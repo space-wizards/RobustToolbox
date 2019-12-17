@@ -48,7 +48,7 @@ namespace Robust.Client.Interfaces.Graphics
         void ProcessInput(FrameEventArgs frameEventArgs);
 
         // Init.
-        bool Initialize(bool lite = false);
+        bool Initialize();
         void Ready();
 
         ClydeHandle LoadShader(ParsedShader shader, string name = null);

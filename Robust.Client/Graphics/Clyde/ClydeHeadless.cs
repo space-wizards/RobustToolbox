@@ -32,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public override bool Initialize(bool lite = false)
+        public override bool Initialize()
         {
             return true;
         }

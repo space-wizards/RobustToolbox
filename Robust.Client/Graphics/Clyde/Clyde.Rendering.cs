@@ -110,119 +110,116 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            if (!_lite)
+            RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
+
+            _setSpace(CurrentSpace.WorldSpace);
+
+            // Calculate world-space AABB for camera, to cull off-screen things.
+            var eye = _eyeManager.CurrentEye;
+            var worldBounds = Box2.CenteredAround(eye.Position.Position,
+                _screenSize / EyeManager.PIXELSPERMETER * eye.Zoom);
+
+            using (DebugGroup("Lights"))
             {
-                RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
-
-                _setSpace(CurrentSpace.WorldSpace);
-
-                // Calculate world-space AABB for camera, to cull off-screen things.
-                var eye = _eyeManager.CurrentEye;
-                var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                    _screenSize / EyeManager.PIXELSPERMETER * eye.Zoom);
-
-                using (DebugGroup("Lights"))
-                {
-                    _drawLights(worldBounds);
-                }
-
-                using (DebugGroup("Grids"))
-                {
-                    _drawGrids(worldBounds);
-                }
-
-                using (DebugGroup("Entities"))
-                {
-                    _sortingSpritesList.Clear();
-                    var map = _eyeManager.CurrentMap;
-
-                    // So we could calculate the correct size of the entities based on the contents of their sprite...
-                    // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-                    // TODO: Make this check more accurate.
-                    var widerBounds = worldBounds.Enlarged(5);
-
-                    foreach (var sprite in _componentManager.GetAllComponents<SpriteComponent>())
-                    {
-                        var entity = sprite.Owner;
-                        if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
-                            !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
-                        {
-                            continue;
-                        }
-
-                        _sortingSpritesList.Add(sprite);
-                    }
-
-                    _sortingSpritesList.Sort((a, b) =>
-                    {
-                        var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
-                        if (cmp != 0)
-                        {
-                            return cmp;
-                        }
-
-                        cmp = a.RenderOrder.CompareTo(b.RenderOrder);
-
-                        if (cmp != 0)
-                        {
-                            return cmp;
-                        }
-
-                        return a.Owner.Uid.CompareTo(b.Owner.Uid);
-                    });
-
-                    foreach (var sprite in _sortingSpritesList)
-                    {
-                        Vector2i roundedPos = default;
-                        if (sprite.PostShader != null)
-                        {
-                            _renderHandle.UseRenderTarget(EntityPostRenderTarget);
-                            _renderHandle.Clear(new Color());
-                            // Calculate viewport so that the entity thinks it's drawing to the same position,
-                            // which is necessary for light application,
-                            // but it's ACTUALLY drawing into the center of the render target.
-                            var spritePos = sprite.Owner.Transform.WorldPosition;
-                            var screenPos = _eyeManager.WorldToScreen(spritePos);
-                            var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                            var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
-                            flippedPos -= EntityPostRenderTarget.Size / 2;
-                            _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
-                        }
-
-                        sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
-
-                        if (sprite.PostShader != null)
-                        {
-                            _renderHandle.UseRenderTarget(null);
-                            _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
-
-                            _renderHandle.UseShader(sprite.PostShader);
-                            _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
-                            _renderHandle.SetModelTransform(Matrix3.Identity);
-
-                            var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
-
-                            var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
-
-                            _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                                box.TopRight, Color.White, null, 0);
-
-                            _renderHandle.SetSpace(CurrentSpace.WorldSpace);
-                            _renderHandle.UseShader(null);
-                        }
-                    }
-
-                    _flushRenderHandle(_renderHandle);
-                }
-
-                RenderOverlays(OverlaySpace.WorldSpace);
-
-                _lightingReady = false;
-
-                _setSpace(CurrentSpace.ScreenSpace);
-
-                RenderOverlays(OverlaySpace.ScreenSpace);
+                _drawLights(worldBounds);
             }
+
+            using (DebugGroup("Grids"))
+            {
+                _drawGrids(worldBounds);
+            }
+
+            using (DebugGroup("Entities"))
+            {
+                _sortingSpritesList.Clear();
+                var map = _eyeManager.CurrentMap;
+
+                // So we could calculate the correct size of the entities based on the contents of their sprite...
+                // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
+                // TODO: Make this check more accurate.
+                var widerBounds = worldBounds.Enlarged(5);
+
+                foreach (var sprite in _componentManager.GetAllComponents<SpriteComponent>())
+                {
+                    var entity = sprite.Owner;
+                    if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
+                        !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
+                    {
+                        continue;
+                    }
+
+                    _sortingSpritesList.Add(sprite);
+                }
+
+                _sortingSpritesList.Sort((a, b) =>
+                {
+                    var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                    if (cmp != 0)
+                    {
+                        return cmp;
+                    }
+
+                    cmp = a.RenderOrder.CompareTo(b.RenderOrder);
+
+                    if (cmp != 0)
+                    {
+                        return cmp;
+                    }
+
+                    return a.Owner.Uid.CompareTo(b.Owner.Uid);
+                });
+
+                foreach (var sprite in _sortingSpritesList)
+                {
+                    Vector2i roundedPos = default;
+                    if (sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(EntityPostRenderTarget);
+                        _renderHandle.Clear(new Color());
+                        // Calculate viewport so that the entity thinks it's drawing to the same position,
+                        // which is necessary for light application,
+                        // but it's ACTUALLY drawing into the center of the render target.
+                        var spritePos = sprite.Owner.Transform.WorldPosition;
+                        var screenPos = _eyeManager.WorldToScreen(spritePos);
+                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
+                        var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                        flippedPos -= EntityPostRenderTarget.Size / 2;
+                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                    }
+
+                    sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
+
+                    if (sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(null);
+                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+
+                        _renderHandle.UseShader(sprite.PostShader);
+                        _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                        _renderHandle.SetModelTransform(Matrix3.Identity);
+
+                        var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+
+                        var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+
+                        _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
+                            box.TopRight, Color.White, null, 0);
+
+                        _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                        _renderHandle.UseShader(null);
+                    }
+                }
+
+                _flushRenderHandle(_renderHandle);
+            }
+
+            RenderOverlays(OverlaySpace.WorldSpace);
+
+            _lightingReady = false;
+
+            _setSpace(CurrentSpace.ScreenSpace);
+
+            RenderOverlays(OverlaySpace.ScreenSpace);
 
             using (DebugGroup("UI"))
             {

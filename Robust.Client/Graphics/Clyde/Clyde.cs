@@ -104,12 +104,10 @@ namespace Robust.Client.Graphics.Clyde
         private bool _quartResLights = true;
 
         private bool _disposing;
-        private bool _lite;
 
-        public override bool Initialize(bool lite = false)
+        public override bool Initialize()
         {
             _debugStats = new ClydeDebugStats();
-            _lite = lite;
             if (!InitWindowing())
             {
                 return false;
@@ -280,10 +278,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
-            if (!_lite)
-            {
                 Render();
-            }
         }
 
         // ReSharper disable once UnusedParameter.Local
@@ -475,11 +470,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _regenerateLightRenderTarget()
         {
-            if (!_lite)
-            {
-                LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
-                    name: "LightRenderTarget");
-            }
+            LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
+                name: "LightRenderTarget");
         }
 
         [StructLayout(LayoutKind.Sequential)]

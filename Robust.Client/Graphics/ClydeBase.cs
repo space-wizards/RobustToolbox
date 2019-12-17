@@ -43,7 +43,7 @@ namespace Robust.Client.Graphics
 
         public abstract Vector2i ScreenSize { get; }
         public abstract void SetWindowTitle(string title);
-        public abstract bool Initialize(bool lite=false);
+        public abstract bool Initialize();
 
         protected virtual void ReloadConfig()
         {

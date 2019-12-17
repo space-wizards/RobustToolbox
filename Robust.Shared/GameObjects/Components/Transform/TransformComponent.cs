@@ -2,6 +2,7 @@
  using System.Collections.Generic;
  using System.Linq;
  using Robust.Shared.Animations;
+ using Robust.Shared.Containers;
  using Robust.Shared.Enums;
  using Robust.Shared.GameObjects.Components.Map;
  using Robust.Shared.GameObjects.EntitySystemMessages;
@@ -175,7 +176,7 @@
             }
         }
 
-        public bool IsMapTransform => Parent == null;
+        public bool IsMapTransform => !ContainerHelpers.IsInContainer(Owner);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -493,7 +494,7 @@
         /// </summary>
         public bool ContainsEntity(ITransformComponent entityTransform)
         {
-            if (entityTransform.IsMapTransform) //Is the entity on the map
+            if (entityTransform.Parent == null) //Is the entity the scene root
             {
                 return false;
             }

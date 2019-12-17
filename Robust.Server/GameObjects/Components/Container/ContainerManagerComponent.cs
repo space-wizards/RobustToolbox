@@ -114,6 +114,16 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
+        public bool ContainsEntity(IEntity entity)
+        {
+            foreach (var container in EntityContainers.Values)
+            {
+                return !container.Deleted && container.Contains(entity);
+            }
+
+            return false;
+        }
+
         public void ForceRemove(IEntity entity)
         {
             foreach (var container in EntityContainers.Values)
@@ -142,7 +152,7 @@ namespace Robust.Server.GameObjects.Components.Container
                     return containers.Remove(entity);
                 }
             }
-            return false;
+            return true; // If we don't contain the entity, it will always be removed
         }
 
         public override void OnRemove()

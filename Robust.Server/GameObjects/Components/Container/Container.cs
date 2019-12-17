@@ -129,7 +129,6 @@ namespace Robust.Server.GameObjects.Components.Container
             // In which case the child is already parented. To us. Don't reject him hand him to the orphanage.
             // Perhaps making it not use Insert() is a good idea but eh.
             if (transform.Parent == null // Only true if Parent is the map entity
-                || transform.Parent.Owner == Owner
                 || !transform.Parent.Owner.TryGetComponent(out IContainerManager containerManager)
                 || !containerManager.Remove(toinsert))
             {

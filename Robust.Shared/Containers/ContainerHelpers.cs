@@ -19,12 +19,11 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(entity != null);
             DebugTools.Assert(!entity.Deleted);
 
-            //TODO: This code needs to check if the entity is actually inside one of the containerManager's containers.
-            // We make the assumption that if a parent entity has a containerManager, the child is inside
-            // one of the containers. Notice the recursion starts at the Owner of the passed in entity, this
+            // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
             if (entity.Transform.Parent != null)
-                return TryGetManagerComp(entity.Transform.Parent.Owner, out _);
+                if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
+                    return containerComp.ContainsEntity(entity);
 
             return false;
         }

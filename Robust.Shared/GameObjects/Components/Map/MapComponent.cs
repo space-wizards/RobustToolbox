@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Map;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 

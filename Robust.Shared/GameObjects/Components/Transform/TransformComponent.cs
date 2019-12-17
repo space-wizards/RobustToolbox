@@ -379,16 +379,6 @@
         }
 
         /// <inheritdoc />
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            // Entities should not be spawned into nullspace
-            DebugTools.Assert(MapID != MapId.Nullspace);
-            DebugTools.Assert(GridID != GridId.Nullspace);
-        }
-
-        /// <inheritdoc />
         protected override void Startup()
         {
             base.Startup();

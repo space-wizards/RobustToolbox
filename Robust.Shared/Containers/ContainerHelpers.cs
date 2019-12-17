@@ -28,6 +28,16 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+
+        public static bool TryGetContainer(IEntity entity, out IContainerManager manager)
+        {
+            if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager))
+                return true;
+
+            manager = default;
+            return false;
+        }
+
         private static bool TryGetManagerComp(IEntity entity, out IContainerManager manager)
         {
             DebugTools.Assert(entity != null);

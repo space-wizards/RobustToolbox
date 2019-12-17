@@ -12,6 +12,7 @@
  using Robust.Shared.Map;
  using Robust.Shared.Maths;
  using Robust.Shared.Serialization;
+ using Robust.Shared.Utility;
  using Robust.Shared.ViewVariables;
 
  namespace Robust.Shared.GameObjects.Components.Transform
@@ -271,7 +272,17 @@
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
+        public MapCoordinates MapPosition
+        {
+            get => new MapCoordinates(WorldPosition, MapID);
+            set
+            {
+                if(!_parent.IsValid())
+                    _gridID = _mapManager.GetDefaultGridId(MapPosition.MapId);
+
+                WorldPosition = value.Position;
+            }
+        }
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
@@ -293,6 +304,16 @@
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
+
+        /// <inheritdoc />
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Entities should not be spawned into nullspace
+            DebugTools.Assert(MapID != MapId.Nullspace);
+            DebugTools.Assert(GridID != GridId.Nullspace);
+        }
 
         /// <inheritdoc />
         protected override void Startup()

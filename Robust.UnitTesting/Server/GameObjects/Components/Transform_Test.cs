@@ -33,11 +33,15 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private MapId MapB;
         private IMapGrid GridB;
 
+        private static readonly GridCoordinates InitialPos = new GridCoordinates(0,0,new GridId(1));
+
         [OneTimeSetUp]
         public void Setup()
         {
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
+
+            MapManager.CreateMap();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
@@ -64,8 +68,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentMapSwitchTest()
         {
             // two entities
-            var parent = EntityManager.SpawnEntity("dummy");
-            var child = EntityManager.SpawnEntity("dummy");
+            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
+            var child = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
@@ -105,8 +109,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentAttachMoveTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy");
-            var child = EntityManager.SpawnEntity("dummy");
+            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
+            var child = EntityManager.SpawnEntity("dummy", InitialPos);
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(5, 5);
@@ -128,8 +132,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentRotateTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy");
-            var child = EntityManager.SpawnEntity("dummy");
+            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
+            var child = EntityManager.SpawnEntity("dummy", InitialPos);
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(0, 0);
@@ -152,8 +156,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentTransRotateTest()
         {
             // Arrange
-            var parent = EntityManager.SpawnEntity("dummy");
-            var child = EntityManager.SpawnEntity("dummy");
+            var parent = EntityManager.SpawnEntity("dummy", InitialPos);
+            var child = EntityManager.SpawnEntity("dummy", InitialPos);
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
             parentTrans.WorldPosition = new Vector2(1, 1);
@@ -176,10 +180,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void PositionCompositionTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
-            var node4 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
@@ -211,9 +215,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void ParentWorldPositionRoundingErrorTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
@@ -253,9 +257,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
 
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
@@ -296,10 +300,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Arrange
             var control = Matrix3.Identity;
 
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
-            var node4 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node4 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
@@ -340,9 +344,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         public void WorldRotationTest()
         {
             // Arrange
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;
@@ -369,9 +373,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void MatrixUpdateTest()
         {
-            var node1 = EntityManager.SpawnEntity("dummy");
-            var node2 = EntityManager.SpawnEntity("dummy");
-            var node3 = EntityManager.SpawnEntity("dummy");
+            var node1 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", InitialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", InitialPos);
 
             var node1Trans = node1.Transform;
             var node2Trans = node2.Transform;

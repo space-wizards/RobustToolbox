@@ -3,7 +3,9 @@ using System.IO;
 using NUnit.Framework;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 
 namespace Robust.UnitTesting.Server.GameObjects.Components
@@ -18,6 +20,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
 
+            var mapManager = IoCManager.Resolve<IMapManager>();
+            mapManager.CreateMap();
+
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();
@@ -26,7 +31,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestCreation()
         {
-            var entity = EntityManager.SpawnEntity("dummy");
+            var entity = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
 
             var container = ContainerManagerComponent.Create<Container>("dummy", entity);
 
@@ -63,8 +68,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestInsertion()
         {
-            var owner = EntityManager.SpawnEntity("dummy");
-            var inserted = EntityManager.SpawnEntity("dummy");
+            var owner = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
+            var inserted = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
             var transform = inserted.Transform;
 
             var container = ContainerManagerComponent.Create<Container>("dummy", owner);

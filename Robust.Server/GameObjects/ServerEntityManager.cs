@@ -26,16 +26,31 @@ namespace Robust.Server.GameObjects
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
-        public override IEntity SpawnEntity(string protoName)
+        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
-            var entity = SpawnEntityNoMapInit(protoName);
+            var newEntity = CreateEntity(prototypeName);
+            newEntity.Transform.GridPosition = coordinates;
+            return newEntity;
+        }
+
+        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        {
+            var newEntity = CreateEntity(prototypeName);
+            newEntity.Transform.MapPosition = coordinates;
+            return newEntity;
+        }
+
+        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        {
+            var entity = SpawnEntityNoMapInit(protoName, coordinates);
             entity.RunMapInit();
             return entity;
         }
 
-        public override IEntity SpawnEntityNoMapInit(string protoName)
+        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntity(protoName);
+            newEnt.Transform.GridPosition = coordinates;
             InitializeAndStartEntity(newEnt);
             return newEnt;
         }

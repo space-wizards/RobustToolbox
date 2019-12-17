@@ -15,11 +15,7 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
-            if (player?.AttachedEntity == null)
-            {
-                ent.SpawnEntity(args[0]);
-            }
-            else
+            if (player?.AttachedEntity != null)
             {
                 ent.SpawnEntityAt(args[0], player.AttachedEntity.Transform.GridPosition);
             }

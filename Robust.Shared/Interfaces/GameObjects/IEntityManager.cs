@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -30,12 +31,17 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Entity Management
 
+        IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
+
+        IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);
+
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
+        /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity(string protoName);
+        IEntity SpawnEntity(string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -44,8 +50,9 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Does not run map init. This only matters on the server.
         /// </remarks>
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
+        /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string protoName);
+        IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position

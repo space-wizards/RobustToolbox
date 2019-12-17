@@ -35,7 +35,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Current position offset of the entity relative to the world.
         ///     This is effectively a more complete version of <see cref="WorldPosition"/>
         /// </summary>
-        MapCoordinates MapPosition { get; }
+        MapCoordinates MapPosition { get; set; }
 
         /// <summary>
         ///     Current rotation offset of the entity.

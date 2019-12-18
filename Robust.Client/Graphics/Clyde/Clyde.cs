@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Threading;
 using JetBrains.Annotations;
-using OpenTK;
-using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
@@ -67,12 +62,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // VBO to draw a single quad.
         private Buffer QuadVBO;
-
         private OGLHandle QuadVAO;
-
-        // VBO to draw a single line.
-        private Buffer LineVBO;
-        private OGLHandle LineVAO;
 
         private const int UniIModUV = 0;
         private const int UniIModelMatrix = 1;
@@ -210,43 +200,24 @@ namespace Robust.Client.Graphics.Clyde
                 GL.EnableVertexAttribArray(1);
             }
 
-            // Line drawing.
+            // Batch rendering
             {
-                var lineVertices = new[]
-                {
-                    new Vertex2D(0, 0, 0, 0),
-                    new Vertex2D(1, 1, 1, 1),
-                };
+                BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
 
-                LineVBO = new Buffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, lineVertices,
-                    nameof(LineVBO));
-
-                LineVAO = new OGLHandle((uint) GL.GenVertexArray());
-                GL.BindVertexArray(LineVAO.Handle);
-                _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, LineVAO, nameof(LineVAO));
+                BatchVAO = new OGLHandle(GL.GenVertexArray());
+                GL.BindVertexArray(BatchVAO.Handle);
+                _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, "BatchVAO");
                 // Vertex Coords
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
                 GL.EnableVertexAttribArray(0);
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+
+                BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                    sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
             }
-
-            BatchVBO = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                Vertex2D.SizeOf * BatchVertexData.Length, "BatchVBO");
-
-            BatchVAO = new OGLHandle(GL.GenVertexArray());
-            GL.BindVertexArray(BatchVAO.Handle);
-            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, "BatchVAO");
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-
-            BatchEBO = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                sizeof(ushort) * BatchIndexData.Length, "BatchEBO");
 
             ProjViewUBO = new Buffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, "ProjViewUBO");
             unsafe
@@ -284,11 +255,7 @@ namespace Robust.Client.Graphics.Clyde
         // ReSharper disable once UnusedParameter.Local
         private void _loadVendorSettings(string vendor, string renderer, string version)
         {
-            if (vendor.IndexOf("intel", StringComparison.InvariantCultureIgnoreCase) != -1)
-            {
-                // Intel specific settings.
-                _reallocateBuffers = true;
-            }
+            // Nothing yet.
         }
 
         private Vector2i _lightMapSize()

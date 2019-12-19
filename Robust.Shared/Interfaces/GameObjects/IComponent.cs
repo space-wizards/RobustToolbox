@@ -60,6 +60,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         Type StateType { get; }
 
         /// <summary>
+        /// Component has been properly initialized.
+        /// </summary>
+        bool Initialized { get; }
+
+        /// <summary>
         ///     This is true when the component is active. Set this value to start or stop the component.
         /// </summary>
         bool Running { get; set; }

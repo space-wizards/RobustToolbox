@@ -129,7 +129,11 @@ namespace Robust.Shared.GameObjects
             {
                 var comp = (Component) t;
                 if (comp != null && !comp.Initialized)
+                {
                     comp.Initialize();
+
+                    DebugTools.Assert(comp.Initialized, $"Component {comp.Name} did not call base {nameof(comp.Initialize)} in derived method.");
+                }
             }
         }
 
@@ -417,6 +421,12 @@ namespace Robust.Shared.GameObjects
 
             foreach (var c in EntityManager.ComponentManager.GetNetComponents(Uid))
             {
+                //TODO: This method is completely broken, GetNetComponents() does not return deleted components.
+                DebugTools.Assert(c.Initialized);
+
+                //Ticks start at 1
+                DebugTools.Assert(c.CreationTick != GameTick.Zero && c.LastModifiedTick != GameTick.Zero);
+
                 if (c.CreationTick >= fromTick && !c.Deleted)
                 {
                     // Can't be null since it's returned by GetNetComponents

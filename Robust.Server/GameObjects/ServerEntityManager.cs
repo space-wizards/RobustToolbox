@@ -9,6 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
 {
@@ -75,6 +76,8 @@ namespace Robust.Server.GameObjects
             var stateEntities = new List<EntityState>();
             foreach (IEntity entity in GetEntities())
             {
+                DebugTools.Assert(entity.Initialized && !entity.Deleted);
+
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 

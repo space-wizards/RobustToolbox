@@ -512,10 +512,6 @@
                 var rebuildMatrices = false;
                 if (Parent?.Owner?.Uid != newParentId)
                 {
-#if _DELME
-                    DetachParent();
-#endif
-
                     if (newParentId.HasValue && newParentId.Value.IsValid())
                     {
                         var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
@@ -599,12 +595,6 @@
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
-
-#if _DELME
-            if (!_parent.IsValid())
-                pos = Vector2.Zero;
-#endif
-
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -622,12 +612,6 @@
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
-
-#if _DELME
-            if (!_parent.IsValid()) // Root node
-                pos = Vector2.Zero;
-#endif
-
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);

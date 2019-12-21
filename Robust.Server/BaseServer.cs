@@ -224,6 +224,8 @@ namespace Robust.Server
             _serializer.Initialize();
 
             // Initialize Tier 2 services
+            IoCManager.Resolve<IGameTiming>().InSimulation = true;
+
             _stateManager.Initialize();
             _entities.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
@@ -268,6 +270,8 @@ namespace Robust.Server
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
+
+            _time.InSimulation = true;
             Cleanup();
         }
 

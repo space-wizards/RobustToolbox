@@ -30,14 +30,23 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            newEntity.Transform.GridPosition = coordinates;
+            if(coordinates.GridID != GridId.Nullspace)
+            {
+                var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntity;
+                newEntity.Transform.AttachParent(GetEntity(gridEntityId));
+                newEntity.Transform.LocalPosition = coordinates.Position;
+            }
             return newEntity;
         }
 
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            newEntity.Transform.MapPosition = coordinates;
+            if(coordinates.MapId != MapId.Nullspace)
+            {
+                newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+                newEntity.Transform.WorldPosition = coordinates.Position;
+            }
             return newEntity;
         }
 
@@ -50,18 +59,16 @@ namespace Robust.Server.GameObjects
 
         public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
         {
-            var newEnt = CreateEntity(protoName);
-            newEnt.Transform.GridPosition = coordinates;
-            InitializeAndStartEntity(newEnt);
+            var newEnt = CreateEntityUninitialized(protoName, coordinates);
+            InitializeAndStartEntity((Entity)newEnt);
             return newEnt;
         }
 
         /// <inheritdoc />
         public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
-            var entity = CreateEntity(entityType);
-            entity.Transform.GridPosition = coordinates;
-            InitializeAndStartEntity(entity);
+            var entity = CreateEntityUninitialized(entityType, coordinates);
+            InitializeAndStartEntity((Entity)entity);
             var grid = _mapManager.GetGrid(coordinates.GridID);
             if (_pauseManager.IsMapInitialized(grid.ParentMapId))
             {

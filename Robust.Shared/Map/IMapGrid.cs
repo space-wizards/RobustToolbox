@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Maths;
 
@@ -21,6 +22,8 @@ namespace Robust.Shared.Map
         ///     The integer ID of the map this grid is currently located within.
         /// </summary>
         MapId ParentMapId { get; set; }
+
+        EntityUid GridEntity { get; }
 
         /// <summary>
         ///     The identifier of this grid.

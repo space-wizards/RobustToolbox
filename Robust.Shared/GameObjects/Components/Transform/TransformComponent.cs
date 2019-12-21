@@ -2,13 +2,16 @@
  using System.Collections.Generic;
  using System.Linq;
  using Robust.Shared.Animations;
+ using Robust.Shared.Containers;
  using Robust.Shared.Enums;
+ using Robust.Shared.GameObjects.Components.Map;
  using Robust.Shared.GameObjects.EntitySystemMessages;
  using Robust.Shared.Interfaces.GameObjects;
  using Robust.Shared.Interfaces.GameObjects.Components;
  using Robust.Shared.Interfaces.Map;
  using Robust.Shared.Interfaces.Timing;
  using Robust.Shared.IoC;
+ using Robust.Shared.Log;
  using Robust.Shared.Map;
  using Robust.Shared.Maths;
  using Robust.Shared.Serialization;
@@ -36,6 +39,7 @@
         #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IEntityManager _entityManager;
         #pragma warning restore 649
 
         /// <inheritdoc />
@@ -54,14 +58,15 @@
         {
             get
             {
-                // Work around a client-side race condition of the grids not being synced yet.
-                // Maybe it's better to fix the race condition instead.
-                // Eh.
-                if (_mapManager.TryGetGrid(GridID, out var grid))
-                {
-                    return grid.ParentMapId;
-                }
-                return MapId.Nullspace;
+                // branch or leaf node
+                if (_parent.IsValid())
+                    return Parent.MapID;
+
+                // root node, expected to have map component
+                if (Owner.TryGetComponent(out IMapComponent mapComp))
+                    return mapComp.WorldMap;
+
+                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
             }
         }
 
@@ -69,7 +74,22 @@
         [ViewVariables]
         public GridId GridID
         {
-            get => _parent.IsValid() ? Parent.GridID : _gridID;
+            get
+            {
+                // root node, grid id is undefined
+                if(Owner.HasComponent<IMapComponent>())
+                    return GridId.Nullspace;
+
+                // second level node, terminates recursion up the branch of the tree
+                if (Owner.TryGetComponent(out IMapGridComponent gridComp))
+                    return gridComp.GridIndex;
+
+                // branch or leaf node
+                if (_parent.IsValid())
+                    return Parent.GridID;
+
+                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+            }
         }
 
         /// <inheritdoc />
@@ -158,7 +178,7 @@
             }
         }
 
-        public bool IsMapTransform => Parent == null;
+        public bool IsMapTransform => !ContainerHelpers.IsInContainer(Owner);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -166,48 +186,51 @@
         {
             get
             {
-                if (Parent != null)
+                if (_parent.IsValid())
                 {
                     // transform _position from parent coords to world coords
                     var worldPos = Parent.WorldMatrix.Transform(GetLocalPosition());
-                    return new GridCoordinates(worldPos, _gridID);
+                    return new GridCoordinates(worldPos, GridID);
                 }
                 else
                 {
-                    return new GridCoordinates(GetLocalPosition(), _gridID);
+                    return new GridCoordinates(GetLocalPosition(), GridID);
                 }
             }
             set
             {
-                if (_parent.IsValid())
+                if (!_parent.IsValid())
                 {
-                    if (value.GridID != _gridID)
-                    {
-                        throw new ArgumentException("Cannot change grid ID of parented entity.");
-                    }
-                    // grid coords to world coords
-                    var worldCoords = value.ToWorld(_mapManager);
-
-                    // world coords to parent coords
-                    var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
-
-                    // float rounding error guard, if the offset is less than 1mm ignore it
-                    if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
-                        return;
-
-                    SetPosition(newPos);
+                    DebugTools.Assert("Tried to move root node.");
+                    return;
                 }
-                else
+
+                // grid coords to world coords
+                var worldCoords = value.ToWorld(_mapManager);
+
+                if (value.GridID != GridID)
                 {
-                    SetPosition(value.Position);
-
-                    _recurseSetGridId(value.GridID);
+                    var newGrid = _mapManager.GetGrid(value.GridID);
+                    AttachParent(_entityManager.GetEntity(newGrid.GridEntity));
                 }
+
+                // world coords to parent coords
+                var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
+
+                // float rounding error guard, if the offset is less than 1mm ignore it
+                if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
+                    return;
+
+                SetPosition(newPos);
 
                 Dirty();
 
-                RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, value));
+                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                if (Running)
+                {
+                    RebuildMatrices();
+                    OnMove?.Invoke(this, new MoveEventArgs(GridPosition, value));
+                }
             }
         }
 
@@ -217,53 +240,35 @@
         {
             get
             {
-                if (Parent != null)
+                if (_parent.IsValid())
                 {
                     // parent coords to world coords
                     return Parent.WorldMatrix.Transform(GetLocalPosition());
                 }
                 else
                 {
-                    // Work around a client-side race condition of the grids not being synced yet.
-                    // Maybe it's better to fix the race condition instead.
-                    // Eh.
-                    if (_mapManager.TryGetGrid(GridID, out var grid))
-                    {
-                        return grid.LocalToWorld(GetLocalPosition());
-                    }
-                    return GetLocalPosition();
+                    return Vector2.Zero;
                 }
             }
             set
             {
-                if (_parent.IsValid())
+                if (!_parent.IsValid())
                 {
-                    // world coords to parent coords
-                    var newPos = Parent.InvWorldMatrix.Transform(value);
-
-                    // float rounding error guard, if the offset is less than 1mm ignore it
-                    if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
-                        return;
-
-                    if (_localPosition == newPos)
-                        return;
-
-                    SetPosition(newPos);
-                }
-                else // has no parent
-                {
-                    var worldPos = value;
-                    var grid = _mapManager.FindGridAt(MapID, worldPos); // resolve grid id at location
-                    var localPos = grid.WorldToLocal(worldPos);
-
-                    // this prevents the component being marked as dirty
-                    if (_localPosition == value && grid.Index == _gridID)
-                        return;
-
-                    SetPosition(localPos);
-                    _recurseSetGridId(grid.Index);
+                    DebugTools.Assert("Tried to move root node.");
+                    return;
                 }
 
+                // world coords to parent coords
+                var newPos = Parent.InvWorldMatrix.Transform(value);
+
+                // float rounding error guard, if the offset is less than 1mm ignore it
+                if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
+                    return;
+
+                if (_localPosition == newPos)
+                    return;
+
+                SetPosition(newPos);
                 Dirty();
 
                 RebuildMatrices();
@@ -277,8 +282,7 @@
             get => new MapCoordinates(WorldPosition, MapID);
             set
             {
-                if(!_parent.IsValid())
-                    _gridID = _mapManager.GetDefaultGridId(MapPosition.MapId);
+                AttachParent(_mapManager.GetMapEntity(value.MapId));
 
                 WorldPosition = value.Position;
             }
@@ -305,14 +309,52 @@
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
 
-        /// <inheritdoc />
         public override void Initialize()
         {
-            base.Initialize();
+            // Attempt to parent itself it the defined grid.
+            if (!_parent.IsValid())
+            {
+                if (!Owner.HasComponent<IMapComponent>())
+                {
+                    if (Owner.HasComponent<IMapGridComponent>())
+                    {
+                        DebugTools.Assert("This should have been set up by the map system.");
+                    }
+                    else
+                    {
+                        // Parent me to the grid comp
+                        if (_gridID != GridId.Nullspace)
+                        {
+                            var mapGrid = _mapManager.GetGrid(_gridID);
+                            if(mapGrid.IsDefaultGrid)
+                            {
+                                var mapEnt = _mapManager.GetMapEntity(mapGrid.ParentMapId);
+                                Logger.WarningS("scene", $"Auto-parenting entity {Owner.Uid} to map {mapGrid.ParentMapId}'s entity {mapEnt.Uid}");
+                                AttachParent(mapEnt);
+                            }
+                            else
+                            {
+                                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntity);
+                                Logger.WarningS("scene", $"Auto-parenting entity {Owner.Uid} to grid {_gridID}'s entity {gridEnt.Uid}");
+                                AttachParent(gridEnt);
+                            }
+                        }
+                        else
+                        {
+                            DebugTools.Assert("My location is unknown!");
+                        }
+                    }
+                }
+                else
+                {
+                    // I am the root node of the scene graph
+                    _gridID = GridId.Nullspace;
+                    _localPosition = Vector2.Zero;
 
-            // Entities should not be spawned into nullspace
-            DebugTools.Assert(MapID != MapId.Nullspace);
-            DebugTools.Assert(GridID != GridId.Nullspace);
+                }
+            }
+
+            base.Initialize();
         }
 
         /// <inheritdoc />
@@ -327,16 +369,21 @@
         /// <inheritdoc />
         public override void OnRemove()
         {
-            DetachParent();
-
-            // Entities are cast to purgatory when they die.
-            GridPosition = GridCoordinates.Nullspace;
-
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childUid in _children.ToArray())
             {
                 // Recursion: DeleteEntity calls the Transform.OnRemove function of child entities.
                 Owner.EntityManager.DeleteEntity(childUid);
+            }
+
+            // map does not have a parent node
+            if (Parent != null)
+            {
+                var concrete = (TransformComponent) Parent;
+                concrete._children.Remove(Owner.Uid);
+
+                // detach
+                Parent = null;
             }
 
             base.OnRemove();
@@ -347,21 +394,26 @@
         /// </summary>
         public virtual void DetachParent()
         {
+            var mapPos = MapPosition;
+
             // nothing to do
             if (Parent == null)
                 return;
 
-            // transform _position from parent coords to world coords
-            var localPosition = GridPosition;
+            var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+
+            // this would be a no-op
+            if(newMapEntity == Parent.Owner)
+                return;
 
             var concrete = (TransformComponent) Parent;
             concrete._children.Remove(Owner.Uid);
 
-            // detach
-            Parent = null;
+            // attach to map
+            Parent = newMapEntity.Transform;
+            MapPosition = mapPos;
 
-            // switch position back to grid coords
-            SetPosition(localPosition.Position);
+            
 
             Dirty();
         }
@@ -372,24 +424,21 @@
         /// <param name="parent"></param>
         public virtual void AttachParent(ITransformComponent parent)
         {
+            //NOTE: This function must be callable from before initialize
+
             // nothing to attach to.
             if (parent == null)
                 return;
 
             // That's already our parent, don't bother attaching again.
             if (parent.Owner.Uid == _parent)
-            {
                 return;
-            }
 
             var oldConcrete = (TransformComponent) Parent;
             oldConcrete?._children.Remove(Owner.Uid);
             var newConcrete = (TransformComponent) parent;
             newConcrete._children.Add(Owner.Uid);
             Parent = parent;
-
-            // move to parents grid
-            _recurseSetGridId(parent.GridID);
 
             // offset position from world to parent
             SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
@@ -421,7 +470,7 @@
         /// </summary>
         public bool ContainsEntity(ITransformComponent entityTransform)
         {
-            if (entityTransform.IsMapTransform) //Is the entity on the map
+            if (entityTransform.Parent == null) //Is the entity the scene root
             {
                 return false;
             }
@@ -463,8 +512,6 @@
                 var rebuildMatrices = false;
                 if (Parent?.Owner?.Uid != newParentId)
                 {
-                    DetachParent();
-
                     if (newParentId.HasValue && newParentId.Value.IsValid())
                     {
                         var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
@@ -548,10 +595,6 @@
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
-
-            if (!_parent.IsValid())
-                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
-
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -569,10 +612,6 @@
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
-
-            if (!_parent.IsValid())
-                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
-
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
@@ -589,11 +628,8 @@
         {
             var pos = _localPosition;
 
-            // Orphaned entities combine their local position with the grid position to form the world matrix
-            if (!_parent.IsValid())
-            {
-                pos = _mapManager.GetGrid(_gridID).LocalToWorld(pos);
-            }
+            if (!_parent.IsValid()) // Root Node
+                pos = Vector2.Zero;
 
             var rot = _localRotation.Theta;
 

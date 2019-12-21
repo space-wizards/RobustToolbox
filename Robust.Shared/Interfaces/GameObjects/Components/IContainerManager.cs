@@ -53,6 +53,8 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <returns>True if the container was found, false otherwise.</returns>
         bool TryGetContainer(string id, out IContainer container);
 
+        bool ContainsEntity(IEntity entity);
+
         void ForceRemove(IEntity entity);
     }
 }

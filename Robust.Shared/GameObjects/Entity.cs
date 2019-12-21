@@ -401,6 +401,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!TryGetComponent(kvStates.Key, out var component))
                 {
+                    DebugTools.Assert("Component does not exist for state.");
                     continue;
                 }
 
@@ -478,7 +479,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"{Name} ({Uid}, {Prototype.ID})";
+            return $"{Name} ({Uid}, {Prototype?.ID})";
         }
     }
 }

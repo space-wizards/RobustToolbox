@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -57,9 +60,9 @@ namespace Robust.Shared.Map
 
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick)
+            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
                 .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
-            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick).ToDictionary(g => g.Index,
+            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
                 grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
                     grid.IsDefaultGrid));
 
@@ -101,14 +104,11 @@ namespace Robust.Shared.Map
                     {
                         continue;
                     }
+
                     var gridCreation = data.CreatedGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
-                    _maps.Add(mapId);
-                    _mapCreationTick[mapId] = _gameTiming.CurTick;
-                    MapCreated?.Invoke(this, new MapEventArgs(mapId));
-                    var newDefaultGrid = CreateGrid(mapId, gridId, gridCreation.ChunkSize, gridCreation.SnapSize);
-                    _defaultGrids.Add(mapId, newDefaultGrid.Index);
+                    CreateMap(mapId, gridId);
                 }
             }
 
@@ -133,6 +133,7 @@ namespace Robust.Shared.Map
                 // Ok good all the grids and maps exist now.
                 foreach (var (gridId, gridDatum) in data.GridData)
                 {
+
                     var grid = _grids[gridId];
                     if (grid.ParentMapId != gridDatum.Coordinates.MapId)
                     {
@@ -178,6 +179,90 @@ namespace Robust.Shared.Map
 
             if(data == null) // if there is no data, there is nothing to do!
                 return;
+
+            // maps created on the client in pre-state are linked to client entities
+            // resolve new maps with their shared component that the server just gave us
+            // and delete the client entities
+            if (data.CreatedMaps != null)
+            {
+                foreach (var (mapId, defaultGridId) in data.CreatedMaps)
+                {
+                    // CreateMap should have set this
+                    DebugTools.Assert(_mapEntities.ContainsKey(mapId));
+
+                    // this was already linked in a previous state.
+                    if(!_mapEntities[mapId].IsClientSide())
+                        continue;
+
+                    // get the existing client entity for the map.
+                    var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
+
+                    // locate the entity that represents this map that was just sent to us
+                    IEntity sharedMapEntity = null;
+                    var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                    foreach (var mapComp in mapComps)
+                    {
+                        if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
+                        {
+                            sharedMapEntity = mapComp.Owner;
+                            _mapEntities[mapId] = mapComp.Owner.Uid;
+                            Logger.DebugS("map", $"Map {mapId} pivoted bound entity from {cEntity.Uid} to {mapComp.Owner.Uid}.");
+                            break;
+                        }
+                    }
+
+                    // verify shared entity was found (the server sent us one)
+                    DebugTools.AssertNotNull(sharedMapEntity);
+                    DebugTools.Assert(!_mapEntities[mapId].IsClientSide());
+
+                    // Transfer client child grids made in GameStatePre to the shared component
+                    // so they are not deleted
+                    foreach (var childGridTrans in cEntity.Transform.Children.ToList())
+                    {
+                        childGridTrans.AttachParent(sharedMapEntity);
+                    }
+
+                    // remove client entity
+                    var cGridComp = cEntity.GetComponent<IMapComponent>();
+                    cGridComp.ClearMapId();
+                    cEntity.Delete();
+                }
+            }
+
+
+            // grids created on the client in pre-state are linked to client entities
+            // resolve new grids with their shared component that the server just gave us
+            // and delete the client entities
+            if (data.CreatedGrids != null)
+            {
+                foreach (var kvNewGrid in data.CreatedGrids)
+                {
+                    var grid = _grids[kvNewGrid.Key];
+
+                    // this was already linked in a previous state.
+                    if(!grid.GridEntity.IsClientSide())
+                        continue;
+
+                    // remove the existing client entity.
+                    var cEntity = _entityManager.GetEntity(grid.GridEntity);
+                    var cGridComp = cEntity.GetComponent<IMapGridComponent>();
+                    cGridComp.ClearGridId();
+                    cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
+
+                    var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
+                    foreach (var gridComp in gridComps)
+                    {
+                        if (gridComp.GridIndex == kvNewGrid.Key)
+                        {
+                            grid.GridEntity = gridComp.Owner.Uid;
+                            Logger.DebugS("map", $"Grid {grid.Index} pivoted bound entity from {cEntity.Uid} to {grid.GridEntity}.");
+                            break;
+                        }
+                    }
+
+                    DebugTools.Assert(!grid.GridEntity.IsClientSide());
+                }
+            }
 
             if(data.DeletedGrids != null)
             {

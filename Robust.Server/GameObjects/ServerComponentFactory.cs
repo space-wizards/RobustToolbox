@@ -3,6 +3,7 @@ using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -20,6 +21,12 @@ namespace Robust.Server.GameObjects
             // Required for the engine to work
             Register<TransformComponent>();
             RegisterReference<TransformComponent, ITransformComponent>();
+
+            Register<MapComponent>();
+            RegisterReference<MapComponent, IMapComponent>();
+
+            Register<MapGridComponent>();
+            RegisterReference<MapGridComponent, IMapGridComponent>();
 
             RegisterIgnore("Icon");
             RegisterIgnore("Occluder");

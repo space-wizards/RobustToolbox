@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -27,6 +30,8 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         public MapId ParentMapId { get; set; }
+
+        public EntityUid GridEntity { get; internal set; }
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -85,10 +90,22 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 WorldPosition
         {
-            get => _worldPosition;
+            get
+            {
+                if(IsDefaultGrid) // Default grids cannot be moved.
+                    return Vector2.Zero;
+
+                //TODO: Make grids real parents of entities.
+                if(GridEntity.IsValid())
+                    return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
+                return Vector2.Zero;
+            }
             set
             {
-                _worldPosition = value;
+                if (IsDefaultGrid) // Default grids cannot be moved.
+                    return;
+
+                IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

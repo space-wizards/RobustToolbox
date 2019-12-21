@@ -186,38 +186,42 @@ namespace Robust.Client.GameObjects
 
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
-            var newEnt = CreateEntity(prototypeName, NewClientEntityUid());
-            newEnt.Transform.GridPosition = coordinates;
-            return newEnt;
+            var newEntity = CreateEntity(prototypeName, NewClientEntityUid());
+            if (coordinates.GridID != GridId.Nullspace)
+            {
+                var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntity;
+                newEntity.Transform.AttachParent(GetEntity(gridEntityId));
+                newEntity.Transform.LocalPosition = coordinates.Position;
+            }
+            return newEntity;
         }
 
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
-            var newEnt = CreateEntity(prototypeName, NewClientEntityUid());
-            newEnt.Transform.MapPosition = coordinates;
-            return newEnt;
+            var newEntity = CreateEntity(prototypeName, NewClientEntityUid());
+            if (coordinates.MapId != MapId.Nullspace)
+            {
+                newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+                newEntity.Transform.WorldPosition = coordinates.Position;
+            }
+            return newEntity;
         }
 
         public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
         {
-            var ent = CreateEntity(protoName, NewClientEntityUid());
-            ent.Transform.GridPosition = coordinates;
-            InitializeAndStartEntity(ent);
-            return ent;
+            return SpawnEntityNoMapInit(protoName, coordinates);
         }
 
         public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
         {
-            return SpawnEntity(protoName, coordinates);
+            var newEnt = CreateEntityUninitialized(protoName, coordinates);
+            InitializeAndStartEntity((Entity)newEnt);
+            return newEnt;
         }
 
         public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
-            var entity = CreateEntity(entityType, NewClientEntityUid());
-            entity.Transform.GridPosition = coordinates;
-            InitializeAndStartEntity(entity);
-
-            return entity;
+            return SpawnEntity(entityType, coordinates);
         }
 
         private EntityUid NewClientEntityUid()

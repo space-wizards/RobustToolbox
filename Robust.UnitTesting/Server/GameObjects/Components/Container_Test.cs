@@ -88,7 +88,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.Insert(inserted);
             owner.Delete();
             // Make sure inserted was detached.
-            Assert.That(transform.IsMapTransform, Is.True);
+            Assert.That(transform.Deleted, Is.True);
         }
 
         const string PROTOTYPES = @"

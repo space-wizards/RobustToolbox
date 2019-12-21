@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -65,6 +67,9 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapID">The map ID to check existance of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
         bool MapExists(MapId mapID);
+
+        EntityUid GetMapEntityId(MapId mapId);
+        IEntity GetMapEntity(MapId mapId);
 
         IEnumerable<MapId> GetAllMapIds();
 

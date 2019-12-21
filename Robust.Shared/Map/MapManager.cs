@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -11,10 +15,11 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    public partial class MapManager : IMapManagerInternal, IPostInjectInit
+    public partial class MapManager : IMapManagerInternal
     {
 #pragma warning disable 649
         [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         public IGameTiming GameTiming => _gameTiming;
@@ -53,18 +58,15 @@ namespace Robust.Shared.Map
 
         private readonly Dictionary<GridId, MapGrid> _grids = new Dictionary<GridId, MapGrid>();
         private readonly Dictionary<MapId, GridId> _defaultGrids = new Dictionary<MapId, GridId>();
+        private readonly Dictionary<MapId, EntityUid> _mapEntities = new Dictionary<MapId, EntityUid>();
 
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new List<(GameTick, GridId)>();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new List<(GameTick, MapId)>();
 
-        public void PostInject()
-        {
-            CreateMap(MapId.Nullspace, GridId.Nullspace);
-        }
-
         /// <inheritdoc />
         public void Initialize()
         {
+            CreateMap(MapId.Nullspace, GridId.Nullspace);
             // So uh I removed the contents from this but I'm too lazy to remove the Initialize method.
             // Deal with it.
         }
@@ -103,6 +105,12 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void DeleteMap(MapId mapID)
         {
+            if (mapID == MapId.Nullspace)
+            {
+                Logger.DebugS("map", "Blocked deletion of nullspace map.");
+                return;
+            }
+
             if (!_maps.Contains(mapID))
             {
                 throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapID}'");
@@ -117,6 +125,12 @@ namespace Robust.Shared.Map
             MapDestroyed?.Invoke(this, new MapEventArgs(mapID));
             _maps.Remove(mapID);
             _mapCreationTick.Remove(mapID);
+
+            var ent = _mapEntities[mapID];
+            if(_entityManager.TryGetEntity(ent, out var mapEnt))
+                mapEnt.Delete();
+
+            _mapEntities.Remove(mapID);
 
             if (_netManager.IsClient)
                 return;
@@ -153,6 +167,41 @@ namespace Robust.Shared.Map
 
             _maps.Add(actualID);
             _mapCreationTick.Add(actualID, _gameTiming.CurTick);
+            Logger.InfoS("map", $"Creating new map {actualID}");
+
+            if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
+            {
+                var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+
+                IMapComponent result = null;
+                foreach (var mapComp in mapComps)
+                {
+                    if (mapComp.WorldMap != actualID)
+                        continue;
+
+                    result = mapComp;
+                    break;
+                }
+
+                if (result != null)
+                {
+                    _mapEntities.Add(actualID, result.Owner.Uid);
+                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.Owner.Uid}");
+                }
+                else
+                {
+                    var newEnt = (Entity)_entityManager.CreateEntityUninitialized(null, GridCoordinates.Nullspace);
+                    _mapEntities.Add(actualID, newEnt.Uid);
+
+                    var mapComp = newEnt.AddComponent<MapComponent>();
+                    mapComp.WorldMap = actualID;
+                    newEnt.Initialize();
+                    newEnt.InitializeComponents();
+                    newEnt.StartAllComponents();
+                    Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
+                }
+            }
+
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
@@ -164,6 +213,16 @@ namespace Robust.Shared.Map
         public bool MapExists(MapId mapID)
         {
             return _maps.Contains(mapID);
+        }
+
+        public EntityUid GetMapEntityId(MapId mapId)
+        {
+            return _mapEntities[mapId];
+        }
+
+        public IEntity GetMapEntity(MapId mapId)
+        {
+            return _entityManager.GetEntity(_mapEntities[mapId]);
         }
 
         public IEnumerable<MapId> GetAllMapIds()
@@ -178,7 +237,9 @@ namespace Robust.Shared.Map
 
         public GridId GetDefaultGridId(MapId mapID)
         {
-            return _defaultGrids[mapID];
+            if(_defaultGrids.TryGetValue(mapID, out var gridID))
+                return gridID;
+            return GridId.Nullspace; //TODO: Hack to make shutdown work
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -200,7 +261,7 @@ namespace Robust.Shared.Map
 
             if (GridExists(actualID))
             {
-                throw new InvalidOperationException($"A map with ID {actualID} already exists");
+                throw new InvalidOperationException($"A grid with ID {actualID} already exists");
             }
 
             if (HighestGridID.Value < actualID.Value)
@@ -210,6 +271,44 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
+            Logger.DebugS("map", $"Creating new grid {actualID}");
+
+            if(actualID != GridId.Nullspace) // nullspace default grid is not bound to an entity
+            {
+                // the entity may already exist from map deserialization
+                IMapGridComponent result = null;
+                foreach (var comp in _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>())
+                {
+                    if (comp.GridIndex != actualID)
+                        continue;
+
+                    result = comp;
+                    break;
+                }
+
+                if (result != null)
+                {
+                    grid.GridEntity = result.Owner.Uid;
+                    Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntity}");
+                }
+                else
+                {
+                    var newEnt = (Entity)_entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, currentMapID));
+                    grid.GridEntity = newEnt.Uid;
+
+                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
+
+                    var gridComp = newEnt.AddComponent<MapGridComponent>();
+                    gridComp.GridIndex = grid.Index;
+
+                    newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
+
+                    newEnt.Initialize();
+                    newEnt.InitializeComponents();
+                    newEnt.StartAllComponents();
+                }
+            }
+
             OnGridCreated?.Invoke(actualID);
             return grid;
         }
@@ -261,6 +360,10 @@ namespace Robust.Shared.Map
 
         public void DeleteGrid(GridId gridID)
         {
+            // nullspace grid cannot be deleted
+            if(gridID == GridId.Nullspace)
+                return;
+
             var grid = _grids[gridID];
 
             grid.Dispose();
@@ -268,7 +371,10 @@ namespace Robust.Shared.Map
 
             if (_defaultGrids.ContainsKey(grid.ParentMapId))
                 _defaultGrids.Remove(grid.ParentMapId);
-            
+
+            if(_entityManager.TryGetEntity(grid.GridEntity, out var gridEnt))
+                gridEnt.Delete();
+
             OnGridRemoved?.Invoke(gridID);
 
             if (_netManager.IsServer)

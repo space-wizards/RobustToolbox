@@ -2,6 +2,8 @@
 {
     public static class NetIDs
     {
+        public const uint MAP_MAP = 1;
+        public const uint MAP_GRID = 2;
         public const uint META_DATA = 4;
         public const uint TRANSFORM = 5;
         public const uint PHYSICS = 6;

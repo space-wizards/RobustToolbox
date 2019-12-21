@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
@@ -64,7 +65,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
 
             var transform = entity.Transform;
-            if (transform.Parent != null)
+            if (ContainerHelpers.IsInContainer(transform.Owner))
             {
                 transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
                 velocity.LinearVelocity = Vector2.Zero;

@@ -58,6 +58,11 @@ namespace Robust.Client.ViewVariables
         public ViewVariablesPropertyEditor PropertyFor(Type type)
         {
             // TODO: make this more flexible.
+            if (type == null)
+            {
+                return new ViewVariablesPropertyEditorDummy();
+            }
+
             if (type == typeof(sbyte))
             {
                 return new ViewVariablesPropertyEditorNumeric(NumberType.SByte);
@@ -176,6 +181,11 @@ namespace Robust.Client.ViewVariables
             if (type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType)
             {
                 return new ViewVariablesPropertyEditorReference();
+            }
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return new ViewVariablesPropertyEditorKeyValuePair();
             }
 
             return new ViewVariablesPropertyEditorDummy();

@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.IoC
 {
@@ -36,6 +37,7 @@ namespace Robust.Shared.IoC
     /// <seealso cref="Interfaces.Reflection.IReflectionManager"/>
     public static class IoCManager
     {
+        private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";
         private static readonly ThreadLocal<IDependencyCollection> _container = new ThreadLocal<IDependencyCollection>();
 
         public static void InitThread()
@@ -74,6 +76,8 @@ namespace Robust.Shared.IoC
         public static void Register<TInterface, TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface, new()
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             _container.Value.Register<TInterface, TImplementation>(overwrite);
         }
 
@@ -91,6 +95,8 @@ namespace Robust.Shared.IoC
         /// </param>
         public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             _container.Value.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
@@ -116,6 +122,8 @@ namespace Robust.Shared.IoC
         [Pure]
         public static T Resolve<T>()
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             return _container.Value.Resolve<T>();
         }
 
@@ -130,6 +138,8 @@ namespace Robust.Shared.IoC
         [Pure]
         public static object ResolveType(Type type)
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             return _container.Value.ResolveType(type);
         }
 
@@ -139,6 +149,8 @@ namespace Robust.Shared.IoC
         /// <seealso cref="InjectDependencies(object)"/>
         public static void BuildGraph()
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             _container.Value.BuildGraph();
         }
 
@@ -156,6 +168,8 @@ namespace Robust.Shared.IoC
         /// <seealso cref="BuildGraph"/>
         public static void InjectDependencies(object obj)
         {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
             _container.Value.InjectDependencies(obj);
         }
     }

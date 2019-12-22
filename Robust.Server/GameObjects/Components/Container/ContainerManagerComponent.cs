@@ -1,15 +1,14 @@
-﻿using Robust.Server.Interfaces.GameObjects;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.Components.Container
 {

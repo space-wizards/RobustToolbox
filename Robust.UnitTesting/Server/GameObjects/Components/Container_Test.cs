@@ -3,6 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;

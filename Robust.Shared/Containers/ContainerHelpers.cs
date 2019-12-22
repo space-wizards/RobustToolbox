@@ -1,5 +1,5 @@
-﻿using Robust.Server.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects;
+﻿using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers

@@ -1,6 +1,6 @@
-using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects.Components;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {

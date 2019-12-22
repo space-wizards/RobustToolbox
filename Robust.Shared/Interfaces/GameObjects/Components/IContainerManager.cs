@@ -1,11 +1,7 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Robust.Server.Interfaces.GameObjects
+namespace Robust.Shared.Interfaces.GameObjects.Components
 {
     /// <summary>
     /// Manages containers on an entity.

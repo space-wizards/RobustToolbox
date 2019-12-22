@@ -39,7 +39,6 @@ namespace Robust.Shared.Map
         private readonly Dictionary<MapIndices, IMapChunkInternal> _chunks = new Dictionary<MapIndices, IMapChunkInternal>();
 
         private readonly IMapManagerInternal _mapManager;
-        private Vector2 _worldPosition;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.

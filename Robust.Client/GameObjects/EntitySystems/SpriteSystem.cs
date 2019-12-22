@@ -11,8 +11,10 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class SpriteSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private readonly IClyde _clyde;
         [Dependency] private readonly IEyeManager _eyeManager;
+#pragma warning restore 649
 
         public SpriteSystem()
         {

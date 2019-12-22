@@ -93,8 +93,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
-        private bool _disposing;
-
         public override bool Initialize()
         {
             _debugStats = new ClydeDebugStats();
@@ -419,7 +417,6 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Dispose()
         {
-            _disposing = true;
             ShutdownWindowing();
             _shutdownAudio();
         }

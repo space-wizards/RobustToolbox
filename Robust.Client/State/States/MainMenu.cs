@@ -6,7 +6,6 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Client.Interfaces.State;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -33,7 +32,6 @@ namespace Robust.Client.State.States
         [Dependency] private readonly IGameController _controllerProxy;
         [Dependency] private readonly ILocalizationManager _loc;
         [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IStateManager stateManager;
         [Dependency] private readonly IUserInterfaceManager userInterfaceManager;
 #pragma warning restore 649
 

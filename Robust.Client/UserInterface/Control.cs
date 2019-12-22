@@ -32,8 +32,6 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control> OnVisibilityChanged;
 
-        private int _uniqueChildId;
-
         private bool _stylingDirty;
 
         /// <summary>

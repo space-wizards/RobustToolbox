@@ -9,7 +9,9 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     internal sealed class DebugClydePanel : PanelContainer
     {
+#pragma warning disable 649
         [Dependency] private readonly IClydeInternal _clydeInternal;
+#pragma warning restore 649
 
         private readonly Label _label;
 

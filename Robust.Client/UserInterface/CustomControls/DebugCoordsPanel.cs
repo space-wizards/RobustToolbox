@@ -71,15 +71,12 @@ namespace Robust.Client.UserInterface.CustomControls
             var screenSize = _displayManager.ScreenSize;
 
             int mouseWorldMap;
-            int mouseWorldGrid;
             GridCoordinates mouseWorldPos;
-            IEntity mouseEntity = null;
             TileRef tile;
             try
             {
                 var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
                 mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).ParentMapId;
-                mouseWorldGrid = (int) coords.GridID;
                 mouseWorldPos = coords;
 
                 tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
@@ -87,7 +84,6 @@ namespace Robust.Client.UserInterface.CustomControls
             catch
             {
                 mouseWorldPos = eyeManager.ScreenToWorld(mouseScreenPos);
-                mouseWorldGrid = 0;
                 mouseWorldMap = 0;
                 tile = new TileRef();
             }

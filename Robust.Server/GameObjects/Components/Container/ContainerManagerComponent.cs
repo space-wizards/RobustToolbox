@@ -3,6 +3,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
@@ -12,10 +13,8 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Container
 {
-    public class ContainerManagerComponent : Component, IContainerManager
+    public sealed class ContainerManagerComponent : SharedContainerManagerComponent
     {
-        public override string Name => "ContainerContainer";
-
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
@@ -72,8 +71,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return container;
         }
 
-        /// <inheritdoc />
-        public T MakeContainer<T>(string id) where T: IContainer
+        public override T MakeContainer<T>(string id)
         {
             return (T) MakeContainer(id, typeof(T));
         }
@@ -86,23 +84,24 @@ namespace Robust.Server.GameObjects.Components.Container
             }
             var container = (IContainer)Activator.CreateInstance(type, id, this);
             EntityContainers[id] = container;
+            Dirty();
             return container;
         }
 
         /// <inheritdoc />
-        public IContainer GetContainer(string id)
+        public override IContainer GetContainer(string id)
         {
             return EntityContainers[id];
         }
 
         /// <inheritdoc />
-        public bool HasContainer(string id)
+        public override bool HasContainer(string id)
         {
             return EntityContainers.ContainsKey(id);
         }
 
         /// <inheritdoc />
-        public bool TryGetContainer(string id, out IContainer container)
+        public override bool TryGetContainer(string id, out IContainer container)
         {
             if (!HasContainer(id))
             {
@@ -113,7 +112,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
-        public bool ContainsEntity(IEntity entity)
+        public override bool ContainsEntity(IEntity entity)
         {
             foreach (var container in EntityContainers.Values)
             {
@@ -123,7 +122,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return false;
         }
 
-        public void ForceRemove(IEntity entity)
+        public override void ForceRemove(IEntity entity)
         {
             foreach (var container in EntityContainers.Values)
             {
@@ -142,7 +141,7 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public bool Remove(IEntity entity)
+        public override bool Remove(IEntity entity)
         {
             foreach (var containers in EntityContainers.Values)
             {
@@ -222,6 +221,14 @@ namespace Robust.Server.GameObjects.Components.Container
             }
 
             _entitiesWaitingResolve = null;
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return new ContainerManagerComponentState(
+                _allContainers.ToDictionary(
+                    c => c.ID,
+                    c => c.ContainedEntities.Select(e => e.Uid).ToList()));
         }
 
         private struct ContainerPrototypeData : IExposeData

@@ -13,5 +13,6 @@
         public const uint CLICKABLE = 14;
         public const uint APPEARANCE = 22;
         public const uint USERINTERFACE = 24;
+        public const uint CONTAINER_MANAGER = 25;
     }
 }

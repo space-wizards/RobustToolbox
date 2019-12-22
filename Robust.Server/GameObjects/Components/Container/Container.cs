@@ -154,6 +154,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
             Owner.EntityManager.EventBus.RaiseEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toinsert, false));
+            Manager.Dirty();
         }
 
         /// <inheritdoc />
@@ -213,6 +214,7 @@ namespace Robust.Server.GameObjects.Components.Container
             Owner?.EntityManager.EventBus.RaiseEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
 
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
+            Manager.Dirty();
         }
 
         /// <inheritdoc />
@@ -228,6 +230,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual void Shutdown()
         {
+            Manager.Dirty();
             Deleted = true;
             Manager = null;
         }

@@ -1,5 +1,6 @@
 ﻿using Robust.Client.GameObjects.Components;
 using Robust.Client.GameObjects.Components.Animations;
+using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.GameObjects.Components.UserInterface;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
@@ -62,6 +63,9 @@ namespace Robust.Client.GameObjects
             RegisterIgnore("IgnorePause");
 
             Register<AnimationPlayerComponent>();
+
+            Register<ContainerManagerComponent>();
+            RegisterReference<ContainerManagerComponent, IContainerManager>();
         }
     }
 }

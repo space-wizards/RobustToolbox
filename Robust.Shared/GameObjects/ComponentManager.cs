@@ -129,10 +129,14 @@ namespace Robust.Shared.GameObjects
 
             component.OnAdd();
 
-            if (entity.Initialized)
+            if (entity.Initialized || entity.Initializing)
             {
                 component.Initialize();
-                component.Running = true;
+
+                if (entity.Initialized)
+                {
+                    component.Running = true;
+                }
             }
         }
 

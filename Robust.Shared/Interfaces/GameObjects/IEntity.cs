@@ -34,6 +34,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         bool Initialized { get; }
 
+        bool Initializing { get; }
+
         /// <summary>
         ///     True if the entity has been deleted.
         /// </summary>
@@ -193,7 +195,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
-        
+
         /// <summary>
         ///     Serverside method to prepare an entity state object
         /// </summary>

@@ -57,6 +57,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Initialized { get; private set; }
 
+        [ViewVariables]
+        public bool Initializing { get; private set; }
+
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
@@ -123,6 +126,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void InitializeComponents()
         {
+            Initializing = true;
             // Initialize() can modify the collection of components.
             var components = EntityManager.ComponentManager.GetComponents(Uid);
             foreach (var t in components)
@@ -135,6 +139,19 @@ namespace Robust.Shared.GameObjects
                     DebugTools.Assert(comp.Initialized, $"Component {comp.Name} did not call base {nameof(comp.Initialize)} in derived method.");
                 }
             }
+
+            #if DEBUG
+
+            // Second integrity check in case of.
+            foreach (var t in EntityManager.ComponentManager.GetComponents(Uid))
+            {
+                DebugTools.Assert(t.Initialized, $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+            }
+
+            #endif
+
+            Initialized = true;
+            Initializing = false;
         }
 
         /// <summary>
@@ -151,14 +168,6 @@ namespace Robust.Shared.GameObjects
                 if (comp != null && comp.Initialized && !comp.Deleted)
                     comp.Running = true;
             }
-        }
-
-        /// <summary>
-        ///     Sets up the entity into a valid initial state.
-        /// </summary>
-        public void Initialize()
-        {
-            Initialized = true;
         }
 
         #endregion Initialization

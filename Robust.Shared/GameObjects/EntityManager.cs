@@ -296,7 +296,6 @@ namespace Robust.Shared.GameObjects
         private protected static void InitializeEntity(Entity entity)
         {
             entity.InitializeComponents();
-            entity.Initialize();
         }
 
         private protected static void StartEntity(Entity entity)

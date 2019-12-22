@@ -195,7 +195,6 @@ namespace Robust.Shared.Map
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
                     mapComp.WorldMap = actualID;
-                    newEnt.Initialize();
                     newEnt.InitializeComponents();
                     newEnt.StartAllComponents();
                     Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
@@ -303,7 +302,6 @@ namespace Robust.Shared.Map
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 
-                    newEnt.Initialize();
                     newEnt.InitializeComponents();
                     newEnt.StartAllComponents();
                 }

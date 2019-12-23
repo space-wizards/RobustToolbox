@@ -50,8 +50,7 @@ namespace Robust.Client.Animations
                 var rsi = sprite.LayerGetActualRSI(LayerKey);
                 if (rsi.TryGetState(keyFrame.State, out var state))
                 {
-                    DebugTools.Assert(state.AnimationLength != null, "state.AnimationLength != null");
-                    var animationTime = Math.Min(state.AnimationLength.Value - 0.01f, playingTime);
+                    var animationTime = Math.Min(state.AnimationLength - 0.01f, playingTime);
                     sprite.LayerSetAutoAnimated(LayerKey, false);
                     // TODO: Doesn't setting the state explicitly reset the animation
                     // so it's slightly more inefficient?

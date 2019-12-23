@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json;
 
 namespace Robust.Shared.Maths
 {
+    [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     public readonly struct Vector2i : IEquatable<Vector2i>

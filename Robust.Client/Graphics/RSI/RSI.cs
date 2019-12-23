@@ -15,7 +15,7 @@ namespace Robust.Client.Graphics
         ///     The size of this RSI, width x height.
         /// </summary>
         [ViewVariables]
-        public Vector2u Size { get; private set; }
+        public Vector2i Size { get; private set; }
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
 
         public State this[StateId key] => States[key];
@@ -35,7 +35,7 @@ namespace Robust.Client.Graphics
             return States.TryGetValue(stateId, out state);
         }
 
-        public RSI(Vector2u size)
+        public RSI(Vector2i size)
         {
             Size = size;
         }

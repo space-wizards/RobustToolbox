@@ -301,9 +301,9 @@ namespace Robust.Client.GameObjects
                 if (delayCount > 0 && (AnimationLoops || AnimationIndex < delayCount - 1))
                 {
                     AnimationTime += frameTime;
-                    while (RsiState.GetFrameOld(RSI.State.Direction.South, AnimationIndex).delay < AnimationTime)
+                    while (RsiState.GetDelay(AnimationIndex) < AnimationTime)
                     {
-                        var (_, delay) = RsiState.GetFrameOld(RSI.State.Direction.South, AnimationIndex);
+                        var delay = RsiState.GetDelay(AnimationIndex);
                         AnimationIndex += 1;
                         AnimationTime -= delay;
                         if (AnimationIndex == delayCount)
@@ -318,7 +318,7 @@ namespace Robust.Client.GameObjects
                             }
                         }
 
-                        EffectSprite = RsiState.GetFrameOld(RSI.State.Direction.South, AnimationIndex).icon;
+                        EffectSprite = RsiState.GetFrame(RSI.State.Direction.South, AnimationIndex);
                     }
                 }
             }

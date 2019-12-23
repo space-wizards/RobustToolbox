@@ -135,7 +135,8 @@ namespace Robust.Client.GameObjects
 
                     if (value.TryGetState(layer.State, out var state))
                     {
-                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrameOld(CorrectLayerDir(ref layer, state), 0);
+                        layer.Texture = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                        layer.AnimationTimeLeft = state.GetDelay(0);
                     }
                     else
                     {
@@ -268,7 +269,8 @@ namespace Robust.Client.GameObjects
             var layer = new Layer {State = stateId};
             if (BaseRSI.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrameOld(CorrectLayerDir(ref layer, state), 0);
+                layer.Texture = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                layer.AnimationTimeLeft = state.GetDelay(0);
             }
             else
             {
@@ -314,7 +316,8 @@ namespace Robust.Client.GameObjects
             var layer = new Layer {State = stateId, RSI = rsi};
             if (rsi.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrameOld(CorrectLayerDir(ref layer, state), 0);
+                layer.Texture = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                layer.AnimationTimeLeft = state.GetDelay(0);
             }
             else
             {
@@ -577,8 +580,8 @@ namespace Robust.Client.GameObjects
                 {
                     theLayer.AnimationFrame = 0;
                     theLayer.AnimationTime = 0;
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrameOld(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.Texture = state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -625,8 +628,8 @@ namespace Robust.Client.GameObjects
                 {
                     theLayer.AnimationFrame = 0;
                     theLayer.AnimationTime = 0;
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrameOld(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.Texture = state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -708,8 +711,8 @@ namespace Robust.Client.GameObjects
             {
                 if (rsi.TryGetState(theLayer.State, out var state))
                 {
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrameOld(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.Texture = state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -918,15 +921,15 @@ namespace Robust.Client.GameObjects
             {
                 // Going backwards we re-calculate from zero.
                 // Definitely possible to optimize this for going backwards but I'm too lazy to figure that out.
-                theLayer.AnimationTimeLeft = -animationTime + state.GetFrameOld(correctDir, 0).delay;
+                theLayer.AnimationTimeLeft = -animationTime + state.GetDelay(0);
                 theLayer.AnimationFrame = 0;
             }
 
             theLayer.AnimationTime = animationTime;
             // After setting timing data correctly, run advance to get to the correct frame.
-            _advanceFrameAnimation(ref theLayer, state, correctDir);
+            _advanceFrameAnimation(ref theLayer, state);
             // And set to said frame.
-            theLayer.Texture = state.GetFrameOld(correctDir, theLayer.AnimationFrame).icon;
+            theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame);
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -1156,7 +1159,8 @@ namespace Robust.Client.GameObjects
                         if (theRsi.TryGetState(stateid, out var state))
                         {
                             // Always use south because this layer will be cached in the serializer.
-                            (layer.Texture, layer.AnimationTimeLeft) = state.GetFrameOld(RSI.State.Direction.South, 0);
+                            layer.Texture = state.GetFrame(RSI.State.Direction.South, 0);
+                            layer.AnimationTimeLeft = state.GetDelay(0);
                         }
                         else
                         {
@@ -1309,12 +1313,12 @@ namespace Robust.Client.GameObjects
                     layer.AnimationTimeLeft = -layer.AnimationTime;
                 }
 
-                _advanceFrameAnimation(ref layer, state, layerSpecificDir);
-                layer.Texture = state.GetFrameOld(layerSpecificDir, layer.AnimationFrame).icon;
+                _advanceFrameAnimation(ref layer, state);
+                layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
             }
         }
 
-        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state, RSI.State.Direction layerSpecificDir)
+        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state)
         {
             var delayCount = state.DelayCount;
             while (layer.AnimationTimeLeft < 0)
@@ -1327,7 +1331,7 @@ namespace Robust.Client.GameObjects
                     layer.AnimationTime = -layer.AnimationTimeLeft;
                 }
 
-                layer.AnimationTimeLeft += state.GetFrameOld(layerSpecificDir, layer.AnimationFrame).delay;
+                layer.AnimationTimeLeft += state.GetDelay(layer.AnimationFrame);
             }
         }
 

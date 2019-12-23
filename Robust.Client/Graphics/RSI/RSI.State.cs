@@ -78,12 +78,11 @@ namespace Robust.Client.Graphics
             /// <summary>
             ///     If true, this state has an animation to play.
             /// </summary>
-            public bool IsAnimated => DelayCount != 0;
+            public bool IsAnimated => DelayCount > 1;
 
-            [Obsolete]
-            public (Texture icon, float delay) GetFrameOld(Direction direction, int frame)
+            public Texture GetFrame(Direction direction, int frame)
             {
-                return (Icons[(int)direction][frame], Delays[frame]);
+                return Icons[(int) direction][frame];
             }
 
             /// <summary>
@@ -108,7 +107,7 @@ namespace Robust.Client.Graphics
                     return Frame0;
                 }
 
-                return GetFrameOld(dir.Convert(Directions), 0).icon;
+                return GetFrame(dir.Convert(Directions), 0);
             }
 
             /// <summary>

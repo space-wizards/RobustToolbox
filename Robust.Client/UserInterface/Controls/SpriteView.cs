@@ -20,6 +20,15 @@ namespace Robust.Client.UserInterface.Controls
 
         public ISpriteComponent Sprite { get; set; }
 
+        /// <summary>
+        ///     Overrides the direction used to render the sprite.
+        /// </summary>
+        /// <remarks>
+        ///     If null, the world space orientation of the entity will be used.
+        ///     Otherwise the specified direction will be used.
+        /// </remarks>
+        public Direction? OverrideDirection { get; set; }
+
         public SpriteView()
         {
             RectClipContent = true;
@@ -39,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2, Scale);
+            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2, Scale, OverrideDirection);
         }
     }
 }

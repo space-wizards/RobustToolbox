@@ -1,67 +1,142 @@
 ﻿using System;
 using Robust.Shared.Maths;
 using Robust.Client.Utility;
-using System.Collections.Generic;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics
 {
     public sealed partial class RSI
     {
+        // See https://github.com/space-wizards/RobustToolbox/issues/905 for the simplification thing of playback.
         /// <summary>
         ///     Represents a single icon state inside an RSI.
         /// </summary>
+        /// <remarks>
+        ///     While the RSI spec allows different animation timing for directions in the same frame,
+        ///     RSIs are folded into a single set of animation timings when loaded.
+        ///     This is to simplify animation playback code in-engine.
+        /// </remarks>
         public sealed class State : IDirectionalTextureProvider
         {
-            public Vector2u Size { get; }
-            public StateId StateId { get; }
-            public DirectionType Directions { get; }
-            public Texture Frame0 => Icons[0][0].icon;
-            public float? AnimationLength { get; }
-            private readonly (Texture icon, float delay)[][] Icons;
+            // List of delays for the frame to reach the next frame.
+            private readonly float[] Delays;
 
-            internal State(Vector2u size, StateId stateId, DirectionType direction, (Texture icon, float delay)[][] icons)
+            // 2D array for the texture to use for each animation frame at each direction.
+            private readonly Texture[][] Icons;
+
+            internal State(Vector2i size, StateId stateId, DirectionType direction, float[] delays, Texture[][] icons)
             {
+                DebugTools.Assert(size.X > 0);
+                DebugTools.Assert(size.Y > 0);
+                DebugTools.Assert(stateId.IsValid);
+
                 Size = size;
                 StateId = stateId;
                 Directions = direction;
+                Delays = delays;
                 Icons = icons;
 
-                float? animLength = null;
-                foreach (var dirFrames in icons)
+                foreach (var delay in delays)
                 {
-                    if (dirFrames.Length <= 1)
-                    {
-                        continue;
-                    }
-
-                    var length = 0f;
-                    foreach (var (_, delay) in dirFrames)
-                    {
-                        length += delay;
-                    }
-
-                    if (animLength == null)
-                    {
-                        animLength = length;
-                    }
-                    else
-                    {
-                        animLength = Math.Max(animLength.Value, length);
-                    }
+                    AnimationLength += delay;
                 }
-
-                AnimationLength = animLength;
             }
 
+            /// <summary>
+            ///     The size of each individual frame in this state.
+            /// </summary>
+            public Vector2i Size { get; }
+
+            /// <summary>
+            ///     The identifier for this state inside an RSI.
+            /// </summary>
+            public StateId StateId { get; }
+
+            /// <summary>
+            ///     How many directions this state has.
+            /// </summary>
+            public DirectionType Directions { get; }
+
+            /// <summary>
+            ///     The first frame of the "south" direction.
+            /// </summary>
+            /// <remarks>
+            ///     Always available and better than nothing for previews etc.
+            /// </remarks>
+            public Texture Frame0 => Icons[0][0];
+
+            /// <summary>
+            ///     The total play length of this state's animation, in seconds.
+            /// </summary>
+            public float AnimationLength { get; }
+
+            /// <summary>
+            ///     The amount of frames in the animation of this state.
+            /// </summary>
+            public int DelayCount => Delays.Length;
+
+            /// <summary>
+            ///     If true, this state has an animation to play.
+            /// </summary>
+            public bool IsAnimated => DelayCount > 1;
+
+            public Texture GetFrame(Direction direction, int frame)
+            {
+                return Icons[(int) direction][frame];
+            }
+
+            /// <summary>
+            ///     Gets the delay between the specified frame and the next frame.
+            /// </summary>
+            /// <param name="frame">The index of the frame.</param>
+            /// <returns>The delay, in seconds.</returns>
+            /// <exception cref="IndexOutOfRangeException">
+            ///     Thrown if the frame index does not exist.
+            /// </exception>
+            public float GetDelay(int frame)
+            {
+                return Delays[frame];
+            }
+
+            Texture IDirectionalTextureProvider.Default => Frame0;
+
+            Texture IDirectionalTextureProvider.TextureFor(Shared.Maths.Direction dir)
+            {
+                if (Directions == DirectionType.Dir1)
+                {
+                    return Frame0;
+                }
+
+                return GetFrame(dir.Convert(Directions), 0);
+            }
+
+            /// <summary>
+            ///     Specifies which types of directions an RSI state has.
+            /// </summary>
             public enum DirectionType : byte
             {
+                /// <summary>
+                ///     A single direction, namely South.
+                /// </summary>
                 Dir1,
+
+                /// <summary>
+                ///     4 cardinal directions.
+                /// </summary>
                 Dir4,
+
+                /// <summary>
+                ///     4 cardinal + 4 diagonal directions.
+                /// </summary>
                 Dir8,
             }
 
+            /// <summary>
+            ///     Specifies a direction in an RSI state.
+            /// </summary>
             public enum Direction : byte
             {
+                // Value of the enum here matches the index used to store it in the icons array.
                 South = 0,
                 North = 1,
                 East = 2,
@@ -70,32 +145,6 @@ namespace Robust.Client.Graphics
                 SouthWest = 5,
                 NorthEast = 6,
                 NorthWest = 7,
-            }
-
-            public (Texture icon, float delay) GetFrame(Direction direction, int frame)
-            {
-                return Icons[(int)direction][frame];
-            }
-
-            public IReadOnlyCollection<(Texture icon, float delay)> GetDirectionFrames(Direction direction)
-            {
-                return Icons[(int)direction];
-            }
-
-            public int DelayCount(Direction direction)
-            {
-                return Icons[(int)direction].Length;
-            }
-
-            Texture IDirectionalTextureProvider.Default => GetFrame(Direction.South, 0).icon;
-
-            Texture IDirectionalTextureProvider.TextureFor(Shared.Maths.Direction dir)
-            {
-                if (Directions == DirectionType.Dir1)
-                {
-                    return GetFrame(Direction.South, 0).icon;
-                }
-                return GetFrame(dir.Convert(Directions), 0).icon;
             }
         }
     }

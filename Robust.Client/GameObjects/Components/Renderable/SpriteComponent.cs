@@ -135,7 +135,7 @@ namespace Robust.Client.GameObjects
 
                     if (value.TryGetState(layer.State, out var state))
                     {
-                        (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                        layer.AnimationTimeLeft = state.GetDelay(0);
                     }
                     else
                     {
@@ -160,12 +160,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IReflectionManager reflectionManager;
 #pragma warning restore 649
 
-        [ViewVariables(VVAccess.ReadWrite)] RSI.State.Direction LastDir;
-        [ViewVariables(VVAccess.ReadWrite)] private bool _recalcDirections = false;
-
-        public uint _renderOrder;
         [ViewVariables(VVAccess.ReadWrite)]
-        public uint RenderOrder { get => _renderOrder; set => _renderOrder = value; }
+        public uint RenderOrder { get; set; }
 
         private static ShaderInstance _defaultShader;
 
@@ -268,7 +264,7 @@ namespace Robust.Client.GameObjects
             var layer = new Layer {State = stateId};
             if (BaseRSI.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                layer.AnimationTimeLeft = state.GetDelay(0);
             }
             else
             {
@@ -314,7 +310,7 @@ namespace Robust.Client.GameObjects
             var layer = new Layer {State = stateId, RSI = rsi};
             if (rsi.TryGetState(stateId, out var state))
             {
-                (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(CorrectLayerDir(ref layer, state), 0);
+                layer.AnimationTimeLeft = state.GetDelay(0);
             }
             else
             {
@@ -577,8 +573,7 @@ namespace Robust.Client.GameObjects
                 {
                     theLayer.AnimationFrame = 0;
                     theLayer.AnimationTime = 0;
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -625,8 +620,7 @@ namespace Robust.Client.GameObjects
                 {
                     theLayer.AnimationFrame = 0;
                     theLayer.AnimationTime = 0;
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -708,8 +702,7 @@ namespace Robust.Client.GameObjects
             {
                 if (rsi.TryGetState(theLayer.State, out var state))
                 {
-                    (theLayer.Texture, theLayer.AnimationTimeLeft) =
-                        state.GetFrame(CorrectLayerDir(ref theLayer, state), 0);
+                    theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
                 else
                 {
@@ -876,7 +869,6 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.DirOffset = offset;
-            _recalcDirections = true;
         }
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
@@ -918,15 +910,13 @@ namespace Robust.Client.GameObjects
             {
                 // Going backwards we re-calculate from zero.
                 // Definitely possible to optimize this for going backwards but I'm too lazy to figure that out.
-                theLayer.AnimationTimeLeft = -animationTime + state.GetFrame(correctDir, 0).delay;
+                theLayer.AnimationTimeLeft = -animationTime + state.GetDelay(0);
                 theLayer.AnimationFrame = 0;
             }
 
             theLayer.AnimationTime = animationTime;
             // After setting timing data correctly, run advance to get to the correct frame.
-            _advanceFrameAnimation(ref theLayer, state, correctDir);
-            // And set to said frame.
-            theLayer.Texture = state.GetFrame(correctDir, theLayer.AnimationFrame).icon;
+            _advanceFrameAnimation(ref theLayer, state);
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -1001,7 +991,7 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true)
+        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true, Direction? overrideDirection=null)
         {
             Matrix3 transform;
             if (useWorldTransform)
@@ -1027,7 +1017,9 @@ namespace Robust.Client.GameObjects
             {
                 transform = Matrix3.Identity;
             }
+
             drawingHandle.SetTransform(transform);
+
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1036,13 +1028,50 @@ namespace Robust.Client.GameObjects
                 }
 
                 // TODO: Implement layer-specific rotation and scale.
-                var texture = layer.Texture ?? resourceCache.GetFallback<TextureResource>();
+
+                var texture = layer.Texture;
+
+                if (layer.State.IsValid)
+                {
+                    // Pull texture from RSI state instead.
+                    var rsi = layer.RSI ?? BaseRSI;
+                    if (rsi != null)
+                    {
+                        var state = rsi[layer.State];
+
+                        RSI.State.Direction layerSpecificDir;
+                        if (state.Directions == RSI.State.DirectionType.Dir1)
+                        {
+                            layerSpecificDir = RSI.State.Direction.South;
+                        }
+                        else
+                        {
+                            RSI.State.Direction dir;
+                            if (overrideDirection != null)
+                            {
+                                dir = overrideDirection.Value.Convert(state.Directions);
+                            }
+                            else
+                            {
+                                dir = GetDir(state.Directions);
+                            }
+                            layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
+                        }
+
+                        texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+                    }
+                }
+
+                texture ??= resourceCache.GetFallback<TextureResource>();
+
                 if (layer.Shader != null)
                 {
                     drawingHandle.UseShader(layer.Shader);
                 }
+
                 drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER),
                     color * layer.Color);
+
                 if (layer.Shader != null)
                 {
                     drawingHandle.UseShader(null);
@@ -1093,8 +1122,6 @@ namespace Robust.Client.GameObjects
                 {
                     Layers.Add(new Layer(clone));
                 }
-                // Do this because the directions in the cache may not be correct for us.
-                _recalcDirections = true;
                 return;
             }
 
@@ -1156,7 +1183,7 @@ namespace Robust.Client.GameObjects
                         if (theRsi.TryGetState(stateid, out var state))
                         {
                             // Always use south because this layer will be cached in the serializer.
-                            (layer.Texture, layer.AnimationTimeLeft) = state.GetFrame(RSI.State.Direction.South, 0);
+                            layer.AnimationTimeLeft = state.GetDelay(0);
                         }
                         else
                         {
@@ -1236,31 +1263,14 @@ namespace Robust.Client.GameObjects
             _layerMapShared = true;
             serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
-            // Do this because the directions in the cache may not be correct.
-            _recalcDirections = true;
         }
 
         public void FrameUpdate(float delta)
         {
-            // TODO: This entire method is a hotspot of redundant code.
-            // This is definitely gonna deserve some optimizations later down the line.
-
-            var dirWeAreFacing = GetDir(RSI.State.DirectionType.Dir8);
-            var diagonalDirChanged = false;
-            var cardinalDirChanged = false;
-
-            if (LastDir != dirWeAreFacing || _recalcDirections)
+            foreach (var t in Layers)
             {
-                diagonalDirChanged = true;
-                cardinalDirChanged = LastDir.RoundToCardinal() != dirWeAreFacing.RoundToCardinal() || _recalcDirections;
-                LastDir = dirWeAreFacing;
-                _recalcDirections = false;
-            }
-
-            for (var i = 0; i < Layers.Count; i++)
-            {
-                var layer = Layers[i];
-                // Since State is a struct, we can't null-check it directly.
+                var layer = t;
+                // Since StateId is a struct, we can't null-check it directly.
                 if (!layer.State.IsValid || !layer.Visible)
                 {
                     continue;
@@ -1271,61 +1281,34 @@ namespace Robust.Client.GameObjects
                 {
                     continue;
                 }
-                var state = rsi[layer.State];
-                RSI.State.Direction layerSpecificDir;
-                if (state.Directions == RSI.State.DirectionType.Dir1)
-                {
-                    layerSpecificDir = RSI.State.Direction.South;
-                }
-                else
-                {
-                    layerSpecificDir = OffsetRsiDir(GetDir(state.Directions), layer.DirOffset);
-                }
 
-                // Is this layer's direction changed?
-                // This depends on the direction type of the layer.
-                var dirChanged = state.Directions == RSI.State.DirectionType.Dir8
-                    ? diagonalDirChanged
-                    : cardinalDirChanged;
+                var state = rsi[layer.State];
+
+                if (!state.IsAnimated)
+                {
+                    continue;
+                }
 
                 layer.AnimationTime += delta;
-                if (!dirChanged)
-                {
-                    var delayCount = state.DelayCount(layerSpecificDir);
-                    if (delayCount < 2 || !layer.AutoAnimated)
-                    {
-                        // Don't bother animating this.
-                        // There's no animation frames!
-                        continue;
-                    }
-
-                    layer.AnimationTimeLeft -= delta;
-                }
-                else
-                {
-                    // Mess with animation data so _advanceFrameAnimation fixes the position to where it should be.
-                    // So cross-direction animations are synced so long as they have the same total length.
-                    layer.AnimationFrame = 0;
-                    layer.AnimationTimeLeft = -layer.AnimationTime;
-                }
-
-                _advanceFrameAnimation(ref layer, state, layerSpecificDir);
-                layer.Texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame).icon;
+                layer.AnimationTimeLeft -= delta;
+                _advanceFrameAnimation(ref layer, state);
             }
         }
 
-        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state, RSI.State.Direction layerSpecificDir)
+        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state)
         {
-            var delayCount = state.DelayCount(layerSpecificDir);
+            var delayCount = state.DelayCount;
             while (layer.AnimationTimeLeft < 0)
             {
-                if (++layer.AnimationFrame >= delayCount)
+                layer.AnimationFrame += 1;
+
+                if (layer.AnimationFrame >= delayCount)
                 {
                     layer.AnimationFrame = 0;
                     layer.AnimationTime = -layer.AnimationTimeLeft;
                 }
 
-                layer.AnimationTimeLeft += state.GetFrame(layerSpecificDir, layer.AnimationFrame).delay;
+                layer.AnimationTimeLeft += state.GetDelay(layer.AnimationFrame);
             }
         }
 

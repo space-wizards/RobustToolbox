@@ -45,7 +45,10 @@ namespace Robust.Client.GameObjects.Components.Containers
         {
             foreach (var container in _containers.Values)
             {
-                return !container.Deleted && container.Contains(entity);
+                if (!container.Deleted && container.Contains(entity))
+                {
+                    return true;
+                }
             }
 
             return false;

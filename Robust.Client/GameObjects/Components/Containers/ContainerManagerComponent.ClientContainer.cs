@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.ViewVariables;
@@ -8,6 +9,7 @@ namespace Robust.Client.GameObjects.Components.Containers
 {
     public sealed partial class ContainerManagerComponent
     {
+        [DebuggerDisplay("ClientContainer {Owner.Uid}/{ID}")]
         private sealed class ClientContainer : IContainer
         {
             public List<IEntity> Entities { get; } = new List<IEntity>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -55,13 +56,12 @@ namespace Robust.Shared.ContentPack
     {
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IResourceManager _resourceManager;
 #pragma warning restore 649
 
         static ModLoader()
         {
-            // Necessary to make the assembly loader not choke on Windows on release builds,
-            // it seems like.
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveMissingAssembly;
+            AssemblyLoadContext.Default.Resolving += ResolvingAssemblyHandler;
         }
 
         private ModuleTestingCallbacks _testingCallbacks;
@@ -70,6 +70,8 @@ namespace Robust.Shared.ContentPack
         ///     Loaded assemblies.
         /// </summary>
         private readonly List<ModInfo> _mods = new List<ModInfo>();
+
+        private readonly List<Assembly> _sideModules = new List<Assembly>();
 
         public virtual void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
             where T : GameShared
@@ -233,20 +235,37 @@ namespace Robust.Shared.ContentPack
             _testingCallbacks = testingCallbacks;
         }
 
-        private static Assembly ResolveMissingAssembly(object sender, ResolveEventArgs args)
+        private static Assembly ResolvingAssemblyHandler(AssemblyLoadContext context, AssemblyName name)
         {
-            var modLoader = IoCManager.Resolve<IModLoader>();
-            if (!(modLoader is ModLoader me))
-            {
-                return null;
-            }
+            var modLoader = IoCManager.Resolve<IModLoader>() as ModLoader;
 
-            foreach (var mod in me._mods)
+            return modLoader?.ResolvingAssembly(context, name);
+        }
+
+        private Assembly ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
+        {
+            // Try main modules.
+            foreach (var mod in _mods)
             {
-                if (mod.GameAssembly.FullName == args.Name)
+                if (mod.GameAssembly.FullName == name.FullName)
                 {
                     return mod.GameAssembly;
                 }
+            }
+
+            foreach (var assembly in _sideModules)
+            {
+                if (assembly.FullName == name.FullName)
+                {
+                    return assembly;
+                }
+            }
+
+            if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+            {
+                var assembly = Assembly.Load(dll.CopyToArray());
+                _sideModules.Add(assembly);
+                return assembly;
             }
 
             return null;

@@ -123,7 +123,7 @@ namespace Robust.Client.Interfaces.Graphics
         DrawingHandleWorld DrawingHandleWorld { get; }
 
         void SetScissor(UIBox2i? scissorBox);
-        void DrawEntity(IEntity entity, Vector2 position, Vector2 scale);
+        void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }
 
     /// <summary>

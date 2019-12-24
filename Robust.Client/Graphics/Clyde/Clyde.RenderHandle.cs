@@ -75,7 +75,7 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSwitchSpace(space);
             }
 
-            public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale)
+            public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
                 if (entity.Deleted)
                 {
@@ -101,7 +101,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // Draw the entity.
-                sprite.OpenGLRender(DrawingHandleWorld, false);
+                sprite.OpenGLRender(DrawingHandleWorld, false, overrideDirection);
 
                 // Reset to screen space
                 SetSpace(CurrentSpace.ScreenSpace);

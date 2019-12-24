@@ -991,7 +991,7 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true)
+        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true, Direction? overrideDirection=null)
         {
             Matrix3 transform;
             if (useWorldTransform)
@@ -1046,7 +1046,16 @@ namespace Robust.Client.GameObjects
                         }
                         else
                         {
-                            layerSpecificDir = OffsetRsiDir(GetDir(state.Directions), layer.DirOffset);
+                            RSI.State.Direction dir;
+                            if (overrideDirection != null)
+                            {
+                                dir = overrideDirection.Value.Convert(state.Directions);
+                            }
+                            else
+                            {
+                                dir = GetDir(state.Directions);
+                            }
+                            layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
                         }
 
                         texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);

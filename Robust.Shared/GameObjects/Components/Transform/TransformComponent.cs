@@ -262,7 +262,7 @@
                 var newPos = Parent.InvWorldMatrix.Transform(value);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
-                if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
+                if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
                     return;
 
                 if (_localPosition == newPos)
@@ -413,7 +413,7 @@
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
 
-            
+
 
             Dirty();
         }

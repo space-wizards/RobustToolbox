@@ -89,7 +89,8 @@
                 if (_parent.IsValid())
                     return Parent.GridID;
 
-                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                // Transform node does not exist inside scene tree
+                return GridId.Nullspace;
             }
         }
 

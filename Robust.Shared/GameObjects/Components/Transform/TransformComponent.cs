@@ -66,7 +66,8 @@
                 if (Owner.TryGetComponent(out IMapComponent mapComp))
                     return mapComp.WorldMap;
 
-                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                // Transform node does not exist inside scene tree
+                return MapId.Nullspace;
             }
         }
 
@@ -339,10 +340,6 @@
                                 AttachParent(gridEnt);
                             }
                         }
-                        else
-                        {
-                            DebugTools.Assert("My location is unknown!");
-                        }
                     }
                 }
                 else
@@ -413,7 +410,7 @@
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
 
-            
+
 
             Dirty();
         }

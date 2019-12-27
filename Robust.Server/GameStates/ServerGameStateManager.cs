@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
+using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -28,6 +30,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IEntitySystemManager _systemManager;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -93,6 +96,8 @@ namespace Robust.Server.GameStates
                 return;
             }
 
+            var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
+
             var oldestAck = GameTick.MaxValue;
             foreach (var channel in _networkManager.Channels)
             {
@@ -112,7 +117,7 @@ namespace Robust.Server.GameStates
                 var mapData = _mapManager.GetStateData(lastAck);
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var state = new GameState(lastAck, _gameTiming.CurTick, entities, players, deletions, mapData);
+                var state = new GameState(lastAck, _gameTiming.CurTick, inputSystem.GetLastInputCommand(session), entities, players, deletions, mapData);
 
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();

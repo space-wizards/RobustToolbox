@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.GameObjects.Components;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
@@ -20,6 +22,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IClientGameStateManager _stateManager;
 #pragma warning restore 649
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
@@ -54,6 +57,13 @@ namespace Robust.Client.GameObjects.EntitySystems
                     return;
             }
 
+            // send it off to the client
+            DispatchInputCommand(message);
+        }
+
+        private void DispatchInputCommand(FullInputCmdMessage message)
+        {
+            _stateManager.InputCommandDispatched(message);
             RaiseNetworkEvent(message);
         }
 

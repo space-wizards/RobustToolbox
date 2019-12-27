@@ -23,6 +23,8 @@ namespace Robust.Server.GameObjects.EntitySystems
         private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
         private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
+        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new Dictionary<IPlayerSession, uint>();
+
         /// <summary>
         ///     Server side input command binds.
         /// </summary>
@@ -38,6 +40,14 @@ namespace Robust.Server.GameObjects.EntitySystems
         public override void Initialize()
         {
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        }
+
+        private void HandleCommandMessage(IPlayerSession session, InputCmdHandler cmdHandler, FullInputCmdMessage msg)
+        {
+            if (_lastProcessedInputCmd[session] < msg.InputSequence)
+                _lastProcessedInputCmd[session] = msg.InputSequence;
+
+            cmdHandler.HandleCmdMessage(session, msg);
         }
 
         /// <inheritdoc />
@@ -64,13 +74,13 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore
-            if (_bindMap.TryGetHandler(function, out var command))
+            if (_bindMap.TryGetHandler(function, out var cmdHandler))
             {
                 // set state, only bound key functions get state changes
                 var states = GetInputStates(session);
                 states.SetState(function, msg.State);
 
-                command.HandleCmdMessage(session, msg);
+                HandleCommandMessage(session, cmdHandler, msg);
             }
         }
 
@@ -79,16 +89,23 @@ namespace Robust.Server.GameObjects.EntitySystems
             return _playerInputs[session];
         }
 
+        public uint GetLastInputCommand(IPlayerSession session)
+        {
+            return _lastProcessedInputCmd[session];
+        }
+
         private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)
             {
                 case SessionStatus.Connected:
                     _playerInputs.Add(args.Session, new PlayerCommandStates());
+                    _lastProcessedInputCmd.Add(args.Session, 0);
                     break;
 
                 case SessionStatus.Disconnected:
                     _playerInputs.Remove(args.Session);
+                    _lastProcessedInputCmd.Remove(args.Session);
                     break;
             }
         }

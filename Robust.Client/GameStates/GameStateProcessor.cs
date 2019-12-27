@@ -203,6 +203,8 @@ namespace Robust.Client.GameStates
             curState = null;
             nextState = null;
 
+            uint lastStateInput = 0;
+
             for (var i = 0; i < _stateBuffer.Count; i++)
             {
                 var state = _stateBuffer[i];
@@ -215,6 +217,10 @@ namespace Robust.Client.GameStates
                 else if (Interpolation && state.ToSequence == nextTick)
                 {
                     nextState = state;
+                }
+                else if (state.ToSequence == lastTick)
+                {
+                    lastStateInput = state.LastProcessedInput;
                 }
                 else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
                 {
@@ -236,12 +242,12 @@ namespace Robust.Client.GameStates
 
             if (curState == null)
             {
-                curState = ExtrapolateState(lastTick, curTick);
+                curState = ExtrapolateState(lastTick, curTick, lastStateInput);
             }
 
             if (nextState == null && Interpolation)
             {
-                nextState = ExtrapolateState(curTick, nextTick);
+                nextState = ExtrapolateState(curTick, nextTick, lastStateInput);
             }
 
             return true;
@@ -250,9 +256,9 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Generates a completely fake GameState.
         /// </summary>
-        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
+        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence, uint lastInput)
         {
-            var state = new GameState(fromSequence, toSequence, null, null, null, null);
+            var state = new GameState(fromSequence, toSequence, lastInput, null, null, null, null);
             state.Extrapolated = true;
             return state;
         }

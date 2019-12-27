@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.GameStates;
+using Robust.Shared.Input;
 
 namespace Robust.Client.Interfaces.GameStates
 {
@@ -47,5 +48,11 @@ namespace Robust.Client.Interfaces.GameStates
         ///     Applies the game state for this tick.
         /// </summary>
         void ApplyGameState();
+
+        /// <summary>
+        ///     An input command has been dispatched.
+        /// </summary>
+        /// <param name="message">Message being dispatched.</param>
+        void InputCommandDispatched(FullInputCmdMessage message);
     }
 }

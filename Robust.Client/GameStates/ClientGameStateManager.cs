@@ -1,17 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
+using Robust.Client.Interfaces.Input;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared.Configuration;
+using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -19,7 +26,10 @@ namespace Robust.Client.GameStates
     public class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor;
-        
+
+        private uint _nextInputCmdSeq = 0;
+        private Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+
 #pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entities;
         [Dependency] private readonly IPlayerManager _players;
@@ -80,6 +90,17 @@ namespace Robust.Client.GameStates
             }
         }
 
+        public void InputCommandDispatched(FullInputCmdMessage message)
+        {
+            message.InputSequence = _nextInputCmdSeq;
+            _pendingInputs.Enqueue(message);
+
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
+            Logger.DebugS("State", $"CL> tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            _nextInputCmdSeq++;
+        }
+
         private void HandleStateMessage(MsgState message)
         {
             var state = message.State;
@@ -89,14 +110,39 @@ namespace Robust.Client.GameStates
             // we always ack everything we receive, even if it is late
             AckGameState(state.ToSequence);
         }
-        
+
+        private uint _lastAppliedInputSeq;
+
         /// <inheritdoc />
         public void ApplyGameState()
         {
             if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
                 return;
 
+            // apply current state
             ApplyGameState(curState, nextState);
+
+            var sysMan = IoCManager.Resolve<IEntitySystemManager>();
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            var input = sysMan.GetEntitySystem<InputSystem>();
+
+            if (_lastAppliedInputSeq < curState.LastProcessedInput)
+            {
+                Logger.DebugS("State", $"SV> tick={_timing.CurTick}, seq={_nextInputCmdSeq - 1}");
+                _lastAppliedInputSeq = curState.LastProcessedInput;
+            }
+
+            // remove old pending inputs
+            while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= curState.LastProcessedInput)
+            {
+                var inCmd = _pendingInputs.Dequeue();
+
+                inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
+                Logger.DebugS("State", $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+            }
+
+
+            //TODO: Replay pending inputs
         }
 
         private void AckGameState(GameTick sequence)

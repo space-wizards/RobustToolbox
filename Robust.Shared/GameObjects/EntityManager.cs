@@ -278,13 +278,13 @@ namespace Robust.Shared.GameObjects
                 return AllocEntity(uid);
 
             var entity = AllocEntity(prototypeName, uid);
-            entity.Prototype.LoadEntity(entity, ComponentFactory, null);
+            EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, null);
             return entity;
         }
 
         private protected void LoadEntity(Entity entity, IEntityLoadContext context)
         {
-            entity.Prototype.LoadEntity(entity, ComponentFactory, context);
+            EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
         private protected static void InitializeAndStartEntity(Entity entity)

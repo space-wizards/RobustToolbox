@@ -1,24 +1,23 @@
-﻿﻿using System;
- using System.Collections.Generic;
- using System.Linq;
- using Robust.Shared.Animations;
- using Robust.Shared.Containers;
- using Robust.Shared.Enums;
- using Robust.Shared.GameObjects.Components.Map;
- using Robust.Shared.GameObjects.EntitySystemMessages;
- using Robust.Shared.Interfaces.GameObjects;
- using Robust.Shared.Interfaces.GameObjects.Components;
- using Robust.Shared.Interfaces.Map;
- using Robust.Shared.Interfaces.Timing;
- using Robust.Shared.IoC;
- using Robust.Shared.Log;
- using Robust.Shared.Map;
- using Robust.Shared.Maths;
- using Robust.Shared.Serialization;
- using Robust.Shared.Utility;
- using Robust.Shared.ViewVariables;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Robust.Shared.Animations;
+using Robust.Shared.Containers;
+using Robust.Shared.Enums;
+using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.GameObjects.EntitySystemMessages;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
- namespace Robust.Shared.GameObjects.Components.Transform
+namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
@@ -33,22 +32,23 @@
         private Vector2 _nextPosition;
         private Angle _nextRotation;
 
-        [ViewVariables]
-        private readonly List<EntityUid> _children = new List<EntityUid>();
+        [ViewVariables] private readonly List<EntityUid> _children = new List<EntityUid>();
 
-        #pragma warning disable 649
+#pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IEntityManager _entityManager;
-        #pragma warning restore 649
+#pragma warning restore 649
 
         /// <inheritdoc />
         public event EventHandler<MoveEventArgs> OnMove;
 
         /// <inheritdoc />
         public override string Name => "Transform";
+
         /// <inheritdoc />
         public sealed override uint? NetID => NetIDs.TRANSFORM;
+
         /// <inheritdoc />
         public sealed override Type StateType => typeof(TransformComponentState);
 
@@ -77,7 +77,7 @@
             get
             {
                 // root node, grid id is undefined
-                if(Owner.HasComponent<IMapComponent>())
+                if (Owner.HasComponent<IMapComponent>())
                     return GridId.Nullspace;
 
                 // second level node, terminates recursion up the branch of the tree
@@ -119,6 +119,7 @@
                 {
                     return Parent.WorldRotation + GetLocalRotation();
                 }
+
                 return GetLocalRotation();
             }
             set
@@ -158,6 +159,7 @@
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                     return result;
                 }
+
                 return GetWorldMatrix();
             }
         }
@@ -174,6 +176,7 @@
                     Matrix3.Multiply(ref matP, ref myMatrix, out var result);
                     return result;
                 }
+
                 return GetWorldMatrixInv();
             }
         }
@@ -304,58 +307,11 @@
         }
 
         [ViewVariables]
-        public IEnumerable<ITransformComponent> Children => _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
+        public IEnumerable<ITransformComponent> Children =>
+            _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
-
-        public override void Initialize()
-        {
-            // Attempt to parent itself it the defined grid.
-            if (!_parent.IsValid())
-            {
-                if (!Owner.HasComponent<IMapComponent>())
-                {
-                    if (Owner.HasComponent<IMapGridComponent>())
-                    {
-                        DebugTools.Assert("This should have been set up by the map system.");
-                    }
-                    else
-                    {
-                        // Parent me to the grid comp
-                        if (_gridID != GridId.Nullspace)
-                        {
-                            var mapGrid = _mapManager.GetGrid(_gridID);
-                            if(mapGrid.IsDefaultGrid)
-                            {
-                                var mapEnt = _mapManager.GetMapEntity(mapGrid.ParentMapId);
-                                Logger.WarningS("scene", $"Auto-parenting entity {Owner.Uid} to map {mapGrid.ParentMapId}'s entity {mapEnt.Uid}");
-                                AttachParent(mapEnt);
-                            }
-                            else
-                            {
-                                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntity);
-                                Logger.WarningS("scene", $"Auto-parenting entity {Owner.Uid} to grid {_gridID}'s entity {gridEnt.Uid}");
-                                AttachParent(gridEnt);
-                            }
-                        }
-                        else
-                        {
-                            DebugTools.Assert("My location is unknown!");
-                        }
-                    }
-                }
-                else
-                {
-                    // I am the root node of the scene graph
-                    _gridID = GridId.Nullspace;
-                    _localPosition = Vector2.Zero;
-
-                }
-            }
-
-            base.Initialize();
-        }
 
         /// <inheritdoc />
         protected override void Startup()
@@ -403,7 +359,7 @@
             var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
 
             // this would be a no-op
-            if(newMapEntity == Parent.Owner)
+            if (newMapEntity == Parent.Owner)
                 return;
 
             var concrete = (TransformComponent) Parent;
@@ -412,7 +368,6 @@
             // attach to map
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
-
 
 
             Dirty();
@@ -461,6 +416,7 @@
             {
                 return Parent.GetMapTransform();
             }
+
             return this;
         }
 
@@ -481,7 +437,9 @@
             }
             else
             {
-                return ContainsEntity(entityTransform.Parent); //Recursively search up the entities containers for this object
+                return
+                    ContainsEntity(entityTransform
+                        .Parent); //Recursively search up the entities containers for this object
             }
         }
 
@@ -490,15 +448,19 @@
             base.ExposeData(serializer);
 
             serializer.DataField(ref _parent, "parent", new EntityUid());
-            serializer.DataField(ref _gridID, "grid", GridId.Nullspace);
             serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
             serializer.DataField(ref _localRotation, "rot", new Angle());
+
+            if (serializer.Reading && serializer.TryReadDataField("grid", out GridId grid))
+            {
+                _gridID = grid;
+            }
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(_localPosition, GridID, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_localPosition, LocalRotation, Parent?.Owner?.Uid);
         }
 
         /// <inheritdoc />
@@ -527,17 +489,12 @@
                     rebuildMatrices = true;
                 }
 
-                if (_localPosition != newState.LocalPosition || (!_parent.IsValid() && GridID != newState.GridID))
+                if (_localPosition != newState.LocalPosition)
                 {
                     var oldPos = GridPosition;
                     if (_localPosition != newState.LocalPosition)
                     {
                         SetPosition(newState.LocalPosition);
-                    }
-
-                    if (!_parent.IsValid() && GridID != newState.GridID)
-                    {
-                        _recurseSetGridId(newState.GridID);
                     }
 
                     OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
@@ -556,7 +513,7 @@
                 _nextPosition = _localPosition; // this should cause the lerp to do nothing
 
             if (nextState != null)
-                _nextRotation = ((TransformComponentState)nextState).Rotation;
+                _nextRotation = ((TransformComponentState) nextState).Rotation;
             else
                 _nextRotation = _localRotation; // this should cause the lerp to do nothing
         }
@@ -574,10 +531,11 @@
 
         protected virtual Vector2 GetLocalPosition()
         {
-            if(_gameTiming.InSimulation || _localPosition == _nextPosition || Owner.Uid.IsClientSide())
+            if (_gameTiming.InSimulation || _localPosition == _nextPosition || Owner.Uid.IsClientSide())
                 return _localPosition;
 
-            return Vector2.Lerp(_localPosition, _nextPosition, (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
+            return Vector2.Lerp(_localPosition, _nextPosition,
+                (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Angle GetLocalRotation()
@@ -585,7 +543,8 @@
             if (_gameTiming.InSimulation || _localRotation == _nextRotation || Owner.Uid.IsClientSide())
                 return _localRotation;
 
-            return Angle.Lerp(_localRotation, _nextRotation, (float)(_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
+            return Angle.Lerp(_localRotation, _nextRotation,
+                (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
         protected virtual Matrix3 GetWorldMatrix()
@@ -598,7 +557,7 @@
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float)rot);
+            var rotMat = Matrix3.CreateRotation((float) rot);
 
             Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
 
@@ -615,7 +574,7 @@
             var rot = GetLocalRotation().Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float)rot);
+            var rotMat = Matrix3.CreateRotation((float) rot);
             var posImat = Matrix3.Invert(posMat);
             var rotImap = Matrix3.Invert(rotMat);
 
@@ -634,7 +593,7 @@
             var rot = _localRotation.Theta;
 
             var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float)rot);
+            var rotMat = Matrix3.CreateRotation((float) rot);
 
             Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
 
@@ -669,16 +628,6 @@
             }
         }
 
-        private void _recurseSetGridId(GridId gridId)
-        {
-            _gridID = gridId;
-            foreach (var child in Children)
-            {
-                var cast = (TransformComponent) child;
-                cast._recurseSetGridId(gridId);
-            }
-        }
-
         public string GetDebugString()
         {
             return $"pos/rot/wpos/wrot: {GridPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
@@ -700,8 +649,6 @@
             /// </summary>
             public readonly Vector2 LocalPosition;
 
-            public readonly GridId GridID;
-
             /// <summary>
             ///     Current rotation offset of the entity.
             /// </summary>
@@ -711,14 +658,12 @@
             ///     Constructs a new state snapshot of a TransformComponent.
             /// </summary>
             /// <param name="localPosition">Current position offset of this entity.</param>
-            /// <param name="gridId">Current grid ID of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
-            public TransformComponentState(Vector2 localPosition, GridId gridId, Angle rotation, EntityUid? parentId)
+            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid? parentId)
                 : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
-                GridID = gridId;
                 Rotation = rotation;
                 ParentID = parentId;
             }

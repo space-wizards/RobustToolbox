@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
-    public static class YamlGridSerializer
+    internal static class YamlGridSerializer
     {
         public static YamlMappingNode SerializeGrid(IMapGrid mapGrid)
         {
@@ -28,7 +28,6 @@ namespace Robust.Server.Maps
             info.Add("chunksize", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
             info.Add("tilesize", grid.TileSize.ToString(CultureInfo.InvariantCulture));
             info.Add("snapsize", grid.SnapSize.ToString(CultureInfo.InvariantCulture));
-            info.Add("worldpos", $"{grid.WorldPosition.X},{grid.WorldPosition.Y}");
 
             var chunks = grid.GetMapChunks();
             foreach (var chunk in chunks)
@@ -80,14 +79,13 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManager mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
+        public static void DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager)
         {
             ushort csz = 0;
             ushort tsz = 0;
             float sgsz = 0.0f;
-            var worldPos = Vector2.Zero;
 
             foreach (var kvInfo in info)
             {
@@ -99,11 +97,9 @@ namespace Robust.Server.Maps
                     tsz = ushort.Parse(val);
                 else if (key == "snapsize")
                     sgsz = float.Parse(val);
-                else if (key == "worldpos")
-                    worldPos = kvInfo.Value.AsVector2();
             }
 
-            var grid = mapMan.CreateGrid(mapId, gridId);
+            var grid = mapMan.CreateGridNoEntity(mapId, gridId);
 
             gridId = grid.Index;
 

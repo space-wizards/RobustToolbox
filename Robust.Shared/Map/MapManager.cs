@@ -127,7 +127,7 @@ namespace Robust.Shared.Map
             _mapCreationTick.Remove(mapID);
 
             var ent = _mapEntities[mapID];
-            if(_entityManager.TryGetEntity(ent, out var mapEnt))
+            if (_entityManager.TryGetEntity(ent, out var mapEnt))
                 mapEnt.Delete();
 
             _mapEntities.Remove(mapID);
@@ -138,13 +138,13 @@ namespace Robust.Shared.Map
             _mapDeletionHistory.Add((_gameTiming.CurTick, mapID));
         }
 
-        /// <inheritdoc />
         public MapId CreateMap(MapId? mapID = null, GridId? defaultGridID = null)
         {
             if (defaultGridID != null && GridExists(defaultGridID.Value))
             {
                 throw new InvalidOperationException($"Grid '{defaultGridID}' already exists.");
             }
+
             MapId actualID;
             if (mapID != null)
             {
@@ -190,7 +190,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = (Entity)_entityManager.CreateEntityUninitialized(null, GridCoordinates.Nullspace);
+                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, GridCoordinates.Nullspace);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
@@ -236,7 +236,7 @@ namespace Robust.Shared.Map
 
         public GridId GetDefaultGridId(MapId mapID)
         {
-            if(_defaultGrids.TryGetValue(mapID, out var gridID))
+            if (_defaultGrids.TryGetValue(mapID, out var gridID))
                 return gridID;
             return GridId.Nullspace; //TODO: Hack to make shutdown work
         }
@@ -247,6 +247,11 @@ namespace Robust.Shared.Map
         }
 
         public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
+        {
+            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, true);
+        }
+
+        private IMapGrid CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, float snapSize, bool createEntity)
         {
             GridId actualID;
             if (gridID != null)
@@ -272,7 +277,7 @@ namespace Robust.Shared.Map
             _grids.Add(actualID, grid);
             Logger.DebugS("map", $"Creating new grid {actualID}");
 
-            if(actualID != GridId.Nullspace) // nullspace default grid is not bound to an entity
+            if (actualID != GridId.Nullspace && createEntity) // nullspace default grid is not bound to an entity
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent result = null;
@@ -292,7 +297,9 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = (Entity)_entityManager.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, currentMapID));
+                    var newEnt =
+                        (Entity) _entityManager.CreateEntityUninitialized(null,
+                            new MapCoordinates(Vector2.Zero, currentMapID));
                     grid.GridEntity = newEnt.Uid;
 
                     Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
@@ -302,13 +309,22 @@ namespace Robust.Shared.Map
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 
-                    newEnt.InitializeComponents();
-                    newEnt.StartAllComponents();
+                    if (createEntity)
+                    {
+                        newEnt.InitializeComponents();
+                        newEnt.StartAllComponents();
+                    }
                 }
             }
 
             OnGridCreated?.Invoke(actualID);
             return grid;
+        }
+
+        public IMapGrid CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16,
+            float snapSize = 1)
+        {
+            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, false);
         }
 
         public IMapGrid GetGrid(GridId gridID)
@@ -323,6 +339,7 @@ namespace Robust.Shared.Map
                 grid = gridinterface;
                 return true;
             }
+
             grid = null;
             return false;
         }
@@ -359,7 +376,7 @@ namespace Robust.Shared.Map
         public void DeleteGrid(GridId gridID)
         {
             // nullspace grid cannot be deleted
-            if(gridID == GridId.Nullspace)
+            if (gridID == GridId.Nullspace)
                 return;
 
             var grid = _grids[gridID];
@@ -370,7 +387,7 @@ namespace Robust.Shared.Map
             if (_defaultGrids.ContainsKey(grid.ParentMapId))
                 _defaultGrids.Remove(grid.ParentMapId);
 
-            if(_entityManager.TryGetEntity(grid.GridEntity, out var gridEnt))
+            if (_entityManager.TryGetEntity(grid.GridEntity, out var gridEnt))
                 gridEnt.Delete();
 
             OnGridRemoved?.Invoke(gridID);

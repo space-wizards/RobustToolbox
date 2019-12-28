@@ -70,12 +70,14 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables]
         public int PlacementRange { get; protected set; } = DEFAULT_RANGE;
+
         private const int DEFAULT_RANGE = 200;
 
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
         /// </summary>
         private readonly HashSet<string> _snapFlags = new HashSet<string>();
+
         private bool _snapOverriden = false;
 
         /// <summary>
@@ -83,6 +85,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables]
         public Vector2i PlacementOffset { get; protected set; }
+
         private bool _placementOverriden = false;
 
         /// <summary>
@@ -102,6 +105,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables]
         public List<EntityPrototype> Children { get; private set; }
+
         public bool IsRoot => Parent == null;
 
         /// <summary>
@@ -122,7 +126,10 @@ namespace Robust.Shared.GameObjects
         private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
 
         string CurrentDeserializingComponent;
-        readonly Dictionary<string, Dictionary<(string, Type), object>> FieldCache = new Dictionary<string, Dictionary<(string, Type), object>>();
+
+        readonly Dictionary<string, Dictionary<(string, Type), object>> FieldCache =
+            new Dictionary<string, Dictionary<(string, Type), object>>();
+
         readonly Dictionary<string, object> DataCache = new Dictionary<string, object>();
 
         public EntityPrototype()
@@ -170,8 +177,10 @@ namespace Robust.Shared.GameObjects
                     {
                         if (ReferenceTypes.Contains(type))
                         {
-                            throw new InvalidOperationException($"Duplicate component reference in prototype: '{type}'");
+                            throw new InvalidOperationException(
+                                $"Duplicate component reference in prototype: '{type}'");
                         }
+
                         ReferenceTypes.Add(type);
                     }
                 }
@@ -233,6 +242,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _snapFlags.Add(flag);
                 }
+
                 _snapOverriden = true;
             }
         }
@@ -253,6 +263,7 @@ namespace Robust.Shared.GameObjects
                     {
                         Parent.Children = new List<EntityPrototype>();
                     }
+
                     Parent.Children.Add(this);
                     return false;
 
@@ -266,9 +277,11 @@ namespace Robust.Shared.GameObjects
                     {
                         break;
                     }
+
                     PushInheritanceAll();
                     break;
             }
+
             return false;
         }
 
@@ -292,10 +305,12 @@ namespace Robust.Shared.GameObjects
                     {
                         continue;
                     }
+
                     foreach (var target in targetList)
                     {
                         PushInheritance(source, target);
                     }
+
                     newSources.AddRange(targetList);
                 }
 
@@ -303,11 +318,13 @@ namespace Robust.Shared.GameObjects
                 {
                     break;
                 }
+
                 sourceTargets.Clear();
                 foreach (var newSource in newSources)
                 {
                     sourceTargets.Add((newSource, newSource.Children));
                 }
+
                 newSources.Clear();
             }
         }
@@ -341,9 +358,11 @@ namespace Robust.Shared.GameObjects
                             goto next;
                         }
                     }
+
                     target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
                 }
-                next:;
+
+                next: ;
             }
 
             // Copy all simple data over.
@@ -391,40 +410,46 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal void LoadEntity(Entity entity, IComponentFactory factory, IEntityLoadContext context)
+        internal static void LoadEntity(EntityPrototype prototype, Entity entity, IComponentFactory factory,
+            IEntityLoadContext context)
         {
             YamlObjectSerializer.Context defaultContext = null;
             if (context == null)
             {
-                defaultContext = new PrototypeSerializationContext(this);
+                defaultContext = new PrototypeSerializationContext(prototype);
             }
-            foreach (var (name, data) in Components)
+
+            if (prototype != null)
             {
-                var compRegistration = factory.GetRegistration(name);
+                foreach (var (name, data) in prototype.Components)
+                {
+                    var compRegistration = factory.GetRegistration(name);
 
-                Component component;
-                if (entity.TryGetComponent(compRegistration.Type, out var existingComp))
-                {
-                    component = (Component) existingComp;
-                }
-                else
-                {
-                    component = (Component) factory.GetComponent(name);
-                    component.Owner = entity;
-                    entity.AddComponent(component);
-                }
+                    Component component;
+                    if (entity.TryGetComponent(compRegistration.Type, out var existingComp))
+                    {
+                        component = (Component) existingComp;
+                    }
+                    else
+                    {
+                        component = (Component) factory.GetComponent(name);
+                        component.Owner = entity;
+                        entity.AddComponent(component);
+                    }
 
-                ObjectSerializer ser;
-                if (context != null)
-                {
-                    ser = context.GetComponentSerializer(name, data);
+                    ObjectSerializer ser;
+                    if (context != null)
+                    {
+                        ser = context.GetComponentSerializer(name, data);
+                    }
+                    else
+                    {
+                        prototype.CurrentDeserializingComponent = name;
+                        ser = YamlObjectSerializer.NewReader(data, defaultContext);
+                    }
+
+                    component.ExposeData(ser);
                 }
-                else
-                {
-                    CurrentDeserializingComponent = name;
-                    ser = YamlObjectSerializer.NewReader(data, defaultContext);
-                }
-                component.ExposeData(ser);
             }
 
             if (context == null)
@@ -436,12 +461,12 @@ namespace Robust.Shared.GameObjects
             // Components that have been ADDED NEW need to be handled too.
             foreach (var name in context.GetExtraComponentTypes())
             {
-                if (Components.ContainsKey(name))
+                if ((prototype != null && prototype.Components.ContainsKey(name)) || name == "Transform" || name == "Metadata")
                 {
                     continue;
                 }
 
-                var component = (Component)factory.GetComponent(name);
+                var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
                 var ser = context.GetComponentSerializer(name, null);
                 component.ExposeData(ser);
@@ -496,6 +521,7 @@ namespace Robust.Shared.GameObjects
                     base.SetCachedField<T>(field, value);
                     return;
                 }
+
                 if (!prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var fieldList))
                 {
                     fieldList = new Dictionary<(string, Type), object>();
@@ -511,11 +537,12 @@ namespace Robust.Shared.GameObjects
                 {
                     return base.TryGetCachedField<T>(field, out value);
                 }
+
                 if (prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var dict))
                 {
                     if (dict.TryGetValue((field, typeof(T)), out var theValue))
                     {
-                        value = (T)theValue;
+                        value = (T) theValue;
                         return true;
                     }
                 }
@@ -531,6 +558,7 @@ namespace Robust.Shared.GameObjects
                     base.SetDataCache(field, value);
                     return;
                 }
+
                 prototype.DataCache[field] = value;
             }
 
@@ -540,6 +568,7 @@ namespace Robust.Shared.GameObjects
                 {
                     return base.TryGetDataCache(field, out value);
                 }
+
                 return prototype.DataCache.TryGetValue(field, out value);
             }
         }

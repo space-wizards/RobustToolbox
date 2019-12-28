@@ -48,13 +48,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Owner.Transform.OnMove -= OnTransformMove;
             if (IsSet)
             {
-                if (!_mapManager.TryGetGrid(_lastGrid, out var grid))
+                if (_mapManager.TryGetGrid(_lastGrid, out var grid))
                 {
-                    Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
+                    grid.RemoveFromSnapGridCell(Position, Offset, this);
                     return;
                 }
 
-                grid.RemoveFromSnapGridCell(Position, Offset, this);
                 IsSet = false;
             }
         }

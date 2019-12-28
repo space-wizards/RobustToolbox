@@ -28,21 +28,14 @@ namespace Robust.Client.Graphics.Clyde
 
             _applySampleParameters(sampleParameters);
 
-            PixelInternalFormat internalFormat;
-            switch (colorFormat)
+            var internalFormat = colorFormat switch
             {
-                case RenderTargetColorFormat.Rgba8:
-                    internalFormat = PixelInternalFormat.Rgba8;
-                    break;
-                case RenderTargetColorFormat.Rgba16F:
-                    internalFormat = PixelInternalFormat.Rgba16f;
-                    break;
-                case RenderTargetColorFormat.Rgba8Srgb:
-                    internalFormat = PixelInternalFormat.Srgb8Alpha8;
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(colorFormat), colorFormat, null);
-            }
+                RenderTargetColorFormat.Rgba8 => PixelInternalFormat.Rgba8,
+                RenderTargetColorFormat.Rgba16F => PixelInternalFormat.Rgba16f,
+                RenderTargetColorFormat.Rgba8Srgb => PixelInternalFormat.Srgb8Alpha8,
+                RenderTargetColorFormat.R11FG11FB10F => PixelInternalFormat.R11fG11fB10f,
+                _ => throw new ArgumentOutOfRangeException(nameof(colorFormat), colorFormat, null)
+            };
 
             var (width, height) = size;
             GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, PixelFormat.Red,

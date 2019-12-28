@@ -434,7 +434,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _regenerateLightRenderTarget()
         {
-            LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.Rgba16F,
+            LightRenderTarget = CreateRenderTarget(_lightMapSize(), RenderTargetColorFormat.R11FG11FB10F,
                 name: "LightRenderTarget");
         }
 

@@ -144,7 +144,9 @@ namespace Robust.Client.Interfaces.Graphics
         /// <summary>
         ///     16 bits per channel floating point linear RGBA.
         /// </summary>
-        Rgba16F
+        Rgba16F,
+
+        R11FG11FB10F,
     }
 
     public class WindowResizedEventArgs : EventArgs

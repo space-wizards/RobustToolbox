@@ -39,6 +39,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         public ICommandBindMapping BindMap => _bindMap;
 
         /// <summary>
+        /// If the input system is currently predicting input.
+        /// </summary>
+        public bool Predicted { get; private set; }
+
+        /// <summary>
         ///     Inserts an Input Command into the simulation.
         /// </summary>
         /// <param name="session">Player session that raised the command. On client, this is always the LocalPlayer session.</param>
@@ -59,6 +64,25 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             // send it off to the client
             DispatchInputCommand(message);
+        }
+
+        /// <summary>
+        /// Handle a predicted input command.
+        /// </summary>
+        /// <param name="inputCmd">Input command to handle as predicted.</param>
+        public void PredictInputCommand(FullInputCmdMessage inputCmd)
+        {
+            var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
+
+            if (!_bindMap.TryGetHandler(keyFunc, out var handler))
+                return;
+
+            Predicted = true;
+
+            var session = _playerManager.LocalPlayer.Session;
+            handler.HandleCmdMessage(session, inputCmd);
+
+            Predicted = false;
         }
 
         private void DispatchInputCommand(FullInputCmdMessage message)

@@ -67,6 +67,8 @@ namespace Robust.Client.Interfaces.Graphics
         IClydeDebugInfo DebugInfo { get; }
 
         IClydeDebugStats DebugStats { get; }
+
+        Texture GetStockTexture(ClydeStockTexture stockTexture);
     }
 
     public interface IClydeAudioSource : IDisposable
@@ -193,5 +195,11 @@ namespace Robust.Client.Interfaces.Graphics
         ///     The amount of batches made.
         /// </summary>
         int LastBatches { get; }
+    }
+
+    internal enum ClydeStockTexture
+    {
+        White,
+        Transparent
     }
 }

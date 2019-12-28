@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
             }
             else
             {
-                var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
+                var white = _loadedTextures[_stockTextureWhite.TextureId].OpenGLObject;
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
 

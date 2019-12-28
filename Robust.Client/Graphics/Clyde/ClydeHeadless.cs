@@ -27,6 +27,11 @@ namespace Robust.Client.Graphics.Clyde
         public IClydeDebugInfo DebugInfo => null;
         public IClydeDebugStats DebugStats => null;
 
+        public Texture GetStockTexture(ClydeStockTexture stockTexture)
+        {
+            return new DummyTexture((1, 1));
+        }
+
         public override void SetWindowTitle(string title)
         {
             // Nada.

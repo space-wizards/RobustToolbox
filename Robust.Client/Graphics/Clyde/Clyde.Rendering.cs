@@ -504,7 +504,7 @@ namespace Robust.Client.Graphics.Clyde
             }
             else
             {
-                var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
+                var white = _loadedTextures[_stockTextureWhite.TextureId].OpenGLObject;
                 GL.BindTexture(TextureTarget.Texture2D, white.Handle);
             }
 
@@ -799,7 +799,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
-            EnsureBatchState(((ClydeTexture) Texture.White).TextureId, color, false, BatchPrimitiveType.Line);
+            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.Line);
 
             a = _currentModelMatrix.Transform(a);
             b = _currentModelMatrix.Transform(b);

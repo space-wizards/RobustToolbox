@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using OpenTK.Graphics.OpenGL;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -14,6 +15,9 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        private ClydeTexture _stockTextureWhite;
+        private ClydeTexture _stockTextureTransparent;
+
         private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
 
         public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
@@ -182,11 +186,11 @@ namespace Robust.Client.Graphics.Clyde
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = Rgba32.White;
-            Texture.White = Texture.LoadFromImage(white);
+            _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
 
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = Rgba32.Transparent;
-            Texture.Transparent = Texture.LoadFromImage(blank);
+            _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
         }
 
         private sealed class LoadedTexture
@@ -214,6 +218,16 @@ namespace Robust.Client.Graphics.Clyde
                 TextureId = id;
                 _clyde = clyde;
             }
+        }
+
+        public Texture GetStockTexture(ClydeStockTexture stockTexture)
+        {
+            return stockTexture switch
+            {
+                ClydeStockTexture.White => _stockTextureWhite,
+                ClydeStockTexture.Transparent => _stockTextureTransparent,
+                _ => throw new ArgumentException(nameof(stockTexture))
+            };
         }
     }
 }

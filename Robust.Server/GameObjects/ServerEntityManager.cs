@@ -88,8 +88,7 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                EntityState entityState = entity.GetEntityState(fromTick);
-                stateEntities.Add(entityState);
+                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick));
             }
 
             // no point sending an empty collection
@@ -261,6 +260,45 @@ namespace Robust.Server.GameObjects
             base.Startup();
             EntitySystemManager.Initialize();
             Started = true;
+        }
+
+        /// <summary>
+        /// Generates a network entity state for the given entity.
+        /// </summary>
+        /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
+        /// <param name="entityUid">Uid of the entity to generate the state from.</param>
+        /// <param name="fromTick">Only provide delta changes from this tick.</param>
+        /// <returns>New entity State for the given entity.</returns>
+        private static EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick)
+        {
+            var compStates = new List<ComponentState>();
+            var changed = new List<ComponentChanged>();
+
+            foreach (var comp in compMan.GetNetComponents(entityUid))
+            {
+                DebugTools.Assert(comp.Initialized);
+
+                //Ticks start at 1
+                DebugTools.Assert(comp.CreationTick != GameTick.Zero && comp.LastModifiedTick != GameTick.Zero);
+
+                if (comp.NetSyncEnabled && comp.LastModifiedTick >= fromTick)
+                    compStates.Add(comp.GetComponentState());
+
+                if (comp.CreationTick >= fromTick && !comp.Deleted)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Added(comp.NetID.Value, comp.Name));
+                }
+                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
+                {
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChanged.Removed(comp.NetID.Value));
+                }
+            }
+
+            return new EntityState(entityUid, changed, compStates);
         }
     }
 }

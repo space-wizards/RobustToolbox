@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -160,7 +161,8 @@ namespace Robust.Client.GameObjects
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
-                ((Entity)ent).HandleEntityState(kvStates.Value.Item1, kvStates.Value.Item2);
+                Entity entity = (Entity)ent;
+                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1, kvStates.Value.Item2);
             }
 
             foreach (var id in deletions)
@@ -227,6 +229,74 @@ namespace Robust.Client.GameObjects
         private EntityUid NewClientEntityUid()
         {
             return new EntityUid(NextClientEntityUid++);
+        }
+
+        private static void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
+            EntityState nextState)
+        {
+            var compStateWork = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
+            var entityUid = entity.Uid;
+
+            if(curState?.ComponentChanges != null)
+            {
+                foreach (var compChange in curState.ComponentChanges)
+                {
+                    if (compChange.Deleted)
+                    {
+                        if (compMan.TryGetComponent(entityUid, compChange.NetID, out var comp))
+                        {
+                            compMan.RemoveComponent(entityUid, comp);
+                        }
+                    }
+                    else
+                    {
+                        if (compMan.HasComponent(entityUid, compChange.NetID))
+                            continue;
+
+                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(compChange.ComponentName);
+                        newComp.Owner = entity;
+                        compMan.AddComponent(entity, newComp, true);
+                    }
+                }
+            }
+
+            if(curState?.ComponentStates != null)
+            {
+                foreach (var compState in curState.ComponentStates)
+                {
+                    compStateWork[compState.NetID] = (compState, null);
+                }
+            }
+
+            if(nextState?.ComponentStates != null)
+            {
+                foreach (var compState in nextState.ComponentStates)
+                {
+                    if (compStateWork.TryGetValue(compState.NetID, out var state))
+                    {
+                        compStateWork[compState.NetID] = (state.curState, compState);
+                    }
+                    else
+                    {
+                        compStateWork[compState.NetID] = (null, compState);
+                    }
+                }
+            }
+
+            foreach (var kvStates in compStateWork)
+            {
+                if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
+                {
+                    DebugTools.Assert("Component does not exist for state.");
+                    continue;
+                }
+
+                DebugTools.Assert(kvStates.Value.curState == null
+                                  || kvStates.Value.curState.GetType() == component.StateType,
+                    "Component state is of the wrong type.");
+
+                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
+            }
         }
     }
 }

@@ -412,11 +412,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetNetComponents(EntityUid uid)
         {
-            foreach (var kvNetComp in _netComponents[uid])
-            {
-                if (!kvNetComp.Value.Deleted)
-                    yield return kvNetComp.Value;
-            }
+            return _netComponents[uid].Values;
         }
 
         /// <inheritdoc />

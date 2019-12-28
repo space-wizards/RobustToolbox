@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -236,20 +233,10 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.AddComponent<T>(this);
         }
 
-        private void AddComponent(Component component, bool overwrite)
-        {
-            EntityManager.ComponentManager.AddComponent(this, component, overwrite);
-        }
-
         /// <inheritdoc />
         public void RemoveComponent<T>()
         {
             EntityManager.ComponentManager.RemoveComponent<T>(Uid);
-        }
-
-        private void RemoveComponent(IComponent component)
-        {
-            EntityManager.ComponentManager.RemoveComponent(Uid, component);
         }
 
         /// <inheritdoc />
@@ -262,11 +249,6 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent(Type type)
         {
             return EntityManager.ComponentManager.HasComponent(Uid, type);
-        }
-
-        private bool HasComponent(uint netId)
-        {
-            return EntityManager.ComponentManager.HasComponent(Uid, netId);
         }
 
         /// <inheritdoc />
@@ -348,132 +330,6 @@ namespace Robust.Shared.GameObjects
         #endregion Components
 
         #region GameState
-
-        private readonly Dictionary<uint, (ComponentState curState, ComponentState nextState)> _compStateWork
-            = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
-
-        /// <summary>
-        ///     Applies an entity state to this entity.
-        /// </summary>
-        /// <param name="curState">State to apply.</param>
-        internal void HandleEntityState(EntityState curState, EntityState nextState)
-        {
-            _compStateWork.Clear();
-
-            if(curState?.ComponentChanges != null)
-            {
-                foreach (var compChange in curState.ComponentChanges)
-                {
-                    if (compChange.Deleted)
-                    {
-                        if (TryGetComponent(compChange.NetID, out var comp))
-                        {
-                            RemoveComponent(comp);
-                        }
-                    }
-                    else
-                    {
-                        if (HasComponent(compChange.NetID))
-                            continue;
-
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(compChange.ComponentName);
-                        newComp.Owner = this;
-                        AddComponent(newComp, true);
-                    }
-                }
-            }
-
-            if(curState?.ComponentStates != null)
-            {
-                foreach (var compState in curState.ComponentStates)
-                {
-                    _compStateWork[compState.NetID] = (compState, null);
-                }
-            }
-
-            if(nextState?.ComponentStates != null)
-            {
-                foreach (var compState in nextState.ComponentStates)
-                {
-                    if (_compStateWork.TryGetValue(compState.NetID, out var state))
-                    {
-                        _compStateWork[compState.NetID] = (state.curState, compState);
-                    }
-                    else
-                    {
-                        _compStateWork[compState.NetID] = (null, compState);
-                    }
-                }
-            }
-
-            foreach (var kvStates in _compStateWork)
-            {
-                if (!TryGetComponent(kvStates.Key, out var component))
-                {
-                    DebugTools.Assert("Component does not exist for state.");
-                    continue;
-                }
-
-                DebugTools.Assert(kvStates.Value.curState == null
-                                  || kvStates.Value.curState.GetType() == component.StateType,
-                    "Component state is of the wrong type.");
-
-                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-            }
-        }
-
-        /// <inheritdoc />
-        public EntityState GetEntityState(GameTick fromTick)
-        {
-            var compStates = GetComponentStates(fromTick);
-
-            var changed = new List<ComponentChanged>();
-
-            foreach (var c in EntityManager.ComponentManager.GetNetComponents(Uid))
-            {
-                //TODO: This method is completely broken, GetNetComponents() does not return deleted components.
-                DebugTools.Assert(c.Initialized);
-
-                //Ticks start at 1
-                DebugTools.Assert(c.CreationTick != GameTick.Zero && c.LastModifiedTick != GameTick.Zero);
-
-                if (c.CreationTick >= fromTick && !c.Deleted)
-                {
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(c.NetID.Value, c.Name));
-                }
-                else if (c.Deleted && c.LastModifiedTick >= fromTick)
-                {
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(c.NetID.Value));
-                }
-            }
-
-            var es = new EntityState(Uid, changed, compStates);
-            return es;
-        }
-
-        /// <summary>
-        ///     Server-side method to get the state of all our components
-        /// </summary>
-        /// <returns></returns>
-        private List<ComponentState> GetComponentStates(GameTick fromTick)
-        {
-            var list = new List<ComponentState>();
-            foreach (var component in EntityManager.ComponentManager.GetNetComponents(Uid))
-            {
-                if (!component.NetSyncEnabled || component.LastModifiedTick < fromTick)
-                {
-                    continue;
-                }
-
-                list.Add(component.GetComponentState());
-            }
-
-            return list;
-        }
 
         /// <summary>
         ///     Marks this entity as dirty so that the networking will sync it with clients.

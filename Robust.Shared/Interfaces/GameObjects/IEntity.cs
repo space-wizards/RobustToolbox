@@ -196,12 +196,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
 
-        /// <summary>
-        ///     Serverside method to prepare an entity state object
-        /// </summary>
-        /// <returns></returns>
-        EntityState GetEntityState(GameTick fromTick);
-
         void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
             where T : EntityEventArgs;
 

@@ -48,10 +48,9 @@ namespace Robust.Client.Graphics.Clyde
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
+        private ClydeHandle _queuedShader;
 
         private ProjViewMatrices _currentMatrices;
-
-        private ClydeHandle _currentShader;
 
         private float _renderTime;
 
@@ -430,15 +429,6 @@ namespace Robust.Client.Graphics.Clyde
                         _setProjViewMatrices(matrices);
                         break;
 
-                    case RenderCommandType.UseShader:
-                        if (command.UseShader.Handle.Value == _currentShader.Value)
-                        {
-                            break;
-                        }
-
-                        _currentShader = command.UseShader.Handle;
-                        break;
-
                     case RenderCommandType.ResetViewMatrix:
                         _setSpace(_currentSpace);
                         break;
@@ -491,7 +481,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindVertexArray(BatchVAO.Handle);
 
-            var (program, loaded) = ActivateShaderInstance(_currentShader);
+            var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
@@ -581,8 +571,8 @@ namespace Robust.Client.Graphics.Clyde
             _queuedRenderCommands.Clear();
 
             // Reset renderer state.
-            _currentShader = _defaultShader.Handle;
             _currentModelMatrix = Matrix3.Identity;
+            _queuedShader = _defaultShader.Handle;
             _disableScissor();
         }
 
@@ -729,7 +719,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
             Angle angle)
         {
-            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TrianglesFan);
+            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TrianglesFan, _queuedShader);
 
             var loadedTexture = _loadedTextures[texture];
 
@@ -799,7 +789,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
-            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.Line);
+            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.Line, _queuedShader);
 
             a = _currentModelMatrix.Transform(a);
             b = _currentModelMatrix.Transform(b);
@@ -839,11 +829,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawUseShader(ClydeHandle handle)
         {
-            BreakBatch();
-
-            ref var command = ref AllocRenderCommand(RenderCommandType.UseShader);
-
-            command.UseShader.Handle = handle;
+            _queuedShader = handle;
         }
 
         private void DrawClear(Color color)
@@ -877,7 +863,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType)
+        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
             {
@@ -885,7 +871,8 @@ namespace Robust.Client.Graphics.Clyde
                 if (metaData.TextureId == textureId &&
                     StrictColorEquality(metaData.Color, color) &&
                     indexed == metaData.Indexed &&
-                    metaData.PrimitiveType == primitiveType)
+                    metaData.PrimitiveType == primitiveType &&
+                    metaData.ShaderInstance == shaderInstance)
                 {
                     // Data matches, don't have to do anything.
                     return;
@@ -897,7 +884,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
-                indexed ? BatchIndexIndex : BatchVertexIndex);
+                indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
         }
 
         private void FinishBatch()
@@ -919,6 +906,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.PrimitiveType = metaData.PrimitiveType;
             command.DrawBatch.Modulate = metaData.Color;
             command.DrawBatch.TextureId = metaData.TextureId;
+            command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
 
@@ -946,7 +934,6 @@ namespace Robust.Client.Graphics.Clyde
             [FieldOffset(4)] public RenderCommandDrawBatch DrawBatch;
             [FieldOffset(4)] public RenderCommandViewMatrix ViewMatrix;
             [FieldOffset(4)] public RenderCommandScissor Scissor;
-            [FieldOffset(4)] public RenderCommandUseShader UseShader;
             [FieldOffset(4)] public RenderCommandSwitchSpace SwitchSpace;
             [FieldOffset(4)] public RenderCommandRenderTarget RenderTarget;
             [FieldOffset(4)] public RenderCommandViewport Viewport;
@@ -956,6 +943,7 @@ namespace Robust.Client.Graphics.Clyde
         private struct RenderCommandDrawBatch
         {
             public ClydeHandle TextureId;
+            public ClydeHandle ShaderInstance;
             public Color Modulate;
 
             public int StartIndex;
@@ -973,11 +961,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool EnableScissor;
             public UIBox2i Scissor;
-        }
-
-        private struct RenderCommandUseShader
-        {
-            public ClydeHandle Handle;
         }
 
         private struct RenderCommandSwitchSpace
@@ -1009,7 +992,6 @@ namespace Robust.Client.Graphics.Clyde
             SwitchSpace,
             Viewport,
 
-            UseShader,
             Scissor,
             RenderTarget,
 
@@ -1044,15 +1026,17 @@ namespace Robust.Client.Graphics.Clyde
             public readonly bool Indexed;
             public readonly BatchPrimitiveType PrimitiveType;
             public readonly int StartIndex;
+            public readonly ClydeHandle ShaderInstance;
 
             public BatchMetaData(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType,
-                int startIndex)
+                int startIndex, ClydeHandle shaderInstance)
             {
                 TextureId = textureId;
                 Color = color;
                 Indexed = indexed;
                 PrimitiveType = primitiveType;
                 StartIndex = startIndex;
+                ShaderInstance = shaderInstance;
             }
         }
 

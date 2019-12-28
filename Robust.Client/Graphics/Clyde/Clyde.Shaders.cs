@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
 
-            _currentShader = _defaultShader.Handle;
+            _queuedShader = _defaultShader.Handle;
 
             var lightVert = _readFile("/Shaders/Internal/light.vert");
             var lightFrag = _readFile("/Shaders/Internal/light.frag");

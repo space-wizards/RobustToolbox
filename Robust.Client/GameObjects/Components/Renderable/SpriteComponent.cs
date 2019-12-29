@@ -900,7 +900,6 @@ namespace Robust.Client.GameObjects
 
             // TODO: This could throw exceptions which shouldn't happen I think.
             var state = (theLayer.RSI ?? BaseRSI)[theLayer.State];
-            var correctDir = CorrectLayerDir(ref theLayer, state);
             if (animationTime > theLayer.AnimationTime)
             {
                 // Handle advancing differently from going backwards.
@@ -916,7 +915,7 @@ namespace Robust.Client.GameObjects
 
             theLayer.AnimationTime = animationTime;
             // After setting timing data correctly, run advance to get to the correct frame.
-            _advanceFrameAnimation(ref theLayer, state);
+            _advanceFrameAnimation(theLayer, state);
         }
 
         public void LayerSetAnimationTime(object layerKey, float animationTime)
@@ -1271,7 +1270,7 @@ namespace Robust.Client.GameObjects
             {
                 var layer = t;
                 // Since StateId is a struct, we can't null-check it directly.
-                if (!layer.State.IsValid || !layer.Visible)
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
                 {
                     continue;
                 }
@@ -1291,11 +1290,11 @@ namespace Robust.Client.GameObjects
 
                 layer.AnimationTime += delta;
                 layer.AnimationTimeLeft -= delta;
-                _advanceFrameAnimation(ref layer, state);
+                _advanceFrameAnimation(layer, state);
             }
         }
 
-        private static void _advanceFrameAnimation(ref Layer layer, RSI.State state)
+        private static void _advanceFrameAnimation(Layer layer, RSI.State state)
         {
             var delayCount = state.DelayCount;
             while (layer.AnimationTimeLeft < 0)
@@ -1471,16 +1470,6 @@ namespace Robust.Client.GameObjects
             }
 
             return builder.ToString();
-        }
-
-        RSI.State.Direction CorrectLayerDir(ref Layer layer, RSI.State state)
-        {
-            if (state.Directions == RSI.State.DirectionType.Dir1)
-            {
-                return RSI.State.Direction.South;
-            }
-
-            return OffsetRsiDir(GetDir(state.Directions), layer.DirOffset);
         }
 
         /// <summary>

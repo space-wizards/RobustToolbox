@@ -110,6 +110,13 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private static void DoMovement(IEntity entity, float frameTime)
         {
+            // TODO: Terrible hack to fix bullets crashing the server.
+            // Should be handled with deferred physics events instead.
+            if (entity.Deleted)
+            {
+                return;
+            }
+
             var velocity = entity.GetComponent<PhysicsComponent>();
 
             if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)

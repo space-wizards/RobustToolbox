@@ -126,6 +126,13 @@ namespace Robust.Shared.Physics
         {
             foreach (var body in GetCollidablesForLocation(colliderAABB))
             {
+                // TODO: Terrible hack to fix bullets crashing the server.
+                // Should be handled with deferred physics events instead.
+                if (body.Owner.Deleted)
+                {
+                    continue;
+                }
+
                 if (!body.CollisionEnabled)
                 {
                     continue;

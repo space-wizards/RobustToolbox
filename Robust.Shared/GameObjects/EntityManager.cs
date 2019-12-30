@@ -106,6 +106,8 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
+        public abstract IEntity CreateEntityUninitialized(string prototypeName);
+
         public abstract IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
 
         public abstract IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);
@@ -115,13 +117,7 @@ namespace Robust.Shared.GameObjects
 
         public abstract IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates);
 
-        public IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
-        {
-            var grid = _mapManager.FindGridAt(coordinates);
-            var gridCoords = new GridCoordinates(grid.WorldToLocal(coordinates.Position), grid);
-
-            return SpawnEntityAt(entityType, gridCoords);
-        }
+        public abstract IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id

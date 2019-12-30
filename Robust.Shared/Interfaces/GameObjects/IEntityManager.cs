@@ -31,6 +31,8 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Entity Management
 
+        IEntity CreateEntityUninitialized(string prototypeName);
+
         IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
 
         IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);

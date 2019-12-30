@@ -37,11 +37,11 @@ namespace Robust.Shared.GameObjects.Components.Map
             internal set => _mapIndex = value;
         }
 
+        /// <inheritdoc />
         public void ClearMapId()
         {
             _mapIndex = MapId.Nullspace;
         }
-
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()

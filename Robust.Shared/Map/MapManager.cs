@@ -89,6 +89,39 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_grids.Count == 1);
         }
 
+        /// <inheritdoc />
+        public void Restart()
+        {
+            foreach (var mapId in _maps.ToArray())
+            {
+                if (mapId != MapId.Nullspace)
+                {
+                    DeleteMap(mapId);
+                }
+            }
+
+            if (!_maps.Contains(MapId.Nullspace))
+            {
+                CreateMap(MapId.Nullspace, GridId.Nullspace);
+            }
+            else if(_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
+            {
+                var mapEnt = _entityManager.GetEntity(mapEntId);
+                var defaultGridId = _defaultGrids[MapId.Nullspace];
+                var defaultGridEntityId = GetGrid(defaultGridId).GridEntity;
+                foreach (var childTransform in mapEnt.Transform.Children.ToArray())
+                {
+                    if(childTransform.Owner.Uid == defaultGridEntityId)
+                        continue;
+
+                    childTransform.Owner.Delete();
+                }
+            }
+
+            DebugTools.Assert(_grids.Count == 1);
+            DebugTools.Assert(GridExists(GridId.Nullspace));
+        }
+
         /// <summary>
         ///     Raises the OnTileChanged event.
         /// </summary>
@@ -214,6 +247,62 @@ namespace Robust.Shared.Map
             return _maps.Contains(mapID);
         }
 
+        public IEntity CreateNewMapEntity(MapId mapId)
+        {
+            var newEntity = _entityManager.CreateEntityUninitialized(null);
+            SetMapEntity(mapId, newEntity);
+            return newEntity;
+        }
+
+        /// <inheritdoc />
+        public void SetMapEntity(MapId mapId, EntityUid newMapEntityId)
+        {
+            var newMapEntity = _entityManager.GetEntity(newMapEntityId);
+            SetMapEntity(mapId, newMapEntity);
+        }
+
+        /// <inheritdoc />
+        public void SetMapEntity(MapId mapId, IEntity newMapEntity)
+        {
+            if(!_maps.Contains(mapId))
+                throw new InvalidOperationException($"Map {mapId} does not exist.");
+
+            foreach (var kvEntity in _mapEntities)
+            {
+                if (kvEntity.Value == newMapEntity.Uid)
+                {
+                    throw new InvalidOperationException($"Entity {newMapEntity} is already the root node of map {kvEntity.Key}.");
+                }
+            }
+
+            // remove existing graph
+            if (_mapEntities.TryGetValue(mapId, out var oldEntId))
+            {
+                //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
+                var oldMapEnt = _entityManager.GetEntity(oldEntId);
+                _entityManager.DeleteEntity(oldMapEnt);
+            }
+            else
+            {
+                _mapEntities.Add(mapId, EntityUid.Invalid);
+            }
+
+            // re-use or add map component
+            if (!newMapEntity.TryGetComponent(out MapComponent mapComp))
+            {
+                mapComp = newMapEntity.AddComponent<MapComponent>();
+            }
+            else
+            {
+                if (mapComp.WorldMap != mapId)
+                    Logger.WarningS("map", $"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.WorldMap}.");
+            }
+
+            // set as new map entity
+            mapComp.WorldMap = mapId;
+            _mapEntities[mapId] = newMapEntity.Uid;
+        }
+
         public EntityUid GetMapEntityId(MapId mapId)
         {
             return _mapEntities[mapId];
@@ -221,6 +310,9 @@ namespace Robust.Shared.Map
 
         public IEntity GetMapEntity(MapId mapId)
         {
+            if(!_mapEntities.ContainsKey(mapId))
+                throw new InvalidOperationException($"Map {mapId} does not have a set map entity.");
+
             return _entityManager.GetEntity(_mapEntities[mapId]);
         }
 

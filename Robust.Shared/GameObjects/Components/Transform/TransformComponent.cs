@@ -88,7 +88,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                     return Parent.GridID;
 
-                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                // Not on a grid
+                return GridId.Nullspace;
             }
         }
 
@@ -312,6 +313,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
+
+        /// <inheritdoc />
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Verifies MapID can be resolved.
+            // If it cannot, then this is an orphan entity, and an exception will be thrown.
+            // DO NOT REMOVE THIS LINE
+            var _ = MapID;
+        }
 
         /// <inheritdoc />
         protected override void Startup()

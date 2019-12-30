@@ -27,6 +27,11 @@ namespace Robust.Server.GameObjects
 
         private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
 
+        public override IEntity CreateEntityUninitialized(string prototypeName)
+        {
+            return CreateEntity(prototypeName);
+        }
+
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
@@ -42,11 +47,8 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            if(coordinates.MapId != MapId.Nullspace)
-            {
-                newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
-                newEntity.Transform.WorldPosition = coordinates.Position;
-            }
+            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+            newEntity.Transform.WorldPosition = coordinates.Position;
             return newEntity;
         }
 
@@ -74,6 +76,14 @@ namespace Robust.Server.GameObjects
             {
                 entity.RunMapInit();
             }
+            return entity;
+        }
+
+        /// <inheritdoc />
+        public override IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
+        {
+            var entity = CreateEntityUninitialized(entityType, coordinates);
+            InitializeAndStartEntity((Entity)entity);
             return entity;
         }
 

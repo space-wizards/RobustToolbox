@@ -45,6 +45,8 @@ namespace Robust.Shared.Interfaces.Map
         void Shutdown();
         void Startup();
 
+        void Restart();
+
         /// <summary>
         ///     Creates a new map.
         /// </summary>
@@ -67,6 +69,24 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapID">The map ID to check existance of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
         bool MapExists(MapId mapID);
+
+        /// <summary>
+        /// Creates a new entity, then sets it as the map entity.
+        /// </summary>
+        /// <returns>Newly created entity.</returns>
+        IEntity CreateNewMapEntity(MapId mapId);
+
+        /// <summary>
+        /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
+        /// before the new one is set.
+        /// </summary>
+        void SetMapEntity(MapId mapId, EntityUid newMapEntityId);
+
+        /// <summary>
+        /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
+        /// before the new one is set.
+        /// </summary>
+        void SetMapEntity(MapId mapId, IEntity newMapEntity);
 
         EntityUid GetMapEntityId(MapId mapId);
         IEntity GetMapEntity(MapId mapId);

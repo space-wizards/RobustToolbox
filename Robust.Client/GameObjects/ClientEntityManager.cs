@@ -186,6 +186,11 @@ namespace Robust.Client.GameObjects
             Shutdown();
         }
 
+        public override IEntity CreateEntityUninitialized(string prototypeName)
+        {
+            return CreateEntity(prototypeName);
+        }
+
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, NewClientEntityUid());
@@ -224,6 +229,15 @@ namespace Robust.Client.GameObjects
         public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
         {
             return SpawnEntity(entityType, coordinates);
+        }
+
+        /// <inheritdoc />
+        public override IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
+        {
+            var grid = _mapManager.FindGridAt(coordinates);
+            var gridCoords = new GridCoordinates(grid.WorldToLocal(coordinates.Position), grid);
+
+            return SpawnEntityAt(entityType, gridCoords);
         }
 
         private EntityUid NewClientEntityUid()

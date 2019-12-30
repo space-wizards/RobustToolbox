@@ -37,7 +37,7 @@ namespace Robust.Shared.Map
         ///     A set of coordinates that is at the origin of an invalid grid.
         ///     This is also the values of an uninitialized struct.
         /// </summary>
-        public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Invalid);
+        public static readonly GridCoordinates InvalidGrid = new GridCoordinates(0, 0, GridId.Invalid);
 
         /// <summary>
         ///     Constructs new grid local coordinates.

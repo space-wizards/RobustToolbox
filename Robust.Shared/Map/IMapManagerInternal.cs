@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.Map;
+﻿using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 
 namespace Robust.Shared.Map
@@ -7,6 +8,7 @@ namespace Robust.Shared.Map
     internal interface IMapManagerInternal : IMapManager
     {
         IGameTiming GameTiming { get; }
+        IEntityManager EntityManager { get; }
 
         /// <summary>
         ///     Raises the OnTileChanged event.

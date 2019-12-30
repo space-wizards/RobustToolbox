@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects
             var newEntity = CreateEntity(prototypeName);
             if(coordinates.GridID != GridId.Invalid)
             {
-                var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntity;
+                var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntityId;
                 newEntity.Transform.AttachParent(GetEntity(gridEntityId));
                 newEntity.Transform.LocalPosition = coordinates.Position;
             }

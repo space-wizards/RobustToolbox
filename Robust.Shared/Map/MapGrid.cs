@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -31,7 +29,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public MapId ParentMapId { get; set; }
 
-        public EntityUid GridEntity { get; internal set; }
+        public EntityUid GridEntityId { get; internal set; }
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -95,8 +93,8 @@ namespace Robust.Shared.Map
                     return Vector2.Zero;
 
                 //TODO: Make grids real parents of entities.
-                if(GridEntity.IsValid())
-                    return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
                 return Vector2.Zero;
             }
             set
@@ -104,7 +102,7 @@ namespace Robust.Shared.Map
                 if (IsDefaultGrid) // Default grids cannot be moved.
                     return;
 
-                IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition = value;
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -113,9 +111,7 @@ namespace Robust.Shared.Map
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
         /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
         /// </summary>
-        /// <param name="gridTile">The new tile to check.</param>
-        /// <param name="empty"></param>
-        private void UpdateAABB(MapIndices gridTile, bool empty)
+        private void UpdateAABB()
         {
             LocalBounds = new Box2();
             foreach (var chunk in _chunks.Values)
@@ -142,7 +138,7 @@ namespace Robust.Shared.Map
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
             LastModifiedTick = _mapManager.GameTiming.CurTick;
-            UpdateAABB(tileRef.GridIndices, tileRef.Tile.IsEmpty);
+            UpdateAABB();
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
         }
 

@@ -23,7 +23,7 @@ namespace Robust.Shared.Map
         /// </summary>
         MapId ParentMapId { get; set; }
 
-        EntityUid GridEntity { get; }
+        EntityUid GridEntityId { get; }
 
         /// <summary>
         ///     The identifier of this grid.

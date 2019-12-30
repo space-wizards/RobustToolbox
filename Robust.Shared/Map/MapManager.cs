@@ -24,6 +24,8 @@ namespace Robust.Shared.Map
 
         public IGameTiming GameTiming => _gameTiming;
 
+        public IEntityManager EntityManager => _entityManager;
+
         /// <inheritdoc />
         public MapId DefaultMap => MapId.Nullspace;
 
@@ -108,7 +110,7 @@ namespace Robust.Shared.Map
             {
                 var mapEnt = _entityManager.GetEntity(mapEntId);
                 var defaultGridId = _defaultGrids[MapId.Nullspace];
-                var defaultGridEntityId = GetGrid(defaultGridId).GridEntity;
+                var defaultGridEntityId = GetGrid(defaultGridId).GridEntityId;
                 foreach (var childTransform in mapEnt.Transform.Children.ToArray())
                 {
                     if(childTransform.Owner.Uid == defaultGridEntityId)
@@ -384,17 +386,17 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    grid.GridEntity = result.Owner.Uid;
-                    Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntity}");
+                    grid.GridEntityId = result.Owner.Uid;
+                    Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntityId}");
                 }
                 else
                 {
                     var newEnt =
                         (Entity) _entityManager.CreateEntityUninitialized(null,
                             new MapCoordinates(Vector2.Zero, currentMapID));
-                    grid.GridEntity = newEnt.Uid;
+                    grid.GridEntityId = newEnt.Uid;
 
-                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntity}");
+                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntityId}");
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
@@ -479,7 +481,7 @@ namespace Robust.Shared.Map
             if (_defaultGrids.ContainsKey(grid.ParentMapId))
                 _defaultGrids.Remove(grid.ParentMapId);
 
-            if (_entityManager.TryGetEntity(grid.GridEntity, out var gridEnt))
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
                 gridEnt.Delete();
 
             OnGridRemoved?.Invoke(gridID);

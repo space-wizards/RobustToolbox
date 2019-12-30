@@ -215,7 +215,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (value.GridID != GridID)
                 {
                     var newGrid = _mapManager.GetGrid(value.GridID);
-                    AttachParent(_entityManager.GetEntity(newGrid.GridEntity));
+                    AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
                 }
 
                 // world coords to parent coords

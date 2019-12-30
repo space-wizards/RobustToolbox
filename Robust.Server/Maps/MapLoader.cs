@@ -299,7 +299,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var entity = _serverEntityManager.GetEntity(grid.GridEntity);
+                    var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
                     entity.Transform.AttachParent(mapEntity);
                 }
             }
@@ -311,7 +311,7 @@ namespace Robust.Server.Maps
                     if (entity.TryGetComponent(out IMapGridComponent grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
-                        castGrid.GridEntity = entity.Uid;
+                        castGrid.GridEntityId = entity.Uid;
                     }
                 }
             }

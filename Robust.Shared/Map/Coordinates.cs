@@ -34,10 +34,10 @@ namespace Robust.Shared.Map
         public float Y => Position.Y;
 
         /// <summary>
-        ///     A set of coordinates that is at the origin of Nullspace.
+        ///     A set of coordinates that is at the origin of an invalid grid.
         ///     This is also the values of an uninitialized struct.
         /// </summary>
-        public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Nullspace);
+        public static readonly GridCoordinates Nullspace = new GridCoordinates(0, 0, GridId.Invalid);
 
         /// <summary>
         ///     Constructs new grid local coordinates.

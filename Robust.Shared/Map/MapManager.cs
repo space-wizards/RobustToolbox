@@ -51,7 +51,7 @@ namespace Robust.Shared.Map
         public bool SuppressOnTileChanged { get; set; }
 
         private MapId HighestMapID = MapId.Nullspace;
-        private GridId HighestGridID = GridId.Nullspace;
+        private GridId HighestGridID = GridId.Invalid;
 
         private readonly HashSet<MapId> _maps = new HashSet<MapId>();
         private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();
@@ -66,7 +66,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void Initialize()
         {
-            CreateMap(MapId.Nullspace, GridId.Nullspace);
+            CreateMap(MapId.Nullspace, GridId.Invalid);
             // So uh I removed the contents from this but I'm too lazy to remove the Initialize method.
             // Deal with it.
         }
@@ -102,7 +102,7 @@ namespace Robust.Shared.Map
 
             if (!_maps.Contains(MapId.Nullspace))
             {
-                CreateMap(MapId.Nullspace, GridId.Nullspace);
+                CreateMap(MapId.Nullspace, GridId.Invalid);
             }
             else if(_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
             {
@@ -119,7 +119,7 @@ namespace Robust.Shared.Map
             }
 
             DebugTools.Assert(_grids.Count == 1);
-            DebugTools.Assert(GridExists(GridId.Nullspace));
+            DebugTools.Assert(GridExists(GridId.Invalid));
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace Robust.Shared.Map
         {
             if (_defaultGrids.TryGetValue(mapID, out var gridID))
                 return gridID;
-            return GridId.Nullspace; //TODO: Hack to make shutdown work
+            return GridId.Invalid; //TODO: Hack to make shutdown work
         }
 
         public IEnumerable<IMapGrid> GetAllGrids()
@@ -369,7 +369,7 @@ namespace Robust.Shared.Map
             _grids.Add(actualID, grid);
             Logger.DebugS("map", $"Creating new grid {actualID}");
 
-            if (actualID != GridId.Nullspace && createEntity) // nullspace default grid is not bound to an entity
+            if (actualID != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent result = null;
@@ -468,7 +468,7 @@ namespace Robust.Shared.Map
         public void DeleteGrid(GridId gridID)
         {
             // nullspace grid cannot be deleted
-            if (gridID == GridId.Nullspace)
+            if (gridID == GridId.Invalid)
                 return;
 
             var grid = _grids[gridID];

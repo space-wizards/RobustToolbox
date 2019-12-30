@@ -95,7 +95,7 @@ namespace Robust.Client.Graphics.ClientEye
             }
             else
             {
-                grid = _mapManager.GetGrid(GridId.Nullspace);
+                grid = _mapManager.GetGrid(GridId.Invalid);
             }
             return new GridCoordinates(grid.WorldToLocal(mapPos), grid);
         }

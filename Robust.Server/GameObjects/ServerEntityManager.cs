@@ -35,7 +35,7 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            if(coordinates.GridID != GridId.Nullspace)
+            if(coordinates.GridID != GridId.Invalid)
             {
                 var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntity;
                 newEntity.Transform.AttachParent(GetEntity(gridEntityId));

@@ -561,7 +561,7 @@ namespace Robust.Server.Maps
                 {
                     if (node.AsString() == "null")
                     {
-                        obj = GridId.Nullspace;
+                        obj = GridId.Invalid;
                         return true;
                     }
 

@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 // root node, grid id is undefined
                 if (Owner.HasComponent<IMapComponent>())
-                    return GridId.Nullspace;
+                    return GridId.Invalid;
 
                 // second level node, terminates recursion up the branch of the tree
                 if (Owner.TryGetComponent(out IMapGridComponent gridComp))
@@ -89,7 +89,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return Parent.GridID;
 
                 // Not on a grid
-                return GridId.Nullspace;
+                return GridId.Invalid;
             }
         }
 

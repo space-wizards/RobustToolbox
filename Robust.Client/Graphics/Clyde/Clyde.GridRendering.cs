@@ -61,9 +61,10 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var model = Matrix3.Identity;
+                Matrix3 model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;
+                //model.Rotate(mapGrid.);
                 gridProgram.SetUniform(UniIModelMatrix, model);
 
                 foreach (var (_, chunk) in grid.GetMapChunks())

@@ -118,7 +118,7 @@ namespace Robust.Client.Graphics.Clyde
 
             using (DebugGroup("Grids"))
             {
-                //_drawGrids(worldBounds);
+                _drawGrids(worldBounds);
             }
 
             using (DebugGroup("Entities"))

@@ -20,6 +20,11 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         MapCoordinates Position { get; }
 
         /// <summary>
+        /// The angle at which this eye is tilted.
+        /// </summary>
+        Angle Rotation { get; set; }
+
+        /// <summary>
         /// Returns the view matrix for this eye.
         /// </summary>
         Matrix3 GetViewMatrix();

@@ -66,6 +66,7 @@ namespace Robust.Client.Graphics.ClientEye
         public Vector2 WorldToScreen(Vector2 point)
         {
             var matrix = CurrentEye.GetViewMatrix();
+            //matrix.Rotate(CurrentEye.Rotation);
             point = matrix.Transform(point);
             point *= new Vector2(1, -1) * PIXELSPERMETER;
             point += _displayManager.ScreenSize/2f;
@@ -103,9 +104,11 @@ namespace Robust.Client.Graphics.ClientEye
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             var matrix = Matrix3.Invert(CurrentEye.GetViewMatrix());
+            //matrix.Rotate(1/CurrentEye.Rotation);
             point -= _displayManager.ScreenSize / 2f;
             var worldPos = matrix.Transform(point / PIXELSPERMETER * new Vector2(1, -1));
             return new MapCoordinates(worldPos, CurrentMap);
         }
+
     }
 }

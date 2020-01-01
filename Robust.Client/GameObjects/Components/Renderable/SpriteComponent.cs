@@ -996,15 +996,13 @@ namespace Robust.Client.GameObjects
             if (useWorldTransform)
             {
                 var angle = Rotation;
-                if (Directional)
+                if (!Directional)
+
                 {
-                    angle -= Owner.Transform.WorldRotation;
-                }
-                else
-                {
+                    angle += Owner.Transform.WorldRotation;
                     angle -= new Angle(MathHelper.PiOver2);
                 }
-
+                angle -= Owner.Transform.LocalRotation;
                 var mOffset = Matrix3.CreateTranslation(Offset);
                 var mRotation = Matrix3.CreateRotation(angle);
                 Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
@@ -1388,7 +1386,7 @@ namespace Robust.Client.GameObjects
                 return RSI.State.Direction.South;
             }
 
-            var angle = new Angle(Owner.Transform.WorldRotation);
+            var angle = new Angle(Owner.Transform.LocalRotation);
             return angle.GetDir().Convert(type);
         }
 

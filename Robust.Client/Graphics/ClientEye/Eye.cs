@@ -14,7 +14,10 @@ namespace Robust.Client.Graphics.ClientEye
 
         /// <inheritdoc />
         public virtual MapCoordinates Position { get; internal set; }
-        
+
+        /// <inheritdoc />
+        public Angle Rotation { get; set; }
+
         /// <inheritdoc />
         public Matrix3 GetViewMatrix()
         {
@@ -24,6 +27,10 @@ namespace Robust.Client.Graphics.ClientEye
             matrix.R0C2 = -Position.X / Zoom.X;
             matrix.R1C2 = -Position.Y / Zoom.Y;
             return matrix;
+        }
+
+        public Eye() {
+            //Rotation = new Angle(MathHelper.PiOver2);
         }
     }
 }

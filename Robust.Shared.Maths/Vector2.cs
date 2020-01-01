@@ -86,6 +86,15 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Subtracts a vector from another, returning a new vector.
         /// </summary>
+        public Vector2 Rotate(Angle angle) {
+            float cos = (float)Math.Cos(angle.Theta);
+            float sin = (float)Math.Sin(angle.Theta);
+            return new Vector2(cos*X-sin*Y,sin*X+cos*Y);
+        }
+
+        /// <summary>
+        ///     Subtracts a vector from another, returning a new vector.
+        /// </summary>
         /// <param name="a">Vector to subtract from.</param>
         /// <param name="b">Vector to subtract with.</param>
         public static Vector2 operator -(Vector2 a, Vector2 b)

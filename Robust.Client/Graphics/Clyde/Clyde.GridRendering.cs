@@ -142,8 +142,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindVertexArray(datum.VAO);
                 datum.EBO.Use();
                 datum.VBO.Use();
-                datum.EBO.WriteSubData(new Span<ushort>(indexBuffer, 0, i * 5));
-                datum.VBO.WriteSubData(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
+                datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * 5));
+                datum.VBO.Reallocate(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
                 datum.Dirty = false;
                 datum.TileCount = i;
             }

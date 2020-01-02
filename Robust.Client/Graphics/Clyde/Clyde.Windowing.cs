@@ -7,7 +7,6 @@ using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
-using OpenTK.Platform;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
@@ -360,94 +359,5 @@ namespace Robust.Client.Graphics.Clyde
         {
             GLFW.SetClipboardString(_glfwWindow, text);
         }
-
-        private sealed class ClydeWindowInfo : IWindowInfo
-        {
-            public ClydeWindowInfo(Window* handle)
-            {
-                Handle = (IntPtr) handle;
-            }
-
-            public void Dispose()
-            {
-                // Nothing.
-            }
-
-            public IntPtr Handle { get; }
-        }
     }
 }
-/*
-var width = _configurationManager.GetCVar<int>("display.width");
-var height = _configurationManager.GetCVar<int>("display.height");
-
-_window = new GameWindow(
-    width,
-    height,
-    GraphicsMode.Default,
-    string.Empty,
-    GameWindowFlags.Default,
-    DisplayDevice.Default,
-    3, 3,
-#if DEBUG
-    GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
-#else
-    GraphicsContextFlags.ForwardCompatible
-#endif
-)
-{
-    Visible = true
-};
-
-// Actually set VSync.
-VSyncChanged();
-WindowModeChanged();
-
-var winSize = _window.ClientSize;
-_screenSize = new Vector2i(winSize.Width, winSize.Height);
-
-_mainThread = Thread.CurrentThread;
-
-_window.KeyDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-_window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-_window.Closed += _onWindowClosed;
-_window.Resize += (sender, eventArgs) =>
-{
-    var oldSize = _screenSize;
-    var newWinSize = _window.ClientSize;
-    _screenSize = new Vector2i(newWinSize.Width, newWinSize.Height);
-    GL.Viewport(0, 0, newWinSize.Width, newWinSize.Height);
-    if (newWinSize.Width != 0 && newWinSize.Height != 0)
-    {
-        _regenerateLightRenderTarget();
-    }
-
-    OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
-};
-_window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-_window.MouseUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-_window.MouseMove += (sender, eventArgs) =>
-{
-    MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);
-    _gameController.MouseMove((MouseMoveEventArgs) eventArgs);
-};
-_window.MouseWheel += (sender, eventArgs) =>
-{
-    _gameController.MouseWheel((MouseWheelEventArgs) eventArgs);
-};
-_window.KeyPress += (sender, eventArgs) =>
-{
-    // If this is a surrogate it has to be specifically handled and I'm not doing that yet.
-    DebugTools.Assert(!char.IsSurrogate(eventArgs.KeyChar));
-
-    _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
-};
-
-using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
-{
-    _window.Icon = new Icon(iconFile);
-}
-
-InitGLContext();
-InitOpenGL();
-*/

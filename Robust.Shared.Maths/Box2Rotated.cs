@@ -10,30 +10,27 @@ namespace Robust.Shared.Maths
     {
         public readonly Box2 Box;
         public readonly Angle Rotation;
-        public readonly Vector2 Position;
+
+        public readonly Vector2 CenterPoint => new Vector2((BottomLeft.X+TopRight.X)/2,(BottomLeft.Y+TopRight.Y)/2);
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
-        public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
+        public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero);
 
-        public Vector2 BottomRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Bottom));
-        public Vector2 TopLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Top));
-        public Vector2 TopRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Top));
-        public Vector2 BottomLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Bottom));
+        public Vector2 BottomRight => new Vector2(Box.Right, Box.Bottom).Rotate(Rotation);
+        public Vector2 TopLeft => new Vector2(Box.Left, Box.Top).Rotate(Rotation);
+        public Vector2 TopRight => new Vector2(Box.Right, Box.Top).Rotate(Rotation);
+        public Vector2 BottomLeft => new Vector2(Box.Left, Box.Bottom).Rotate(Rotation);
 
         public Box2Rotated(Box2 box, Angle rotation)
-            : this(box, rotation, Vector2.Zero) { }
-
-        public Box2Rotated(Box2 box, Angle rotation, Vector2 position)
         {
             Box = box;
             Rotation = rotation;
-            Position = position;
         }
 
         /// <summary>
-        /// calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
+        /// Calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
         /// </summary>
         public Box2 CalcBoundingBox()
         {
@@ -55,6 +52,23 @@ namespace Robust.Shared.Maths
             var NH = Math.Abs(WX * SF) + Math.Abs(WY * CF);  //boundrect half-height
             var NW = Math.Abs(WX * CF) + Math.Abs(WY * SF);  //boundrect half-width
             return new Box2((float) (CX - NW), (float) (CY - NH), (float) (CX + NW), (float) (CY + NH)); //draw bound rectangle
+        }
+
+        /// <summary>
+        /// Returns whether the given point lies within this Box2Rotated. 
+        /// </summary>
+        /// <param name="point">Global coords of the given point.</param>
+        public bool Encloses(Vector2 point) {
+            point = point.Rotate(-Rotation);
+            return Box.Contains(point);
+        }
+
+        public bool Intersects(Box2Rotated other) {
+            return CalcBoundingBox().Intersects(other.CalcBoundingBox());
+        }
+
+        public bool Intersects(Box2 other) {
+            return CalcBoundingBox().Intersects(other);
         }
 
         #region Equality

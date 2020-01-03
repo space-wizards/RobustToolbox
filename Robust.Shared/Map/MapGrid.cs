@@ -65,6 +65,8 @@ namespace Robust.Shared.Map
             // Nothing for now.
         }
 
+        public Box2Rotated WorldBoundsRotated => new Box2Rotated(WorldBounds, WorldRotation);
+
         /// <inheritdoc />
         public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
 
@@ -103,6 +105,25 @@ namespace Robust.Shared.Map
                     return;
 
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
+            }
+        }
+
+        public Angle WorldRotation
+        {
+            get {
+                if (IsDefaultGrid) // Default grids cannot be moved.
+                    return 0;
+
+                if (GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                return 0;
+            }
+            set {
+                if (IsDefaultGrid) // Default grids cannot be moved.
+                    return;
+
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

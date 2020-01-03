@@ -354,7 +354,7 @@ namespace Robust.Shared.Map
 
         public Box2 CalcWorldBounds()
         {
-            var worldPos = _grid.WorldPosition + (Vector2i)Indices * _grid.TileSize * ChunkSize;
+            Vector2 worldPos = _grid.WorldPosition + (Vector2i)Indices * _grid.TileSize * ChunkSize;
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
 

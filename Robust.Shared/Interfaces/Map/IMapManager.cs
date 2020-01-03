@@ -106,6 +106,7 @@ namespace Robust.Shared.Interfaces.Map
         IMapGrid FindGridAt(MapId mapId, Vector2 worldPos);
         IMapGrid FindGridAt(MapCoordinates mapCoords);
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+
         void DeleteGrid(GridId gridID);
 
         /// <summary>

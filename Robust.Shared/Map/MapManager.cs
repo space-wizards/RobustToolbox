@@ -464,7 +464,7 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
-            return GetAllMapGrids(mapId).Where(grid => grid.WorldBounds.Intersects(worldArea));
+            return GetAllMapGrids(mapId).Where(grid => grid.WorldBoundsRotated.Intersects(worldArea));
         }
 
         public void DeleteGrid(GridId gridID)

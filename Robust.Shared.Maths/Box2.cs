@@ -76,6 +76,10 @@ namespace Robust.Shared.Maths
                    other.Left <= this.Right;
         }
 
+        public bool Intersects(Box2Rotated other) {
+            return other.Intersects(this); //Handled in Box2Rotated.cs
+        }
+
         public Box2 Enlarged(float size)
         {
             return new Box2(Left - size, Bottom - size, Right + size, Top + size);

@@ -36,6 +36,11 @@ namespace Robust.Shared.Map
         ushort TileSize { get; }
 
         /// <summary>
+        ///     The rotated bounding box of the grid in world coordinates.
+        /// </summary>
+        Box2Rotated WorldBoundsRotated { get; }
+
+        /// <summary>
         ///     The bounding box of the grid in world coordinates.
         /// </summary>
         Box2 WorldBounds { get; }

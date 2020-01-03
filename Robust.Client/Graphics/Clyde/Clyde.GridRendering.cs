@@ -5,6 +5,9 @@ using OpenTK.Graphics.OpenGL;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.IoC;
+using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -18,6 +21,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawGrids(Box2 worldBounds)
         {
+
             var mapId = _eyeManager.CurrentMap;
             if (!_mapManager.MapExists(mapId))
             {
@@ -64,7 +68,8 @@ namespace Robust.Client.Graphics.Clyde
                 Matrix3 model = Matrix3.Identity;
                 model.R0C2 = grid.WorldPosition.X;
                 model.R1C2 = grid.WorldPosition.Y;
-                //model.Rotate(mapGrid.);
+                if(!grid.IsDefaultGrid)
+                    model.Rotate(-IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId).Transform.WorldRotation);
                 gridProgram.SetUniform(UniIModelMatrix, model);
 
                 foreach (var (_, chunk) in grid.GetMapChunks())

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Timing;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
@@ -13,6 +14,8 @@ namespace Robust.Shared.Map
         ///     The total number of chunks contained on this grid.
         /// </summary>
         int ChunkCount { get; }
+
+        Angle WorldRotation { get; set; }
 
         void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
 

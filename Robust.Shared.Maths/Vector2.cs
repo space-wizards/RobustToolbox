@@ -84,12 +84,24 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
-        ///     Subtracts a vector from another, returning a new vector.
+        ///     Rotates a vector around the origin.
         /// </summary>
+        /// <param name="angle">Degrees/radians to rotate.</param>
         public Vector2 Rotate(Angle angle) {
             float cos = (float)Math.Cos(angle.Theta);
             float sin = (float)Math.Sin(angle.Theta);
-            return new Vector2(cos*X-sin*Y,sin*X+cos*Y);
+            return
+                new Vector2(cos*X-sin*Y,sin*X+cos*Y);
+        }
+        /// <summary>
+        ///     Rotates a vector around a given point.
+        /// </summary>
+        /// <param name="center">Center of the circle to rotate around.</param>
+        /// <param name="angle">Degrees/radians to rotate.</param>
+        public Vector2 RotateAround(Vector2 center, Angle angle) {
+            float cos = (float)Math.Cos(angle.Theta);
+            float sin = (float)Math.Sin(angle.Theta);
+            return new Vector2(cos*(X-center.X)-sin*(Y-center.Y)+center.X, sin*(X-center.X)+cos*(Y-center.Y)+center.Y);
         }
 
         /// <summary>

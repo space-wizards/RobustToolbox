@@ -11,6 +11,7 @@ using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.Containers;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -134,11 +135,11 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var sprite in _componentManager.GetAllComponents<SpriteComponent>())
                 {
                     var entity = sprite.Owner;
-                    if (!entity.Transform.IsMapTransform || entity.Transform.MapID != map ||
-                        !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
-                    {
+                    if (entity.Transform.MapID != map || !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
                         continue;
-                    }
+
+                    if(ContainerHelpers.TryGetContainer(entity, out var container) && !container.ShowContents)
+                        continue;
 
                     _sortingSpritesList.Add(sprite);
                 }

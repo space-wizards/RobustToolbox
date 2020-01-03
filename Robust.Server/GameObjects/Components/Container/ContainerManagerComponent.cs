@@ -112,6 +112,21 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
+        public override bool TryGetContainer(IEntity entity, out IContainer container)
+        {
+            foreach (var contain in EntityContainers.Values)
+            {
+                if (!contain.Deleted && contain.Contains(entity))
+                {
+                    container = contain;
+                    return true;
+                }
+            }
+
+            container = default;
+            return false;
+        }
+
         public override bool ContainsEntity(IEntity entity)
         {
             foreach (var container in EntityContainers.Values)
@@ -231,7 +246,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return new ContainerManagerComponentState(
                 _allContainers.ToDictionary(
                     c => c.ID,
-                    c => c.ContainedEntities.Select(e => e.Uid).ToList()));
+                    c => (c.ShowContents, c.ContainedEntities.Select(e => e.Uid).ToList())));
         }
 
         private struct ContainerPrototypeData : IExposeData

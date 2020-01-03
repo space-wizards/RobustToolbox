@@ -12,8 +12,8 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Am I inside a container?
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <returns>If the entity is inside of a container.</returns>
         public static bool IsInContainer(IEntity entity)
         {
             DebugTools.Assert(entity != null);
@@ -28,13 +28,39 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-
-        public static bool TryGetContainer(IEntity entity, out IContainerManager manager)
+        /// <summary>
+        /// Tries to find the container manager that this entity is inside (if any).
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="manager">The container manager that this entity is inside of.</param>
+        /// <returns>If a container manager was found.</returns>
+        public static bool TryGetContainerMan(IEntity entity, out IContainerManager manager)
         {
-            if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager))
+            DebugTools.Assert(entity != null);
+            DebugTools.Assert(!entity.Deleted);
+
+            if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
             manager = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to find the container that this entity is inside (if any).
+        /// </summary>
+        /// <param name="entity">Entity that might be inside a container.</param>
+        /// <param name="container">The container that this entity is inside of.</param>
+        /// <returns>If a container was found.</returns>
+        public static bool TryGetContainer(IEntity entity, out IContainer container)
+        {
+            DebugTools.Assert(entity != null);
+            DebugTools.Assert(!entity.Deleted);
+
+            if (TryGetContainerMan(entity, out var manager))
+                return manager.TryGetContainer(entity, out container);
+
+            container = default;
             return false;
         }
 

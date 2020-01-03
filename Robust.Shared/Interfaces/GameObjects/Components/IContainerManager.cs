@@ -49,6 +49,15 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <returns>True if the container was found, false otherwise.</returns>
         bool TryGetContainer(string id, out IContainer container);
 
+        /// <summary>
+        /// Attempt to retrieve a container that contains a specific entity.
+        /// </summary>
+        /// <param name="entity">The entity that is inside the container.</param>
+        /// <param name="container">The container if it was found, <c>null</c> if not found.</param>
+        /// <returns>True if the container was found, false otherwise.</returns>
+        /// <returns>True if the container was found, false otherwise.</returns>
+        bool TryGetContainer(IEntity entity, out IContainer container);
+
         bool ContainsEntity(IEntity entity);
 
         void ForceRemove(IEntity entity);

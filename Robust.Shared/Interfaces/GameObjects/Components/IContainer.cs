@@ -49,6 +49,12 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         IReadOnlyCollection<IEntity> ContainedEntities { get; }
 
         /// <summary>
+        /// Should the contents of this container be shown? False for closed containers like lockers, true for
+        /// things like glass display cases.
+        /// </summary>
+        bool ShowContents { get; set; }
+
+        /// <summary>
         /// Checks if the entity can be inserted into this container.
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>

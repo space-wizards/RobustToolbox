@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.Interfaces.GameObjects;
@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects.Components.Containers
             [ViewVariables] public IEntity Owner => Manager.Owner;
             [ViewVariables] public bool Deleted { get; private set; }
             [ViewVariables] public IReadOnlyCollection<IEntity> ContainedEntities => Entities;
-
+            public bool ShowContents { get; set; }
 
             public bool CanInsert(IEntity toinsert)
             {

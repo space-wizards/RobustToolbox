@@ -2,7 +2,6 @@
 using JetBrains.Annotations;
 using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -87,6 +86,9 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
 
+        /// <inheritdoc />
+        public bool ShowContents { get; set; }
+
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
@@ -98,21 +100,6 @@ namespace Robust.Server.GameObjects.Components.Container
 
             ID = id;
             Manager = manager;
-        }
-
-        private static bool RecursiveFindContainerMan(ITransformComponent transform,
-            out IContainerManager containerManager)
-        {
-            if (transform == null)
-            {
-                containerManager = default;
-                return false;
-            }
-
-            if (transform.Owner.TryGetComponent(out containerManager))
-                return true;
-
-            return RecursiveFindContainerMan(transform.Parent, out containerManager);
         }
 
         /// <inheritdoc />
@@ -129,7 +116,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (transform.Parent == null) // Only true if Parent is the map entity
                 return false;
 
-            if(ContainerHelpers.TryGetContainer(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toinsert))
+            if(ContainerHelpers.TryGetContainerMan(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toinsert))
             {
                 // Can't remove from existing container, can't insert.
                 return false;

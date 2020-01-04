@@ -52,6 +52,12 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private void HandleMovement(IEntity entity, float frameTime)
         {
+            if (entity.Deleted)
+            {
+                // Ugh let's hope this fixes the crashes.
+                return;
+            }
+
             var velocity = entity.GetComponent<PhysicsComponent>();
             if (velocity.DidMovementCalculations)
             {
@@ -135,6 +141,12 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
         {
+            if (velocity.Deleted)
+            {
+                // Help crashes.
+                return default;
+            }
+
             var movement = velocity.LinearVelocity * frameTime;
             if (movement.LengthSquared <= Epsilon)
             {

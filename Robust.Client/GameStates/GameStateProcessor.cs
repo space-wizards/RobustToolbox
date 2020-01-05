@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
@@ -17,6 +18,7 @@ namespace Robust.Client.GameStates
         private bool _waitingForFull = true;
         private int _interpRatio;
         private GameTick _lastProcessedRealState;
+        private GameTick _highestFromSequence;
 
         /// <inheritdoc />
         public int MinBufferSize => Interpolation ? 3 : 2;
@@ -25,7 +27,7 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => MinBufferSize + InterpRatio;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _stateBuffer.Count;
+        public int CurrentBufferSize => _stateBuffer.Count(s => s.ToSequence >= _timing.CurTick);
 
         /// <inheritdoc />
         public bool Interpolation { get; set; }
@@ -126,7 +128,7 @@ namespace Robust.Client.GameStates
                 // This will slightly speed up or slow down the client tickrate based on the contents of the buffer.
                 // CalcNextState should have just cleaned out any old states, so the buffer contains [t-1(last), t+0(cur), t+1(next), t+2, t+3, ..., t+n]
                 // we can use this info to properly time our tickrate so it does not run fast or slow compared to the server.
-                _timing.TickTimingAdjustment = (_stateBuffer.Count - (float)TargetBufferSize) * 0.10f;
+                _timing.TickTimingAdjustment = (CurrentBufferSize - (float)TargetBufferSize) * 0.10f;
             }
             else
             {
@@ -203,6 +205,8 @@ namespace Robust.Client.GameStates
             curState = null;
             nextState = null;
 
+            GameState futureState = null;
+
             for (var i = 0; i < _stateBuffer.Count; i++)
             {
                 var state = _stateBuffer[i];
@@ -211,19 +215,32 @@ namespace Robust.Client.GameStates
                 if (state.ToSequence == curTick)
                 {
                     curState = state;
+                    _highestFromSequence = state.FromSequence;
                 }
                 else if (Interpolation && state.ToSequence == nextTick)
                 {
                     nextState = state;
                 }
-                else if (state.ToSequence < lastTick) // remove any old states we find to keep the buffer clean
+                else if (state.ToSequence > nextTick)
+                {
+                    futureState = state;
+                }
+                else if (state.ToSequence < _highestFromSequence) // remove any old states we find to keep the buffer clean
                 {
                     _stateBuffer.RemoveSwap(i);
                     i--;
                 }
             }
 
-            // we won't extrapolate, and curState was not found.
+            // can't find current state, but we do have a future state.
+            if (!Extrapolation && curState == null && futureState != null)
+            {
+                //this is not actually extrapolation
+                curState = ExtrapolateState(_highestFromSequence, curTick); 
+                return true; // keep moving, we have a future state
+            }
+
+            // we won't extrapolate, and curState was not found, buffer is empty
             if (!Extrapolation && curState == null)
                 return false;
 
@@ -236,12 +253,12 @@ namespace Robust.Client.GameStates
 
             if (curState == null)
             {
-                curState = ExtrapolateState(lastTick, curTick);
+                curState = ExtrapolateState(_highestFromSequence, curTick);
             }
 
             if (nextState == null && Interpolation)
             {
-                nextState = ExtrapolateState(curTick, nextTick);
+                nextState = ExtrapolateState(_highestFromSequence, nextTick);
             }
 
             return true;

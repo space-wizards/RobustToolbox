@@ -33,5 +33,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">
+      <LogicalName>Robust.Shared.Utility.TypeAbbreviations.yaml</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

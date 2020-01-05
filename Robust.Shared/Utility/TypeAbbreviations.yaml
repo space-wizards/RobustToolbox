@@ -1,0 +1,52 @@
+- long: "System"
+  short: "S"
+  sub:
+  - long: "Collections"
+    short: "C"
+    sub:
+    - long: "Generic"
+      short: "G"
+
+- long: "Robust"
+  short: "R"
+  sub:
+  - long: "Shared"
+    short: "Sh"
+    sub:
+    - long: "Maths"
+      short: "M"
+
+    - &GO
+      long: "GameObjects"
+      short: "GO"
+      sub:
+      - long: "Components"
+        short: "C"
+
+  - long: "Server"
+    short: "Se"
+    sub:
+    - *GO
+
+  - long: "Client"
+    short: "C"
+    sub:
+    - *GO
+
+- long: "Content"
+  short: "C"
+  sub:
+  - long: "Shared"
+    short: "Sh"
+    sub:
+    - *GO
+
+  - long: "Server"
+    short: "Se"
+    sub:
+    - *GO
+
+  - long: "Client"
+    short: "C"
+    sub:
+    - *GO

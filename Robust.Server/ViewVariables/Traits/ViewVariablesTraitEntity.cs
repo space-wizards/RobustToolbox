@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables.Traits
@@ -24,7 +24,7 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = type.ToString(), Qualified = type.AssemblyQualifiedName});
+                        {Stringified = TypeAbbreviation.Abbreviate(type.ToString()), Qualified = type.AssemblyQualifiedName});
                 }
 
                 return new ViewVariablesBlobEntityComponents

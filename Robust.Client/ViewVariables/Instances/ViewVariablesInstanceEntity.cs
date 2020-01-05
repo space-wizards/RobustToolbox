@@ -10,6 +10,7 @@ using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Instances
@@ -123,7 +124,7 @@ namespace Robust.Client.ViewVariables.Instances
             var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
             foreach (var component in componentList)
             {
-                var button = new Button {Text = component.GetType().ToString(), TextAlign = Button.AlignMode.Left};
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType().ToString()), TextAlign = Button.AlignMode.Left};
                 button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
                 clientComponents.AddChild(button);
             }

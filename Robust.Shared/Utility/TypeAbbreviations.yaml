@@ -1,3 +1,10 @@
+# Config file for the abbreviations system (TypeAbbreviations.cs).
+# Format should be pretty self explanatory.
+# Each abbreviation has a long, a short and (optionally) a list of sub abbreviations.
+# The sub abbreviations get tried if their owner passed.
+# Only one abbreviation can pass in a set of abbreviations
+#   (and then that passing one's sub abbreviations get considered).
+
 - long: "System"
   short: "S"
   sub:

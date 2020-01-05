@@ -5,6 +5,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Utility
 {
+    /// <summary>
+    ///     Utility class for abbreviating common type names.
+    /// </summary>
     public static class TypeAbbreviation
     {
         private static readonly Abbreviation[] _abbreviations;
@@ -26,6 +29,11 @@ namespace Robust.Shared.Utility
             _abbreviations = ParseAbbreviations((YamlSequenceNode) document.RootNode);
         }
 
+        /// <summary>
+        ///     Attempt to abbreviate a full type name into something shorter.
+        /// </summary>
+        /// <param name="name">The type name to abbreviate.</param>
+        /// <returns>A shorter, but still unique, version of the passed type name.</returns>
         public static string Abbreviate(ReadOnlySpan<char> name)
         {
             var sb = new StringBuilder();

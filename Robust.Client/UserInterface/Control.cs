@@ -471,6 +471,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newChild">The new child.</param>
         protected virtual void ChildAdded(Control newChild)
         {
+            MinimumSizeChanged();
         }
 
         /// <summary>
@@ -516,6 +517,7 @@ namespace Robust.Client.UserInterface
         /// <param name="child">The former child.</param>
         protected virtual void ChildRemoved(Control child)
         {
+            MinimumSizeChanged();
         }
 
         /// <summary>

@@ -702,6 +702,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         protected virtual void FrameUpdate(FrameEventArgs args)
         {
+            ProcessAnimations(args);
         }
 
         public enum CursorShape

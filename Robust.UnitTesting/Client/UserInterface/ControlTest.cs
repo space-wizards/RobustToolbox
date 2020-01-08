@@ -1,9 +1,12 @@
 using System;
+using Content.Client.Animations;
 using NUnit.Framework;
+using Robust.Client.Animations;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
+using Robust.Shared.Animations;
 using Robust.Shared.IoC;
-using Robust.Shared.Utility;
+using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Client.UserInterface
 {
@@ -124,6 +127,58 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control();
 
             control.SetValue(_nullableAttachedProperty, null);
+        }
+
+        [Test]
+        public void TestAnimations()
+        {
+            var control = new TestControl();
+            var animation = new Animation
+            {
+                Length = TimeSpan.FromSeconds(3),
+                AnimationTracks =
+                {
+                    new AnimationTrackControlProperty
+                    {
+                        Property = nameof(TestControl.Foo),
+                        KeyFrames =
+                        {
+                            new AnimationTrackProperty.KeyFrame(1f, 1f),
+                            new AnimationTrackProperty.KeyFrame(3f, 2f)
+                        }
+                    }
+                }
+            };
+
+            control.PlayAnimation(animation, "foo");
+            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(0f)); // Should still be 0.
+
+            control.DoFrameUpdate(new FrameEventArgs(0.5001f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(1f, 0.01)); // Should now be 1.
+
+            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(1.5f, 0.01)); // Should now be 1.5.
+
+            control.DoFrameUpdate(new FrameEventArgs(1.0f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(2.5f, 0.01)); // Should now be 2.5.
+
+            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(3f, 0.01)); // Should now be 3.
+
+            control.DoFrameUpdate(new FrameEventArgs(0.5f));
+
+            Assert.That(control.Foo, new ApproxEqualityConstraint(3f, 0.01)); // Should STILL be 3.
+        }
+
+        private sealed class TestControl : Control
+        {
+            [Animatable] public float Foo { get; set; }
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Animations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -99,6 +100,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color? FontColorOverride { get; set; }
 
         public int? ShadowOffsetXOverride { get; set; }

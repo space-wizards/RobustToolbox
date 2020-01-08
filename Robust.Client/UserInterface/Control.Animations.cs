@@ -1,19 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Client.Animations;
-using Robust.Shared.GameObjects;
+using Robust.Shared.Timing;
 using static Robust.Client.Animations.AnimationPlaybackShared;
 
-namespace Robust.Client.GameObjects.Components.Animations
+namespace Robust.Client.UserInterface
 {
-    /// <summary>
-    ///     Plays back <see cref="Animation"/>s on entities.
-    /// </summary>
-    public sealed class AnimationPlayerComponent : Component
+    public partial class Control
     {
-        public override string Name => "AnimationPlayer";
-
-        private readonly Dictionary<string, AnimationPlayback> _playingAnimations
+        [CanBeNull]
+        private Dictionary<string, AnimationPlayback> _playingAnimations
             = new Dictionary<string, AnimationPlayback>();
 
         /// <summary>
@@ -23,26 +20,27 @@ namespace Robust.Client.GameObjects.Components.Animations
         /// <param name="key">
         ///     The key for this animation play. This key can be used to stop playback short later.
         /// </param>
-        public void Play(Animation animation, string key)
+        public void PlayAnimation(Animation animation, string key)
         {
             var playback = new AnimationPlayback(animation);
 
+            _playingAnimations ??= new Dictionary<string, AnimationPlayback>();
             _playingAnimations.Add(key, playback);
         }
 
         public bool HasRunningAnimation(string key)
         {
-            return _playingAnimations.ContainsKey(key);
+            return _playingAnimations?.ContainsKey(key) ?? false;
         }
 
-        public void Stop(string key)
+        public void StopAnimation(string key)
         {
-            _playingAnimations.Remove(key);
+            _playingAnimations?.Remove(key);
         }
 
-        internal void Update(float frameTime)
+        private void ProcessAnimations(FrameEventArgs args)
         {
-            if (_playingAnimations.Count == 0)
+            if (_playingAnimations == null || _playingAnimations.Count == 0)
             {
                 return;
             }
@@ -50,7 +48,7 @@ namespace Robust.Client.GameObjects.Components.Animations
             // TODO: Get rid of this ToArray() allocation.
             foreach (var (key, playback) in _playingAnimations.ToArray())
             {
-                var keep = UpdatePlayback(Owner, playback, frameTime);
+                var keep = UpdatePlayback(this, playback, args.DeltaSeconds);
                 if (!keep)
                 {
                     _playingAnimations.Remove(key);

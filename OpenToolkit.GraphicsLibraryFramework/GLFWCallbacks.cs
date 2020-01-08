@@ -1,4 +1,4 @@
-//
+﻿//
 // GLFWCallbacks.cs
 //
 // Copyright (C) 2019 OpenTK
@@ -167,5 +167,14 @@ namespace OpenToolkit.GraphicsLibraryFramework
         /// </summary>
         /// <param name="window">The window that needs to be refreshed.</param>
         public delegate void WindowRefreshCallback(Window* window);
+
+        /// <summary>
+        /// This is the function pointer type for window content scale callbacks. 
+        /// </summary>
+        /// <param name="window">The window whose content scale changed. </param>
+        /// <param name="xscale">The new x-axis content scale of the window. </param>
+        /// <param name="yscale">The new y-axis content scale of the window.</param>
+        /// <seealso cref="GLFW.SetWindowContentScaleCallback"/>
+        public delegate void WindowContentScaleCallback(Window* window, float xscale, float yscale);
     }
 }

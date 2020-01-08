@@ -1101,6 +1101,49 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
         /// <summary>
         /// <para>
+        /// This function retrieves the content scale for the specified window.
+        /// </para>
+        /// <para>
+        /// The content scale is the ratio between the current DPI and the platform's default DPI.
+        /// This is especially important for text and any UI elements.
+        /// If the pixel dimensions of your UI scaled by this look appropriate on your machine then it should
+        /// appear at a reasonable size on other machines regardless of their DPI and scaling settings.
+        /// This relies on the system DPI and scaling settings being somewhat correct.
+        /// </para>
+        ///
+        /// <para>
+        /// On systems where each monitors can have its own content scale,
+        /// the window content scale will depend on which monitor the system considers the window to be on.
+        /// </para>
+        /// </summary>
+        /// <param name="window">The window to query.</param>
+        /// <param name="xScale">
+        /// Where to store the x-axis content scale, or <c>out _</c>.
+        /// </param>
+        /// <param name="yScale">
+        /// Where to store the y-axis content scale, or <c>out _</c>.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// This function must only be called from the main thread.
+        /// </para>
+        /// <para>
+        /// Possible errors include <see cref="ErrorCode.NotInitialized"/> and <see cref="ErrorCode.PlatformError"/>.
+        /// </para>
+        /// </remarks>
+        public static unsafe void GetWindowContentScale(
+            Window* window,
+            out float xScale,
+            out float yScale)
+        {
+            float x, y;
+            glfwGetWindowContentScale(window, &x, &y);
+            xScale = x;
+            yScale = y;
+        }
+
+        /// <summary>
+        /// <para>
         /// This function returns the opacity of the window, including any decorations.
         /// </para>
         /// <para>
@@ -4420,6 +4463,31 @@ namespace OpenToolkit.GraphicsLibraryFramework
             GLFWCallbacks.WindowIconifyCallback callback)
         {
             return glfwSetWindowIconifyCallback(window, Marshal.GetFunctionPointerForDelegate(callback));
+        }
+
+        /// <summary>
+        /// <para>
+        /// This function sets the window content scale callback of the specified window,
+        /// which is called when the content scale of the specified window changes.
+        /// </para>
+        /// </summary>
+        /// <param name="window">The window whose content scale changed.</param>
+        /// <param name="xscale">The new x-axis content scale of the window. </param>
+        /// <param name="yscale">The new y-axis content scale of the window. </param>
+        /// <remarks>
+        /// <para>
+        /// This function must only be called from the main thread.
+        /// </para>
+        /// <para>
+        /// Possible errors include <see cref="ErrorCode.NotInitialized"/>.
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="GetWindowContentScale"/>
+        public static unsafe IntPtr SetWindowContentScaleCallback(
+            Window* window,
+            GLFWCallbacks.WindowContentScaleCallback callback)
+        {
+            return glfwSetWindowContentScaleCallback(window, Marshal.GetFunctionPointerForDelegate(callback));
         }
 
         /// <summary>

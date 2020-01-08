@@ -186,6 +186,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
             SearchBar.Clear();
+            BuildEntityList("");
         }
 
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)

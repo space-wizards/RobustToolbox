@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -36,6 +36,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLFWCallbacks.ScrollCallback _scrollCallback;
         private GLFWCallbacks.WindowCloseCallback _windowCloseCallback;
         private GLFWCallbacks.WindowSizeCallback _windowSizeCallback;
+        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback;
 
         private bool _glfwInitialized = false;
 
@@ -43,6 +44,7 @@ namespace Robust.Client.Graphics.Clyde
         private Window* _glfwWindow;
 
         private Vector2i _screenSize;
+        private Vector2 _windowScale;
         private Thread _mainThread;
 
         private Vector2 _lastMousePos;
@@ -118,6 +120,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetWindowSizeCallback(_glfwWindow, _windowSizeCallback);
             GLFW.SetScrollCallback(_glfwWindow, _scrollCallback);
             GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
+            GLFW.SetWindowContentScaleCallback(_glfwWindow, _windowContentScaleCallback);
 
             GLFW.MakeContextCurrent(_glfwWindow);
 
@@ -125,6 +128,9 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
             _screenSize = (fbW, fbH);
+
+            GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
+            _windowScale = (scaleX, scaleY);
 
             InitGLContext();
 
@@ -218,7 +224,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwCursorPos(Window* window, double x, double y)
         {
-            var newPos = new Vector2((float) x, (float) y);
+            var newPos = new Vector2((float) x, (float) y) * _windowScale;
             var delta = newPos - _lastMousePos;
             _lastMousePos = newPos;
 
@@ -288,6 +294,11 @@ namespace Robust.Client.Graphics.Clyde
             OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
         }
 
+        private void OnGlfwWindownContentScale(Window *window, float xScale, float yScale)
+        {
+            _windowScale = (xScale, yScale);
+        }
+
         private void StoreCallbacks()
         {
             _errorCallback = OnGlfwError;
@@ -298,6 +309,7 @@ namespace Robust.Client.Graphics.Clyde
             _scrollCallback = OnGlfwScroll;
             _windowCloseCallback = OnGlfwWindowClose;
             _windowSizeCallback = OnGlfwWindowSize;
+            _windowContentScaleCallback = OnGlfwWindownContentScale;
         }
 
         public override void SetWindowTitle(string title)

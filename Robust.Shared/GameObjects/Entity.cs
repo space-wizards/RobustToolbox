@@ -277,7 +277,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public bool TryGetComponent<T>(out T component)
-            where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 

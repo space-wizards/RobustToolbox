@@ -333,7 +333,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, out T component)
-            where T : class
         {
             if (TryGetComponent(uid, typeof(T), out var comp))
             {

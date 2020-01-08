@@ -151,8 +151,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, out T component)
-            where T : class;
+        bool TryGetComponent<T>(EntityUid uid, out T component);
 
         /// <summary>
         ///     Returns the component of a specific type.

@@ -110,7 +110,7 @@ namespace Robust.Client.Graphics.Clyde
             // Calculate world-space AABB for camera, to cull off-screen things.
             var eye = _eyeManager.CurrentEye;
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _screenSize / EyeManager.PIXELSPERMETER * eye.Zoom);
+                _framebufferSize / EyeManager.PIXELSPERMETER * eye.Zoom);
 
             using (DebugGroup("Lights"))
             {
@@ -416,7 +416,7 @@ namespace Robust.Client.Graphics.Clyde
 
                             ref var s = ref command.Scissor.Scissor;
                             // Don't forget to flip it, these coordinates have bottom left as origin.
-                            GL.Scissor(s.Left, _screenSize.Y - s.Bottom, s.Width, s.Height);
+                            GL.Scissor(s.Left, _framebufferSize.Y - s.Bottom, s.Width, s.Height);
                         }
                         else if (oldIsScissoring)
                         {

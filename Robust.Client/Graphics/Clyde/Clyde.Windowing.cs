@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -43,13 +42,17 @@ namespace Robust.Client.Graphics.Clyde
         private GraphicsContext _graphicsContext;
         private Window* _glfwWindow;
 
-        private Vector2i _screenSize;
+        private Vector2i _framebufferSize;
+        private Vector2i _windowSize;
         private Vector2 _windowScale;
+        private Vector2 _pixelRatio;
         private Thread _mainThread;
 
         private Vector2 _lastMousePos;
 
-        public override Vector2i ScreenSize => _screenSize;
+        // NOTE: in engine we pretend the framebuffer size is the screen size..
+        // For practical reasons like UI rendering.
+        public override Vector2i ScreenSize => _framebufferSize;
 
         public Vector2 MouseScreenPosition => _lastMousePos;
 
@@ -127,10 +130,15 @@ namespace Robust.Client.Graphics.Clyde
             VSyncChanged();
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
-            _screenSize = (fbW, fbH);
+            _framebufferSize = (fbW, fbH);
 
             GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
             _windowScale = (scaleX, scaleY);
+
+            GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
+            _windowSize = (w, h);
+
+            _pixelRatio = _framebufferSize / _windowSize;
 
             InitGLContext();
 
@@ -224,7 +232,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwCursorPos(Window* window, double x, double y)
         {
-            var newPos = new Vector2((float) x, (float) y) * _windowScale;
+            var newPos = ((float) x, (float) y) * _pixelRatio;
             var delta = newPos - _lastMousePos;
             _lastMousePos = newPos;
 
@@ -281,9 +289,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwWindowSize(Window* window, int width, int height)
         {
-            var oldSize = _screenSize;
+            var oldSize = _framebufferSize;
             GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
-            _screenSize = (fbW, fbH);
+            _framebufferSize = (fbW, fbH);
+
+            _windowSize = (width, height);
+            _pixelRatio = _framebufferSize / _windowSize;
 
             GL.Viewport(0, 0, fbW, fbH);
             if (fbW != 0 && fbH != 0)
@@ -291,7 +302,7 @@ namespace Robust.Client.Graphics.Clyde
                 _regenerateLightRenderTarget();
             }
 
-            OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
+            OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
         }
 
         private void OnGlfwWindownContentScale(Window *window, float xScale, float yScale)

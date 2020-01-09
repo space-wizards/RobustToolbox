@@ -455,13 +455,13 @@ namespace Robust.Client.UserInterface.Controls
                 var bottom = anchorBottom * pSizeY + marginBottom;
 
                 var (wSizeX, wSizeY) = (right - left, bottom - top);
-                var (minSizeX, minSizeY) = child.CombinedMinimumSize;
+                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
 
                 HandleLayoutOverflow(growHorizontal, minSizeX, left, wSizeX, out var posX, out var sizeX);
                 HandleLayoutOverflow(growVertical, minSizeY, top, wSizeY, out var posY, out var sizeY);
 
-                child.Position = (posX, posY);
-                child.Size = (sizeX, sizeY);
+                child.Position = new Vector2(posX, posY) / UserInterfaceManager.UIScale;
+                child.Size = new Vector2(sizeX, sizeY)  / UserInterfaceManager.UIScale;
             }
         }
 

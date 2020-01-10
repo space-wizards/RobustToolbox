@@ -24,7 +24,6 @@ namespace Robust.Shared.Interfaces.Physics
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
-        void BuildCollisionGrid();
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

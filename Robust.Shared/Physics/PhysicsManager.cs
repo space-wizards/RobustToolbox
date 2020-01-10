@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network.Messages;
 
 namespace Robust.Shared.Physics
 {
@@ -18,6 +15,8 @@ namespace Robust.Shared.Physics
     {
         private readonly List<IPhysBody> _bodies = new List<IPhysBody>();
         private readonly List<IPhysBody> _results = new List<IPhysBody>();
+
+        IBroadPhase _broadphase = new BroadPhaseNaive();
 
         /// <summary>
         ///     returns true if collider intersects a physBody under management. Does not trigger Bump.
@@ -55,6 +54,7 @@ namespace Robust.Shared.Physics
 
             var collidable = (IPhysBody) entity.GetComponent<ICollidableComponent>();
 
+            // This will never collide with anything
             if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
                 return false;
 
@@ -68,20 +68,14 @@ namespace Robust.Shared.Physics
             _results.Clear();
             DoCollisionTest(collidable, colliderAABB, _results);
 
+            // collided with nothing
+            if (_results.Count == 0)
+                return false;
+
             //See if our collision will be overridden by a component
             var collisionmodifiers = entity.GetAllComponents<ICollideSpecial>().ToList();
             var collidedwith = new List<IEntity>();
 
-            var collided = TestSpecialCollisionAndBump(entity, bump, collisionmodifiers, collidedwith);
-
-            collidable.Bump(collidedwith);
-
-            //TODO: This needs multi-grid support.
-            return collided;
-        }
-
-        private bool TestSpecialCollisionAndBump(IEntity entity, bool bump, List<ICollideSpecial> collisionmodifiers, List<IEntity> collidedwith)
-        {
             //try all of the AABBs against the target rect.
             var collided = false;
             foreach (var otherCollidable in _results)
@@ -113,6 +107,9 @@ namespace Robust.Shared.Physics
                 collidedwith.Add(otherCollidable.Owner);
             }
 
+            collidable.Bump(collidedwith);
+
+            //TODO: This needs multi-grid support.
             return collided;
         }
 
@@ -124,34 +121,40 @@ namespace Robust.Shared.Physics
         /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
         internal void DoCollisionTest(IPhysBody physBody, Box2 colliderAABB, List<IPhysBody> results)
         {
-            foreach (var body in GetCollidablesForLocation(colliderAABB))
+            // TODO: Terrible hack to fix bullets crashing the server.
+            // Should be handled with deferred physics events instead.
+            if(physBody.Owner.Deleted)
+                return;
+
+            _broadphase.Query((delegate(int id)
             {
+                var body = _broadphase.GetProxy(id).Body;
+
                 // TODO: Terrible hack to fix bullets crashing the server.
                 // Should be handled with deferred physics events instead.
                 if (body.Owner.Deleted)
-                {
-                    continue;
-                }
+                    return true;
 
-                if (!body.CollisionEnabled)
-                {
-                    continue;
-                }
+                if (TestMask(physBody, body))
+                    results.Add(body);
 
-                if ((physBody.CollisionMask & body.CollisionLayer) == 0x0)
-                {
-                    continue;
-                }
+                return true;
+            }), colliderAABB);
+        }
 
-                if (physBody.MapID != body.MapID ||
-                    physBody == body ||
-                    !colliderAABB.Intersects(body.WorldAABB))
-                {
-                    continue;
-                }
+        private static bool TestMask(IPhysBody a, IPhysBody b)
+        {
+            if (a == b)
+                return false;
 
-                results.Add(body);
-            }
+            if (!a.CollisionEnabled || !b.CollisionEnabled)
+                return false;
+
+            if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
+                (b.CollisionMask & a.CollisionLayer) == 0x0)
+                return false;
+
+            return a.MapID == b.MapID;
         }
 
         /// <summary>
@@ -161,7 +164,16 @@ namespace Robust.Shared.Physics
         public void AddBody(IPhysBody physBody)
         {
             if (!_bodies.Contains(physBody))
+            {
                 _bodies.Add(physBody);
+
+                var proxy = new BodyProxy()
+                {
+                    Body = physBody
+                };
+
+                physBody.ProxyId = _broadphase.AddProxy(proxy);
+            }
             else
                 Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
         }
@@ -173,7 +185,10 @@ namespace Robust.Shared.Physics
         public void RemoveBody(IPhysBody physBody)
         {
             if (_bodies.Contains(physBody))
+            {
                 _bodies.Remove(physBody);
+                _broadphase.RemoveProxy(physBody.ProxyId);
+            }
             else
                 Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
         }
@@ -213,58 +228,5 @@ namespace Robust.Shared.Physics
         }
 
         public event Action<DebugRayData> DebugDrawRay;
-
-        private Dictionary<Vector2, List<IPhysBody>> _collisionGrid = new Dictionary<Vector2, List<IPhysBody>>();
-        private float _collisionGridResolution = 5;
-
-        public void BuildCollisionGrid()
-        {
-            foreach (var bodies in _collisionGrid.Values)
-            {
-                bodies.Clear();
-            }
-
-            foreach (var body in _bodies)
-            {
-                var snappedLocation = SnapLocationToGrid(body.WorldAABB);
-                if (!_collisionGrid.TryGetValue(snappedLocation, out var bodies))
-                {
-                    bodies = new List<IPhysBody>();
-                    _collisionGrid.Add(snappedLocation, bodies);
-                }
-
-                bodies.Add(body);
-            }
-        }
-
-        private Vector2 SnapLocationToGrid(Box2 worldAAAB)
-        {
-            var result = worldAAAB.Center;
-            result /= _collisionGridResolution;
-            result = new Vector2((float)Math.Floor(result.X), (float)Math.Floor(result.Y));
-            return result;
-        }
-
-        private IEnumerable<IPhysBody> GetCollidablesForLocation(Box2 location)
-        {
-            var snappedLocation = SnapLocationToGrid(location);
-
-            for (var xOffset = -1; xOffset <= 1; xOffset++)
-            {
-                for (var yOffset = -1; yOffset <= 1; yOffset++)
-                {
-                    var offsetLocation = snappedLocation + new Vector2(xOffset, yOffset);
-                    if (!_collisionGrid.TryGetValue(offsetLocation, out var bodies))
-                    {
-                        continue;
-                    }
-
-                    foreach (var body in bodies)
-                    {
-                        yield return body;
-                    }
-                }
-            }
-        }
     }
 }

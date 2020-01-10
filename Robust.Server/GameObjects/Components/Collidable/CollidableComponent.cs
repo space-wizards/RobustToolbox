@@ -35,6 +35,9 @@ namespace Robust.Server.GameObjects
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
+        public int ProxyId { get; set; }
+
+        /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);

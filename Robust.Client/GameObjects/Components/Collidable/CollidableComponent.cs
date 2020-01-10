@@ -74,6 +74,9 @@ namespace Robust.Client.GameObjects
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
+        public int ProxyId { get; set; }
+
+        /// <inheritdoc />
         void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));

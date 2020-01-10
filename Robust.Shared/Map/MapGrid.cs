@@ -68,6 +68,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
 
+        /// <inheritdoc />
         public Box2 LocalBounds { get; private set; }
 
         /// <inheritdoc />

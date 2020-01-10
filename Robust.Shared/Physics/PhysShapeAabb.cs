@@ -44,6 +44,9 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
+        public void ApplyState() { }
+
+        /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return _localBounds;

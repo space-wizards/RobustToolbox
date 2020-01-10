@@ -24,5 +24,7 @@ namespace Robust.Shared.Physics
         ///  Bitmask of the layers this component collides with.
         /// </summary>
         int CollisionMask { get; set; }
+
+        void ApplyState();
     }
 }

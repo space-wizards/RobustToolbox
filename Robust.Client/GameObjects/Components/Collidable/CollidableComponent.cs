@@ -166,15 +166,25 @@ namespace Robust.Client.GameObjects
             var newState = (CollidableComponentState) curState;
 
             // edge triggered
-            if (newState.CollisionEnabled == _collisionEnabled)
-                return;
+            if (newState.CollisionEnabled != _collisionEnabled)
+            {
+                if (newState.CollisionEnabled)
+                    EnableCollision();
+                else
+                    DisableCollision();
+            }
 
-            if (newState.CollisionEnabled)
-                EnableCollision();
-            else
-                DisableCollision();
+            if (newState.PhysShapes != null)
+            {
+                _physShapes = newState.PhysShapes;
 
-            _physShapes = newState.PhysShapes;
+                foreach (var shape in _physShapes)
+                {
+                    shape.ApplyState();
+                }
+            }
+
+
         }
 
         /// <inheritdoc />

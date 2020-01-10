@@ -401,6 +401,8 @@ namespace Robust.Shared.Map
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
 
+                    //TODO: Add collidable component
+
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 
                     if (createEntity)

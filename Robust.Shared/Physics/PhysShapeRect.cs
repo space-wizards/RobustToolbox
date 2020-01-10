@@ -34,6 +34,9 @@ namespace Robust.Shared.Physics
             set => _collisionMask = value;
         }
 
+        /// <inheritdoc />
+        public void ApplyState() { }
+
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _collisionLayer, "layer", 0);

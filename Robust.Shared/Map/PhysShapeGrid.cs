@@ -19,7 +19,6 @@ namespace Robust.Shared.Map
         [NonSerialized]
         private IMapGridInternal _mapGrid;
 
-
         /// <inheritdoc />
         /// <remarks>
         /// The collision layer of a grid physics shape cannot be changed.
@@ -52,6 +51,14 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Constructs a new instance of <see cref="PhysShapeGrid"/>.
         /// </summary>
+        public PhysShapeGrid()
+        {
+            // Better hope ExposeData get called...
+        }
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="PhysShapeGrid"/>.
+        /// </summary>
         public PhysShapeGrid(IMapGrid mapGrid)
         {
             _mapGrid = (IMapGridInternal)mapGrid;
@@ -59,7 +66,16 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void ExposeData(ObjectSerializer serializer) { }
+        public void ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataField(ref _gridId, "grid", GridId.Invalid);
+
+            if (serializer.Reading) // There is no Initialize function
+            {
+                var mapMan = IoCManager.Resolve<IMapManager>();
+                _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
+            }
+        }
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)

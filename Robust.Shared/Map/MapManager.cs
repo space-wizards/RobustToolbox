@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -401,15 +402,15 @@ namespace Robust.Shared.Map
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
 
-                    //TODO: Add collidable component
+                    var collideComp = newEnt.AddComponent<CollidableComponent>();
+                    collideComp.CollisionEnabled = true;
+                    collideComp.IsHardCollidable = true;
+                    collideComp.PhysicsShapes.Add(new PhysShapeGrid(grid));
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));
 
-                    if (createEntity)
-                    {
-                        newEnt.InitializeComponents();
-                        newEnt.StartAllComponents();
-                    }
+                    newEnt.InitializeComponents();
+                    newEnt.StartAllComponents();
                 }
             }
 

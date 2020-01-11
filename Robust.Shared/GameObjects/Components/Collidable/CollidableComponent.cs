@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects.Components
         private bool _isHardCollidable;
         private bool _isScrapingFloor;
         private BodyType _bodyType;
-        private List<IPhysShape> _physShapes;
+        private List<IPhysShape> _physShapes = new List<IPhysShape>();
 
         /// <inheritdoc />
         public override string Name => "Collidable";

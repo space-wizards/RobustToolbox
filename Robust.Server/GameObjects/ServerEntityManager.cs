@@ -2,8 +2,8 @@
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -25,7 +25,7 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IPauseManager _pauseManager;
 #pragma warning restore 649
 
-        private readonly List<(GameTick tick, EntityUid uid)> DeletionHistory = new List<(GameTick, EntityUid)>();
+        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new List<(GameTick, EntityUid)>();
 
         public override IEntity CreateEntityUninitialized(string prototypeName)
         {
@@ -109,13 +109,13 @@ namespace Robust.Server.GameObjects
         {
             base.DeleteEntity(e);
 
-            DeletionHistory.Add((CurrentTick, e.Uid));
+            _deletionHistory.Add((CurrentTick, e.Uid));
         }
 
         public List<EntityUid> GetDeletedEntities(GameTick fromTick)
         {
             var list = new List<EntityUid>();
-            foreach (var (tick, id) in DeletionHistory)
+            foreach (var (tick, id) in _deletionHistory)
             {
                 if (tick >= fromTick)
                 {
@@ -129,7 +129,7 @@ namespace Robust.Server.GameObjects
 
         public void CullDeletionHistory(GameTick toTick)
         {
-            DeletionHistory.RemoveAll(hist => hist.tick <= toTick);
+            _deletionHistory.RemoveAll(hist => hist.tick <= toTick);
         }
 
         #endregion IEntityManager Members

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -22,7 +22,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
-        private int NextClientEntityUid = EntityUid.ClientUid + 1;
+        private int _nextClientEntityUid = EntityUid.ClientUid + 1;
 
         public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
         {
@@ -118,7 +118,7 @@ namespace Robust.Client.GameObjects
         {
             var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
-            deletions = deletions ?? new EntityUid[0];
+            deletions ??= new EntityUid[0];
 
             if (curEntStates != null && curEntStates.Count != 0)
             {
@@ -161,7 +161,7 @@ namespace Robust.Client.GameObjects
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
-                Entity entity = (Entity)ent;
+                var entity = (Entity)ent;
                 HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1, kvStates.Value.Item2);
             }
 
@@ -242,7 +242,7 @@ namespace Robust.Client.GameObjects
 
         private EntityUid NewClientEntityUid()
         {
-            return new EntityUid(NextClientEntityUid++);
+            return new EntityUid(_nextClientEntityUid++);
         }
 
         private static void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
@@ -302,7 +302,6 @@ namespace Robust.Client.GameObjects
                 if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
                 {
                     DebugTools.Assert("Component does not exist for state.");
-                    continue;
                 }
 
                 DebugTools.Assert(kvStates.Value.curState == null

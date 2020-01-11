@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -11,7 +10,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects.Components
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
@@ -23,13 +22,16 @@ namespace Robust.Server.GameObjects
         private bool _isHardCollidable;
         private bool _isScrapingFloor;
         private BodyType _bodyType;
-        private List<IPhysShape> _physShapes = new List<IPhysShape>();
+        private List<IPhysShape> _physShapes;
 
         /// <inheritdoc />
         public override string Name => "Collidable";
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.COLLIDABLE;
+
+        /// <inheritdoc />
+        public override Type StateType => typeof(CollidableComponentState);
 
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
@@ -56,6 +58,30 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
+        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        {
+            if (curState == null)
+                return;
+
+            var newState = (CollidableComponentState)curState;
+
+            _collisionEnabled = newState.CollisionEnabled;
+            _isHardCollidable = newState.HardCollidable;
+            _isScrapingFloor = newState.ScrapingFloor;
+
+            //TODO: Is this always true?
+            if (newState.PhysShapes != null)
+            {
+                _physShapes = newState.PhysShapes;
+
+                foreach (var shape in _physShapes)
+                {
+                    shape.ApplyState();
+                }
+            }
+        }
+
+        /// <inheritdoc />
         [ViewVariables]
         Box2 IPhysBody.WorldAABB
         {
@@ -76,7 +102,10 @@ namespace Robust.Server.GameObjects
                 var bounds = new Box2();
 
                 foreach (var shape in _physShapes)
-                    bounds = bounds.Union(shape.CalculateLocalBounds(angle));
+                {
+                    var shapeBounds = shape.CalculateLocalBounds(angle);
+                    bounds = bounds.IsEmpty() ? shapeBounds : bounds.Union(shapeBounds);
+                }
 
                 return bounds;
             }
@@ -156,6 +185,16 @@ namespace Robust.Server.GameObjects
             {
                 collidecomponents[i].CollideWith(bumpedinto);
             }
+        }
+
+        /// <inheritdoc />
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // normally ExposeData would create this
+            if (_physShapes == null)
+                _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
         }
 
         /// <inheritdoc />

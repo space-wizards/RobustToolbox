@@ -4,8 +4,8 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -80,7 +80,6 @@ namespace Robust.Client.Debugging
         {
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
-            private readonly IPrototypeManager _prototypeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -89,9 +88,8 @@ namespace Robust.Client.Debugging
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
-                _prototypeManager = protoMan;
 
-                Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+                Shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
             }
 
             protected override void Draw(DrawingHandleBase handle)

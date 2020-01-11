@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 
-namespace Robust.Shared.Interfaces.GameObjects.Components
+namespace Robust.Shared.GameObjects.Components
 {
     public interface ICollidableComponent : IComponent, IPhysBody
     {

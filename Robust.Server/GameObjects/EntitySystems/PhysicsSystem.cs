@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -10,6 +12,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
+    [UsedImplicitly]
     internal class PhysicsSystem : EntitySystem
     {
 #pragma warning disable 649

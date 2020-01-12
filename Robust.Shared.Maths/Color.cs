@@ -777,54 +777,55 @@ namespace Robust.Shared.Maths
         }
 #endif
 
-        public static Color? TryFromHex(string hexColor)
+        public static Color? TryFromHex(ReadOnlySpan<char> hexColor)
         {
             if (hexColor.Length <= 0 || hexColor[0] != '#') return null;
             if (hexColor.Length == 9)
             {
-                if (!byte.TryParse(hexColor.Substring(1, 2), NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor.Substring(3, 2), NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor.Substring(5, 2), NumberStyles.HexNumber, null, out var b)) return null;
-                if (!byte.TryParse(hexColor.Substring(7, 2), NumberStyles.HexNumber, null, out var a)) return null;
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
+                if (!byte.TryParse(hexColor[7..9], NumberStyles.HexNumber, null, out var a)) return null;
                 return new Color(r, g, b, a);
             }
             if (hexColor.Length == 7)
             {
-                if (!byte.TryParse(hexColor.Substring(1, 2), NumberStyles.HexNumber, null, out var r)) return null;
-                if (!byte.TryParse(hexColor.Substring(3, 2), NumberStyles.HexNumber, null, out var g)) return null;
-                if (!byte.TryParse(hexColor.Substring(5, 2), NumberStyles.HexNumber, null, out var b)) return null;
+                if (!byte.TryParse(hexColor[1..3], NumberStyles.HexNumber, null, out var r)) return null;
+                if (!byte.TryParse(hexColor[3..5], NumberStyles.HexNumber, null, out var g)) return null;
+                if (!byte.TryParse(hexColor[5..7], NumberStyles.HexNumber, null, out var b)) return null;
                 return new Color(r, g, b);
             }
+
+            static bool ParseDup(char chr, out byte value)
+            {
+                Span<char> buf = stackalloc char[2];
+                buf[0] = chr;
+                buf[1] = chr;
+
+                return byte.TryParse(buf, NumberStyles.HexNumber, null, out value);
+            }
+
             if (hexColor.Length == 5)
             {
-                var r = hexColor[1].ToString();
-                var g = hexColor[2].ToString();
-                var b = hexColor[3].ToString();
-                var a = hexColor[4].ToString();
-
-                if (!byte.TryParse(r + r, NumberStyles.HexNumber, null, out var rByte)) return null;
-                if (!byte.TryParse(g + g, NumberStyles.HexNumber, null, out var gByte)) return null;
-                if (!byte.TryParse(b + b, NumberStyles.HexNumber, null, out var bByte)) return null;
-                if (!byte.TryParse(a + a, NumberStyles.HexNumber, null, out var aByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return null;
+                if (!ParseDup(hexColor[2], out var gByte)) return null;
+                if (!ParseDup(hexColor[3], out var bByte)) return null;
+                if (!ParseDup(hexColor[4], out var aByte)) return null;
 
                 return new Color(rByte, gByte, bByte, aByte);
             }
             if (hexColor.Length == 4)
             {
-                var r = hexColor[1].ToString();
-                var g = hexColor[2].ToString();
-                var b = hexColor[3].ToString();
-
-                if (!byte.TryParse(r + r, NumberStyles.HexNumber, null, out var rByte)) return null;
-                if (!byte.TryParse(g + g, NumberStyles.HexNumber, null, out var gByte)) return null;
-                if (!byte.TryParse(b + b, NumberStyles.HexNumber, null, out var bByte)) return null;
+                if (!ParseDup(hexColor[1], out var rByte)) return null;
+                if (!ParseDup(hexColor[2], out var gByte)) return null;
+                if (!ParseDup(hexColor[3], out var bByte)) return null;
 
                 return new Color(rByte, gByte, bByte);
             }
             return null;
         }
 
-        public static Color FromHex(string hexColor, Color? fallback = null)
+        public static Color FromHex(ReadOnlySpan<char> hexColor, Color? fallback = null)
         {
             var color = TryFromHex(hexColor);
             if (color.HasValue)

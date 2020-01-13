@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -8,8 +9,10 @@ namespace Robust.Shared.Map
     /// </summary>
     internal static class GridChunkPartition
     {
-        public static void PartitionChunk(IMapChunk chunk, ref IList<Box2> rectangles)
+        public static void PartitionChunk(IMapChunk chunk, ref IList<Box2> rectangles, out Box2i bounds)
         {
+            rectangles.Clear();
+
             var size = chunk.ChunkSize;
 
             // copy 2d img
@@ -20,6 +23,8 @@ namespace Robust.Shared.Map
                     image[x, y] = !chunk.GetTile(x, y).IsEmpty;
 
             Partition(size, size, image, out var blocks, out var blockCount);
+
+            bounds = new Box2i();
 
             // convert blocks to rectangles array.
             for(int i=0;i< blockCount; i++)
@@ -33,9 +38,12 @@ namespace Robust.Shared.Map
                 var bottom = block.x1;
                 var top = block.x2 + 1;
 
-                var box = new Box2(left, bottom, right, top);
+                rectangles.Add(new Box2(left, bottom, right, top));
 
-                rectangles.Add(box);
+                if(bounds.Size.Equals(Vector2i.Zero))
+                    bounds = new Box2i(left, bottom, right, top);
+                else
+                    bounds = bounds.Union(new Box2i(left, bottom, right, top));
             }
         }
 

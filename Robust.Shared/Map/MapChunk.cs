@@ -17,9 +17,12 @@ namespace Robust.Shared.Map
         private readonly SnapGridCell[,] _snapGrid;
 
         private Box2i _cachedBounds;
+        private IList<Box2> _colBoxes;
 
         /// <inheritdoc />
         public GameTick LastModifiedTick { get; private set; }
+
+        public IEnumerable<Box2> CollisionBoxes => _colBoxes;
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
@@ -37,6 +40,7 @@ namespace Robust.Shared.Map
 
             _tiles = new Tile[ChunkSize, ChunkSize];
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
+            _colBoxes = new List<Box2>(0);
         }
 
         /// <inheritdoc />
@@ -121,7 +125,7 @@ namespace Robust.Shared.Map
             LastModifiedTick = _grid.CurTick;
 
             _tiles[xIndex, yIndex] = tile;
-            CheckBounds(new Vector2i(xIndex, yIndex), tile.IsEmpty);
+            RegenerateCollision();
 
             _grid.NotifyTileChanged(newTileRef, oldTile);
         }
@@ -233,117 +237,10 @@ namespace Robust.Shared.Map
             }
         }
 
-        private void CheckBounds(in Vector2i indices, bool empty)
+        private void RegenerateCollision()
         {
-            var tileBounds = new Box2i(0,0,1, 1).Translated(indices);
-
-            if (!empty)
-            {
-                // placing tiles can only expand the bounds, it is easier to just blind union
-                _cachedBounds = _cachedBounds.Size.Equals(Vector2i.Zero) ? tileBounds : _cachedBounds.Union(tileBounds);
-            }
-            else
-            {
-                // removing tiles can only shrink the bounds, this is not an easy thing to detect
-                ReduceBoundsX(_tiles, tileBounds, ref _cachedBounds);
-                ReduceBoundsY(_tiles, tileBounds, ref _cachedBounds);
-            }
-        }
-
-        private static void ReduceBoundsX(in Tile[,] tiles, Box2i tBounds, ref Box2i cBounds)
-        {
-            if (tBounds.Left != cBounds.Left && tBounds.Right != cBounds.Right)
-                return; // nothing to do, we are not on an edge
-
-            var left = tBounds.Left == cBounds.Left;
-
-            // removing a tile can shrink the side more than one tile
-            while (cBounds.Width > 0)
-            {
-                // check if we are the only tile holding the side out
-                if(!AnyTileOnY(tiles, new Vector2i(cBounds.Bottom, cBounds.Top), tBounds.BottomLeft))
-                    return; // our removal does not modify the edge, we are done here
-
-                // shrink the chunk bounds
-                int newLeft;
-                int newRight;
-                if (left)
-                {
-                    newLeft = cBounds.Left + 1;
-                    newRight = cBounds.Right;
-                    tBounds = tBounds.Translated(new Vector2i(1, 0));
-                }
-                else
-                {
-                    newLeft = cBounds.Left;
-                    newRight = cBounds.Right - 1;
-                    tBounds = tBounds.Translated(new Vector2i(-1, 0));
-                }
-
-                cBounds = new Box2i(newLeft, cBounds.Bottom, newRight, cBounds.Top);
-            }
-        }
-
-        private static void ReduceBoundsY(in Tile[,] tiles, Box2i tBounds, ref Box2i cBounds)
-        {
-            if (tBounds.Bottom != cBounds.Bottom && tBounds.Top != cBounds.Top)
-                return; // nothing to do, we are not on an edge
-
-            var bottom = tBounds.Bottom == cBounds.Bottom; // which side we are moving
-
-            // removing a tile can shrink the side more than one tile
-            while (cBounds.Height > 0)
-            {
-                // check if we are the only tile holding the side out
-                if (!AnyTileOnX(tiles, new Vector2i(cBounds.Left, cBounds.Right), tBounds.BottomLeft))
-                    return; // our removal does not modify the edge
-
-                // shrink the chunk bounds
-                int newBottom;
-                int newTop;
-                if (bottom)
-                {
-                    newBottom = cBounds.Bottom + 1;
-                    newTop = cBounds.Top;
-                    tBounds = tBounds.Translated(new Vector2i(0, 1));
-                }
-                else
-                {
-                    newBottom = cBounds.Bottom;
-                    newTop = cBounds.Top - 1;
-                    tBounds = tBounds.Translated(new Vector2i(0, -1));
-                }
-
-                cBounds = new Box2i(cBounds.Left, newBottom, cBounds.Right, newTop);
-            }
-        }
-
-        private static bool AnyTileOnX(in Tile[,] tiles, Vector2i extents, in Vector2i indices)
-        {
-            var y = indices.Y;
-            for (var x = extents.X; x < extents.Y; x++)
-            {
-                if(tiles[x, y].IsEmpty)
-                    continue;
-
-                return false;
-            }
-
-            return true;
-        }
-
-        private static bool AnyTileOnY(in Tile[,] tiles, Vector2i extents, in Vector2i indices)
-        {
-            var x = indices.X;
-            for (var y = extents.X; y < extents.Y; y++)
-            {
-                if(tiles[x, y].IsEmpty)
-                    continue;
-
-                return false;
-            }
-
-            return true;
+            // generate collision rects
+            GridChunkPartition.PartitionChunk(this, ref _colBoxes, out _cachedBounds);
         }
 
         /// <inheritdoc />

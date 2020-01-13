@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Timing;
+﻿using System.Collections.Generic;
+using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
@@ -6,8 +8,13 @@ namespace Robust.Shared.Map
     internal interface IMapChunkInternal : IMapChunk
     {
         /// <summary>
-        ///     The last game simulation tick that this chunk was modified.
+        /// The last game simulation tick that this chunk was modified.
         /// </summary>
         GameTick LastModifiedTick { get; }
+
+        /// <summary>
+        /// The physical collision boxes of this chunk.
+        /// </summary>
+        IEnumerable<Box2> CollisionBoxes { get; }
     }
 }

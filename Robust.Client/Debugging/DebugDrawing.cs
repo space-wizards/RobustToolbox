@@ -95,6 +95,7 @@ namespace Robust.Client.Debugging
             protected override void Draw(DrawingHandleBase handle)
             {
                 var worldHandle = (DrawingHandleWorld) handle;
+                var drawing = new PhysDrawingAdapter(worldHandle);
 
                 var viewport = _eyeManager.GetWorldViewport();
                 foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
@@ -107,7 +108,6 @@ namespace Robust.Client.Debugging
                         continue;
 
                     var worldBox = boundingBox.WorldAABB;
-                    var colorFill = Color.Green.WithAlpha(0.25f);
                     var colorEdge = Color.Red.WithAlpha(0.33f);
 
                     // if not on screen, or too small, continue
@@ -116,22 +116,34 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in boundingBox.PhysicsShapes)
                     {
-                        // TODO: Add a debug drawing function to IPhysShape
-                        if (shape is PhysShapeAabb aabb)
-                        {
-                            var shapeWorldBox = aabb.LocalBounds.Translated(transform.WorldPosition);
-                            worldHandle.DrawRect(shapeWorldBox, colorFill);
-                        }
-                        else if (shape is PhysShapeRect rect)
-                        {
-                            worldHandle.SetTransform(transform.WorldMatrix);
-                            worldHandle.DrawRect(rect.Rectangle, colorFill);
-                            worldHandle.SetTransform(Matrix3.Identity);
-                        }
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport);
                     }
-                    
+
                     // draw AABB
                     worldHandle.DrawRect(worldBox, colorEdge, false);
+                }
+            }
+
+            private class PhysDrawingAdapter : DebugDrawingHandle
+            {
+                private readonly DrawingHandleWorld _handle;
+
+                public PhysDrawingAdapter(DrawingHandleWorld worldHandle)
+                {
+                    _handle = worldHandle;
+                }
+
+                public override Color GridFillColor => Color.Blue.WithAlpha(0.05f);
+                public override Color RectFillColor => Color.Green.WithAlpha(0.25f);
+
+                public override void DrawRect(in Box2 box, in Color color)
+                {
+                    _handle.DrawRect(box, color);
+                }
+
+                public override void SetTransform(in Matrix3 transform)
+                {
+                    _handle.SetTransform(transform);
                 }
             }
         }

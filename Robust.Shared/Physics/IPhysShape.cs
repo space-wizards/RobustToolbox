@@ -26,5 +26,7 @@ namespace Robust.Shared.Physics
         int CollisionMask { get; set; }
 
         void ApplyState();
+
+        void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport);
     }
 }

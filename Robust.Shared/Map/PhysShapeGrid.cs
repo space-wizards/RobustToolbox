@@ -48,6 +48,22 @@ namespace Robust.Shared.Map
             _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
         }
 
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport)
+        {
+            handle.SetTransform(modelMatrix);
+            foreach (var chunk in _mapGrid.GetMapChunks().Values)
+            {
+                foreach (var box in chunk.CollisionBoxes)
+                {
+                    var localChunkPos = new Vector2(chunk.Indices.X, chunk.Indices.Y) * _mapGrid.ChunkSize;
+                    var localBox = box.Translated(localChunkPos);
+
+                    handle.DrawRect(localBox, handle.GridFillColor);
+                }
+            }
+            handle.SetTransform(Matrix3.Identity);
+        }
+
         /// <summary>
         /// Constructs a new instance of <see cref="PhysShapeGrid"/>.
         /// </summary>

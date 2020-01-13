@@ -37,6 +37,13 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void ApplyState() { }
 
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport)
+        {
+            handle.SetTransform(modelMatrix);
+            handle.DrawRect(Rectangle, handle.RectFillColor);
+            handle.SetTransform(Matrix3.Identity);
+        }
+
         public void ExposeData(ObjectSerializer serializer)
         {
             serializer.DataField(ref _collisionLayer, "layer", 0);

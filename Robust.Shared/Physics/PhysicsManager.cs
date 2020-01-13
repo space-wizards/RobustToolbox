@@ -16,7 +16,7 @@ namespace Robust.Shared.Physics
         private readonly List<IPhysBody> _bodies = new List<IPhysBody>();
         private readonly List<IPhysBody> _results = new List<IPhysBody>();
 
-        IBroadPhase _broadphase = new BroadPhaseNaive();
+        private readonly IBroadPhase _broadphase = new BroadPhaseNaive();
 
         /// <summary>
         ///     returns true if collider intersects a physBody under management. Does not trigger Bump.

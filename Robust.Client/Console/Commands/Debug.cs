@@ -545,6 +545,15 @@ namespace Robust.Client.Console.Commands
 
             tabContainer.AddChild(vBoxRadioButtons);
 
+            tabContainer.AddChild(new VBoxContainer
+            {
+                Name = "Slider",
+                Children =
+                {
+                    new Slider()
+                }
+            });
+
             window.OpenCenteredMinSize();
 
             return false;

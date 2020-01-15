@@ -64,8 +64,6 @@ namespace Robust.Shared.GameObjects
 
         protected readonly Queue<IncomingEntityMessage> NetworkMessageBuffer = new Queue<IncomingEntityMessage>();
 
-        protected int NextUid = (int)EntityUid.FirstUid;
-
         private readonly IEntityEventBus _eventBus = new EntityEventBus();
 
         /// <inheritdoc />
@@ -240,7 +238,7 @@ namespace Robust.Shared.GameObjects
         {
             if (uid == null)
             {
-                uid = new EntityUid(NextUid++);
+                uid = GenerateEntityUid();
             }
 
             if (EntityExists(uid.Value))
@@ -402,6 +400,8 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion message processing
+
+        protected abstract EntityUid GenerateEntityUid();
     }
 
     public enum EntityMessageType

@@ -25,6 +25,8 @@ namespace Robust.Server.GameObjects
         [Dependency] private readonly IPauseManager _pauseManager;
 #pragma warning restore 649
 
+        private int _nextServerEntityUid = (int)EntityUid.FirstUid;
+
         private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new List<(GameTick, EntityUid)>();
 
         public override IEntity CreateEntityUninitialized(string prototypeName)
@@ -247,6 +249,11 @@ namespace Robust.Server.GameObjects
         IEntity IServerEntityManagerInternal.AllocEntity(string prototypeName, EntityUid? uid)
         {
             return AllocEntity(prototypeName, uid);
+        }
+
+        protected override EntityUid GenerateEntityUid()
+        {
+            return new EntityUid(_nextServerEntityUid++);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext context)

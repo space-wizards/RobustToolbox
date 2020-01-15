@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.GameObjects;
@@ -13,6 +12,8 @@ namespace Robust.UnitTesting.Shared.Map
     [TestFixture, TestOf(typeof(MapManager))]
     class MapManager_Tests : RobustUnitTest
     {
+        public override UnitTestProject Project => UnitTestProject.Server;
+
         [SetUp]
         public void Setup()
         {
@@ -61,7 +62,7 @@ namespace Robust.UnitTesting.Shared.Map
         public void Restart_NullspaceMap_IsEmptied()
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
-            var entMan = IoCManager.Resolve<IServerEntityManager>();
+            var entMan = IoCManager.Resolve<IEntityManager>();
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
@@ -85,7 +86,7 @@ namespace Robust.UnitTesting.Shared.Map
             // Arrange
             var mapID = new MapId(11);
             var mapMan = IoCManager.Resolve<IMapManager>();
-            var entMan = IoCManager.Resolve<IServerEntityManager>();
+            var entMan = IoCManager.Resolve<IEntityManager>();
 
             mapMan.CreateMap(new MapId(7));
             mapMan.CreateMap(mapID);

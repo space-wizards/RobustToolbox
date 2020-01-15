@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
-    public partial class MapManager
+    internal partial class MapManager
     {
 #pragma warning disable 649
         [Dependency] private readonly INetManager _netManager;

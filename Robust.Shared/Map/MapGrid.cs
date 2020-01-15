@@ -71,6 +71,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 LocalBounds { get; private set; }
 
+        public bool SuppressCollisionRegeneration { get; set; }
+
         /// <inheritdoc />
         public ushort ChunkSize { get; }
 
@@ -267,6 +269,11 @@ namespace Robust.Shared.Map
         #endregion TileAccess
 
         #region ChunkAccess
+
+        public void RegenerateCollision()
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         ///     The total number of allocated chunks in the grid.

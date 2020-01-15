@@ -16,7 +16,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    public partial class MapManager : IMapManagerInternal
+    internal partial class MapManager : IMapManagerInternal
     {
 #pragma warning disable 649
         [Dependency] private readonly IGameTiming _gameTiming;
@@ -346,7 +346,7 @@ namespace Robust.Shared.Map
             return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, true);
         }
 
-        private IMapGrid CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, float snapSize, bool createEntity)
+        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, float snapSize, bool createEntity)
         {
             GridId actualID;
             if (gridID != null)
@@ -418,7 +418,7 @@ namespace Robust.Shared.Map
             return grid;
         }
 
-        public IMapGrid CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16,
+        public IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16,
             float snapSize = 1)
         {
             return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, false);

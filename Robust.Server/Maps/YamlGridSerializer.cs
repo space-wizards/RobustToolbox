@@ -103,42 +103,47 @@ namespace Robust.Server.Maps
 
             gridId = grid.Index;
 
-            foreach (YamlMappingNode chunkNode in chunks.Cast<YamlMappingNode>())
+            foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {
                 DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
         }
 
-        private static void DeserializeChunk(IMapManager mapMan, IMapGrid grid, YamlMappingNode chunk, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
+        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {
-            var indNode = chunk["ind"];
-            var tileNode = chunk["tiles"];
+            var indNode = chunkData["ind"];
+            var tileNode = chunkData["tiles"];
 
-            var (chunkOffsetX, chunkOffsetY) = indNode.AsVector2i() * grid.ChunkSize;
+            var (chunkOffsetX, chunkOffsetY) = indNode.AsVector2i();
             var tileBytes = Convert.FromBase64String(tileNode.ToString());
 
-            using (var stream = new MemoryStream(tileBytes))
-            using (var reader = new BinaryReader(stream))
+            using var stream = new MemoryStream(tileBytes);
+            using var reader = new BinaryReader(stream);
+
+            mapMan.SuppressOnTileChanged = true;
+
+            var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+
+            chunk.SuppressCollisionRegeneration = true;
+
+            for (ushort y = 0; y < grid.ChunkSize; y++)
             {
-                mapMan.SuppressOnTileChanged = true;
-
-                for (var y = 0; y < grid.ChunkSize; y++)
+                for (ushort x = 0; x < grid.ChunkSize; x++)
                 {
-                    for (var x = 0; x < grid.ChunkSize; x++)
-                    {
-                        var id = reader.ReadUInt16();
-                        var data = reader.ReadUInt16();
+                    var id = reader.ReadUInt16();
+                    var data = reader.ReadUInt16();
 
-                        var defName = tileDefMapping[id];
-                        id = tileDefinitionManager[defName].TileId;
+                    var defName = tileDefMapping[id];
+                    id = tileDefinitionManager[defName].TileId;
 
-                        var tile = new Tile(id, data);
-                        grid.SetTile(new MapIndices(chunkOffsetX + x, chunkOffsetY + y), tile);
-                    }
+                    var tile = new Tile(id, data);
+                    chunk.SetTile(x, y, tile);
                 }
-
-                mapMan.SuppressOnTileChanged = false;
             }
+
+            chunk.SuppressCollisionRegeneration = false;
+            chunk.RegenerateCollision();
+            mapMan.SuppressOnTileChanged = false;
         }
     }
 }

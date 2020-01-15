@@ -125,7 +125,11 @@ namespace Robust.Shared.Map
             LastModifiedTick = _grid.CurTick;
 
             _tiles[xIndex, yIndex] = tile;
-            RegenerateCollision();
+
+            if (!SuppressCollisionRegeneration)
+            {
+                RegenerateCollision();
+            }
 
             _grid.NotifyTileChanged(newTileRef, oldTile);
         }
@@ -237,7 +241,9 @@ namespace Robust.Shared.Map
             }
         }
 
-        private void RegenerateCollision()
+        public bool SuppressCollisionRegeneration { get; set; }
+
+        public void RegenerateCollision()
         {
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, ref _colBoxes, out _cachedBounds);

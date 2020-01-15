@@ -632,11 +632,6 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
-            if (shader.ActiveInstance == instance.ShaderHandle)
-            {
-                return (program, shader);
-            }
-
             // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {

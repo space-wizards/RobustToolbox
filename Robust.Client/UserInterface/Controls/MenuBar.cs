@@ -44,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
 
             button.OnKeyBindDown += _ => OpenPopupFor(button);
 
-            button.OnMouseEntered += () =>
+            button.OnMouseEntered += _ =>
             {
                 if (_popupOpen)
                 {
@@ -192,8 +192,6 @@ namespace Robust.Client.UserInterface.Controls
             public Label Label { get; }
             public Menu Menu { get; }
 
-            public event Action OnMouseEntered;
-
             public MenuBarTopButton(Menu menu)
             {
                 Menu = menu;
@@ -203,8 +201,6 @@ namespace Robust.Client.UserInterface.Controls
             protected internal override void MouseEntered()
             {
                 base.MouseEntered();
-
-                OnMouseEntered?.Invoke();
 
                 SetOnlyStylePseudoClass(StylePseudoClassHover);
             }

@@ -83,7 +83,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _drawingSplash;
 
         private ShaderProgram _currentProgram;
-        private ClydeHandle _currentShaderInstance;
 
         private ClydeDebugStats _debugStats;
 

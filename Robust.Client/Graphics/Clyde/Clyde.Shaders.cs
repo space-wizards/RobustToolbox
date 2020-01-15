@@ -33,7 +33,6 @@ namespace Robust.Client.Graphics.Clyde
             public ShaderProgram Program;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
-            public ClydeHandle ActiveInstance;
         }
 
         private class LoadedShaderInstance

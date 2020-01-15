@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -37,8 +36,6 @@ namespace Robust.Shared.GameObjects
 
         [Dependency]
         private readonly IGameTiming _gameTiming;
-
-        [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
         #endregion Dependencies

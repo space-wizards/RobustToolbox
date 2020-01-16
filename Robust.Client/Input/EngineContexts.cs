@@ -28,6 +28,8 @@ namespace Robust.Client.Input
 
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorBegin);
+            common.AddFunction(EngineKeyFunctions.TextCursorEnd);
             common.AddFunction(EngineKeyFunctions.TextBackspace);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
             common.AddFunction(EngineKeyFunctions.TextPaste);

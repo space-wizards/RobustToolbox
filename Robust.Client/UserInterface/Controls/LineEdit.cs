@@ -321,6 +321,14 @@ namespace Robust.Client.UserInterface.Controls
 
                     _cursorPosition += 1;
                 }
+                else if (args.Function == EngineKeyFunctions.TextCursorBegin)
+                {
+                    _cursorPosition = 0;
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorEnd)
+                {
+                    _cursorPosition = _text.Length;
+                }
                 else if (args.Function == EngineKeyFunctions.TextSubmit)
                 {
                     if (Editable)

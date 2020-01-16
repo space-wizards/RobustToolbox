@@ -139,6 +139,7 @@ namespace Robust.Client.UserInterface.CustomControls
             BuildEntityList();
 
             this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            SearchBar.GrabKeyboardFocus();
         }
 
         public override void Close()

@@ -110,8 +110,10 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Select(int idx)
         {
-            var prev = _buttonData[_idMap[SelectedId]];
-            prev.Button.Pressed = false;
+            if (_idMap.TryGetValue(SelectedId, out var prevIdx))
+            {
+                _buttonData[prevIdx].Button.Pressed = false;
+            }
             var data = _buttonData[idx];
             SelectedId = data.Id;
             Text = Prefix + data.Text;

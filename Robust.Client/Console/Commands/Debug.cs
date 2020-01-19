@@ -43,7 +43,7 @@ namespace Robust.Client.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (var e in entityManager.GetEntities())
+            foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
                 console.AddLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.GridPosition}.", Color.White);
             }

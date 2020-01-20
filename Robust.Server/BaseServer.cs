@@ -142,6 +142,12 @@ namespace Robust.Server
                 }
             }
 
+            if (_commandLineArgs != null)
+            {
+                _config.OverrideConVars(_commandLineArgs.CVars);
+            }
+
+
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);

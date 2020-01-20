@@ -1112,15 +1112,22 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            static List<Layer> CloneLayers(List<Layer> source)
+            {
+                var clone = new List<Layer>(source.Count);
+                foreach (var layer in source)
+                {
+                    clone.Add(new Layer(layer));
+                }
+
+                return clone;
+            }
+
             if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
             {
                 LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
                 _layerMapShared = true;
-                Layers = new List<Layer>(layers.Count);
-                foreach (var clone in layers)
-                {
-                    Layers.Add(new Layer(clone));
-                }
+                Layers = CloneLayers(layers);
                 return;
             }
 
@@ -1260,7 +1267,7 @@ namespace Robust.Client.GameObjects
             Layers = layers;
             LayerMap = layerMap;
             _layerMapShared = true;
-            serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
+            serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
         }
 

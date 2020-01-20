@@ -252,7 +252,7 @@ namespace Robust.Shared.Configuration
                 {
                     cfgVar.OverrideValue = value;
                     cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
-                    cfgVar.ValueChanged?.Invoke(cfgVar.Value);
+                    cfgVar.ValueChanged?.Invoke(cfgVar.OverrideValueParsed);
                 }
                 else
                 {

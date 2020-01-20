@@ -292,7 +292,7 @@ namespace Robust.Server
         /// </summary>
         private void UpdateTitle()
         {
-            if (!Environment.UserInteractive)
+            if (!Environment.UserInteractive || System.Console.IsInputRedirected)
             {
                 return;
             }

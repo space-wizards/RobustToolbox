@@ -105,6 +105,11 @@ namespace Robust.Client
                 }
             }
 
+            if (_commandLineArgs != null)
+            {
+                _configurationManager.OverrideConVars(_commandLineArgs.CVars);
+            }
+
             _signalHandler.MaybeStart();
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);

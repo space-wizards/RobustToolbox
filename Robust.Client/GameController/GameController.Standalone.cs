@@ -1,7 +1,4 @@
-﻿using System;
-using System.Linq;
-using CommandLine;
-using Robust.Client.Interfaces;
+﻿using Robust.Client.Interfaces;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -19,8 +16,10 @@ namespace Robust.Client
 
         public static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<CommandLineArgs>(args)
-                .WithParsed(ParsedMain);
+            if (CommandLineArgs.TryParse(args, out var parsed))
+            {
+                ParsedMain(parsed);
+            }
         }
 
         private static void ParsedMain(CommandLineArgs args)

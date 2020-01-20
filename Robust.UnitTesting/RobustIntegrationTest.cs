@@ -1,8 +1,10 @@
 using System;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using NUnit.Framework;
 using Robust.Client;
 using Robust.Client.Interfaces;
 using Robust.Server;
@@ -164,38 +166,41 @@ namespace Robust.UnitTesting
             /// </exception>
             public async Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                try
+                while (_isAlive && _currentTicksId != _ackTicksId)
                 {
-                    while (_isAlive && _currentTicksId != _ackTicksId)
+                    var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
+                    switch (msg)
                     {
-                        var msg = await _fromInstanceReader.ReadAsync(cancellationToken);
-                        switch (msg)
+                        case ShutDownMessage shutDownMessage:
                         {
-                            case ShutDownMessage shutDownMessage:
+                            _isAlive = false;
+                            _isSurelyIdle = true;
+                            _unhandledException = shutDownMessage.UnhandledException;
+                            if (throwOnUnhandled && _unhandledException != null)
                             {
-                                _isAlive = false;
-                                _unhandledException = shutDownMessage.UnhandledException;
-                                if (throwOnUnhandled && _unhandledException != null)
-                                {
-                                    throw new Exception("Waiting instance shut down with unhandled exception",
-                                        _unhandledException);
-                                }
-
-                                break;
+                                throw new Exception("Waiting instance shut down with unhandled exception",
+                                    _unhandledException);
                             }
 
-                            case AckTicksMessage ack:
-                            {
-                                _ackTicksId = ack.MessageId;
-                                break;
-                            }
+                            break;
+                        }
+
+                        case AckTicksMessage ack:
+                        {
+                            _ackTicksId = ack.MessageId;
+                            break;
+                        }
+
+                        case AssertFailMessage assertFailMessage:
+                        {
+                            // Rethrow exception without losing stack trace.
+                            ExceptionDispatchInfo.Capture(assertFailMessage.Exception).Throw();
+                            break; // Unreachable.
                         }
                     }
                 }
-                finally
-                {
-                    _isSurelyIdle = true;
-                }
+
+                _isSurelyIdle = true;
             }
 
             /// <summary>
@@ -223,11 +228,30 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     Queue for a delegate to be ran inside the main loop of the instance.
             /// </summary>
+            /// <remarks>
+            ///     Do not run NUnit assertions inside <see cref="Post"/>. Use <see cref="Assert"/> instead.
+            /// </remarks>
             public void Post(Action post)
             {
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
                 _toInstanceWriter.TryWrite(new PostMessage(post, _currentTicksId));
+            }
+
+            /// <summary>
+            ///     Queue for a delegate to be ran inside the main loop of the instance,
+            ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
+            /// </summary>
+            /// <remarks>
+            ///     Exceptions raised inside this callback will be rethrown by <see cref="WaitIdleAsync"/>.
+            ///     This makes it ideal for NUnit assertions,
+            ///     since rethrowing the NUnit assertion directly provides less noise.
+            /// </remarks>
+            public void Assert(Action assertion)
+            {
+                _isSurelyIdle = false;
+                _currentTicksId += 1;
+                _toInstanceWriter.TryWrite(new AssertMessage(assertion, _currentTicksId));
             }
         }
 
@@ -440,6 +464,19 @@ namespace Robust.UnitTesting
                             postMessage.Post();
                             _channelWriter.TryWrite(new AckTicksMessage(postMessage.MessageId));
                             break;
+
+                        case AssertMessage assertMessage:
+                            try
+                            {
+                                assertMessage.Assertion();
+                            }
+                            catch (Exception e)
+                            {
+                                _channelWriter.TryWrite(new AssertFailMessage(e));
+                            }
+
+                            _channelWriter.TryWrite(new AckTicksMessage(assertMessage.MessageId));
+                            break;
                     }
                 }
             }
@@ -499,6 +536,16 @@ namespace Robust.UnitTesting
             public int MessageId { get; }
         }
 
+        private sealed class AssertFailMessage
+        {
+            public Exception Exception { get; }
+
+            public AssertFailMessage(Exception exception)
+            {
+                Exception = exception;
+            }
+        }
+
         /// <summary>
         ///     Sent instance -> head when instance shuts down for whatever reason.
         /// </summary>
@@ -520,6 +567,18 @@ namespace Robust.UnitTesting
             public PostMessage(Action post, int messageId)
             {
                 Post = post;
+                MessageId = messageId;
+            }
+        }
+
+        private sealed class AssertMessage
+        {
+            public Action Assertion { get; }
+            public int MessageId { get; }
+
+            public AssertMessage(Action assertion, int messageId)
+            {
+                Assertion = assertion;
                 MessageId = messageId;
             }
         }

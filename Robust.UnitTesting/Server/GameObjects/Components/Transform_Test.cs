@@ -40,6 +40,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
+            MapManager.Initialize();
+            MapManager.Startup();
 
             MapManager.CreateMap();
 

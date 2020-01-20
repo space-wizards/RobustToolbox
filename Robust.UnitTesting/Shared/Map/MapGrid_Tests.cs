@@ -18,6 +18,15 @@ namespace Robust.UnitTesting.Shared.Map
     [TestFixture, TestOf(typeof(MapGrid))]
     class MapGrid_Tests : RobustUnitTest
     {
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+
+            mapMan.Initialize();
+            mapMan.Startup();
+        }
+
         [Test]
         public void GetTileRefCoords()
         {
@@ -122,7 +131,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new MapIndices(-2, -1)));
             Assert.That(tileRef, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new MapIndices(-9, -1), new Tile(1, 2))));
         }
-        
+
         private static IMapGridInternal MapGridFactory(GridId id)
         {
             var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();

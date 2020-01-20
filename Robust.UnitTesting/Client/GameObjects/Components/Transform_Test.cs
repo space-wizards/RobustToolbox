@@ -40,6 +40,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
+            MapManager.Initialize();
+            MapManager.Startup();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));

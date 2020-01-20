@@ -230,6 +230,7 @@ namespace Robust.Server
             _entities.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
+            _mapManager.Startup();
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
             IoCManager.Resolve<IDebugDrawingManager>().Initialize();

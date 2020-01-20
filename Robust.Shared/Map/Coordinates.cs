@@ -99,9 +99,9 @@ namespace Robust.Shared.Map
         {
             return new GridCoordinates(Position + offset, GridID);
         }
-        
+
         /// <summary>
-        ///     Checks that these coordinates are within a certain distance of another set. 
+        ///     Checks that these coordinates are within a certain distance of another set.
         /// </summary>
         /// <param name="mapManager">Map manager containing the two GridIds.</param>
         /// <param name="otherCoords">Other set of coordinates to use.</param>
@@ -118,7 +118,7 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Checks that these coordinates are within a certain distance of another set. 
+        ///     Checks that these coordinates are within a certain distance of another set.
         /// </summary>
         /// <param name="mapManager">Map manager containing the two GridIds.</param>
         /// <param name="otherCoords">Other set of coordinates to use.</param>
@@ -288,6 +288,8 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly struct MapCoordinates : IEquatable<MapCoordinates>
     {
+        public static readonly MapCoordinates Nullspace = new MapCoordinates(Vector2.Zero, MapId.Nullspace);
+
         /// <summary>
         ///     World Position coordinates.
         /// </summary>

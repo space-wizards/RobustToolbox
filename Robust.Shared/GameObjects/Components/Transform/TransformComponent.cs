@@ -156,12 +156,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var parentMatrix = Parent.WorldMatrix;
-                    var myMatrix = GetWorldMatrix();
+                    var myMatrix = GetLocalMatrix();
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                     return result;
                 }
 
-                return GetWorldMatrix();
+                return GetLocalMatrix();
             }
         }
 
@@ -173,12 +173,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var matP = Parent.InvWorldMatrix;
-                    var myMatrix = GetWorldMatrixInv();
+                    var myMatrix = GetLocalMatrixInv();
                     Matrix3.Multiply(ref matP, ref myMatrix, out var result);
                     return result;
                 }
 
-                return GetWorldMatrixInv();
+                return GetLocalMatrixInv();
             }
         }
 
@@ -310,6 +310,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
+
+        public IEnumerable<EntityUid> ChildEntityUids => _children;
+
+        public int ChildCount => _children.Count;
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
@@ -559,7 +563,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
-        protected virtual Matrix3 GetWorldMatrix()
+        public Matrix3 GetLocalMatrix()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _worldMatrix;
@@ -576,7 +580,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return transMat;
         }
 
-        protected virtual Matrix3 GetWorldMatrixInv()
+        public Matrix3 GetLocalMatrixInv()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _invWorldMatrix;

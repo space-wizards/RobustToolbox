@@ -363,6 +363,11 @@ namespace Robust.Shared.Map
             return _entityManager.GetEntity(_mapEntities[mapId]);
         }
 
+        public bool HasMapEntity(MapId mapId)
+        {
+            return _mapEntities.ContainsKey(mapId);
+        }
+
         public IEnumerable<MapId> GetAllMapIds()
         {
             return _maps;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -104,5 +105,9 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         void AttachParent(IEntity parent);
 
         IEnumerable<ITransformComponent> Children { get; }
+        int ChildCount { get; }
+        IEnumerable<EntityUid> ChildEntityUids { get; }
+        Matrix3 GetLocalMatrix();
+        Matrix3 GetLocalMatrixInv();
     }
 }

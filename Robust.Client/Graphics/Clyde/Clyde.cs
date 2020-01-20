@@ -42,6 +42,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly ILightManager _lightManager;
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);

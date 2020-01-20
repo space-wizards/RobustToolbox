@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -6,12 +7,13 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL;
 using Robust.Client.GameObjects;
+using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.Containers;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -25,6 +27,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
         /// </summary>
         private CurrentSpace _currentSpace;
+
         private CurrentSpace _queuedSpace;
 
         private bool _lightingReady;
@@ -57,10 +60,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _isScissoring;
 
-        private readonly List<SpriteComponent> _sortingSpritesList = new List<SpriteComponent>();
-
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
+        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation)> _drawingSpriteList =
+            new RefList<(SpriteComponent, Matrix3, Angle)>();
 
         public void Render()
         {
@@ -110,7 +113,7 @@ namespace Robust.Client.Graphics.Clyde
             // Calculate world-space AABB for camera, to cull off-screen things.
             var eye = _eyeManager.CurrentEye;
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _framebufferSize / (float)EyeManager.PIXELSPERMETER * eye.Zoom);
+                _framebufferSize / (float) EyeManager.PIXELSPERMETER * eye.Zoom);
 
             using (DebugGroup("Lights"))
             {
@@ -124,86 +127,7 @@ namespace Robust.Client.Graphics.Clyde
 
             using (DebugGroup("Entities"))
             {
-                _sortingSpritesList.Clear();
-                var map = _eyeManager.CurrentMap;
-
-                // So we could calculate the correct size of the entities based on the contents of their sprite...
-                // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-                // TODO: Make this check more accurate.
-                var widerBounds = worldBounds.Enlarged(5);
-
-                foreach (var sprite in _componentManager.GetAllComponents<SpriteComponent>())
-                {
-                    var entity = sprite.Owner;
-                    if (entity.Transform.MapID != map || !widerBounds.Contains(entity.Transform.WorldPosition) || !sprite.Visible)
-                        continue;
-
-                    if(ContainerHelpers.TryGetContainer(entity, out var container) && !container.ShowContents)
-                        continue;
-
-                    _sortingSpritesList.Add(sprite);
-                }
-
-                _sortingSpritesList.Sort((a, b) =>
-                {
-                    var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
-                    if (cmp != 0)
-                    {
-                        return cmp;
-                    }
-
-                    cmp = a.RenderOrder.CompareTo(b.RenderOrder);
-
-                    if (cmp != 0)
-                    {
-                        return cmp;
-                    }
-
-                    return a.Owner.Uid.CompareTo(b.Owner.Uid);
-                });
-
-                foreach (var sprite in _sortingSpritesList)
-                {
-                    Vector2i roundedPos = default;
-                    if (sprite.PostShader != null)
-                    {
-                        _renderHandle.UseRenderTarget(EntityPostRenderTarget);
-                        _renderHandle.Clear(new Color());
-                        // Calculate viewport so that the entity thinks it's drawing to the same position,
-                        // which is necessary for light application,
-                        // but it's ACTUALLY drawing into the center of the render target.
-                        var spritePos = sprite.Owner.Transform.WorldPosition;
-                        var screenPos = _eyeManager.WorldToScreen(spritePos);
-                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                        var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
-                        flippedPos -= EntityPostRenderTarget.Size / 2;
-                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
-                    }
-
-                    sprite.OpenGLRender(_renderHandle.DrawingHandleWorld);
-
-                    if (sprite.PostShader != null)
-                    {
-                        _renderHandle.UseRenderTarget(null);
-                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
-
-                        _renderHandle.UseShader(sprite.PostShader);
-                        _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
-                        _renderHandle.SetModelTransform(Matrix3.Identity);
-
-                        var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
-
-                        var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
-
-                        _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                            box.TopRight, Color.White, null, 0);
-
-                        _renderHandle.SetSpace(CurrentSpace.WorldSpace);
-                        _renderHandle.UseShader(null);
-                    }
-                }
-
-                FlushRenderQueue();
+                DrawEntities(worldBounds);
             }
 
             RenderOverlays(OverlaySpace.WorldSpace);
@@ -222,6 +146,125 @@ namespace Robust.Client.Graphics.Clyde
 
             // And finally, swap those buffers!
             SwapBuffers();
+        }
+
+        private void DrawEntities(Box2 worldBounds)
+        {
+            if (!_mapManager.HasMapEntity(_eyeManager.CurrentMap))
+            {
+                return;
+            }
+
+            // So we could calculate the correct size of the entities based on the contents of their sprite...
+            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
+            // TODO: Make this check more accurate.
+            var widerBounds = worldBounds.Enlarged(5);
+
+            var mapEntity = _mapManager.GetMapEntity(_eyeManager.CurrentMap);
+
+            var identity = Matrix3.Identity;
+            ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList);
+
+            // We use a separate list for indexing so that the sort is faster.
+            var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
+
+            for (var i = 0; i < _drawingSpriteList.Count; i++)
+            {
+                indexList[i] = i;
+            }
+
+            Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+
+            for (var i = 0; i < _drawingSpriteList.Count; i++)
+            {
+                ref var entry = ref _drawingSpriteList[indexList[i]];
+                Vector2i roundedPos = default;
+                if (entry.sprite.PostShader != null)
+                {
+                    _renderHandle.UseRenderTarget(EntityPostRenderTarget);
+                    _renderHandle.Clear(new Color());
+                    // Calculate viewport so that the entity thinks it's drawing to the same position,
+                    // which is necessary for light application,
+                    // but it's ACTUALLY drawing into the center of the render target.
+                    var spritePos = entry.sprite.Owner.Transform.WorldPosition;
+                    var screenPos = _eyeManager.WorldToScreen(spritePos);
+                    var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
+                    var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                    flippedPos -= EntityPostRenderTarget.Size / 2;
+                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                }
+
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
+
+                if (entry.sprite.PostShader != null)
+                {
+                    _renderHandle.UseRenderTarget(null);
+                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+
+                    _renderHandle.UseShader(entry.sprite.PostShader);
+                    _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                    _renderHandle.SetModelTransform(Matrix3.Identity);
+
+                    var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+
+                    var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+
+                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
+                        box.TopRight, Color.White, null, 0);
+
+                    _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                    _renderHandle.UseShader(null);
+                }
+            }
+
+            _drawingSpriteList.Clear();
+
+            FlushRenderQueue();
+        }
+
+        private void ProcessSpriteEntities(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
+            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle)> list)
+        {
+            entity.TryGetComponent(out ContainerManagerComponent containerManager);
+
+            var localMatrix = entity.Transform.GetLocalMatrix();
+            Matrix3.Multiply(ref parentTransform, ref localMatrix, out var matrix);
+            var rotation = parentRotation + entity.Transform.LocalRotation;
+
+            foreach (var child in entity.Transform.ChildEntityUids)
+            {
+                var childEntity = _entityManager.GetEntity(child);
+
+                if (containerManager != null && containerManager.TryGetContainer(childEntity, out var container) &&
+                    !container.ShowContents)
+                {
+                    continue;
+                }
+
+                var childTransform = childEntity.Transform;
+
+                var worldPosition = Matrix3.Transform(matrix, childTransform.LocalPosition);
+
+                if (worldBounds.Contains(worldPosition))
+                {
+                    if (childEntity.TryGetComponent(out SpriteComponent sprite) && sprite.Visible)
+                    {
+                        ref var entry = ref list.AllocAdd();
+
+                        var childLocalMatrix = childTransform.GetLocalMatrix();
+                        Matrix3.Multiply(ref matrix, ref childLocalMatrix, out entry.Item2);
+                        var childWorldRotation = rotation + childTransform.LocalRotation;
+
+                        entry.Item1 = sprite;
+                        entry.Item3 = childWorldRotation;
+                    }
+                }
+
+                if (childTransform.ChildCount > 0)
+                {
+                    ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list);
+                }
+            }
         }
 
         private void _drawSplash(IRenderHandle handle)
@@ -514,7 +557,8 @@ namespace Robust.Client.Graphics.Clyde
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
             {
-                GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort, command.StartIndex * sizeof(ushort));
+                GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort,
+                    command.StartIndex * sizeof(ushort));
             }
             else
             {
@@ -541,7 +585,7 @@ namespace Robust.Client.Graphics.Clyde
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
-            rectTransform.Multiply(ref modelMatrix);
+            rectTransform.Multiply(modelMatrix);
             program.SetUniformMaybe(UniIModelMatrix, rectTransform);
 
             _debugStats.LastGLDrawCalls += 1;
@@ -565,6 +609,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     BatchEBO.Reallocate(new Span<ushort>(BatchIndexData, 0, BatchIndexIndex));
                 }
+
                 BatchIndexIndex = 0;
             }
 
@@ -859,7 +904,8 @@ namespace Robust.Client.Graphics.Clyde
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
+        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed,
+            BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
             {
@@ -1041,6 +1087,37 @@ namespace Robust.Client.Graphics.Clyde
             Triangles,
             TrianglesFan,
             Line
+        }
+
+        private sealed class SpriteDrawingOrderComparer : IComparer<int>
+        {
+            private readonly RefList<(SpriteComponent, Matrix3, Angle)> _drawList;
+
+            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle)> drawList)
+            {
+                _drawList = drawList;
+            }
+
+            public int Compare(int x, int y)
+            {
+                var a = _drawList[x].Item1;
+                var b = _drawList[y].Item1;
+
+                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                cmp = a.RenderOrder.CompareTo(b.RenderOrder);
+
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+            }
         }
     }
 }

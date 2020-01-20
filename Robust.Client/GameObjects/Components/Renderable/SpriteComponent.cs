@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using OpenTK.Graphics.ES30;
 using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
@@ -990,33 +991,35 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true, Direction? overrideDirection=null)
+        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation, Direction? overrideDirection=null)
         {
-            Matrix3 transform;
-            if (useWorldTransform)
+            var angle = Rotation;
+            if (Directional)
             {
-                var angle = Rotation;
-                if (Directional)
-                {
-                    angle -= Owner.Transform.WorldRotation;
-                }
-                else
-                {
-                    angle -= new Angle(MathHelper.PiOver2);
-                }
-
-                var mOffset = Matrix3.CreateTranslation(Offset);
-                var mRotation = Matrix3.CreateRotation(angle);
-                Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
-
-                var worldTransform = Owner.Transform.WorldMatrix;
-                transform.Multiply(ref worldTransform);
+                angle -= worldRotation;
             }
             else
             {
-                transform = Matrix3.Identity;
+                angle -= new Angle(MathHelper.PiOver2);
             }
 
+            var mOffset = Matrix3.CreateTranslation(Offset);
+            var mRotation = Matrix3.CreateRotation(angle);
+            Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
+
+            transform.Multiply(worldTransform);
+
+            RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
+        }
+
+        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        {
+            RenderInternal(drawingHandle, worldRotation, overrideDirection, Matrix3.Identity);
+        }
+
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection,
+            in Matrix3 transform)
+        {
             drawingHandle.SetTransform(transform);
 
             foreach (var layer in Layers)
@@ -1052,8 +1055,9 @@ namespace Robust.Client.GameObjects
                             }
                             else
                             {
-                                dir = GetDir(state.Directions);
+                                dir = GetDir(state.Directions, worldRotation);
                             }
+
                             layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
                         }
 
@@ -1068,7 +1072,7 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(layer.Shader);
                 }
 
-                drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER),
+                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PIXELSPERMETER),
                     color * layer.Color);
 
                 if (layer.Shader != null)
@@ -1388,14 +1392,14 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType type)
+        private RSI.State.Direction GetDir(RSI.State.DirectionType type, Angle worldRotation)
         {
             if (!Directional)
             {
                 return RSI.State.Direction.South;
             }
 
-            var angle = new Angle(Owner.Transform.WorldRotation);
+            var angle = new Angle(worldRotation);
             return angle.GetDir().Convert(type);
         }
 
@@ -1460,7 +1464,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, Directional, GetDir(RSI.State.DirectionType.Dir8)
+                Color, Directional, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation)
             );
 
             foreach (var layer in Layers)

@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Utility
 {
-    // The T : unmanaged constraint is to prevent the need to null potential references.
     /// <summary>
     ///     Supposedly a high-performance version of <see cref="List{T}"/>,
     ///     that allows fetching direct references to the underlying contents.
@@ -16,7 +15,7 @@ namespace Robust.Shared.Utility
     ///     Don't do it.
     /// </remarks>
     /// <typeparam name="T">The type of the contents of the list. This must be an unmanaged type.</typeparam>
-    public class RefList<T> : IList<T> where T : unmanaged
+    public class RefList<T> : IList<T>
     {
         private T[] _array;
         private int _size;
@@ -71,6 +70,10 @@ namespace Robust.Shared.Utility
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                Array.Clear(_array, 0, _size);
+            }
             _size = 0;
         }
 
@@ -129,6 +132,11 @@ namespace Robust.Shared.Utility
             {
                 Array.Copy(_array, index + 1, _array, index, _size - index);
             }
+
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                _array[_size] = default;
+            }
         }
 
         public ref T this[int index]
@@ -141,6 +149,11 @@ namespace Robust.Shared.Utility
         {
             get => _array[index];
             set => _array[index] = value;
+        }
+
+        public void Sort(IComparer<T> comparer)
+        {
+            Array.Sort(_array, 0, _size, comparer);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

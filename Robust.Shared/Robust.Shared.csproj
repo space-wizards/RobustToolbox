@@ -13,16 +13,16 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.0" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
     <PackageReference Include="NetSerializer" Version="4.1.1" />
     <PackageReference Include="Nett" Version="0.13.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="nfluidsynth" Version="0.2.4" />
-    <PackageReference Include="NGettext" Version="0.6.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="nfluidsynth" Version="0.2.5" />
+    <PackageReference Include="NGettext" Version="0.6.5" />
     <PackageReference Include="Pidgin" Version="2.2.0" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="YamlDotNet" Version="6.1.2" />
+    <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

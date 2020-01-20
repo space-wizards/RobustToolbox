@@ -14,18 +14,18 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
-    <PackageReference Include="DiscordRichPresence" Version="1.0.121" />
+    <PackageReference Include="DiscordRichPresence" Version="1.0.147" />
     <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
-    <PackageReference Include="nfluidsynth" Version="0.2.4" />
-    <PackageReference Include="NVorbis" Version="0.8.6" />
+    <PackageReference Include="nfluidsynth" Version="0.2.5" />
+    <PackageReference Include="NVorbis" Version="0.9.1" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="NJsonSchema" Version="10.0.23" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NJsonSchema" Version="10.1.4" />
     <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0007" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0006" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0006" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
-    <PackageReference Include="YamlDotNet" Version="6.1.2" />
+    <PackageReference Include="YamlDotNet" Version="8.1.0" />
     <PackageReference Include="OpenTK" Version="3.1.0" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.0" />
   </ItemGroup>

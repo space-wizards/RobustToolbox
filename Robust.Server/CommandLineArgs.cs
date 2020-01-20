@@ -69,6 +69,10 @@ namespace Robust.Server
                     PrintHelp();
                     return false;
                 }
+                else
+                {
+                    C.WriteLine("Unknown argument: {0}", arg);
+                }
             }
 
             parsed = new CommandLineArgs(configFile, dataDir, cvars);

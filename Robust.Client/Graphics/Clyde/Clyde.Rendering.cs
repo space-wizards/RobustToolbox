@@ -10,12 +10,14 @@ using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
+using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using StencilOp = OpenTK.Graphics.OpenGL.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -59,6 +61,7 @@ namespace Robust.Client.Graphics.Clyde
         private float _renderTime;
 
         private bool _isScissoring;
+        private bool _isStencilling;
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
@@ -666,7 +669,8 @@ namespace Robust.Client.Graphics.Clyde
         private void ClearFramebuffer(Color color)
         {
             GL.ClearColor(color.ConvertOpenTK());
-            GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.ClearStencil(0);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
         }
 
         private (ShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
@@ -722,6 +726,26 @@ namespace Robust.Client.Graphics.Clyde
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
                 }
+            }
+
+            // Handle stencil parameters.
+
+            if (instance.Stencil.Enabled)
+            {
+                if (!_isStencilling)
+                {
+                    GL.Enable(EnableCap.StencilTest);
+                    _isStencilling = true;
+                }
+
+                GL.StencilMask(instance.Stencil.WriteMask);
+                GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
+                GL.StencilOp(StencilOp.Keep, StencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+            }
+            else if (_isStencilling)
+            {
+                GL.Disable(EnableCap.StencilTest);
+                _isStencilling = false;
             }
 
             return (program, shader);
@@ -953,6 +977,38 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
 
             _debugStats.LastBatches += 1;
+        }
+
+        private static StencilOp ToGLStencilOp(Shaders.StencilOp op)
+        {
+            return op switch
+            {
+                Shaders.StencilOp.Keep => StencilOp.Keep,
+                Shaders.StencilOp.Zero => StencilOp.Zero,
+                Shaders.StencilOp.Replace => StencilOp.Replace,
+                Shaders.StencilOp.IncrementClamp => StencilOp.Incr,
+                Shaders.StencilOp.IncrementWrap => StencilOp.IncrWrap,
+                Shaders.StencilOp.DecrementClamp => StencilOp.Decr,
+                Shaders.StencilOp.DecrementWrap => StencilOp.DecrWrap,
+                Shaders.StencilOp.Invert => StencilOp.Invert,
+                _ => throw new NotSupportedException()
+            };
+        }
+
+        private static StencilFunction ToGLStencilFunc(StencilFunc op)
+        {
+            return op switch
+            {
+                StencilFunc.Never => StencilFunction.Never,
+                StencilFunc.Always => StencilFunction.Always,
+                StencilFunc.Less => StencilFunction.Less,
+                StencilFunc.LessOrEqual => StencilFunction.Lequal,
+                StencilFunc.Greater => StencilFunction.Greater,
+                StencilFunc.GreaterOrEqual => StencilFunction.Gequal,
+                StencilFunc.NotEqual => StencilFunction.Notequal,
+                StencilFunc.Equal => StencilFunction.Equal,
+                _ => throw new NotSupportedException()
+            };
         }
 
         /// <summary>

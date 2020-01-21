@@ -93,6 +93,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
+        private bool _canDoStencil8RenderBuffer;
+
         public override bool Initialize()
         {
             _debugStats = new ClydeDebugStats();
@@ -159,6 +161,8 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
             Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
             _loadVendorSettings(vendor, renderer, version);
+
+            DetectOpenGLFeatures();
 
             var major = GL.GetInteger(GetPName.MajorVersion);
             var minor = GL.GetInteger(GetPName.MinorVersion);
@@ -238,7 +242,7 @@ namespace Robust.Client.Graphics.Clyde
             _regenerateLightRenderTarget();
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
-                RenderTargetColorFormat.Rgba8Srgb, name: nameof(EntityPostRenderTarget));
+                RenderTargetColorFormat.Rgba8Srgb, name: nameof(EntityPostRenderTarget), hasStencilBuffer: true);
 
             _drawingSplash = true;
 
@@ -248,6 +252,15 @@ namespace Robust.Client.Graphics.Clyde
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
                 Render();
+        }
+
+        private void DetectOpenGLFeatures()
+        {
+            if (HasExtension("GL_ARB_ES3_compatibility"))
+            {
+                _canDoStencil8RenderBuffer = true;
+                Logger.DebugS("clyde.ogl.ext", "Have GL_ARB_ES3_compatibility, GL_STENCIL_INDEX8 supported.");
+            }
         }
 
         // ReSharper disable once UnusedParameter.Local

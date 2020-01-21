@@ -8,6 +8,7 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using StencilOp = Robust.Client.Graphics.Shaders.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -41,6 +42,8 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
             public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
+
+            public StencilParameters Stencil = StencilParameters.Default;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
@@ -104,10 +107,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private string _readFile(string path)
         {
-            using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), EncodingHelpers.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            using var reader = new StreamReader(_resourceCache.ContentFileRead(path), EncodingHelpers.UTF8);
+            return reader.ReadToEnd();
         }
 
         private ShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
@@ -238,7 +239,7 @@ namespace Robust.Client.Graphics.Clyde
                 Parent = parent;
             }
 
-            protected override ShaderInstance DuplicateImpl()
+            private protected override ShaderInstance DuplicateImpl()
             {
                 var instanceData = Parent._shaderInstances[Handle];
                 var newData = new LoadedShaderInstance
@@ -250,6 +251,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     newData.Parameters.Add(name, value);
                 }
+
+                newData.Stencil = instanceData.Stencil;
 
                 var newHandle = Parent.AllocRid();
                 Parent._shaderInstances.Add(newHandle, newData);
@@ -263,70 +266,126 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: Verify that parameters actually exist before assigning them like this.
 
-            protected override void SetParameterImpl(string name, float value)
+            private protected override void SetParameterImpl(string name, float value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector2 value)
+            private protected override void SetParameterImpl(string name, Vector2 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector3 value)
+            private protected override void SetParameterImpl(string name, Vector3 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector4 value)
+            private protected override void SetParameterImpl(string name, Vector4 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Color value)
+            private protected override void SetParameterImpl(string name, Color value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, int value)
+            private protected override void SetParameterImpl(string name, int value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector2i value)
+            private protected override void SetParameterImpl(string name, Vector2i value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, bool value)
+            private protected override void SetParameterImpl(string name, bool value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, in Matrix3 value)
+            private protected override void SetParameterImpl(string name, in Matrix3 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Texture value)
+            private protected override void SetParameterImpl(string name, Texture value)
             {
                 throw new NotImplementedException();
             }
+
+            private protected override void SetStencilOpImpl(StencilOp op)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Op = op;
+            }
+
+            private protected override void SetStencilFuncImpl(StencilFunc func)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Func = func;
+            }
+
+            private protected override void SetStencilTestEnabledImpl(bool enabled)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Enabled = enabled;
+            }
+
+            private protected override void SetStencilRefImpl(int @ref)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Ref = @ref;
+            }
+
+            private protected override void SetStencilWriteMaskImpl(int mask)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.WriteMask = mask;
+            }
+
+            private protected override void SetStencilReadMaskRefImpl(int mask)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.ReadMask = mask;
+            }
+        }
+
+        private struct StencilParameters
+        {
+            public static readonly StencilParameters Default = new StencilParameters
+            {
+                Enabled = false,
+                Ref = 0,
+                Op = StencilOp.Keep,
+                Func = StencilFunc.Always,
+                ReadMask = unchecked((int)uint.MaxValue),
+                WriteMask = unchecked((int)uint.MaxValue),
+            };
+
+            public bool Enabled;
+            public int Ref;
+            public int WriteMask;
+            public int ReadMask;
+            public StencilOp Op;
+            public StencilFunc Func;
         }
     }
 }

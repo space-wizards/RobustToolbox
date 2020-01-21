@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private RenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
-            TextureSampleParameters? sampleParameters = null, string name = null)
+            TextureSampleParameters? sampleParameters = null, string name = null, bool hasStencilBuffer = false)
         {
             // Generate color attachment texture.
             var texture = new OGLHandle(GL.GenTexture());
@@ -55,6 +55,23 @@ namespace Robust.Client.Graphics.Clyde
             GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, texture.Handle,
                 0);
 
+            OGLHandle stencilBuffer = default;
+            if (hasStencilBuffer)
+            {
+                stencilBuffer = new OGLHandle(GL.GenRenderbuffer());
+                GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, stencilBuffer.Handle);
+
+                var (format, attachment) = _canDoStencil8RenderBuffer
+                    ? (RenderbufferStorage.StencilIndex8, FramebufferAttachment.StencilAttachment)
+                    : (RenderbufferStorage.Depth24Stencil8, FramebufferAttachment.DepthStencilAttachment);
+
+                GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, format, width,
+                    height);
+
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, attachment,
+                    RenderbufferTarget.Renderbuffer, stencilBuffer.Handle);
+            }
+
             // This should always pass but OpenGL makes it easy to check for once so let's.
             var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
             DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
@@ -66,7 +83,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var textureObject = _genTexture(texture, size, name);
             var handle = AllocRid();
-            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle);
+            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle, stencilBuffer);
             _renderTargets.Add(handle, renderTarget);
             return renderTarget;
         }
@@ -76,24 +93,32 @@ namespace Robust.Client.Graphics.Clyde
             GL.DeleteFramebuffer(renderTarget.ObjectHandle.Handle);
             _renderTargets.Remove(renderTarget.Handle);
             _deleteTexture(renderTarget.Texture);
+
+            if (renderTarget.StencilBuffer != default)
+            {
+                GL.DeleteRenderbuffer(renderTarget.StencilBuffer.Handle);
+            }
         }
 
         private sealed class RenderTarget : IRenderTarget
         {
             private readonly Clyde _clyde;
 
-            public RenderTarget(Vector2i size, ClydeTexture texture, OGLHandle objectHandle, Clyde clyde, ClydeHandle handle)
+            public RenderTarget(Vector2i size, ClydeTexture texture, OGLHandle objectHandle, Clyde clyde,
+                ClydeHandle handle, OGLHandle stencilBuffer)
             {
                 Size = size;
                 Texture = texture;
                 ObjectHandle = objectHandle;
                 _clyde = clyde;
                 Handle = handle;
+                StencilBuffer = stencilBuffer;
             }
 
             public Vector2i Size { get; }
             public ClydeTexture Texture { get; }
             public ClydeHandle Handle { get; }
+            public OGLHandle StencilBuffer { get; }
 
             Texture IRenderTarget.Texture => Texture;
 

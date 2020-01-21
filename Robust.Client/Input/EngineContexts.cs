@@ -37,6 +37,7 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextHistoryNext);
             common.AddFunction(EngineKeyFunctions.TextReleaseFocus);
             common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
+            common.AddFunction(EngineKeyFunctions.TextDelete);
 
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);

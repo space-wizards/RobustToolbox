@@ -42,6 +42,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
         public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
+        public static readonly BoundKeyFunction TextDelete = "TextDelete";
     }
 
     [Serializable, NetSerializable]

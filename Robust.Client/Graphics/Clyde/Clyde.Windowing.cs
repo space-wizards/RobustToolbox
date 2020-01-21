@@ -292,8 +292,11 @@ namespace Robust.Client.Graphics.Clyde
             var oldSize = _framebufferSize;
             GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
             _framebufferSize = (fbW, fbH);
-
             _windowSize = (width, height);
+
+            if(fbW == 0 || fbH == 0 || width == 0 || height == 0)
+                return;
+
             _pixelRatio = _framebufferSize / _windowSize;
 
             GL.Viewport(0, 0, fbW, fbH);

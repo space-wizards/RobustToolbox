@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.Map;
+using Robust.Shared.Utility;
 using System;
 
 namespace Robust.Shared.Maths
@@ -35,6 +36,9 @@ namespace Robust.Shared.Maths
             _position = position;
             _direction = direction;
             _collisionMask = collisionMask;
+
+            DebugTools.Assert(FloatMath.CloseTo(_direction.LengthSquared, 1));
+
         }
 
         #region Intersect Tests

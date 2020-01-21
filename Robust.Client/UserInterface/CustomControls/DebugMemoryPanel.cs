@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
@@ -14,7 +13,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private readonly long[] _allocDeltas = new long[60];
         private long _lastAllocated;
-        private int _allocDeltaIndex = 0;
+        private int _allocDeltaIndex;
 
         public DebugMemoryPanel()
         {
@@ -55,7 +54,7 @@ namespace Robust.Client.UserInterface.CustomControls
             var allocated = GC.GetTotalMemory(false);
             LogAllocSize(allocated);
             var info = GC.GetGCMemoryInfo();
-            return $@"Heap Size: {FormatBytes(info.HeapSizeBytes)}
+            return $@"Last Heap Size: {FormatBytes(info.HeapSizeBytes)}
 Total Allocated: {FormatBytes(allocated)}
 Collections: {GC.CollectionCount(0)} {GC.CollectionCount(1)} {GC.CollectionCount(2)}
 Alloc Rate: {FormatBytes(CalculateAllocRate())} / frame";

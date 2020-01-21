@@ -13,8 +13,8 @@ out vec2 Pos;
 uniform mat3 modelMatrix;
 layout (std140) uniform projectionViewMatrices
 {
-    mat3 projectionMatrix;
-    mat3 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
 };
 
 layout (std140) uniform uniformConstants
@@ -31,7 +31,7 @@ uniform vec4 modifyUV;
 
 void main()
 {
-    vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
+    vec4 transformed = projectionMatrix * viewMatrix * mat4(modelMatrix) * vec4(aPos, 1.0, 1.0);
     vec2 VERTEX = transformed.xy;
 
     [SHADER_CODE]

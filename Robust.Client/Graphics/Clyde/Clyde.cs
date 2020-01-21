@@ -548,36 +548,38 @@ namespace Robust.Client.Graphics.Clyde
         [PublicAPI]
         private struct ProjViewMatrices
         {
-            [FieldOffset(0 * sizeof(float))] public Vector3 ProjMatrixC0;
-            [FieldOffset(4 * sizeof(float))] public Vector3 ProjMatrixC1;
-            [FieldOffset(8 * sizeof(float))] public Vector3 ProjMatrixC2;
-
-            [FieldOffset(12 * sizeof(float))] public Vector3 ViewMatrixC0;
-            [FieldOffset(16 * sizeof(float))] public Vector3 ViewMatrixC1;
-            [FieldOffset(20 * sizeof(float))] public Vector3 ViewMatrixC2;
+            [FieldOffset(0 * sizeof(float))] OpenTK.Matrix4 ProjMatrix;
+            [FieldOffset(16 * sizeof(float))] OpenTK.Matrix4 ViewMatrix;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
             {
-                ProjMatrixC0 = new Vector3(projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0);
-                ProjMatrixC1 = new Vector3(projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1);
-                ProjMatrixC2 = new Vector3(projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2);
+                this.ProjMatrix = new OpenTK.Matrix4(
+                    projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0, 0,
+                    projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1, 0,
+                    projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2, 0,
+                    0, 0, 0, 1
+                );
 
-                ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
-                ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
-                ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
+                this.ViewMatrix = new OpenTK.Matrix4(
+                    viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0, 0,
+                    viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1, 0,
+                    viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2, 0,
+                    0, 0, 0, 1
+                );
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in ProjViewMatrices readProjMatrix, in Matrix3 viewMatrix)
             {
-                ProjMatrixC0 = readProjMatrix.ProjMatrixC0;
-                ProjMatrixC1 = readProjMatrix.ProjMatrixC1;
-                ProjMatrixC2 = readProjMatrix.ProjMatrixC2;
+                this.ProjMatrix = readProjMatrix.ProjMatrix;
 
-                ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
-                ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
-                ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
+                this.ViewMatrix = new OpenTK.Matrix4(
+                    viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0, 0,
+                    viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1, 0,
+                    viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2, 0,
+                    0, 0, 0, 1
+                );
             }
         }
 

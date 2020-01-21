@@ -12,16 +12,16 @@ uniform mat3 modelMatrix;
 
 layout (std140) uniform projectionViewMatrices
 {
-    mat3 projectionMatrix;
-    mat3 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
 };
 
 void main()
 {
-    vec3 transformed = modelMatrix * vec3(aPos, 1.0);
+    vec4 transformed = mat4(modelMatrix) * vec4(aPos, 1.0, 1.0);
     worldPosition = transformed.xy;
     transformed = projectionMatrix * viewMatrix * transformed;
 
-    gl_Position = vec4(transformed, 1.0);
+    gl_Position = transformed;
     UV = tCoord;
 }

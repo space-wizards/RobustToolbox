@@ -85,7 +85,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Loads a new soundfont into the renderer.
         /// </summary>
-        void LoadSoundfont(string filename, bool resetPresets);
+        void LoadSoundfont(string filename, bool resetPresets = false);
 
         /// <summary>
         ///     Invoked whenever a new midi event is registered.
@@ -129,19 +129,18 @@ namespace Robust.Client.Audio.Midi
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
-        private ISawmill _midiSawmill;
+        private readonly ISawmill _midiSawmill;
         private Settings _settings;
         private Synth _synth;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
-        private SoundFontLoader _soundFontLoader;
-        private List<int> _notesPlaying = new List<int>();
+        private readonly List<int> _notesPlaying = new List<int>();
         private int _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
         private const int Buffers = SampleRate/1000;
         private readonly object _playerStateLock = new object();
-        public IClydeBufferedAudioSource Source;
+        public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
         public bool Disposed { get; private set; } = false;
 
@@ -184,9 +183,8 @@ namespace Robust.Client.Audio.Midi
             Source = _clydeAudio.CreateBufferedAudioSource(Buffers);
             Source.SampleRate = SampleRate;
             _settings = settings;
-            _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
-            _synth.AddSoundFontLoader(_soundFontLoader);
+            _synth.AddSoundFontLoader(soundFontLoader);
             Mono = mono;
             Source.EmptyBuffers();
             Source.StartPlaying();
@@ -355,41 +353,31 @@ namespace Robust.Client.Audio.Midi
 
             try
             {
-                switch (midiEvent.Type)
+                lock (_notesPlaying)
                 {
-                    // NoteOn
-                    case 144:
-                        // NoteOn with 0 velocity is the same as NoteOff
-                        if (midiEvent.Velocity == 0)
-                            goto case 128;
-                        else
+                    // 144 = NoteOn, 128 = NoteOff.
+                    // NoteOn with 0 velocity is the same as NoteOff.
+                    // Any other midi event is also treated as a NoteOff.
+                    if (midiEvent.Type == 144 && midiEvent.Velocity != 0)
+                    {
+                        // If we're at the limit of notes being played at once, we drop this one.
+                        if (_notesPlaying.Count >= NoteLimit)
+                            return;
+
+                        lock(_playerStateLock)
+                            _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
+                        if (!_notesPlaying.Contains(midiEvent.Key))
+                            _notesPlaying.Add(midiEvent.Key);
+                    }
+                    else
+                    {
+                        if (_notesPlaying.Contains(midiEvent.Key))
                         {
-                            lock (_notesPlaying)
-                            {
-                                // If we're at the limit of notes being played at once, we drop this one.
-                                if (_notesPlaying.Count >= NoteLimit)
-                                    return;
-
-                                lock(_playerStateLock)
-                                    _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
-                                if (!_notesPlaying.Contains(midiEvent.Key))
-                                    _notesPlaying.Add(midiEvent.Key);
-                            }
+                            lock(_playerStateLock)
+                                _synth.NoteOff(ch, midiEvent.Key);
+                            _notesPlaying.Remove(midiEvent.Key);
                         }
-
-                        break;
-                    // NoteOff. Any other midi event is also treated as a NoteOff.
-                    case 128:
-                    default:
-                        lock(_notesPlaying)
-                            if (_notesPlaying.Contains(midiEvent.Key))
-                            {
-                                lock(_playerStateLock)
-                                    _synth.NoteOff(ch, midiEvent.Key);
-                                _notesPlaying.Remove(midiEvent.Key);
-                            }
-
-                        break;
+                    }
                 }
             }
             catch (FluidSynthInteropException e)
@@ -424,7 +412,6 @@ namespace Robust.Client.Audio.Midi
             _synth = null;
             _player = null;
             _driver = null;
-            _soundFontLoader = null;
         }
     }
 }

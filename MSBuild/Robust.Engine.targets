@@ -7,7 +7,7 @@
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download swnfd because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="CopyGlfw">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) '$(RobustToolsPath)/download glfw.py' $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) '$(RobustToolsPath)/download_glfw.py' $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download GLFW because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="CopyMiscDependencies">

@@ -10,6 +10,7 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>

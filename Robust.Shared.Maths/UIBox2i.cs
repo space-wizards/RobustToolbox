@@ -88,7 +88,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.Equals
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is UIBox2i box)
             {

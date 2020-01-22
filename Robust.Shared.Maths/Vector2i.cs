@@ -58,7 +58,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Vector2i && Equals((Vector2i) obj);

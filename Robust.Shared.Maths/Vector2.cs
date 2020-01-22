@@ -302,7 +302,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is Vector2 vec && Equals(vec);
         }

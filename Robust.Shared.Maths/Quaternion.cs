@@ -822,12 +822,12 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Compares this object instance to another object for equality.
         /// </summary>
-        /// <param name="other">The other object to be used in the comparison.</param>
+        /// <param name="obj">The other object to be used in the comparison.</param>
         /// <returns>True if both objects are Quaternions of equal value. Otherwise it returns false.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj is Quaternion == false) return false;
-            return this == (Quaternion) obj;
+            if (obj is Quaternion quaternion) return this == quaternion;
+            return false;
         }
 
         #endregion public override bool Equals (object o)

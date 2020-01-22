@@ -126,7 +126,7 @@ namespace Robust.Shared.Maths
                    Bottom.Equals(other.Bottom);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is UIBox2 box2 && Equals(box2);

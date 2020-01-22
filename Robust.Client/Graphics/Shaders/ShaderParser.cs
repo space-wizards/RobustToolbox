@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -42,6 +42,7 @@ namespace Robust.Client.Graphics.Shaders
 
             ShaderLightMode? lightMode = null;
             ShaderBlendMode? blendMode = null;
+            ShaderKind? shaderKind = null;
 
             Token token;
 
@@ -56,7 +57,7 @@ namespace Robust.Client.Graphics.Shaders
 
                 if (!(token is TokenWord word))
                 {
-                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying' or type.",
+                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'kind', 'uniform', 'varying' or type.",
                         token.Position);
                 }
 
@@ -109,6 +110,34 @@ namespace Robust.Client.Graphics.Shaders
                             throw new ShaderParseException("Expected 'mix', 'add', 'subtract' or 'multiply'.");
                     }
                 }
+                else if (word.Word == "kind")
+                {
+                    if (shaderKind != null)
+                    {
+                        throw new ShaderParseException("Already specified 'kind' before!");
+                    }
+                    _takeToken();
+                    token = _takeToken();
+
+                    switch (token)
+                    {
+                        case TokenWord t when t.Word == "sprite":
+                            shaderKind = ShaderKind.Sprite;
+                            break;
+                        case TokenWord t when t.Word == "model":
+                            shaderKind = ShaderKind.Model;
+                            break;
+                        default:
+                            throw new ShaderParseException("Expected 'sprite' or 'model'.");
+                    }
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
+                    }
+                }
                 else
                 {
                     break;
@@ -149,7 +178,7 @@ namespace Robust.Client.Graphics.Shaders
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
-                _functionsParsing, lightMode ?? ShaderLightMode.Default, blendMode ?? ShaderBlendMode.Mix);
+                _functionsParsing, lightMode ?? ShaderLightMode.Default, blendMode ?? ShaderBlendMode.Mix, shaderKind ?? ShaderKind.Sprite);
         }
 
         private void _parseFunction()

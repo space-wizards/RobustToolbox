@@ -1,4 +1,4 @@
-using Robust.Client.Graphics.ClientEye;
+﻿using Robust.Client.Graphics.ClientEye;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Drawing
@@ -9,6 +9,11 @@ namespace Robust.Client.Graphics.Drawing
 
         public abstract void DrawRect(Box2 rect, Color color, bool filled = true);
         public abstract void DrawRect(in Box2Rotated rect, Color color, bool filled = true);
+
+        public abstract void UseShaderModel();
+
+        public abstract void DrawTextureRect3D(Texture texture, in Matrix4 rect_transform, UIBox2? subRegion = null,
+            Color? modulate = null);
 
         public abstract void DrawTextureRectRegion(Texture texture, Box2 rect, UIBox2? subRegion = null,
             Color? modulate = null);

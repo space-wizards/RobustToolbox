@@ -26,6 +26,6 @@ namespace Robust.Client.Graphics.ClientEye
             return matrix;
         }
 
-        public bool Is3D { get; } = false;
+        public bool Is3D { get; } = true;
     }
 }

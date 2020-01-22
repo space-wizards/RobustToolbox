@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -15,9 +15,13 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private ClydeShaderInstance _defaultShader;
+        private ClydeShaderInstance _defaultModelShader;
 
         private string _shaderWrapCodeSpriteFrag;
         private string _shaderWrapCodeSpriteVert;
+
+        private string _shaderWrapCodeModelFrag;
+        private string _shaderWrapCodeModelVert;
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
             new Dictionary<ClydeHandle, LoadedShader>();
@@ -48,8 +52,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
-            var vertexSource = _shaderWrapCodeSpriteVert;
-            var fragmentSource = _shaderWrapCodeSpriteFrag;
+            var vertexSource = shader.Kind == ShaderKind.Model ? _shaderWrapCodeModelVert : _shaderWrapCodeSpriteVert;
+            var fragmentSource = shader.Kind == ShaderKind.Model ? _shaderWrapCodeModelFrag : _shaderWrapCodeSpriteFrag;
 
             var (header, vertBody, fragBody) = _getShaderCode(shader);
 
@@ -91,11 +95,18 @@ namespace Robust.Client.Graphics.Clyde
             _shaderWrapCodeSpriteFrag = _readFile("/Shaders/Internal/sprite.frag");
             _shaderWrapCodeSpriteVert = _readFile("/Shaders/Internal/sprite.vert");
 
-
             var defaultLoadedShader = _resourceCache
                 .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
 
-            _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
+            _defaultShader = (ClydeShaderInstance)InstanceShader(defaultLoadedShader);
+
+            _shaderWrapCodeModelFrag = _readFile("/Shaders/Internal/model.frag");
+            _shaderWrapCodeModelVert = _readFile("/Shaders/Internal/model.vert");
+
+            var defaultModelShader = _resourceCache
+                .GetResource<ShaderSourceResource>("/Shaders/Internal/default-model.swsl").ClydeHandle;
+
+            _defaultModelShader = (ClydeShaderInstance)InstanceShader(defaultModelShader);
 
             _queuedShader = _defaultShader.Handle;
 

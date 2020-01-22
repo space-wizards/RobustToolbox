@@ -186,45 +186,55 @@ namespace Robust.Client.Graphics.Clyde
 
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
-            for (var i = 0; i < _drawingSpriteList.Count; i++)
+            if (_eyeManager.CurrentEye.Is3D)
             {
-                ref var entry = ref _drawingSpriteList[indexList[i]];
-                Vector2i roundedPos = default;
-                if (entry.sprite.PostShader != null)
+                for (var i = 0; i < _drawingSpriteList.Count; i++)
                 {
-                    _renderHandle.UseRenderTarget(EntityPostRenderTarget);
-                    _renderHandle.Clear(new Color());
-                    // Calculate viewport so that the entity thinks it's drawing to the same position,
-                    // which is necessary for light application,
-                    // but it's ACTUALLY drawing into the center of the render target.
-                    var spritePos = entry.sprite.Owner.Transform.WorldPosition;
-                    var screenPos = _eyeManager.WorldToScreen(spritePos);
-                    var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                    var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
-                    flippedPos -= EntityPostRenderTarget.Size / 2;
-                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                    ref var entry = ref _drawingSpriteList[indexList[i]];
+                    entry.sprite.Render3D(_renderHandle.DrawingHandleWorld, entry.worldMatrix);
                 }
-
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
-
-                if (entry.sprite.PostShader != null)
+            } else
+            {
+                for (var i = 0; i < _drawingSpriteList.Count; i++)
                 {
-                    _renderHandle.UseRenderTarget(null);
-                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+                    ref var entry = ref _drawingSpriteList[indexList[i]];
+                    Vector2i roundedPos = default;
+                    if (entry.sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(EntityPostRenderTarget);
+                        _renderHandle.Clear(new Color());
+                        // Calculate viewport so that the entity thinks it's drawing to the same position,
+                        // which is necessary for light application,
+                        // but it's ACTUALLY drawing into the center of the render target.
+                        var spritePos = entry.sprite.Owner.Transform.WorldPosition;
+                        var screenPos = _eyeManager.WorldToScreen(spritePos);
+                        var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
+                        var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                        flippedPos -= EntityPostRenderTarget.Size / 2;
+                        _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                    }
 
-                    _renderHandle.UseShader(entry.sprite.PostShader);
-                    _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
-                    _renderHandle.SetModelTransform(Matrix3.Identity);
+                    entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
 
-                    var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
+                    if (entry.sprite.PostShader != null)
+                    {
+                        _renderHandle.UseRenderTarget(null);
+                        _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
 
-                    var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+                        _renderHandle.UseShader(entry.sprite.PostShader);
+                        _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                        _renderHandle.SetModelTransform(Matrix3.Identity);
 
-                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                        box.TopRight, Color.White, null, 0);
+                        var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
 
-                    _renderHandle.SetSpace(CurrentSpace.WorldSpace);
-                    _renderHandle.UseShader(null);
+                        var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+
+                        _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
+                            box.TopRight, Color.White, null, 0);
+
+                        _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                        _renderHandle.UseShader(null);
+                    }
                 }
             }
 
@@ -340,7 +350,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawLights(Box2 worldBounds)
         {
-            if (!_lightManager.Enabled)
+            if (!_lightManager.Enabled || _eyeManager.CurrentEye.Is3D)
             {
                 return;
             }

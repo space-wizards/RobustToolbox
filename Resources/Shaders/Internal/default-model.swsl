@@ -1,0 +1,5 @@
+kind model;
+
+void fragment() {
+    COLOR = texture(TEXTURE, UV);
+}

@@ -991,6 +991,74 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
+        internal void Render3D(DrawingHandleWorld drawingHandle, in Matrix4 worldTransform, Direction? overrideDirection = null)
+        {
+            foreach (var layer in Layers)
+            {
+                if (!layer.Visible)
+                {
+                    continue;
+                }
+
+                // TODO: Implement layer-specific rotation and scale.
+
+                var texture = layer.Texture;
+
+                /*if (layer.State.IsValid)
+                {
+                    // Pull texture from RSI state instead.
+                    var rsi = layer.RSI ?? BaseRSI;
+                    if (rsi != null)
+                    {
+                        var state = rsi[layer.State];
+
+                        RSI.State.Direction layerSpecificDir;
+                        if (state.Directions == RSI.State.DirectionType.Dir1)
+                        {
+                            layerSpecificDir = RSI.State.Direction.South;
+                        }
+                        else
+                        {
+                            RSI.State.Direction dir;
+                            if (overrideDirection != null)
+                            {
+                                dir = overrideDirection.Value.Convert(state.Directions);
+                            }
+                            else
+                            {
+                                dir = GetDir(state.Directions, worldRotation);
+                            }
+
+                            layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
+                        }
+
+                        texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+                    }
+                }*/
+
+                texture ??= resourceCache.GetFallback<TextureResource>();
+
+                drawingHandle.UseShaderModel();
+
+                drawingHandle.DrawTextureRect3D(texture, worldTransform, null, color * layer.Color);
+
+                drawingHandle.UseShader(null);
+            }
+
+            /*drawingHandle.UseShaderModel();
+
+            drawingHandle.DrawTextureRect3D()
+
+            drawingHandle.UseShader(null);*/
+            /*drawingHandle.DrawTexture(texture, -(Vector2)texture.Size / (2f * EyeManager.PIXELSPERMETER),
+                color * layer.Color);
+
+            if (layer.Shader != null)
+            {
+                drawingHandle.UseShader(null);
+            }*/
+        }
+
         internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation, Direction? overrideDirection=null)
         {
             var angle = Rotation;

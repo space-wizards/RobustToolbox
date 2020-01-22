@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -8,13 +8,14 @@ namespace Robust.Client.Graphics.Shaders
     {
         public ParsedShader(IReadOnlyDictionary<string, ShaderUniformDefinition> uniforms,
             IReadOnlyDictionary<string, ShaderVaryingDefinition> varyings, IList<ShaderFunctionDefinition> functions,
-            ShaderLightMode lightMode, ShaderBlendMode blendMode)
+            ShaderLightMode lightMode, ShaderBlendMode blendMode, ShaderKind kind)
         {
             Uniforms = uniforms;
             Varyings = varyings;
             Functions = functions;
             LightMode = lightMode;
             BlendMode = blendMode;
+            Kind = kind;
         }
 
         public IReadOnlyDictionary<string, ShaderUniformDefinition> Uniforms { get; }
@@ -22,6 +23,7 @@ namespace Robust.Client.Graphics.Shaders
         public IList<ShaderFunctionDefinition> Functions { get; }
         public ShaderLightMode LightMode { get; }
         public ShaderBlendMode BlendMode { get; }
+        public ShaderKind Kind { get; }
     }
 
     internal sealed class ShaderFunctionDefinition
@@ -161,6 +163,12 @@ namespace Robust.Client.Graphics.Shaders
             {ShaderDataType.ISampler2D, "isampler2D"},
             {ShaderDataType.USampler2D, "usampler2D"},
         };
+    }
+
+    internal enum ShaderKind
+    {
+        Sprite,
+        Model
     }
 
     internal enum ShaderLightMode

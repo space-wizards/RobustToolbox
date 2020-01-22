@@ -317,17 +317,25 @@ namespace Robust.Client.Graphics.Clyde
             toScreen = ((float) Math.Floor(toScreen.X), (float) Math.Floor(toScreen.Y));
             var cameraWorldAdjusted = _eyeManager.ScreenToMap(toScreen);
 
-            var viewMatrixWorld = Matrix3.Identity;
-            viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;
-            viewMatrixWorld.R1C1 = 1 / eye.Zoom.Y;
-            viewMatrixWorld.R0C2 = -cameraWorldAdjusted.X / eye.Zoom.X;
-            viewMatrixWorld.R1C2 = -cameraWorldAdjusted.Y / eye.Zoom.Y;
+            if (eye.Is3D)
+            {
+                var viewMatrixWorld = Matrix4.CreateTranslation(new Vector3(-cameraWorldAdjusted.X, -cameraWorldAdjusted.Y + 10, -10));
+                viewMatrixWorld *= Matrix4.CreateFromAxisAngle(new Vector3(1,0,0),-1.0f);
 
-            var projMatrixWorld = Matrix3.Identity;
-            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.X;
-            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.Y;
+                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.5f, (float)ScreenSize.X / (float)ScreenSize.Y, 0.01f, 1000);
 
-            return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+                return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+            } else
+            {
+                var viewMatrixWorld = Matrix4.CreateTranslation(new Vector3(-cameraWorldAdjusted.X, -cameraWorldAdjusted.Y, 0));
+                viewMatrixWorld *= Matrix4.Scale(1/ eye.Zoom.X, 1/ eye.Zoom.Y, 1);
+
+                var projMatrixWorld = Matrix4.Identity;
+                projMatrixWorld.M11 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.X;
+                projMatrixWorld.M22 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.Y;
+
+                return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+            }
         }
 
         private void _drawLights(Box2 worldBounds)

@@ -25,5 +25,7 @@ namespace Robust.Client.Graphics.ClientEye
             matrix.R1C2 = -Position.Y / Zoom.Y;
             return matrix;
         }
+
+        public bool Is3D { get; } = false;
     }
 }

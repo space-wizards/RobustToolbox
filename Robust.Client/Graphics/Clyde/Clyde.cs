@@ -548,20 +548,20 @@ namespace Robust.Client.Graphics.Clyde
         [PublicAPI]
         private struct ProjViewMatrices
         {
-            [FieldOffset(0 * sizeof(float))] OpenTK.Matrix4 ProjMatrix;
-            [FieldOffset(16 * sizeof(float))] OpenTK.Matrix4 ViewMatrix;
+            [FieldOffset(0 * sizeof(float))] Matrix4 ProjMatrix;
+            [FieldOffset(16 * sizeof(float))] Matrix4 ViewMatrix;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ProjViewMatrices(in Matrix3 projMatrix, in Matrix3 viewMatrix)
             {
-                this.ProjMatrix = new OpenTK.Matrix4(
+                this.ProjMatrix = new Matrix4(
                     projMatrix.R0C0, projMatrix.R1C0, projMatrix.R2C0, 0,
                     projMatrix.R0C1, projMatrix.R1C1, projMatrix.R2C1, 0,
                     projMatrix.R0C2, projMatrix.R1C2, projMatrix.R2C2, 0,
                     0, 0, 0, 1
                 );
 
-                this.ViewMatrix = new OpenTK.Matrix4(
+                this.ViewMatrix = new Matrix4(
                     viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0, 0,
                     viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1, 0,
                     viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2, 0,
@@ -574,13 +574,21 @@ namespace Robust.Client.Graphics.Clyde
             {
                 this.ProjMatrix = readProjMatrix.ProjMatrix;
 
-                this.ViewMatrix = new OpenTK.Matrix4(
+                this.ViewMatrix = new Matrix4(
                     viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0, 0,
                     viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1, 0,
                     viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2, 0,
                     0, 0, 0, 1
                 );
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public ProjViewMatrices(in Matrix4 projMatrix, in Matrix4 viewMatrix)
+            {
+                this.ProjMatrix = projMatrix;
+                this.ViewMatrix = viewMatrix;
+            }
+
         }
 
         [StructLayout(LayoutKind.Explicit, Size = sizeof(float) * 4)]

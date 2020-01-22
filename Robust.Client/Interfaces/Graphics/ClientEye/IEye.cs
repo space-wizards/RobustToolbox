@@ -23,5 +23,7 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// Returns the view matrix for this eye.
         /// </summary>
         Matrix3 GetViewMatrix();
+
+        bool Is3D { get; }
     }
 }

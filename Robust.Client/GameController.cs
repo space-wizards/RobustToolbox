@@ -72,8 +72,6 @@ namespace Robust.Client
 
         private CommandLineArgs _commandLineArgs;
 
-        public string ContentRootDir { get; set; } = "../../../";
-
         public bool LoadConfigAndUserData { get; set; } = true;
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -117,10 +115,11 @@ namespace Robust.Client
 #if FULL_RELEASE
             _resourceCache.MountContentDirectory(@"Resources/");
 #else
-            _resourceCache.MountContentDirectory($@"{ContentRootDir}RobustToolbox/Resources/");
-            _resourceCache.MountContentDirectory($@"{ContentRootDir}bin/Content.Client/",
+            var contentRootDir = ProgramShared.FindContentRootDir();
+            _resourceCache.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
+            _resourceCache.MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
                 new ResourcePath("/Assemblies/"));
-            _resourceCache.MountContentDirectory($@"{ContentRootDir}Resources/");
+            _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
             // Default to en-US.

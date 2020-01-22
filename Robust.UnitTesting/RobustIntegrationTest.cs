@@ -296,8 +296,6 @@ namespace Robust.UnitTesting
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
                     }
 
-                    server.ContentRootDir = "../../";
-
                     _options?.BeforeStart?.Invoke();
                     if (server.Start())
                     {
@@ -377,7 +375,6 @@ namespace Robust.UnitTesting
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
                     }
 
-                    client.ContentRootDir = "../../";
                     client.LoadConfigAndUserData = false;
                     _options?.BeforeStart?.Invoke();
                     client.Startup();

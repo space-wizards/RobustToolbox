@@ -8,7 +8,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Utility functions
     /// </summary>
-    public static class PathHelpers
+    internal static class PathHelpers
     {
         /// <summary>
         ///     Get the full directory path that the executable is located in.
@@ -17,17 +17,12 @@ namespace Robust.Shared.ContentPack
         {
             // TODO: remove this shitty hack, either through making it less hardcoded into shared,
             //   or by making our file structure less spaghetti somehow.
-            // Godot always executes relative to the project.godot file you opened the engine/editor on.
-            // So this needs to return the directory relative to Robust.Client.dll,
-            //   NOT the current working dir, when on the client.
-            var assembly = AppDomain.CurrentDomain.GetAssemblyByName("Robust.Client")
-                           ?? Assembly.GetEntryAssembly()
-                           ?? Assembly.GetExecutingAssembly();
-            var PathURI = new Uri(assembly.CodeBase);
-            var path = PathURI.LocalPath;
-            if (PathURI.Fragment != "")
+            var assembly = typeof(PathHelpers).Assembly;
+            var pathUri = new Uri(assembly.CodeBase);
+            var path = pathUri.LocalPath;
+            if (pathUri.Fragment != "")
             {
-                path += PathURI.Fragment;
+                path += pathUri.Fragment;
             }
             return Path.GetDirectoryName(path);
         }

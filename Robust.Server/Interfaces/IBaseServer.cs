@@ -45,7 +45,6 @@ namespace Robust.Server.Interfaces
     internal interface IBaseServerInternal : IBaseServer
     {
         void OverrideMainLoop(IGameLoop gameLoop);
-        string ContentRootDir { get; set; }
 
         void SetCommandLineArgs(CommandLineArgs args);
     }

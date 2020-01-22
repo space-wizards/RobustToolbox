@@ -1,4 +1,6 @@
-﻿using Robust.Client.Interfaces;
+﻿using System;
+using System.Threading;
+using Robust.Client.Interfaces;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -14,8 +16,22 @@ namespace Robust.Client
         [Dependency] private IGameTiming _gameTiming;
 #pragma warning restore 649
 
+        private static bool _hasStarted;
+
         public static void Main(string[] args)
         {
+            Start(args);
+        }
+
+        public static void Start(string[] args)
+        {
+            if (_hasStarted)
+            {
+                throw new InvalidOperationException("Cannot start twice!");
+            }
+
+            _hasStarted = true;
+
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
                 ParsedMain(parsed);

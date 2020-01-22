@@ -14,7 +14,6 @@ namespace Robust.Client.Interfaces
         bool LoadConfigAndUserData { get; set; }
         bool Startup();
         void MainLoop(GameController.DisplayMode mode);
-        string ContentRootDir { get; set; }
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);
         void TextEntered(TextEventArgs textEvent);

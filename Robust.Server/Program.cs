@@ -13,8 +13,22 @@ namespace Robust.Server
 {
     internal static class Program
     {
+        private static bool _hasStarted;
+
         internal static void Main(string[] args)
         {
+            Start(args);
+        }
+
+        internal static void Start(string[] args)
+        {
+            if (_hasStarted)
+            {
+                throw new InvalidOperationException("Cannot start twice!");
+            }
+
+            _hasStarted = true;
+
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
                 ParsedMain(parsed);

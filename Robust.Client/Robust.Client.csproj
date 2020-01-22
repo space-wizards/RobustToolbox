@@ -52,5 +52,8 @@
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <PropertyGroup>
+    <RobustToolsPath>../Tools</RobustToolsPath>
+  </PropertyGroup>
   <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
 </Project>

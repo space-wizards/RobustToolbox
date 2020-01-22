@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK;
@@ -36,8 +37,9 @@ namespace Robust.Client.Graphics.Clyde
         private GLFWCallbacks.WindowCloseCallback _windowCloseCallback;
         private GLFWCallbacks.WindowSizeCallback _windowSizeCallback;
         private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback;
+        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback;
 
-        private bool _glfwInitialized = false;
+        private bool _glfwInitialized;
 
         private GraphicsContext _graphicsContext;
         private Window* _glfwWindow;
@@ -55,6 +57,10 @@ namespace Robust.Client.Graphics.Clyde
         public override Vector2i ScreenSize => _framebufferSize;
 
         public Vector2 MouseScreenPosition => _lastMousePos;
+
+        private List<Exception> _glfwExceptionList;
+        private bool _isMinimized;
+
 
         private bool InitGlfw()
         {
@@ -124,6 +130,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetScrollCallback(_glfwWindow, _scrollCallback);
             GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
             GLFW.SetWindowContentScaleCallback(_glfwWindow, _windowContentScaleCallback);
+            GLFW.SetWindowIconifyCallback(_glfwWindow, _windowIconifyCallback);
 
             GLFW.MakeContextCurrent(_glfwWindow);
 
@@ -227,27 +234,55 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwChar(Window* window, uint codepoint)
         {
-            _gameController.TextEntered(new TextEventArgs(codepoint));
+            try
+            {
+                _gameController.TextEntered(new TextEventArgs(codepoint));
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwCursorPos(Window* window, double x, double y)
         {
-            var newPos = ((float) x, (float) y) * _pixelRatio;
-            var delta = newPos - _lastMousePos;
-            _lastMousePos = newPos;
+            try
+            {
+                var newPos = ((float) x, (float) y) * _pixelRatio;
+                var delta = newPos - _lastMousePos;
+                _lastMousePos = newPos;
 
-            var ev = new MouseMoveEventArgs(delta, newPos);
-            _gameController.MouseMove(ev);
+                var ev = new MouseMoveEventArgs(delta, newPos);
+                _gameController.MouseMove(ev);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
         {
-            EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
+            try
+            {
+                EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwMouseButton(Window* window, MouseButton button, InputAction action, KeyModifiers mods)
         {
-            EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
+            try
+            {
+                EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
@@ -278,39 +313,79 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwScroll(Window* window, double offsetX, double offsetY)
         {
-            var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
-            _gameController.MouseWheel(ev);
+            try
+            {
+                var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
+                _gameController.MouseWheel(ev);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwWindowClose(Window* window)
         {
-            _gameController.Shutdown("Window closed");
+            try
+            {
+                _gameController.Shutdown("Window closed");
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwWindowSize(Window* window, int width, int height)
         {
-            var oldSize = _framebufferSize;
-            GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
-            _framebufferSize = (fbW, fbH);
-            _windowSize = (width, height);
-
-            if(fbW == 0 || fbH == 0 || width == 0 || height == 0)
-                return;
-
-            _pixelRatio = _framebufferSize / _windowSize;
-
-            GL.Viewport(0, 0, fbW, fbH);
-            if (fbW != 0 && fbH != 0)
+            try
             {
-                _regenerateLightRenderTarget();
-            }
+                var oldSize = _framebufferSize;
+                GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
+                _framebufferSize = (fbW, fbH);
+                _windowSize = (width, height);
 
-            OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
+                if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
+                    return;
+
+                _pixelRatio = _framebufferSize / _windowSize;
+
+                GL.Viewport(0, 0, fbW, fbH);
+                if (fbW != 0 && fbH != 0)
+                {
+                    _regenerateLightRenderTarget();
+                }
+
+                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
-        private void OnGlfwWindownContentScale(Window *window, float xScale, float yScale)
+        private void OnGlfwWindownContentScale(Window* window, float xScale, float yScale)
         {
-            _windowScale = (xScale, yScale);
+            try
+            {
+                _windowScale = (xScale, yScale);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
+        }
+
+        private void OnGlfwWindowIconify(Window* window, bool iconified)
+        {
+            try
+            {
+                _isMinimized = iconified;
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void StoreCallbacks()
@@ -324,6 +399,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowCloseCallback = OnGlfwWindowClose;
             _windowSizeCallback = OnGlfwWindowSize;
             _windowContentScaleCallback = OnGlfwWindownContentScale;
+            _windowIconifyCallback = OnGlfwWindowIconify;
         }
 
         public override void SetWindowTitle(string title)
@@ -339,6 +415,28 @@ namespace Robust.Client.Graphics.Clyde
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             GLFW.PollEvents();
+
+            if (_glfwExceptionList == null || _glfwExceptionList.Count == 0)
+            {
+                return;
+            }
+
+            // Exception handling.
+            // See CatchCallbackException for details.
+
+            if (_glfwExceptionList.Count == 1)
+            {
+                var exception = _glfwExceptionList[0];
+                _glfwExceptionList = null;
+
+                // Rethrow without losing stack trace.
+                ExceptionDispatchInfo.Capture(exception).Throw();
+                throw exception; // Unreachable.
+            }
+
+            var list = _glfwExceptionList;
+            _glfwExceptionList = null;
+            throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
         }
 
         private void SwapBuffers()
@@ -384,6 +482,20 @@ namespace Robust.Client.Graphics.Clyde
         void IClipboardManager.SetText(string text)
         {
             GLFW.SetClipboardString(_glfwWindow, text);
+        }
+
+        // We can't let exceptions unwind into GLFW, as that can cause the CLR to crash.
+        // And it probably messes up GLFW too.
+        // So all the callbacks are passed to this method.
+        // So they can be queued for re-throw at the end of ProcessInputs().
+        private void CatchCallbackException(Exception e)
+        {
+            if (_glfwExceptionList == null)
+            {
+                _glfwExceptionList = new List<Exception>();
+            }
+
+            _glfwExceptionList.Add(e);
         }
     }
 }

@@ -71,8 +71,15 @@ namespace Robust.Client.Graphics.Clyde
         public void Render()
         {
             var size = ScreenSize;
-            if (size.X == 0 || size.Y == 0)
+            if (size.X == 0 || size.Y == 0 || _isMinimized)
+            {
+                ClearFramebuffer(Color.Black);
+
+                // We have to keep running swapbuffers here
+                // or else the user's PC will turn into a heater!!
+                SwapBuffers();
                 return;
+            }
 
             _debugStats.Reset();
 

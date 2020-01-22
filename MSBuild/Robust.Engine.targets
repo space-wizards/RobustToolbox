@@ -3,15 +3,24 @@
     <RobustToolsPath>$(MSBuildThisFileDirectory)/../Tools/</RobustToolsPath>
   </PropertyGroup>
   <Target Name="CopySwnfd">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) '$(RobustToolsPath)/download_swnfd.py' $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <CombinePath BasePath="$(RobustToolsPath)" Paths="download_swnfd.py">
+      <Output TaskParameter="CombinedPaths" PropertyName="ScriptPath" />
+    </CombinePath>
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) &quot;$(ScriptPath)&quot; $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download swnfd because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="CopyGlfw">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) '$(RobustToolsPath)/download_glfw.py' $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <CombinePath BasePath="$(RobustToolsPath)" Paths="download_glfw.py">
+      <Output TaskParameter="CombinedPaths" PropertyName="ScriptPath" />
+    </CombinePath>
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) &quot;$(ScriptPath)&quot; $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download GLFW because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="CopyMiscDependencies">
-    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) '$(RobustToolsPath)/download_misc_dependencies.py' $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
+    <CombinePath BasePath="$(RobustToolsPath)" Paths="download_misc_dependencies.py">
+      <Output TaskParameter="CombinedPaths" PropertyName="ScriptPath" />
+    </CombinePath>
+    <Exec Condition="'$(Platform)' == 'x64'" Command="$(Python) &quot;$(ScriptPath)&quot; $(Platform) $(TargetOS) $(OutputPath)" CustomErrorRegularExpression="^Error" />
     <Warning Condition="'$(Platform)' != 'x64'" Text="Did not download misc dependencies because the platform is not set to x64. Only use this build for unit testing!" />
   </Target>
   <Target Name="ClientAfterBuild" DependsOnTargets="CopyMiscDependencies;CopySwnfd;CopyGlfw" />

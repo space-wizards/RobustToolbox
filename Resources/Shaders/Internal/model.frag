@@ -29,5 +29,5 @@ void main()
 
     vec3 lightSample = texture(lightMap, Pos).rgb;
 
-    FragColor = COLOR * modulate * vec4(lightSample, 1);
+    FragColor = vec4(1,0,0,1); //COLOR;// * modulate * vec4(lightSample, 1);
 }

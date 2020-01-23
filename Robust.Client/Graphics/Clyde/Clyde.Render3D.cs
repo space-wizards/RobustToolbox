@@ -35,29 +35,31 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.BindVertexArray(VAO3D.Handle);
                 clyde._objectLabelMaybe(ObjectLabelIdentifier.VertexArray, VAO3D, "VAO3D");
+
+                var test = new float[] {
+                    0.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f,      0.0f, 0.0f,
+                    1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+
+                    0.0f, 1.0f, 0.0f,      0.0f, 0.0f,
+                    1.0f, 1.0f, 0.0f,      0.0f, 0.0f,
+                    1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                };
+
+                var test_bytes = MemoryMarshal.AsBytes<float>(test);
+
+                VBO3D = new Buffer(clyde, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw, test_bytes, "VBO3D");
+                VBO3D.Use();
+
                 // Vertex Coords
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vert_size, 0);
                 GL.EnableVertexAttribArray(0);
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, vert_size, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
-
-                var test = new float[] {
-                    0.0f, 0.0f, 0.0f,      0.0f, 0.0f,
-                    100.0f, 0.0f, 0.0f,      0.0f, 0.0f,
-                    0.0f, 100.0f, 0.0f,      0.0f, 0.0f,
-
-                    0.0f, 0.0f, 0.0f,      0.0f, 0.0f,
-                    0.0f, 100.0f, 0.0f,      0.0f, 0.0f,
-                    100.0f, 0.0f, 0.0f,      0.0f, 0.0f,
-                };
-
-                var test_bytes = MemoryMarshal.AsBytes<float>(test);
-
-                VBO3D = new Buffer(clyde, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw, test_bytes, "VBO3D");
             }
 
-            public void DrawRect3D()
+            public void DrawRect3D(Matrix4 transform)
             {
                 //var loadedTexture = _loadedTextures[command.TextureId];
 
@@ -83,8 +85,8 @@ namespace Robust.Client.Graphics.Clyde
                 program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
-                // Model matrix becomes identity since it's built into the batch mesh.
-                program.SetUniformMaybe(UniIModelMatrix, Matrix4.Identity);
+                // Model matrix
+                program.SetUniformMaybe(UniIModelMatrix, transform);
                 // Reset ModUV to ensure it's identity and doesn't touch anything.
                 program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 

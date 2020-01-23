@@ -1038,7 +1038,9 @@ namespace Robust.Client.GameObjects
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
-                render.DrawRect3D();
+                //var transform = Matrix4.CreateTranslation(Offset.X, Offset.Y, 0);
+
+                render.DrawRect3D(worldTransform);
                 /*drawingHandle.UseShaderModel();
 
                 drawingHandle.DrawTextureRect3D(texture, worldTransform, null, color * layer.Color);

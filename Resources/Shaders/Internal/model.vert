@@ -32,7 +32,7 @@ uniform vec4 modifyUV;
 void main()
 {
     vec4 transformed = projectionMatrix * viewMatrix * modelMatrix * vec4(aPos, 1.0);
-    vec3 VERTEX = transformed.xyz;
+    vec3 VERTEX = transformed.xyz / transformed.w;
 
     [SHADER_CODE]
 

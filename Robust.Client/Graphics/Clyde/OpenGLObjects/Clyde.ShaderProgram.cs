@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenTK.Graphics.OpenGL;
@@ -392,6 +392,22 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetUniformMaybe(int uniformName, in Matrix3 value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, in Matrix4 value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(int uniformName, in Matrix4 value)
             {
                 if (TryGetUniform(uniformName, out var slot))
                 {

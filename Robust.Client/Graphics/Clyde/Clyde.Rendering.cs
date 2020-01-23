@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -191,7 +191,7 @@ namespace Robust.Client.Graphics.Clyde
                 for (var i = 0; i < _drawingSpriteList.Count; i++)
                 {
                     ref var entry = ref _drawingSpriteList[indexList[i]];
-                    entry.sprite.Render3D(_renderHandle.DrawingHandleWorld, entry.worldMatrix);
+                    entry.sprite.Render3D(this.GetClyde3D(), Matrix4.Identity);
                 }
             } else
             {

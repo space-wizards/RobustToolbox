@@ -15,7 +15,6 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private ClydeShaderInstance _defaultShader;
-        private ClydeShaderInstance _defaultModelShader;
 
         private string _shaderWrapCodeSpriteFrag;
         private string _shaderWrapCodeSpriteVert;
@@ -102,11 +101,6 @@ namespace Robust.Client.Graphics.Clyde
 
             _shaderWrapCodeModelFrag = _readFile("/Shaders/Internal/model.frag");
             _shaderWrapCodeModelVert = _readFile("/Shaders/Internal/model.vert");
-
-            var defaultModelShader = _resourceCache
-                .GetResource<ShaderSourceResource>("/Shaders/Internal/default-model.swsl").ClydeHandle;
-
-            _defaultModelShader = (ClydeShaderInstance)InstanceShader(defaultModelShader);
 
             _queuedShader = _defaultShader.Handle;
 

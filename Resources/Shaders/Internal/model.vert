@@ -10,11 +10,11 @@ out vec2 Pos;
 
 // Maybe we should merge these CPU side.
 // idk yet.
-uniform mat3 modelMatrix;
+uniform mat4 modelMatrix;
 layout (std140) uniform projectionViewMatrices
 {
-    mat3 projectionMatrix;
-    mat3 viewMatrix;
+    mat4 projectionMatrix;
+    mat4 viewMatrix;
 };
 
 layout (std140) uniform uniformConstants
@@ -31,7 +31,7 @@ uniform vec4 modifyUV;
 
 void main()
 {
-    vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * aPos;
+    vec4 transformed = projectionMatrix * viewMatrix * modelMatrix * vec4(aPos, 1.0);
     vec3 VERTEX = transformed.xyz;
 
     [SHADER_CODE]

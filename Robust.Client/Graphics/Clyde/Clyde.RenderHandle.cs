@@ -129,12 +129,6 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
             }
 
-            public void UseShaderModel()
-            {
-                // sorry I was too darn lazy to do this properly
-                _clyde.DrawUseShader(_clyde._defaultModelShader.Handle);
-            }
-
             public void Viewport(Box2i viewport)
             {
                 _clyde.DrawViewport(viewport);
@@ -224,11 +218,6 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseShader(shader);
                 }
 
-                public override void UseShaderModel()
-                {
-                    _renderHandle.UseShaderModel();
-                }
-
                 public override void DrawCircle(Vector2 position, float radius, Color color)
                 {
                     // TODO: Implement this.
@@ -284,15 +273,6 @@ namespace Robust.Client.Graphics.Clyde
 
                     _renderHandle.DrawTexture(texture, rect.Box.BottomLeft, rect.Box.TopRight, color, subRegion,
                         (float) rect.Rotation);
-                }
-
-                public override void DrawTextureRect3D(Texture texture, in Matrix4 rect_transform, UIBox2? subRegion = null,
-                    Color? modulate = null)
-                {
-                    var color = (modulate ?? Color.White) * Modulate;
-
-                    //_renderHandle.DrawTexture(texture, rect.Box.BottomLeft, rect.Box.TopRight, color, subRegion,
-                    //    (float)rect.Rotation);
                 }
             }
         }

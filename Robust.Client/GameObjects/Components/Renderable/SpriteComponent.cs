@@ -991,7 +991,7 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void Render3D(DrawingHandleWorld drawingHandle, in Matrix4 worldTransform, Direction? overrideDirection = null)
+        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Direction? overrideDirection = null)
         {
             foreach (var layer in Layers)
             {
@@ -1038,11 +1038,12 @@ namespace Robust.Client.GameObjects
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
-                drawingHandle.UseShaderModel();
+                render.DrawRect3D();
+                /*drawingHandle.UseShaderModel();
 
                 drawingHandle.DrawTextureRect3D(texture, worldTransform, null, color * layer.Color);
 
-                drawingHandle.UseShader(null);
+                drawingHandle.UseShader(null);*/
             }
 
             /*drawingHandle.UseShaderModel();

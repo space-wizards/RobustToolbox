@@ -26,6 +26,29 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = _eyeManager.CurrentMap;
             }
 
+            if (_eyeManager.CurrentEye.Is3D)
+            {
+                var render3d = GetRender3D();
+
+                foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+                {
+                    foreach (var tile in mapGrid.GetAllTiles())
+                    {
+                        var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
+                        if (!regionMaybe.HasValue)
+                        {
+                            continue;
+                        }
+
+                        var region = regionMaybe.Value;
+
+                        var transform = Matrix4.CreateTranslation(new Vector3(tile.X+.5f,tile.Y+.5f,-.5f));
+                        render3d.DrawRect3D(transform, _tileDefinitionManager.TileTextureAtlas, Color.White, region);
+                    }
+                }
+                return;
+            }
+
             var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
             var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
 

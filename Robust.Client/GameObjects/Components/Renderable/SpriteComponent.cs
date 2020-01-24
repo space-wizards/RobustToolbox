@@ -25,6 +25,8 @@ using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
 
+using Sprite3DRenderMode = Robust.Client.Graphics.Clyde.Clyde.Render3D.Sprite3DRenderMode;
+
 namespace Robust.Client.GameObjects
 {
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent, IClickTargetComponent,
@@ -991,8 +993,11 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Angle worldRotation, Direction? overrideDirection = null)
-        {
+        /// Render the sprite in 3D. This is almost entirely copy-pasted from the 2D version.
+        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Angle worldRotation,
+            Sprite3DRenderMode renderMode, Direction? overrideDirection = null
+        ) {
+
             var angle = Rotation;
             if (Directional)
             {
@@ -1004,11 +1009,16 @@ namespace Robust.Client.GameObjects
             }
 
             var mOffset = Matrix4.CreateTranslation(new Vector3(Offset));
-            var mRotation = Matrix4.CreateFromAxisAngle(new Vector3(0,0,-1),(float)angle.Theta);
+            var mRotation = Matrix4.CreateRotationZ((float)angle.Theta); //Matrix4.CreateFromAxisAngle(new Vector3(0,0,1),(float)angle.Theta);
 
-            var transform = mRotation * mOffset;
+            render.AdjustSpriteTransform(renderMode, ref mOffset);
+            //System.Console.WriteLine("???" + Offset);
 
-            transform = worldTransform * transform;
+            //var transform = mRotation * mOffset;
+            var transform = mOffset * mRotation;
+
+
+            transform = transform * worldTransform;
 
             // Draw layers
             foreach (var layer in Layers)
@@ -1056,28 +1066,8 @@ namespace Robust.Client.GameObjects
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
-                //var transform = Matrix4.CreateTranslation(Offset.X, Offset.Y, 0);
-
                 render.DrawRect3D(transform, texture, color * layer.Color);
-                /*drawingHandle.UseShaderModel();
-
-                drawingHandle.DrawTextureRect3D(texture, worldTransform, null, color * layer.Color);
-
-                drawingHandle.UseShader(null);*/
             }
-
-            /*drawingHandle.UseShaderModel();
-
-            drawingHandle.DrawTextureRect3D()
-
-            drawingHandle.UseShader(null);*/
-            /*drawingHandle.DrawTexture(texture, -(Vector2)texture.Size / (2f * EyeManager.PIXELSPERMETER),
-                color * layer.Color);
-
-            if (layer.Shader != null)
-            {
-                drawingHandle.UseShader(null);
-            }*/
         }
 
         internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation, Direction? overrideDirection=null)

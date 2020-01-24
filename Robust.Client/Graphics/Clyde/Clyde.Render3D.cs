@@ -5,6 +5,7 @@ using System.Text;
 
 using OpenTK.Graphics.OpenGL;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -19,6 +20,13 @@ namespace Robust.Client.Graphics.Clyde
             private ClydeShaderInstance modelShader;
             private OGLHandle VAO3D = new OGLHandle(GL.GenVertexArray());
             private Buffer VBO3D;
+
+            public enum Sprite3DRenderMode
+            {
+                Floor,  // Draw Flat on the ground, no extra transformations
+                Table,  // Higher than floor
+                SimpleSprite, // Always rotate to face the camera
+            }
 
             public Render3D(Clyde clyde)
             {
@@ -37,13 +45,13 @@ namespace Robust.Client.Graphics.Clyde
                 clyde._objectLabelMaybe(ObjectLabelIdentifier.VertexArray, VAO3D, "VAO3D");
 
                 var test = new float[] {
-                    0.0f, 0.0f, 0.0f,       1.0f, 0.0f,
-                    0.0f, -1.0f, 0.0f,      1.0f, 1.0f,
-                    -1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                    0.5f, 0.5f, 0.0f,       1.0f, 0.0f,
+                    0.5f, -0.5f, 0.0f,      1.0f, 1.0f,
+                    -0.5f, 0.5f, 0.0f,      0.0f, 0.0f,
 
-                    0.0f, -1.0f, 0.0f,      1.0f, 1.0f,
-                    -1.0f, -1.0f, 0.0f,     0.0f, 1.0f,
-                    -1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                    0.5f, -0.5f, 0.0f,      1.0f, 1.0f,
+                    -0.5f, -0.5f, 0.0f,     0.0f, 1.0f,
+                    -0.5f, 0.5f, 0.0f,      0.0f, 0.0f,
                 };
 
                 var test_bytes = MemoryMarshal.AsBytes<float>(test);
@@ -60,19 +68,25 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             /// Terribly unoptimized, should probably have a sprite batch for 3D quads if this evolves beyond just being a meme.
-            public void DrawRect3D(Matrix4 transform, Texture texture, Color color)
+            public void DrawRect3D(Matrix4 transform, Texture texture, Color color, UIBox2? subRegion = null)
             {
                 var region = new Vector4(0, 0, 1, 1);
 
                 if (texture is AtlasTexture atlas)
                 {
                     texture = atlas.SourceTexture;
-                    var subRegion = atlas.SubRegion;
                     region = new Vector4(
-                        subRegion.Left / texture.Width,
-                        subRegion.Top / texture.Height,
-                        subRegion.Right / texture.Width,
-                        subRegion.Bottom / texture.Height);
+                        atlas.SubRegion.Left / texture.Width,
+                        atlas.SubRegion.Top / texture.Height,
+                        atlas.SubRegion.Right / texture.Width,
+                        atlas.SubRegion.Bottom / texture.Height);
+                } else if (subRegion.HasValue)
+                {
+                    region = new Vector4(
+                        subRegion.Value.Left,
+                        subRegion.Value.Top,
+                        subRegion.Value.Right,
+                        subRegion.Value.Bottom);
                 }
 
                 var loadedTexture = clyde._loadedTextures[ ((ClydeTexture)texture).TextureId ];
@@ -87,6 +101,9 @@ namespace Robust.Client.Graphics.Clyde
                 program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
+                // Need to take the transpose because linal is hell I guess.
+                transform.Transpose();
+
                 // Model matrix
                 program.SetUniformMaybe(UniIModelMatrix, transform);
                 // Set ModUV to our subregion
@@ -97,11 +114,73 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.DrawArrays(PrimitiveType.Triangles, 0, 6);
             }
+
+            Vector3 CameraPos = Vector3.Zero;
+            Matrix4 FaceCameraRotation = Matrix4.Identity;
+
+            public (Matrix4,Matrix4) GetProjViewMatrices3D(Vector2 eyePos)
+            {
+                float dist = 3;
+                float angle = 0;// clyde._renderTime;
+                var basePos = new Vector3(eyePos.X, eyePos.Y, 0);
+                CameraPos = basePos + new Vector3(MathF.Sin(angle) * -dist, MathF.Cos(angle) * -dist, dist);
+
+                //var s = Math.Sin(this._renderTime);
+                //var viewMatrixWorld = Matrix4.LookAt(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
+                var viewMatrixWorld = Matrix4.CreateTranslation(-CameraPos);
+                //viewMatrixWorld *= Matrix4.Scale(0.01f);
+                var cameraRotation = Matrix4.CreateRotationZ(angle);
+                cameraRotation *= Matrix4.CreateRotationX(-1.0f);
+
+                viewMatrixWorld *= cameraRotation;
+                //viewMatrixWorld.Invert();
+                //var viewMatrixWorld = Matrix4.Identity;
+                FaceCameraRotation = cameraRotation;
+                FaceCameraRotation.Transpose();
+
+                float aspect = (float)clyde.ScreenSize.X / clyde.ScreenSize.Y;
+
+                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.5f, aspect, 0.1f, 100);
+
+                return (projMatrixWorld, viewMatrixWorld);
+            }
+
+            public void AdjustSpriteTransform(Sprite3DRenderMode renderMode, ref Matrix4 matrix)
+            {
+                switch (renderMode)
+                {
+                    case Sprite3DRenderMode.Floor:
+                        matrix *= Matrix4.CreateTranslation(0, 0, -.5f);
+                        break;
+                    case Sprite3DRenderMode.Table:
+                        matrix *= Matrix4.CreateTranslation(0, 0, -.25f);
+                        break;
+                    case Sprite3DRenderMode.SimpleSprite:
+                        matrix *= FaceCameraRotation;
+                        break;
+                }
+            }
+
+            public static Sprite3DRenderMode InferRenderMode(IEntity ent)
+            {
+                switch (ent.Name)
+                {
+                    case "worktop":
+                        return Sprite3DRenderMode.Table;
+                    case "Solid wall":
+                        return Sprite3DRenderMode.Table; // todo walls
+                    case "Catwalk":
+                    case "Wire":
+                        return Sprite3DRenderMode.Floor;
+                }
+
+                return Sprite3DRenderMode.SimpleSprite;
+            }
         }
 
         Render3D? render3d;
 
-        Render3D GetClyde3D()
+        Render3D GetRender3D()
         {
             if (render3d == null)
             {

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -46,6 +45,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEntity SpawnEntity(string protoName, GridCoordinates coordinates);
 
         /// <summary>
+        /// Spawns an entity at a specific position
+        /// </summary>
+        /// <param name="protoName"></param>
+        /// <param name="coordinates"></param>
+        /// <returns></returns>
+        IEntity SpawnEntity(string protoName, MapCoordinates coordinates);
+
+        /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
         /// </summary>
         /// <remarks>
@@ -55,22 +62,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
         IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates);
-
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="entityType"></param>
-        /// <param name="coordinates"></param>
-        /// <returns></returns>
-        IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates);
-
-        /// <summary>
-        /// Spawns an entity at a specific position
-        /// </summary>
-        /// <param name="entityType"></param>
-        /// <param name="coordinates"></param>
-        /// <returns></returns>
-        IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id

@@ -131,7 +131,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             // Act
-            var newEntity = entMan.SpawnEntityAt(null, MapCoordinates.Nullspace);
+            var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
             Assert.That(newEntity.Transform.MapID, Is.EqualTo(MapId.Nullspace));

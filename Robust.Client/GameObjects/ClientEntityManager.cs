@@ -109,11 +109,13 @@ namespace Robust.Client.GameObjects
             Shutdown();
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
@@ -126,6 +128,7 @@ namespace Robust.Client.GameObjects
             return newEntity;
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
@@ -134,6 +137,7 @@ namespace Robust.Client.GameObjects
             return newEntity;
         }
 
+        /// <inheritdoc />
         public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
@@ -141,27 +145,20 @@ namespace Robust.Client.GameObjects
             return newEnt;
         }
 
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
-        {
-            var newEnt = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity)newEnt);
-            return newEnt;
-        }
-
-        public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
-        {
-            var newEnt = CreateEntityUninitialized(entityType, coordinates);
-            InitializeAndStartEntity((Entity)newEnt);
-            return newEnt;
-        }
-
         /// <inheritdoc />
-        public override IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
         {
-            var entity = CreateEntityUninitialized(entityType, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity)entity);
             return entity;
         }
+
+        /// <inheritdoc />
+        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        {
+            return SpawnEntity(protoName, coordinates);
+        }
+
 
         protected override EntityUid GenerateEntityUid()
         {

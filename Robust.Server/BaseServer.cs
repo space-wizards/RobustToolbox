@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
@@ -66,6 +67,8 @@ namespace Robust.Server
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
+
+        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
@@ -238,7 +241,21 @@ namespace Robust.Server
 
             IoCManager.Resolve<IStatusHost>().Start();
 
+            AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
+
             return false;
+        }
+
+        private void ProcessExiting(object sender, EventArgs e)
+        {
+            _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
+            // Give the server 10 seconds to shut down.
+            // If it still hasn't managed to assume it's stuck or something.
+            if (!_shutdownEvent.Wait(10_000))
+            {
+                System.Console.WriteLine("ProcessExited timeout (10s) has been passed; killing server.");
+                // This kills the server right? Returning?
+            }
         }
 
         /// <inheritdoc />
@@ -260,6 +277,8 @@ namespace Robust.Server
 
             _time.InSimulation = true;
             Cleanup();
+
+            _shutdownEvent.Set();
         }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
@@ -324,6 +343,8 @@ namespace Robust.Server
             var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath),
                 "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
             File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+
+            AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
         }

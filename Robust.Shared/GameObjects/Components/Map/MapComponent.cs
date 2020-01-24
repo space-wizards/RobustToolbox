@@ -28,9 +28,6 @@ namespace Robust.Shared.GameObjects.Components.Map
         public override uint? NetID => NetIDs.MAP_MAP;
 
         /// <inheritdoc />
-        public override Type StateType => typeof(MapComponentState);
-
-        /// <inheritdoc />
         public MapId WorldMap
         {
             get => _mapIndex;

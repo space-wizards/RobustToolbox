@@ -304,9 +304,8 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert("Component does not exist for state.");
                 }
 
-                DebugTools.Assert(kvStates.Value.curState == null
-                                  || kvStates.Value.curState.GetType() == component.StateType,
-                    "Component state is of the wrong type.");
+                DebugTools.Assert(kvStates.Value.curState != null,
+                    "Component state is null.");
 
                 component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
             }

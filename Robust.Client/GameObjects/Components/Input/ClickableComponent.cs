@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Client.Graphics.Shaders;
+﻿using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
@@ -22,7 +21,6 @@ namespace Robust.Client.GameObjects
 
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
-        public override Type StateType => typeof(ClickableComponentState);
 
         [ViewVariables]
         public Box2? LocalBounds

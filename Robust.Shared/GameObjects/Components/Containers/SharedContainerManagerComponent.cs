@@ -10,7 +10,6 @@ namespace Robust.Shared.GameObjects.Components.Containers
     {
         public sealed override string Name => "ContainerContainer";
         public sealed override uint? NetID => NetIDs.CONTAINER_MANAGER;
-        public override Type StateType => typeof(ContainerManagerComponentState);
 
         public abstract T MakeContainer<T>(string id) where T : IContainer;
         public abstract bool Remove(IEntity entity);

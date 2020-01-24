@@ -50,9 +50,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public sealed override uint? NetID => NetIDs.TRANSFORM;
 
         /// <inheritdoc />
-        public sealed override Type StateType => typeof(TransformComponentState);
-
-        /// <inheritdoc />
         [ViewVariables]
         public MapId MapID
         {

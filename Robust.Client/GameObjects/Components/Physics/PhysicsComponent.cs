@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -17,9 +16,6 @@ namespace Robust.Client.GameObjects
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
-
-        /// <inheritdoc />
-        public override Type StateType => typeof(PhysicsComponentState);
 
         /// <summary>
         ///     Current mass of the entity in kg.

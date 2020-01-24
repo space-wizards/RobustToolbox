@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Client.Graphics;
+﻿using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
@@ -16,7 +15,6 @@ namespace Robust.Client.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
-        public override Type StateType => typeof(PointLightComponentState);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color

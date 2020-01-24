@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
@@ -19,7 +18,6 @@ namespace Robust.Server.GameObjects
 
         public override string Name => "Clickable";
         public override uint? NetID => NetIDs.CLICKABLE;
-        public override Type StateType => typeof(ClickableComponentState);
 
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)

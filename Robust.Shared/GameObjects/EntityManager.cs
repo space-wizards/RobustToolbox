@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -18,24 +20,14 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [Dependency]
 #pragma warning disable 649
-        private readonly IEntityNetworkManager EntityNetworkManager;
-
-        [Dependency]
-        private readonly IPrototypeManager PrototypeManager;
-
-        [Dependency]
-        protected readonly IEntitySystemManager EntitySystemManager;
-
-        [Dependency]
-        private readonly IComponentFactory ComponentFactory;
-
-        [Dependency]
-        private readonly IComponentManager _componentManager;
-
-        [Dependency]
-        private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager;
+        [Dependency] private readonly IPrototypeManager PrototypeManager;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
+        [Dependency] private readonly IComponentFactory ComponentFactory;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
         #endregion Dependencies
@@ -399,6 +391,142 @@ namespace Robust.Shared.GameObjects
         #endregion message processing
 
         protected abstract EntityUid GenerateEntityUid();
+
+        #region Spatial Queries
+
+        /// <inheritdoc />
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box)
+        {
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.Transform;
+                if (transform.MapID != mapId)
+                    continue;
+
+                if (entity.TryGetComponent<ICollidableComponent>(out var component))
+                {
+                    if (box.Intersects(component.WorldAABB))
+                        return true;
+                }
+                else
+                {
+                    if (box.Contains(transform.WorldPosition))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
+        {
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.Transform;
+                if (transform.MapID != mapId)
+                    continue;
+
+                if (entity.TryGetComponent<ICollidableComponent>(out var component))
+                {
+                    if (position.Intersects(component.WorldAABB))
+                        yield return entity;
+                }
+                else
+                {
+                    if (position.Contains(transform.WorldPosition))
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
+        {
+            foreach (var entity in GetEntities())
+            {
+                var transform = entity.Transform;
+                if (transform.MapID != mapId)
+                    continue;
+
+                if (entity.TryGetComponent<ICollidableComponent>(out var component))
+                {
+                    if (component.WorldAABB.Contains(position))
+                        yield return entity;
+                }
+                else
+                {
+                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
+                    {
+                        yield return entity;
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
+        {
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, position.ToWorld(_mapManager).Position);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
+        {
+            if (entity.TryGetComponent<ICollidableComponent>(out var component))
+            {
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB);
+            }
+
+            return GetEntitiesIntersecting(entity.Transform.GridPosition);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
+        {
+            var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range)
+        {
+            var aabb = new Box2(box.Left - range, box.Top - range, box.Right + range, box.Bottom + range);
+            return GetEntitiesIntersecting(mapId, aabb);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
+        {
+            if (entity.TryGetComponent<ICollidableComponent>(out var component))
+            {
+                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range);
+            }
+            else
+            {
+                GridCoordinates coords = entity.Transform.GridPosition;
+                return GetEntitiesInRange(coords, range);
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth)
+        {
+            var entities = GetEntitiesInRange(coordinates, range*2);
+
+            foreach (var entity in entities)
+            {
+                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld(_mapManager).Position);
+                if (angle.Degrees < direction.Degrees + arcWidth / 2 && angle.Degrees > direction.Degrees - arcWidth / 2)
+                    yield return entity;
+            }
+        }
+
+        #endregion
     }
 
     public enum EntityMessageType

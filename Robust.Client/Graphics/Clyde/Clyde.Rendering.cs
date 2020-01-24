@@ -201,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
                         mat3.R2C0, mat3.R2C1, 0, mat3.R2C2
                     );
 
-                    entry.sprite.Render3D(this.GetClyde3D(), mat4);
+                    entry.sprite.Render3D(this.GetClyde3D(), mat4, entry.worldRotation);
                 }
             } else
             {
@@ -341,13 +341,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 //var s = Math.Sin(this._renderTime);
                 //var viewMatrixWorld = Matrix4.LookAt(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
-                var viewMatrixWorld = Matrix4.CreateTranslation(new Vector3(-cameraWorldAdjusted.X, -cameraWorldAdjusted.Y + 10, -10));
+                float dist = 3;
+                var viewMatrixWorld = Matrix4.CreateTranslation(new Vector3(-cameraWorldAdjusted.X, -cameraWorldAdjusted.Y + dist, -dist));
                 //viewMatrixWorld *= Matrix4.Scale(0.01f);
                 viewMatrixWorld *= Matrix4.CreateFromAxisAngle(new Vector3(1,0,0),-1.0f);
                 //viewMatrixWorld.Invert();
                 //var viewMatrixWorld = Matrix4.Identity;
 
-                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.5f, (float)ScreenSize.X / (float)ScreenSize.Y, 0.01f, 2000);
+                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.5f, (float)ScreenSize.X / (float)ScreenSize.Y, 0.1f, 100);
 
                 return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
             } else

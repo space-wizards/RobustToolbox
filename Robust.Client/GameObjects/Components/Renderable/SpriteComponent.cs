@@ -991,8 +991,26 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Direction? overrideDirection = null)
+        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Angle worldRotation, Direction? overrideDirection = null)
         {
+            var angle = Rotation;
+            if (Directional)
+            {
+                angle -= worldRotation;
+            }
+            else
+            {
+                angle -= new Angle(MathHelper.PiOver2);
+            }
+
+            var mOffset = Matrix4.CreateTranslation(new Vector3(Offset));
+            var mRotation = Matrix4.CreateFromAxisAngle(new Vector3(0,0,-1),(float)angle.Theta);
+
+            var transform = mRotation * mOffset;
+
+            transform = worldTransform * transform;
+
+            // Draw layers
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1004,7 +1022,7 @@ namespace Robust.Client.GameObjects
 
                 var texture = layer.Texture;
 
-                /*if (layer.State.IsValid)
+                if (layer.State.IsValid)
                 {
                     // Pull texture from RSI state instead.
                     var rsi = layer.RSI ?? BaseRSI;
@@ -1034,13 +1052,13 @@ namespace Robust.Client.GameObjects
 
                         texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
                     }
-                }*/
+                }
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
                 //var transform = Matrix4.CreateTranslation(Offset.X, Offset.Y, 0);
 
-                render.DrawRect3D(worldTransform);
+                render.DrawRect3D(transform, texture, color * layer.Color);
                 /*drawingHandle.UseShaderModel();
 
                 drawingHandle.DrawTextureRect3D(texture, worldTransform, null, color * layer.Color);

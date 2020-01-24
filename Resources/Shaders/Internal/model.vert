@@ -31,12 +31,11 @@ uniform vec4 modifyUV;
 
 void main()
 {
-    vec4 transformed = projectionMatrix * viewMatrix * modelMatrix * vec4(aPos, 1.0);
-    vec3 VERTEX = transformed.xyz / transformed.w;
+    vec4 VERTEX = projectionMatrix * viewMatrix * modelMatrix * vec4(aPos, 1.0);
 
     [SHADER_CODE]
 
-    gl_Position = vec4(VERTEX, 1.0);
+    gl_Position = VERTEX;
     Pos = (VERTEX.xy + 1) / 2;
     UV = mix(modifyUV.xy, modifyUV.zw, tCoord);
 }

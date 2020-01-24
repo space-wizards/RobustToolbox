@@ -37,13 +37,13 @@ namespace Robust.Client.Graphics.Clyde
                 clyde._objectLabelMaybe(ObjectLabelIdentifier.VertexArray, VAO3D, "VAO3D");
 
                 var test = new float[] {
-                    0.0f, 0.0f, 0.0f,      0.0f, 0.0f,
-                    0.0f, 1.0f, 0.0f,      0.0f, 0.0f,
-                    1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f,       1.0f, 0.0f,
+                    0.0f, -1.0f, 0.0f,      1.0f, 1.0f,
+                    -1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
 
-                    0.0f, 1.0f, 0.0f,      0.0f, 0.0f,
-                    1.0f, 1.0f, 0.0f,      0.0f, 0.0f,
-                    1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
+                    0.0f, -1.0f, 0.0f,      1.0f, 1.0f,
+                    -1.0f, -1.0f, 0.0f,     0.0f, 1.0f,
+                    -1.0f, 0.0f, 0.0f,      0.0f, 0.0f,
                 };
 
                 var test_bytes = MemoryMarshal.AsBytes<float>(test);
@@ -55,42 +55,44 @@ namespace Robust.Client.Graphics.Clyde
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vert_size, 0);
                 GL.EnableVertexAttribArray(0);
                 // Texture Coords.
-                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, vert_size, 2 * sizeof(float));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, vert_size, 3 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
             }
 
-            public void DrawRect3D(Matrix4 transform)
+            /// Terribly unoptimized, should probably have a sprite batch for 3D quads if this evolves beyond just being a meme.
+            public void DrawRect3D(Matrix4 transform, Texture texture, Color color)
             {
-                //var loadedTexture = _loadedTextures[command.TextureId];
+                var region = new Vector4(0, 0, 1, 1);
+
+                if (texture is AtlasTexture atlas)
+                {
+                    texture = atlas.SourceTexture;
+                    var subRegion = atlas.SubRegion;
+                    region = new Vector4(
+                        subRegion.Left / texture.Width,
+                        subRegion.Top / texture.Height,
+                        subRegion.Right / texture.Width,
+                        subRegion.Bottom / texture.Height);
+                }
+
+                var loadedTexture = clyde._loadedTextures[ ((ClydeTexture)texture).TextureId ];
 
                 GL.BindVertexArray(this.VAO3D.Handle);
 
                 var (program, loaded) = clyde.ActivateShaderInstance(this.modelShader.Handle);
 
                 GL.ActiveTexture(TextureUnit.Texture0);
-                //GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
-
-                GL.ActiveTexture(TextureUnit.Texture1);
-                /*if (_lightingReady && loaded.HasLighting)
-                {
-                    var lightTexture = _loadedTextures[LightRenderTarget.Texture.TextureId].OpenGLObject;
-                    GL.BindTexture(TextureTarget.Texture2D, lightTexture.Handle);
-                }
-                else
-                {*/
-                    var white = clyde._loadedTextures[clyde._stockTextureWhite.TextureId].OpenGLObject;
-                    GL.BindTexture(TextureTarget.Texture2D, white.Handle);
-                //}
+                GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
 
                 program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
                 // Model matrix
                 program.SetUniformMaybe(UniIModelMatrix, transform);
-                // Reset ModUV to ensure it's identity and doesn't touch anything.
-                program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
+                // Set ModUV to our subregion
+                program.SetUniformMaybe(UniIModUV, region);
 
-                program.SetUniformMaybe(UniIModulate, new Vector4(1, 1, 1, 1)); // modulate
+                program.SetUniformMaybe(UniIModulate, color); // modulate
                 program.SetUniformMaybe(UniITexturePixelSize, new Vector2(1, 1)); // meh
 
                 GL.DrawArrays(PrimitiveType.Triangles, 0, 6);

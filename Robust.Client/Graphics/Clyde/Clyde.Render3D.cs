@@ -26,6 +26,7 @@ namespace Robust.Client.Graphics.Clyde
                 Floor,  // Draw Flat on the ground, no extra transformations
                 Table,  // Higher than floor
                 SimpleSprite, // Always rotate to face the camera
+                Wall // Render 4 sides + top cap
             }
 
             public Render3D(Clyde clyde)
@@ -145,20 +146,32 @@ namespace Robust.Client.Graphics.Clyde
                 return (projMatrixWorld, viewMatrixWorld);
             }
 
-            public void AdjustSpriteTransform(Sprite3DRenderMode renderMode, ref Matrix4 matrix)
+            public Matrix4 GetSpriteTransform(Sprite3DRenderMode renderMode, int n = 0)
             {
                 switch (renderMode)
                 {
                     case Sprite3DRenderMode.Floor:
-                        matrix *= Matrix4.CreateTranslation(0, 0, -.5f);
-                        break;
+                        return Matrix4.CreateTranslation(0, 0, -.5f);
                     case Sprite3DRenderMode.Table:
-                        matrix *= Matrix4.CreateTranslation(0, 0, -.25f);
-                        break;
+                        return Matrix4.CreateTranslation(0, 0, -.25f);
+                    case Sprite3DRenderMode.Wall:
+                        switch (n)
+                        {
+                            case 0:
+                                return Matrix4.CreateRotationY(MathHelper.PiOver2) * Matrix4.CreateTranslation(.5f, 0, 0);
+                            case 1:
+                                return Matrix4.CreateRotationY(MathHelper.PiOver2) * Matrix4.CreateTranslation(-.5f, 0, 0);
+                            case 2:
+                                return Matrix4.CreateRotationX(MathHelper.PiOver2) * Matrix4.CreateTranslation(0, .5f, 0);
+                            case 3:
+                                return Matrix4.CreateRotationX(MathHelper.PiOver2) * Matrix4.CreateTranslation(0, -.5f, 0);
+                            default:
+                                return Matrix4.CreateTranslation(0, 0, .5f);
+                        }
                     case Sprite3DRenderMode.SimpleSprite:
-                        matrix *= FaceCameraRotation;
-                        break;
+                        return FaceCameraRotation;
                 }
+                return Matrix4.Identity;
             }
 
             public static Sprite3DRenderMode InferRenderMode(IEntity ent)
@@ -168,10 +181,14 @@ namespace Robust.Client.Graphics.Clyde
                     case "worktop":
                         return Sprite3DRenderMode.Table;
                     case "Solid wall":
-                        return Sprite3DRenderMode.Table; // todo walls
+                        return Sprite3DRenderMode.Wall;
                     case "Catwalk":
                     case "Wire":
                         return Sprite3DRenderMode.Floor;
+                }
+                if (ent.Name.Contains("Airlock"))
+                {
+                    return Sprite3DRenderMode.Wall;
                 }
 
                 return Sprite3DRenderMode.SimpleSprite;

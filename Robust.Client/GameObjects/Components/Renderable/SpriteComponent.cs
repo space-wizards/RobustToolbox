@@ -994,33 +994,25 @@ namespace Robust.Client.GameObjects
         }
 
         /// Render the sprite in 3D. This is almost entirely copy-pasted from the 2D version.
-        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, in Matrix4 worldTransform, Angle worldRotation,
+        internal void Render3D(Graphics.Clyde.Clyde.Render3D render, Vector2 worldPosition, Angle worldRotation,
             Sprite3DRenderMode renderMode, Direction? overrideDirection = null
         ) {
 
-            var angle = Rotation;
+            Angle angle;
             if (Directional)
             {
-                angle -= worldRotation;
+                angle = Rotation;
             }
             else
             {
-                angle -= new Angle(MathHelper.PiOver2);
+                angle = Rotation + worldRotation;
             }
 
-            var mOffset = Matrix4.CreateTranslation(new Vector3(Offset));
-            var mRotation = Matrix4.CreateRotationZ((float)angle.Theta); //Matrix4.CreateFromAxisAngle(new Vector3(0,0,1),(float)angle.Theta);
-
-            render.AdjustSpriteTransform(renderMode, ref mOffset);
-            //System.Console.WriteLine("???" + Offset);
-
-            //var transform = mRotation * mOffset;
-            var transform = mOffset * mRotation;
-
-
-            transform = transform * worldTransform;
+            var mRotation = Matrix4.CreateRotationZ((float)angle);
+            var mWorldOffset = Matrix4.CreateTranslation(worldPosition.X, worldPosition.Y, 0);
 
             // Draw layers
+            int layer_n = 0;
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1066,7 +1058,30 @@ namespace Robust.Client.GameObjects
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
-                render.DrawRect3D(transform, texture, color * layer.Color);
+                float offsetZ = renderMode == Sprite3DRenderMode.SimpleSprite ? layer_n * 0.001f : 0.001f;
+                var mOffset = Matrix4.CreateTranslation(new Vector3(Offset.X, Offset.Y, offsetZ));
+
+                bool isWall = renderMode == Sprite3DRenderMode.Wall;
+                int rectCount = isWall ? 5 : 1;
+
+                for (int i = 0; i < rectCount; i++)
+                {
+                    var m3D = render.GetSpriteTransform(renderMode, i);
+
+                    var transform = mOffset * mRotation * m3D * mWorldOffset;
+
+                    var rectColor = color * layer.Color;
+                    var rectTexture = texture;
+
+                    if (isWall && i == rectCount - 1)
+                    {
+                        rectColor = Color.Black;
+                    }
+
+                    render.DrawRect3D(transform, rectTexture, rectColor);
+                }
+
+                layer_n++;
             }
         }
 

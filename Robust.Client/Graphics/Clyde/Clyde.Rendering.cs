@@ -66,8 +66,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
 
-        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, Render3D.Sprite3DRenderMode renderMode)> _drawingSpriteList =
-            new RefList<(SpriteComponent, Matrix3, Angle, Render3D.Sprite3DRenderMode)>();
+        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation)> _drawingSpriteList =
+            new RefList<(SpriteComponent, Matrix3, Angle)>();
+
+        private readonly RefList<(SpriteComponent sprite, Vector2 worldPosition, Angle worldRotation, Render3D.Sprite3DRenderMode renderMode)> _drawingSpriteList3D =
+            new RefList<(SpriteComponent, Vector2, Angle, Render3D.Sprite3DRenderMode)>();
 
         public void Render()
         {
@@ -131,6 +134,14 @@ namespace Robust.Client.Graphics.Clyde
                 _drawLights(worldBounds);
             }
 
+            if (eye.Is3D)
+            {
+                // Start 3D rendering. Enable depth buffer.
+                GL.Enable(EnableCap.DepthTest);
+                GL.DepthMask(true);
+                GL.DepthFunc(DepthFunction.Less);
+            }
+
             using (DebugGroup("Grids"))
             {
                 _drawGrids(worldBounds);
@@ -140,6 +151,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawEntities(worldBounds);
             }
+
+            // Any 3D rendering should be done.
+            GL.Disable(EnableCap.DepthTest);
 
             RenderOverlays(OverlaySpace.WorldSpace);
 
@@ -166,8 +180,6 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            bool is3d = _eyeManager.CurrentEye.Is3D;
-
             // So we could calculate the correct size of the entities based on the contents of their sprite...
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
             // TODO: Make this check more accurate.
@@ -176,39 +188,36 @@ namespace Robust.Client.Graphics.Clyde
             var mapEntity = _mapManager.GetMapEntity(_eyeManager.CurrentMap);
 
             var identity = Matrix3.Identity;
-            ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList, is3d);
 
-            // We use a separate list for indexing so that the sort is faster.
-            var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
-
-            for (var i = 0; i < _drawingSpriteList.Count; i++)
-            {
-                indexList[i] = i;
-            }
-
-            Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+            bool is3d = _eyeManager.CurrentEye.Is3D;
 
             if (is3d)
             {
+                ProcessSpriteEntities3D(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList3D);
+
                 var clyde3d = GetRender3D();
+
+                for (var i = 0; i < _drawingSpriteList3D.Count; i++)
+                {
+                    ref var entry = ref _drawingSpriteList3D[i];
+
+                    entry.sprite.Render3D(clyde3d, entry.worldPosition, entry.worldRotation, entry.renderMode);
+                }
+                _drawingSpriteList3D.Clear();
+            } else
+            {
+                ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList);
+
+                // We use a separate list for indexing so that the sort is faster.
+                var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
 
                 for (var i = 0; i < _drawingSpriteList.Count; i++)
                 {
-                    ref var entry = ref _drawingSpriteList[indexList[i]];
-
-                    var mat3 = entry.worldMatrix;
-
-                    var mat4 = new Matrix4(
-                        mat3.R0C0, mat3.R1C0, 0, mat3.R2C0,
-                        mat3.R0C1, mat3.R1C1, 0, mat3.R2C1,
-                        0,         0,         1, 0,
-                        mat3.R0C2, mat3.R1C2, 0, mat3.R2C2
-                    );
-
-                    entry.sprite.Render3D(clyde3d, mat4, entry.worldRotation, entry.renderMode);
+                    indexList[i] = i;
                 }
-            } else
-            {
+
+                Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
+
                 for (var i = 0; i < _drawingSpriteList.Count; i++)
                 {
                     ref var entry = ref _drawingSpriteList[indexList[i]];
@@ -250,15 +259,15 @@ namespace Robust.Client.Graphics.Clyde
                         _renderHandle.UseShader(null);
                     }
                 }
+                _drawingSpriteList.Clear();
             }
 
-            _drawingSpriteList.Clear();
 
             FlushRenderQueue();
         }
 
         private void ProcessSpriteEntities(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
-            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle, Render3D.Sprite3DRenderMode)> list, bool include3DRenderMode)
+            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle)> list)
         {
             entity.TryGetComponent(out ContainerManagerComponent containerManager);
 
@@ -293,16 +302,61 @@ namespace Robust.Client.Graphics.Clyde
                         entry.Item1 = sprite;
                         entry.Item3 = childWorldRotation;
 
-                        if (include3DRenderMode)
+                        /*if (include3DRenderMode)
                         {
                             entry.Item4 = Render3D.InferRenderMode(childEntity);
-                        }
+                        }*/
                     }
                 }
 
                 if (childTransform.ChildCount > 0)
                 {
-                    ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list, include3DRenderMode);
+                    ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list);
+                }
+            }
+        }
+
+        private void ProcessSpriteEntities3D(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
+            Box2 worldBounds, RefList<(SpriteComponent, Vector2, Angle, Render3D.Sprite3DRenderMode)> list)
+        {
+            entity.TryGetComponent(out ContainerManagerComponent containerManager);
+
+            var localMatrix = entity.Transform.GetLocalMatrix();
+            Matrix3.Multiply(ref parentTransform, ref localMatrix, out var matrix);
+            var rotation = parentRotation + entity.Transform.LocalRotation;
+
+            foreach (var child in entity.Transform.ChildEntityUids)
+            {
+                var childEntity = _entityManager.GetEntity(child);
+
+                if (containerManager != null && containerManager.TryGetContainer(childEntity, out var container) &&
+                    !container.ShowContents)
+                {
+                    continue;
+                }
+
+                var childTransform = childEntity.Transform;
+
+                var worldPosition = Matrix3.Transform(matrix, childTransform.LocalPosition);
+
+                if (worldBounds.Contains(worldPosition))
+                {
+                    if (childEntity.TryGetComponent(out SpriteComponent sprite) && sprite.Visible)
+                    {
+                        ref var entry = ref list.AllocAdd();
+
+                        var childWorldRotation = rotation + childTransform.LocalRotation;
+
+                        entry.Item1 = sprite;
+                        entry.Item2 = worldPosition;
+                        entry.Item3 = childWorldRotation;
+                        entry.Item4 = Render3D.InferRenderMode(childEntity);
+                    }
+                }
+
+                if (childTransform.ChildCount > 0)
+                {
+                    ProcessSpriteEntities3D(childEntity, ref matrix, rotation, worldBounds, list);
                 }
             }
         }
@@ -712,7 +766,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             GL.ClearColor(color.ConvertOpenTK());
             GL.ClearStencil(0);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            GL.ClearDepth(1);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit | ClearBufferMask.DepthBufferBit);
         }
 
         private (ShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
@@ -1189,9 +1244,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class SpriteDrawingOrderComparer : IComparer<int>
         {
-            private readonly RefList<(SpriteComponent, Matrix3, Angle, Render3D.Sprite3DRenderMode)> _drawList;
+            private readonly RefList<(SpriteComponent, Matrix3, Angle)> _drawList;
 
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle, Render3D.Sprite3DRenderMode)> drawList)
+            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle)> drawList)
             {
                 _drawList = drawList;
             }

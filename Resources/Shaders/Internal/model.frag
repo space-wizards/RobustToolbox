@@ -28,4 +28,7 @@ void main()
     [SHADER_CODE]
 
     FragColor = COLOR * modulate;
+	
+	if (FragColor.a < 0.5)
+		discard;
 }

@@ -73,20 +73,20 @@ namespace Robust.Shared.ContentPack
 
         private readonly List<Assembly> _sideModules = new List<Assembly>();
 
-        public virtual void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
+        public virtual void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
             AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = true;
+            AssemblyTypeChecker.DumpTypes = false;
             if (!AssemblyTypeChecker.CheckAssembly(assembly))
                 return;
 
-            var gameAssembly = symbols != null
-                ? AppDomain.CurrentDomain.Load(assembly, symbols)
-                : AppDomain.CurrentDomain.Load(assembly);
+            assembly.Position = 0;
+
+            var gameAssembly = AssemblyLoadContext.Default.LoadFromStream(assembly, symbols);
 
             InitMod<T>(gameAssembly);
         }
@@ -98,8 +98,9 @@ namespace Robust.Shared.ContentPack
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
             AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = true;
-            if (!AssemblyTypeChecker.CheckAssembly(File.ReadAllBytes(diskPath)))
+            AssemblyTypeChecker.DumpTypes = false;
+
+            if (!AssemblyTypeChecker.CheckAssembly(diskPath))
                 return;
 
             InitMod<T>(Assembly.LoadFrom(diskPath));
@@ -202,7 +203,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly<T>(gameDll.CopyToArray(), gamePdb.CopyToArray());
+                        LoadGameAssembly<T>(gameDll, gamePdb);
                         return true;
                     }
                     catch (Exception e)
@@ -216,7 +217,7 @@ namespace Robust.Shared.ContentPack
                 try
                 {
                     // load the assembly into the process, and bootstrap the GameServer entry point.
-                    LoadGameAssembly<T>(gameDll.CopyToArray());
+                    LoadGameAssembly<T>(gameDll);
                     return true;
                 }
                 catch (Exception e)

@@ -240,6 +240,8 @@ namespace Robust.Shared.ContentPack
             {
                 lock (_lock)
                 {
+                    _logManager.GetSawmill("res").Debug("ResolvingAssembly {0}", name);
+
                     // Try main modules.
                     foreach (var mod in _mods)
                     {

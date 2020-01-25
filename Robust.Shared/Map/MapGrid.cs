@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -319,15 +320,32 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices SnapGridCellFor(GridCoordinates worldPos, SnapGridOffset offset)
+        public MapIndices SnapGridCellFor(GridCoordinates gridPos, SnapGridOffset offset)
         {
-            var local = worldPos.ConvertToGrid(_mapManager, this);
+            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(gridPos.GridID).ParentMapId);
+
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            return SnapGridCellFor(local, offset);
+        }
+
+        /// <inheritdoc />
+        public MapIndices SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset)
+        {
+            DebugTools.Assert(ParentMapId == worldPos.MapId);
+
+            var localPos = WorldToLocal(worldPos.Position);
+            return SnapGridCellFor(localPos, offset);
+        }
+
+        /// <inheritdoc />
+        public MapIndices SnapGridCellFor(Vector2 localPos, SnapGridOffset offset)
+        {
             if (offset == SnapGridOffset.Edge)
             {
-                local = local.Offset(new Vector2(TileSize / 2f, TileSize / 2f));
+                localPos += new Vector2(TileSize / 2f, TileSize / 2f);
             }
-            var x = (int)Math.Floor(local.X / TileSize);
-            var y = (int)Math.Floor(local.Y / TileSize);
+            var x = (int)Math.Floor(localPos.X / TileSize);
+            var y = (int)Math.Floor(localPos.Y / TileSize);
             return new MapIndices(x, y);
         }
 
@@ -399,9 +417,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToTile(GridCoordinates posWorld)
+        public MapIndices WorldToTile(GridCoordinates gridPos)
         {
-            var local = posWorld.ConvertToGrid(_mapManager, this);
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new MapIndices(x, y);
@@ -410,9 +428,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to chunk indices relative to grid origin.
         /// </summary>
-        public MapIndices LocalToChunkIndices(GridCoordinates posWorld)
+        public MapIndices LocalToChunkIndices(GridCoordinates gridPos)
         {
-            var local = posWorld.ConvertToGrid(_mapManager, this);
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new MapIndices(x, y);
@@ -446,6 +464,19 @@ namespace Robust.Shared.Map
         public GridCoordinates GridTileToLocal(MapIndices gridTile)
         {
             return new GridCoordinates(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f), this);
+        }
+
+        public Vector2 GridTileToWorldPos(MapIndices gridTile)
+        {
+            var locX = gridTile.X * TileSize + (TileSize / 2f);
+            var locY = gridTile.Y * TileSize + (TileSize / 2f);
+
+            return new Vector2(locX, locY) + WorldPosition;
+        }
+
+        public MapCoordinates GridTileToWorld(MapIndices gridTile)
+        {
+            return new MapCoordinates(GridTileToWorldPos(gridTile), ParentMapId);
         }
 
         /// <inheritdoc />

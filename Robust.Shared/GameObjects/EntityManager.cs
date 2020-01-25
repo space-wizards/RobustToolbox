@@ -474,9 +474,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position)
+        {
+            return GetEntitiesIntersecting(position.MapId, position.Position);
+        }
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
         {
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, position.ToWorld(_mapManager).Position);
+            var mapPos = position.ToMap(_mapManager);
+            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position);
         }
 
         /// <inheritdoc />
@@ -522,10 +529,11 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth)
         {
             var entities = GetEntitiesInRange(coordinates, range*2);
+            var position = coordinates.ToMap(_mapManager).Position;
 
             foreach (var entity in entities)
             {
-                var angle = new Angle(entity.Transform.WorldPosition - coordinates.ToWorld(_mapManager).Position);
+                var angle = new Angle(entity.Transform.WorldPosition - position);
                 if (angle.Degrees < direction.Degrees + arcWidth / 2 && angle.Degrees > direction.Degrees - arcWidth / 2)
                     yield return entity;
             }

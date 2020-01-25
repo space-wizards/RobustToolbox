@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // grid coords to world coords
-                var worldCoords = value.ToWorld(_mapManager);
+                var worldCoords = value.ToMapPos(_mapManager);
 
                 if (value.GridID != GridID)
                 {
@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
-                var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
+                var newPos = Parent.InvWorldMatrix.Transform(worldCoords);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
@@ -618,27 +618,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
 
             _invWorldMatrix = itransMat;
-        }
-
-        /// <summary>
-        ///     Calculate our LocalCoordinates as if the location relative to our parent is equal to <paramref name="localPosition" />.
-        /// </summary>
-        private GridCoordinates LocalCoordinatesFor(Vector2 localPosition, GridId gridId)
-        {
-            if (Parent != null)
-            {
-                // transform localPosition from parent coords to world coords
-                var worldPos = Parent.WorldMatrix.Transform(localPosition);
-                var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, _mapManager.GetDefaultGridId(grid.ParentMapId));
-
-                // then to parent grid coords
-                return lc.ConvertToGrid(_mapManager, _mapManager.GetGrid(Parent.GridPosition.GridID));
-            }
-            else
-            {
-                return new GridCoordinates(localPosition, gridId);
-            }
         }
 
         public string GetDebugString()

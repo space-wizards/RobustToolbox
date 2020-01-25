@@ -171,7 +171,7 @@ namespace Robust.Client.Audio.Midi
 
                     if (renderer.TrackingCoordinates != null)
                     {
-                        renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToWorld(_mapManager).Position);
+                        renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager));
                     }
                     else if (renderer.TrackingEntity != null)
                     {

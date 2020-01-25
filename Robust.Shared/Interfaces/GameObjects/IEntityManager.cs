@@ -142,6 +142,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position);
 
         /// <summary>
+        /// Gets entities with a bounding box that intersects this point
+        /// </summary>
+        /// <param name="position"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position);
+
+        /// <summary>
         /// Gets entities with a bounding box that intersects this point in coordinate form
         /// </summary>
         /// <param name="position"></param>

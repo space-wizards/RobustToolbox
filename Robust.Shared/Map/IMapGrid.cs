@@ -119,7 +119,9 @@ namespace Robust.Shared.Map
         IEnumerable<SnapGridComponent> GetSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset);
         IEnumerable<SnapGridComponent> GetSnapGridCell(MapIndices pos, SnapGridOffset offset);
 
-        MapIndices SnapGridCellFor(GridCoordinates worldPos, SnapGridOffset offset);
+        MapIndices SnapGridCellFor(GridCoordinates gridPos, SnapGridOffset offset);
+        MapIndices SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
+        MapIndices SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
 
         void AddToSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
         void AddToSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
@@ -167,6 +169,18 @@ namespace Robust.Shared.Map
         GridCoordinates GridTileToLocal(MapIndices gridTile);
 
         /// <summary>
+        ///     Transforms grid-space tile indices to map coordinate position.
+        ///     The resulting coordinates are centered on the tile.
+        /// </summary>
+        Vector2 GridTileToWorldPos(MapIndices gridTile);
+
+        /// <summary>
+        ///     Transforms grid-space tile indices to map coordinates.
+        ///     The resulting coordinates are centered on the tile.
+        /// </summary>
+        MapCoordinates GridTileToWorld(MapIndices gridTile);
+
+        /// <summary>
         ///     Transforms grid indices into a tile reference, returns false if no tile is found.
         /// </summary>
         /// <param name="indices">The Grid Tile indices.</param>
@@ -182,7 +196,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Transforms local grid coordinates to chunk indices.
         /// </summary>
-        MapIndices LocalToChunkIndices(GridCoordinates posWorld);
+        MapIndices LocalToChunkIndices(GridCoordinates gridPos);
 
         #endregion Transforms
 

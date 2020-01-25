@@ -55,8 +55,7 @@ namespace Robust.Client.Placement.Modes
 
                     // round coords to center of tile
                     var tileIndices = closest.WorldToTile(intersect.Center);
-                    var tileCenterLocal = closest.GridTileToLocal(tileIndices);
-                    var tileCenterWorld = tileCenterLocal.ToWorld(pManager.MapManager).Position;
+                    var tileCenterWorld = closest.GridTileToWorldPos(tileIndices);
 
                     // move mouse one tile out along normal
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;

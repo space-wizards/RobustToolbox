@@ -52,17 +52,12 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal class ModLoader : IModLoader
+    internal class ModLoader : IModLoader, IDisposable
     {
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
         [Dependency] private readonly IResourceManager _resourceManager;
 #pragma warning restore 649
-
-        static ModLoader()
-        {
-            AssemblyLoadContext.Default.Resolving += ResolvingAssemblyHandler;
-        }
 
         private ModuleTestingCallbacks _testingCallbacks;
 
@@ -72,6 +67,19 @@ namespace Robust.Shared.ContentPack
         private readonly List<ModInfo> _mods = new List<ModInfo>();
 
         private readonly List<Assembly> _sideModules = new List<Assembly>();
+
+        private readonly AssemblyLoadContext _loadContext;
+
+        private readonly object _lock = new object();
+
+        public ModLoader()
+        {
+            // Imma just turn on collectible assemblies for the heck of it.
+            // Even though we don't need it yet.
+            _loadContext = new AssemblyLoadContext(null, true);
+
+            _loadContext.Resolving += ResolvingAssembly;
+        }
 
         public virtual void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
             where T : GameShared
@@ -86,7 +94,7 @@ namespace Robust.Shared.ContentPack
 
             assembly.Position = 0;
 
-            var gameAssembly = AssemblyLoadContext.Default.LoadFromStream(assembly, symbols);
+            var gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
 
             InitMod<T>(gameAssembly);
         }
@@ -157,20 +165,6 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        /// <summary>
-        ///     Holds info about a loaded assembly.
-        /// </summary>
-        private class ModInfo
-        {
-            public ModInfo()
-            {
-                EntryPoints = new List<GameShared>();
-            }
-
-            public Assembly GameAssembly { get; set; }
-            public List<GameShared> EntryPoints { get; }
-        }
-
         public virtual bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared
         {
@@ -236,40 +230,55 @@ namespace Robust.Shared.ContentPack
             _testingCallbacks = testingCallbacks;
         }
 
-        private static Assembly ResolvingAssemblyHandler(AssemblyLoadContext context, AssemblyName name)
-        {
-            var modLoader = IoCManager.Resolve<IModLoader>() as ModLoader;
-
-            return modLoader?.ResolvingAssembly(context, name);
-        }
-
         private Assembly ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
         {
-            // Try main modules.
-            foreach (var mod in _mods)
+            lock (_lock)
             {
-                if (mod.GameAssembly.FullName == name.FullName)
+                // Try main modules.
+                foreach (var mod in _mods)
                 {
-                    return mod.GameAssembly;
+                    if (mod.GameAssembly.FullName == name.FullName)
+                    {
+                        return mod.GameAssembly;
+                    }
                 }
-            }
 
-            foreach (var assembly in _sideModules)
-            {
-                if (assembly.FullName == name.FullName)
+                foreach (var assembly in _sideModules)
                 {
+                    if (assembly.FullName == name.FullName)
+                    {
+                        return assembly;
+                    }
+                }
+
+                if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                {
+                    var assembly = _loadContext.LoadFromStream(dll);
+                    _sideModules.Add(assembly);
                     return assembly;
                 }
-            }
 
-            if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                return null;
+            }
+        }
+
+        public void Dispose()
+        {
+            _loadContext.Unload();
+        }
+
+        /// <summary>
+        ///     Holds info about a loaded assembly.
+        /// </summary>
+        private class ModInfo
+        {
+            public ModInfo()
             {
-                var assembly = Assembly.Load(dll.CopyToArray());
-                _sideModules.Add(assembly);
-                return assembly;
+                EntryPoints = new List<GameShared>();
             }
 
-            return null;
+            public Assembly GameAssembly { get; set; }
+            public List<GameShared> EntryPoints { get; }
         }
     }
 }

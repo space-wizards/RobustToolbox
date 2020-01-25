@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -57,6 +59,7 @@ namespace Robust.Shared.ContentPack
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
         [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly ILogManager _logManager;
 #pragma warning restore 649
 
         private ModuleTestingCallbacks _testingCallbacks;
@@ -71,6 +74,7 @@ namespace Robust.Shared.ContentPack
         private readonly AssemblyLoadContext _loadContext;
 
         private readonly object _lock = new object();
+
 
         public ModLoader()
         {
@@ -232,33 +236,42 @@ namespace Robust.Shared.ContentPack
 
         private Assembly ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
         {
-            lock (_lock)
+            try
             {
-                // Try main modules.
-                foreach (var mod in _mods)
+                lock (_lock)
                 {
-                    if (mod.GameAssembly.FullName == name.FullName)
+                    // Try main modules.
+                    foreach (var mod in _mods)
                     {
-                        return mod.GameAssembly;
+                        if (mod.GameAssembly.FullName == name.FullName)
+                        {
+                            return mod.GameAssembly;
+                        }
                     }
-                }
 
-                foreach (var assembly in _sideModules)
-                {
-                    if (assembly.FullName == name.FullName)
+                    foreach (var assembly in _sideModules)
                     {
+                        if (assembly.FullName == name.FullName)
+                        {
+                            return assembly;
+                        }
+                    }
+
+                    if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                    {
+                        var assembly = _loadContext.LoadFromStream(dll);
+                        _sideModules.Add(assembly);
                         return assembly;
                     }
-                }
 
-                if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
-                {
-                    var assembly = _loadContext.LoadFromStream(dll);
-                    _sideModules.Add(assembly);
-                    return assembly;
+                    return null;
                 }
-
-                return null;
+            }
+            catch (Exception e)
+            {
+                _logManager.GetSawmill("res").Error("Exception in ResolvingAssembly: {0}", e);
+                ExceptionDispatchInfo.Capture(e).Throw();
+                throw null; // Unreachable.
             }
         }
 

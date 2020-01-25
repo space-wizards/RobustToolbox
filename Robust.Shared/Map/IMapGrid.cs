@@ -185,5 +185,11 @@ namespace Robust.Shared.Map
         MapIndices LocalToChunkIndices(GridCoordinates posWorld);
 
         #endregion Transforms
+
+        #region Collision
+
+        bool CollidesWithGrid(MapIndices indices);
+
+        #endregion
     }
 }

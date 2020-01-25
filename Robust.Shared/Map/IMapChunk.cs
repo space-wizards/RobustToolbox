@@ -85,5 +85,11 @@ namespace Robust.Shared.Map
         Box2i CalcLocalBounds();
 
         Box2 CalcWorldBounds();
+
+        /// <summary>
+        /// Tests if a point is on top of a non-empty tile.
+        /// </summary>
+        /// <param name="localIndices">Local tile indices</param>
+        bool CollidesWithChunk(MapIndices localIndices);
     }
 }

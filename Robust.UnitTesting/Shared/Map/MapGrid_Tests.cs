@@ -132,6 +132,28 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(tileRef, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new MapIndices(-9, -1), new Tile(1, 2))));
         }
 
+        [Test]
+        public void PointCollidesWithGrid()
+        {
+            var grid = MapGridFactory(new GridId(1));
+            grid.SetTile(new MapIndices(19, 23), new Tile(1));
+
+            var result = grid.CollidesWithGrid(new MapIndices(19, 23));
+
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void PointNotCollideWithGrid()
+        {
+            var grid = MapGridFactory(new GridId(1));
+            grid.SetTile(new MapIndices(19, 23), new Tile(1));
+
+            var result = grid.CollidesWithGrid(new MapIndices(19, 24));
+
+            Assert.That(result, Is.False);
+        }
+
         private static IMapGridInternal MapGridFactory(GridId id)
         {
             var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();

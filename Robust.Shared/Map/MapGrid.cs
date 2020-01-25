@@ -418,6 +418,21 @@ namespace Robust.Shared.Map
             return new MapIndices(x, y);
         }
 
+        public bool CollidesWithGrid(MapIndices indices)
+        {
+            var chunkIndices = GridTileToChunkIndices(indices);
+            if (!_chunks.TryGetValue(chunkIndices, out var chunk))
+                return false;
+
+            var cTileIndices = chunk.GridTileToChunkTile(indices);
+            return chunk.CollidesWithChunk(cTileIndices);
+        }
+
+        public bool CollidesWithGrid(Box2 aabb)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <inheritdoc />
         public MapIndices GridTileToChunkIndices(MapIndices gridTile)
         {

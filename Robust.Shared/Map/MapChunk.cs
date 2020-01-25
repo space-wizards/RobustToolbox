@@ -271,6 +271,18 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public bool CollidesWithChunk(MapIndices localIndices)
+        {
+            return _tiles[localIndices.X, localIndices.Y].TypeId != Tile.Empty.TypeId;
+        }
+
+        /// <inheritdoc />
+        public bool CollidesWithChunk(Box2 pos)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"Chunk {_gridIndices}";

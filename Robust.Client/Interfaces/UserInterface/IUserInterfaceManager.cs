@@ -22,7 +22,7 @@ namespace Robust.Client.Interfaces.UserInterface
 
         LayoutContainer PopupRoot { get; }
 
-        LayoutContainer ModalRoot { get; }
+        PopupContainer ModalRoot { get; }
 
         Control CurrentlyHovered { get; }
 

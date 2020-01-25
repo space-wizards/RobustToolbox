@@ -1,4 +1,6 @@
 ﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -86,7 +88,7 @@ namespace Robust.Shared.Physics
         {
             DebugTools.Assert(_nodes[proxyId].NextIndex == AllocatedIndex);
 
-            throw new NotImplementedException();
+            // Does nothing in this implementation.
         }
 
         /// <inheritdoc />
@@ -100,6 +102,8 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void RemoveProxy(int proxyId)
         {
+            DebugTools.Assert(_nodes[proxyId].NextIndex == AllocatedIndex);
+
             // insert the free'd node at the front of the freelist
             _nodes[proxyId].NextIndex = _firstFreeNode;
             _firstFreeNode = proxyId;
@@ -143,9 +147,38 @@ namespace Robust.Shared.Physics
             return a.MapID == b.MapID && a.WorldAABB.Intersects(b.WorldAABB);
         }
 
-        public void RayCast(RayCastCallback callback, in Ray ray, float maxLength = 25)
+        /// <inheritdoc />
+        public void RayCast(RayCastCallback callback, MapId mapId, in Ray ray, float maxLength = 25)
         {
-            throw new NotImplementedException();
+            var minDist = maxLength;
+            for (var i = 0; i < _nodes.Length; i++)
+            {
+                var node = _nodes[i];
+                if(node.NextIndex != AllocatedIndex)
+                    continue;
+
+                var body = node.Proxy.Body;
+
+                if(mapId != body.MapID)
+                    continue;
+
+                if(!body.CollisionEnabled)
+                    continue;
+
+                if(!body.IsHardCollidable)
+                    continue;
+
+                if ((ray.CollisionMask & body.CollisionLayer) == 0x0)
+                    continue;
+
+                if (!ray.Intersects(body.WorldAABB, out var dist, out var hitPos) || !(dist < minDist))
+                    continue;
+
+                if (!callback(i, new RayCastResults(dist, hitPos, body.Owner)))
+                    continue;
+
+                minDist = dist;
+            }
         }
 
         /// <inheritdoc />

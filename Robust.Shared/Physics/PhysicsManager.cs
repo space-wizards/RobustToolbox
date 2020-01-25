@@ -194,37 +194,23 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity ignoredEnt = null)
+        public RayCastResults IntersectRay(MapId mapId, Ray ray, float maxLength = 50, IEntity ignoredEnt = null)
         {
-            IEntity entity = null;
-            var hitPosition = Vector2.Zero;
-            var minDist = maxLength;
-            foreach (var body in _bodies)
-            {
-                if ((ray.CollisionMask & body.CollisionLayer) == 0x0)
-                {
-                    continue;
-                }
-                if (ray.Intersects(body.WorldAABB, out var dist, out var hitPos) && dist < minDist)
-                {
-                    if (!body.IsHardCollidable || ignoredEnt != null && ignoredEnt == body.Owner)
-                        continue;
+            RayCastResults rayResults = default;
 
-                    entity = body.Owner;
-                    minDist = dist;
-                    hitPosition = hitPos;
-                }
+            bool Callback(int proxy, RayCastResults results)
+            {
+                if (results.HitEntity == ignoredEnt)
+                    return false;
+
+                rayResults = results;
+                return true;
             }
 
-            RayCastResults results = default;
-            if (entity != null)
-            {
-                results = new RayCastResults(minDist, hitPosition, entity);
-            }
+            _broadphase.RayCast(Callback, mapId, ray, maxLength);
 
-            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, results));
-
-            return results;
+            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, rayResults));
+            return rayResults;
         }
 
         public event Action<DebugRayData> DebugDrawRay;

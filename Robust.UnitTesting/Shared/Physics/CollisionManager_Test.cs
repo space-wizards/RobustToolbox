@@ -175,7 +175,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.True);
@@ -201,7 +201,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.False);

@@ -1,10 +1,17 @@
-﻿using Robust.Shared.Maths;
+﻿using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {
     internal delegate bool QueryCallback(int proxyId);
 
-    internal delegate bool RayCastCallback(RayCastResults results);
+    /// <summary>
+    /// Callback predicate for when a ray cast hits an entity.
+    /// </summary>
+    /// <param name="proxy">Id of the proxy that was hit.</param>
+    /// <param name="results">Information about the ray cast intersection.</param>
+    /// <returns>Should the entity be accepted?</returns>
+    internal delegate bool RayCastCallback(int proxy, RayCastResults results);
 
     internal delegate void BroadPhaseCallback(int proxyA, int proxyB);
 
@@ -35,7 +42,7 @@ namespace Robust.Shared.Physics
         bool Test(int proxyA, int proxyB);
 
         // Raycast
-        void RayCast(RayCastCallback callback, in Ray ray, float maxLength = 25);
+        void RayCast(RayCastCallback callback, MapId mapId, in Ray ray, float maxLength = 25);
 
         // Update
         void Update(BroadPhaseCallback callback);

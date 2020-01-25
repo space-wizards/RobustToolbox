@@ -8,7 +8,7 @@ namespace Robust.Shared.Maths
     ///     A representation of a 2D ray.
     /// </summary>
     [Serializable]
-    public struct Ray : IEquatable<Ray>
+    public readonly struct Ray : IEquatable<Ray>
     {
         private readonly Vector2 _position;
         private readonly Vector2 _direction;

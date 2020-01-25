@@ -28,11 +28,12 @@ namespace Robust.Shared.Interfaces.Physics
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.
         /// </summary>
+        /// <param name="mapId"></param>
         /// <param name="ray">Ray to cast in the world.</param>
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        RayCastResults IntersectRay(Ray ray, float maxLength = 50, IEntity ignoredEnt = null);
+        RayCastResults IntersectRay(MapId mapId, Ray ray, float maxLength = 50, IEntity ignoredEnt = null);
 
         event Action<DebugRayData> DebugDrawRay;
     }

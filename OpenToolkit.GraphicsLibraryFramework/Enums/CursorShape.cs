@@ -15,6 +15,11 @@ namespace OpenToolkit.GraphicsLibraryFramework
     public enum CursorShape
     {
         /// <summary>
+        /// Default standard shape for user-created cursors
+        /// </summary>
+        CustomShape = 0,
+
+        /// <summary>
         /// The standard arrow shape. Used in almost all situations.
         /// </summary>
         Arrow = 0x00036001,

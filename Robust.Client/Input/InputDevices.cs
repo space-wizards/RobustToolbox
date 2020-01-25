@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using GlfwKey = OpenToolkit.GraphicsLibraryFramework.Keys;
 using GlfwButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
+using GlfwCursor = OpenToolkit.GraphicsLibraryFramework.WindowAttributeSetter;
 
 namespace Robust.Client.Input
 {
@@ -33,6 +34,11 @@ namespace Robust.Client.Input
             return _openTKButtonMap[button];
         }
 
+
+
+
+
+
         private static readonly Dictionary<Button, Keyboard.Key> _mouseKeyMap = new Dictionary<Button, Keyboard.Key>
         {
             {Button.Left, Keyboard.Key.MouseLeft},
@@ -58,6 +64,8 @@ namespace Robust.Client.Input
             {GlfwButton.Button7, Button.Button7},
             {GlfwButton.Button8, Button.Button8},
         };
+
+
     }
 
     public static class Keyboard

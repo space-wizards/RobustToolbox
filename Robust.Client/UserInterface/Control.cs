@@ -724,6 +724,7 @@ namespace Robust.Client.UserInterface
             VSplit = 14,
             HSplit = 15,
             Help = 16,
+            Custom = 17,
         }
 
         public CursorShape DefaultCursorShape

@@ -10,6 +10,8 @@ using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -21,11 +23,13 @@ using Image = SixLabors.ImageSharp.Image;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using Cursor = OpenToolkit.GraphicsLibraryFramework.Cursor;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal unsafe partial class Clyde
     {
+
         // Keep delegates around to prevent GC issues.
         private GLFWCallbacks.ErrorCallback _errorCallback;
         private GLFWCallbacks.CharCallback _charCallback;
@@ -41,6 +45,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private GraphicsContext _graphicsContext;
         private Window* _glfwWindow;
+        private Cursor* _cursor;
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
@@ -113,6 +118,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+
 
             LoadWindowIcon();
 
@@ -249,6 +255,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
         }
+
+
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
         {

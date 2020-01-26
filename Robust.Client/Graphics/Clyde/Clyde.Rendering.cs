@@ -15,6 +15,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using StencilOp = OpenTK.Graphics.OpenGL.StencilOp;
@@ -160,7 +161,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawEntities(Box2 worldBounds)
         {
-            if (!_mapManager.HasMapEntity(_eyeManager.CurrentMap))
+            if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
             {
                 return;
             }

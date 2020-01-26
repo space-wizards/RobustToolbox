@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -43,6 +44,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="message">Arguments for this event.</param>
         public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message)
         {
+            #if DEBUG
+
+            var funcId = _inputManager.NetworkBindMap.KeyFunctionID(function);
+            DebugTools.Assert(funcId == message.InputFunctionId, "Function ID in message does not match function.");
+
+            #endif
+
             // set state, state change is updated regardless if it is locally bound
             _cmdStates.SetState(function, message.State);
 

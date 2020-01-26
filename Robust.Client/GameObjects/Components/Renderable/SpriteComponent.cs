@@ -997,15 +997,23 @@ namespace Robust.Client.GameObjects
         internal void Render3D(Graphics.Clyde.Clyde.Render3D render, Vector2 worldPosition, Angle worldRotation,
             Sprite3DRenderMode renderMode, Direction? overrideDirection = null
         ) {
-
             Angle angle;
+            Angle spriteAngle;
             if (Directional)
             {
                 angle = Rotation;
+                if (renderMode == Sprite3DRenderMode.SimpleSprite)
+                {
+                    spriteAngle = worldRotation + render.CameraAngle2D;
+                } else
+                {
+                    spriteAngle = worldRotation;
+                }
             }
             else
             {
                 angle = Rotation + worldRotation;
+                spriteAngle = worldRotation;
             }
 
             var mRotation = Matrix4.CreateRotationZ((float)angle);
@@ -1046,7 +1054,7 @@ namespace Robust.Client.GameObjects
                             }
                             else
                             {
-                                dir = GetDir(state.Directions, worldRotation);
+                                dir = GetDir(state.Directions, spriteAngle);
                             }
 
                             layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);

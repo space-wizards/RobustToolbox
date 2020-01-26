@@ -119,19 +119,23 @@ namespace Robust.Client.Graphics.Clyde
             Vector3 CameraPos = Vector3.Zero;
             Matrix4 FaceCameraRotation = Matrix4.Identity;
 
+            public Angle CameraAngle2D { get; private set; }
+
             public (Matrix4,Matrix4) GetProjViewMatrices3D(Vector2 eyePos)
             {
-                float dist = 3;
-                float angle = 0;// clyde._renderTime;
+                float dist = 4;
+                float dist_v = 8;//0.3f;
+                float angle = clyde._renderTime;// * 0.1f;
                 var basePos = new Vector3(eyePos.X, eyePos.Y, 0);
-                CameraPos = basePos + new Vector3(MathF.Sin(angle) * -dist, MathF.Cos(angle) * -dist, dist);
+                CameraAngle2D = new Angle(angle);
+                CameraPos = basePos + new Vector3(MathF.Sin(angle) * -dist, MathF.Cos(angle) * -dist, dist_v);
 
                 //var s = Math.Sin(this._renderTime);
                 //var viewMatrixWorld = Matrix4.LookAt(new Vector3(0, 0, 0), new Vector3(0, 0, 0), new Vector3(0, 1, 0));
                 var viewMatrixWorld = Matrix4.CreateTranslation(-CameraPos);
                 //viewMatrixWorld *= Matrix4.Scale(0.01f);
                 var cameraRotation = Matrix4.CreateRotationZ(angle);
-                cameraRotation *= Matrix4.CreateRotationX(-1.0f);
+                cameraRotation *= Matrix4.CreateRotationX(-0.7f);
 
                 viewMatrixWorld *= cameraRotation;
                 //viewMatrixWorld.Invert();

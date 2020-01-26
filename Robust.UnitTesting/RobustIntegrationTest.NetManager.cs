@@ -30,6 +30,8 @@ namespace Robust.UnitTesting
 
             private int _connectionUidTracker;
 
+            private int _clientConnectingUid;
+
             // This isn't used for anything except a log message somewhere, so we kinda ignore it.
             public int Port => default;
 
@@ -104,7 +106,7 @@ namespace Robust.UnitTesting
                             }
 
                             writer.TryWrite(new ConfirmConnectMessage(uid, sessionId));
-                            var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId);
+                            var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId, connect.Uid);
                             _channels.Add(uid, channel);
                             Connected?.Invoke(this, new NetChannelArgs(channel));
                             break;
@@ -122,6 +124,11 @@ namespace Robust.UnitTesting
                             }
                             else
                             {
+                                if (ServerChannel == null || data.Connection != ServerChannel.ConnectionUid)
+                                {
+                                    continue;
+                                }
+
                                 channel = ServerChannel;
                             }
 
@@ -166,7 +173,7 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsClient);
 
-                            var channel = new IntegrationNetChannel(this, NextConnectChannel, _genConnectionUid(),
+                            var channel = new IntegrationNetChannel(this, NextConnectChannel, _clientConnectingUid,
                                 confirm.SessionId, confirm.AssignedUid);
 
                             _channels.Add(channel.ConnectionUid, channel);
@@ -196,7 +203,7 @@ namespace Robust.UnitTesting
                 DebugTools.Assert(IsServer);
 
                 var channel = (IntegrationNetChannel) recipient;
-                channel.OtherChannel.TryWrite(new DataMessage(message, channel.ConnectionUid));
+                channel.OtherChannel.TryWrite(new DataMessage(message, channel.RemoteUid));
             }
 
             public void ServerSendToMany(NetMessage message, List<INetChannel> recipients)
@@ -252,7 +259,9 @@ namespace Robust.UnitTesting
                     throw new InvalidOperationException("Didn't set a connect target!");
                 }
 
-                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter));
+                _clientConnectingUid = _genConnectionUid();
+
+                NextConnectChannel.TryWrite(new ConnectMessage(MessageChannelWriter, _clientConnectingUid));
             }
 
             public void ClientDisconnect(string reason)
@@ -326,12 +335,14 @@ namespace Robust.UnitTesting
 
             private sealed class ConnectMessage
             {
-                public ConnectMessage(ChannelWriter<object> channelWriter)
+                public ConnectMessage(ChannelWriter<object> channelWriter, int uid)
                 {
                     ChannelWriter = channelWriter;
+                    Uid = uid;
                 }
 
                 public ChannelWriter<object> ChannelWriter { get; }
+                public int Uid { get; }
             }
 
             private sealed class ConfirmConnectMessage

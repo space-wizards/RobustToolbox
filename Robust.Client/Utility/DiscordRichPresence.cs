@@ -126,6 +126,12 @@ namespace Robust.Client.Utility
         private sealed class NativeLogger : ILogger
         {
             private readonly ISawmill _sawmill;
+            /// <summary>
+            /// This library keeps trying to connect all the time and spams the client with error messages.
+            /// To mitigate this annoyance, this variable keeps track of whether a connection was established
+            /// (or whether it's the first time it's being attempted) so that we can print the error only when it's useful.
+            /// </summary>
+            private bool _successfullyConnected = true;
 
             public NativeLogger(ISawmill sawmill)
             {
@@ -134,6 +140,10 @@ namespace Robust.Client.Utility
 
             public void Trace(string message, params object[] args)
             {
+                if (message == "Setting the connection state to {0}" && args.Length > 0 && (string)args[0] == "CONNECTED")
+                {
+                    _successfullyConnected = true;
+                }
                 if (Level > LogLevel.Trace)
                 {
                     return;
@@ -159,11 +169,35 @@ namespace Robust.Client.Utility
                     return;
                 }
 
+                if (message == "Tried to close a already closed pipe.")
+                {
+                    if (_successfullyConnected)
+                    {
+                        _successfullyConnected = false;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
                 _sawmill.Warning(message, args);
             }
 
             public void Error(string message, params object[] args)
             {
+                if (message.StartsWith("Failed connection to") || message == "Failed to connect for some reason.")
+                {
+                    if (_successfullyConnected)
+                    {
+                        _successfullyConnected = false;
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+
                 _sawmill.Error(message, args);
             }
 

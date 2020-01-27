@@ -1,4 +1,6 @@
 using System;
+using OpenToolkit.GraphicsLibraryFramework;
+using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Configuration;
@@ -43,6 +45,8 @@ namespace Robust.Client.Graphics
 
         public abstract Vector2i ScreenSize { get; }
         public abstract void SetWindowTitle(string title);
+
+        public abstract void CreateCursor(GlfwImage image, int x, int y);
         public abstract bool Initialize();
 
         protected virtual void ReloadConfig()

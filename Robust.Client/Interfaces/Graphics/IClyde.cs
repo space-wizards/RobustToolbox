@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.GraphicsLibraryFramework;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Robust.Client.Audio;
@@ -11,6 +13,8 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
+using Cursor = OpenToolkit.GraphicsLibraryFramework.Cursor;
 
 namespace Robust.Client.Interfaces.Graphics
 {
@@ -18,6 +22,8 @@ namespace Robust.Client.Interfaces.Graphics
     {
         Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
+        void CreateCursor(GlfwImage image, int x, int y);
+        void SetCursor(Cursor cursor, Window window);
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         Texture LoadTextureFromPNGStream(Stream stream, string name = null,
@@ -161,6 +167,17 @@ namespace Robust.Client.Interfaces.Graphics
 
         public Vector2i OldSize { get; }
         public Vector2i NewSize { get; }
+    }
+
+    public class CursorStyleChangedEventArgs : EventArgs
+    {
+        public CursorStyleChangedEventArgs(Cursor cursor)
+        {
+            NewCursor = cursor;
+        }
+
+        public Cursor NewCursor { get; }
+
     }
 
     internal interface IClydeDebugInfo

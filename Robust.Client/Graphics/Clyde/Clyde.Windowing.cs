@@ -45,13 +45,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private GraphicsContext _graphicsContext;
         private Window* _glfwWindow;
-        private Cursor* _cursor;
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
         private Thread _mainThread;
+
+        private Cursor* _cursor;
 
         private Vector2 _lastMousePos;
 
@@ -157,6 +158,21 @@ namespace Robust.Client.Graphics.Clyde
             InitOpenGL();
         }
 
+        public override void CreateCursor(GlfwImage image, int x, int y)
+        {
+            List<Image<Rgba32>> cursorIcons = LoadCursorIcon("/Textures/UserInterface/cursorIcons");
+            image = SetCursorIcon(cursorIcons);
+            Logger.Info("Cursor style changed");
+
+            _cursor = GLFW.CreateCursor(image, x, y);
+            GLFW.SetCursor(_glfwWindow, _cursor);
+        }
+
+        public void SetCursor(Cursor cursor, Window window)
+        {
+            throw new NotImplementedException();
+        }
+
         private void LoadWindowIcon()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -210,6 +226,53 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        public List<Image<Rgba32>> LoadCursorIcon(string png)
+        {
+            var cursorIcons = new List<Image<Rgba32>>();
+            foreach (var file in _resourceCache.ContentFindFiles(png))
+            {
+                if (file.Extension != "png")
+                {
+                    continue;
+                }
+
+                using (var stream = _resourceCache.ContentFileRead(file))
+                {
+                    var image = Image.Load(stream);
+                    cursorIcons.Add(image);
+                }
+            }
+
+            return cursorIcons;
+        }
+
+        private GlfwImage SetCursorIcon(IEnumerable<Image<Rgba32>> cursorIcons)
+        {
+            // Turn each image into a byte[] so we can actually pin their contents.
+            // Wish I knew a clean way to do this without allocations.
+            var images = cursorIcons
+                .Select(i => (MemoryMarshal.Cast<Rgba32, byte>(i.GetPixelSpan()).ToArray(), i.Width, i.Height))
+                .ToList();
+
+            Span<GCHandle> handles = stackalloc GCHandle[images.Count];
+            Span<GlfwImage> glfwImages = new GlfwImage[images.Count];
+
+            for (var i = 0; i < images.Count; i++)
+            {
+                var image = images[i];
+                handles[i] = GCHandle.Alloc(image.Item1, GCHandleType.Pinned);
+                var addrOfPinnedObject = (byte*) handles[i].AddrOfPinnedObject();
+                glfwImages[i] = new GlfwImage(image.Width, image.Height, addrOfPinnedObject);
+            }
+
+            foreach (var handle in handles)
+            {
+                handle.Free();
+            }
+
+            return glfwImages[0];
+        }
+
         private void InitGLContext()
         {
             // Initialize the OpenTK 3 GL context with GLFW.
@@ -245,6 +308,8 @@ namespace Robust.Client.Graphics.Clyde
             var ev = new MouseMoveEventArgs(delta, newPos);
             _gameController.MouseMove(ev);
         }
+
+
 
         private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
         {
@@ -340,6 +405,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.SetWindowTitle(_glfwWindow, title);
         }
+
+        public event Action<CursorStyleChangedEventArgs> OnCursorStyleChanged;
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {

@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
 using OpenTK.Graphics.OpenGL;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -20,11 +21,14 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using Image = OpenToolkit.GraphicsLibraryFramework.Image;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -366,6 +370,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             return OpenGLExtensions.Contains(extensionName);
         }
+
+
 
         [Conditional("DEBUG")]
         private void _objectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string label)

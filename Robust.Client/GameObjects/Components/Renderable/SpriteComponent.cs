@@ -1502,7 +1502,13 @@ namespace Robust.Client.GameObjects
             }
 
             var angle = new Angle(worldRotation);
-            return angle.GetDir().Convert(type);
+            if (type == RSI.State.DirectionType.Dir4)
+            {
+                return angle.GetCardinalDir().Convert(type);
+            } else
+            {
+                return angle.GetDir().Convert(type);
+            }
         }
 
         private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)

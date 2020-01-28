@@ -1066,7 +1066,7 @@ namespace Robust.Client.GameObjects
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
 
-                float offsetZ = renderMode == Sprite3DRenderMode.SimpleSprite ? layer_n * 0.001f : 0.001f;
+                float offsetZ = renderMode == Sprite3DRenderMode.SimpleSprite ? (float)drawDepth * 0.001f + layer_n * 0.001f : 0.001f;
                 var mOffset = Matrix4.CreateTranslation(new Vector3(Offset.X, Offset.Y, offsetZ));
 
                 bool isWall = renderMode == Sprite3DRenderMode.Wall;

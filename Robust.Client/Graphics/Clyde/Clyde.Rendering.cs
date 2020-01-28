@@ -140,6 +140,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Enable(EnableCap.DepthTest);
                 GL.DepthMask(true);
                 GL.DepthFunc(DepthFunction.Less);
+
+                worldBounds = Box2.CenteredAround(eye.Position.Position, new Vector2(20,20));
             }
 
             using (DebugGroup("Grids"))
@@ -188,7 +190,10 @@ namespace Robust.Client.Graphics.Clyde
 
             if (is3d)
             {
-                ProcessSpriteEntities3D(mapEntity, ref identity, Angle.Zero, worldBounds, _drawingSpriteList3D);
+                // Enlarge by a small amount so rendered objects and grids mostly line up with eachother.
+                var widerBounds = worldBounds.Enlarged(.5f);
+
+                ProcessSpriteEntities3D(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList3D);
 
                 var clyde3d = GetRender3D();
 

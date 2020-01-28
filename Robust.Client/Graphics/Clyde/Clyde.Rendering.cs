@@ -180,11 +180,6 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            // TODO: Make this check more accurate.
-            var widerBounds = worldBounds.Enlarged(5);
-
             var mapEntity = _mapManager.GetMapEntity(_eyeManager.CurrentMap);
 
             var identity = Matrix3.Identity;
@@ -193,7 +188,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (is3d)
             {
-                ProcessSpriteEntities3D(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList3D);
+                ProcessSpriteEntities3D(mapEntity, ref identity, Angle.Zero, worldBounds, _drawingSpriteList3D);
 
                 var clyde3d = GetRender3D();
 
@@ -206,6 +201,11 @@ namespace Robust.Client.Graphics.Clyde
                 _drawingSpriteList3D.Clear();
             } else
             {
+                // So we could calculate the correct size of the entities based on the contents of their sprite...
+                // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
+                // TODO: Make this check more accurate.
+                var widerBounds = worldBounds.Enlarged(5);
+
                 ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList);
 
                 // We use a separate list for indexing so that the sort is faster.

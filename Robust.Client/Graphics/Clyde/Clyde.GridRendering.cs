@@ -32,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
                 {
-                    foreach (var tile in mapGrid.GetAllTiles())
+                    foreach (var tile in mapGrid.GetTilesIntersecting(worldBounds))
                     {
                         var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
                         if (!regionMaybe.HasValue)
@@ -42,7 +42,11 @@ namespace Robust.Client.Graphics.Clyde
 
                         var region = regionMaybe.Value;
 
-                        var transform = Matrix4.CreateTranslation(new Vector3(tile.X+.5f,tile.Y+.5f,-.5f));
+                        var transform = Matrix4.CreateTranslation(new Vector3(
+                            mapGrid.WorldPosition.X+tile.X+.5f,
+                            mapGrid.WorldPosition.Y+tile.Y+.5f,
+                            -.5f));
+
                         render3d.DrawRect3D(transform, _tileDefinitionManager.TileTextureAtlas, Color.White, region);
                     }
                 }

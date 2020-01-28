@@ -123,9 +123,9 @@ namespace Robust.Client.Graphics.Clyde
 
             public (Matrix4,Matrix4) GetProjViewMatrices3D(Vector2 eyePos)
             {
-                float dist = 4;
-                float dist_v = 8;//0.3f;
-                float angle = clyde._renderTime;// * 0.1f;
+                float dist = 10;
+                float dist_v = 10;//0.3f;
+                float angle = 0.3f;//clyde._renderTime * 0.05f;
                 var basePos = new Vector3(eyePos.X, eyePos.Y, 0);
                 CameraAngle2D = new Angle(angle);
                 CameraPos = basePos + new Vector3(MathF.Sin(angle) * -dist, MathF.Cos(angle) * -dist, dist_v);
@@ -135,7 +135,7 @@ namespace Robust.Client.Graphics.Clyde
                 var viewMatrixWorld = Matrix4.CreateTranslation(-CameraPos);
                 //viewMatrixWorld *= Matrix4.Scale(0.01f);
                 var cameraRotation = Matrix4.CreateRotationZ(angle);
-                cameraRotation *= Matrix4.CreateRotationX(-0.7f);
+                cameraRotation *= Matrix4.CreateRotationX(-0.785f);
 
                 viewMatrixWorld *= cameraRotation;
                 //viewMatrixWorld.Invert();
@@ -145,7 +145,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 float aspect = (float)clyde.ScreenSize.X / clyde.ScreenSize.Y;
 
-                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.5f, aspect, 0.1f, 100);
+                var projMatrixWorld = Matrix4.CreatePerspectiveFieldOfView(1.0f, aspect, 0.1f, 100);
 
                 return (projMatrixWorld, viewMatrixWorld);
             }

@@ -36,17 +36,6 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <!--Hahaha everything hurts and NuGet is making the package dirs inconsistently on some systems.-->
-    <Content Include="..\packages\opentk\3.1.0\content\OpenTK.dll.config" Condition="Exists('..\packages\opentk\3.1.0\content\OpenTK.dll.config')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-    <Content Include="..\..\packages\opentk\3.1.0\content\OpenTK.dll.config" Condition="Exists('..\..\packages\opentk\3.1.0\content\OpenTK.dll.config')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Visible>false</Visible>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json">
       <LogicalName>Robust.Client.Graphics.RSI.RSISchema.json</LogicalName>
     </EmbeddedResource>

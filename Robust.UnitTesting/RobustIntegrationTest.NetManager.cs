@@ -219,6 +219,7 @@ namespace Robust.UnitTesting
             public event EventHandler<NetConnectingArgs> Connecting;
             public event EventHandler<NetChannelArgs> Connected;
             public event EventHandler<NetChannelArgs> Disconnect;
+            public event Func<IPEndPoint, string> JudgeConnection;
 
             public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null) where T : NetMessage
             {

@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
@@ -33,7 +31,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
+    public partial class NetManager : IClientNetManager, IDisposable
     {
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -445,9 +443,8 @@ namespace Robust.Shared.Network
             }
         }
 
-        private void HandleApproval(NetIncomingMessage message)
+        protected virtual void HandleApproval(NetIncomingMessage message)
         {
-            // TODO: Maybe preemptively refuse connections here in some cases?
             if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
             {
                 // This can happen if the approval message comes in after the state changes to disconnected.

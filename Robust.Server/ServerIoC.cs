@@ -13,6 +13,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Server.Interfaces.Timing;
 using Robust.Server.Maps;
+using Robust.Server.Network;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
@@ -30,7 +31,6 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Server
@@ -62,7 +62,8 @@ namespace Robust.Server
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
             IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
-            IoCManager.Register<IServerNetManager, NetManager>();
+            IoCManager.Register<INetManager, ServerNetManager>();
+            IoCManager.Register<IServerNetManager, ServerNetManager>();
             IoCManager.Register<ISignalHandler, ServerSignalHandler>();
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();

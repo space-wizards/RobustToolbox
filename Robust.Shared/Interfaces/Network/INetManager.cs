@@ -67,6 +67,13 @@ namespace Robust.Shared.Interfaces.Network
         void Shutdown(string reason);
 
         /// <summary>
+        ///     Disconnects this channel from the remote peer.
+        /// </summary>
+        /// <param name="channel">NetChannel to disconnect.</param>
+        /// <param name="reason">Reason why it was disconnected.</param>
+        void DisconnectChannel(INetChannel channel, string reason);
+
+        /// <summary>
         ///     Process all queued packets. Should be called often.
         /// </summary>
         void ProcessPackets();

@@ -34,5 +34,5 @@
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <Target Name="RobustAfterBuild" DependsOnTargets="CopyMiscDependencies;CopySwnfd" AfterTargets="Build" />
+  <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
 </Project>

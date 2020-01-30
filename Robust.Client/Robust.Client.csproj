@@ -27,7 +27,7 @@
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
     <PackageReference Include="OpenTK" Version="3.1.0" />
-    <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.0" />
+    <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

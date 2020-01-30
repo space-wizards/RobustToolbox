@@ -46,6 +46,10 @@ namespace Robust.Client.Input
             editor.AddFunction(EngineKeyFunctions.EditorCancelPlace);
             editor.AddFunction(EngineKeyFunctions.EditorRotateObject);
 
+            common.AddFunction(EngineKeyFunctions.OpenEntitySpawnWindow);
+            common.AddFunction(EngineKeyFunctions.OpenSandboxWindow);
+            common.AddFunction(EngineKeyFunctions.OpenTileSpawnWindow);
+
             var human = contexts.New("human", common);
         }
     }

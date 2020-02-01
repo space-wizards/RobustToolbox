@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -36,7 +37,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         {
             base.Startup();
 
-            Owner.Transform.OnMove += OnTransformMove;
             UpdatePosition();
         }
 
@@ -45,7 +45,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         {
             base.Shutdown();
 
-            Owner.Transform.OnMove -= OnTransformMove;
             if (IsSet)
             {
                 if (_mapManager.TryGetGrid(_lastGrid, out var grid))
@@ -58,7 +57,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        void OnTransformMove(object sender, object eventArgs) => UpdatePosition();
+        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
+        {
+            base.HandleMessage(message, netChannel, component);
+
+            if (message is MoveMessage msg && Running)
+            {
+                UpdatePosition();
+            }
+        }
 
         public override void ExposeData(ObjectSerializer serializer)
         {

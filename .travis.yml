@@ -12,6 +12,7 @@ os:
 addons:
   apt:
     update: true
+    dist: bionic
     packages:
     - python3
     - python3-pip

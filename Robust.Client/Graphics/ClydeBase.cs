@@ -7,6 +7,8 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Robust.Client.Graphics
 {
@@ -85,5 +87,7 @@ namespace Robust.Client.Graphics
         protected virtual void HighResLightsChanged(bool newValue)
         {
         }
+
+        public abstract void ConvertPnGtoGlfwImage(string png);
     }
 }

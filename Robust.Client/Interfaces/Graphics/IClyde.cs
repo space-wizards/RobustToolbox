@@ -23,7 +23,11 @@ namespace Robust.Client.Interfaces.Graphics
         Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
         void CreateCursor(GlfwImage image, int x, int y);
+
+        void ConvertPnGtoGlfwImage(string png);
+
         void SetCursor(Cursor cursor, Window window);
+
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         Texture LoadTextureFromPNGStream(Stream stream, string name = null,

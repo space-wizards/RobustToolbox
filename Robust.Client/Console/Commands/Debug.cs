@@ -4,16 +4,20 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Resources;
 using System.Text;
+using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.ResourceManagement;
 using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -30,6 +34,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using SixLabors.ImageSharp.PixelFormats;
+using Robust.Client.Graphics;
+using OpenToolkit.GraphicsLibraryFramework;
 
 namespace Robust.Client.Console.Commands
 {
@@ -352,6 +359,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+
     internal class ReloadResource : IConsoleCommand
     {
         public string Command => "rldrsc";
@@ -456,6 +464,20 @@ namespace Robust.Client.Console.Commands
 
             members.Sort((a, b) => string.Compare(a.Item1, b.Item1, StringComparison.Ordinal));
             return members;
+        }
+    }
+
+    internal class CursorTestCommand : IConsoleCommand
+    {
+        public string Command => "cursortest";
+        public string Description => "Change cursor to a generic custom";
+        public string Help => "cursortest";
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var _clyde = IoCManager.Resolve<IClyde>();
+            _clyde.ConvertPnGtoGlfwImage("/Textures/UserInterface/cursorIcons/skull_icon.png");
+            console.AddLine("Set cursor to generic icon");
+            return true;
         }
     }
 

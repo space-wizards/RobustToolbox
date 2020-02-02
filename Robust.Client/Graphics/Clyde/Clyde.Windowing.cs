@@ -158,21 +158,6 @@ namespace Robust.Client.Graphics.Clyde
             InitOpenGL();
         }
 
-        public override void CreateCursor(GlfwImage image, int x, int y)
-        {
-            List<Image<Rgba32>> cursorIcons = LoadCursorIcon("/Textures/UserInterface/cursorIcons");
-            image = SetCursorIcon(cursorIcons);
-            Logger.Info("Cursor style changed");
-
-            _cursor = GLFW.CreateCursor(image, x, y);
-            GLFW.SetCursor(_glfwWindow, _cursor);
-        }
-
-        public void SetCursor(Cursor cursor, Window window)
-        {
-            throw new NotImplementedException();
-        }
-
         private void LoadWindowIcon()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -405,8 +390,6 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.SetWindowTitle(_glfwWindow, title);
         }
-
-        public event Action<CursorStyleChangedEventArgs> OnCursorStyleChanged;
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {

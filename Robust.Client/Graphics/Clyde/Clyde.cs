@@ -22,13 +22,15 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using Matrix3 = Robust.Shared.Maths.Matrix3;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using Vector3 = Robust.Shared.Maths.Vector3;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
-using Image = OpenToolkit.GraphicsLibraryFramework.Image;
+using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -96,6 +98,19 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
+        public override void CreateCursor(GlfwImage image, int x, int y)
+        {
+            unsafe
+            {
+                System.Console.WriteLine("Trying to change cursor...");
+                GLFW.DestroyCursor(_cursor);
+                var _customCursor = GLFW.CreateCursor(image, 0, 0);
+                GLFW.SetCursor(_glfwWindow, _customCursor);
+
+                System.Console.WriteLine("Cursor changed");
+            }
+        }
+
         public override bool Initialize()
         {
             _debugStats = new ClydeDebugStats();
@@ -145,6 +160,32 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
+        }
+
+        public override void ConvertPnGtoGlfwImage(string png)
+        {
+
+            using (var stream = _resourceCache.ContentFileRead(path: png))
+            {
+                unsafe
+                {
+                    var image = Image.Load(stream);
+
+                    fixed (Rgba32* pixPtr = image.GetPixelSpan())
+                    {
+                        var glfwImage = new GlfwImage(image.Width, image.Height, (byte*) pixPtr);
+                        // DO NOT use glfwImage after leaving the `fixed` block. Call `glfwCreateCursor` in here or something.
+
+                        CreateCursor(glfwImage, 0 , 0);
+                    }
+                }
+            }
+
+        }
+
+        public void SetCursor(Cursor cursor, Window window)
+        {
+            throw new NotImplementedException();
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;

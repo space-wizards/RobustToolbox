@@ -1,6 +1,6 @@
 language: csharp
 
-dist: trusty
+dist: bionic
 sudo: false
 mono: none
 # dotnet: 3.1.100 # Travis is shitting itself right now and it can't locate .NET Core packages.

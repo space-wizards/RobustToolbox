@@ -11,9 +11,7 @@ os:
 
 addons:
   apt:
-    #sources:
-    #- deadsnakes
-
+    update: true
     packages:
     - python3
     - python3-pip

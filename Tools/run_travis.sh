@@ -6,5 +6,5 @@ set -e
 # Travis is shitting itself. Wonderful.
 PATH="~/.dotnet:$PATH"
 
-dotnet build RobustToolbox.sln /p:Python=python3.5
+dotnet build RobustToolbox.sln /p:Python=python3.6
 dotnet test Robust.UnitTesting/Robust.UnitTesting.csproj

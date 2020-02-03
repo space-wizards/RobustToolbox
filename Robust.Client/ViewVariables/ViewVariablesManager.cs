@@ -27,6 +27,7 @@ namespace Robust.Client.ViewVariables
 #pragma warning restore 649
 
         private uint _nextReqId = 1;
+        private readonly Vector2i _defaultWindowSize = (640, 420);
 
         private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
             new Dictionary<ViewVariablesInstance, SS14Window>();
@@ -209,7 +210,7 @@ namespace Robust.Client.ViewVariables
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
             window.Open();
-            LayoutContainer.SetSize(window, (500, 300));
+            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
@@ -250,7 +251,7 @@ namespace Robust.Client.ViewVariables
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
             window.Open();
-            LayoutContainer.SetSize(window, (500, 300));
+            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)

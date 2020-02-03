@@ -41,9 +41,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 #pragma warning restore 649
 
         /// <inheritdoc />
-        public event EventHandler<MoveEventArgs> OnMove;
-
-        /// <inheritdoc />
         public override string Name => "Transform";
 
         /// <inheritdoc />
@@ -230,7 +227,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (Running)
                 {
                     RebuildMatrices();
-                    OnMove?.Invoke(this, new MoveEventArgs(GridPosition, value));
+                    Owner.SendMessage(this, new MoveMessage(GridPosition, value));
                 }
             }
         }
@@ -273,7 +270,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
+                Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
 
@@ -300,7 +297,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetPosition(value);
                 RebuildMatrices();
                 Dirty();
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
+                Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
             }
         }
 
@@ -510,7 +507,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         SetPosition(newState.LocalPosition);
                     }
 
-                    OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
+                    Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
                     rebuildMatrices = true;
                 }
 

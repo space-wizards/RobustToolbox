@@ -95,7 +95,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var consumer in velocityConsumers)
                 {
                     totalMass += consumer.Mass;
-                    var movement = lowestMovement * velocity.Mass / totalMass;
+                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass : 1);
                     consumer.AngularVelocity = velocity.AngularVelocity;
                     consumer.LinearVelocity = movement;
                     copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);

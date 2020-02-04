@@ -1,16 +1,18 @@
-﻿using Newtonsoft.Json.Linq;
-using NJsonSchema;
-using Robust.Client.Graphics;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Shared.Log;
-using Robust.Shared.Maths;
-using Robust.Shared.Utility;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+
+using Robust.Client.Graphics;
+using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.Log;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+
+using Newtonsoft.Json.Linq;
+using NJsonSchema;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

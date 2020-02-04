@@ -32,6 +32,8 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture((1, 1));
         }
 
+        public ClydeDebugLayers DebugLayers { get; set; }
+
         public override void SetWindowTitle(string title)
         {
             // Nada.
@@ -85,6 +87,11 @@ namespace Robust.Client.Graphics.Clyde
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             return default;
+        }
+
+        public void ReloadShader(ClydeHandle handle, ParsedShader newShader)
+        {
+            // Nada.
         }
 
         public void Ready()

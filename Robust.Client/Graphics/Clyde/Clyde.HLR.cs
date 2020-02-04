@@ -19,6 +19,8 @@ namespace Robust.Client.Graphics.Clyde
     // The idea is this shouldn't contain too much GL specific stuff.
     internal partial class Clyde
     {
+        public ClydeDebugLayers DebugLayers { get; set; }
+
         private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation)> _drawingSpriteList
             =
             new RefList<(SpriteComponent, Matrix3, Angle)>();
@@ -50,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
             // Short path to render only the splash.
             if (_drawingSplash)
             {
-                _drawSplash(_renderHandle);
+                DrawSplash(_renderHandle);
                 FlushRenderQueue();
                 SwapBuffers();
                 return;
@@ -82,7 +84,7 @@ namespace Robust.Client.Graphics.Clyde
 
             using (DebugGroup("Lights"))
             {
-                _drawLights(worldBounds);
+                DrawLightsAndFov(worldBounds, eye);
             }
 
             using (DebugGroup("Grids"))
@@ -100,6 +102,14 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = false;
 
             SetSpaceFull(CurrentSpace.ScreenSpace);
+
+            if (DebugLayers == ClydeDebugLayers.Fov)
+            {
+                _renderHandle.UseShader(_fovDebugShaderInstance);
+                _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                var pos = UIBox2.FromDimensions(ScreenSize / 2 - (100, 100), (200, 200));
+                _renderHandle.DrawingHandleScreen.DrawTextureRect(_fovDepthTextureObject, pos);
+            }
 
             RenderOverlays(OverlaySpace.ScreenSpace);
 
@@ -172,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
 
-                    var box = UIBox2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
+                    var box = Box2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
 
                     _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
                         box.TopRight, Color.White, null, 0);
@@ -232,7 +242,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _drawSplash(IRenderHandle handle)
+        private void DrawSplash(IRenderHandle handle)
         {
             var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
 

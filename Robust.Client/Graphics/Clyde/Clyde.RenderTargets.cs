@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde
             TextureSampleParameters? sampleParameters = null, string name = null, bool hasStencilBuffer = false)
         {
             // Generate color attachment texture.
-            var texture = new OGLHandle(GL.GenTexture());
+            var texture = new GLHandle(GL.GenTexture());
 
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
 
@@ -42,7 +42,7 @@ namespace Robust.Client.Graphics.Clyde
                 PixelType.Byte, IntPtr.Zero);
 
             // Generate FBO.
-            var fbo = new OGLHandle(GL.GenFramebuffer());
+            var fbo = new GLHandle(GL.GenFramebuffer());
 
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
@@ -55,10 +55,10 @@ namespace Robust.Client.Graphics.Clyde
             GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, texture.Handle,
                 0);
 
-            OGLHandle stencilBuffer = default;
+            GLHandle stencilBuffer = default;
             if (hasStencilBuffer)
             {
-                stencilBuffer = new OGLHandle(GL.GenRenderbuffer());
+                stencilBuffer = new GLHandle(GL.GenRenderbuffer());
                 GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, stencilBuffer.Handle);
 
                 var (format, attachment) = _canDoStencil8RenderBuffer
@@ -104,8 +104,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            public RenderTarget(Vector2i size, ClydeTexture texture, OGLHandle objectHandle, Clyde clyde,
-                ClydeHandle handle, OGLHandle stencilBuffer)
+            public RenderTarget(Vector2i size, ClydeTexture texture, GLHandle objectHandle, Clyde clyde,
+                ClydeHandle handle, GLHandle stencilBuffer)
             {
                 Size = size;
                 Texture = texture;
@@ -118,11 +118,11 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size { get; }
             public ClydeTexture Texture { get; }
             public ClydeHandle Handle { get; }
-            public OGLHandle StencilBuffer { get; }
+            public GLHandle StencilBuffer { get; }
 
             Texture IRenderTarget.Texture => Texture;
 
-            public OGLHandle ObjectHandle { get; }
+            public GLHandle ObjectHandle { get; }
 
             public void Delete()
             {

@@ -1,24 +1,16 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.Graphics.ClientEye;
-using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = OpenTK.Graphics.OpenGL.StencilOp;
+using StencilOp = OpenTK.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -111,118 +103,6 @@ namespace Robust.Client.Graphics.Clyde
             return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
         }
 
-        private void _drawLights(Box2 worldBounds)
-        {
-            if (!_lightManager.Enabled)
-            {
-                return;
-            }
-
-            var map = _eyeManager.CurrentMap;
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightRenderTarget.ObjectHandle.Handle);
-            var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
-            GL.ClearColor(converted.R, converted.G, converted.B, 1);
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            var (lightW, lightH) = _lightMapSize();
-            GL.Viewport(0, 0, lightW, lightH);
-
-            _lightShader.Use();
-
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
-
-            var lastRange = float.NaN;
-            var lastPower = float.NaN;
-            var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
-            Texture lastMask = null;
-
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
-            {
-                if (!component.Enabled || component.Owner.Transform.MapID != map)
-                {
-                    continue;
-                }
-
-                var transform = component.Owner.Transform;
-                var lightPos = transform.WorldMatrix.Transform(component.Offset);
-
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
-
-                if (!lightBounds.Intersects(worldBounds))
-                {
-                    continue;
-                }
-
-                Texture mask = null;
-                var rotation = Angle.Zero;
-                if (component.Mask != null)
-                {
-                    mask = component.Mask;
-                    rotation = component.Rotation;
-
-                    if (component.MaskAutoRotate)
-                    {
-                        rotation += transform.WorldRotation;
-                    }
-                }
-
-                var maskTexture = mask ?? Texture.White;
-                if (lastMask != maskTexture)
-                {
-                    var maskHandle = _loadedTextures[((ClydeTexture) maskTexture).TextureId].OpenGLObject;
-                    GL.ActiveTexture(TextureUnit.Texture0);
-                    GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
-                    lastMask = maskTexture;
-                    _lightShader.SetUniformTexture("lightMask", TextureUnit.Texture0);
-                }
-
-                if (!FloatMath.CloseTo(lastRange, component.Radius))
-                {
-                    lastRange = component.Radius;
-                    _lightShader.SetUniform("lightRange", lastRange);
-                }
-
-                if (!FloatMath.CloseTo(lastPower, component.Energy))
-                {
-                    lastPower = component.Energy;
-                    _lightShader.SetUniform("lightPower", lastPower);
-                }
-
-                if (lastColor != component.Color)
-                {
-                    lastColor = component.Color;
-                    _lightShader.SetUniform("lightColor", lastColor);
-                }
-
-                _lightShader.SetUniform("lightCenter", lightPos);
-
-                var offset = new Vector2(component.Radius, component.Radius);
-
-                Matrix3 matrix;
-                if (mask == null)
-                {
-                    matrix = Matrix3.Identity;
-                }
-                else
-                {
-                    // Only apply rotation if a mask is said, because else it doesn't matter.
-                    matrix = Matrix3.CreateRotation(rotation);
-                }
-
-                (matrix.R0C2, matrix.R1C2) = lightPos;
-
-                _drawQuad(-offset, offset, ref matrix, _lightShader);
-            }
-
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
-
-            _lightingReady = true;
-        }
-
         private void _setProjViewMatrices(in ProjViewMatrices matrices)
         {
             _currentMatrices = matrices;
@@ -276,7 +156,6 @@ namespace Robust.Client.Graphics.Clyde
                     case RenderCommandType.RenderTarget:
                         if (command.RenderTarget.RenderTarget.Value == 0)
                         {
-                            _popDebugGroupMaybe();
                             // Bind window framebuffer.
                             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
                             var (w, h) = ScreenSize;
@@ -284,7 +163,6 @@ namespace Robust.Client.Graphics.Clyde
                         }
                         else
                         {
-                            _pushDebugGroupMaybe("fb");
                             var renderTarget = _renderTargets[command.RenderTarget.RenderTarget];
 
                             GL.BindFramebuffer(FramebufferTarget.Framebuffer, renderTarget.ObjectHandle.Handle);
@@ -371,7 +249,7 @@ namespace Robust.Client.Graphics.Clyde
             };
         }
 
-        private void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, ShaderProgram program)
+        private void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, GLShaderProgram program)
         {
             GL.BindVertexArray(QuadVAO.Handle);
             var rectTransform = Matrix3.Identity;
@@ -462,7 +340,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
         }
 
-        private (ShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
+        private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];
             var shader = _loadedShaders[instance.ShaderHandle];
@@ -577,29 +455,29 @@ namespace Robust.Client.Graphics.Clyde
 
             var loadedTexture = _loadedTextures[texture];
 
-            UIBox2 sr;
+            Box2 sr;
             if (subRegion.HasValue)
             {
                 var (w, h) = loadedTexture.Size;
                 var csr = subRegion.Value;
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {
-                    sr = new UIBox2(csr.Left / w, csr.Top / h, csr.Right / w, csr.Bottom / h);
+                    sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
                 }
                 else
                 {
-                    sr = new UIBox2(csr.Left / w, csr.Bottom / h, csr.Right / w, csr.Top / h);
+                    sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
                 }
             }
             else
             {
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {
-                    sr = new UIBox2(0, 0, 1, 1);
+                    sr = new Box2(0, 0, 1, 1);
                 }
                 else
                 {
-                    sr = new UIBox2(0, 1, 1, 0);
+                    sr = new Box2(0, 1, 1, 0);
                 }
             }
 
@@ -902,7 +780,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Dispose()
             {
-                _clyde._popDebugGroupMaybe();
+                _clyde.PopDebugGroupMaybe();
             }
         }
 

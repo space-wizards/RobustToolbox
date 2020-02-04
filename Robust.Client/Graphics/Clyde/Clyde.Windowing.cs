@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
@@ -353,7 +353,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Viewport(0, 0, fbW, fbH);
                 if (fbW != 0 && fbH != 0)
                 {
-                    _regenerateLightRenderTarget();
+                    RegenerateLightingRenderTargets();
                 }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));

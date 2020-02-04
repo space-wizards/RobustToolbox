@@ -4,16 +4,19 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Text;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -642,6 +645,53 @@ namespace Robust.Client.Console.Commands
             var chunk = grid.GetChunk(chunkIndex);
 
             console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
+            return false;
+        }
+    }
+
+    internal class ReloadShaders : IConsoleCommand
+    {
+        public string Command => "rldshader";
+        public string Description => "Reloads all shaders";
+        public string Help => "rldshader";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var resC = IoCManager.Resolve<IResourceCache>();
+
+            var paths = resC.GetAllResources<ShaderSourceResource>().Select(p => p.Key).ToList();
+
+            foreach (var path in paths)
+            {
+                resC.ReloadResource<ShaderSourceResource>(path);
+            }
+
+            return false;
+        }
+    }
+
+    internal class ClydeDebugLayerCommand : IConsoleCommand
+    {
+        public string Command => "cldbglyr";
+        public string Description => "";
+        public string Help => "cldbglyr";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var clyde = IoCManager.Resolve<IClydeInternal>();
+
+            if (args.Length < 1)
+            {
+                clyde.DebugLayers = ClydeDebugLayers.None;
+                return false;
+            }
+
+            clyde.DebugLayers = args[0] switch
+            {
+                "fov" => ClydeDebugLayers.Fov,
+                _ => ClydeDebugLayers.None
+            };
+
             return false;
         }
     }

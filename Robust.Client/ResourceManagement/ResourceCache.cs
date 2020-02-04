@@ -90,11 +90,15 @@ namespace Robust.Client.ResourceManagement
         public void ReloadResource<T>(ResourcePath path) where T : BaseResource, new()
         {
             var cache = GetTypeDict<T>();
-            var resource = new T();
+
+            if (!cache.TryGetValue(path, out var res))
+            {
+                return;
+            }
+
             try
             {
-                resource.Load(this, path);
-                cache[path] = resource;
+                res.Reload(this, path);
             }
             catch (Exception e)
             {
@@ -127,7 +131,7 @@ namespace Robust.Client.ResourceManagement
         {
             if (_fallbacks.TryGetValue(typeof(T), out var fallback))
             {
-                return (T)fallback;
+                return (T) fallback;
             }
 
             var res = new T();
@@ -138,7 +142,12 @@ namespace Robust.Client.ResourceManagement
 
             fallback = GetResource<T>(res.Fallback, useFallback: false);
             _fallbacks.Add(typeof(T), fallback);
-            return (T)fallback;
+            return (T) fallback;
+        }
+
+        public IEnumerable<KeyValuePair<ResourcePath, T>> GetAllResources<T>() where T : BaseResource, new()
+        {
+            return GetTypeDict<T>().Select(p => new KeyValuePair<ResourcePath, T>(p.Key, (T) p.Value));
         }
 
         #region IDisposable Members

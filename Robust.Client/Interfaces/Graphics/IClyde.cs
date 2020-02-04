@@ -53,6 +53,8 @@ namespace Robust.Client.Interfaces.Graphics
 
         ClydeHandle LoadShader(ParsedShader shader, string name = null);
 
+        void ReloadShader(ClydeHandle handle, ParsedShader newShader);
+
         /// <summary>
         ///     Creates a new instance of a shader.
         /// </summary>
@@ -69,6 +71,8 @@ namespace Robust.Client.Interfaces.Graphics
         IClydeDebugStats DebugStats { get; }
 
         Texture GetStockTexture(ClydeStockTexture stockTexture);
+
+        ClydeDebugLayers DebugLayers { get; set; }
     }
 
     public interface IClydeAudioSource : IDisposable
@@ -201,5 +205,11 @@ namespace Robust.Client.Interfaces.Graphics
     {
         White,
         Transparent
+    }
+
+    internal enum ClydeDebugLayers
+    {
+        None,
+        Fov,
     }
 }

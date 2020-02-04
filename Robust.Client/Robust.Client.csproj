@@ -39,6 +39,8 @@
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json">
       <LogicalName>Robust.Client.Graphics.RSI.RSISchema.json</LogicalName>
     </EmbeddedResource>
+
+    <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <PropertyGroup>

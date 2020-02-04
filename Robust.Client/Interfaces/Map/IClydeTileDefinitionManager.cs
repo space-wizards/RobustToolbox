@@ -19,6 +19,6 @@ namespace Robust.Client.Interfaces.Map
         ///     Gets the region inside the texture atlas to use to draw a tile.
         /// </summary>
         /// <returns>If null, do not draw the tile at all.</returns>
-        UIBox2? TileAtlasRegion(Tile tile);
+        Box2? TileAtlasRegion(Tile tile);
     }
 }

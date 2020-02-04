@@ -22,9 +22,9 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas { get; private set; }
 
-        private readonly Dictionary<ushort, UIBox2> _tileRegions = new Dictionary<ushort, UIBox2>();
+        private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
 
-        public UIBox2? TileAtlasRegion(Tile tile)
+        public Box2? TileAtlasRegion(Tile tile)
         {
             if (_tileRegions.TryGetValue(tile.TypeId, out var region))
             {
@@ -65,17 +65,20 @@ namespace Robust.Client.Map
 
                 if (image.Width != tileSize || image.Height != tileSize)
                 {
-                    throw new NotImplementedException("Unable to use tiles with a dimension other than 32x32.");
+                    throw new NotSupportedException("Unable to use tiles with a dimension other than 32x32.");
                 }
 
                 var point = new Vector2i(column * tileSize, row * tileSize);
 
                 image.Blit(new UIBox2i(0, 0, image.Width, image.Height), sheet, point);
 
+                var w = (float) sheet.Width;
+                var h = (float) sheet.Height;
+
                 _tileRegions.Add(def.TileId,
-                    UIBox2.FromDimensions(
-                        point.X / (float) sheet.Width, point.Y / (float) sheet.Height,
-                        tileSize / (float) sheet.Width, tileSize / (float) sheet.Height));
+                    Box2.FromDimensions(
+                        point.X / w, (h - point.Y - EyeManager.PIXELSPERMETER) / h,
+                        tileSize / w, tileSize / h));
             }
 
             TileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");

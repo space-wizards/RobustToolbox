@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -40,7 +40,10 @@ namespace Robust.Client.Graphics.Clyde
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);
 
-            var texture = new OGLHandle((uint) GL.GenTexture());
+            // Flip image because OpenGL reads images upside down.
+            var copy = FlipClone(image);
+
+            var texture = new GLHandle((uint) GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
             _applySampleParameters(actualParams.SampleParameters);
 
@@ -74,7 +77,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Can only use R8 for Gray8 if sRGB is OFF.
                 // Because OpenGL doesn't provide non-sRGB single/dual channel image formats.
                 // Vulkan when?
-                if (image.Width % 4 != 0 || image.Height % 4 != 0)
+                if (copy.Width % 4 != 0 || copy.Height % 4 != 0)
                 {
                     throw new ArgumentException("Gray8 non-sRGB images must have multiple of 4 sizes.");
                 }
@@ -93,15 +96,15 @@ namespace Robust.Client.Graphics.Clyde
 
             unsafe
             {
-                var span = image.GetPixelSpan();
+                var span = copy.GetPixelSpan();
                 fixed (T* ptr = span)
                 {
-                    GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, image.Width, image.Height, 0,
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, copy.Width, copy.Height, 0,
                         pixelDataFormat, pixelDataType, (IntPtr) ptr);
                 }
             }
 
-            return _genTexture(texture, (image.Width, image.Height), name);
+            return _genTexture(texture, (copy.Width, copy.Height), name);
         }
 
         private static void _applySampleParameters(TextureSampleParameters? sampleParameters)
@@ -147,18 +150,18 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture _genTexture(OGLHandle oglHandle, Vector2i size, string name)
+        private ClydeTexture _genTexture(GLHandle glHandle, Vector2i size, string name)
         {
             if (name != null)
             {
-                _objectLabelMaybe(ObjectLabelIdentifier.Texture, oglHandle, name);
+                ObjectLabelMaybe(ObjectLabelIdentifier.Texture, glHandle, name);
             }
 
             var (width, height) = size;
 
             var loaded = new LoadedTexture
             {
-                OpenGLObject = oglHandle,
+                OpenGLObject = glHandle,
                 Width = width,
                 Height = height,
                 Name = name
@@ -182,7 +185,7 @@ namespace Robust.Client.Graphics.Clyde
             _loadedTextures.Remove(texture.TextureId);
         }
 
-        private void _loadStockTextures()
+        private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
             white[0, 0] = Rgba32.White;
@@ -193,9 +196,36 @@ namespace Robust.Client.Graphics.Clyde
             _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
         }
 
+        /// <summary>
+        ///     Makes a clone of the image that is also flipped.
+        /// </summary>
+        private static Image<T> FlipClone<T>(Image<T> source) where T : struct, IPixel<T>
+        {
+            var copy = new Image<T>(source.Width, source.Height);
+
+            var w = copy.Width;
+            var h = copy.Height;
+
+            var srcSpan = source.GetPixelSpan();
+            var dstSpan = copy.GetPixelSpan();
+
+            var dr = h - 1;
+            for (var r = 0; r < h; r++, dr--)
+            {
+                var si = r * w;
+                var di = dr * w;
+                var srcRow = srcSpan[si..(si + w)];
+                var dstRow = dstSpan[di..(di + w)];
+
+                srcRow.CopyTo(dstRow);
+            }
+
+            return copy;
+        }
+
         private sealed class LoadedTexture
         {
-            public OGLHandle OpenGLObject;
+            public GLHandle OpenGLObject;
             public int Width;
             public int Height;
             public string Name;

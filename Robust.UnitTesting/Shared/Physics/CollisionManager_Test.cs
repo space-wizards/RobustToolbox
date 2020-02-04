@@ -162,7 +162,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX, 1);
+            var ray = new CollisionRay(new Vector2(0, 1), Vector2.UnitX, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();
@@ -189,7 +189,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
+            var ray = new CollisionRay(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();

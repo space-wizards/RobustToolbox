@@ -1188,7 +1188,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        var stateid = new RSI.StateId(layerDatum.State, RSI.Selectors.None);
+                        var stateid = new RSI.StateId(layerDatum.State);
                         layer.State = stateid;
                         if (theRsi.TryGetState(stateid, out var state))
                         {

@@ -142,6 +142,7 @@ namespace Robust.Client.GameObjects
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity)newEnt);
+            UpdateEntityTree(newEnt);
             return newEnt;
         }
 
@@ -150,6 +151,7 @@ namespace Robust.Client.GameObjects
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity)entity);
+            UpdateEntityTree(entity);
             return entity;
         }
 

@@ -191,5 +191,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth);
 
         #endregion
+
+        #region Spatial Updates
+
+        void UpdateEntityTree(IEntity entity);
+
+        #endregion
+
     }
 }

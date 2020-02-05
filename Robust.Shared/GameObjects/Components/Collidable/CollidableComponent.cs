@@ -74,6 +74,9 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     shape.ApplyState();
                 }
+
+                UpdateEntityTree();
+                Dirty();
             }
         }
 
@@ -170,6 +173,7 @@ namespace Robust.Shared.GameObjects.Components
         void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -217,5 +221,7 @@ namespace Robust.Shared.GameObjects.Components
 
             return _physicsManager.TryCollide(Owner, offset, bump);
         }
+
+        private void UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
     }
 }

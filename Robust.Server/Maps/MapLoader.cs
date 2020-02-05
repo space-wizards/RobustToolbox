@@ -424,6 +424,11 @@ namespace Robust.Server.Maps
             {
                 foreach (var entity in Entities)
                 {
+                    _serverEntityManager.UpdateEntityTree(entity);
+                }
+
+                foreach (var entity in Entities)
+                {
                     _serverEntityManager.FinishEntityStartup(entity);
                 }
             }

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using System.Linq;
 using Robust.Client.GameObjects;
@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
             entity.TryGetComponent(out ContainerManagerComponent containerManager);
 
             var localMatrix = entity.Transform.GetLocalMatrix();
-            Matrix3.Multiply(ref parentTransform, ref localMatrix, out var matrix);
+            Matrix3.Multiply(ref localMatrix, ref parentTransform, out var matrix);
             var rotation = parentRotation + entity.Transform.LocalRotation;
 
             foreach (var child in entity.Transform.ChildEntityUids)
@@ -227,7 +227,7 @@ namespace Robust.Client.Graphics.Clyde
                         ref var entry = ref list.AllocAdd();
 
                         var childLocalMatrix = childTransform.GetLocalMatrix();
-                        Matrix3.Multiply(ref matrix, ref childLocalMatrix, out entry.Item2);
+                        Matrix3.Multiply(ref childLocalMatrix, ref matrix, out entry.Item2);
                         var childWorldRotation = rotation + childTransform.LocalRotation;
 
                         entry.Item1 = sprite;

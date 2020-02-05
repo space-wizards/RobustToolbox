@@ -224,9 +224,6 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert("Component does not exist for state.");
                 }
 
-                DebugTools.Assert(kvStates.Value.curState != null,
-                    "Component state is null.");
-
                 component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
             }
         }

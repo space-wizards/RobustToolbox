@@ -105,7 +105,10 @@ namespace Robust.Shared.Physics
             lastNode.Height = -1;
         }
 
-        private int Capacity => _nodes.Length;
+        public int Capacity {
+            get => _nodes.Length;
+            set => EnsureCapacity(value);
+        }
 
         public int Height
         {
@@ -883,7 +886,7 @@ namespace Robust.Shared.Physics
             return alloc;
         }
 
-        private void EnsureCapacity(int newCapacity)
+        public void EnsureCapacity(int newCapacity)
         {
             if (newCapacity <= Capacity)
             {

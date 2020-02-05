@@ -105,7 +105,8 @@ namespace Robust.Shared.Physics
             lastNode.Height = -1;
         }
 
-        public int Capacity {
+        public int Capacity
+        {
             get => _nodes.Length;
             set => EnsureCapacity(value);
         }

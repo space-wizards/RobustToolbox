@@ -431,6 +431,11 @@ namespace Robust.Server.Maps
                 {
                     _serverEntityManager.FinishEntityStartup(entity);
                 }
+
+                foreach (var entity in Entities)
+                {
+                    _serverEntityManager.UpdateEntityTree(entity);
+                }
             }
 
             // Serialization

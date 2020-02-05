@@ -194,7 +194,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Spatial Updates
 
-        void UpdateEntityTree(IEntity entity);
+        bool UpdateEntityTree(IEntity entity);
 
         #endregion
 

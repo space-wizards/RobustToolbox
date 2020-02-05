@@ -186,6 +186,7 @@ namespace Robust.Shared.GameObjects
             if (TryGetEntity(uid, out var entity))
             {
                 DeleteEntity(entity);
+                UpdateEntityTree(entity);
             }
         }
 
@@ -394,29 +395,12 @@ namespace Robust.Shared.GameObjects
         #region Spatial Queries
 
         /// <inheritdoc />
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box)
-        {
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.Transform;
-                if (transform.MapID != mapId)
-                    continue;
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box) {
+            var any = false;
 
-                if (entity.TryGetComponent<ICollidableComponent>(out var component))
-                {
-                    if (box.Intersects(component.WorldAABB))
-                        return true;
-                }
-                else
-                {
-                    if (box.Contains(transform.WorldPosition))
-                    {
-                        return true;
-                    }
-                }
-            }
+            _entityTreesPerMap[mapId].Query((ref IEntity ent) => any = !ent.Deleted, box);
 
-            return false;
+            return any;
         }
 
         /// <inheritdoc />
@@ -436,22 +420,27 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
-        {
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.Transform;
-                if (transform.MapID != mapId)
-                    continue;
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position) {
+            const float range = .00001f / 2;
+            var aabb = Box2.Grow(new Box2(position, position), range);
 
-                if (entity.TryGetComponent<ICollidableComponent>(out var component))
+            var newResults = _entityTreesPerMap[mapId].Query(aabb).ToArray();
+
+
+            foreach (var entity in newResults)
+            {
+
+                if (entity.TryGetComponent(out ICollidableComponent component))
                 {
                     if (component.WorldAABB.Contains(position))
                         yield return entity;
                 }
                 else
                 {
-                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
+                    var transform = entity.Transform;
+                    var entPos = transform.WorldPosition;
+                    if (FloatMath.CloseTo(entPos.X, position.X)
+                        && FloatMath.CloseTo(entPos.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -533,17 +522,17 @@ namespace Robust.Shared.GameObjects
 
         private ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap = new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
 
-        public void UpdateEntityTree(IEntity entity) {
+        public bool UpdateEntityTree(IEntity entity) {
 
             if (entity.Deleted)
             {
                 RemoveFromEntityTrees(entity);
-                return;
+                return true;
             }
 
             if (!entity.Initialized || !Entities.ContainsKey(entity.Uid))
             {
-                return;
+                return false;
             }
 
             var transform = entity.TryGetComponent(out ITransformComponent tx) ? tx : null;
@@ -551,14 +540,30 @@ namespace Robust.Shared.GameObjects
             if (transform == null || !transform.Initialized)
             {
                 RemoveFromEntityTrees(entity);
-                return;
+                return true;
             }
 
             var mapId = transform.MapID;
 
             var entTree = _entityTreesPerMap.GetOrAdd(mapId, EntityTreeFactory);
 
-            entTree.AddOrUpdate(entity);
+            // for debugging
+            var necessary = 0;
+
+            if (entTree.AddOrUpdate(entity))
+            {
+                ++necessary;
+            }
+
+            foreach (var childTx in entity.Transform.Children)
+            {
+                if (UpdateEntityTree(childTx.Owner))
+                {
+                    ++necessary;
+                }
+            }
+
+            return necessary > 0;
         }
 
         private void RemoveFromEntityTrees(IEntity entity) {

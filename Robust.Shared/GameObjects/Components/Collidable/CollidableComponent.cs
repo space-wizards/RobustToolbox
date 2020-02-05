@@ -222,6 +222,6 @@ namespace Robust.Shared.GameObjects.Components
             return _physicsManager.TryCollide(Owner, offset, bump);
         }
 
-        private void UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
+        private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
     }
 }

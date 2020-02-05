@@ -630,7 +630,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _invWorldMatrix = itransMat;
         }
 
-        private void UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
+        private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
         public string GetDebugString()
         {

@@ -88,6 +88,11 @@ namespace Robust.Client.GameObjects
                 HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1, kvStates.Value.Item2);
             }
 
+            foreach (var kvp in toApply)
+            {
+                UpdateEntityTree(kvp.Key);
+            }
+
             foreach (var id in deletions)
             {
                 DeleteEntity(id);
@@ -101,6 +106,11 @@ namespace Robust.Client.GameObjects
             foreach (var entity in toInitialize)
             {
                 StartEntity(entity);
+            }
+
+            foreach (var entity in toInitialize)
+            {
+                UpdateEntityTree(entity);
             }
         }
 

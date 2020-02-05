@@ -284,6 +284,17 @@ namespace Robust.Shared.Physics
         private bool TryGetProxy(in T item, out Proxy proxy)
             => _nodeLookup.TryGetValue(item, out proxy);
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2? GetNodeBounds(T item)
+            => TryGetProxy(item, out var proxy) ? _nodes[proxy].Aabb : (Box2?) null;
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2? GetNodeBounds(in T item)
+            => TryGetProxy(item, out var proxy) ? _nodes[proxy].Aabb : (Box2?) null;
+
+
         public bool Remove(in T item)
         {
             if (!_nodeLookup.TryRemove(item, out var proxy))
@@ -316,7 +327,7 @@ namespace Robust.Shared.Physics
 
             Assert(Contains(item));
 
-            var leafNode = _nodes[leaf];
+            ref var leafNode = ref _nodes[leaf];
 
             Assert(leafNode.IsLeaf);
 
@@ -336,6 +347,8 @@ namespace Robust.Shared.Physics
             var fattenedNewBox = Box2.Grow(newBox, AabbExtendSize);
 
             fattenedNewBox = Box2.Combine(newBox, fattenedNewBox.Translated(movedDist));
+
+            Assert(fattenedNewBox.Contains(newBox));
 
             RemoveLeaf(leaf);
 
@@ -1380,15 +1393,10 @@ namespace Robust.Shared.Physics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddOrUpdate(T item)
-        {
-            if (!Update(item))
-            {
-                Add(item);
-            }
-        }
+        public bool AddOrUpdate(T item) => Update(item) || Add(item);
 
         [Conditional("DEBUG_DYNAMIC_TREE")]
+        [Conditional("DEBUG_DYNAMIC_TREE_ASSERTS")]
         [DebuggerNonUserCode] [DebuggerHidden] [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Assert(bool assertion, [CallerMemberName] string member = default, [CallerFilePath] string file = default, [CallerLineNumber] int line = default)

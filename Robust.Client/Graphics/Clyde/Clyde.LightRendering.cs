@@ -2,12 +2,12 @@ using System;
 using System.Buffers;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -18,11 +18,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeShaderInstance _fovDebugShaderInstance;
 
+        private RenderTarget _fovRenderTarget;
         private GLShaderProgram _fovCalculationProgram;
 
         private RenderTarget LightRenderTarget;
-        private GLHandle _fovFbo;
-        private GLHandle _fovDepthTexture;
         private ClydeTexture _fovDepthTextureObject;
 
         private int _occlusionDataLength;
@@ -53,45 +52,11 @@ namespace Robust.Client.Graphics.Clyde
             GL.EnableVertexAttribArray(0);
 
             // FOV FBO.
+            _fovRenderTarget = CreateRenderTarget((ShadowMapSize, 1),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
 
-            _fovFbo = new GLHandle(GL.GenFramebuffer());
-
-            var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
-            var boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _fovFbo.Handle);
-
-            _fovDepthTexture = new GLHandle(GL.GenTexture());
-
-            GL.BindTexture(TextureTarget.Texture2D, _fovDepthTexture.Handle);
-
-            _fovDepthTextureObject = _genTexture(_fovDepthTexture, (ShadowMapSize, 1), "FOV depth texture");
-
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.DepthComponent, ShadowMapSize, 1, 0,
-                PixelFormat.DepthComponent, PixelType.Float, IntPtr.Zero);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
-                (int) OGLTextureWrapMode.Repeat);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
-                (int) OGLTextureWrapMode.Repeat);
-
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
-                (int) TextureMagFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
-                (int) TextureMinFilter.Nearest);
-
-            GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment,
-                _fovDepthTexture.Handle, 0);
-
-            GL.DrawBuffer(DrawBufferMode.None);
-            GL.ReadBuffer(ReadBufferMode.None);
-
-            var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-            DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
-                $"new framebuffer has bad status {status}");
-
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+            _fovDepthTextureObject = _fovRenderTarget.Texture;
         }
 
         private void LoadLightingShaders()
@@ -107,14 +72,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawFov(Box2 worldBounds, IEye eye)
         {
-            /*
+            var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
+            var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
+
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Lequal);
             GL.DepthMask(true);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _fovFbo.Handle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _fovRenderTarget.ObjectHandle.Handle);
             GL.ClearDepth(1);
-            GL.Clear(ClearBufferMask.DepthBufferBit);
+            GL.ClearColor(maxDist, maxDist, maxDist, 1);
+            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
 
             GL.BindVertexArray(_occlusionVao.Handle);
 
@@ -123,23 +91,25 @@ namespace Robust.Client.Graphics.Clyde
             var lightMatrix = Matrix4.CreateTranslation(-eye.Position.X, -eye.Position.Y, 0);
             _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
 
-            var baseProj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), 1, 0.1f, 11);
+            var baseProj =
+                Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), 1, maxDist / 1000,
+                    maxDist * 1.1f);
 
             const int step = ShadowMapSize / 4;
 
             for (var i = 0; i < 4; i++)
             {
-                var up = new Vector3(0, 0, -1);
-                var forward = i switch
+                var orientation = i switch
                 {
-                    0 => new Vector3(0, 1, 0),
-                    1 => new Vector3(1, 0, 0),
-                    2 => new Vector3(0, -1, 0),
-                    3 => new Vector3(-1, 0, 0)
+                    0 => new Quaternion(-0.707f, 0, 0, 0.707f),
+                    1 => new Quaternion(0.5f, -0.5f, -0.5f, -0.5f),
+                    2 => new Quaternion(0, 0.707f, 0.707f, 0),
+                    3 => new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
+                    _ => default
                 };
-                var orientation = Quaternion.LookRotation(ref forward, ref up);
 
-                var proj = Matrix4.Rotate(orientation) * baseProj;
+                var rotMatrix = Matrix4.Rotate(orientation);
+                var proj = rotMatrix * baseProj;
 
                 _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
                 GL.Viewport(step * i, 0, step, 1);
@@ -149,7 +119,6 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Disable(EnableCap.DepthTest);
-            */
         }
 
         private void DrawLightsAndFov(Box2 worldBounds, IEye eye)
@@ -159,11 +128,9 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            /*
             UpdateOcclusionGeometry(eye.Position.MapId);
 
             DrawFov(worldBounds, eye);
-            */
 
             var map = _eyeManager.CurrentMap;
 

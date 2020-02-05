@@ -12,64 +12,75 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<ClydeHandle, RenderTarget> _renderTargets =
             new Dictionary<ClydeHandle, RenderTarget>();
 
-        IRenderTarget IClyde.CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
+        IRenderTarget IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string name)
         {
-            return CreateRenderTarget(size, colorFormat, sampleParameters, name);
+            return CreateRenderTarget(size, format, sampleParameters, name);
         }
 
-        private RenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
-            TextureSampleParameters? sampleParameters = null, string name = null, bool hasStencilBuffer = false)
+        private RenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+            TextureSampleParameters? sampleParameters = null, string name = null)
         {
-            // Generate color attachment texture.
-            var texture = new GLHandle(GL.GenTexture());
-
-            GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-
-            _applySampleParameters(sampleParameters);
-
-            var internalFormat = colorFormat switch
-            {
-                RenderTargetColorFormat.Rgba8 => PixelInternalFormat.Rgba8,
-                RenderTargetColorFormat.Rgba16F => PixelInternalFormat.Rgba16f,
-                RenderTargetColorFormat.Rgba8Srgb => PixelInternalFormat.Srgb8Alpha8,
-                RenderTargetColorFormat.R11FG11FB10F => PixelInternalFormat.R11fG11fB10f,
-                _ => throw new ArgumentOutOfRangeException(nameof(colorFormat), colorFormat, null)
-            };
-
-            var (width, height) = size;
-            GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, PixelFormat.Red,
-                PixelType.Byte, IntPtr.Zero);
-
-            // Generate FBO.
-            var fbo = new GLHandle(GL.GenFramebuffer());
-
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
             var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
             var boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
 
+            // Generate FBO.
+            var fbo = new GLHandle(GL.GenFramebuffer());
+
             // Bind color attachment to FBO.
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
 
-            GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0, texture.Handle,
-                0);
+            ObjectLabelMaybe(ObjectLabelIdentifier.Framebuffer, fbo, name);
 
-            GLHandle stencilBuffer = default;
-            if (hasStencilBuffer)
+            var (width, height) = size;
+
+            ClydeTexture textureObject;
+            GLHandle depthStencilBuffer = default;
+
+            // Color attachment.
             {
-                stencilBuffer = new GLHandle(GL.GenRenderbuffer());
-                GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, stencilBuffer.Handle);
+                var texture = new GLHandle(GL.GenTexture());
 
-                var (format, attachment) = _canDoStencil8RenderBuffer
-                    ? (RenderbufferStorage.StencilIndex8, FramebufferAttachment.StencilAttachment)
-                    : (RenderbufferStorage.Depth24Stencil8, FramebufferAttachment.DepthStencilAttachment);
+                GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
 
-                GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, format, width,
+                ApplySampleParameters(sampleParameters);
+
+                var internalFormat = format.ColorFormat switch
+                {
+                    RenderTargetColorFormat.Rgba8 => PixelInternalFormat.Rgba8,
+                    RenderTargetColorFormat.Rgba16F => PixelInternalFormat.Rgba16f,
+                    RenderTargetColorFormat.Rgba8Srgb => PixelInternalFormat.Srgb8Alpha8,
+                    RenderTargetColorFormat.R11FG11FB10F => PixelInternalFormat.R11fG11fB10f,
+                    RenderTargetColorFormat.R32F => PixelInternalFormat.R32f,
+                    _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
+                };
+
+                GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, PixelFormat.Red,
+                    PixelType.Byte, IntPtr.Zero);
+
+                GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                    texture.Handle,
+                    0);
+
+                textureObject = GenTexture(texture, size, name == null ? null : $"{name}-color");
+            }
+
+            // Depth/stencil buffers.
+            if (format.HasDepthStencil)
+            {
+                depthStencilBuffer = new GLHandle(GL.GenRenderbuffer());
+                GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+
+                ObjectLabelMaybe(ObjectLabelIdentifier.Renderbuffer, depthStencilBuffer,
+                    name == null ? null : $"{name}-depth-stencil");
+
+                GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, width,
                     height);
 
-                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, attachment,
-                    RenderbufferTarget.Renderbuffer, stencilBuffer.Handle);
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+                    RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
             }
 
             // This should always pass but OpenGL makes it easy to check for once so let's.
@@ -81,22 +92,21 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
 
-            var textureObject = _genTexture(texture, size, name);
             var handle = AllocRid();
-            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle, stencilBuffer);
+            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle, depthStencilBuffer);
             _renderTargets.Add(handle, renderTarget);
             return renderTarget;
         }
 
-        private void _deleteRenderTarget(RenderTarget renderTarget)
+        private void DeleteRenderTarget(RenderTarget renderTarget)
         {
             GL.DeleteFramebuffer(renderTarget.ObjectHandle.Handle);
             _renderTargets.Remove(renderTarget.Handle);
-            _deleteTexture(renderTarget.Texture);
+            DeleteTexture(renderTarget.Texture);
 
-            if (renderTarget.StencilBuffer != default)
+            if (renderTarget.DepthStencilBuffer != default)
             {
-                GL.DeleteRenderbuffer(renderTarget.StencilBuffer.Handle);
+                GL.DeleteRenderbuffer(renderTarget.DepthStencilBuffer.Handle);
             }
         }
 
@@ -105,20 +115,20 @@ namespace Robust.Client.Graphics.Clyde
             private readonly Clyde _clyde;
 
             public RenderTarget(Vector2i size, ClydeTexture texture, GLHandle objectHandle, Clyde clyde,
-                ClydeHandle handle, GLHandle stencilBuffer)
+                ClydeHandle handle, GLHandle depthStencilBuffer)
             {
                 Size = size;
                 Texture = texture;
                 ObjectHandle = objectHandle;
                 _clyde = clyde;
                 Handle = handle;
-                StencilBuffer = stencilBuffer;
+                DepthStencilBuffer = depthStencilBuffer;
             }
 
             public Vector2i Size { get; }
             public ClydeTexture Texture { get; }
             public ClydeHandle Handle { get; }
-            public GLHandle StencilBuffer { get; }
+            public GLHandle DepthStencilBuffer { get; }
 
             Texture IRenderTarget.Texture => Texture;
 
@@ -126,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Delete()
             {
-                _clyde._deleteRenderTarget(this);
+                _clyde.DeleteRenderTarget(this);
             }
         }
     }

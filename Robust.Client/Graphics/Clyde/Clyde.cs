@@ -63,7 +63,6 @@ namespace Robust.Client.Graphics.Clyde
         private bool _quartResLights = true;
 
         private bool _hasKhrDebug;
-        private bool _canDoStencil8RenderBuffer;
 
         public override bool Initialize()
         {
@@ -72,6 +71,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 return false;
             }
+
             _initializeAudio();
             ReloadConfig();
 
@@ -172,7 +172,8 @@ namespace Robust.Client.Graphics.Clyde
                     new Vertex2D(0, 1, 0, 0)
                 };
 
-                QuadVBO = new GLBuffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw, quadVertices,
+                QuadVBO = new GLBuffer<Vertex2D>(this, BufferTarget.ArrayBuffer, BufferUsageHint.StaticDraw,
+                    quadVertices,
                     nameof(QuadVBO));
 
                 QuadVAO = new GLHandle((uint) GL.GenVertexArray());
@@ -205,7 +206,8 @@ namespace Robust.Client.Graphics.Clyde
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));
             }
 
-            ProjViewUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw, nameof(ProjViewUBO));
+            ProjViewUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
+                nameof(ProjViewUBO));
             ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
 
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.ObjectHandle);
@@ -218,18 +220,13 @@ namespace Robust.Client.Graphics.Clyde
                 UniformConstantsUBO.ObjectHandle);
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
-                RenderTargetColorFormat.Rgba8Srgb, name: nameof(EntityPostRenderTarget), hasStencilBuffer: true);
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                name: nameof(EntityPostRenderTarget));
         }
 
         private void DetectOpenGLFeatures()
         {
             var extensions = GetGLExtensions();
-
-            if (extensions.Contains("GL_ARB_ES3_compatibility"))
-            {
-                _canDoStencil8RenderBuffer = true;
-                Logger.DebugS("clyde.ogl", "Have GL_ARB_ES3_compatibility, GL_STENCIL_INDEX8 supported.");
-            }
 
             if (extensions.Contains("GL_KHR_debug"))
             {

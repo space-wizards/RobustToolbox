@@ -78,7 +78,7 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture((image.Width, image.Height));
         }
 
-        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
+        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string name = null)
         {
             return new DummyRenderTarget(size, new DummyTexture(size));

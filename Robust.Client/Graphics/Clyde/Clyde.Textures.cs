@@ -45,7 +45,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var texture = new GLHandle((uint) GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            _applySampleParameters(actualParams.SampleParameters);
+            ApplySampleParameters(actualParams.SampleParameters);
 
             PixelInternalFormat internalFormat;
             PixelFormat pixelDataFormat;
@@ -104,10 +104,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return _genTexture(texture, (copy.Width, copy.Height), name);
+            return GenTexture(texture, (copy.Width, copy.Height), name);
         }
 
-        private static void _applySampleParameters(TextureSampleParameters? sampleParameters)
+        private static void ApplySampleParameters(TextureSampleParameters? sampleParameters)
         {
             var actualParams = sampleParameters ?? TextureSampleParameters.Default;
             if (actualParams.Filter)
@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture _genTexture(GLHandle glHandle, Vector2i size, string name)
+        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string name)
         {
             if (name != null)
             {
@@ -173,7 +173,7 @@ namespace Robust.Client.Graphics.Clyde
             return new ClydeTexture(id, size, this);
         }
 
-        private void _deleteTexture(ClydeTexture texture)
+        private void DeleteTexture(ClydeTexture texture)
         {
             if (!_loadedTextures.TryGetValue(texture.TextureId, out var loadedTexture))
             {
@@ -240,7 +240,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void Delete()
             {
-                _clyde._deleteTexture(this);
+                _clyde.DeleteTexture(this);
             }
 
             internal ClydeTexture(ClydeHandle id, Vector2i size, Clyde clyde) : base(size)

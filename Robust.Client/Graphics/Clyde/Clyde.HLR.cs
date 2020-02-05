@@ -107,7 +107,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _renderHandle.UseShader(_fovDebugShaderInstance);
                 _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                var pos = UIBox2.FromDimensions(ScreenSize / 2 - (100, 100), (200, 200));
+                var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
                 _renderHandle.DrawingHandleScreen.DrawTextureRect(_fovDepthTextureObject, pos);
             }
 

@@ -1,6 +1,10 @@
 #version 330 core
 
+in float dist;
+
+layout(location = 0) out vec4 depth;
+
 void main()
 {
-    // Depth gets set by OpenGL, so no-op here.
+    depth = vec4(vec3(dist), 1);
 }

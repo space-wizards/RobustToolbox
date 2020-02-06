@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using OpenTK.Graphics.ES30;
 using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
@@ -175,6 +174,9 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
         const string LayerMapSerializationCache = "spritelayermap";
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool IsInert { get; private set; }
 
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
@@ -344,6 +346,7 @@ namespace Robust.Client.GameObjects
 
         private int AddLayer(Layer layer, int? newIndex)
         {
+            int index;
             if (newIndex.HasValue)
             {
                 Layers.Insert(newIndex.Value, layer);
@@ -355,13 +358,16 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                return newIndex.Value;
+                index = newIndex.Value;
             }
             else
             {
                 Layers.Add(layer);
-                return Layers.Count - 1;
+                index = Layers.Count - 1;
             }
+
+            UpdateIsInert();
+            return index;
         }
 
         public void RemoveLayer(int layer)
@@ -386,6 +392,8 @@ namespace Robust.Client.GameObjects
                     LayerMap[kv.Key] = kv.Value - 1;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -495,6 +503,8 @@ namespace Robust.Client.GameObjects
             var theLayer = Layers[layer];
             theLayer.State = null;
             theLayer.Texture = texture;
+
+            UpdateIsInert();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -583,6 +593,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -712,6 +724,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -820,6 +834,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Visible = visible;
+
+            UpdateIsInert();
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -942,6 +958,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.AutoAnimated = autoAnimated;
+
+            UpdateIsInert();
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -1132,6 +1150,7 @@ namespace Robust.Client.GameObjects
                 LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
                 _layerMapShared = true;
                 Layers = CloneLayers(layers);
+                UpdateIsInert();
                 return;
             }
 
@@ -1273,6 +1292,7 @@ namespace Robust.Client.GameObjects
             _layerMapShared = true;
             serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
+            UpdateIsInert();
         }
 
         public void FrameUpdate(float delta)
@@ -1395,12 +1415,41 @@ namespace Robust.Client.GameObjects
         private RSI.State.Direction GetDir(RSI.State.DirectionType type, Angle worldRotation)
         {
             if (!Directional)
+
             {
                 return RSI.State.Direction.South;
             }
 
             var angle = new Angle(worldRotation);
             return angle.GetDir().Convert(type);
+        }
+
+        private void UpdateIsInert()
+        {
+            IsInert = true;
+
+            foreach (var layer in Layers)
+            {
+                // Since StateId is a struct, we can't null-check it directly.
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                {
+                    continue;
+                }
+
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null)
+                {
+                    continue;
+                }
+
+                var state = rsi[layer.State];
+
+                if (state.IsAnimated)
+                {
+                    IsInert = false;
+                    break;
+                }
+            }
         }
 
         private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)

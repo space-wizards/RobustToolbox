@@ -4,6 +4,8 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -14,6 +16,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning disable 649
         [Dependency] private readonly IClyde _clyde;
         [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
 
         public SpriteSystem()
@@ -31,17 +34,34 @@ namespace Robust.Client.GameObjects.EntitySystems
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
                 _clyde.ScreenSize / EyeManager.PIXELSPERMETER * eye.Zoom).Enlarged(5);
 
-            foreach (var entity in EntityManager.GetEntities(EntityQuery))
+            var mapEntity = _mapManager.GetMapEntityId(eye.Position.MapId);
+
+            var parentMatrix = Matrix3.Identity;
+            RunUpdatesRecurse(frameTime, worldBounds, EntityManager.GetEntity(mapEntity), ref parentMatrix);
+        }
+
+        private void RunUpdatesRecurse(float frameTime, Box2 bounds, IEntity entity, ref Matrix3 parentMatrix)
+        {
+            var localMatrix = entity.Transform.GetLocalMatrix();
+            Matrix3.Multiply(ref localMatrix, ref parentMatrix, out var matrix);
+
+            foreach (var childUid in entity.Transform.ChildEntityUids)
             {
-                var transform = entity.Transform;
-                if (!worldBounds.Contains(transform.WorldPosition))
+                var child = EntityManager.GetEntity(childUid);
+                if (child.TryGetComponent(out ISpriteComponent sprite))
                 {
-                    continue;
+                    var worldPosition = Matrix3.Transform(matrix, child.Transform.LocalPosition);
+
+                    if (!sprite.IsInert && bounds.Contains(worldPosition))
+                    {
+                        sprite.FrameUpdate(frameTime);
+                    }
                 }
 
-                // TODO: Don't call this on components without RSIs loaded.
-                // Serious performance benefit here.
-                entity.GetComponent<ISpriteComponent>().FrameUpdate(frameTime);
+                if (child.Transform.ChildCount != 0)
+                {
+                    RunUpdatesRecurse(frameTime, bounds, child, ref matrix);
+                }
             }
         }
     }

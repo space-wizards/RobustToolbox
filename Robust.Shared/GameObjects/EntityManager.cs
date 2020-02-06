@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -424,7 +424,7 @@ namespace Robust.Shared.GameObjects
             const float range = .00001f / 2;
             var aabb = new Box2(position, position).Enlarged(range);
 
-            var newResults = _entityTreesPerMap[mapId].Query(aabb).ToArray();
+            var newResults = _entityTreesPerMap[mapId].Query(aabb);
 
 
             foreach (var entity in newResults)

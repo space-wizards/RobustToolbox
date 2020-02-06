@@ -42,7 +42,7 @@ namespace Robust.Shared.Physics
         bool Test(int proxyA, int proxyB);
 
         // Raycast
-        void RayCast(RayCastCallback callback, MapId mapId, in Ray ray, float maxLength = 25);
+        void RayCast(RayCastCallback callback, MapId mapId, in CollisionRay ray, float maxLength = 25);
 
         // Update
         void Update(BroadPhaseCallback callback);

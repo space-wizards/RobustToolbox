@@ -148,7 +148,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public void RayCast(RayCastCallback callback, MapId mapId, in Ray ray, float maxLength = 25)
+        public void RayCast(RayCastCallback callback, MapId mapId, in CollisionRay ray, float maxLength = 25)
         {
             var minDist = maxLength;
             for (var i = 0; i < _nodes.Length; i++)

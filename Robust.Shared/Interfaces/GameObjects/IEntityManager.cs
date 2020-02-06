@@ -118,7 +118,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Spatial Queries
 
-        IEnumerable<IEntity> GetEntitiesAt(Vector2 position);
+        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position);
 
         /// <summary>
         /// Checks if any entity is intersecting the box
@@ -191,5 +191,12 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth);
 
         #endregion
+
+        #region Spatial Updates
+
+        bool UpdateEntityTree(IEntity entity);
+
+        #endregion
+
     }
 }

@@ -100,6 +100,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetRotation(value);
                 RebuildMatrices();
+                UpdateEntityTree();
                 Dirty();
             }
         }
@@ -221,14 +222,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetPosition(newPos);
 
-                Dirty();
-
                 //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                 if (Running)
                 {
                     RebuildMatrices();
                     Owner.SendMessage(this, new MoveMessage(GridPosition, value));
                 }
+
+                UpdateEntityTree();
+                Dirty();
             }
         }
 
@@ -267,9 +269,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return;
 
                 SetPosition(newPos);
-                Dirty();
 
                 RebuildMatrices();
+                UpdateEntityTree();
+                Dirty();
+
                 Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
@@ -296,6 +300,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var oldPos = GridPosition;
                 SetPosition(value);
                 RebuildMatrices();
+                UpdateEntityTree();
                 Dirty();
                 Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
             }
@@ -321,6 +326,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // If it cannot, then this is an orphan entity, and an exception will be thrown.
             // DO NOT REMOVE THIS LINE
             var _ = MapID;
+
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -330,6 +337,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
+            UpdateEntityTree();
+            Dirty();
         }
 
         /// <inheritdoc />
@@ -379,7 +388,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
 
-
+            UpdateEntityTree();
             Dirty();
         }
 
@@ -408,6 +417,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // offset position from world to parent
             SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
+            UpdateEntityTree();
             Dirty();
         }
 
@@ -526,6 +536,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _nextRotation = ((TransformComponentState) nextState).Rotation;
             else
                 _nextRotation = _localRotation; // this should cause the lerp to do nothing
+
+            UpdateEntityTree();
+            Dirty();
         }
 
         // Hooks for GodotTransformComponent go here.
@@ -616,6 +629,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             _invWorldMatrix = itransMat;
         }
+
+        private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
         public string GetDebugString()
         {

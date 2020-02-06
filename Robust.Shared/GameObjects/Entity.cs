@@ -1,5 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -55,7 +57,16 @@ namespace Robust.Shared.GameObjects
         public bool Initialized { get; private set; }
 
         [ViewVariables]
-        public bool Initializing { get; private set; }
+        public bool Initializing {
+            get => _initializing;
+            private set {
+                _initializing = value;
+                if (value)
+                {
+                    EntityManager.UpdateEntityTree(this);
+                }
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -67,6 +78,8 @@ namespace Robust.Shared.GameObjects
         public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
 
         private IMetaDataComponent _metaData;
+
+        private bool _initializing;
         /// <inheritdoc />
         [ViewVariables]
         public IMetaDataComponent MetaData => _metaData ?? (_metaData = GetComponent<IMetaDataComponent>());
@@ -159,6 +172,20 @@ namespace Robust.Shared.GameObjects
             // Startup() can modify _components
             // TODO: This code can only handle additions to the list. Is there a better way?
             var components = EntityManager.ComponentManager.GetComponents(Uid);
+
+            foreach (var t in components.OfType<ITransformComponent>())
+            {
+                if (t.Initialized && !t.Deleted)
+                    t.Running = true;
+            }
+            foreach (var t in components.OfType<ICollidableComponent>())
+            {
+                if (t.Initialized && !t.Deleted)
+                    t.Running = true;
+            }
+
+            EntityManager.UpdateEntityTree(this);
+
             foreach (var t in components)
             {
                 var comp = (Component)t;

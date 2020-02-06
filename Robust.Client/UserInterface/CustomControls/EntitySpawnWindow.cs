@@ -295,7 +295,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Index = index // We track this index purely for debugging.
             };
             button.ActualButton.OnToggled += OnItemButtonToggled;
-            button.EntityLabel.Text = prototype.Name;
+            button.EntityLabel.Text = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
 
             if (prototype == SelectedPrototype)
             {

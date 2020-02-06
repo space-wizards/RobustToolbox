@@ -295,7 +295,7 @@ namespace Robust.Shared.GameObjects
             // Culling happens in updates.
             // It doesn't matter because to-be culled entities can't be accessed.
             // This should prevent most cases of "somebody is iterating while we're removing things"
-            foreach (var entity in GetEntities())
+            foreach (var entity in Entities.Values)
             {
                 if (!entity.Deleted)
                 {

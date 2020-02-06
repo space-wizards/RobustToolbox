@@ -18,18 +18,10 @@ namespace Robust.Shared.Physics
     {
         private readonly List<IPhysBody> _results = new List<IPhysBody>();
 
-        private readonly ConcurrentDictionary<MapId,DynamicTree<IPhysBody>> _treesPerMap =
-            new ConcurrentDictionary<MapId, DynamicTree<IPhysBody>>();
+        private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
+            new ConcurrentDictionary<MapId, BroadPhase>();
 
-        private static DynamicTree<IPhysBody> TreeFactory(MapId _)
-            => new DynamicTree<IPhysBody>(
-                (in IPhysBody body) => body.WorldAABB,
-                capacity: 3840,
-                growthFunc: x => x + 256
-            );
-
-        private DynamicTree<IPhysBody> this[MapId mapId] =>
-            _treesPerMap.GetOrAdd(mapId, TreeFactory);
+        private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
         /// <summary>
         ///     returns true if collider intersects a physBody under management. Does not trigger Bump.

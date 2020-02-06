@@ -57,8 +57,7 @@ namespace Robust.Shared.Physics
     [PublicAPI]
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
     public sealed partial class DynamicTree<T>
-        : DynamicTree, ICollection<T>
-    {
+        : DynamicTree, IBroadPhase<T> {
 
         public delegate Box2 ExtractAabbDelegate(in T value);
 

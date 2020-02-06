@@ -1,50 +1,46 @@
-﻿using Robust.Shared.Map;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Physics
-{
-    internal delegate bool QueryCallback(int proxyId);
+namespace Robust.Shared.Physics {
 
-    /// <summary>
-    /// Callback predicate for when a ray cast hits an entity.
-    /// </summary>
-    /// <param name="proxy">Id of the proxy that was hit.</param>
-    /// <param name="results">Information about the ray cast intersection.</param>
-    /// <returns>Should the entity be accepted?</returns>
-    internal delegate bool RayCastCallback(int proxy, RayCastResults results);
+    public interface IBroadPhase : IBroadPhase<IPhysBody> {
 
-    internal delegate void BroadPhaseCallback(int proxyA, int proxyB);
-
-    internal struct BodyProxy
-    {
-        public IPhysBody Body;
     }
 
-    internal interface IBroadPhase
-    {
-        // Create
-        int AddProxy(in BodyProxy proxy);
+    public interface IBroadPhase<T> : ICollection<T> {
 
-        // Read
-        BodyProxy GetProxy(int proxyId);
+        int Capacity { get; set; }
 
-        // Update
-        void MoveProxy(int proxyId, ref Box2 aabb, Vector2 displacement);
-        void SetProxy(int proxyId, ref BodyProxy proxy);
+        int Height {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get;
+        }
 
-        // Delete
-        void RemoveProxy(int proxyId);
+        int MaxBalance {
+            [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+            get;
+        }
 
-        // Query
-        void Query(QueryCallback callback, in Box2 aabb);
+        float AreaRatio {
+            [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+            get;
+        }
 
-        // Test
-        bool Test(int proxyA, int proxyB);
+        int Count { get; }
 
-        // Raycast
-        void RayCast(RayCastCallback callback, MapId mapId, in CollisionRay ray, float maxLength = 25);
+        bool Add(in T item);
 
-        // Update
-        void Update(BroadPhaseCallback callback);
+        bool Remove(in T item);
+
+        bool Update(in T item);
+
+        IEnumerable<T> Query(Box2 aabb, bool approx = false);
+
+        IEnumerable<T> Query(Vector2 point, bool approx = false);
+
+        bool Query(DynamicTree<T>.RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false);
+
     }
+
 }

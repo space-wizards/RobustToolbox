@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -146,9 +146,9 @@ namespace Robust.Shared.GameObjects
             return query.Match(this);
         }
 
-        public IEnumerable<IEntity> GetEntitiesAt(Vector2 position)
+        public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position)
         {
-            foreach (var entity in GetEntities())
+            foreach (var entity in _entityTreesPerMap[mapId].Query(position))
             {
                 var transform = entity.Transform;
                 if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
@@ -422,7 +422,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position) {
             const float range = .00001f / 2;
-            var aabb = Box2.Grow(new Box2(position, position), range);
+            var aabb = new Box2(position, position).Enlarged(range);
 
             var newResults = _entityTreesPerMap[mapId].Query(aabb).ToArray();
 
@@ -482,7 +482,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range)
         {
-            var aabb = Box2.Grow(box, range);
+            var aabb = box.Enlarged(range);
             return GetEntitiesIntersecting(mapId, aabb);
         }
 
@@ -503,10 +503,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth)
         {
-            var entities = GetEntitiesInRange(coordinates, range*2);
             var position = coordinates.ToMap(_mapManager).Position;
 
-            foreach (var entity in entities)
+            foreach (var entity in GetEntitiesInRange(coordinates, range*2))
             {
                 var angle = new Angle(entity.Transform.WorldPosition - position);
                 if (angle.Degrees < direction.Degrees + arcWidth / 2 && angle.Degrees > direction.Degrees - arcWidth / 2)

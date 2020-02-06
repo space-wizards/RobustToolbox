@@ -348,9 +348,9 @@ namespace Robust.Shared.Physics
 
             var movedDist = newBox.Center - oldBox.Center;
 
-            var fattenedNewBox = Box2.Grow(newBox, AabbExtendSize);
+            var fattenedNewBox = newBox.Enlarged(AabbExtendSize);
 
-            fattenedNewBox = Box2.Combine(newBox, fattenedNewBox.Translated(movedDist));
+            fattenedNewBox = newBox.Union(fattenedNewBox.Translated(movedDist));
 
             Assert(fattenedNewBox.Contains(newBox));
 
@@ -617,7 +617,7 @@ namespace Robust.Shared.Physics
             var v = new Vector2(-r.Y, r.X);
             var absV = new Vector2(MathF.Abs(r.Y), MathF.Abs(r.X));
 
-            var aabb = Box2.Combine(start, end);
+            var aabb = Box2.Union(start, end);
 
             var stack = new Stack<Proxy>(256);
 
@@ -803,7 +803,7 @@ namespace Robust.Shared.Physics
                     {
                         ref var aabbJ = ref _nodes[proxies[j]].Aabb;
 
-                        var cost = Box2.Perimeter(Box2.Combine(aabbI, aabbJ));
+                        var cost = Box2.Perimeter(aabbI.Union(aabbJ));
 
                         if (cost >= minCost)
                         {
@@ -828,7 +828,7 @@ namespace Robust.Shared.Physics
                 parentNode.Child1 = child1;
                 parentNode.Child2 = child2;
                 parentNode.Height = Math.Max(child1Node.Height, child2Node.Height) + 1;
-                parentNode.Aabb = Box2.Combine(child1Node.Aabb, child2Node.Aabb);
+                parentNode.Aabb = child1Node.Aabb.Union(child2Node.Aabb);
                 parentNode.Parent = Proxy.Free;
 
                 child1Node.Parent = parent;
@@ -1068,7 +1068,7 @@ namespace Robust.Shared.Physics
                 ref var child2Node = ref _nodes[child2];
                 ref var indexAabb = ref indexNode.Aabb;
                 var indexPeri = Box2.Perimeter(indexAabb);
-                var combinedAabb = Box2.Combine(indexAabb, leafAabb);
+                var combinedAabb = indexAabb.Union(leafAabb);
                 var combinedPeri = Box2.Perimeter(combinedAabb);
                 var cost = 2 * combinedPeri;
                 var inheritCost = 2 * (combinedPeri - indexPeri);
@@ -1093,7 +1093,7 @@ namespace Robust.Shared.Physics
 
             ref var newParentNode = ref _nodes[newParent];
             newParentNode.Parent = oldParent;
-            newParentNode.Aabb = Box2.Combine(leafAabb, siblingNode.Aabb);
+            newParentNode.Aabb = leafAabb.Union(siblingNode.Aabb);
             newParentNode.Height = 1 + siblingNode.Height;
 
             ref var proxyNode = ref _nodes[leaf];
@@ -1199,7 +1199,7 @@ namespace Robust.Shared.Physics
                 ref var child2Node = ref _nodes[child2];
 
                 indexNode.Height = Math.Max(child1Node.Height, child2Node.Height) + 1;
-                indexNode.Aabb = Box2.Combine(child1Node.Aabb, child2Node.Aabb);
+                indexNode.Aabb = child1Node.Aabb.Union(child2Node.Aabb);
 
                 index = indexNode.Parent;
             }
@@ -1271,8 +1271,8 @@ namespace Robust.Shared.Physics
                     c.Child2 = iF;
                     a.Child2 = iG;
                     g.Parent = iA;
-                    a.Aabb = Box2.Combine(b.Aabb, g.Aabb);
-                    c.Aabb = Box2.Combine(a.Aabb, f.Aabb);
+                    a.Aabb = b.Aabb.Union(g.Aabb);
+                    c.Aabb = a.Aabb.Union(f.Aabb);
 
                     a.Height = Math.Max(b.Height, g.Height) + 1;
                     c.Height = Math.Max(a.Height, f.Height) + 1;
@@ -1282,8 +1282,8 @@ namespace Robust.Shared.Physics
                     c.Child2 = iG;
                     a.Child2 = iF;
                     f.Parent = iA;
-                    a.Aabb = Box2.Combine(b.Aabb, f.Aabb);
-                    c.Aabb = Box2.Combine(a.Aabb, g.Aabb);
+                    a.Aabb = b.Aabb.Union(f.Aabb);
+                    c.Aabb = a.Aabb.Union(g.Aabb);
 
                     a.Height = Math.Max(b.Height, f.Height) + 1;
                     c.Height = Math.Max(a.Height, g.Height) + 1;
@@ -1335,8 +1335,8 @@ namespace Robust.Shared.Physics
                     b.Child2 = iD;
                     a.Child1 = iE;
                     e.Parent = iA;
-                    a.Aabb = Box2.Combine(c.Aabb, e.Aabb);
-                    b.Aabb = Box2.Combine(a.Aabb, d.Aabb);
+                    a.Aabb = c.Aabb.Union(e.Aabb);
+                    b.Aabb = a.Aabb.Union(d.Aabb);
 
                     a.Height = Math.Max(c.Height, e.Height) + 1;
                     b.Height = Math.Max(a.Height, d.Height) + 1;
@@ -1346,8 +1346,8 @@ namespace Robust.Shared.Physics
                     b.Child2 = iE;
                     a.Child1 = iD;
                     d.Parent = iA;
-                    a.Aabb = Box2.Combine(c.Aabb, d.Aabb);
-                    b.Aabb = Box2.Combine(a.Aabb, e.Aabb);
+                    a.Aabb = c.Aabb.Union(d.Aabb);
+                    b.Aabb = a.Aabb.Union(e.Aabb);
 
                     a.Height = Math.Max(c.Height, d.Height) + 1;
                     b.Height = Math.Max(a.Height, e.Height) + 1;
@@ -1363,10 +1363,7 @@ namespace Robust.Shared.Physics
         private float EstimateCost(in Box2 baseAabb, in Node node)
         {
             var cost = Box2.Perimeter(
-                Box2.Combine(
-                    baseAabb,
-                    node.Aabb
-                )
+                baseAabb.Union(node.Aabb)
             );
 
             if (!node.IsLeaf)

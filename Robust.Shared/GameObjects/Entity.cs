@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
@@ -80,7 +80,6 @@ namespace Robust.Shared.GameObjects
         private IMetaDataComponent _metaData;
 
         private bool _initializing;
-
         /// <inheritdoc />
         [ViewVariables]
         public IMetaDataComponent MetaData => _metaData ?? (_metaData = GetComponent<IMetaDataComponent>());

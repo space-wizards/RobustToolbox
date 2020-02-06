@@ -77,6 +77,7 @@ namespace Robust.Shared.Maths
                    other.Left <= this.Right;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Enlarged(float size)
         {
             return new Box2(Left - size, Bottom - size, Right + size, Top + size);
@@ -101,6 +102,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Union(in Box2 other)
         {
             var left   = Math.Min(Left,   other.Left);
@@ -233,30 +235,12 @@ namespace Robust.Shared.Maths
             => (box.Width + box.Height) * 2;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Box2 Combine(in Box2 a, in Box2 b)
-            => new Box2(
-                MathF.Min(a.Left, b.Left),
-                MathF.Min(a.Bottom, b.Bottom),
-                MathF.Max(a.Right, b.Right),
-                MathF.Max(a.Top, b.Top)
-            );
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Box2 Combine(in Vector2 a, in Vector2 b)
+        public static Box2 Union(in Vector2 a, in Vector2 b)
             => new Box2(
                 MathF.Min(a.X, b.X),
                 MathF.Min(a.Y, b.Y),
                 MathF.Max(a.X, b.X),
                 MathF.Max(a.Y, b.Y)
-            );
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Box2 Grow(in Box2 box, float range)
-            => new Box2(
-                box.Left - range,
-                box.Bottom - range,
-                box.Right + range,
-                box.Top + range
             );
 
     }

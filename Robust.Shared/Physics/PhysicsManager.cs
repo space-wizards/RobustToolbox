@@ -188,17 +188,15 @@ namespace Robust.Shared.Physics
         ///     Removes a physBody from the manager
         /// </summary>
         /// <param name="physBody"></param>
-        public void RemoveBody(IPhysBody physBody) {
+        public void RemoveBody(IPhysBody physBody)
+        {
 
+            var removeAttempted = false;
             var removed = false;
 
-            try
+            if (physBody.Owner.Deleted || physBody.Owner.Transform.Deleted)
             {
-                removed = this[physBody.MapID].Remove(physBody);
-            }
-            catch (InvalidOperationException ioex)
-            {
-                // TODO: TryGetMapId or something
+                removeAttempted = true;
                 foreach (var mapId in _mapManager.GetAllMapIds())
                 {
                     removed = this[mapId].Remove(physBody);
@@ -210,27 +208,42 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            if (removed)
+            if (!removed)
             {
-
-                MapId physBodyMapId;
                 try
                 {
-                    physBodyMapId = physBody.MapID;
+                    removed = this[physBody.MapID].Remove(physBody);
                 }
-                catch (InvalidOperationException ioex) {
-                    // TODO: find alternative way to see if physBody/transform has mapId avail, e.g. TryGetMapId
-
+                catch (InvalidOperationException ioex)
+                {
+                    removeAttempted = true;
+                    // TODO: TryGetMapId or something
                     foreach (var mapId in _mapManager.GetAllMapIds())
                     {
-                        this[mapId].Remove(physBody);
-                    }
-                    return;
-                }
+                        removed = this[mapId].Remove(physBody);
 
-                this[physBodyMapId].Remove(physBody);
+                        if (removed)
+                        {
+                            break;
+                        }
+                    }
+                }
             }
-            else
+
+            if (!removed)
+            {
+                foreach (var mapId in _mapManager.GetAllMapIds())
+                {
+                    removed = this[mapId].Remove(physBody);
+
+                    if (removed)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (!removed)
                 Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
         }
 

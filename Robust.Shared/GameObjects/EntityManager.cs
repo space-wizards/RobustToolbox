@@ -395,13 +395,8 @@ namespace Robust.Shared.GameObjects
         #region Spatial Queries
 
         /// <inheritdoc />
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box) {
-            var any = false;
-
-            _entityTreesPerMap[mapId].Query((ref IEntity ent) => any = !ent.Deleted, box);
-
-            return any;
-        }
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box) =>
+            _entityTreesPerMap[mapId].Query(box).Any(ent => !ent.Deleted);
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position) {

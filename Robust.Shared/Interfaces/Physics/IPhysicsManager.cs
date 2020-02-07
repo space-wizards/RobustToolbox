@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -36,6 +37,9 @@ namespace Robust.Shared.Interfaces.Physics
         RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null);
 
         event Action<DebugRayData> DebugDrawRay;
+
+        IEnumerable<(IPhysBody, IPhysBody)> GetCollisions();
+
     }
 
     public struct DebugRayData

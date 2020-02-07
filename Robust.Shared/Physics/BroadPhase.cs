@@ -55,7 +55,11 @@ namespace Robust.Shared.Physics {
         public bool Query(DynamicTree<IPhysBody>.RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false) =>
             _tree.Query(callback, in start, in dir, approx);
 
+        public IEnumerable<(IPhysBody A, IPhysBody B)> GetCollisions(bool approx = false) =>
+            _tree.GetCollisions(approx);
+
         public bool IsReadOnly => _tree.IsReadOnly;
+
 
     }
 

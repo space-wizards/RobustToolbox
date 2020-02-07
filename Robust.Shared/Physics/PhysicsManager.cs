@@ -261,5 +261,34 @@ namespace Robust.Shared.Physics
         }
 
         public event Action<DebugRayData> DebugDrawRay;
+
+        public IEnumerable<(IPhysBody, IPhysBody)> GetCollisions()
+        {
+            foreach (var mapId in _mapManager.GetAllMapIds())
+            {
+                foreach (var collision in this[mapId].GetCollisions(true))
+                {
+                    var (a, b) = collision;
+
+                    if (!a.CollisionEnabled || !b.CollisionEnabled)
+                    {
+                        continue;
+                    }
+
+                    if (((a.CollisionLayer & b.CollisionMask) == 0x0)
+                        ||(b.CollisionLayer & a.CollisionMask) == 0x0)
+                    {
+                        continue;
+                    }
+
+                    if (!a.WorldAABB.Intersects(b.WorldAABB))
+                    {
+                        continue;
+                    }
+
+                    yield return collision;
+                }
+            }
+        }
     }
 }

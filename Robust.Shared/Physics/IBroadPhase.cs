@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 
@@ -40,6 +40,8 @@ namespace Robust.Shared.Physics {
         IEnumerable<T> Query(Vector2 point, bool approx = false);
 
         bool Query(DynamicTree<T>.RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false);
+
+        IEnumerable<(T A,T B)> GetCollisions(bool approx = false);
 
     }
 

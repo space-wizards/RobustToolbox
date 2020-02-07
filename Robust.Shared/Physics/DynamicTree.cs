@@ -373,132 +373,6 @@ namespace Robust.Shared.Physics
             => ref _nodes[proxy].Aabb;
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public bool Query(QueryCallbackDelegate callback, in Box2 aabb, bool approx = false)
-        {
-            var stack = new Stack<Proxy>(256);
-
-            stack.Push(_root);
-
-            var any = false;
-
-            while (stack.Count > 0)
-            {
-                var proxy = stack.Pop();
-
-                if (proxy == Proxy.Free)
-                {
-                    continue;
-                }
-
-                ref var node = ref _nodes[proxy];
-
-                if (!node.Aabb.Intersects(aabb))
-                {
-                    continue;
-                }
-
-                if (!node.IsLeaf)
-                {
-                    if (node.Child1 != Proxy.Free)
-                    {
-                        stack.Push(node.Child1);
-                    }
-
-                    if (node.Child2 != Proxy.Free)
-                    {
-                        stack.Push(node.Child2);
-                    }
-
-                    continue;
-                }
-
-                ref var item = ref node.Item;
-
-                if (!approx)
-                {
-                    var preciseAabb = _extractAabb(item);
-
-                    if (!preciseAabb.Contains(aabb))
-                    {
-                        continue;
-                    }
-                }
-
-                if (!callback(ref item))
-                {
-                    return true;
-                }
-
-                any = true;
-            }
-
-            return any;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public bool Query(QueryCallbackDelegate callback, in Vector2 point, bool approx = false)
-        {
-            var stack = new Stack<Proxy>(256);
-
-            stack.Push(_root);
-
-            var any = false;
-
-            while (stack.Count > 0)
-            {
-                var proxy = stack.Pop();
-
-                if (proxy == Proxy.Free)
-                {
-                    continue;
-                }
-
-                ref var node = ref _nodes[proxy];
-
-                if (!node.Aabb.Contains(point))
-                {
-                    continue;
-                }
-
-                if (!node.IsLeaf)
-                {
-                    if (node.Child1 != Proxy.Free)
-                    {
-                        stack.Push(node.Child1);
-                    }
-
-                    if (node.Child2 != Proxy.Free)
-                    {
-                        stack.Push(node.Child2);
-                    }
-
-                    continue;
-                }
-
-                ref var item = ref node.Item;
-
-                if (!approx)
-                {
-                    var preciseAabb = _extractAabb(item);
-
-                    if (!preciseAabb.Contains(point))
-                    {
-                        continue;
-                    }
-                }
-
-                if (!callback(ref item))
-                {
-                    return true;
-                }
-
-                any = true;
-            }
-
-            return any;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
         public IEnumerable<T> Query(Box2 aabb, bool approx = false)
         {
             var stack = new Stack<Proxy>(256);
@@ -550,6 +424,95 @@ namespace Robust.Shared.Physics
                 }
 
                 yield return node.Item;
+            }
+        }
+
+
+        public IEnumerable<(T A,T B)> GetCollisions(bool approx = false)
+        {
+            var stack = new Stack<Proxy>(256);
+
+            ISet<(Proxy, Proxy)> collisions = new HashSet<(Proxy, Proxy)>(_nodeLookup.Count);
+
+            foreach (var leaf in _nodeLookup.Values)
+            {
+                foreach (var pair in GetCollisions(stack, collisions, leaf, approx))
+                {
+                    yield return (_nodes[pair.A].Item, _nodes[pair.B].Item);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+        private IEnumerable<(Proxy A,Proxy B)> GetCollisions(Stack<Proxy> stack, ISet<(Proxy,Proxy)> pairs, Proxy leaf, bool approx = false)
+        {
+            stack.Clear();
+
+            var leafNode = _nodes[leaf];
+
+            var aabb = approx ? leafNode.Aabb : _extractAabb(leafNode.Item);
+
+            var parent = leafNode.Parent;
+
+            if (parent == Proxy.Free)
+            {
+                yield break;
+            }
+
+            stack.Push(parent);
+
+            while (stack.Count > 0)
+            {
+                var proxy = stack.Pop();
+
+                if (proxy == Proxy.Free || proxy == leaf)
+                {
+                    continue;
+                }
+
+                // note: non-ref stack local copy here
+                var node = _nodes[proxy];
+
+                if (!node.Aabb.Intersects(aabb))
+                {
+                    continue;
+                }
+
+                if (!node.IsLeaf)
+                {
+                    if (node.Child1 != Proxy.Free)
+                    {
+                        stack.Push(node.Child1);
+                    }
+
+                    if (node.Child2 != Proxy.Free)
+                    {
+                        stack.Push(node.Child2);
+                    }
+
+                    continue;
+                }
+
+                var item = node.Item;
+
+                if (!approx)
+                {
+                    var preciseAabb = _extractAabb(item);
+
+                    if (!preciseAabb.Intersects(aabb))
+                    {
+                        continue;
+                    }
+                }
+
+                var pair = leaf > proxy ? (proxy, leaf) : (leaf, proxy);
+
+                if (!pairs.Add(pair))
+                {
+                    continue;
+                }
+
+                yield return pair;
             }
         }
 
@@ -606,88 +569,6 @@ namespace Robust.Shared.Physics
 
                 yield return node.Item;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public bool Query(QueryCallbackDelegate callback, in Vector2 start, in Vector2 end, bool approx = false)
-        {
-            var r = (end - start).Normalized;
-
-            var v = new Vector2(-r.Y, r.X);
-            var absV = new Vector2(MathF.Abs(r.Y), MathF.Abs(r.X));
-
-            var aabb = Box2.Union(start, end);
-
-            var stack = new Stack<Proxy>(256);
-
-            stack.Push(_root);
-
-            var any = false;
-
-            while (stack.Count > 0)
-            {
-                var proxy = stack.Pop();
-
-                if (proxy == Proxy.Free)
-                {
-                    continue;
-                }
-
-                ref var node = ref _nodes[proxy];
-
-                if (!node.Aabb.Intersects(aabb))
-                {
-                    continue;
-                }
-
-                var c = node.Aabb.Center;
-                var h = (node.Aabb.BottomRight - node.Aabb.TopLeft) * .5f;
-
-                var separation = MathF.Abs(Dot(v, start - c) - Dot(absV, h));
-
-                if (separation > 0)
-                {
-                    continue;
-                }
-
-                var item = node.Item;
-
-                if (!approx)
-                {
-                    var preciseAabb = _extractAabb(item);
-
-                    if (!preciseAabb.Intersects(aabb))
-                    {
-                        continue;
-                    }
-                }
-
-                if (node.IsLeaf)
-                {
-                    any = true;
-
-                    var carryOn = callback(ref node.Item);
-
-                    if (!carryOn)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (node.Child1 != Proxy.Free)
-                    {
-                        stack.Push(node.Child1);
-                    }
-
-                    if (node.Child2 != Proxy.Free)
-                    {
-                        stack.Push(node.Child2);
-                    }
-                }
-            }
-
-            return any;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,6 +14,7 @@ using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -29,6 +30,7 @@ namespace Robust.Client.Graphics.Clyde
     {
 #pragma warning disable 649
         [Dependency] private readonly IResourceCache _resourceCache;
+        [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IOverlayManager _overlayManager;
@@ -251,6 +253,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
+
             GCHandle.Alloc(_debugMessageCallbackInstance);
             // See https://github.com/opentk/opentk/issues/880
             var type = typeof(GL);
@@ -259,13 +262,14 @@ namespace Robust.Client.Graphics.Clyde
                 .GetValue(null);
             var ep = entryPoints[184];
             var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
+            _debugMessageCallbackInstance = DebugMessageCallback;
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);
             d(funcPtr, new IntPtr(0x3005));
         }
 
         private delegate void DebugMessageCallbackDelegate(IntPtr funcPtr, IntPtr userParam);
 
-        private static void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
+        private void DebugMessageCallback(DebugSource source, DebugType type, int id, DebugSeverity severity,
             int length, IntPtr message, IntPtr userParam)
         {
             var contents = $"{source}: " + Marshal.PtrToStringAnsi(message, length);
@@ -300,29 +304,31 @@ namespace Robust.Client.Graphics.Clyde
                     throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
 
+            var sawmill = _logManager.GetSawmill(category);
+
             switch (severity)
             {
                 case DebugSeverity.DontCare:
-                    Logger.InfoS(category, contents);
+                    sawmill.Info(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityNotification:
-                    Logger.InfoS(category, contents);
+                    sawmill.Info(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityHigh:
-                    Logger.ErrorS(category, contents);
+                    sawmill.Error(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityMedium:
-                    Logger.ErrorS(category, contents);
+                    sawmill.Error(category, contents);
                     break;
                 case DebugSeverity.DebugSeverityLow:
-                    Logger.WarningS(category, contents);
+                    sawmill.Warning(category, contents);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(severity), severity, null);
             }
         }
 
-        private static readonly DebugProc _debugMessageCallbackInstance = DebugMessageCallback;
+        private static DebugProc _debugMessageCallbackInstance;
 
         private static HashSet<string> GetGLExtensions()
         {

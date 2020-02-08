@@ -204,6 +204,12 @@ namespace Robust.Client.GameObjects.EntitySystems
                         break;
 
                     case PlayAudioPositionalMessage posmsg:
+                        if (!_mapManager.GridExists(posmsg.Coordinates.GridID))
+                        {
+                            Logger.Error($"Server tried to play sound on grid {posmsg.Coordinates.GridID.Value}, which does not exist. Ignoring.");
+                            break;
+                        }
+
                         Play(posmsg.FileName, posmsg.Coordinates, posmsg.AudioParams);
                         break;
                 }

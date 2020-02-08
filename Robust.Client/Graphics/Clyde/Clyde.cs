@@ -162,7 +162,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.GridChanged += _updateOnGridModified;
         }
 
-        public override void ConvertPnGtoGlfwImage(string png)
+        public override void CreatePngCursor(string png)
         {
 
             using (var stream = _resourceCache.ContentFileRead(path: png))

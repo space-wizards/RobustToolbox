@@ -37,6 +37,7 @@ using Robust.Shared.ViewVariables;
 using SixLabors.ImageSharp.PixelFormats;
 using Robust.Client.Graphics;
 using OpenToolkit.GraphicsLibraryFramework;
+using Robust.Shared.Log;
 
 namespace Robust.Client.Console.Commands
 {
@@ -474,8 +475,15 @@ namespace Robust.Client.Console.Commands
         public string Help => "cursortest";
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length == 0)
+            {
+                console.AddLine("No icon path received, please enter a path to the png.");
+            }
+
+            Logger.Info(args.ToString());
+            Logger.Info("Received " + args.Last());
             var _clyde = IoCManager.Resolve<IClyde>();
-            _clyde.ConvertPnGtoGlfwImage("/Textures/UserInterface/cursorIcons/skull_icon.png");
+            _clyde.CreatePngCursor(args[0]);
             console.AddLine("Set cursor to generic icon");
             return true;
         }

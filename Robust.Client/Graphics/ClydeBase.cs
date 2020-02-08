@@ -88,6 +88,6 @@ namespace Robust.Client.Graphics
         {
         }
 
-        public abstract void ConvertPnGtoGlfwImage(string png);
+        public abstract void CreatePngCursor(string png);
     }
 }

@@ -24,7 +24,7 @@ namespace Robust.Client.Interfaces.Graphics
         void SetWindowTitle(string title);
         void CreateCursor(GlfwImage image, int x, int y);
 
-        void ConvertPnGtoGlfwImage(string png);
+        void CreatePngCursor(string png);
 
         void SetCursor(Cursor cursor, Window window);
 

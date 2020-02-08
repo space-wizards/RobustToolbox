@@ -59,7 +59,7 @@ namespace Robust.Client.Graphics.Clyde
 
 #pragma warning disable CS0067
         public override event Action<WindowResizedEventArgs> OnWindowResized;
-        public override void ConvertPnGtoGlfwImage(string png)
+        public override void CreatePngCursor(string png)
         {
             throw new NotImplementedException();
         }

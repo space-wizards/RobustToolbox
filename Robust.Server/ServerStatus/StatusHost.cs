@@ -46,6 +46,15 @@ namespace Robust.Server.ServerStatus
             _configurationManager.RegisterCVar("status.bind", "localhost:1212", CVar.ARCHIVE);
             _configurationManager.RegisterCVar<string>("status.connectaddress", null, CVar.ARCHIVE);
 
+            _configurationManager.RegisterCVar("build.fork_id", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.version", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_windows", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_macos", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_linux", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_windows", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_macos", (string) null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_linux", (string) null, CVar.ARCHIVE);
+
             if (!_configurationManager.GetCVar<bool>("status.enabled"))
             {
                 return;
@@ -204,9 +213,38 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
+
+            var downloadUrlWindows = _configurationManager.GetCVar<string>("build.download_url_windows");
+            JObject buildInfo;
+            if (downloadUrlWindows == null)
+            {
+                buildInfo = null;
+            }
+            else
+            {
+                buildInfo = new JObject
+                {
+                    ["download_urls"] = new JObject
+                    {
+                        ["Windows"] = downloadUrlWindows,
+                        ["MacOS"] = _configurationManager.GetCVar<string>("build.download_url_macos"),
+                        ["Linux"] = _configurationManager.GetCVar<string>("build.download_url_linux")
+                    },
+                    ["fork_id"] = _configurationManager.GetCVar<string>("build.fork_id"),
+                    ["version"] = _configurationManager.GetCVar<string>("build.version"),
+                    ["hashes"] = new JObject
+                    {
+                        ["Windows"] = _configurationManager.GetCVar<string>("build.hash_windows"),
+                        ["MacOS"] = _configurationManager.GetCVar<string>("build.hash_macos"),
+                        ["Linux"] = _configurationManager.GetCVar<string>("build.hash_linux"),
+                    },
+                };
+            }
+
             var jObject = new JObject
             {
-                ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress")
+                ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress"),
+                ["build"] = buildInfo
             };
 
             OnInfoRequest?.Invoke(jObject);

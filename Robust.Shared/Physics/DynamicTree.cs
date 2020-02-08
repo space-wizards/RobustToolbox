@@ -604,18 +604,19 @@ namespace Robust.Shared.Physics
 
                 var item = node.Item;
 
-                if (!approx)
-                {
-                    var preciseAabb = _extractAabb(item);
-
-                    if (!ray.Intersects(preciseAabb, out dist, out hit))
-                    {
-                        continue;
-                    }
-                }
-
                 if (node.IsLeaf)
                 {
+
+                    if (!approx)
+                    {
+                        var preciseAabb = _extractAabb(item);
+
+                        if (!ray.Intersects(preciseAabb, out dist, out hit))
+                        {
+                            continue;
+                        }
+                    }
+
                     any = true;
 
                     var carryOn = callback(ref node.Item, hit, dist);

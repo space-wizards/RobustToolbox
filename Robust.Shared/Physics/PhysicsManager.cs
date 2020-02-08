@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -248,29 +250,46 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null) {
-            RayCastResults results = default;
+        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null)
+        {
+            RayCastResults result = default;
 
             this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) => {
+
                 if (distFromOrigin > maxLength)
-                    return false;
+                {
+                    return true;
+                }
 
                 if (body.Owner == ignoredEnt)
-                    return false;
+                {
+                    return true;
+                }
 
                 if (!body.CollisionEnabled)
+                {
                     return true;
+                }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
                     return true;
+                }
 
-                results = new RayCastResults(distFromOrigin, point, body.Owner);
+                // ReSharper disable once CompareOfFloatsByEqualityOperator
+                if (result.Distance != 0f && distFromOrigin > result.Distance)
+                {
+                    return true;
+                }
 
-                return false;
+                result = new RayCastResults(distFromOrigin, point, body.Owner);
+
+                return true;
             }, ray.Position, ray.Direction);
 
-            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, results));
-            return results;
+            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
+
+            return result;
         }
 
         public event Action<DebugRayData> DebugDrawRay;

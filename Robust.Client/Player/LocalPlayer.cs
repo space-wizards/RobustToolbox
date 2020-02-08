@@ -1,18 +1,12 @@
 ﻿using System;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
-using Robust.Client.Interfaces.GameObjects;
-using Robust.Client.Interfaces.GameObjects.Components;
-using Robust.Shared;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
-using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Player
 {
@@ -38,20 +32,20 @@ namespace Robust.Client.Player
         ///     Game entity that the local player is controlling. If this is null, the player
         ///     is in free/spectator cam.
         /// </summary>
-        public IEntity ControlledEntity { get; private set; }
+        [ViewVariables] public IEntity ControlledEntity { get; private set; }
 
 
-        public NetSessionId SessionId { get; set; }
+        [ViewVariables] public NetSessionId SessionId { get; set; }
 
         /// <summary>
         ///     Session of the local client.
         /// </summary>
-        public PlayerSession Session { get; set; }
+        [ViewVariables] public PlayerSession Session { get; set; }
 
         /// <summary>
         ///     OOC name of the local player.
         /// </summary>
-        public string Name => SessionId.Username;
+        [ViewVariables] public string Name => SessionId.Username;
 
         /// <summary>
         ///     The status of the client's session has changed.

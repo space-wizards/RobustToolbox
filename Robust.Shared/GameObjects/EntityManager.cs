@@ -50,7 +50,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly ConcurrentDictionary<EntityUid, IEntity> Entities = new ConcurrentDictionary<EntityUid, IEntity>();
+        protected readonly IDictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
 
         protected readonly Queue<IncomingEntityMessage> NetworkMessageBuffer = new Queue<IncomingEntityMessage>();
 
@@ -290,20 +290,36 @@ namespace Robust.Shared.GameObjects
             entity.StartAllComponents();
         }
 
+        private const int CullingQueueCapacity = 256;
+        private int _cullingQueueDepth = CullingQueueCapacity; // maybe scale
+        private Queue<EntityUid> _cullingQueue = new Queue<EntityUid>(CullingQueueCapacity);
         private void CullDeletedEntities()
         {
             // Culling happens in updates.
             // It doesn't matter because to-be culled entities can't be accessed.
             // This should prevent most cases of "somebody is iterating while we're removing things"
-            foreach (var entity in Entities.Values)
+            _cullingQueue.Clear();
+
+            foreach (var (uid,entity) in Entities)
             {
                 if (!entity.Deleted)
                 {
                     continue;
                 }
 
-                Entities.Remove(entity.Uid, out _);
+                _cullingQueue.Enqueue(uid);
+
                 RemoveFromEntityTrees(entity);
+
+                if (_cullingQueue.Count == CullingQueueCapacity)
+                {
+                    break;
+                }
+            }
+
+            foreach (var uid in _cullingQueue)
+            {
+                Entities.Remove(uid);
             }
         }
 
@@ -560,9 +576,12 @@ namespace Robust.Shared.GameObjects
             return necessary > 0;
         }
 
-        private void RemoveFromEntityTrees(IEntity entity) {
-            foreach (var mapId in _mapManager.GetAllMapIds()) {
-                if (_entityTreesPerMap.TryGetValue(mapId, out var entTree)) {
+        private void RemoveFromEntityTrees(IEntity entity)
+        {
+            foreach (var mapId in _mapManager.GetAllMapIds())
+            {
+                if (_entityTreesPerMap.TryGetValue(mapId, out var entTree))
+                {
                     entTree.Remove(entity);
                 }
             }

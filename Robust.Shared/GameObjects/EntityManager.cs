@@ -419,6 +419,11 @@ namespace Robust.Shared.GameObjects
             const float range = .00001f / 2;
             var aabb = new Box2(position, position).Enlarged(range);
 
+            if (mapId == MapId.Nullspace)
+            {
+                yield break;
+            }
+
             var newResults = _entityTreesPerMap[mapId].Query(aabb);
 
 

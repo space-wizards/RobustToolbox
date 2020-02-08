@@ -114,6 +114,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         public void SetEntityContextActive()
         {
+            if (_playerManager.LocalPlayer.ControlledEntity == null)
+            {
+                return;
+            }
+
             SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
         }
     }

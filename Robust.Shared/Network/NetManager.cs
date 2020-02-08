@@ -338,6 +338,11 @@ namespace Robust.Shared.Network
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
 
+            if (IsServer)
+            {
+                netConfig.MaximumConnections = _config.GetCVar<int>("game.maxplayers");
+            }
+
 #if DEBUG
             //Simulate Latency
             netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");

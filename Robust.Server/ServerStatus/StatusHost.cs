@@ -43,7 +43,7 @@ namespace Robust.Server.ServerStatus
         public void Start()
         {
             _configurationManager.RegisterCVar("status.enabled", true, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("status.bind", "localhost:1212", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("status.bind", "*:1212", CVar.ARCHIVE);
             _configurationManager.RegisterCVar<string>("status.connectaddress", null, CVar.ARCHIVE);
 
             _configurationManager.RegisterCVar("build.fork_id", (string) null, CVar.ARCHIVE);

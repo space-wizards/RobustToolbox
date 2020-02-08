@@ -12,7 +12,7 @@ bindto = "::,0.0.0.0"
 
 [status]
 enabled = true
-bind = "localhost:1212"
+bind = "*:1212"
 
 [game]
 hostname = "MyServer"

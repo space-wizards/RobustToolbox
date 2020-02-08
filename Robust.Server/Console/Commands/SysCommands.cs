@@ -159,6 +159,11 @@ namespace Robust.Server.Console.Commands
             if (args.Length == 0)
             {
                 console.SendText(player,$"current gc latency mode: {(int) prevMode} ({prevMode})");
+                console.SendText(player,"possible modes:");
+                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                {
+                    console.SendText(player,$" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
+                }
             }
             else
             {

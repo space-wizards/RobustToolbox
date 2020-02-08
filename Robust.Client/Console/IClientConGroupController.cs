@@ -12,5 +12,7 @@ namespace Robust.Client.Console
 
         bool CanCommand(string cmdName);
         bool CanViewVar();
+        bool CanAdminPlace();
+        event Action ConGroupUpdated;
     }
 }

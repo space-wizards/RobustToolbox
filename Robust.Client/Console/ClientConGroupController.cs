@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Console;
+﻿using System;
+using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 
@@ -19,6 +20,8 @@ namespace Robust.Client.Console
         /// </summary>
         private ConGroup _clientConGroup;
 
+        public event Action ConGroupUpdated;
+
         public void Initialize()
         {
             _netManager.RegisterNetMessage<MsgConGroupUpdate>(MsgConGroupUpdate.Name, _onConGroupUpdate);
@@ -38,6 +41,13 @@ namespace Robust.Client.Console
             return _clientConGroup.CanViewVar;
         }
 
+        public bool CanAdminPlace()
+        {
+            if (_clientConGroup == null)
+                return false;
+            return _clientConGroup.CanAdminPlace;
+        }
+
         /// <summary>
         /// Update client console group data with message from the server.
         /// </summary>
@@ -45,6 +55,8 @@ namespace Robust.Client.Console
         private void _onConGroupUpdate(MsgConGroupUpdate msg)
         {
             _clientConGroup = msg.ClientConGroup;
+
+            ConGroupUpdated?.Invoke();
         }
     }
 }

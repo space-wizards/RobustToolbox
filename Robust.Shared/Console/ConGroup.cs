@@ -11,5 +11,6 @@ namespace Robust.Shared.Console
         public List<string> Commands { get; set; }
 
         public bool CanViewVar { get; set; }
+        public bool CanAdminPlace { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Robust.Server.Interfaces.GameObjects;
+﻿using System;
+using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Server.Interfaces.Placement;
 using Robust.Server.Interfaces.Player;
@@ -31,6 +32,8 @@ namespace Robust.Server.Placement
 
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
+        public Func<MsgPlacement, bool> AllowPlacementFunc { get; set; }
+
         #region IPlacementManager Members
 
         public void Initialize()
@@ -43,6 +46,11 @@ namespace Robust.Server.Placement
         /// </summary>
         public void HandleNetMessage(MsgPlacement msg)
         {
+            if (!AllowPlacementFunc(msg))
+            {
+                return;
+            }
+
             switch (msg.PlaceType)
             {
                 case PlacementManagerMessage.StartPlacement:

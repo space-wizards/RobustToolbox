@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using Mono.Net;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -12,6 +13,10 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using HttpListener = Mono.Net.HttpListener;
+using HttpListenerContext = Mono.Net.HttpListenerContext;
+using HttpListenerRequest = Mono.Net.HttpListenerRequest;
+using HttpListenerResponse = Mono.Net.HttpListenerResponse;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.

@@ -2,6 +2,8 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using Robust.Shared.Utility;
+using Mono.Net;
+using HttpListenerResponse = Mono.Net.HttpListenerResponse;
 
 namespace Robust.Server.ServerStatus
 {

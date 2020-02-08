@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using Newtonsoft.Json.Linq;
+using HttpListenerRequest = Mono.Net.HttpListenerRequest;
+using HttpListenerResponse = Mono.Net.HttpListenerResponse;
 
 namespace Robust.Server.Interfaces.ServerStatus
 {

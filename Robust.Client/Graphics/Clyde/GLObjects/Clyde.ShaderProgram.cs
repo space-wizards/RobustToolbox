@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -14,23 +14,23 @@ namespace Robust.Client.Graphics.Clyde
         ///     You've been warned:
         ///     using things like <see cref="SetUniformTexture" /> if this buffer isn't bound WILL mess things up!
         /// </summary>
-        private class ShaderProgram
+        private class GLShaderProgram
         {
             private readonly sbyte?[] _uniformIntCache = new sbyte?[Clyde.UniCount];
             private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
             private uint _handle = 0;
-            private Shader _fragmentShader;
-            private Shader _vertexShader;
+            private GLShader _fragmentShader;
+            private GLShader _vertexShader;
             public string Name { get; }
             private readonly Clyde _clyde;
 
-            public ShaderProgram(Clyde clyde, string name = null)
+            public GLShaderProgram(Clyde clyde, string name = null)
             {
                 _clyde = clyde;
                 Name = name;
             }
 
-            public void Add(Shader shader)
+            public void Add(GLShader shader)
             {
                 ClearCaches();
                 switch (shader.Type)
@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
                 _handle = (uint) GL.CreateProgram();
                 if (Name != null)
                 {
-                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
+                    _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Program, _handle, Name);
                 }
 
                 if (_vertexShader != null)
@@ -221,18 +221,18 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void SetUniform(string uniformName, in Matrix4 matrix)
+            public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)
             {
                 var uniformId = GetUniform(uniformName);
-                SetUniformDirect(uniformId, matrix);
+                SetUniformDirect(uniformId, matrix, transpose);
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static unsafe void SetUniformDirect(int uniformId, in Matrix4 value)
+            private static unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
             {
                 fixed (Matrix4* ptr = &value)
                 {
-                    GL.UniformMatrix4(uniformId, 1, true, (float*) ptr);
+                    GL.UniformMatrix4(uniformId, 1, transpose, (float*) ptr);
                 }
             }
 

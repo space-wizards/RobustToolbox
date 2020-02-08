@@ -203,6 +203,7 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public void LoadDirectory(ResourcePath path)
         {
+            var sawmill = Logger.GetSawmill("eng");
             _hasEverBeenReloaded = true;
             var yamlStreams = _resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
@@ -218,7 +219,7 @@ namespace Robust.Shared.Prototypes
                     }
                     catch (YamlException e)
                     {
-                        Logger.ErrorS("eng", $"Exception whilst loading prototypes from {filePath}: {e}");
+                        sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", filePath, e.Message);
                         return (null, null);
                     }
                 })

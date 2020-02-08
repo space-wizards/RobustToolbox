@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
@@ -11,7 +11,7 @@ namespace Robust.Client.Graphics.Clyde
         /// <summary>
         ///     Represents an OpenGL buffer object.
         /// </summary>
-        private class Buffer
+        private class GLBuffer
         {
             private readonly Clyde _clyde;
             public BufferTarget Type { get; }
@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics.Clyde
             public BufferUsageHint UsageHint { get; }
             public string Name { get; }
 
-            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, string name = null)
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, string name = null)
             {
                 _clyde = clyde;
                 Type = type;
@@ -29,19 +29,21 @@ namespace Robust.Client.Graphics.Clyde
                 GL.GenBuffers(1, out uint handle);
                 ObjectHandle = handle;
 
+                GL.BindBuffer(type, handle);
+
                 if (name != null)
                 {
-                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Buffer, ObjectHandle, name);
+                    _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Buffer, ObjectHandle, name);
                 }
             }
 
-            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string name = null)
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string name = null)
                 : this(clyde, type, usage, name)
             {
                 Reallocate(size);
             }
 
-            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<byte> initialize,
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<byte> initialize,
                 string name = null)
                 : this(clyde, type, usage, name)
             {
@@ -144,11 +146,11 @@ namespace Robust.Client.Graphics.Clyde
         /// <inheritdoc />
         /// <summary>
         ///     Subtype of buffers so that we can have a generic constructor.
-        ///     Functionally equivalent to <see cref="Buffer"/> otherwise.
+        ///     Functionally equivalent to <see cref="GLBuffer"/> otherwise.
         /// </summary>
-        private class Buffer<T> : Buffer where T : unmanaged
+        private class GLBuffer<T> : GLBuffer where T : unmanaged
         {
-            public Buffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<T> initialize, string name = null)
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<T> initialize, string name = null)
                 : base(clyde, type, usage, MemoryMarshal.AsBytes(initialize), name)
             {
             }

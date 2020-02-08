@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -52,17 +54,13 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal class ModLoader : IModLoader
+    internal class ModLoader : IModLoader, IDisposable
     {
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager;
         [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly ILogManager _logManager;
 #pragma warning restore 649
-
-        static ModLoader()
-        {
-            AssemblyLoadContext.Default.Resolving += ResolvingAssemblyHandler;
-        }
 
         private ModuleTestingCallbacks _testingCallbacks;
 
@@ -73,20 +71,34 @@ namespace Robust.Shared.ContentPack
 
         private readonly List<Assembly> _sideModules = new List<Assembly>();
 
-        public virtual void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
+        private readonly AssemblyLoadContext _loadContext;
+
+        private readonly object _lock = new object();
+
+
+        public ModLoader()
+        {
+            // Imma just turn on collectible assemblies for the heck of it.
+            // Even though we don't need it yet.
+            _loadContext = new AssemblyLoadContext(null, true);
+
+            _loadContext.Resolving += ResolvingAssembly;
+        }
+
+        public virtual void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
             AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = true;
+            AssemblyTypeChecker.DumpTypes = false;
             if (!AssemblyTypeChecker.CheckAssembly(assembly))
                 return;
 
-            var gameAssembly = symbols != null
-                ? AppDomain.CurrentDomain.Load(assembly, symbols)
-                : AppDomain.CurrentDomain.Load(assembly);
+            assembly.Position = 0;
+
+            var gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
 
             InitMod<T>(gameAssembly);
         }
@@ -98,8 +110,9 @@ namespace Robust.Shared.ContentPack
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
             AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = true;
-            if (!AssemblyTypeChecker.CheckAssembly(File.ReadAllBytes(diskPath)))
+            AssemblyTypeChecker.DumpTypes = false;
+
+            if (!AssemblyTypeChecker.CheckAssembly(diskPath))
                 return;
 
             InitMod<T>(Assembly.LoadFrom(diskPath));
@@ -156,20 +169,6 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        /// <summary>
-        ///     Holds info about a loaded assembly.
-        /// </summary>
-        private class ModInfo
-        {
-            public ModInfo()
-            {
-                EntryPoints = new List<GameShared>();
-            }
-
-            public Assembly GameAssembly { get; set; }
-            public List<GameShared> EntryPoints { get; }
-        }
-
         public virtual bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared
         {
@@ -202,7 +201,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly<T>(gameDll.CopyToArray(), gamePdb.CopyToArray());
+                        LoadGameAssembly<T>(gameDll, gamePdb);
                         return true;
                     }
                     catch (Exception e)
@@ -216,7 +215,7 @@ namespace Robust.Shared.ContentPack
                 try
                 {
                     // load the assembly into the process, and bootstrap the GameServer entry point.
-                    LoadGameAssembly<T>(gameDll.CopyToArray());
+                    LoadGameAssembly<T>(gameDll);
                     return true;
                 }
                 catch (Exception e)
@@ -235,40 +234,66 @@ namespace Robust.Shared.ContentPack
             _testingCallbacks = testingCallbacks;
         }
 
-        private static Assembly ResolvingAssemblyHandler(AssemblyLoadContext context, AssemblyName name)
-        {
-            var modLoader = IoCManager.Resolve<IModLoader>() as ModLoader;
-
-            return modLoader?.ResolvingAssembly(context, name);
-        }
-
         private Assembly ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
         {
-            // Try main modules.
-            foreach (var mod in _mods)
+            try
             {
-                if (mod.GameAssembly.FullName == name.FullName)
+                lock (_lock)
                 {
-                    return mod.GameAssembly;
+                    _logManager.GetSawmill("res").Debug("ResolvingAssembly {0}", name);
+
+                    // Try main modules.
+                    foreach (var mod in _mods)
+                    {
+                        if (mod.GameAssembly.FullName == name.FullName)
+                        {
+                            return mod.GameAssembly;
+                        }
+                    }
+
+                    foreach (var assembly in _sideModules)
+                    {
+                        if (assembly.FullName == name.FullName)
+                        {
+                            return assembly;
+                        }
+                    }
+
+                    if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                    {
+                        var assembly = _loadContext.LoadFromStream(dll);
+                        _sideModules.Add(assembly);
+                        return assembly;
+                    }
+
+                    return null;
                 }
             }
-
-            foreach (var assembly in _sideModules)
+            catch (Exception e)
             {
-                if (assembly.FullName == name.FullName)
-                {
-                    return assembly;
-                }
+                _logManager.GetSawmill("res").Error("Exception in ResolvingAssembly: {0}", e);
+                ExceptionDispatchInfo.Capture(e).Throw();
+                throw null; // Unreachable.
+            }
+        }
+
+        public void Dispose()
+        {
+            _loadContext.Unload();
+        }
+
+        /// <summary>
+        ///     Holds info about a loaded assembly.
+        /// </summary>
+        private class ModInfo
+        {
+            public ModInfo()
+            {
+                EntryPoints = new List<GameShared>();
             }
 
-            if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
-            {
-                var assembly = Assembly.Load(dll.CopyToArray());
-                _sideModules.Add(assembly);
-                return assembly;
-            }
-
-            return null;
+            public Assembly GameAssembly { get; set; }
+            public List<GameShared> EntryPoints { get; }
         }
     }
 }

@@ -83,7 +83,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             catch
             {
-                mouseWorldPos = eyeManager.ScreenToWorld(mouseScreenPos);
+                mouseWorldPos = GridCoordinates.InvalidGrid;
                 mouseWorldMap = 0;
                 tile = new TileRef();
             }

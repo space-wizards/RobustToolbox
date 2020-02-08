@@ -24,83 +24,6 @@ namespace Robust.Client.GameObjects
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
 
-        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
-        {
-            var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2), position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb);
-        }
-
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
-        {
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.Transform;
-                if (transform.MapID != mapId)
-                    continue;
-
-                if (entity.TryGetComponent<ICollidableComponent>(out var component))
-                {
-                    if (position.Intersects(component.WorldAABB))
-                        yield return entity;
-                }
-                else
-                {
-                    if (position.Contains(transform.WorldPosition))
-                    {
-                        yield return entity;
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
-        {
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.Transform;
-                if (transform.MapID != mapId)
-                    continue;
-
-                if (entity.TryGetComponent<ICollidableComponent>(out var component))
-                {
-                    if (component.WorldAABB.Contains(position))
-                        yield return entity;
-                }
-                else
-                {
-                    if (FloatMath.CloseTo(transform.GridPosition.X, position.X) && FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
-                    {
-                        yield return entity;
-                    }
-                }
-            }
-        }
-
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box)
-        {
-            foreach (var entity in GetEntities())
-            {
-                var transform = entity.Transform;
-                if (transform.MapID != mapId)
-                    continue;
-
-                if (entity.TryGetComponent<ICollidableComponent>(out var component))
-                {
-                    if (box.Intersects(component.WorldAABB))
-                        return true;
-                }
-                else
-                {
-                    if (box.Contains(transform.WorldPosition))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         public override void Startup()
         {
             base.Startup();
@@ -165,6 +88,11 @@ namespace Robust.Client.GameObjects
                 HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1, kvStates.Value.Item2);
             }
 
+            foreach (var kvp in toApply)
+            {
+                UpdateEntityTree(kvp.Key);
+            }
+
             foreach (var id in deletions)
             {
                 DeleteEntity(id);
@@ -179,6 +107,11 @@ namespace Robust.Client.GameObjects
             {
                 StartEntity(entity);
             }
+
+            foreach (var entity in toInitialize)
+            {
+                UpdateEntityTree(entity);
+            }
         }
 
         public void Dispose()
@@ -186,11 +119,13 @@ namespace Robust.Client.GameObjects
             Shutdown();
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
@@ -203,6 +138,7 @@ namespace Robust.Client.GameObjects
             return newEntity;
         }
 
+        /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
@@ -211,34 +147,30 @@ namespace Robust.Client.GameObjects
             return newEntity;
         }
 
+        /// <inheritdoc />
         public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity)newEnt);
-            return newEnt;
-        }
-
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
-        {
-            var newEnt = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity)newEnt);
-            return newEnt;
-        }
-
-        public override IEntity SpawnEntityAt(string entityType, GridCoordinates coordinates)
-        {
-            var newEnt = CreateEntityUninitialized(entityType, coordinates);
-            InitializeAndStartEntity((Entity)newEnt);
+            UpdateEntityTree(newEnt);
             return newEnt;
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityAt(string entityType, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
         {
-            var entity = CreateEntityUninitialized(entityType, coordinates);
+            var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity)entity);
+            UpdateEntityTree(entity);
             return entity;
         }
+
+        /// <inheritdoc />
+        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        {
+            return SpawnEntity(protoName, coordinates);
+        }
+
 
         protected override EntityUid GenerateEntityUid()
         {
@@ -303,10 +235,6 @@ namespace Robust.Client.GameObjects
                 {
                     DebugTools.Assert("Component does not exist for state.");
                 }
-
-                DebugTools.Assert(kvStates.Value.curState == null
-                                  || kvStates.Value.curState.GetType() == component.StateType,
-                    "Component state is of the wrong type.");
 
                 component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
             }

@@ -27,14 +27,14 @@ layout (std140) uniform uniformConstants
 // Input texture coordinates get mapped to this range.
 uniform vec4 modifyUV;
 
-[SHADER_HEADER_CODE]
+// [SHADER_HEADER_CODE]
 
 void main()
 {
     vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
     vec2 VERTEX = transformed.xy;
 
-    [SHADER_CODE]
+    // [SHADER_CODE]
 
     // Pixel snapping to avoid sampling issues on nvidia.
     VERTEX += 1;

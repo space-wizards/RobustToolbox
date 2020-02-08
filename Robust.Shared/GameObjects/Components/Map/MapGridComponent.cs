@@ -36,9 +36,6 @@ namespace Robust.Shared.GameObjects.Components.Map
         public override uint? NetID => NetIDs.MAP_GRID;
 
         /// <inheritdoc />
-        public override Type StateType => typeof(MapGridComponentState);
-
-        /// <inheritdoc />
         public GridId GridIndex
         {
             get => _gridIndex;

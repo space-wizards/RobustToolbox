@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using CommandLine;
 using Robust.Server.Interfaces;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Log;
@@ -14,9 +13,26 @@ namespace Robust.Server
 {
     internal static class Program
     {
+        private static bool _hasStarted;
+
         internal static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<CommandLineArgs>(args).WithParsed(ParsedMain);
+            Start(args);
+        }
+
+        internal static void Start(string[] args)
+        {
+            if (_hasStarted)
+            {
+                throw new InvalidOperationException("Cannot start twice!");
+            }
+
+            _hasStarted = true;
+
+            if (CommandLineArgs.TryParse(args, out var parsed))
+            {
+                ParsedMain(parsed);
+            }
         }
 
         private static void ParsedMain(CommandLineArgs args)
@@ -37,7 +53,7 @@ namespace Robust.Server
             {
                 Logger.Fatal("Server -> Can not start server");
                 //Not like you'd see this, haha. Perhaps later for logging.
-                //Environment.Exit(0);
+                return;
             }
 
             string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();

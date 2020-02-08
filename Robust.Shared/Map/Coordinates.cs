@@ -77,19 +77,24 @@ namespace Robust.Shared.Map
             : this(new Vector2(x, y), gridId) { }
 
         /// <summary>
-        ///     Converts this set of coordinates to another grid, preserving the same world position.
+        ///     Converts this set of coordinates to map coordinates.
         /// </summary>
-        public GridCoordinates ConvertToGrid(IMapManager mapManager, IMapGrid argGrid)
+        public MapCoordinates ToMap(IMapManager mapManager)
         {
-            return new GridCoordinates(Position + mapManager.GetGrid(GridID).WorldPosition - argGrid.WorldPosition, argGrid);
+            //TODO: Assert GridID is not invalid
+
+            var grid = mapManager.GetGrid(GridID);
+            return new MapCoordinates(grid.LocalToWorld(Position), grid.ParentMapId);
         }
 
         /// <summary>
-        ///     Converts this set of coordinates to the default grid on the map.
+        ///     Converts this set of coordinates to map coordinate position.
         /// </summary>
-        public GridCoordinates ToWorld(IMapManager mapManager)
+        public Vector2 ToMapPos(IMapManager mapManager)
         {
-            return ConvertToGrid(mapManager, mapManager.GetDefaultGrid(mapManager.GetGrid(GridID).ParentMapId));
+            //TODO: Assert GridID is not invalid
+
+            return mapManager.GetGrid(GridID).LocalToWorld(Position);
         }
 
         /// <summary>
@@ -99,9 +104,9 @@ namespace Robust.Shared.Map
         {
             return new GridCoordinates(Position + offset, GridID);
         }
-        
+
         /// <summary>
-        ///     Checks that these coordinates are within a certain distance of another set. 
+        ///     Checks that these coordinates are within a certain distance of another set.
         /// </summary>
         /// <param name="mapManager">Map manager containing the two GridIds.</param>
         /// <param name="otherCoords">Other set of coordinates to use.</param>
@@ -114,11 +119,11 @@ namespace Robust.Shared.Map
                 return false;
             }
 
-            return ((otherCoords.ToWorld(mapManager).Position - ToWorld(mapManager).Position).LengthSquared < range * range);
+            return ((otherCoords.ToMapPos(mapManager) - ToMapPos(mapManager)).LengthSquared < range * range);
         }
 
         /// <summary>
-        ///     Checks that these coordinates are within a certain distance of another set. 
+        ///     Checks that these coordinates are within a certain distance of another set.
         /// </summary>
         /// <param name="mapManager">Map manager containing the two GridIds.</param>
         /// <param name="otherCoords">Other set of coordinates to use.</param>
@@ -137,7 +142,7 @@ namespace Robust.Shared.Map
         /// <returns>Distance between the two points.</returns>
         public float Distance(IMapManager mapManager, GridCoordinates otherCoords)
         {
-            return (ToWorld(mapManager).Position - otherCoords.ToWorld(mapManager).Position).Length;
+            return (ToMapPos(mapManager) - otherCoords.ToMapPos(mapManager)).Length;
         }
 
         /// <summary>
@@ -288,6 +293,8 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly struct MapCoordinates : IEquatable<MapCoordinates>
     {
+        public static readonly MapCoordinates Nullspace = new MapCoordinates(Vector2.Zero, MapId.Nullspace);
+
         /// <summary>
         ///     World Position coordinates.
         /// </summary>

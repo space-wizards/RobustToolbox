@@ -42,6 +42,8 @@ namespace Robust.Client.Graphics.Shaders
 
             ShaderLightMode? lightMode = null;
             ShaderBlendMode? blendMode = null;
+            ShaderPreset? preset = null;
+
 
             Token token;
 
@@ -56,7 +58,7 @@ namespace Robust.Client.Graphics.Shaders
 
                 if (!(token is TokenWord word))
                 {
-                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying' or type.",
+                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying', 'preset' or type.",
                         token.Position);
                 }
 
@@ -91,22 +93,46 @@ namespace Robust.Client.Graphics.Shaders
                     _takeToken();
                     token = _takeToken();
 
-                    switch (token)
+                    blendMode = token switch
                     {
-                        case TokenWord t when t.Word == "mix":
-                            blendMode = ShaderBlendMode.Mix;
-                            break;
-                        case TokenWord t when t.Word == "add":
-                            blendMode = ShaderBlendMode.Add;
-                            break;
-                        case TokenWord t when t.Word == "subtract":
-                            blendMode = ShaderBlendMode.Subtract;
-                            break;
-                        case TokenWord t when t.Word == "multiply":
-                            blendMode = ShaderBlendMode.Multiply;
-                            break;
-                        default:
-                            throw new ShaderParseException("Expected 'mix', 'add', 'subtract' or 'multiply'.");
+                        TokenWord t when t.Word == "mix" => ShaderBlendMode.Mix,
+                        TokenWord t when t.Word == "add" => ShaderBlendMode.Add,
+                        TokenWord t when t.Word == "subtract" => ShaderBlendMode.Subtract,
+                        TokenWord t when t.Word == "multiply" => ShaderBlendMode.Multiply,
+                        TokenWord t when t.Word == "none" => ShaderBlendMode.None,
+                        _ => throw new ShaderParseException("Expected 'mix', 'add', 'subtract', 'none' or 'multiply'.")
+                    };
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
+                    }
+                }
+                else if (word.Word == "preset")
+                {
+                    if (preset != null)
+                    {
+                        throw new ShaderParseException("Already specified 'preset' before!");
+                    }
+
+                    _takeToken();
+
+                    token = _takeToken();
+
+                    preset = token switch
+                    {
+                        TokenWord t when t.Word == "default" => ShaderPreset.Default,
+                        TokenWord t when t.Word == "raw" => ShaderPreset.Raw,
+                        _ => throw new ShaderParseException("Expected 'default' or 'raw'.")
+                    };
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
                     }
                 }
                 else
@@ -149,7 +175,10 @@ namespace Robust.Client.Graphics.Shaders
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
-                _functionsParsing, lightMode ?? ShaderLightMode.Default, blendMode ?? ShaderBlendMode.Mix);
+                _functionsParsing,
+                lightMode ?? ShaderLightMode.Default,
+                blendMode ?? ShaderBlendMode.Mix,
+                preset ?? ShaderPreset.Default);
         }
 
         private void _parseFunction()
@@ -190,7 +219,6 @@ namespace Robust.Client.Graphics.Shaders
                 // Parse parameters.
                 while (true)
                 {
-                    token = _takeToken();
                     if (!(token is TokenWord paramTypeOrQualifierToken))
                     {
                         throw new ShaderParseException("Expected type, 'in', 'out' or 'inout'.", token.Position);
@@ -244,6 +272,7 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         if (commaOrCloseParenToken.Symbol == Symbols.Comma)
                         {
+                            token = _takeToken();
                             continue;
                         }
 

@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.Map;
+using Robust.Shared.Utility;
 using System;
 
 namespace Robust.Shared.Maths
@@ -7,11 +8,10 @@ namespace Robust.Shared.Maths
     ///     A representation of a 2D ray.
     /// </summary>
     [Serializable]
-    public struct Ray : IEquatable<Ray>
+    public readonly struct Ray : IEquatable<Ray>
     {
         private readonly Vector2 _position;
         private readonly Vector2 _direction;
-        private readonly int _collisionMask;
 
         /// <summary>
         ///     Specifies the starting point of the ray.
@@ -23,18 +23,18 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Vector2 Direction => _direction;
 
-        public int CollisionMask => _collisionMask;
-
         /// <summary>
         ///     Creates a new instance of a Ray.
         /// </summary>
         /// <param name="position">Starting position of the ray.</param>
         /// <param name="direction">Unit direction vector that the ray is pointing.</param>
-        public Ray(Vector2 position, Vector2 direction, int collisionMask)
+        public Ray(Vector2 position, Vector2 direction)
         {
             _position = position;
             _direction = direction;
-            _collisionMask = collisionMask;
+
+            DebugTools.Assert(FloatMath.CloseTo(_direction.LengthSquared, 1));
+
         }
 
         #region Intersect Tests

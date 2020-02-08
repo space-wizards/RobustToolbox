@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
@@ -29,9 +28,6 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.COLLIDABLE;
-
-        /// <inheritdoc />
-        public override Type StateType => typeof(CollidableComponentState);
 
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
@@ -78,6 +74,9 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     shape.ApplyState();
                 }
+
+                UpdateEntityTree();
+                Dirty();
             }
         }
 
@@ -174,6 +173,7 @@ namespace Robust.Shared.GameObjects.Components
         void IPhysBody.Bumped(IEntity bumpedby)
         {
             SendMessage(new BumpedEntMsg(bumpedby));
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -221,5 +221,7 @@ namespace Robust.Shared.GameObjects.Components
 
             return _physicsManager.TryCollide(Owner, offset, bump);
         }
+
+        private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
     }
 }

@@ -106,17 +106,18 @@ namespace Robust.Server.Placement
             */
             if (!isTile)
             {
-                var created = _entityManager.SpawnEntityAt(entityTemplateName, coordinates);
+                var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
                 created.Transform.LocalRotation = dirRcv.ToAngle();
             }
             else
             {
-                PlaceNewTile(coordinates, tileType, _mapManager.GetGrid(coordinates.GridID).ParentMapId, coordinates.ToWorld(_mapManager).Position);
+                var mapCoords = coordinates.ToMap(_mapManager);
+                PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
             }
         }
 
-        private void PlaceNewTile(GridCoordinates coordinates, ushort tileType, MapId mapId, Vector2 position)
+        private void PlaceNewTile(ushort tileType, MapId mapId, Vector2 position)
         {
             // tile can snap up to 0.75m away from grid
             var gridSearchBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f)
@@ -149,8 +150,7 @@ namespace Robust.Server.Placement
 
                 // round coords to center of tile
                 var tileIndices = closest.WorldToTile(intersect.Center);
-                var tileCenterLocal = closest.GridTileToLocal(tileIndices);
-                var tileCenterWorld = tileCenterLocal.ToWorld(_mapManager).Position;
+                var tileCenterWorld = closest.GridTileToWorldPos(tileIndices);
 
                 // move mouse one tile out along normal
                 var newTilePos = tileCenterWorld + normal * closest.TileSize;

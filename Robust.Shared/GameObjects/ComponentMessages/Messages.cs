@@ -2,6 +2,7 @@
 using Robust.Shared.Console;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -52,5 +53,17 @@ namespace Robust.Shared.GameObjects
             NewParent = newParent;
             OldParent = oldParent;
         }
+    }
+
+    public class MoveMessage : ComponentMessage
+    {
+        public MoveMessage(GridCoordinates oldPos, GridCoordinates newPos)
+        {
+            OldPosition = oldPos;
+            NewPosition = newPos;
+        }
+
+        public GridCoordinates OldPosition { get; }
+        public GridCoordinates NewPosition { get; }
     }
 }

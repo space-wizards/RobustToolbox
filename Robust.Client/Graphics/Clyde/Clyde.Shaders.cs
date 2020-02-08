@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using StencilOp = Robust.Client.Graphics.Shaders.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -15,8 +16,13 @@ namespace Robust.Client.Graphics.Clyde
     {
         private ClydeShaderInstance _defaultShader;
 
-        private string _shaderWrapCodeSpriteFrag;
-        private string _shaderWrapCodeSpriteVert;
+        private string _shaderWrapCodeDefaultFrag;
+        private string _shaderWrapCodeDefaultVert;
+
+        private string _shaderWrapCodeRawFrag;
+        private string _shaderWrapCodeRawVert;
+
+
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
             new Dictionary<ClydeHandle, LoadedShader>();
@@ -26,13 +32,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new ConcurrentQueue<ClydeHandle>();
 
-        private ShaderProgram _lightShader;
+        private GLShaderProgram _lightShader;
 
         private class LoadedShader
         {
-            public ShaderProgram Program;
+            public GLShaderProgram Program;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
+            public string Name;
         }
 
         private class LoadedShaderInstance
@@ -41,34 +48,48 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
             public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
+
+            public StencilParameters Stencil = StencilParameters.Default;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
-            var vertexSource = _shaderWrapCodeSpriteVert;
-            var fragmentSource = _shaderWrapCodeSpriteFrag;
+            var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var (header, vertBody, fragBody) = _getShaderCode(shader);
+            var program = _compileProgram(vertBody, fragBody, name);
 
-            vertexSource = vertexSource.Replace("[SHADER_HEADER_CODE]", header);
-            vertexSource = vertexSource.Replace("[SHADER_CODE]", vertBody);
-            fragmentSource = fragmentSource.Replace("[SHADER_HEADER_CODE]", header);
-            fragmentSource = fragmentSource.Replace("[SHADER_CODE]", fragBody);
-
-            var program = _compileProgram(vertexSource, fragmentSource, name);
-
-            program.BindBlock("projectionViewMatrices", ProjViewBindingIndex);
-            program.BindBlock("uniformConstants", UniformConstantsBindingIndex);
+            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
+            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
 
             var loaded = new LoadedShader
             {
                 Program = program,
                 HasLighting = shader.LightMode != ShaderLightMode.Unshaded,
-                BlendMode = shader.BlendMode
+                BlendMode = shader.BlendMode,
+                Name = name
             };
             var handle = AllocRid();
             _loadedShaders.Add(handle, loaded);
             return handle;
+        }
+
+        public void ReloadShader(ClydeHandle handle, ParsedShader newShader)
+        {
+            var loaded = _loadedShaders[handle];
+
+            loaded.HasLighting = newShader.LightMode != ShaderLightMode.Unshaded;
+            loaded.BlendMode = newShader.BlendMode;
+
+            var (vertBody, fragBody) = GetShaderCode(newShader);
+
+            var program = _compileProgram(vertBody, fragBody, loaded.Name);
+
+            loaded.Program.Delete();
+
+            loaded.Program = program;
+
+            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
+            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
@@ -83,11 +104,13 @@ namespace Robust.Client.Graphics.Clyde
             return instance;
         }
 
-        private void _loadStockShaders()
+        private void LoadStockShaders()
         {
-            _shaderWrapCodeSpriteFrag = _readFile("/Shaders/Internal/sprite.frag");
-            _shaderWrapCodeSpriteVert = _readFile("/Shaders/Internal/sprite.vert");
+            _shaderWrapCodeDefaultFrag = ReadEmbeddedShader("base-default.frag");
+            _shaderWrapCodeDefaultVert = ReadEmbeddedShader("base-default.vert");
 
+            _shaderWrapCodeRawVert = ReadEmbeddedShader("base-raw.vert");
+            _shaderWrapCodeRawFrag = ReadEmbeddedShader("base-raw.frag");
 
             var defaultLoadedShader = _resourceCache
                 .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
@@ -96,30 +119,31 @@ namespace Robust.Client.Graphics.Clyde
 
             _queuedShader = _defaultShader.Handle;
 
-            var lightVert = _readFile("/Shaders/Internal/light.vert");
-            var lightFrag = _readFile("/Shaders/Internal/light.frag");
+            var lightVert = ReadEmbeddedShader("light.vert");
+            var lightFrag = ReadEmbeddedShader("light.frag");
 
             _lightShader = _compileProgram(lightVert, lightFrag, "_lightShader");
         }
 
-        private string _readFile(string path)
+        private string ReadEmbeddedShader(string fileName)
         {
-            using (var reader = new StreamReader(_resourceCache.ContentFileRead(path), EncodingHelpers.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            var assembly = typeof(Clyde).Assembly;
+            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}");
+            DebugTools.AssertNotNull(stream);
+            using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+            return reader.ReadToEnd();
         }
 
-        private ShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
+        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
         {
-            Shader vertexShader = null;
-            Shader fragmentShader = null;
+            GLShader vertexShader = null;
+            GLShader fragmentShader = null;
 
             try
             {
                 try
                 {
-                    vertexShader = new Shader(this, ShaderType.VertexShader, vertexSource);
+                    vertexShader = new GLShader(this, ShaderType.VertexShader, vertexSource, name == null ? $"{name}-vertex" : null);
                 }
                 catch (ShaderCompilationException e)
                 {
@@ -129,7 +153,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 try
                 {
-                    fragmentShader = new Shader(this, ShaderType.FragmentShader, fragmentSource);
+                    fragmentShader = new GLShader(this, ShaderType.FragmentShader, fragmentSource, name == null ? $"{name}-fragment" : null);
                 }
                 catch (ShaderCompilationException e)
                 {
@@ -137,7 +161,7 @@ namespace Robust.Client.Graphics.Clyde
                         "Failed to compile fragment shader, see inner for details.", e);
                 }
 
-                var program = new ShaderProgram(this, name);
+                var program = new GLShaderProgram(this, name);
                 program.Add(vertexShader);
                 program.Add(fragmentShader);
 
@@ -161,28 +185,36 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private static (string header, string vertBody, string fragBody)
-            _getShaderCode(ParsedShader shader)
+        private (string vertBody, string fragBody) GetShaderCode(ParsedShader shader)
         {
-            var header = new StringBuilder();
+            var headerUniforms = new StringBuilder();
 
             foreach (var uniform in shader.Uniforms.Values)
             {
                 if (uniform.DefaultValue != null)
                 {
-                    header.AppendFormat("uniform {0} {1} = {2};", uniform.Type.GetNativeType(), uniform.Name,
+                    headerUniforms.AppendFormat("uniform {0} {1} = {2};", uniform.Type.GetNativeType(), uniform.Name,
                         uniform.DefaultValue);
                 }
                 else
                 {
-                    header.AppendFormat("uniform {0} {1};", uniform.Type.GetNativeType(), uniform.Name);
+                    headerUniforms.AppendFormat("uniform {0} {1};", uniform.Type.GetNativeType(), uniform.Name);
                 }
             }
 
-            // TODO: Varyings.
+            var varyingsFragment = new StringBuilder();
+            var varyingsVertex = new StringBuilder();
+
+            foreach (var (name, varying) in shader.Varyings)
+            {
+                varyingsFragment.AppendFormat("in {0} {1};", varying.Type.GetNativeType(), name);
+                varyingsVertex.AppendFormat("out {0} {1};", varying.Type.GetNativeType(), name);
+            }
 
             ShaderFunctionDefinition fragmentMain = null;
             ShaderFunctionDefinition vertexMain = null;
+
+            var functionsBuilder = new StringBuilder();
 
             foreach (var function in shader.Functions)
             {
@@ -198,25 +230,50 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                header.AppendFormat("{0} {1}(", function.ReturnType.GetNativeType(), function.Name);
+                functionsBuilder.AppendFormat("{0} {1}(", function.ReturnType.GetNativeType(), function.Name);
                 var first = true;
                 foreach (var parameter in function.Parameters)
                 {
                     if (!first)
                     {
-                        header.Append(", ");
+                        functionsBuilder.Append(", ");
                     }
 
                     first = false;
 
-                    header.AppendFormat("{0} {1} {2}", parameter.Qualifiers.GetString(), parameter.Type.GetNativeType(),
+                    functionsBuilder.AppendFormat("{0} {1} {2}", parameter.Qualifiers.GetString(), parameter.Type.GetNativeType(),
                         parameter.Name);
                 }
 
-                header.AppendFormat(") {{\n{0}\n}}\n", function.Body);
+                functionsBuilder.AppendFormat(") {{\n{0}\n}}\n", function.Body);
             }
 
-            return (header.ToString(), vertexMain?.Body ?? "", fragmentMain?.Body ?? "");
+            var (wrapVert, wrapFrag) = shader.Preset switch
+            {
+                ShaderPreset.Default => (_shaderWrapCodeDefaultVert, _shaderWrapCodeDefaultFrag),
+                ShaderPreset.Raw => (_shaderWrapCodeRawVert, _shaderWrapCodeRawFrag),
+                _ => throw new NotSupportedException()
+            };
+
+            var vertexHeader = $"{headerUniforms}\n{varyingsVertex}\n{functionsBuilder}";
+            var fragmentHeader = $"{headerUniforms}\n{varyingsFragment}\n{functionsBuilder}";
+
+            // These are prefixed with comments because the syntax highlighter I'm using doesn't like the brackets.
+            // And it's producing a lot of squigly lines.
+            var vertexSource = wrapVert.Replace("// [SHADER_HEADER_CODE]", vertexHeader);
+            var fragmentSource = wrapFrag.Replace("// [SHADER_HEADER_CODE]", fragmentHeader);
+
+            if (vertexMain != null)
+            {
+                vertexSource = vertexSource.Replace("// [SHADER_CODE]", vertexMain.Body);
+            }
+
+            if (fragmentMain != null)
+            {
+                fragmentSource = fragmentSource.Replace("// [SHADER_CODE]", fragmentMain.Body);
+            }
+
+            return (vertexSource, fragmentSource);
         }
 
         private void ClearDeadShaderInstances()
@@ -238,7 +295,7 @@ namespace Robust.Client.Graphics.Clyde
                 Parent = parent;
             }
 
-            protected override ShaderInstance DuplicateImpl()
+            private protected override ShaderInstance DuplicateImpl()
             {
                 var instanceData = Parent._shaderInstances[Handle];
                 var newData = new LoadedShaderInstance
@@ -250,6 +307,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     newData.Parameters.Add(name, value);
                 }
+
+                newData.Stencil = instanceData.Stencil;
 
                 var newHandle = Parent.AllocRid();
                 Parent._shaderInstances.Add(newHandle, newData);
@@ -263,70 +322,126 @@ namespace Robust.Client.Graphics.Clyde
 
             // TODO: Verify that parameters actually exist before assigning them like this.
 
-            protected override void SetParameterImpl(string name, float value)
+            private protected override void SetParameterImpl(string name, float value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector2 value)
+            private protected override void SetParameterImpl(string name, Vector2 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector3 value)
+            private protected override void SetParameterImpl(string name, Vector3 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector4 value)
+            private protected override void SetParameterImpl(string name, Vector4 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Color value)
+            private protected override void SetParameterImpl(string name, Color value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, int value)
+            private protected override void SetParameterImpl(string name, int value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Vector2i value)
+            private protected override void SetParameterImpl(string name, Vector2i value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, bool value)
+            private protected override void SetParameterImpl(string name, bool value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, in Matrix3 value)
+            private protected override void SetParameterImpl(string name, in Matrix3 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4 value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;
             }
 
-            protected override void SetParameterImpl(string name, Texture value)
+            private protected override void SetParameterImpl(string name, Texture value)
             {
                 throw new NotImplementedException();
             }
+
+            private protected override void SetStencilOpImpl(StencilOp op)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Op = op;
+            }
+
+            private protected override void SetStencilFuncImpl(StencilFunc func)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Func = func;
+            }
+
+            private protected override void SetStencilTestEnabledImpl(bool enabled)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Enabled = enabled;
+            }
+
+            private protected override void SetStencilRefImpl(int @ref)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.Ref = @ref;
+            }
+
+            private protected override void SetStencilWriteMaskImpl(int mask)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.WriteMask = mask;
+            }
+
+            private protected override void SetStencilReadMaskRefImpl(int mask)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Stencil.ReadMask = mask;
+            }
+        }
+
+        private struct StencilParameters
+        {
+            public static readonly StencilParameters Default = new StencilParameters
+            {
+                Enabled = false,
+                Ref = 0,
+                Op = StencilOp.Keep,
+                Func = StencilFunc.Always,
+                ReadMask = unchecked((int)uint.MaxValue),
+                WriteMask = unchecked((int)uint.MaxValue),
+            };
+
+            public bool Enabled;
+            public int Ref;
+            public int WriteMask;
+            public int ReadMask;
+            public StencilOp Op;
+            public StencilFunc Func;
         }
     }
 }

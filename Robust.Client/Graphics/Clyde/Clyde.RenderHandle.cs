@@ -101,7 +101,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // Draw the entity.
-                sprite.OpenGLRender(DrawingHandleWorld, false, overrideDirection);
+                sprite.Render(
+                    DrawingHandleWorld,
+                    overrideDirection == null
+                        ? entity.Transform.WorldRotation
+                        : Angle.Zero,
+                    overrideDirection);
 
                 // Reset to screen space
                 SetSpace(CurrentSpace.ScreenSpace);

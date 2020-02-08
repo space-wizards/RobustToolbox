@@ -21,10 +21,11 @@ namespace Robust.Shared.Utility
             return i;
         }
 
-        // This can be replaced with CoreFX's version if we ever decide to drop .NET Framework.
-        // For now we're stuck with it, though.
         public static unsafe string PtrToStringUTF8(byte* ptr)
         {
+#if NETCOREAPP
+            return Marshal.PtrToStringUTF8((IntPtr) ptr);
+#else
             if (ptr == null)
             {
                 return null;
@@ -33,10 +34,16 @@ namespace Robust.Shared.Utility
             var length = FindNullTerminator(ptr);
 
             return EncodingHelpers.UTF8.GetString(ptr, length);
+#endif
         }
 
         public static unsafe IntPtr StringToCoTaskMemUTF8(string str)
         {
+#if NETCOREAPP
+
+            return Marshal.StringToCoTaskMemUTF8(str);
+
+#else
             if (str == null)
             {
                 return IntPtr.Zero;
@@ -44,16 +51,18 @@ namespace Robust.Shared.Utility
 
             var maxByteLength = System.Text.Encoding.UTF8.GetMaxByteCount(str.Length);
 
-            var ptr = (byte*)Marshal.AllocCoTaskMem(maxByteLength + 1);
+            var ptr = (byte*) Marshal.AllocCoTaskMem(maxByteLength + 1);
 
             int actualLen;
             fixed (char* pChar = str)
             {
                 actualLen = System.Text.Encoding.UTF8.GetBytes(pChar, str.Length, ptr, maxByteLength);
             }
+
             ptr[actualLen] = 0;
 
-            return (IntPtr)ptr;
+            return (IntPtr) ptr;
+#endif
         }
     }
 }

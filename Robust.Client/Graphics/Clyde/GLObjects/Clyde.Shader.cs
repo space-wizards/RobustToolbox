@@ -1,20 +1,20 @@
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private class Shader
+        private class GLShader
         {
             private readonly Clyde _clyde;
 
-            public Shader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
+            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
             {
                 _clyde = clyde;
                 Compile(type, shaderSource);
                 if (name != null)
                 {
-                    _clyde._objectLabelMaybe(ObjectLabelIdentifier.Shader, ObjectHandle, name);
+                    _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Shader, ObjectHandle, name);
                 }
             }
 

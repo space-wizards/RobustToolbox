@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace Robust.Client.Graphics.Shaders
@@ -266,6 +267,14 @@ namespace Robust.Client.Graphics.Shaders
                     symbol = Symbols.Or;
                 }
             }
+            else if (chr == '?')
+            {
+                symbol = Symbols.QuestionMark;
+            }
+            else if (chr == ':')
+            {
+                symbol = Symbols.Colon;
+            }
             else
             {
                 // Unknown symbol
@@ -405,6 +414,7 @@ namespace Robust.Client.Graphics.Shaders
             public TextFileRange Position { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Word) + "}")]
         private sealed class TokenWord : Token
         {
             public TokenWord(string word, TextFileRange position) : base(position)
@@ -415,6 +425,7 @@ namespace Robust.Client.Graphics.Shaders
             public string Word { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Number) + "}")]
         private sealed class TokenNumber : Token
         {
             public TokenNumber(string number, TextFileRange position) : base(position)
@@ -425,6 +436,7 @@ namespace Robust.Client.Graphics.Shaders
             public string Number { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Symbol) + "}")]
         private sealed class TokenSymbol : Token
         {
             public TokenSymbol(Symbols symbol, TextFileRange position) : base(position)
@@ -474,6 +486,8 @@ namespace Robust.Client.Graphics.Shaders
             Greater,
             LessOrEq,
             GreaterOrEq,
+            QuestionMark,
+            Colon,
         }
 
         private static readonly Dictionary<Symbols, string> _symbolStringMap = new Dictionary<Symbols, string>
@@ -515,6 +529,8 @@ namespace Robust.Client.Graphics.Shaders
             {Symbols.LessOrEq, "<="},
             {Symbols.Greater, ">"},
             {Symbols.GreaterOrEq, ">="},
+            {Symbols.QuestionMark, "?"},
+            {Symbols.Colon, ":"},
         };
     }
 }

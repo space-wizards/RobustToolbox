@@ -14,7 +14,6 @@ namespace Robust.Shared.GameObjects.Components.Appearance
     {
         public override string Name => "Appearance";
         public override uint? NetID => NetIDs.APPEARANCE;
-        public override Type StateType => typeof(AppearanceComponentState);
 
         public abstract void SetData(string key, object value);
         public abstract void SetData(Enum key, object value);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Configuration;
 
 namespace Robust.Shared.Interfaces.Configuration
@@ -62,5 +63,7 @@ namespace Robust.Shared.Interfaces.Configuration
         /// </summary>
         /// <param name="name">The name of the CVar</param>
         Type GetCVarType(string name);
+
+        void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars);
     }
 }

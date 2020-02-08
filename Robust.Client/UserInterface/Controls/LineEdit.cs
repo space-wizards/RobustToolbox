@@ -344,6 +344,15 @@ namespace Robust.Client.UserInterface.Controls
                         InsertAtCursor(clipboard.GetText());
                     }
                 }
+                else if (args.Function == EngineKeyFunctions.TextDelete)
+                {
+                    if (_cursorPosition >= _text.Length || !Editable)
+                        return;
+
+                    _text = _text.Remove(_cursorPosition, 1);
+                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                    _updatePseudoClass();
+                }
             }
             else
             {

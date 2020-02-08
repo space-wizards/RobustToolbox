@@ -14,11 +14,25 @@ namespace Robust.UnitTesting.Shared.Map
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 
+        [OneTimeSetUp]
+        public void OneTimeSetup()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            mapMan.Initialize();
+        }
+
         [SetUp]
         public void Setup()
         {
             var mapMan = IoCManager.Resolve<IMapManager>();
-            mapMan.Restart();
+            mapMan.Startup();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+            mapMan.Shutdown();
         }
 
         /// <summary>
@@ -66,7 +80,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
-            var oldEntity = (Entity)entMan.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, MapId.Nullspace));
+            var oldEntity = (Entity)entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             oldEntity.InitializeComponents();
 
             mapMan.Restart();
@@ -117,10 +131,24 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             // Act
-            var newEntity = entMan.SpawnEntityAt(null, new MapCoordinates(Vector2.Zero, MapId.Nullspace));
+            var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
             Assert.That(newEntity.Transform.MapID, Is.EqualTo(MapId.Nullspace));
+        }
+
+        [Test]
+        public void Restart_MapEntity_IsRemoved()
+        {
+            var mapMan = IoCManager.Resolve<IMapManager>();
+
+            var entity = mapMan.CreateNewMapEntity(MapId.Nullspace);
+
+            mapMan.Restart();
+
+            Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
+            Assert.That(entity.Deleted, Is.True);
+            Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }
 }

@@ -6,6 +6,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Shared.Map
@@ -440,6 +441,28 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(bounds.Bottom, Is.EqualTo(5));
             Assert.That(bounds.Right, Is.EqualTo(4));
             Assert.That(bounds.Top, Is.EqualTo(6));
+        }
+
+        [Test]
+        public void PointCollideWithChunk()
+        {
+            var chunk = MapChunkFactory(7, 9);
+            chunk.SetTile(3, 5, new Tile(1));
+
+            var result = chunk.CollidesWithChunk(new MapIndices(3, 5));
+
+            Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void PointNotCollideWithChunk()
+        {
+            var chunk = MapChunkFactory(7, 9);
+            chunk.SetTile(3, 5, new Tile(1));
+
+            var result = chunk.CollidesWithChunk(new MapIndices(3, 6));
+
+            Assert.That(result, Is.False);
         }
 
         public IMapChunkInternal MapChunkFactory(int xChunkIndex, int yChunkIndex)

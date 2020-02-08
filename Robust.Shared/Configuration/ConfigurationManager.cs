@@ -186,6 +186,12 @@ namespace Robust.Shared.Configuration
                 cVar.Flags = flags;
                 cVar.Registered = true;
                 cVar.ValueChanged = valueChangedDelegate;
+
+                if (cVar.OverrideValue != null)
+                {
+                    cVar.OverrideValueParsed = ParseOverrideValue(cVar.OverrideValue, typeof(T));
+                }
+
                 return;
             }
 
@@ -211,6 +217,10 @@ namespace Robust.Shared.Configuration
             {
                 cVar.Value = value;
                 cVar.ValueChanged?.Invoke(value);
+
+                // Setting an override value just turns off the override, basically.
+                cVar.OverrideValue = null;
+                cVar.OverrideValueParsed = null;
             }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
@@ -221,7 +231,7 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T)(cVar.Value ?? cVar.DefaultValue);
+                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue);
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -232,6 +242,46 @@ namespace Robust.Shared.Configuration
 
             // If it's null it's a string, since the rest is primitives which aren't null.
             return cVar.Value?.GetType() ?? typeof(string);
+        }
+
+        public void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars)
+        {
+            foreach (var (key, value) in cVars)
+            {
+                if (_configVars.TryGetValue(key, out var cfgVar))
+                {
+                    cfgVar.OverrideValue = value;
+                    cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
+                    cfgVar.ValueChanged?.Invoke(cfgVar.OverrideValueParsed);
+                }
+                else
+                {
+                    //or add another unregistered CVar
+                    var cVar = new ConfigVar(key, null, CVar.NONE) { OverrideValue = value };
+                    _configVars.Add(key, cVar);
+                }
+            }
+        }
+
+        private object ParseOverrideValue(string value, Type type)
+        {
+            if (type == typeof(int))
+            {
+                return int.Parse(value);
+            }
+
+            if (type == typeof(bool))
+            {
+                return bool.Parse(value);
+            }
+
+            if (type == typeof(float))
+            {
+                return float.Parse(value);
+            }
+
+            // Must be a string.
+            return value;
         }
 
         /// <summary>
@@ -310,6 +360,12 @@ namespace Robust.Shared.Configuration
             ///     Invoked when the value of this CVar is changed.
             /// </summary>
             public Action<object> ValueChanged { get; set; }
+
+            // We don't know what the type of the var is until it's registered.
+            // So we can't actually parse them until then.
+            // So we keep the raw string around.
+            public string OverrideValue { get; set; }
+            public object OverrideValueParsed { get; set; }
         }
     }
 

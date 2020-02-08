@@ -1,6 +1,7 @@
 ﻿using System;
-using Robust.Shared.Maths;
+
 using Robust.Client.Utility;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics

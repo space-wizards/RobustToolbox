@@ -565,7 +565,7 @@ namespace Robust.Shared.Maths
 
         /// <summary>Multiply left matrix times this matrix.</summary>
         /// <param name="matrix">The matrix to multiply.</param>
-        public void Multiply(ref Matrix3 matrix)
+        public void Multiply(in Matrix3 matrix)
         {
             var r0c0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
             var r0c1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;

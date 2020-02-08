@@ -41,16 +41,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
 #pragma warning restore 649
 
         /// <inheritdoc />
-        public event EventHandler<MoveEventArgs> OnMove;
-
-        /// <inheritdoc />
         public override string Name => "Transform";
 
         /// <inheritdoc />
         public sealed override uint? NetID => NetIDs.TRANSFORM;
-
-        /// <inheritdoc />
-        public sealed override Type StateType => typeof(TransformComponentState);
 
         /// <inheritdoc />
         [ViewVariables]
@@ -106,6 +100,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetRotation(value);
                 RebuildMatrices();
+                UpdateEntityTree();
                 Dirty();
             }
         }
@@ -156,12 +151,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var parentMatrix = Parent.WorldMatrix;
-                    var myMatrix = GetWorldMatrix();
+                    var myMatrix = GetLocalMatrix();
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                     return result;
                 }
 
-                return GetWorldMatrix();
+                return GetLocalMatrix();
             }
         }
 
@@ -173,12 +168,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     var matP = Parent.InvWorldMatrix;
-                    var myMatrix = GetWorldMatrixInv();
+                    var myMatrix = GetLocalMatrixInv();
                     Matrix3.Multiply(ref matP, ref myMatrix, out var result);
                     return result;
                 }
 
-                return GetWorldMatrixInv();
+                return GetLocalMatrixInv();
             }
         }
 
@@ -210,7 +205,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // grid coords to world coords
-                var worldCoords = value.ToWorld(_mapManager);
+                var worldCoords = value.ToMapPos(_mapManager);
 
                 if (value.GridID != GridID)
                 {
@@ -219,7 +214,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
-                var newPos = Parent.InvWorldMatrix.Transform(worldCoords.Position);
+                var newPos = Parent.InvWorldMatrix.Transform(worldCoords);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
@@ -227,14 +222,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetPosition(newPos);
 
-                Dirty();
-
                 //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                 if (Running)
                 {
                     RebuildMatrices();
-                    OnMove?.Invoke(this, new MoveEventArgs(GridPosition, value));
+                    Owner.SendMessage(this, new MoveMessage(GridPosition, value));
                 }
+
+                UpdateEntityTree();
+                Dirty();
             }
         }
 
@@ -273,10 +269,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return;
 
                 SetPosition(newPos);
-                Dirty();
 
                 RebuildMatrices();
-                OnMove?.Invoke(this, new MoveEventArgs(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
+                UpdateEntityTree();
+                Dirty();
+
+                Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
 
@@ -302,14 +300,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var oldPos = GridPosition;
                 SetPosition(value);
                 RebuildMatrices();
+                UpdateEntityTree();
                 Dirty();
-                OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
+                Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
             }
         }
 
         [ViewVariables]
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
+
+        public IEnumerable<EntityUid> ChildEntityUids => _children;
+
+        public int ChildCount => _children.Count;
 
         /// <inheritdoc />
         public Vector2 LerpDestination => _nextPosition;
@@ -323,6 +326,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // If it cannot, then this is an orphan entity, and an exception will be thrown.
             // DO NOT REMOVE THIS LINE
             var _ = MapID;
+
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -332,6 +337,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
+            UpdateEntityTree();
+            Dirty();
         }
 
         /// <inheritdoc />
@@ -381,7 +388,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
 
-
+            UpdateEntityTree();
             Dirty();
         }
 
@@ -410,6 +417,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // offset position from world to parent
             SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
+            UpdateEntityTree();
             Dirty();
         }
 
@@ -509,7 +517,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         SetPosition(newState.LocalPosition);
                     }
 
-                    OnMove?.Invoke(this, new MoveEventArgs(oldPos, GridPosition));
+                    Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
                     rebuildMatrices = true;
                 }
 
@@ -528,6 +536,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _nextRotation = ((TransformComponentState) nextState).Rotation;
             else
                 _nextRotation = _localRotation; // this should cause the lerp to do nothing
+
+            UpdateEntityTree();
+            Dirty();
         }
 
         // Hooks for GodotTransformComponent go here.
@@ -559,7 +570,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
         }
 
-        protected virtual Matrix3 GetWorldMatrix()
+        public Matrix3 GetLocalMatrix()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _worldMatrix;
@@ -576,7 +587,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return transMat;
         }
 
-        protected virtual Matrix3 GetWorldMatrixInv()
+        public Matrix3 GetLocalMatrixInv()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
                 return _invWorldMatrix;
@@ -619,26 +630,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _invWorldMatrix = itransMat;
         }
 
-        /// <summary>
-        ///     Calculate our LocalCoordinates as if the location relative to our parent is equal to <paramref name="localPosition" />.
-        /// </summary>
-        private GridCoordinates LocalCoordinatesFor(Vector2 localPosition, GridId gridId)
-        {
-            if (Parent != null)
-            {
-                // transform localPosition from parent coords to world coords
-                var worldPos = Parent.WorldMatrix.Transform(localPosition);
-                var grid = _mapManager.GetGrid(gridId);
-                var lc = new GridCoordinates(worldPos, _mapManager.GetDefaultGridId(grid.ParentMapId));
-
-                // then to parent grid coords
-                return lc.ConvertToGrid(_mapManager, _mapManager.GetGrid(Parent.GridPosition.GridID));
-            }
-            else
-            {
-                return new GridCoordinates(localPosition, gridId);
-            }
-        }
+        private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
         public string GetDebugString()
         {

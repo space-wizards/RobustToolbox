@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -52,12 +51,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Entity that this component is attached to.
         /// </summary>
         IEntity Owner { get; }
-
-        /// <summary>
-        ///     Class Type that deserializes this component. This is the type that GetComponentState returns,
-        ///     and is the type that is passed to HandleComponentState.
-        /// </summary>
-        Type StateType { get; }
 
         /// <summary>
         /// Component has been properly initialized.

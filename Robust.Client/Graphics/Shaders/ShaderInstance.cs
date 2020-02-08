@@ -20,12 +20,97 @@ namespace Robust.Client.Graphics.Shaders
     /// </remarks>
     public abstract class ShaderInstance : IDisposable
     {
+        private bool _stencilTestEnabled;
+        private int _stencilRef;
+        private int _stencilReadMask;
+        private int _stencilWriteMask;
+        private StencilFunc _stencilFunc = StencilFunc.Always;
+        private StencilOp _stencilOp = StencilOp.Keep;
+
         public bool Disposed { get; private set; }
 
         /// <summary>
         ///     Whether this shader is mutable. An immutable shader can no longer be edited and is ideal for sharing.
         /// </summary>
         public bool Mutable { get; private set; } = true;
+
+        public bool StencilTestEnabled
+        {
+            get => _stencilTestEnabled;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilTestEnabled = value;
+                SetStencilTestEnabledImpl(value);
+            }
+        }
+
+        public int StencilRef
+        {
+            get => _stencilRef;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilRef = value;
+                SetStencilRefImpl(value);
+            }
+        }
+
+        public int StencilWriteMask
+        {
+            get => _stencilWriteMask;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilWriteMask = value;
+                SetStencilWriteMaskImpl(value);
+            }
+        }
+
+        public int StencilReadMask
+        {
+            get => _stencilReadMask;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilReadMask = value;
+                SetStencilReadMaskRefImpl(value);
+            }
+        }
+
+        public StencilFunc StencilFunc
+        {
+            get => _stencilFunc;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilFunc = value;
+                SetStencilFuncImpl(value);
+            }
+        }
+
+        public StencilOp StencilOp
+        {
+            get => _stencilOp;
+            set
+            {
+                EnsureAlive();
+                EnsureMutable();
+
+                _stencilOp = value;
+                SetStencilOpImpl(value);
+            }
+        }
 
         public void SetParameter(string name, float value)
         {
@@ -156,18 +241,25 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
-        protected abstract ShaderInstance DuplicateImpl();
+        private protected abstract ShaderInstance DuplicateImpl();
 
-        protected abstract void SetParameterImpl(string name, float value);
-        protected abstract void SetParameterImpl(string name, Vector2 value);
-        protected abstract void SetParameterImpl(string name, Vector3 value);
-        protected abstract void SetParameterImpl(string name, Vector4 value);
-        protected abstract void SetParameterImpl(string name, Color value);
-        protected abstract void SetParameterImpl(string name, int value);
-        protected abstract void SetParameterImpl(string name, Vector2i value);
-        protected abstract void SetParameterImpl(string name, bool value);
-        protected abstract void SetParameterImpl(string name, in Matrix3 value);
-        protected abstract void SetParameterImpl(string name, in Matrix4 value);
-        protected abstract void SetParameterImpl(string name, Texture value);
+        private protected abstract void SetParameterImpl(string name, float value);
+        private protected abstract void SetParameterImpl(string name, Vector2 value);
+        private protected abstract void SetParameterImpl(string name, Vector3 value);
+        private protected abstract void SetParameterImpl(string name, Vector4 value);
+        private protected abstract void SetParameterImpl(string name, Color value);
+        private protected abstract void SetParameterImpl(string name, int value);
+        private protected abstract void SetParameterImpl(string name, Vector2i value);
+        private protected abstract void SetParameterImpl(string name, bool value);
+        private protected abstract void SetParameterImpl(string name, in Matrix3 value);
+        private protected abstract void SetParameterImpl(string name, in Matrix4 value);
+        private protected abstract void SetParameterImpl(string name, Texture value);
+
+        private protected abstract void SetStencilOpImpl(StencilOp op);
+        private protected abstract void SetStencilFuncImpl(StencilFunc func);
+        private protected abstract void SetStencilTestEnabledImpl(bool enabled);
+        private protected abstract void SetStencilRefImpl(int @ref);
+        private protected abstract void SetStencilWriteMaskImpl(int mask);
+        private protected abstract void SetStencilReadMaskRefImpl(int mask);
     }
 }

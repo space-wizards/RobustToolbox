@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Threading;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
@@ -31,6 +32,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Server.Interfaces.Debugging;
+using Robust.Shared;
 
 namespace Robust.Server
 {
@@ -40,38 +42,22 @@ namespace Robust.Server
     internal sealed class BaseServer : IBaseServerInternal
     {
 #pragma warning disable 649
-        [Dependency]
-        private readonly IConfigurationManager _config;
-        [Dependency]
-        private readonly IComponentManager _components;
-        [Dependency]
-        private readonly IServerEntityManager _entities;
-        [Dependency]
-        private readonly ILogManager _log;
-        [Dependency]
-        private readonly IRobustSerializer _serializer;
-        [Dependency]
-        private readonly IGameTiming _time;
-        [Dependency]
-        private readonly IResourceManagerInternal _resources;
-        [Dependency]
-        private readonly IMapManager _mapManager;
-        [Dependency]
-        private readonly ITimerManager timerManager;
-        [Dependency]
-        private readonly IServerGameStateManager _stateManager;
-        [Dependency]
-        private readonly IServerNetManager _network;
-        [Dependency]
-        private readonly ISystemConsoleManager _systemConsole;
-        [Dependency]
-        private readonly ITaskManager _taskManager;
-        [Dependency]
-        private readonly ILocalizationManager _localizationManager;
-        [Dependency]
-        private IRuntimeLog runtimeLog;
-        [Dependency]
-        private readonly IModLoader _modLoader;
+        [Dependency] private readonly IConfigurationManager _config;
+        [Dependency] private readonly IComponentManager _components;
+        [Dependency] private readonly IServerEntityManager _entities;
+        [Dependency] private readonly ILogManager _log;
+        [Dependency] private readonly IRobustSerializer _serializer;
+        [Dependency] private readonly IGameTiming _time;
+        [Dependency] private readonly IResourceManagerInternal _resources;
+        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly ITimerManager timerManager;
+        [Dependency] private readonly IServerGameStateManager _stateManager;
+        [Dependency] private readonly IServerNetManager _network;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole;
+        [Dependency] private readonly ITaskManager _taskManager;
+        [Dependency] private readonly ILocalizationManager _localizationManager;
+        [Dependency] private IRuntimeLog runtimeLog;
+        [Dependency] private readonly IModLoader _modLoader;
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
@@ -82,7 +68,7 @@ namespace Robust.Server
         private int _lastReceivedBytes;
         private int _lastSentBytes;
 
-        public string ContentRootDir { get; set; } = "../../../";
+        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
@@ -142,6 +128,12 @@ namespace Robust.Server
                 }
             }
 
+            if (_commandLineArgs != null)
+            {
+                _config.OverrideConVars(_commandLineArgs.CVars);
+            }
+
+
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
@@ -149,7 +141,8 @@ namespace Robust.Server
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd")).Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd"))
+                .Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
             var fullPath = Path.Combine(logPath, logFilename);
 
             if (!Path.IsPathRooted(fullPath))
@@ -175,7 +168,9 @@ namespace Robust.Server
             catch (Exception e)
             {
                 var port = netMan.Port;
-                Logger.Fatal("Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}", port, e);
+                Logger.Fatal(
+                    "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
+                    port, e);
                 return true;
             }
 
@@ -189,21 +184,15 @@ namespace Robust.Server
 #else
             // Load from the resources dir in the repo root instead.
             // It's a debug build so this is fine.
-            _resources.MountContentDirectory($@"{ContentRootDir}RobustToolbox/Resources/");
-            _resources.MountContentDirectory($@"{ContentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
-            _resources.MountContentDirectory($@"{ContentRootDir}Resources/");
+            var contentRootDir = ProgramShared.FindContentRootDir();
+            _resources.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
+            _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
+            _resources.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
             // Default to en-US.
             // Perhaps in the future we could make a command line arg or something to change this default.
             _localizationManager.LoadCulture(new CultureInfo("en-US"));
-
-
-            //mount the engine content pack
-            // _resources.MountContentPack(@"EngineContentPack.zip");
-
-            //mount the default game ContentPack defined in config
-            // _resources.MountDefaultContentPack();
 
             //identical code in game controller for client
             if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
@@ -230,6 +219,7 @@ namespace Robust.Server
             _entities.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
+            _mapManager.Startup();
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
             IoCManager.Resolve<IDebugDrawingManager>().Initialize();
@@ -251,7 +241,21 @@ namespace Robust.Server
 
             IoCManager.Resolve<IStatusHost>().Start();
 
+            AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
+
             return false;
+        }
+
+        private void ProcessExiting(object sender, EventArgs e)
+        {
+            _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
+            // Give the server 10 seconds to shut down.
+            // If it still hasn't managed to assume it's stuck or something.
+            if (!_shutdownEvent.Wait(10_000))
+            {
+                System.Console.WriteLine("ProcessExited timeout (10s) has been passed; killing server.");
+                // This kills the server right? Returning?
+            }
         }
 
         /// <inheritdoc />
@@ -273,6 +277,8 @@ namespace Robust.Server
 
             _time.InSimulation = true;
             Cleanup();
+
+            _shutdownEvent.Set();
         }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
@@ -285,7 +291,7 @@ namespace Robust.Server
         /// </summary>
         private void UpdateTitle()
         {
-            if (!Environment.UserInteractive)
+            if (!Environment.UserInteractive || System.Console.IsInputRedirected)
             {
                 return;
             }
@@ -316,7 +322,7 @@ namespace Robust.Server
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
 
-            _time.TickRate = (byte)_config.GetCVar<int>("net.tickrate");
+            _time.TickRate = (byte) _config.GetCVar<int>("net.tickrate");
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -334,8 +340,11 @@ namespace Robust.Server
 
             // Wrtie down exception log
             var logPath = _config.GetCVar<string>("log.path");
-            var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath), "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+            var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath),
+                "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
             File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+
+            AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
             //TODO: This should prob shutdown all managers in a loop.
         }
@@ -344,7 +353,8 @@ namespace Robust.Server
         {
             var stats = IoCManager.Resolve<IServerNetManager>().Statistics;
 
-            var bps = $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
+            var bps =
+                $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
 
             _lastSentBytes = stats.SentBytes;
             _lastReceivedBytes = stats.ReceivedBytes;

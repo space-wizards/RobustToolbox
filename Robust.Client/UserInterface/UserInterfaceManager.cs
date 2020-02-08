@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface
         private Control _controlFocused;
 
         public LayoutContainer StateRoot { get; private set; }
-        public LayoutContainer ModalRoot { get; private set; }
+        public PopupContainer ModalRoot { get; private set; }
         public Control CurrentlyHovered { get; private set; }
         public float UIScale { get; private set; } = 1;
         public Control RootControl { get; private set; }
@@ -128,7 +128,7 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(PopupRoot);
 
-            ModalRoot = new LayoutContainer
+            ModalRoot = new PopupContainer
             {
                 Name = "ModalRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,

@@ -54,7 +54,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 if (stream.TrackingCoordinates != null)
                 {
-                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToWorld(_mapManager).Position);
+                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToMapPos(_mapManager));
                 }
                 else if (stream.TrackingEntity != null)
                 {
@@ -149,7 +149,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            source.SetPosition(coordinates.ToWorld(_mapManager).Position);
+            source.SetPosition(coordinates.ToMapPos(_mapManager));
             ApplyAudioParams(audioParams, source);
 
             source.StartPlaying();

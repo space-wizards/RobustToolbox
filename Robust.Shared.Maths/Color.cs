@@ -185,7 +185,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">An object to compare to.</param>
         /// <returns>True obj is a Color4 structure with the same components as this Color4; false otherwise.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Color))
                 return false;
@@ -1817,8 +1817,7 @@ namespace Robust.Shared.Maths
         private static readonly Dictionary<Color, string> DefaultColorsInverted =
             DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
 
-        [CanBeNull]
-        public string Name()
+        public string? Name()
         {
             return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
         }

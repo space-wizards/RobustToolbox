@@ -139,5 +139,6 @@ namespace Robust.Shared.Interfaces.Map
         // but old ones can be deleted after.
         void ApplyGameStatePre(GameStateMapData data);
         void ApplyGameStatePost(GameStateMapData data);
+        bool HasMapEntity(MapId mapId);
     }
 }

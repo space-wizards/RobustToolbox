@@ -162,7 +162,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX, 1);
+            var ray = new CollisionRay(new Vector2(0, 1), Vector2.UnitX, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();
@@ -175,7 +175,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.True);
@@ -189,7 +189,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
+            var ray = new CollisionRay(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();
@@ -201,7 +201,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.False);

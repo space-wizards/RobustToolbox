@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -59,12 +60,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         Matrix3 InvWorldMatrix { get; }
 
         /// <summary>
-        ///     Event that gets invoked every time the position gets modified through properties such as <see cref="LocalRotation" />.
-        /// </summary>
-        [Obsolete]
-        event EventHandler<MoveEventArgs> OnMove;
-
-        /// <summary>
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         ITransformComponent Parent { get; }
@@ -104,5 +99,9 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         void AttachParent(IEntity parent);
 
         IEnumerable<ITransformComponent> Children { get; }
+        int ChildCount { get; }
+        IEnumerable<EntityUid> ChildEntityUids { get; }
+        Matrix3 GetLocalMatrix();
+        Matrix3 GetLocalMatrixInv();
     }
 }

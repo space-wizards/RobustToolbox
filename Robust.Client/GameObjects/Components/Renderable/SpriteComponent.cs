@@ -175,6 +175,9 @@ namespace Robust.Client.GameObjects
         const string LayerSerializationCache = "spritelayer";
         const string LayerMapSerializationCache = "spritelayermap";
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool IsInert { get; private set; }
+
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
         {
@@ -343,6 +346,7 @@ namespace Robust.Client.GameObjects
 
         private int AddLayer(Layer layer, int? newIndex)
         {
+            int index;
             if (newIndex.HasValue)
             {
                 Layers.Insert(newIndex.Value, layer);
@@ -354,13 +358,16 @@ namespace Robust.Client.GameObjects
                     }
                 }
 
-                return newIndex.Value;
+                index = newIndex.Value;
             }
             else
             {
                 Layers.Add(layer);
-                return Layers.Count - 1;
+                index = Layers.Count - 1;
             }
+
+            UpdateIsInert();
+            return index;
         }
 
         public void RemoveLayer(int layer)
@@ -385,6 +392,8 @@ namespace Robust.Client.GameObjects
                     LayerMap[kv.Key] = kv.Value - 1;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void RemoveLayer(object layerKey)
@@ -494,6 +503,8 @@ namespace Robust.Client.GameObjects
             var theLayer = Layers[layer];
             theLayer.State = null;
             theLayer.Texture = texture;
+
+            UpdateIsInert();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -582,6 +593,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -711,6 +724,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            UpdateIsInert();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -819,6 +834,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Visible = visible;
+
+            UpdateIsInert();
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -941,6 +958,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.AutoAnimated = autoAnimated;
+
+            UpdateIsInert();
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -990,33 +1009,35 @@ namespace Robust.Client.GameObjects
             return LayerGetActualRSI(layer);
         }
 
-        internal void OpenGLRender(DrawingHandleWorld drawingHandle, bool useWorldTransform=true, Direction? overrideDirection=null)
+        internal void Render(DrawingHandleWorld drawingHandle, in Matrix3 worldTransform, Angle worldRotation, Direction? overrideDirection=null)
         {
-            Matrix3 transform;
-            if (useWorldTransform)
+            var angle = Rotation;
+            if (Directional)
             {
-                var angle = Rotation;
-                if (Directional)
-                {
-                    angle -= Owner.Transform.WorldRotation;
-                }
-                else
-                {
-                    angle -= new Angle(MathHelper.PiOver2);
-                }
-
-                var mOffset = Matrix3.CreateTranslation(Offset);
-                var mRotation = Matrix3.CreateRotation(angle);
-                Matrix3.Multiply(ref mRotation, ref mOffset, out transform);
-
-                var worldTransform = Owner.Transform.WorldMatrix;
-                transform.Multiply(ref worldTransform);
+                angle -= worldRotation;
             }
             else
             {
-                transform = Matrix3.Identity;
+                angle -= new Angle(MathHelper.PiOver2);
             }
 
+            var mOffset = Matrix3.CreateTranslation(Offset);
+            var mRotation = Matrix3.CreateRotation(angle);
+            Matrix3.Multiply(ref mRotation, ref mOffset, out var transform);
+
+            transform.Multiply(worldTransform);
+
+            RenderInternal(drawingHandle, worldRotation, overrideDirection, transform);
+        }
+
+        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        {
+            RenderInternal(drawingHandle, worldRotation, overrideDirection, Matrix3.Identity);
+        }
+
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection,
+            in Matrix3 transform)
+        {
             drawingHandle.SetTransform(transform);
 
             foreach (var layer in Layers)
@@ -1052,8 +1073,9 @@ namespace Robust.Client.GameObjects
                             }
                             else
                             {
-                                dir = GetDir(state.Directions);
+                                dir = GetDir(state.Directions, worldRotation);
                             }
+
                             layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
                         }
 
@@ -1068,7 +1090,7 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(layer.Shader);
                 }
 
-                drawingHandle.DrawTexture(texture, -(Vector2)texture.Size/(2f*EyeManager.PIXELSPERMETER),
+                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PIXELSPERMETER),
                     color * layer.Color);
 
                 if (layer.Shader != null)
@@ -1112,15 +1134,23 @@ namespace Robust.Client.GameObjects
                 }
             }
 
+            static List<Layer> CloneLayers(List<Layer> source)
+            {
+                var clone = new List<Layer>(source.Count);
+                foreach (var layer in source)
+                {
+                    clone.Add(new Layer(layer));
+                }
+
+                return clone;
+            }
+
             if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
             {
                 LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
                 _layerMapShared = true;
-                Layers = new List<Layer>(layers.Count);
-                foreach (var clone in layers)
-                {
-                    Layers.Add(new Layer(clone));
-                }
+                Layers = CloneLayers(layers);
+                UpdateIsInert();
                 return;
             }
 
@@ -1177,7 +1207,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        var stateid = new RSI.StateId(layerDatum.State, RSI.Selectors.None);
+                        var stateid = new RSI.StateId(layerDatum.State);
                         layer.State = stateid;
                         if (theRsi.TryGetState(stateid, out var state))
                         {
@@ -1260,8 +1290,9 @@ namespace Robust.Client.GameObjects
             Layers = layers;
             LayerMap = layerMap;
             _layerMapShared = true;
-            serializer.SetCacheData(LayerSerializationCache, Layers.ShallowClone());
+            serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
+            UpdateIsInert();
         }
 
         public void FrameUpdate(float delta)
@@ -1381,15 +1412,44 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType type)
+        private RSI.State.Direction GetDir(RSI.State.DirectionType type, Angle worldRotation)
         {
             if (!Directional)
+
             {
                 return RSI.State.Direction.South;
             }
 
-            var angle = new Angle(Owner.Transform.WorldRotation);
+            var angle = new Angle(worldRotation);
             return angle.GetDir().Convert(type);
+        }
+
+        private void UpdateIsInert()
+        {
+            IsInert = true;
+
+            foreach (var layer in Layers)
+            {
+                // Since StateId is a struct, we can't null-check it directly.
+                if (!layer.State.IsValid || !layer.Visible || !layer.AutoAnimated)
+                {
+                    continue;
+                }
+
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null)
+                {
+                    continue;
+                }
+
+                var state = rsi[layer.State];
+
+                if (state.IsAnimated)
+                {
+                    IsInert = false;
+                    break;
+                }
+            }
         }
 
         private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
@@ -1453,7 +1513,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/diral/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, Directional, GetDir(RSI.State.DirectionType.Dir8)
+                Color, Directional, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation)
             );
 
             foreach (var layer in Layers)

@@ -402,6 +402,8 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public void RemoveAllChildren()
         {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
             foreach (var child in Children.ToList())
             {
                 RemoveChild(child);
@@ -413,6 +415,8 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public void Orphan()
         {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
             Parent?.RemoveChild(this);
         }
 
@@ -429,11 +433,15 @@ namespace Robust.Client.UserInterface
         /// </exception>
         public void AddChild(Control child)
         {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
             if (child == null) throw new ArgumentNullException(nameof(child));
             if (child.Parent != null)
             {
                 throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
             }
+
+            DebugTools.Assert(!child.Disposed, "Child is disposed.");
 
             if (child == this)
             {
@@ -493,6 +501,8 @@ namespace Robust.Client.UserInterface
         /// </exception>
         public void RemoveChild(Control child)
         {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
             if (child.Parent != this)
             {
                 throw new InvalidOperationException("The provided control is not a direct child of this control.");

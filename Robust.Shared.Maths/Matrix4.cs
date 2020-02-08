@@ -1094,7 +1094,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">The object to compare with this matrix.</param>
         /// <returns>True if the instances are equal; false otherwise.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (!(obj is Matrix4))
                 return false;

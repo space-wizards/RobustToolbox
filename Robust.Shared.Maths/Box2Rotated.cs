@@ -66,7 +66,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Box2Rotated other && Equals(other);

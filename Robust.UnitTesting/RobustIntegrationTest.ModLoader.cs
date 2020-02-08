@@ -1,3 +1,4 @@
+using System.IO;
 using System.Reflection;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Resources;
@@ -12,7 +13,7 @@ namespace Robust.UnitTesting
             public Assembly ServerContentAssembly { get; set; }
             public Assembly SharedContentAssembly { get; set; }
 
-            public override void LoadGameAssembly<T>(byte[] assembly, byte[] symbols = null)
+            public override void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
             {
                 if (TryLoadPreset<T>())
                 {

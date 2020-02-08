@@ -20,10 +20,6 @@
             "type": "object",
             "properties": {
                 "name": {"type": "string"},
-                "select": {
-                    "type": "array",
-                    "items": {"type": "string"}
-                },
                 "flags": {"type": "object"}, //To be de-serialized as a Dictionary
                 "directions": {"$ref": "#/definitions/directions"},
                 "delays": {

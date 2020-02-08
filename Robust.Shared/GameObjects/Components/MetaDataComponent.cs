@@ -80,9 +80,6 @@ namespace Robust.Shared.GameObjects
         public override uint? NetID => NetIDs.META_DATA;
 
         /// <inheritdoc />
-        public override Type StateType => typeof(MetaDataComponentState);
-
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityName
         {

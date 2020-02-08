@@ -168,6 +168,9 @@ namespace Robust.Shared.Network
 
             _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
 
+            _config.RegisterCVar("net.sendbuffersize", 131071, CVar.ARCHIVE);
+            _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
+
             if (!isServer)
             {
                 _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
@@ -331,6 +334,9 @@ namespace Robust.Shared.Network
 
             // ping the client 4 times every second.
             netConfig.PingInterval = 0.25f;
+
+            netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
+            netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
 
 #if DEBUG
             //Simulate Latency

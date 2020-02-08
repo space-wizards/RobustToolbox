@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -39,6 +40,8 @@ namespace Robust.Shared.Interfaces.Physics
         event Action<DebugRayData> DebugDrawRay;
 
         IEnumerable<(IPhysBody, IPhysBody)> GetCollisions();
+
+        bool Update(IPhysBody collider);
 
     }
 

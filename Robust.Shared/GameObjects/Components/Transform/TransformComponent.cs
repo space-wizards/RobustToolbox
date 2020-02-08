@@ -9,10 +9,12 @@ using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -36,6 +38,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
@@ -101,6 +104,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetRotation(value);
                 RebuildMatrices();
                 UpdateEntityTree();
+                UpdatePhysicsTree();
                 Dirty();
             }
         }
@@ -230,6 +234,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 UpdateEntityTree();
+                UpdatePhysicsTree();
                 Dirty();
             }
         }
@@ -272,6 +277,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 RebuildMatrices();
                 UpdateEntityTree();
+                UpdatePhysicsTree();
                 Dirty();
 
                 Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
@@ -301,6 +307,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetPosition(value);
                 RebuildMatrices();
                 UpdateEntityTree();
+                UpdatePhysicsTree();
                 Dirty();
                 Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
             }
@@ -389,6 +396,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             MapPosition = mapPos;
 
             UpdateEntityTree();
+            UpdatePhysicsTree();
             Dirty();
         }
 
@@ -538,6 +546,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _nextRotation = _localRotation; // this should cause the lerp to do nothing
 
             UpdateEntityTree();
+            TryUpdatePhysicsTree();
             Dirty();
         }
 
@@ -629,6 +638,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             _invWorldMatrix = itransMat;
         }
+
+        private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
+        private bool UpdatePhysicsTree() => Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

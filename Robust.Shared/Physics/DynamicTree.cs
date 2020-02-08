@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics
         private Proxy _freeNodes;
 
         // avoids "Collection was modified; enumeration operation may not execute."
-        private ConcurrentDictionary<T, Proxy> _nodeLookup;
+        private IDictionary<T, Proxy> _nodeLookup;
 
         private Node[] _nodes;
 
@@ -87,7 +87,7 @@ namespace Robust.Shared.Physics
 
             _root = Proxy.Free;
 
-            _nodeLookup = new ConcurrentDictionary<T, Proxy>();
+            _nodeLookup = new Dictionary<T, Proxy>();
             _nodes = new Node[capacity];
 
             var l = Capacity - 1;
@@ -207,7 +207,43 @@ namespace Robust.Shared.Physics
         }
 
         public IEnumerator<T> GetEnumerator()
-            => _nodeLookup.Keys.GetEnumerator();
+        {
+            var stack = new Stack<Proxy>(256);
+
+            stack.Push(_root);
+
+            while (stack.Count > 0)
+            {
+                var proxy = stack.Pop();
+
+                if (proxy == Proxy.Free)
+                {
+                    continue;
+                }
+
+                // note: non-ref stack local copy here
+                var node = _nodes[proxy];
+
+                if (!node.IsLeaf)
+                {
+                    if (node.Child1 != Proxy.Free)
+                    {
+                        stack.Push(node.Child1);
+                    }
+
+                    if (node.Child2 != Proxy.Free)
+                    {
+                        stack.Push(node.Child2);
+                    }
+
+                    continue;
+                }
+
+                var item = node.Item;
+
+                yield return node.Item;
+            }
+        }
 
         IEnumerator IEnumerable.GetEnumerator()
             => GetEnumerator();
@@ -220,7 +256,7 @@ namespace Robust.Shared.Physics
             _nodes = new Node[capacity];
             _root = Proxy.Free;
 
-            _nodeLookup = new ConcurrentDictionary<T, Proxy>();
+            _nodeLookup = new Dictionary<T, Proxy>();
             _nodes = new Node[capacity];
 
             var l = Capacity - 1;
@@ -300,7 +336,7 @@ namespace Robust.Shared.Physics
 
         public bool Remove(in T item)
         {
-            if (!_nodeLookup.TryRemove(item, out var proxy))
+            if (!_nodeLookup.Remove(item, out var proxy))
             {
                 return false;
             }
@@ -434,7 +470,7 @@ namespace Robust.Shared.Physics
 
             ISet<(Proxy, Proxy)> collisions = new HashSet<(Proxy, Proxy)>(_nodeLookup.Count);
 
-            foreach (var leaf in _nodeLookup.Values)
+            foreach (var (_, leaf) in _nodeLookup)
             {
                 foreach (var pair in GetCollisions(stack, collisions, leaf, approx))
                 {

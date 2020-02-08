@@ -322,5 +322,9 @@ namespace Robust.Shared.Physics
                 }
             }
         }
+
+        public bool Update(IPhysBody collider)
+            => this[collider.MapID].Update(collider);
+
     }
 }

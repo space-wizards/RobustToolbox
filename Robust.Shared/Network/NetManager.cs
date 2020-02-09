@@ -548,7 +548,14 @@ namespace Robust.Shared.Network
             _channels.Remove(connection);
 
             if (IsClient)
+            {
+                connection.Peer.Shutdown(reason);
+                _toCleanNetPeers.Add(connection.Peer);
                 _strings.Reset();
+
+                _cancelConnectTokenSource?.Cancel();
+                _clientConnectionState = ClientConnectionState.NotConnecting;
+            }
         }
 
         /// <inheritdoc />

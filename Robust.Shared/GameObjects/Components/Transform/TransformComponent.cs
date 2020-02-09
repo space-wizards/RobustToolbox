@@ -23,6 +23,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
+        // Max distance per tick how far an entity can move before it is considered teleporting.
+        private const float MaxInterpDistance = 2.0f;
+
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
@@ -533,10 +536,21 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 {
                     RebuildMatrices();
                 }
+
+                UpdateEntityTree();
+                TryUpdatePhysicsTree();
+                Dirty();
             }
 
             if (nextState != null)
-                _nextPosition = ((TransformComponentState) nextState).LocalPosition;
+            {
+                var nextPos = ((TransformComponentState) nextState).LocalPosition;
+
+                if ((nextPos - _localPosition).LengthSquared < 2.0f)
+                    _nextPosition = nextPos;
+                else
+                    _nextPosition = _localPosition;
+            }
             else
                 _nextPosition = _localPosition; // this should cause the lerp to do nothing
 
@@ -544,10 +558,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _nextRotation = ((TransformComponentState) nextState).Rotation;
             else
                 _nextRotation = _localRotation; // this should cause the lerp to do nothing
-
-            UpdateEntityTree();
-            TryUpdatePhysicsTree();
-            Dirty();
         }
 
         // Hooks for GodotTransformComponent go here.

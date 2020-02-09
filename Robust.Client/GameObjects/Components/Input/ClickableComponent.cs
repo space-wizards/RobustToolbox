@@ -38,8 +38,10 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var state = (ClickableComponentState)curState;
-            _localBounds = state.LocalBounds;
+            if (curState is ClickableComponentState state)
+            {
+                _localBounds = state.LocalBounds;
+            }
         }
 
         /// <inheritdoc />

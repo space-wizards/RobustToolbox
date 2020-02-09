@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+﻿using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -120,8 +121,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Handles an incoming component state from the server.
         /// </summary>
-        /// <param name="curState"></param>
-        /// <param name="nextState"></param>
-        void HandleComponentState(ComponentState curState, ComponentState nextState);
+        /// <remarks>
+        /// This function should only be called on the client.
+        /// Both, one, or neither of the two states can be null.
+        /// On the next tick, curState will be nextState.
+        /// Passing null for both arguments should do nothing.
+        /// </remarks>
+        /// <param name="curState">Current component state for this tick.</param>
+        /// <param name="nextState">Next component state for the next tick.</param>
+        void HandleComponentState([CanBeNull]ComponentState curState, [CanBeNull]ComponentState nextState);
     }
 }

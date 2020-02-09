@@ -77,7 +77,8 @@ namespace Robust.Client.GameObjects.Components.Containers
 
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var cast = (ContainerManagerComponentState) curState;
+            if(!(curState is ContainerManagerComponentState cast))
+                return;
 
             // Delete now-gone containers.
             List<string> toDelete = null;

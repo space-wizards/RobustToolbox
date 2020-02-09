@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -234,9 +235,18 @@ namespace Robust.Client.GameObjects
                 if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
                 {
                     DebugTools.Assert("Component does not exist for state.");
+                    continue;
                 }
 
-                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
+                try
+                {
+                    component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("entity", $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}\n  {e}");
+                    DebugTools.Assert(e.Message);
+                }
             }
         }
     }

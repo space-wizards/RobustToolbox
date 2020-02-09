@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.Versioning;
 using System.Text;
 using Robust.Client.Interfaces;
@@ -31,6 +32,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -623,6 +625,72 @@ namespace Robust.Client.Console.Commands
 
             return false;
         }
+    }
+
+    internal class GcModeCommand : IConsoleCommand
+    {
+
+        public string Command => "gc_mode";
+
+        public string Description => "Change the GC Latency mode.";
+
+        public string Help => "gc_mode [type]";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var prevMode = GCSettings.LatencyMode;
+            if (args.Length == 0)
+            {
+                console.AddLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
+                console.AddLine("possible modes:");
+                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                {
+                    console.AddLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
+                }
+            }
+            else
+            {
+                GCLatencyMode mode;
+                if (char.IsDigit(args[0][0]) && int.TryParse(args[0], out var modeNum))
+                {
+                    mode = (GCLatencyMode) modeNum;
+                }
+                else if (!Enum.TryParse(args[0], true, out mode))
+                {
+                    console.AddLine($"unknown gc latency mode: {args[0]}");
+                    return false;
+                }
+
+                console.AddLine($"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
+                GCSettings.LatencyMode = mode;
+                console.AddLine($"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
+            }
+
+            return false;
+        }
+
+    }
+
+    internal class SerializeStatsCommand : IConsoleCommand
+    {
+
+        public string Command => "szr_stats";
+
+        public string Description => "Report serializer statistics.";
+
+        public string Help => "szr_stats";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+
+            console.AddLine($"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
+            console.AddLine($"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
+            console.AddLine($"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
+            console.AddLine($"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
+
+            return false;
+        }
+
     }
 
     internal class ChunkInfoCommand : IConsoleCommand

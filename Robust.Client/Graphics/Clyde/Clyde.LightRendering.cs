@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
@@ -14,15 +15,20 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private const int ShadowMapSize = 512;
+        private const int ShadowMapSize = 4096;
+        private const int MaxLightsPerScene = 64;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
 
         private RenderTarget _fovRenderTarget;
+        private ClydeTexture _fovDepthTextureObject;
+
+        private RenderTarget _shadowRenderTarget;
+        private ClydeTexture _shadowTextureObject;
+
         private GLShaderProgram _fovCalculationProgram;
 
         private RenderTarget LightRenderTarget;
-        private ClydeTexture _fovDepthTextureObject;
 
         private int _occlusionDataLength;
         private GLBuffer _occlusionVbo;
@@ -57,6 +63,13 @@ namespace Robust.Client.Graphics.Clyde
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
 
             _fovDepthTextureObject = _fovRenderTarget.Texture;
+
+            // Shadow FBO.
+            _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "Shadow depth render target.");
+
+            _shadowTextureObject = _shadowRenderTarget.Texture;
         }
 
         private void LoadLightingShaders()
@@ -115,6 +128,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Viewport(step * i, 0, step, 1);
 
                 GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+                _debugStats.LastGLDrawCalls += 1;
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -134,6 +148,91 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = _eyeManager.CurrentMap;
 
+            var lights = new List<(PointLightComponent light, Vector2 pos)>();
+            var maxRadius = 123f;
+
+            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            {
+                if (!component.Enabled || component.Owner.Transform.MapID != map)
+                {
+                    continue;
+                }
+
+                var transform = component.Owner.Transform;
+                var lightPos = transform.WorldPosition;
+
+                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
+
+                if (!lightBounds.Intersects(worldBounds))
+                {
+                    continue;
+                }
+
+                lights.Add((component, lightPos));
+                maxRadius = Math.Max(maxRadius, component.Radius);
+
+                if (lights.Count == MaxLightsPerScene)
+                {
+                    // TODO: Allow more than 64 lights.
+                    break;
+                }
+            }
+
+            // Draw shadow depth.
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.DepthMask(true);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _shadowRenderTarget.ObjectHandle.Handle);
+            GL.ClearDepth(1);
+            GL.ClearColor(maxRadius, maxRadius, maxRadius, 1);
+            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+
+            GL.BindVertexArray(_occlusionVao.Handle);
+
+            _fovCalculationProgram.Use();
+
+            for (var i = 0; i < lights.Count; i++)
+            {
+                var (light, lightPos) = lights[i];
+
+                var lightMatrix = Matrix4.CreateTranslation(-lightPos.X, -lightPos.Y, 0);
+                _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
+
+                var radius = light.Radius;
+
+                var baseProj = Matrix4.CreatePerspectiveFieldOfView(
+                    MathHelper.DegreesToRadians(90),
+                    1,
+                    radius / 1000,
+                    radius * 1.1f);
+
+                const int step = ShadowMapSize / 4;
+
+                for (var o = 0; o < 4; o++)
+                {
+                    var orientation = o switch
+                    {
+                        0 => new Quaternion(-0.707f, 0, 0, 0.707f),
+                        1 => new Quaternion(0.5f, -0.5f, -0.5f, -0.5f),
+                        2 => new Quaternion(0, 0.707f, 0.707f, 0),
+                        3 => new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
+                        _ => default
+                    };
+
+                    var rotMatrix = Matrix4.Rotate(orientation);
+                    var proj = rotMatrix * baseProj;
+
+                    _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
+                    GL.Viewport(step * o, i, step, 1);
+
+                    GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+                    _debugStats.LastGLDrawCalls += 1;
+                }
+            }
+
+            GL.Disable(EnableCap.DepthTest);
+
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightRenderTarget.ObjectHandle.Handle);
             var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
             GL.ClearColor(converted.R, converted.G, converted.B, 1);
@@ -144,6 +243,12 @@ namespace Robust.Client.Graphics.Clyde
 
             _lightShader.Use();
 
+            var shadowHandle = _loadedTextures[_shadowTextureObject.TextureId].OpenGLObject;
+            GL.ActiveTexture(TextureUnit.Texture1);
+            GL.BindTexture(TextureTarget.Texture2D, shadowHandle.Handle);
+
+            _lightShader.SetUniformTexture("shadowMap", TextureUnit.Texture1);
+
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
 
             var lastRange = float.NaN;
@@ -151,15 +256,10 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             Texture lastMask = null;
 
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            for (var i = 0; i < lights.Count; i++)
             {
-                if (!component.Enabled || component.Owner.Transform.MapID != map)
-                {
-                    continue;
-                }
-
+                var (component, lightPos) = lights[i];
                 var transform = component.Owner.Transform;
-                var lightPos = transform.WorldMatrix.Transform(component.Offset);
 
                 var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
 
@@ -210,6 +310,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 _lightShader.SetUniform("lightCenter", lightPos);
+                _lightShader.SetUniform("lightIndex", i);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 

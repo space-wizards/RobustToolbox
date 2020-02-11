@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -153,7 +153,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
             {
-                if (!component.Enabled || component.Owner.Transform.MapID != map)
+                if (!component.Enabled || component.Occluded || component.Owner.Transform.MapID != map)
                 {
                     continue;
                 }

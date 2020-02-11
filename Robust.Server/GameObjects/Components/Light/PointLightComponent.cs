@@ -1,4 +1,4 @@
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -9,6 +9,7 @@ namespace Robust.Server.GameObjects
     {
         private Color _color;
         private bool _enabled;
+        private bool _occluded;
         private int _radius;
         private Vector2 _offset;
 
@@ -33,6 +34,17 @@ namespace Robust.Server.GameObjects
             set
             {
                 _enabled = value;
+                Dirty();
+            }
+        }
+
+        [ViewVariables]
+        public bool Occluded
+        {
+            get => _occluded;
+            set
+            {
+                _occluded = value;
                 Dirty();
             }
         }
@@ -72,7 +84,7 @@ namespace Robust.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            return new PointLightComponentState(Enabled, Color, Radius, Offset);
+            return new PointLightComponentState(Enabled, Occluded, Color, Radius, Offset);
         }
     }
 }

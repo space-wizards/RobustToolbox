@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -89,6 +90,8 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public bool ShowContents { get; set; }
 
+        public bool Occlusion { get; set; }
+
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
@@ -127,6 +130,11 @@ namespace Robust.Server.GameObjects.Components.Container
             // spatially move the object to the location of the container. If you don't want this functionality, the
             // calling code can save the local position before calling this function, and apply it afterwords.
             transform.LocalPosition = Vector2.Zero;
+
+            if (Occlusion == true && toinsert.TryGetComponent<PointLightComponent>(out var pointlight))
+            {
+                pointlight.Occluded = true;
+            }
 
             return true;
         }
@@ -177,6 +185,12 @@ namespace Robust.Server.GameObjects.Components.Container
                 return true;
 
             toremove.Transform.DetachParent();
+
+            if (Occlusion == true && toremove.TryGetComponent<PointLightComponent>(out var pointlight))
+            {
+                pointlight.Occluded = false;
+            }
+
             return true;
         }
 

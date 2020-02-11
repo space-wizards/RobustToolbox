@@ -61,8 +61,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadLightingShaders()
         {
-            var depthVert = ReadEmbeddedShader("shadow-depth.vert");
-            var depthFrag = ReadEmbeddedShader("shadow-depth.frag");
+            var depthVert = ReadInternalShader("shadow-depth.vert");
+            var depthFrag = ReadInternalShader("shadow-depth.frag");
 
             _fovCalculationProgram = _compileProgram(depthVert, depthFrag, "Shadow Depth Program");
 

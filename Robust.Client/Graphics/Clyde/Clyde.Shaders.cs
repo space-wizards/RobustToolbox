@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.Graphics.Shaders;
@@ -106,11 +107,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadStockShaders()
         {
-            _shaderWrapCodeDefaultFrag = ReadEmbeddedShader("base-default.frag");
-            _shaderWrapCodeDefaultVert = ReadEmbeddedShader("base-default.vert");
+            _shaderWrapCodeDefaultFrag = ReadInternalShader("base-default.frag");
+            _shaderWrapCodeDefaultVert = ReadInternalShader("base-default.vert");
 
-            _shaderWrapCodeRawVert = ReadEmbeddedShader("base-raw.vert");
-            _shaderWrapCodeRawFrag = ReadEmbeddedShader("base-raw.frag");
+            _shaderWrapCodeRawVert = ReadInternalShader("base-raw.vert");
+            _shaderWrapCodeRawFrag = ReadInternalShader("base-raw.frag");
 
             var defaultLoadedShader = _resourceCache
                 .GetResource<ShaderSourceResource>("/Shaders/Internal/default-sprite.swsl").ClydeHandle;
@@ -119,20 +120,30 @@ namespace Robust.Client.Graphics.Clyde
 
             _queuedShader = _defaultShader.Handle;
 
-            var lightVert = ReadEmbeddedShader("light.vert");
-            var lightFrag = ReadEmbeddedShader("light.frag");
+            var lightVert = ReadInternalShader("light.vert");
+            var lightFrag = ReadInternalShader("light.frag");
 
             _lightShader = _compileProgram(lightVert, lightFrag, "_lightShader");
         }
 
-        private string ReadEmbeddedShader(string fileName)
+        private string GetInternalShaderPath(string fileName)
         {
-            var assembly = typeof(Clyde).Assembly;
-            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}");
-            DebugTools.AssertNotNull(stream);
-            using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
-            return reader.ReadToEnd();
+#if DEBUG
+            // for hot reload
+            var devPath = Path.Combine(Path.GetDirectoryName(GetCodeFilePath()), "Shaders", fileName);
+            if (File.Exists(devPath))
+            {
+                return devPath;
+            }
+#endif
+            return Path.Combine("Graphics", "Clyde", "Shaders", fileName);
         }
+
+        private string ReadInternalShader(string fileName) => File.ReadAllText(GetInternalShaderPath(fileName));
+
+#if DEBUG
+        private string GetCodeFilePath([CallerFilePath] string filePath = default) => filePath;
+#endif
 
         private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
         {

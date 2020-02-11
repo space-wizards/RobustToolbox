@@ -64,6 +64,8 @@ namespace Robust.Client.Graphics.Clyde
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
 
             _fovDepthTextureObject = _fovRenderTarget.Texture;
+
+            _lightingInit = true;
         }
 
         private void LoadLightingShaders()

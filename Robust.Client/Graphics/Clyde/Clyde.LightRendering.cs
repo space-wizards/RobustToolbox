@@ -29,11 +29,18 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer _occlusionEbo;
         private GLHandle _occlusionVao;
 
+        private bool _lightingInit;
+
         private unsafe void InitLighting()
         {
             LoadLightingShaders();
 
             RegenerateLightingRenderTargets();
+
+            if (_lightingInit)
+            {
+                return;
+            }
 
             // Occlusion VAO.
             // Only handles positions, no other vertex data necessary.
@@ -61,10 +68,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadLightingShaders()
         {
+            _fovCalculationProgram?.Delete();
+
             var depthVert = ReadInternalShader("shadow-depth.vert");
             var depthFrag = ReadInternalShader("shadow-depth.frag");
 
             _fovCalculationProgram = _compileProgram(depthVert, depthFrag, "Shadow Depth Program");
+
+            if (_fovDebugShaderInstance != null)
+            {
+                return;
+            }
 
             var debugShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/depth-debug.swsl");
             _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
@@ -338,4 +352,5 @@ namespace Robust.Client.Graphics.Clyde
             RegenerateLightingRenderTargets();
         }
     }
+
 }

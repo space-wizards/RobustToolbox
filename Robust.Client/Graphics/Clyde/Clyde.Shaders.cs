@@ -107,6 +107,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadStockShaders()
         {
+            _lightShader?.Delete();
+
             _shaderWrapCodeDefaultFrag = ReadInternalShader("base-default.frag");
             _shaderWrapCodeDefaultVert = ReadInternalShader("base-default.vert");
 

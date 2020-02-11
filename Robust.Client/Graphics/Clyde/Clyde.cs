@@ -80,6 +80,11 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
+        public void ReloadShaders()
+        {
+            InitLightingAndShaders();
+        }
+
         public void FrameProcess(FrameEventArgs eventArgs)
         {
             _renderTime += eventArgs.DeltaSeconds;
@@ -148,7 +153,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             LoadStockTextures();
-            LoadStockShaders();
+            InitLightingAndShaders();
 
             CreateMiscGLObjects();
 
@@ -156,10 +161,14 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
-            InitLighting();
-
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
+        }
+
+        private void InitLightingAndShaders()
+        {
+            LoadStockShaders();
+            InitLighting();
         }
 
         private unsafe void CreateMiscGLObjects()

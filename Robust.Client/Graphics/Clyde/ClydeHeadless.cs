@@ -44,6 +44,11 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
+        public void ReloadShaders()
+        {
+            // Nada.
+        }
+
 #pragma warning disable CS0067
         public override event Action<WindowResizedEventArgs> OnWindowResized;
 #pragma warning restore CS0067

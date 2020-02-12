@@ -1,12 +1,16 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
+using System.Threading;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
@@ -717,25 +721,138 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ReloadShaders : IConsoleCommand
+    internal class ReloadShadersCommand : IConsoleCommand
     {
+
         public string Command => "rldshader";
+
         public string Description => "Reloads all shaders";
+
         public string Help => "rldshader";
+
+        public static Dictionary<string, FileSystemWatcher> _watchers;
+
+        public static ConcurrentDictionary<string,bool> _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var resC = IoCManager.Resolve<IResourceCache>();
+            IResourceCache resC;
+            List<ResourcePath> paths;
+            if (args.Length == 1)
+            {
+                const int watchersCreatedByClyde = 1;
+                const int filesWatchedByClyde = 8;
+                if (args[0] == "+watch")
+                {
+                    IoCManager.Resolve<IClyde>().WatchShadersAndReload(true);
 
-            var paths = resC.GetAllResources<ShaderSourceResource>().Select(p => p.Key).ToList();
+                    resC = IoCManager.Resolve<IResourceCache>();
+                    paths = resC.GetAllResources<ShaderSourceResource>()
+                        .Select(p => p.Key).ToList();
+
+                    _watchers = new Dictionary<string, FileSystemWatcher>();
+                    var stringComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)?StringComparer.OrdinalIgnoreCase:StringComparer.Ordinal;
+                    var reversePathResolution = new ConcurrentDictionary<string, ResourcePath>(stringComparer);
+
+                    var syncCtx = SynchronizationContext.Current;
+
+                    var created = 0;
+                    foreach (var path in paths)
+                    {
+                        if (!resC.TryGetDiskFilePath(path, out var fullPath))
+                        {
+                            throw new NotImplementedException();
+                        }
+
+                        reversePathResolution[fullPath] = path;
+
+                        var dir = Path.GetDirectoryName(fullPath);
+                        var fileName = Path.GetFileName(fullPath);
+
+                        if (!_watchers.TryGetValue(dir, out var watcher))
+                        {
+                            watcher = new FileSystemWatcher(dir);
+                            watcher.Changed += (_, ev) =>
+                            {
+                                if (_reloadShadersQueued.TryAdd(ev.FullPath, true))
+                                {
+                                    syncCtx.Post(o =>
+                                    {
+                                        var changed = (FileSystemEventArgs) o;
+                                        var resPath = reversePathResolution[changed.FullPath];
+                                        IoCManager.Resolve<IResourceCache>()
+                                            .ReloadResource<ShaderSourceResource>(resPath);
+                                        console.AddLine($"Reloaded shader: {resPath}");
+                                        _reloadShadersQueued.TryRemove(changed.FullPath, out var _);
+                                    }, ev);
+                                }
+                            };
+                            _watchers.Add(dir, watcher);
+                            ++created;
+                        }
+
+                        watcher.Filters.Add(fileName);
+                    }
+
+                    foreach (var (_, watcher) in _watchers)
+                    {
+                        watcher.EnableRaisingEvents = true;
+                    }
+
+                    console.AddLine($"Created {created + watchersCreatedByClyde} shader directory watchers for {paths.Count + filesWatchedByClyde} shaders.");
+
+                    return false;
+                }
+
+                if (args[0] == "-watch")
+                {
+                    if (_watchers == null)
+                    {
+                        console.AddLine("No shader directory watchers active.");
+                        return false;
+                    }
+                    IoCManager.Resolve<IClyde>().WatchShadersAndReload(false);
+
+                    var disposed = 0;
+                    foreach (var (_,watcher) in _watchers)
+                    {
+                        ++disposed;
+                        watcher.Dispose();
+                    }
+
+                    _watchers = null;
+
+                    console.AddLine($"Disposed of {disposed + watchersCreatedByClyde} shader directory watchers.");
+
+                    return false;
+                }
+            }
+
+            if (args.Length > 1)
+            {
+                console.AddLine("Not implemented.");
+                return false;
+            }
+
+            IoCManager.Resolve<IClyde>().ReloadShaders();
+
+            console.AddLine("Reloading content shader resources...");
+
+            resC = IoCManager.Resolve<IResourceCache>();
+
+            paths = resC.GetAllResources<ShaderSourceResource>()
+                .Select(p => p.Key).ToList();
 
             foreach (var path in paths)
             {
                 resC.ReloadResource<ShaderSourceResource>(path);
             }
 
+            console.AddLine("Done.");
+
             return false;
         }
+
     }
 
     internal class ClydeDebugLayerCommand : IConsoleCommand

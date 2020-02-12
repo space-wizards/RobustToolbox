@@ -2,10 +2,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using OpenTK.Graphics.OpenGL4;
+using Robust.Client.Console;
 using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Lighting;
@@ -16,6 +20,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -78,6 +83,69 @@ namespace Robust.Client.Graphics.Clyde
             ReloadConfig();
 
             return true;
+        }
+
+        public void ReloadShaders()
+        {
+            if (IoCManager.Resolve<IClientConsole>() is IDebugConsole con)
+            {
+                con.AddLine("Reloading base shaders and reinitializing lighting...");
+            }
+            InitLightingAndShaders();
+        }
+
+        private bool _watchingShaders;
+
+        private FileSystemWatcher _shaderWatcher;
+
+        private bool _reloadShadersQueued;
+
+        public void WatchShadersAndReload(bool enabled)
+        {
+            if (enabled == _watchingShaders)
+            {
+                return;
+            }
+
+            if (enabled)
+            {
+                var path = GetInternalShaderPath("");
+                _shaderWatcher = new FileSystemWatcher(path);
+                _shaderWatcher.Filters.Add("*.vert");
+                _shaderWatcher.Filters.Add("*.frag");
+                _shaderWatcher.Filters.Add("*.swsl");
+                _shaderWatcher.Changed += (_, args) =>
+                {
+                    if (_reloadShadersQueued)
+                    {
+                        return;
+                    }
+
+                    var name = args.Name;
+
+                    if (!name.EndsWith(".vert")
+                        && !name.EndsWith(".frag"))
+                    {
+                        return;
+                    }
+
+                    _reloadShadersQueued = true;
+                    SynchronizationContext.Current.Post(o =>
+                    {
+                        ((Clyde) o).ReloadShaders();
+                        _reloadShadersQueued = false;
+                    }, this);
+                };
+                _shaderWatcher.EnableRaisingEvents = true;
+            }
+            else
+            {
+                _shaderWatcher.Dispose();
+                _shaderWatcher = null;
+            }
+
+            _watchingShaders = enabled;
+
         }
 
         public void FrameProcess(FrameEventArgs eventArgs)
@@ -148,7 +216,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
             LoadStockTextures();
-            LoadStockShaders();
+            InitLightingAndShaders();
 
             CreateMiscGLObjects();
 
@@ -156,10 +224,14 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
-            InitLighting();
-
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
+        }
+
+        private void InitLightingAndShaders()
+        {
+            LoadStockShaders();
+            InitLighting();
         }
 
         private unsafe void CreateMiscGLObjects()

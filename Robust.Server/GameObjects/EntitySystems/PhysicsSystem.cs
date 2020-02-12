@@ -75,14 +75,17 @@ namespace Robust.Server.GameObjects.EntitySystems
                 return;
             }
 
-            var velocity = entity.GetComponent<PhysicsComponent>();
-            if (velocity.DidMovementCalculations)
+            var moving = entity.GetComponent<PhysicsComponent>();
+
+            moving.BeforeMovement();
+
+            if (moving.DidMovementCalculations)
             {
-                velocity.DidMovementCalculations = false;
+                moving.DidMovementCalculations = false;
                 return;
             }
 
-            if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)
+            if (moving.AngularVelocity == 0 && moving.LinearVelocity == Vector2.Zero)
             {
                 return;
             }
@@ -91,12 +94,12 @@ namespace Robust.Server.GameObjects.EntitySystems
             if (ContainerHelpers.IsInContainer(transform.Owner))
             {
                 transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
-                velocity.LinearVelocity = Vector2.Zero;
+                moving.LinearVelocity = Vector2.Zero;
                 return;
             }
 
-            var velocityConsumers = velocity.GetVelocityConsumers();
-            var initialMovement = velocity.LinearVelocity;
+            var velocityConsumers = moving.GetVelocityConsumers();
+            var initialMovement = moving.LinearVelocity;
             int velocityConsumerCount;
             float totalMass;
             Vector2 lowestMovement;
@@ -109,18 +112,18 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var consumer in velocityConsumers)
                 {
                     totalMass += consumer.Mass;
-                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass : 1);
-                    consumer.AngularVelocity = velocity.AngularVelocity;
+                    var movement = lowestMovement * moving.Mass / (totalMass != 0 ? totalMass : 1);
+                    consumer.AngularVelocity = moving.AngularVelocity;
                     consumer.LinearVelocity = movement;
                     copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
                 }
 
                 copy.Sort(LengthComparer);
                 lowestMovement = copy[0];
-                velocityConsumers = velocity.GetVelocityConsumers();
+                velocityConsumers = moving.GetVelocityConsumers();
             } while (velocityConsumers.Count != velocityConsumerCount);
 
-            velocity.ClearVelocityConsumers();
+            moving.ClearVelocityConsumers();
 
             foreach (var consumer in velocityConsumers)
             {
@@ -128,7 +131,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 consumer.DidMovementCalculations = true;
             }
 
-            velocity.DidMovementCalculations = false;
+            moving.DidMovementCalculations = false;
         }
 
         private static void DoMovement(IEntity entity, float frameTime)
@@ -140,31 +143,33 @@ namespace Robust.Server.GameObjects.EntitySystems
                 return;
             }
 
-            var velocity = entity.GetComponent<PhysicsComponent>();
+            var moving = entity.GetComponent<PhysicsComponent>();
 
-            if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
+            if (moving.LinearVelocity.LengthSquared < Epsilon && moving.AngularVelocity < Epsilon)
                 return;
 
             float angImpulse = 0;
-            if (velocity.AngularVelocity > Epsilon)
+            if (moving.AngularVelocity > Epsilon)
             {
-                angImpulse = velocity.AngularVelocity * frameTime;
+                angImpulse = moving.AngularVelocity * frameTime;
             }
 
             var transform = entity.Transform;
             transform.LocalRotation += angImpulse;
-            transform.WorldPosition += velocity.LinearVelocity * frameTime;
+            transform.WorldPosition += moving.LinearVelocity * frameTime;
+
+            moving.AfterMovement();
         }
 
-        private static Vector2 CalculateMovement(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, PhysicsComponent velocity, float frameTime, IEntity entity)
+        private static Vector2 CalculateMovement(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, PhysicsComponent moving, float frameTime, IEntity entity)
         {
-            if (velocity.Deleted)
+            if (moving.Deleted)
             {
                 // Help crashes.
                 return default;
             }
 
-            var movement = velocity.LinearVelocity * frameTime;
+            var movement = moving.LinearVelocity * frameTime;
             if (movement.LengthSquared <= Epsilon)
             {
                 return Vector2.Zero;
@@ -178,7 +183,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
                 if (collided)
                 {
-                    if (velocity.EdgeSlide)
+                    if (moving.EdgeSlide)
                     {
                         //Slide along the blockage in the non-blocked direction
                         var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
@@ -202,7 +207,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     if (tileDef.Friction != 0)
                     {
                         movement -= movement * tileDef.Friction;
-                        if (movement.LengthSquared <= velocity.Mass * Epsilon / (1 - tileDef.Friction))
+                        if (movement.LengthSquared <= moving.Mass * Epsilon / (1 - tileDef.Friction))
                         {
                             movement = Vector2.Zero;
                         }

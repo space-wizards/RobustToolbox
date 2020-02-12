@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -7,6 +6,8 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using System;
+using System.Collections.Generic;
 
 namespace Robust.Server.GameObjects
 {
@@ -90,6 +91,9 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        public event EventHandler<MovementEventArgs> DoBeforeMovement; 
+        public event EventHandler<MovementEventArgs> DoAfterMovement;
+
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -166,5 +170,24 @@ namespace Robust.Server.GameObjects
         }
 
         public bool DidMovementCalculations { get; set; } = false;
+
+        public void BeforeMovement()
+        {
+            var args = new MovementEventArgs();
+            DoBeforeMovement?.Invoke(this, args);
+        }
+
+        public void AfterMovement()
+        {
+            var args = new MovementEventArgs();
+            DoAfterMovement?.Invoke(this, args);
+        }
     }
+
+
+    public class MovementEventArgs : EventArgs { }
+
+
+
+
 }

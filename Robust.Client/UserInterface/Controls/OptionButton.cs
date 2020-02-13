@@ -26,7 +26,6 @@ namespace Robust.Client.UserInterface.Controls
 
             var hBox = new HBoxContainer
             {
-                SizeFlagsHorizontal = SizeFlags.FillExpand,
                 MouseFilter = MouseFilterMode.Ignore
             };
             AddChild(hBox);

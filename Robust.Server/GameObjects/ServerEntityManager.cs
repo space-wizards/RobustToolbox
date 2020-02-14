@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
@@ -59,7 +59,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in newEntity.GetAllComponents())
+                foreach (var component in ComponentManager.GetNetComponents(newEntity.Uid))
                 {
                     ((Component)component).ClearTicks();
                 }

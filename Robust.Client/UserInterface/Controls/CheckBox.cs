@@ -1,69 +1,76 @@
-using Robust.Client.Graphics;
-using Robust.Client.Graphics.Drawing;
-using Robust.Shared.Maths;
+﻿using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
     ///     A type of toggleable button that also has a checkbox.
     /// </summary>
-    public class CheckBox : Button
+    public class CheckBox : ContainerButton
     {
-        public const string StylePropertyIcon = "icon";
-        public const string StylePropertyHSeparation = "hseparation";
+        public const string StyleIdentifierCheckBoxChecked = "checkBoxChecked";
+        public const string StyleIdentifierCheckBoxUnchecked = "checkBoxUnchecked";
 
-        public CheckBox()
+        public Label Label { get; }
+        public TextureRect TextureRect { get; }
+
+        public CheckBox() : base()
         {
             ToggleMode = true;
+
+            var hBox = new HBoxContainer
+            {
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            AddChild(hBox);
+
+            TextureRect = new TextureRect
+            {
+                MouseFilter = MouseFilterMode.Ignore,
+                StyleIdentifier = StyleIdentifierCheckBoxUnchecked
+            };
+            hBox.AddChild(TextureRect);
+
+            Label = new Label
+            {
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            hBox.AddChild(Label);
         }
 
-        protected internal override void Draw(DrawingHandleScreen handle)
+        protected override void DrawModeChanged()
         {
-            var offset = 0;
-            var icon = _getIcon();
-            if (icon != null)
+            base.DrawModeChanged();
+
+            if (TextureRect == null)
             {
-                offset += _getIcon().Width + _getHSeparation();
-                var vOffset = (PixelHeight - _getIcon().Height) / 2;
-                handle.DrawTextureRectRegion(icon, UIBox2.FromDimensions((0, vOffset), icon.Size * UIScale));
+                return;
             }
 
-            var box = new UIBox2(offset, 0, PixelWidth, PixelHeight);
-            DrawTextInternal(handle, box);
+            if (Pressed)
+                TextureRect.StyleIdentifier = StyleIdentifierCheckBoxChecked;
+            else
+                TextureRect.StyleIdentifier = StyleIdentifierCheckBoxUnchecked;
         }
 
-        protected override Vector2 CalculateMinimumSize()
-        {
-            var minSize = _getIcon()?.Size / UIScale ?? Vector2.Zero;
-            var font = ActualFont;
+        /// <summary>
+        ///     How to align the text inside the button.
+        /// </summary>
+        [ViewVariables]
+        public AlignMode TextAlign { get => Label.Align; set => Label.Align = value; }
 
-            if (!string.IsNullOrWhiteSpace(Text) && !ClipText)
-            {
-                minSize += (EnsureWidthCache() / UIScale + _getHSeparation() / UIScale, 0);
-            }
-            minSize = Vector2.ComponentMax(minSize, (0, font.GetHeight(UIScale) / UIScale));
+        /// <summary>
+        ///     If true, the button will allow shrinking and clip text
+        ///     to prevent the text from going outside the bounds of the button.
+        ///     If false, the minimum size will always fit the contained text.
+        /// </summary>
+        [ViewVariables]
+        public bool ClipText { get => Label.ClipText; set => Label.ClipText = value; }
 
-            return minSize;
-        }
-
-        private Texture _getIcon()
-        {
-            if (TryGetStyleProperty(StylePropertyIcon, out Texture tex))
-            {
-                return tex;
-            }
-
-            return null;
-        }
-
-        private int _getHSeparation()
-        {
-            if (TryGetStyleProperty(StylePropertyHSeparation, out int hSep))
-            {
-                return hSep;
-            }
-
-            return 0;
-        }
+        /// <summary>
+        ///     The text displayed by the button.
+        /// </summary>
+        [ViewVariables]
+        public string Text { get => Label.Text; set => Label.Text = value; }
     }
 }

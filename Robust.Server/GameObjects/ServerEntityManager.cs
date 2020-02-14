@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
@@ -192,11 +192,6 @@ namespace Robust.Server.GameObjects
         {
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
-
-            if (entityUid == new EntityUid(295))
-            {
-
-            }
 
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {

@@ -39,7 +39,7 @@ namespace Robust.Server.GameStates
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
         }
-        
+
         private void HandleClientConnected(object sender, NetChannelArgs e)
         {
             if(!_ackedStates.ContainsKey(e.Channel.ConnectionId))
@@ -47,7 +47,7 @@ namespace Robust.Server.GameStates
             else
                 _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
         }
-        
+
         private void HandleClientDisconnect(object sender, NetChannelArgs e)
         {
             if (_ackedStates.ContainsKey(e.Channel.ConnectionId))
@@ -104,7 +104,7 @@ namespace Robust.Server.GameStates
                 {
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
-                
+
                 //TODO: Cull these based on client view rectangle, remember the issues with transform parenting
                 var entities = _entityManager.GetEntityStates(lastAck);
                 var players = _playerManager.GetPlayerStates(lastAck);
@@ -119,10 +119,11 @@ namespace Robust.Server.GameStates
                 stateUpdateMessage.State = state;
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
-                // we are not going to send a full state every tick (rip bandwidth) until they ack, so assume they receive it
-                // and start the deltas from the full state.
-                // the client will signal to us if they need another one.
-                if (lastAck == GameTick.Zero)
+                // If the state is too big we let Lidgren send it reliably.
+                // This is to avoid a situation where a state is so large that it consistently gets dropped
+                // (or, well, part of it).
+                // When we send them reliably, we immediately update the ack so that the next state will not be huge.
+                if (stateUpdateMessage.ShouldSendReliably())
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
 
                 if (lastAck < oldestAck)

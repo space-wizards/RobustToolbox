@@ -739,7 +739,7 @@ namespace Robust.Shared.Network
             foreach (var peer in _netPeers)
             {
                 var packet = BuildMessage(message, peer);
-                var method = GetMethod(message.MsgGroup);
+                var method = message.DeliveryMethod;
                 if (peer.ConnectionsCount == 0)
                 {
                     continue;
@@ -758,7 +758,8 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
-            peer.SendMessage(packet, channel.Connection, NetDeliveryMethod.ReliableOrdered);
+            var method = message.DeliveryMethod;
+            peer.SendMessage(packet, channel.Connection, method);
         }
 
         /// <inheritdoc />
@@ -788,7 +789,7 @@ namespace Robust.Shared.Network
 
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer);
-            var method = GetMethod(message.MsgGroup);
+            var method = message.DeliveryMethod;
             peer.SendMessage(packet, peer.Connections[0], method);
         }
 
@@ -832,22 +833,6 @@ namespace Robust.Shared.Network
         public event EventHandler<NetChannelArgs> Disconnect;
 
         #endregion Events
-
-        private static NetDeliveryMethod GetMethod(MsgGroups group)
-        {
-            switch (group)
-            {
-                case MsgGroups.Entity:
-                    return NetDeliveryMethod.Unreliable;
-                case MsgGroups.Core:
-                case MsgGroups.String:
-                case MsgGroups.Command:
-                case MsgGroups.EntityEvent:
-                    return NetDeliveryMethod.ReliableUnordered;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(group), group, null);
-            }
-        }
 
         private enum ClientConnectionState
         {

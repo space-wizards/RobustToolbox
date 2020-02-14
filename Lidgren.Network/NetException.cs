@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -25,7 +25,6 @@ namespace Lidgren.Network
 	/// <summary>
 	/// Exception thrown in the Lidgren Network Library
 	/// </summary>
-	[Serializable]
 	public sealed class NetException : Exception
 	{
 		/// <summary>
@@ -49,14 +48,6 @@ namespace Lidgren.Network
 		/// </summary>
 		public NetException(string message, Exception inner)
 			: base(message, inner)
-		{
-		}
-
-		/// <summary>
-		/// NetException constructor
-		/// </summary>
-		private NetException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
 		{
 		}
 

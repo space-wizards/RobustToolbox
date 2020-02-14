@@ -1,4 +1,4 @@
-
+﻿
 Completed features:
 * Message coalescing
 * Peer, connection statistics

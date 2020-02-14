@@ -1,4 +1,4 @@
-
+﻿
 PER MESSAGE:
 7 bits - NetMessageType
 1 bit - Is a message fragment?

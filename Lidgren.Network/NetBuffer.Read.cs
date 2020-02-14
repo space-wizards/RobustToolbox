@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using System.Net;
+using System.Threading;
+
+#if !__NOIPENDPOINT__
+using NetEndPoint = System.Net.IPEndPoint;
+#endif
 
 namespace Lidgren.Network
 {
@@ -12,6 +17,8 @@ namespace Lidgren.Network
 	public partial class NetBuffer
 	{
 		private const string c_readOverflowError = "Trying to read past the buffer size - likely caused by mismatching Write/Reads, different size or order.";
+		private const int c_bufferSize = 64; // Min 8 to hold anything but strings. Increase it if readed strings usally don't fit inside the buffer
+		private static object s_buffer;
 
 		/// <summary>
 		/// Reads a boolean value (stored as a single bit) written using Write(bool)
@@ -255,6 +262,7 @@ namespace Lidgren.Network
 		public UInt32 ReadUInt32(int numberOfBits)
 		{
 			NetException.Assert(numberOfBits > 0 && numberOfBits <= 32, "ReadUInt32(bits) can only read between 1 and 32 bits");
+			//NetException.Assert(m_bitLength - m_readBitPtr >= numberOfBits, "tried to read past buffer size");
 
 			UInt32 retval = NetBitWriter.ReadUInt32(m_data, numberOfBits, m_readPosition);
 			m_readPosition += numberOfBits;
@@ -310,7 +318,7 @@ namespace Lidgren.Network
 			else
 			{
 				retval = NetBitWriter.ReadUInt32(m_data, 32, m_readPosition);
-				retval |= NetBitWriter.ReadUInt32(m_data, numberOfBits - 32, m_readPosition) << 32;
+				retval |= (UInt64)NetBitWriter.ReadUInt32(m_data, numberOfBits - 32, m_readPosition + 32) << 32;
 			}
 			m_readPosition += numberOfBits;
 			return retval;
@@ -347,8 +355,11 @@ namespace Lidgren.Network
 				return retval;
 			}
 
-			byte[] bytes = ReadBytes(4);
-			return BitConverter.ToSingle(bytes, 0);
+			byte[] bytes = (byte[]) Interlocked.Exchange(ref s_buffer, null) ?? new byte[c_bufferSize];
+			ReadBytes(bytes, 0, 4);
+			float res = BitConverter.ToSingle(bytes, 0);
+			s_buffer = bytes;
+			return res;
 		}
 
 		/// <summary>
@@ -369,8 +380,10 @@ namespace Lidgren.Network
 				return true;
 			}
 
-			byte[] bytes = ReadBytes(4);
+			byte[] bytes = (byte[]) Interlocked.Exchange(ref s_buffer, null) ?? new byte[c_bufferSize];
+			ReadBytes(bytes, 0, 4);
 			result = BitConverter.ToSingle(bytes, 0);
+			s_buffer = bytes;
 			return true;
 		}
 
@@ -389,8 +402,11 @@ namespace Lidgren.Network
 				return retval;
 			}
 
-			byte[] bytes = ReadBytes(8);
-			return BitConverter.ToDouble(bytes, 0);
+			byte[] bytes = (byte[]) Interlocked.Exchange(ref s_buffer, null) ?? new byte[c_bufferSize];
+			ReadBytes(bytes, 0, 8);
+			double res = BitConverter.ToDouble(bytes, 0);
+			s_buffer = bytes;
+			return res;
 		}
 
 		//
@@ -405,7 +421,7 @@ namespace Lidgren.Network
 		{
 			int num1 = 0;
 			int num2 = 0;
-			while (true)
+			while (m_bitLength - m_readPosition >= 8)
 			{
 				byte num3 = this.ReadByte();
 				num1 |= (num3 & 0x7f) << num2;
@@ -413,6 +429,9 @@ namespace Lidgren.Network
 				if ((num3 & 0x80) == 0)
 					return (uint)num1;
 			}
+
+			// ouch; failed to find enough bytes; malformed variable length number?
+			return (uint)num1;
 		}
 
 		/// <summary>
@@ -423,7 +442,7 @@ namespace Lidgren.Network
 		{
 			int num1 = 0;
 			int num2 = 0;
-			while (true)
+			while (m_bitLength - m_readPosition >= 8)
 			{
 				byte num3;
 				if (ReadByte(out num3) == false)
@@ -439,6 +458,8 @@ namespace Lidgren.Network
 					return true;
 				}
 			}
+			result = (uint)num1;
+			return false;
 		}
 
 		/// <summary>
@@ -467,14 +488,20 @@ namespace Lidgren.Network
 		{
 			UInt64 num1 = 0;
 			int num2 = 0;
-			while (true)
+			while (m_bitLength - m_readPosition >= 8)
 			{
+				//if (num2 == 0x23)
+				//	throw new FormatException("Bad 7-bit encoded integer");
+
 				byte num3 = this.ReadByte();
 				num1 |= ((UInt64)num3 & 0x7f) << num2;
 				num2 += 7;
 				if ((num3 & 0x80) == 0)
 					return num1;
 			}
+
+			// ouch; failed to find enough bytes; malformed variable length number?
+			return num1;
 		}
 
 		/// <summary>
@@ -532,6 +559,21 @@ namespace Lidgren.Network
 			return (int)(min + rvalue);
 		}
 
+	        /// <summary>
+	        /// Reads a 64 bit integer value written using WriteRangedInteger() (64 version)
+	        /// </summary>
+	        /// <param name="min">The minimum value used when writing the value</param>
+	        /// <param name="max">The maximum value used when writing the value</param>
+	        /// <returns>A signed integer value larger or equal to MIN and smaller or equal to MAX</returns>
+	        public long ReadRangedInteger(long min, long max)
+	        {
+	            ulong range = (ulong)(max - min);
+	            int numBits = NetUtility.BitsToHoldUInt64(range);
+	
+	            ulong rvalue = ReadUInt64(numBits);
+	            return min + (long)rvalue;
+	        }
+
 		/// <summary>
 		/// Reads a string written using Write(string)
 		/// </summary>
@@ -539,10 +581,20 @@ namespace Lidgren.Network
 		{
 			int byteLen = (int)ReadVariableUInt32();
 
-			if (byteLen == 0)
+			if (byteLen <= 0)
 				return String.Empty;
 
-			NetException.Assert(m_bitLength - m_readPosition >= (byteLen * 8), c_readOverflowError);
+			if ((ulong)(m_bitLength - m_readPosition) < ((ulong)byteLen * 8))
+			{
+				// not enough data
+#if DEBUG
+				
+				throw new NetException(c_readOverflowError);
+#else
+				m_readPosition = m_bitLength;
+				return null; // unfortunate; but we need to protect against DDOS
+#endif
+			}
 
 			if ((m_readPosition & 7) == 0)
 			{
@@ -552,8 +604,16 @@ namespace Lidgren.Network
 				return retval;
 			}
 
-			byte[] bytes = ReadBytes(byteLen);
-			return System.Text.Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+			if (byteLen <= c_bufferSize) {
+				byte[] buffer = (byte[]) Interlocked.Exchange(ref s_buffer, null) ?? new byte[c_bufferSize];
+				ReadBytes(buffer, 0, byteLen);
+				string retval = Encoding.UTF8.GetString(buffer, 0, byteLen);
+				s_buffer = buffer;
+				return retval;
+			} else {
+				byte[] bytes = ReadBytes(byteLen);
+				return Encoding.UTF8.GetString(bytes, 0, bytes.Length);
+			}
 		}
 
 		/// <summary>
@@ -568,7 +628,7 @@ namespace Lidgren.Network
 				return false;
 			}
 
-			if (byteLen == 0)
+			if (byteLen <= 0)
 			{
 				result = String.Empty;
 				return true;
@@ -616,14 +676,14 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Reads a stored IPv4 endpoint description
 		/// </summary>
-		public IPEndPoint ReadIPEndPoint()
+		public NetEndPoint ReadIPEndPoint()
 		{
 			byte len = ReadByte();
 			byte[] addressBytes = ReadBytes(len);
 			int port = (int)ReadUInt16();
 
-			IPAddress address = new IPAddress(addressBytes);
-			return new IPEndPoint(address, port);
+			var address = NetUtility.CreateAddressFromBytes(addressBytes);
+			return new NetEndPoint(address, port);
 		}
 
 		/// <summary>

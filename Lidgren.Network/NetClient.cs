@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -18,6 +18,10 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 using System;
 using System.Net;
+
+#if !__NOIPENDPOINT__
+using NetEndPoint = System.Net.IPEndPoint;
+#endif
 
 namespace Lidgren.Network
 {
@@ -80,7 +84,7 @@ namespace Lidgren.Network
 		/// <param name="remoteEndPoint">The remote endpoint to connect to</param>
 		/// <param name="hailMessage">The hail message to pass</param>
 		/// <returns>server connection, or null if already connected</returns>
-		public override NetConnection Connect(IPEndPoint remoteEndPoint, NetOutgoingMessage hailMessage)
+		public override NetConnection Connect(NetEndPoint remoteEndPoint, NetOutgoingMessage hailMessage)
 		{
 			lock (m_connections)
 			{
@@ -153,6 +157,7 @@ namespace Lidgren.Network
 			if (serverConnection == null)
 			{
 				LogWarning("Cannot send message, no server connection!");
+				Recycle(msg);
 				return NetSendResult.FailedNotConnected;
 			}
 

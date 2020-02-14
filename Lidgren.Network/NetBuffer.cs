@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -72,8 +72,6 @@ namespace Lidgren.Network
 		
 		static NetBuffer()
 		{
-			Type[] integralTypes = typeof(Byte).Assembly.GetTypes();
-
 			s_readMethods = new Dictionary<Type, MethodInfo>();
 			MethodInfo[] methods = typeof(NetIncomingMessage).GetMethods(BindingFlags.Instance | BindingFlags.Public);
 			foreach (MethodInfo mi in methods)

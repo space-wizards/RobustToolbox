@@ -53,6 +53,17 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
+            if (prototypeName != null)
+            {
+                // At this point in time, all data configure on the entity *should* be purely from the prototype.
+                // As such, we can reset the modified ticks to Zero,
+                // which indicates "not different from client's own deserialization".
+                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
+                foreach (var component in newEntity.GetAllComponents())
+                {
+                    ((Component)component).ClearTicks();
+                }
+            }
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
             newEntity.Transform.WorldPosition = coordinates.Position;
             return newEntity;
@@ -182,17 +193,22 @@ namespace Robust.Server.GameObjects
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 
+            if (entityUid == new EntityUid(295))
+            {
+
+            }
+
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(comp.Initialized);
 
                 //Ticks start at 1
-                DebugTools.Assert(comp.CreationTick != GameTick.Zero && comp.LastModifiedTick != GameTick.Zero);
+                //DebugTools.Assert(comp.CreationTick != GameTick.Zero && comp.LastModifiedTick != GameTick.Zero);
 
-                if (comp.NetSyncEnabled && comp.LastModifiedTick >= fromTick)
+                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
                     compStates.Add(comp.GetComponentState());
 
-                if (comp.CreationTick >= fromTick && !comp.Deleted)
+                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException

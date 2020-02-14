@@ -29,6 +29,7 @@ namespace Robust.Client.UserInterface.Controls
                 return UserInterfaceManager.ThemeDefaults.ButtonStyle;
             }
         }
+
         protected override void LayoutUpdateOverride()
         {
             var contentBox = ActualStyleBox.GetContentBox(PixelSizeBox);

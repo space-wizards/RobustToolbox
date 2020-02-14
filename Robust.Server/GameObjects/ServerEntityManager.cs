@@ -202,8 +202,12 @@ namespace Robust.Server.GameObjects
             {
                 DebugTools.Assert(comp.Initialized);
 
-                //Ticks start at 1
-                //DebugTools.Assert(comp.CreationTick != GameTick.Zero && comp.LastModifiedTick != GameTick.Zero);
+                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+                // "not different from entity creation".
+                // i.e. when the client spawns the entity and loads the entity prototype,
+                // the data it deserializes from the prototype SHOULD be equal
+                // to what the component state / ComponentChanged would send.
+                // As such, we can avoid sending this data in this case since the client "already has it".
 
                 if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
                     compStates.Add(comp.GetComponentState());

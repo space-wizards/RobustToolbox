@@ -196,16 +196,16 @@ namespace Robust.Client.Input
             if (state == BoundKeyState.Up || !eventArgs.Handled)
             {
                 KeyBindStateChanged?.Invoke(eventArgs);
-            }
 
-            var cmd = GetInputCommand(binding.Function);
-            if (state == BoundKeyState.Up)
-            {
-                cmd?.Disabled(null);
-            }
-            else
-            {
-                cmd?.Enabled(null);
+                var cmd = GetInputCommand(binding.Function);
+                if (state == BoundKeyState.Up)
+                {
+                    cmd?.Disabled(null);
+                }
+                else
+                {
+                    cmd?.Enabled(null);
+                }
             }
 
             return (eventArgs.Handled);

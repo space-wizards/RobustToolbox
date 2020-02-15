@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
     public class OptionButton : ContainerButton
     {
+        public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
         private List<ButtonData> _buttonData = new List<ButtonData>();
@@ -37,6 +39,7 @@ namespace Robust.Client.UserInterface.Controls
 
             _label = new Label
             {
+                StyleClasses = { StyleClassOptionButton },
                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                 MouseFilter = MouseFilterMode.Ignore
             };

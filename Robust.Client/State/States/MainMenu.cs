@@ -228,7 +228,10 @@ namespace Robust.Client.State.States
                 var layout = new LayoutContainer();
                 AddChild(layout);
 
-                var vBox = new VBoxContainer();
+                var vBox = new VBoxContainer
+                {
+                    StyleIdentifier = "mainMenuVBox"
+                };
 
                 layout.AddChild(vBox);
                 LayoutContainer.SetAnchorPreset(vBox, LayoutContainer.LayoutPreset.TopRight);

@@ -8,8 +8,8 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class CheckBox : ContainerButton
     {
-        public const string StyleIdentifierCheckBoxChecked = "checkBoxChecked";
-        public const string StyleIdentifierCheckBoxUnchecked = "checkBoxUnchecked";
+        public const string StyleClassCheckBox = "checkBox";
+        public const string StyleClassCheckBoxChecked = "checkBoxChecked";
 
         public Label Label { get; }
         public TextureRect TextureRect { get; }
@@ -20,14 +20,15 @@ namespace Robust.Client.UserInterface.Controls
 
             var hBox = new HBoxContainer
             {
+                StyleClasses = { StyleClassCheckBox },
                 MouseFilter = MouseFilterMode.Ignore
             };
             AddChild(hBox);
 
             TextureRect = new TextureRect
             {
-                MouseFilter = MouseFilterMode.Ignore,
-                StyleIdentifier = StyleIdentifierCheckBoxUnchecked
+                StyleClasses = { StyleClassCheckBox },
+                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(TextureRect);
 
@@ -42,15 +43,13 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.DrawModeChanged();
 
-            if (TextureRect == null)
+            if (TextureRect != null)
             {
-                return;
+                if (Pressed)
+                    TextureRect.AddStyleClass(StyleClassCheckBoxChecked);
+                else
+                    TextureRect.RemoveStyleClass(StyleClassCheckBoxChecked);
             }
-
-            if (Pressed)
-                TextureRect.StyleIdentifier = StyleIdentifierCheckBoxChecked;
-            else
-                TextureRect.StyleIdentifier = StyleIdentifierCheckBoxUnchecked;
         }
 
         /// <summary>

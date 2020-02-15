@@ -8,11 +8,16 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class Button : ContainerButton
     {
+        public const string StyleClassButton = "button";
+
         public Label Label { get; }
 
         public Button() : base()
         {
-            Label = new Label();
+            Label = new Label
+            {
+                StyleClasses = { StyleClassButton }
+            };
             AddChild(Label);
         }
 

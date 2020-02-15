@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -602,6 +602,20 @@ namespace Robust.Client.Console.Commands
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             mgr.Enabled = !mgr.Enabled;
+            return false;
+        }
+    }
+
+    internal class ToggleShadows : IConsoleCommand
+    {
+        public string Command => "toggleshadows";
+        public string Description => "Toggles shadow rendering.";
+        public string Help => "toggleshadows";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.DrawShadows = !mgr.DrawShadows;
             return false;
         }
     }

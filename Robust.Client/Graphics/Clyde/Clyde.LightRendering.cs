@@ -15,7 +15,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private const int ShadowMapSize = 4096;
+        private const int ShadowMapSize = 512;
         private const int MaxLightsPerScene = 64;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
@@ -83,30 +83,31 @@ namespace Robust.Client.Graphics.Clyde
             _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
         }
 
-        private void DrawFov(Box2 worldBounds, IEye eye)
+        private void DrawFov(IEye eye)
         {
             var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
             var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
-            GL.Enable(EnableCap.DepthTest);
-            GL.DepthFunc(DepthFunction.Lequal);
-            GL.DepthMask(true);
+            DrawOcclusionDepth(eye.Position.Position, maxDist, 0, out _);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _fovRenderTarget.ObjectHandle.Handle);
-            GL.ClearDepth(1);
-            GL.ClearColor(maxDist, maxDist, maxDist, 1);
-            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            GL.Disable(EnableCap.DepthTest);
+        }
 
-            GL.BindVertexArray(_occlusionVao.Handle);
+        private void DrawOcclusionDepth(Vector2 lightPos, float maxDist, int viewportY, out Matrix4 projMatrix)
+        {
+            projMatrix = default; // Gets overriden below.
 
-            _fovCalculationProgram.Use();
+            var (posX, posY) = lightPos;
+            var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
 
-            var lightMatrix = Matrix4.CreateTranslation(-eye.Position.X, -eye.Position.Y, 0);
             _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
 
-            var baseProj =
-                Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(90), 1, maxDist / 1000,
-                    maxDist * 1.1f);
+            var baseProj = Matrix4.CreatePerspectiveFieldOfView(
+                MathHelper.DegreesToRadians(90),
+                1,
+                maxDist / 1000,
+                maxDist * 1.1f);
 
             const int step = ShadowMapSize / 4;
 
@@ -124,15 +125,35 @@ namespace Robust.Client.Graphics.Clyde
                 var rotMatrix = Matrix4.Rotate(orientation);
                 var proj = rotMatrix * baseProj;
 
+                if (i == 0)
+                {
+                    projMatrix = proj;
+                }
+
                 _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
-                GL.Viewport(step * i, 0, step, 1);
+                GL.Viewport(step * i, viewportY, step, 1);
 
                 GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
                 _debugStats.LastGLDrawCalls += 1;
             }
+        }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Disable(EnableCap.DepthTest);
+        private void PrepareDepthDraw(RenderTarget target)
+        {
+            const float arbitraryDistanceMax = 12345;
+
+            GL.Enable(EnableCap.DepthTest);
+            GL.DepthFunc(DepthFunction.Lequal);
+            GL.DepthMask(true);
+
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
+            GL.ClearDepth(1);
+            GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax, arbitraryDistanceMax, 1);
+            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+
+            GL.BindVertexArray(_occlusionVao.Handle);
+
+            _fovCalculationProgram.Use();
         }
 
         private void DrawLightsAndFov(Box2 worldBounds, IEye eye)
@@ -144,7 +165,9 @@ namespace Robust.Client.Graphics.Clyde
 
             UpdateOcclusionGeometry(eye.Position.MapId);
 
-            DrawFov(worldBounds, eye);
+            PrepareDepthDraw(_fovRenderTarget);
+
+            DrawFov(eye);
 
             var map = _eyeManager.CurrentMap;
 
@@ -178,56 +201,18 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            var shadowMatrices = new Matrix4[lights.Count];
+
             // Draw shadow depth.
-            GL.Enable(EnableCap.DepthTest);
-            GL.DepthFunc(DepthFunction.Lequal);
-            GL.DepthMask(true);
+            PrepareDepthDraw(_shadowRenderTarget);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _shadowRenderTarget.ObjectHandle.Handle);
-            GL.ClearDepth(1);
-            GL.ClearColor(maxRadius, maxRadius, maxRadius, 1);
-            GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
-
-            GL.BindVertexArray(_occlusionVao.Handle);
-
-            _fovCalculationProgram.Use();
-
-            for (var i = 0; i < lights.Count; i++)
+            if (_lightManager.DrawShadows)
             {
-                var (light, lightPos) = lights[i];
-
-                var lightMatrix = Matrix4.CreateTranslation(-lightPos.X, -lightPos.Y, 0);
-                _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
-
-                var radius = light.Radius;
-
-                var baseProj = Matrix4.CreatePerspectiveFieldOfView(
-                    MathHelper.DegreesToRadians(90),
-                    1,
-                    radius / 1000,
-                    radius * 1.1f);
-
-                const int step = ShadowMapSize / 4;
-
-                for (var o = 0; o < 4; o++)
+                for (var i = 0; i < lights.Count; i++)
                 {
-                    var orientation = o switch
-                    {
-                        0 => new Quaternion(-0.707f, 0, 0, 0.707f),
-                        1 => new Quaternion(0.5f, -0.5f, -0.5f, -0.5f),
-                        2 => new Quaternion(0, 0.707f, 0.707f, 0),
-                        3 => new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
-                        _ => default
-                    };
+                    var (light, lightPos) = lights[i];
 
-                    var rotMatrix = Matrix4.Rotate(orientation);
-                    var proj = rotMatrix * baseProj;
-
-                    _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
-                    GL.Viewport(step * o, i, step, 1);
-
-                    GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
-                    _debugStats.LastGLDrawCalls += 1;
+                    DrawOcclusionDepth(lightPos, light.Radius, i, out shadowMatrices[i]);
                 }
             }
 
@@ -294,23 +279,24 @@ namespace Robust.Client.Graphics.Clyde
                 if (!FloatMath.CloseTo(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
-                    _lightShader.SetUniform("lightRange", lastRange);
+                    _lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
                 if (!FloatMath.CloseTo(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
-                    _lightShader.SetUniform("lightPower", lastPower);
+                    _lightShader.SetUniformMaybe("lightPower", lastPower);
                 }
 
                 if (lastColor != component.Color)
                 {
                     lastColor = component.Color;
-                    _lightShader.SetUniform("lightColor", lastColor);
+                    _lightShader.SetUniformMaybe("lightColor", lastColor);
                 }
 
                 _lightShader.SetUniform("lightCenter", lightPos);
                 _lightShader.SetUniform("lightIndex", i);
+                _lightShader.SetUniform("shadowMatrix", shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -412,7 +398,8 @@ namespace Robust.Client.Graphics.Clyde
             LightRenderTarget?.Delete();
 
             LightRenderTarget = CreateRenderTarget(GetLightMapSize(), RenderTargetColorFormat.R11FG11FB10F,
-                name: nameof(LightRenderTarget));
+                new TextureSampleParameters {Filter = true},
+                nameof(LightRenderTarget));
         }
 
         private Vector2i GetLightMapSize()

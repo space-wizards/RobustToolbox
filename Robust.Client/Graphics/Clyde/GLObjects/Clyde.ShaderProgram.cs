@@ -415,6 +415,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniformMaybe(string uniformName, float value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    GL.Uniform1(slot, value);
+                }
+            }
+
             private void ClearCaches()
             {
                 _uniformCache.Clear();

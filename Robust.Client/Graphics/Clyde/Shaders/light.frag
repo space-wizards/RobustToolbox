@@ -17,6 +17,7 @@ uniform float lightPower;
 uniform sampler2D lightMask;
 uniform sampler2D shadowMap;
 uniform int lightIndex;
+uniform mat4 shadowMatrix;
 
 void main()
 {
@@ -26,16 +27,45 @@ void main()
     float realDist = dot(diff, diff);
     float dist = realDist + LIGHTING_HEIGHT;
 
-    // Get angle for indexing shadow map.
+    // SHADOWS
     float angle = atan(diff.y, -diff.x) + PI + radians(135.0);
 
     angle = mod(angle, 2 * PI);
-    angle /= (PI * 2);
+
+    vec2 shadowPoint;
+    float shadowMapOffset;
+
+    if (angle < radians(90.0)) // Top
+    {
+        shadowPoint = diff;
+        shadowMapOffset = 0;
+    }
+    else if (angle < radians(180.0)) // Right
+    {
+        shadowPoint = vec2(-diff.y, diff.x);
+        shadowMapOffset = 0.25;
+    }
+    else if (angle < radians(270.0)) // Bottom
+    {
+        shadowPoint = -diff;
+        shadowMapOffset = 0.50;
+    }
+    else // Left
+    {
+        shadowPoint = vec2(diff.y, -diff.x);
+        shadowMapOffset = 0.75;
+    }
+
+    vec4 s = shadowMatrix * vec4(shadowPoint, 0.0, 1.0);
+    s.xyz /= s.w;
+    float su = s.x * 0.5 + 0.5;
+    float sz = s.z * 0.5 + 0.5;
 
     float y = (lightIndex / 64.0) + (0.5 / 64.0);
-    float shadowDepth = texture(shadowMap, vec2(angle, y)).r;
+    float shadowDepth = texture(shadowMap, vec2(su / 4 + shadowMapOffset, y)).r;
 
-    if (shadowDepth < sqrt(realDist))
+
+    if (shadowDepth < sz)
     {
         discard;
     }

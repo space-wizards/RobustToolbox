@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -620,7 +620,10 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                GC.Collect(int.Parse(args[0]));
+                if (int.TryParse(args[0], out int result))
+                    GC.Collect(result);
+                else
+                    console.AddLine("Failed to parse argument.");
             }
 
             return false;

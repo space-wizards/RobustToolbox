@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -28,7 +31,10 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
 #pragma warning restore 649
+
+        private bool ParallelStates => _configurationManager.GetCVar<bool>("net.parallelstates");
 
         /// <inheritdoc />
         public void Initialize()
@@ -38,11 +44,13 @@ namespace Robust.Server.GameStates
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
+
+            _configurationManager.RegisterCVar("net.parallelstates", false, CVar.ARCHIVE);
         }
 
         private void HandleClientConnected(object sender, NetChannelArgs e)
         {
-            if(!_ackedStates.ContainsKey(e.Channel.ConnectionId))
+            if (!_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Add(e.Channel.ConnectionId, GameTick.Zero);
             else
                 _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
@@ -74,6 +82,7 @@ namespace Robust.Server.GameStates
                     //Performance/Abuse: Should this be rate limited?
                     _ackedStates[uniqueIdentifier] = GameTick.Zero;
                 }
+
                 //else stateAcked was out of order or client is being silly, just ignore
             }
             else
@@ -94,26 +103,37 @@ namespace Robust.Server.GameStates
             }
 
             var oldestAck = GameTick.MaxValue;
+
+            var work = new List<(INetChannel channel, GameTick lastAck)>();
+
             foreach (var channel in _networkManager.Channels)
             {
                 var session = _playerManager.GetSessionByChannel(channel);
-                if (session == null || session.Status != SessionStatus.InGame) // client still joining, maybe iterate over sessions instead?
+                if (session == null || session.Status != SessionStatus.InGame)
+                {
+                    // client still joining, maybe iterate over sessions instead?
                     continue;
+                }
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
                 {
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                //TODO: Cull these based on client view rectangle, remember the issues with transform parenting
-                var entities = _entityManager.GetEntityStates(lastAck);
-                var players = _playerManager.GetPlayerStates(lastAck);
-                var deletions = _entityManager.GetDeletedEntities(lastAck);
-                var mapData = _mapManager.GetStateData(lastAck);
+                work.Add((channel, lastAck));
 
-                // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var state = new GameState(lastAck, _gameTiming.CurTick, entities, players, deletions, mapData);
+                if (lastAck < oldestAck)
+                {
+                    oldestAck = lastAck;
+                }
+            }
 
+            var workDone = ParallelStates
+                ? work.AsParallel().Select(GenerateStateFor).ToList()
+                : work.Select(GenerateStateFor).ToList();
+
+            foreach (var (channel, state) in workDone)
+            {
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
@@ -124,10 +144,9 @@ namespace Robust.Server.GameStates
                 // (or, well, part of it).
                 // When we send them reliably, we immediately update the ack so that the next state will not be huge.
                 if (stateUpdateMessage.ShouldSendReliably())
+                {
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
-
-                if (lastAck < oldestAck)
-                    oldestAck = lastAck;
+                }
             }
 
             // keep the deletion history buffers clean
@@ -137,6 +156,22 @@ namespace Robust.Server.GameStates
                 _entityManager.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }
+        }
+
+        private (INetChannel channel, GameState state) GenerateStateFor((INetChannel channel, GameTick lastAck) job)
+        {
+            var (channel, lastAck) = job;
+
+            var entities = _entityManager.GetEntityStates(lastAck);
+            var players = _playerManager.GetPlayerStates(lastAck);
+            var deletions = _entityManager.GetDeletedEntities(lastAck);
+            var mapData = _mapManager.GetStateData(lastAck);
+
+            // lastAck varies with each client based on lag and such,
+            // we can't just make 1 global state and send it to everyone
+            var state = new GameState(lastAck, _gameTiming.CurTick, entities, players, deletions, mapData);
+
+            return (channel, state);
         }
     }
 }

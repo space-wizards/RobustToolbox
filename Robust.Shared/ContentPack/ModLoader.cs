@@ -163,9 +163,12 @@ namespace Robust.Shared.ContentPack
 
         public void BroadcastUpdate(ModUpdateLevel level, FrameEventArgs frameEventArgs)
         {
-            foreach (var entrypoint in _mods.SelectMany(m => m.EntryPoints))
+            foreach (var module in _mods)
             {
-                entrypoint.Update(level, frameEventArgs);
+                foreach (var entryPoint in module.EntryPoints)
+                {
+                    entryPoint.Update(level, frameEventArgs);
+                }
             }
         }
 

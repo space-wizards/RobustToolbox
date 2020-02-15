@@ -105,9 +105,14 @@ namespace Robust.Server.GameObjects
         public List<EntityState> GetEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
-            foreach (IEntity entity in GetEntities())
+            foreach (var entity in AllEntities)
             {
-                DebugTools.Assert(entity.Initialized && !entity.Deleted);
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
+                DebugTools.Assert(entity.Initialized);
 
                 if (entity.LastModifiedTick <= fromTick)
                     continue;

@@ -224,7 +224,7 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += args =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.Qualified));
+                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
                 };
                 _serverComponents.AddChild(button);
             }

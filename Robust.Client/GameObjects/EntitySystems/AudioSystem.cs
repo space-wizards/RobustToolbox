@@ -78,11 +78,19 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 if (stream.TrackingCoordinates != null)
                 {
-                    stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToMapPos(_mapManager));
+                    if (!stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToMapPos(_mapManager)))
+                    {
+                        Logger.Warning("Interrupting positional audio, can't set position.");
+                        stream.Source.StopPlaying();
+                    }
                 }
                 else if (stream.TrackingEntity != null)
                 {
-                    stream.Source.SetPosition(stream.TrackingEntity.Transform.WorldPosition);
+                    if(!stream.Source.SetPosition(stream.TrackingEntity.Transform.WorldPosition))
+                    {
+                        Logger.Warning("Interrupting positional audio, can't set position.");
+                        stream.Source.StopPlaying();
+                    }
                 }
             }
 
@@ -148,10 +156,16 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
+        [CanBeNull]
         public IPlayingAudioStream Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            source.SetPosition(entity.Transform.WorldPosition);
+            if (!source.SetPosition(entity.Transform.WorldPosition))
+            {
+                Logger.Warning("Can't play positional audio, can't set position.");
+                return null;
+            }
+
             ApplyAudioParams(audioParams, source);
 
             source.StartPlaying();
@@ -170,6 +184,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
+        [CanBeNull]
         public IPlayingAudioStream Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             if(_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
@@ -187,11 +202,17 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
+        [CanBeNull]
         public IPlayingAudioStream Play(AudioStream stream, GridCoordinates coordinates,
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            source.SetPosition(coordinates.ToMapPos(_mapManager));
+            if (!source.SetPosition(coordinates.ToMapPos(_mapManager)))
+            {
+                Logger.Warning("Can't play positional audio, can't set position.");
+                return null;
+            }
+
             ApplyAudioParams(audioParams, source);
 
             source.StartPlaying();

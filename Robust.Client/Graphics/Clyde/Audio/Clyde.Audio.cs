@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.CompilerServices;
 using OpenTK;
 using OpenTK.Audio.OpenAL;
@@ -412,10 +413,16 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
-            public void SetPosition(Vector2 position)
+            public bool SetPosition(Vector2 position)
             {
                 _checkDisposed();
 
+                var (x, y) = position;
+
+                if (!ValidatePosition(x, y))
+                {
+                    return false;
+                }
 #if DEBUG
                 // OpenAL doesn't seem to want to play stereo positionally.
                 // Log a warning if people try to.
@@ -428,9 +435,19 @@ namespace Robust.Client.Graphics.Clyde
                 }
 #endif
 
-                var (x, y) = position;
                 AL.Source(SourceHandle, ALSource3f.Position, x, y, 0);
                 _checkAlError();
+                return true;
+            }
+
+            private static bool ValidatePosition(float x, float y)
+            {
+                if (float.IsFinite(x) && float.IsFinite(y))
+                {
+                    return true;
+                }
+
+                return false;
             }
 
             public void SetPitch(float pitch)
@@ -562,15 +579,32 @@ namespace Robust.Client.Graphics.Clyde
                 _checkAlError();
             }
 
-            public void SetPosition(Vector2 position)
+            public bool SetPosition(Vector2 position)
             {
                 _checkDisposed();
 
-                _mono = true;
                 var (x, y) = position;
+
+                if (!ValidatePosition(x, y))
+                {
+                    return false;
+                }
+
+                _mono = true;
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.Source(SourceHandle.Value, ALSource3f.Position, x, y, 0);
                 _checkAlError();
+                return true;
+            }
+
+            private static bool ValidatePosition(float x, float y)
+            {
+                if (float.IsFinite(x) && float.IsFinite(y))
+                {
+                    return true;
+                }
+
+                return false;
             }
 
             public void SetPitch(float pitch)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class EntityState
+    public sealed class EntityState
     {
         public EntityUid Uid { get; }
         public List<ComponentChanged> ComponentChanges { get; }

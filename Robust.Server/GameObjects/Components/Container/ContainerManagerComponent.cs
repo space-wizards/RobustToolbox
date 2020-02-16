@@ -89,6 +89,10 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
+        public override IEnumerable<IContainer> GetAllContainers() =>
+            EntityContainers.Values.Where(c => !c.Deleted);
+
+        /// <inheritdoc />
         public override IContainer GetContainer(string id)
         {
             return EntityContainers[id];

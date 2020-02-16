@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
@@ -46,6 +45,7 @@ namespace Robust.Server.GameStates
             _networkManager.Disconnect += HandleClientDisconnect;
 
             _configurationManager.RegisterCVar("net.parallelstates", false, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
 
         private void HandleClientConnected(object sender, NetChannelArgs e)
@@ -58,6 +58,8 @@ namespace Robust.Server.GameStates
 
         private void HandleClientDisconnect(object sender, NetChannelArgs e)
         {
+            _entityManager.DropPlayerState(_playerManager.GetSessionById(e.Channel.SessionId));
+
             if (_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Remove(e.Channel.ConnectionId);
         }
@@ -94,6 +96,8 @@ namespace Robust.Server.GameStates
         {
             DebugTools.Assert(_networkManager.IsServer);
 
+            _entityManager.Update();
+
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
@@ -104,7 +108,6 @@ namespace Robust.Server.GameStates
 
             var oldestAck = GameTick.MaxValue;
 
-            var work = new List<(INetChannel channel, GameTick lastAck)>();
 
             foreach (var channel in _networkManager.Channels)
             {
@@ -120,20 +123,21 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                work.Add((channel, lastAck));
+                var entStates = lastAck == GameTick.Zero
+                    ? _entityManager.GetEntityStates(lastAck)
+                    : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
+                var playerStates = _playerManager.GetPlayerStates(lastAck);
+                var deletions = _entityManager.GetDeletedEntities(lastAck);
+                var mapData = _mapManager.GetStateData(lastAck);
 
+
+                // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
+                var state = new GameState(lastAck, _gameTiming.CurTick, entStates, playerStates, deletions, mapData);
                 if (lastAck < oldestAck)
                 {
                     oldestAck = lastAck;
                 }
-            }
 
-            var workDone = ParallelStates
-                ? work.AsParallel().Select(GenerateStateFor).ToList()
-                : work.Select(GenerateStateFor).ToList();
-
-            foreach (var (channel, state) in workDone)
-            {
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
@@ -147,6 +151,7 @@ namespace Robust.Server.GameStates
                 {
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
                 }
+
             }
 
             // keep the deletion history buffers clean
@@ -158,20 +163,5 @@ namespace Robust.Server.GameStates
             }
         }
 
-        private (INetChannel channel, GameState state) GenerateStateFor((INetChannel channel, GameTick lastAck) job)
-        {
-            var (channel, lastAck) = job;
-
-            var entities = _entityManager.GetEntityStates(lastAck);
-            var players = _playerManager.GetPlayerStates(lastAck);
-            var deletions = _entityManager.GetDeletedEntities(lastAck);
-            var mapData = _mapManager.GetStateData(lastAck);
-
-            // lastAck varies with each client based on lag and such,
-            // we can't just make 1 global state and send it to everyone
-            var state = new GameState(lastAck, _gameTiming.CurTick, entities, players, deletions, mapData);
-
-            return (channel, state);
-        }
     }
 }

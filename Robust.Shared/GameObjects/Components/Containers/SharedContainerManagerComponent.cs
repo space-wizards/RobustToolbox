@@ -33,5 +33,8 @@ namespace Robust.Shared.GameObjects.Components.Containers
                 Containers = containers;
             }
         }
+
+        public abstract IEnumerable<IContainer> GetAllContainers();
+
     }
 }

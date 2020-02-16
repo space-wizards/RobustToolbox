@@ -198,5 +198,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #endregion
 
+        void Update();
+
     }
 }

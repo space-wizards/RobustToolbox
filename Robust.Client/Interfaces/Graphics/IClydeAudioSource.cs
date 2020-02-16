@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.Graphics
@@ -12,7 +13,8 @@ namespace Robust.Client.Interfaces.Graphics
 
         bool IsLooping { get; set; }
 
-        void SetPosition(Vector2 position);
+        [MustUseReturnValue]
+        bool SetPosition(Vector2 position);
         void SetPitch(float pitch);
         void SetGlobal();
         void SetVolume(float decibels);

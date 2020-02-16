@@ -158,9 +158,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetPosition(Vector2 position)
+            public bool SetPosition(Vector2 position)
             {
-                // Nada.
+                return true;
             }
 
             public void SetPitch(float pitch)

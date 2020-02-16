@@ -102,9 +102,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetRotation(value);
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
             }
         }
 
@@ -239,9 +239,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     Owner.SendMessage(this, new MoveMessage(GridPosition, value));
                 }
 
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
             }
         }
 
@@ -282,9 +282,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetPosition(newPos);
 
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
 
                 Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
@@ -312,9 +312,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var oldPos = GridPosition;
                 SetPosition(value);
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
                 Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
             }
         }
@@ -350,8 +350,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
-            UpdateEntityTree();
             Dirty();
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -401,9 +401,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Parent = newMapEntity.Transform;
             MapPosition = mapPos;
 
+            Dirty();
             UpdateEntityTree();
             UpdatePhysicsTree();
-            Dirty();
         }
 
         /// <summary>
@@ -431,8 +431,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // offset position from world to parent
             SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
-            UpdateEntityTree();
             Dirty();
+            UpdateEntityTree();
         }
 
         public void AttachParent(IEntity parent)
@@ -540,9 +540,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     RebuildMatrices();
                 }
 
+                Dirty();
                 UpdateEntityTree();
                 TryUpdatePhysicsTree();
-                Dirty();
             }
 
             if (nextState != null)

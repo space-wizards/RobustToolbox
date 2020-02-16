@@ -367,7 +367,7 @@ namespace Robust.Server
             UpdateTitle();
             _systemConsole.Update();
 
-            IoCManager.Resolve<IServerNetManager>().ProcessPackets();
+            _network.ProcessPackets();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
 

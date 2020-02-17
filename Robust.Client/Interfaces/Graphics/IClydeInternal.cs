@@ -1,5 +1,6 @@
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
+using Robust.Client.Input;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Maths;
@@ -40,5 +41,10 @@ namespace Robust.Client.Interfaces.Graphics
         Texture GetStockTexture(ClydeStockTexture stockTexture);
 
         ClydeDebugLayers DebugLayers { get; set; }
+
+        string GetKeyName(Keyboard.Key key);
+        string GetKeyNameScanCode(int scanCode);
+
+        int GetKeyScanCode(Keyboard.Key key);
     }
 }

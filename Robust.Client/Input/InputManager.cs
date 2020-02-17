@@ -2,20 +2,19 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Robust.Client.GameObjects.EntitySystems;
+using System.Text;
 using Robust.Client.Interfaces.Input;
-using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using static Robust.Client.Input.Keyboard;
 
 namespace Robust.Client.Input
 {
@@ -52,6 +51,26 @@ namespace Robust.Client.Input
             .Where(x => x.State == BoundKeyState.Down)
             .Select(x => x.Function)
             .ToList();
+
+        public virtual string GetKeyName(Key key)
+        {
+            return string.Empty;
+        }
+
+        public string GetKeyFunctionButtonString(BoundKeyFunction function)
+        {
+            IKeyBinding bind;
+            try
+            {
+                bind = GetKeyBinding(function);
+            }
+            catch (KeyNotFoundException)
+            {
+                return Loc.GetString("<not bound>");
+            }
+
+            return bind.GetKeyString();
+        }
 
         /// <inheritdoc />
         public void Initialize()
@@ -91,7 +110,7 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
-            if (!Enabled || args.Key == Keyboard.Key.Unknown)
+            if (!Enabled || args.Key == Key.Unknown)
             {
                 return;
             }
@@ -132,7 +151,7 @@ namespace Robust.Client.Input
         /// <inheritdoc />
         public void KeyUp(KeyEventArgs args)
         {
-            if (args.Key == Keyboard.Key.Unknown)
+            if (args.Key == Key.Unknown)
             {
                 return;
             }
@@ -259,7 +278,7 @@ namespace Robust.Client.Input
             return true;
         }
 
-        private static byte KeyToInternal(Keyboard.Key key)
+        private static byte KeyToInternal(Key key)
         {
             return (byte) key;
         }
@@ -286,7 +305,7 @@ namespace Robust.Client.Input
                     continue;
                 }
 
-                var key = keyMapping.GetNode("key").AsEnum<Keyboard.Key>();
+                var key = keyMapping.GetNode("key").AsEnum<Key>();
 
                 var canFocus = false;
                 if (keyMapping.TryGetNode("canFocus", out var canFocusName))
@@ -300,35 +319,29 @@ namespace Robust.Client.Input
                     canRepeat = canRepeatName.AsBool();
                 }
 
-                var mod1 = Keyboard.Key.Unknown;
+                var mod1 = Key.Unknown;
                 if (keyMapping.TryGetNode("mod1", out var mod1Name))
                 {
-                    mod1 = mod1Name.AsEnum<Keyboard.Key>();
+                    mod1 = mod1Name.AsEnum<Key>();
                 }
 
-                var mod2 = Keyboard.Key.Unknown;
+                var mod2 = Key.Unknown;
                 if (keyMapping.TryGetNode("mod2", out var mod2Name))
                 {
-                    mod2 = mod2Name.AsEnum<Keyboard.Key>();
+                    mod2 = mod2Name.AsEnum<Key>();
                 }
 
-                var mod3 = Keyboard.Key.Unknown;
+                var mod3 = Key.Unknown;
                 if (keyMapping.TryGetNode("mod3", out var mod3Name))
                 {
-                    mod3 = mod3Name.AsEnum<Keyboard.Key>();
+                    mod3 = mod3Name.AsEnum<Key>();
                 }
 
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
+                var binding = new KeyBinding(this, function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
                 RegisterBinding(binding);
             }
-        }
-
-        public void AddClickBind()
-        {
-            RegisterBinding(new KeyBinding(EngineKeyFunctions.Use, KeyBindingType.State, Keyboard.Key.MouseLeft, true,
-                false));
         }
 
         private void RegisterBinding(KeyBinding binding)
@@ -378,6 +391,8 @@ namespace Robust.Client.Input
 
         private class KeyBinding : IKeyBinding
         {
+            private readonly InputManager _inputManager;
+
             public BoundKeyState State { get; set; }
             public int PackedKeyCombo { get; }
             public BoundKeyFunction Function { get; }
@@ -393,28 +408,54 @@ namespace Robust.Client.Input
             /// </summary>
             public bool CanRepeat { get; internal set; }
 
-            public KeyBinding(BoundKeyFunction function,
+            public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
-                Keyboard.Key baseKey,
-                bool canFocus, bool canRepeat,
-                Keyboard.Key mod1 = Keyboard.Key.Unknown,
-                Keyboard.Key mod2 = Keyboard.Key.Unknown,
-                Keyboard.Key mod3 = Keyboard.Key.Unknown)
+                Key baseKey,
+                bool canFocus, bool canRepeat, Key mod1 = Key.Unknown,
+                Key mod2 = Key.Unknown,
+                Key mod3 = Key.Unknown)
             {
                 Function = function;
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
+                _inputManager = inputManager;
 
                 PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
             }
 
-            private static int PackKeyCombo(Keyboard.Key baseKey,
-                Keyboard.Key mod1 = Keyboard.Key.Unknown,
-                Keyboard.Key mod2 = Keyboard.Key.Unknown,
-                Keyboard.Key mod3 = Keyboard.Key.Unknown)
+            public string GetKeyString()
             {
-                if (baseKey == Keyboard.Key.Unknown)
+                var (baseKey, mod1, mod2, mod3) = KeyBinding.UnpackKeyCombo(PackedKeyCombo);
+
+                var sb = new StringBuilder();
+
+                if (mod3 != Key.Unknown)
+                {
+                    sb.AppendFormat("{0}+", _inputManager.GetKeyName(mod3));
+                }
+
+                if (mod2 != Key.Unknown)
+                {
+                    sb.AppendFormat("{0}+", _inputManager.GetKeyName(mod2));
+                }
+
+                if (mod1 != Key.Unknown)
+                {
+                    sb.AppendFormat("{0}+", _inputManager.GetKeyName(mod1));
+                }
+
+                sb.Append(_inputManager.GetKeyName(baseKey));
+
+                return sb.ToString();
+            }
+
+            private static int PackKeyCombo(Key baseKey,
+                Key mod1 = Key.Unknown,
+                Key mod2 = Key.Unknown,
+                Key mod3 = Key.Unknown)
+            {
+                if (baseKey == Key.Unknown)
                     throw new ArgumentOutOfRangeException(nameof(baseKey), baseKey, "Cannot bind Unknown key.");
 
                 //pack key combo
@@ -439,6 +480,16 @@ namespace Robust.Client.Input
                 combo |= int3 << 24;
 
                 return combo;
+            }
+
+            private static (Key baseKey, Key mod1, Key mod2, Key mod3) UnpackKeyCombo(int packed)
+            {
+                var key = packed & 0xFF;
+                var mod1 = (packed >> 08) & 0xFF;
+                var mod2 = (packed >> 16) & 0xFF;
+                var mod3 = (packed >> 24) & 0xFF;
+
+                return ((Key) key, (Key) mod1, (Key) mod2, (Key) mod3);
             }
         }
     }

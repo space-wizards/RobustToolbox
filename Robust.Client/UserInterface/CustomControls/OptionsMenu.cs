@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             ApplyButton = new Button
             {
-                Text = "Apply", TextAlign = Button.AlignMode.Center,
+                Text = "Apply", TextAlign = Label.AlignMode.Center,
                 SizeFlagsVertical = SizeFlags.ShrinkCenter
             };
             vBox.AddChild(ApplyButton);

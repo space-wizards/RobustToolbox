@@ -21,11 +21,12 @@ namespace Robust.Client.UserInterface.Controls
                 UserInterfaceManagerInternal.RemoveModal(this);
             }
 
-            if (box != null)
+            if (box != null && _desiredSize != box.Value.Size)
             {
                 PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
 
                 _desiredSize = box.Value.Size;
+                MinimumSizeChanged();
             }
 
             Visible = true;

@@ -116,7 +116,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                             (OverrideMenu = new OptionButton
                             {
-                                ToggleMode = false,
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                                 ToolTip = _loc.GetString("Override placement")
                             })

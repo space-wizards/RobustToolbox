@@ -230,7 +230,7 @@ namespace Robust.Client.State.States
 
                 var vBox = new VBoxContainer
                 {
-                    StyleIdentifier = "mainMenuVBox",
+                    StyleIdentifier = "mainMenuVBox"
                 };
 
                 layout.AddChild(vBox);
@@ -263,7 +263,8 @@ namespace Robust.Client.State.States
                 JoinPublicServerButton = new Button
                 {
                     Text = "Join Public Server",
-                    TextAlign = Button.AlignMode.Center,
+                    StyleIdentifier = "mainMenu",
+                    TextAlign = Label.AlignMode.Center,
 #if !FULL_RELEASE
                     Disabled = true,
                     ToolTip = "Cannot connect to public server with a debug build."
@@ -287,7 +288,8 @@ namespace Robust.Client.State.States
                 DirectConnectButton = new Button
                 {
                     Text = "Direct Connect",
-                    TextAlign = Button.AlignMode.Center
+                    TextAlign = Label.AlignMode.Center,
+                    StyleIdentifier = "mainMenu",
                 };
 
                 vBox.AddChild(DirectConnectButton);
@@ -298,7 +300,8 @@ namespace Robust.Client.State.States
                 OptionsButton = new Button
                 {
                     Text = "Options",
-                    TextAlign = Button.AlignMode.Center
+                    TextAlign = Label.AlignMode.Center,
+                    StyleIdentifier = "mainMenu",
                 };
 
                 vBox.AddChild(OptionsButton);
@@ -306,7 +309,8 @@ namespace Robust.Client.State.States
                 QuitButton = new Button
                 {
                     Text = "Quit",
-                    TextAlign = Button.AlignMode.Center
+                    TextAlign = Label.AlignMode.Center,
+                    StyleIdentifier = "mainMenu",
                 };
 
                 vBox.AddChild(QuitButton);

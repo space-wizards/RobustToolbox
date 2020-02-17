@@ -9,7 +9,6 @@ using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -41,7 +40,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649

@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Interfaces.Resources;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -16,6 +15,7 @@ namespace Robust.Client.Graphics.Shaders
         private readonly List<Token> _tokens = new List<Token>();
 
         private readonly List<ShaderUniformDefinition> _uniformsParsing = new List<ShaderUniformDefinition>();
+        private readonly List<ShaderConstantDefinition> _constantsParsing = new List<ShaderConstantDefinition>();
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new List<ShaderVaryingDefinition>();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new List<ShaderFunctionDefinition>();
 
@@ -58,7 +58,8 @@ namespace Robust.Client.Graphics.Shaders
 
                 if (!(token is TokenWord word))
                 {
-                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying', 'preset' or type.",
+                    throw new ShaderParseException(
+                        "Expected 'light_mode', 'blend_mode', 'uniform', 'varying', 'preset' or type.",
                         token.Position);
                 }
 
@@ -68,6 +69,7 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         throw new ShaderParseException("Already specified 'light_mode' before!");
                     }
+
                     _takeToken();
                     token = _takeToken();
                     if (!(token is TokenWord unshadedWord) || unshadedWord.Word != "unshaded")
@@ -90,6 +92,7 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         throw new ShaderParseException("Already specified 'blend_mode' before!");
                     }
+
                     _takeToken();
                     token = _takeToken();
 
@@ -169,12 +172,19 @@ namespace Robust.Client.Graphics.Shaders
                     continue;
                 }
 
+                if (word.Word == "const")
+                {
+                    ParseConstant();
+                    continue;
+                }
+
                 _parseFunction();
             }
 
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
+                _constantsParsing.ToDictionary(p => p.Name, p => p),
                 _functionsParsing,
                 lightMode ?? ShaderLightMode.Default,
                 blendMode ?? ShaderBlendMode.Mix,
@@ -388,6 +398,54 @@ namespace Robust.Client.Graphics.Shaders
             }
 
             throw new ShaderParseException("Expected ';' or '='", defaultValueMaybe.Position);
+        }
+
+        private void ParseConstant()
+        {
+            _takeToken();
+            var typeToken = _takeToken();
+            if (!(typeToken is TokenWord wordType))
+            {
+                throw new ShaderParseException("Expected type.", typeToken.Position);
+            }
+
+            var type = _parseShaderType(wordType);
+
+            var nameToken = _takeToken();
+            if (!(nameToken is TokenWord wordName))
+            {
+                throw new ShaderParseException("Expected constant name.", nameToken.Position);
+            }
+
+            var name = wordName.Word;
+
+            var equals = _takeToken();
+
+            if (!(equals is TokenSymbol equalsSymbol) || equalsSymbol.Symbol != Symbols.Equals)
+            {
+                throw new ShaderParseException("Expected '='", equals.Position);
+            }
+
+            var tokens = new List<Token>();
+            while (true)
+            {
+                var token = _takeToken();
+                if (token == null)
+                {
+                    throw new ShaderParseException("Got EOF while parsing uniform default value.");
+                }
+
+                if (token is TokenSymbol tokenSymbol && tokenSymbol.Symbol == Symbols.Semicolon)
+                {
+                    break;
+                }
+
+                tokens.Add(token);
+            }
+
+            var defValue = _tokensToString(tokens);
+            var def = new ShaderConstantDefinition(name, type, defValue);
+            _constantsParsing.Add(def);
         }
 
         private void _parseVarying()

@@ -342,7 +342,15 @@ namespace Robust.Client.Graphics.Shaders
 
             else if (chr == '^')
             {
-                symbol = Symbols.Xor;
+                if (next == '^')
+                {
+                    symbol = Symbols.LogicXor;
+                    _currentParser.Take();
+                }
+                else
+                {
+                    symbol = Symbols.Xor;
+                }
             }
 
             else if (chr == '&')
@@ -591,6 +599,7 @@ namespace Robust.Client.Graphics.Shaders
             Or,
             LogicAnd,
             LogicOr,
+            LogicXor,
             Less,
             Greater,
             LessOrEq,
@@ -601,123 +610,46 @@ namespace Robust.Client.Graphics.Shaders
 
         private static readonly Dictionary<Symbols, string> _symbolStringMap = new Dictionary<Symbols, string>
         {
-            {
-                Symbols.Semicolon, ";\n"
-            },
-            {
-                Symbols.Comma, ","
-            },
-            {
-                Symbols.Period, "."
-            },
-            {
-                Symbols.Equals, "="
-            },
-            {
-                Symbols.ParenOpen, "("
-            },
-            {
-                Symbols.ParenClosed, ")"
-            },
-            {
-                Symbols.BracketOpen, "["
-            },
-            {
-                Symbols.BracketClosed, "]"
-            },
-            {
-                Symbols.BraceOpen, "{\n"
-            },
-            {
-                Symbols.BraceClosed, "}\n"
-            },
-            {
-                Symbols.Increment, "++"
-            },
-            {
-                Symbols.Plus, "+"
-            },
-            {
-                Symbols.PlusEquals, "+="
-            },
-            {
-                Symbols.Decrement, "--"
-            },
-            {
-                Symbols.Minus, "-"
-            },
-            {
-                Symbols.MinusEquals, "-="
-            },
-            {
-                Symbols.Multiply, "*"
-            },
-            {
-                Symbols.MultiplyEquals, "-="
-            },
-            {
-                Symbols.Modulo, "%"
-            },
-            {
-                Symbols.ModuleEquals, "%="
-            },
-            {
-                Symbols.Divide, "/"
-            },
-            {
-                Symbols.DivideEquals, "/="
-            },
-            {
-                Symbols.BitNot, "~"
-            },
-            {
-                Symbols.Not, "!"
-            },
-            {
-                Symbols.ShiftLeft, "<<"
-            },
-            {
-                Symbols.ShiftRight, ">>"
-            },
-            {
-                Symbols.DoubleEquals, "=="
-            },
-            {
-                Symbols.NotEquals, "!="
-            },
-            {
-                Symbols.And, "&"
-            },
-            {
-                Symbols.Xor, "^"
-            },
-            {
-                Symbols.Or, "|"
-            },
-            {
-                Symbols.LogicAnd, "&"
-            },
-            {
-                Symbols.LogicOr, "|"
-            },
-            {
-                Symbols.Less, "<"
-            },
-            {
-                Symbols.LessOrEq, "<="
-            },
-            {
-                Symbols.Greater, ">"
-            },
-            {
-                Symbols.GreaterOrEq, ">="
-            },
-            {
-                Symbols.QuestionMark, "?"
-            },
-            {
-                Symbols.Colon, ":"
-            },
+            {Symbols.Semicolon, ";\n"},
+            {Symbols.Comma, ","},
+            {Symbols.Period, "."},
+            {Symbols.Equals, "="},
+            {Symbols.ParenOpen, "("},
+            {Symbols.ParenClosed, ")"},
+            {Symbols.BracketOpen, "["},
+            {Symbols.BracketClosed, "]"},
+            {Symbols.BraceOpen, "{\n"},
+            {Symbols.BraceClosed, "}\n"},
+            {Symbols.Increment, "++"},
+            {Symbols.Plus, "+"},
+            {Symbols.PlusEquals, "+="},
+            {Symbols.Decrement, "--"},
+            {Symbols.Minus, "-"},
+            {Symbols.MinusEquals, "-="},
+            {Symbols.Multiply, "*"},
+            {Symbols.MultiplyEquals, "*="},
+            {Symbols.Modulo, "%"},
+            {Symbols.ModuleEquals, "%="},
+            {Symbols.Divide, "/"},
+            {Symbols.DivideEquals, "/="},
+            {Symbols.BitNot, "~"},
+            {Symbols.Not, "!"},
+            {Symbols.ShiftLeft, "<<"},
+            {Symbols.ShiftRight, ">>"},
+            {Symbols.DoubleEquals, "=="},
+            {Symbols.NotEquals, "!="},
+            {Symbols.And, "&"},
+            {Symbols.Xor, "^"},
+            {Symbols.Or, "|"},
+            {Symbols.LogicAnd, "&&"},
+            {Symbols.LogicOr, "||"},
+            {Symbols.LogicXor, "^^"},
+            {Symbols.Less, "<"},
+            {Symbols.LessOrEq, "<="},
+            {Symbols.Greater, ">"},
+            {Symbols.GreaterOrEq, ">="},
+            {Symbols.QuestionMark, "?"},
+            {Symbols.Colon, ":"},
         };
     }
 }

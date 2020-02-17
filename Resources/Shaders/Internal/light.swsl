@@ -1,0 +1,44 @@
+preset raw;
+
+#include "/Shaders/Internal/shadow_cast_shared.swsl"
+
+const float LIGHTING_HEIGHT = 1;
+const float PI = 3.1415926535897932384626433; // That enough digits?
+
+varying vec2 worldPosition;
+
+uniform vec4 lightColor;
+// Position of the light, in world coordinates.
+uniform vec2 lightCenter;
+uniform float lightRange;
+uniform float lightPower;
+uniform float lightIndex;
+
+void vertex()
+{
+    vec3 transformed = modelMatrix * vec3(VERTEX, 1.0);
+    worldPosition = transformed.xy;
+    transformed = projectionMatrix * viewMatrix * transformed;
+
+    VERTEX = transformed.xy;
+}
+
+void fragment()
+{
+    float mask = texture(TEXTURE, UV).r;
+
+    vec2 diff = worldPosition - lightCenter;
+    float dist = dot(diff, diff) + LIGHTING_HEIGHT;
+
+    if (doesOcclude(diff, lightIndex))
+    {
+        discard;
+    }
+
+    float val = clamp((1 - clamp(sqrt(dist) / lightRange, 0, 1)) * (1 / (sqrt(dist + 1))), 0, 1);
+
+    val *= lightPower;
+    val *= mask;
+
+    COLOR = vec4(lightColor.rgb, val);
+}

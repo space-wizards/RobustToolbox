@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         private const int MaxLightsPerScene = 64;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
+        private ClydeHandle _lightShaderHandle;
 
         private RenderTarget _fovRenderTarget;
         private ClydeTexture _fovDepthTextureObject;
@@ -81,6 +82,9 @@ namespace Robust.Client.Graphics.Clyde
 
             var debugShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/depth-debug.swsl");
             _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
+
+            var shaderSource = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/light.swsl");
+            _lightShaderHandle = shaderSource.ClydeHandle;
         }
 
         private void DrawFov(IEye eye)
@@ -226,13 +230,14 @@ namespace Robust.Client.Graphics.Clyde
             var (lightW, lightH) = GetLightMapSize();
             GL.Viewport(0, 0, lightW, lightH);
 
-            _lightShader.Use();
+            var lightShader = _loadedShaders[_lightShaderHandle].Program;
+            lightShader.Use();
 
             var shadowHandle = _loadedTextures[_shadowTextureObject.TextureId].OpenGLObject;
             GL.ActiveTexture(TextureUnit.Texture1);
             GL.BindTexture(TextureTarget.Texture2D, shadowHandle.Handle);
 
-            _lightShader.SetUniformTexture("shadowMap", TextureUnit.Texture1);
+            lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
 
@@ -273,30 +278,30 @@ namespace Robust.Client.Graphics.Clyde
                     GL.ActiveTexture(TextureUnit.Texture0);
                     GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
                     lastMask = maskTexture;
-                    _lightShader.SetUniformTexture("lightMask", TextureUnit.Texture0);
+                    lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
 
                 if (!FloatMath.CloseTo(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
-                    _lightShader.SetUniformMaybe("lightRange", lastRange);
+                    lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
                 if (!FloatMath.CloseTo(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
-                    _lightShader.SetUniformMaybe("lightPower", lastPower);
+                    lightShader.SetUniformMaybe("lightPower", lastPower);
                 }
 
                 if (lastColor != component.Color)
                 {
                     lastColor = component.Color;
-                    _lightShader.SetUniformMaybe("lightColor", lastColor);
+                    lightShader.SetUniformMaybe("lightColor", lastColor);
                 }
 
-                _lightShader.SetUniform("lightCenter", lightPos);
-                _lightShader.SetUniform("lightIndex", i);
-                _lightShader.SetUniform("shadowMatrix", shadowMatrices[i], false);
+                lightShader.SetUniformMaybe("lightCenter", lightPos);
+                lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / _shadowTextureObject.Height);
+                lightShader.SetUniformMaybe("shadowMatrix", shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -313,7 +318,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 (matrix.R0C2, matrix.R1C2) = lightPos;
 
-                _drawQuad(-offset, offset, ref matrix, _lightShader);
+                _drawQuad(-offset, offset, ref matrix, lightShader);
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);

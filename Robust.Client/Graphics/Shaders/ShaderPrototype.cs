@@ -225,7 +225,7 @@ namespace Robust.Client.Graphics.Shaders
 
             source += "void fragment() {\n    COLOR = texture(TEXTURE, UV);\n}";
 
-            var preset = ShaderParser.Parse(source);
+            var preset = ShaderParser.Parse(source, _resourceCache);
             CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");
         }
 

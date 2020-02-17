@@ -4,13 +4,14 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
     internal sealed partial class ShaderParser
     {
-        private readonly TextParser _textParser;
+        private readonly IResourceManager _resManager;
         private int _tokenIndex;
         private readonly List<Token> _tokens = new List<Token>();
 
@@ -18,32 +19,31 @@ namespace Robust.Client.Graphics.Shaders
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new List<ShaderVaryingDefinition>();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new List<ShaderFunctionDefinition>();
 
-        public static ParsedShader Parse(TextReader reader)
+        public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {
-            return new ShaderParser(reader)._parse();
+            var parser = new ShaderParser(resManager);
+            parser.PushTokenize(reader, "<anonymous>");
+
+            return parser._parse();
         }
 
-        public static ParsedShader Parse(string code)
+        public static ParsedShader Parse(string code, IResourceManager resManager)
         {
-            using (var reader = new StringReader(code))
-            {
-                return Parse(reader);
-            }
+            using var reader = new StringReader(code);
+
+            return Parse(reader, resManager);
         }
 
-        private ShaderParser(TextReader reader)
+        private ShaderParser(IResourceManager resManager)
         {
-            _textParser = new TextParser(reader);
+            _resManager = resManager;
         }
 
         private ParsedShader _parse()
         {
-            _tokenize();
-
             ShaderLightMode? lightMode = null;
             ShaderBlendMode? blendMode = null;
             ShaderPreset? preset = null;
-
 
             Token token;
 
@@ -483,29 +483,33 @@ namespace Robust.Client.Graphics.Shaders
         [PublicAPI]
         internal readonly struct TextFileRange
         {
+            public readonly string FileName;
             public readonly int LineStart;
             public readonly int LineEnd;
             public readonly int ColumnStart;
             public readonly int ColumnEnd;
 
-            public TextFileRange(int lineStart, int lineEnd, int columnStart, int columnEnd)
+            public TextFileRange(string fileName, int lineStart, int lineEnd, int columnStart, int columnEnd)
             {
+                FileName = fileName;
                 LineStart = lineStart;
                 LineEnd = lineEnd;
                 ColumnStart = columnStart;
                 ColumnEnd = columnEnd;
             }
 
-            public TextFileRange(int line, int columnStart, int columnEnd)
+            public TextFileRange(string fileName, int line, int columnStart, int columnEnd)
             {
+                FileName = fileName;
                 LineStart = line;
                 LineEnd = line;
                 ColumnStart = columnStart;
                 ColumnEnd = columnEnd;
             }
 
-            public TextFileRange(int line, int column) : this()
+            public TextFileRange(string fileName, int line, int column)
             {
+                FileName = fileName;
                 LineStart = line;
                 LineEnd = line;
                 ColumnStart = column;

@@ -23,11 +23,6 @@ namespace Robust.Client.Interfaces.Input
 
         void Initialize();
 
-        /// <summary>
-        ///     Adds the Use keybind for Keyboard.Key.MouseLeft for Robust.Lite Launcher.
-        /// </summary>
-        void AddClickBind();
-
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
@@ -37,6 +32,7 @@ namespace Robust.Client.Interfaces.Input
         /// <param name="function">The function the key binding is bound to.</param>
         /// <returns>The key binding.</returns>
         IKeyBinding GetKeyBinding(BoundKeyFunction function);
+
         bool TryGetKeyBinding(BoundKeyFunction function, out IKeyBinding binding);
 
         /// <summary>
@@ -59,5 +55,16 @@ namespace Robust.Client.Interfaces.Input
         event Action<BoundKeyEventArgs> KeyBindStateChanged;
 
         IEnumerable<BoundKeyFunction> DownKeyFunctions { get; }
+
+        /// <summary>
+        ///     Gets the name of the key on the keyboard, based on the current input method and language.
+        /// </summary>
+        string GetKeyName(Keyboard.Key key);
+
+        /// <summary>
+        ///     Gets a user-presentable, localized & keyboard-adjusted string for which combination
+        ///     of buttons is bound to the specified key function.
+        /// </summary>
+        string GetKeyFunctionButtonString(BoundKeyFunction function);
     }
 }

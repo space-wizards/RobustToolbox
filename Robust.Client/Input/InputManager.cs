@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using Robust.Client.Interfaces.Input;
 using Robust.Shared.Input;
@@ -115,10 +116,9 @@ namespace Robust.Client.Input
                 return;
             }
 
-            var internalKey = KeyToInternal(args.Key);
-            _keysPressed[internalKey] = true;
+            _keysPressed[(int) args.Key] = true;
 
-            var matchedCombo = 0;
+            PackedKeyCombo matchedCombo = default;
 
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
@@ -131,8 +131,8 @@ namespace Robust.Client.Input
                 {
                     // this statement *should* always be true first
                     // Keep triggering keybinds of the same PackedKeyCombo until Handled or no bindings left
-                    if ((matchedCombo == 0 || binding.PackedKeyCombo == matchedCombo) &&
-                        PackedContainsKey(binding.PackedKeyCombo, internalKey))
+                    if ((matchedCombo == default || binding.PackedKeyCombo == matchedCombo) &&
+                        PackedContainsKey(binding.PackedKeyCombo, args.Key))
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
@@ -156,21 +156,20 @@ namespace Robust.Client.Input
                 return;
             }
 
-            var internalKey = KeyToInternal(args.Key);
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
                 if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                     continue;
 
-                if (PackedContainsKey(binding.PackedKeyCombo, internalKey) &&
+                if (PackedContainsKey(binding.PackedKeyCombo, args.Key) &&
                     PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
                     UpBind(binding);
                 }
             }
 
-            _keysPressed[internalKey] = false;
+            _keysPressed[(int) args.Key] = false;
         }
 
         private bool DownBind(KeyBinding binding)
@@ -230,45 +229,35 @@ namespace Robust.Client.Input
             return (eventArgs.Handled);
         }
 
-        private bool PackedMatchesPressedState(int packedKeyCombo)
+        private bool PackedMatchesPressedState(PackedKeyCombo packed)
         {
-            var key = (byte) (packedKeyCombo & 0x000000FF);
-            if (!_keysPressed[key]) return false;
+            var (baseKey, mod1, mod2, mod3) = packed;
 
-            key = (byte) ((packedKeyCombo & 0x0000FF00) >> 8);
-            if (key != 0x00 && !_keysPressed[key]) return false;
-
-            key = (byte) ((packedKeyCombo & 0x00FF0000) >> 16);
-            if (key != 0x00 && !_keysPressed[key]) return false;
-
-            key = (byte) ((packedKeyCombo & 0xFF000000) >> 24);
-            if (key != 0x00 && !_keysPressed[key]) return false;
+            if (!_keysPressed[(int) baseKey]) return false;
+            if (mod1 != Key.Unknown && !_keysPressed[(int) mod1]) return false;
+            if (mod2 != Key.Unknown && !_keysPressed[(int) mod2]) return false;
+            if (mod3 != Key.Unknown && !_keysPressed[(int) mod3]) return false;
 
             return true;
         }
 
-        private static bool PackedContainsKey(int packedKeyCombo, byte key)
+        private static bool PackedContainsKey(PackedKeyCombo packed, Key key)
         {
-            var cKey = (byte) (packedKeyCombo & 0x000000FF);
-            if (cKey == key) return true;
+            var (baseKey, mod1, mod2, mod3) = packed;
 
-            cKey = (byte) ((packedKeyCombo & 0x0000FF00) >> 8);
-            if (cKey != 0x00 && cKey == key) return true;
-
-            cKey = (byte) ((packedKeyCombo & 0x00FF0000) >> 16);
-            if (cKey != 0x00 && cKey == key) return true;
-
-            cKey = (byte) ((packedKeyCombo & 0xFF000000) >> 24);
-            if (cKey != 0x00 && cKey == key) return true;
+            if (baseKey == key) return true;
+            if (mod1 != Key.Unknown && mod1 == key) return true;
+            if (mod2 != Key.Unknown && mod2 == key) return true;
+            if (mod3 != Key.Unknown && mod3 == key) return true;
 
             return false;
         }
 
-        private static bool PackedIsSubPattern(int packedCombo, int subPackedCombo)
+        private static bool PackedIsSubPattern(PackedKeyCombo packedCombo, PackedKeyCombo subPackedCombo)
         {
             for (var i = 0; i < 32; i += 8)
             {
-                var key = (byte) (subPackedCombo >> i);
+                var key = (Key) (subPackedCombo.Packed >> i);
                 if (!PackedContainsKey(packedCombo, key))
                 {
                     return false;
@@ -276,11 +265,6 @@ namespace Robust.Client.Input
             }
 
             return true;
-        }
-
-        private static byte KeyToInternal(Key key)
-        {
-            return (byte) key;
         }
 
         private void LoadKeyFile(ResourcePath yamlFile)
@@ -351,7 +335,7 @@ namespace Robust.Client.Input
 
             // reversed a,b for descending order
             // we sort larger combos first so they take priority over smaller (single key) combos
-            _bindings.Sort((a, b) => b.PackedKeyCombo.CompareTo(a.PackedKeyCombo));
+            _bindings.Sort((a, b) => b.PackedKeyCombo.Packed.CompareTo(a.PackedKeyCombo.Packed));
         }
 
         /// <inheritdoc />
@@ -394,7 +378,7 @@ namespace Robust.Client.Input
             private readonly InputManager _inputManager;
 
             public BoundKeyState State { get; set; }
-            public int PackedKeyCombo { get; }
+            public PackedKeyCombo PackedKeyCombo { get; }
             public BoundKeyFunction Function { get; }
             public KeyBindingType BindingType { get; }
 
@@ -421,12 +405,12 @@ namespace Robust.Client.Input
                 CanRepeat = canRepeat;
                 _inputManager = inputManager;
 
-                PackedKeyCombo = PackKeyCombo(baseKey, mod1, mod2, mod3);
+                PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);
             }
 
             public string GetKeyString()
             {
-                var (baseKey, mod1, mod2, mod3) = KeyBinding.UnpackKeyCombo(PackedKeyCombo);
+                var (baseKey, mod1, mod2, mod3) = PackedKeyCombo;
 
                 var sb = new StringBuilder();
 
@@ -449,8 +433,18 @@ namespace Robust.Client.Input
 
                 return sb.ToString();
             }
+        }
 
-            private static int PackKeyCombo(Key baseKey,
+        [StructLayout(LayoutKind.Explicit)]
+        private readonly struct PackedKeyCombo : IEquatable<PackedKeyCombo>
+        {
+            [FieldOffset(0)] public readonly int Packed;
+            [FieldOffset(0)] public readonly Key Mod3;
+            [FieldOffset(1)] public readonly Key Mod2;
+            [FieldOffset(2)] public readonly Key Mod1;
+            [FieldOffset(3)] public readonly Key BaseKey;
+
+            public PackedKeyCombo(Key baseKey,
                 Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
@@ -458,38 +452,56 @@ namespace Robust.Client.Input
                 if (baseKey == Key.Unknown)
                     throw new ArgumentOutOfRangeException(nameof(baseKey), baseKey, "Cannot bind Unknown key.");
 
-                //pack key combo
-                var combo = 0x00000000;
-                combo |= KeyToInternal(baseKey);
-
                 // Modifiers are sorted so that the higher key values are lower in the integer bytes.
                 // Unknown is zero so at the very "top".
-                // More modifiers thus takes precedent with that sort in register,
+                // More modifiers thus takes precedent with that sort in RegisterBinding,
                 // and order only matters for amount of modifiers, not the modifiers themselves,
-                var int1 = KeyToInternal(mod1);
-                var int2 = KeyToInternal(mod2);
-                var int3 = KeyToInternal(mod3);
-
                 // Use a simplistic bubble sort to sort the key modifiers.
-                if (int1 < int2) (int1, int2) = (int2, int1);
-                if (int2 < int3) (int2, int3) = (int3, int2);
-                if (int1 < int2) (int1, int2) = (int2, int1);
+                if (mod1 < mod2) (mod1, mod2) = (mod2, mod1);
+                if (mod2 < mod3) (mod2, mod3) = (mod3, mod2);
+                if (mod1 < mod2) (mod1, mod2) = (mod2, mod1);
 
-                combo |= int1 << 8;
-                combo |= int2 << 16;
-                combo |= int3 << 24;
+                // Working around the fact that C# is not aware of Explicit layout
+                // and requires all struct fields be initialized.
+                Packed = default;
 
-                return combo;
+                BaseKey = baseKey;
+                Mod1 = mod1;
+                Mod2 = mod2;
+                Mod3 = mod3;
             }
 
-            private static (Key baseKey, Key mod1, Key mod2, Key mod3) UnpackKeyCombo(int packed)
+            public void Deconstruct(out Key baseKey, out Key mod1, out Key mod2, out Key mod3)
             {
-                var key = packed & 0xFF;
-                var mod1 = (packed >> 08) & 0xFF;
-                var mod2 = (packed >> 16) & 0xFF;
-                var mod3 = (packed >> 24) & 0xFF;
+                baseKey = BaseKey;
+                mod1 = Mod1;
+                mod2 = Mod2;
+                mod3 = Mod3;
+            }
 
-                return ((Key) key, (Key) mod1, (Key) mod2, (Key) mod3);
+            public bool Equals(PackedKeyCombo other)
+            {
+                return Packed == other.Packed;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is PackedKeyCombo other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return Packed;
+            }
+
+            public static bool operator ==(PackedKeyCombo left, PackedKeyCombo right)
+            {
+                return left.Equals(right);
+            }
+
+            public static bool operator !=(PackedKeyCombo left, PackedKeyCombo right)
+            {
+                return !left.Equals(right);
             }
         }
     }

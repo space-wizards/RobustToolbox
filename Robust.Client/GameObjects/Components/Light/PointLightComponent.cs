@@ -107,7 +107,7 @@ namespace Robust.Client.GameObjects
         private Color _color = Color.White;
         private Vector2 _offset;
         private bool _enabled = true;
-        private bool _occluded = true;
+        private bool _occluded;
         private bool _maskAutoRotate;
         private Angle _rotation;
         private float _energy;

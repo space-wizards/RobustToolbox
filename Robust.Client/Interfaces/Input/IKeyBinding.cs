@@ -8,5 +8,10 @@ namespace Robust.Client.Interfaces.Input
         BoundKeyState State { get; }
         BoundKeyFunction Function { get; }
         KeyBindingType BindingType { get; }
+
+        /// <summary>
+        ///     Gets a user-presentable, localized & keyboard-adjusted string for which buttons the user has to press.
+        /// </summary>
+        string GetKeyString();
     }
 }

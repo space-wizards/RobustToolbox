@@ -37,6 +37,14 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
+        ///     Escape a string of text to be able to be formatted into markup.
+        /// </summary>
+        public static string EscapeText(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("[", "\\[");
+        }
+
+        /// <summary>
         ///     Create a new <c>FormattedMessage</c> by copying another one.
         /// </summary>
         /// <param name="toCopy">The message to copy.</param>

@@ -102,7 +102,7 @@ namespace Robust.Client.UserInterface.Controls
                             Text = menuButton.Text,
                             ClipText = true,
                             Disabled = menuButton.Disabled,
-                            TextAlign = Button.AlignMode.Left
+                            TextAlign = Label.AlignMode.Left
                         };
                         pushButton.OnPressed += _ => menuButton.OnPressed?.Invoke();
                         container.AddChild(pushButton);

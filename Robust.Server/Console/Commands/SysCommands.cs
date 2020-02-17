@@ -139,7 +139,10 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                GC.Collect(int.Parse(args[0]));
+                if(int.TryParse(args[0], out int result))
+                    GC.Collect(result);
+                else
+                    shell.SendText(player, "Failed to parse argument.");
             }
         }
     }

@@ -10,6 +10,8 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class TextureRect : Control
     {
+        public const string StylePropertyTexture = "texture";
+
         private bool _canShrink;
         private Texture _texture;
         private Vector2 _textureScale = Vector2.One;
@@ -69,34 +71,40 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.Draw(handle);
 
-            if (_texture == null)
+            var texture = _texture;
+
+            if (texture == null)
             {
-                return;
+                TryGetStyleProperty(StylePropertyTexture, out texture);
+                if (texture == null)
+                {
+                    return;
+                }
             }
 
             switch (Stretch)
             {
                 case StretchMode.Scale:
-                    handle.DrawTextureRect(_texture,
+                    handle.DrawTextureRect(texture,
                         UIBox2.FromDimensions(Vector2.Zero, PixelSize));
                     break;
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
-                    handle.DrawTextureRect(_texture,
-                        UIBox2.FromDimensions(Vector2.Zero, _texture.Size * _textureScale * UIScale));
+                    handle.DrawTextureRect(texture,
+                        UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale));
                     break;
                 case StretchMode.KeepCentered:
                 {
-                    var position = (PixelSize - _texture.Size * _textureScale * UIScale) / 2;
-                    handle.DrawTextureRect(_texture, UIBox2.FromDimensions(position, _texture.Size * _textureScale * UIScale));
+                    var position = (PixelSize - texture.Size * _textureScale * UIScale) / 2;
+                    handle.DrawTextureRect(texture, UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale));
                     break;
                 }
 
                 case StretchMode.KeepAspect:
                 case StretchMode.KeepAspectCentered:
                 {
-                    var (texWidth, texHeight) = _texture.Size * _textureScale;
+                    var (texWidth, texHeight) = texture.Size * _textureScale;
                     var width = texWidth * (PixelSize.Y / texHeight);
                     var height = (float)PixelSize.Y;
                     if (width > PixelSize.X)
@@ -112,19 +120,19 @@ namespace Robust.Client.UserInterface.Controls
                         position = (PixelSize - size) / 2;
                     }
 
-                    handle.DrawTextureRectRegion(_texture, UIBox2.FromDimensions(position, size));
+                    handle.DrawTextureRectRegion(texture, UIBox2.FromDimensions(position, size));
                     break;
                 }
 
                 case StretchMode.KeepAspectCovered:
-                    var texSize = _texture.Size * _textureScale;
+                    var texSize = texture.Size * _textureScale;
                     // Calculate the scale necessary to fit width and height to control size.
                     var (scaleX, scaleY) = PixelSize / texSize;
                     // Use whichever scale is greater.
                     var scale = Math.Max(scaleX, scaleY);
                     // Offset inside the actual texture.
                     var offset = (texSize - PixelSize) / scale / 2f;
-                    handle.DrawTextureRectRegion(_texture, PixelSizeBox, UIBox2.FromDimensions(offset, PixelSize / scale));
+                    handle.DrawTextureRectRegion(texture, PixelSizeBox, UIBox2.FromDimensions(offset, PixelSize / scale));
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -179,12 +187,19 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            if (_texture == null || CanShrink)
+            var texture = _texture;
+
+            if (texture == null)
+            {
+                TryGetStyleProperty(StylePropertyTexture, out texture);
+            }
+
+            if (texture == null || CanShrink)
             {
                 return Vector2.Zero;
             }
 
-            return Texture.Size * TextureScale;
+            return texture.Size * TextureScale;
         }
     }
 }

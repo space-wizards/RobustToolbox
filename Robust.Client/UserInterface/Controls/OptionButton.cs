@@ -2,19 +2,57 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class OptionButton : Button
+    public class OptionButton : ContainerButton
     {
+        public const string StyleClassOptionButton = "optionButton";
+        public const string StyleClassOptionTriangle = "optionTriangle";
+
         private List<ButtonData> _buttonData = new List<ButtonData>();
         private Dictionary<int, int> _idMap = new Dictionary<int, int>();
         private Popup _popup;
         private VBoxContainer _popupVBox;
+        private Label _label;
 
         public event Action<ItemSelectedEventArgs> OnItemSelected;
 
         public string Prefix { get; set; }
+
+        public OptionButton()
+        {
+            Prefix = "";
+            OnPressed += _onPressed;
+
+            var hBox = new HBoxContainer
+            {
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            AddChild(hBox);
+
+            _popup = new Popup();
+            UserInterfaceManager.ModalRoot.AddChild(_popup);
+            _popupVBox = new VBoxContainer();
+            _popup.AddChild(_popupVBox);
+
+            _label = new Label
+            {
+                StyleClasses = { StyleClassOptionButton },
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            hBox.AddChild(_label);
+
+            var textureRect = new TextureRect
+            {
+                StyleClasses = { StyleClassOptionTriangle },
+                SizeFlagsVertical = SizeFlags.ShrinkCenter,
+                MouseFilter = MouseFilterMode.Ignore
+            };
+            hBox.AddChild(textureRect);
+        }
 
         public void AddItem(Texture icon, string label, int? id = null)
         {
@@ -116,7 +154,7 @@ namespace Robust.Client.UserInterface.Controls
             }
             var data = _buttonData[idx];
             SelectedId = data.Id;
-            Text = Prefix + data.Text;
+            _label.Text = Prefix + data.Text;
             data.Button.Pressed = true;
         }
 
@@ -165,7 +203,7 @@ namespace Robust.Client.UserInterface.Controls
             data.Text = text;
             if (SelectedId == data.Id)
             {
-                Text = text;
+                _label.Text = text;
             }
 
             data.Button.Text = text;
@@ -177,16 +215,6 @@ namespace Robust.Client.UserInterface.Controls
             var (minX, minY) = _popupVBox.CombinedMinimumSize;
             var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
             _popup.Open(box);
-        }
-
-        public OptionButton()
-        {
-            Prefix = "";
-            OnPressed += _onPressed;
-            _popup = new Popup();
-            UserInterfaceManager.ModalRoot.AddChild(_popup);
-            _popupVBox = new VBoxContainer();
-            _popup.AddChild(_popupVBox);
         }
 
         protected override void Dispose(bool disposing)

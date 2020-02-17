@@ -1,4 +1,5 @@
-﻿using Lidgren.Network;
+﻿using System;
+using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
 
 namespace Robust.Shared.Network
@@ -86,5 +87,24 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="buffer">The buffer of the new packet being serialized.</param>
         public abstract void WriteToBuffer(NetOutgoingMessage buffer);
+
+        public virtual NetDeliveryMethod DeliveryMethod
+        {
+            get
+            {
+                switch (MsgGroup)
+                {
+                    case MsgGroups.Entity:
+                        return NetDeliveryMethod.Unreliable;
+                    case MsgGroups.Core:
+                    case MsgGroups.String:
+                    case MsgGroups.Command:
+                    case MsgGroups.EntityEvent:
+                        return NetDeliveryMethod.ReliableUnordered;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+        }
     }
 }

@@ -24,7 +24,7 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = TypeAbbreviation.Abbreviate(type.ToString()), Qualified = type.AssemblyQualifiedName});
+                        {Stringified = TypeAbbreviation.Abbreviate(type.ToString()), FullName = type.FullName});
                 }
 
                 return new ViewVariablesBlobEntityComponents

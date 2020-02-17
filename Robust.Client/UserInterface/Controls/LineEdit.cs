@@ -394,7 +394,7 @@ namespace Robust.Client.UserInterface.Controls
                 // Same but left side.
                 var distanceLeft = clickPosX - lastChrPostX;
                 // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
-                if (distanceRight > distanceLeft)
+                if (index > 0 && distanceRight > distanceLeft)
                 {
                     index -= 1;
                 }

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
+using System.Threading;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
@@ -75,12 +76,14 @@ namespace Robust.Shared.ContentPack
 
         private readonly object _lock = new object();
 
+        private static int _modLoaderId;
 
         public ModLoader()
         {
+            var id = Interlocked.Increment(ref _modLoaderId);
             // Imma just turn on collectible assemblies for the heck of it.
             // Even though we don't need it yet.
-            _loadContext = new AssemblyLoadContext(null, true);
+            _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
         }
@@ -163,9 +166,12 @@ namespace Robust.Shared.ContentPack
 
         public void BroadcastUpdate(ModUpdateLevel level, FrameEventArgs frameEventArgs)
         {
-            foreach (var entrypoint in _mods.SelectMany(m => m.EntryPoints))
+            foreach (var module in _mods)
             {
-                entrypoint.Update(level, frameEventArgs);
+                foreach (var entryPoint in module.EntryPoints)
+                {
+                    entryPoint.Update(level, frameEventArgs);
+                }
             }
         }
 

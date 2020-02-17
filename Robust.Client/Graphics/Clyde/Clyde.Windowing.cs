@@ -11,6 +11,7 @@ using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -58,9 +59,35 @@ namespace Robust.Client.Graphics.Clyde
 
         public Vector2 MouseScreenPosition => _lastMousePos;
 
+        public string GetKeyName(Keyboard.Key key)
+        {
+            var name = Keyboard.GetSpecialKeyName(key);
+            if (name != null)
+            {
+                return Loc.GetString(name);
+            }
+
+            name = GLFW.GetKeyName(Keyboard.ConvertGlfwKeyReverse(key), 0);
+            if (name != null)
+            {
+                return name.ToUpper();
+            }
+
+            return Loc.GetString("<unknown key>");
+        }
+
+        public string GetKeyNameScanCode(int scanCode)
+        {
+            return GLFW.GetKeyName(Keys.Unknown, scanCode);
+        }
+
+        public int GetKeyScanCode(Keyboard.Key key)
+        {
+            return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
+        }
+
         private List<Exception> _glfwExceptionList;
         private bool _isMinimized;
-
 
         private bool InitGlfw()
         {

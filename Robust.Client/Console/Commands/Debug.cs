@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.Versioning;
 using System.Text;
+using Robust.Client.Input;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Debugging;
@@ -634,7 +635,10 @@ namespace Robust.Client.Console.Commands
             }
             else
             {
-                GC.Collect(int.Parse(args[0]));
+                if (int.TryParse(args[0], out int result))
+                    GC.Collect(result);
+                else
+                    console.AddLine("Failed to parse argument.");
             }
 
             return false;
@@ -773,6 +777,42 @@ namespace Robust.Client.Console.Commands
                 "fov" => ClydeDebugLayers.Fov,
                 _ => ClydeDebugLayers.None
             };
+
+            return false;
+        }
+    }
+
+    internal class GetKeyInfoCommand : IConsoleCommand
+    {
+        public string Command => "keyinfo";
+        public string Description { get; }
+        public string Help => "keyinfo <Key>";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length != 1)
+            {
+                console.AddLine("Expected one argument", Color.Red);
+                return false;
+            }
+
+            var clyde = IoCManager.Resolve<IClydeInternal>();
+
+            if (Enum.TryParse(typeof(Keyboard.Key), args[0], true, out var parsed))
+            {
+                var key = (Keyboard.Key) parsed;
+
+                var name = clyde.GetKeyName(key);
+                var scanCode = clyde.GetKeyScanCode(key);
+                var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
+
+                console.AddLine($"name: '{name}' scan code: '{scanCode}' name via scan code: '{nameScanCode}'");
+            }
+            else if (int.TryParse(args[0], out var scanCode))
+            {
+                var nameScanCode = clyde.GetKeyNameScanCode(scanCode);
+                console.AddLine($"name via scan code: '{nameScanCode}'");
+            }
 
             return false;
         }

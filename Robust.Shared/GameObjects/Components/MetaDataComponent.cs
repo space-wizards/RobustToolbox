@@ -171,5 +171,14 @@ namespace Robust.Shared.GameObjects
             //    s => _prototypes.Index<EntityPrototype>(s),
             //    p => p.ID);
         }
+
+        internal override void ClearTicks()
+        {
+            // Do not clear modified ticks.
+            // MetaDataComponent is used in the game state system to carry initial data like prototype ID.
+            // So it ALWAYS has to be sent.
+            // (Creation can still be cleared though)
+            ClearCreationTick();
+        }
     }
 }

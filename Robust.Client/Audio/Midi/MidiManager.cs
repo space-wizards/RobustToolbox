@@ -158,6 +158,11 @@ namespace Robust.Client.Audio.Midi
 
         public void FrameUpdate(float frameTime)
         {
+            if (!FluidsynthInitialized)
+            {
+                return;
+            }
+
             // Update positions of streams every frame.
             lock (_renderers)
                 for (var i = 0; i < _renderers.Count; i++)

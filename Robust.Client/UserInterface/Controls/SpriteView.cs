@@ -43,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
 
         internal override void DrawInternal(IRenderHandle renderHandle)
         {
-            if (Sprite == null)
+            if (Sprite == null || Sprite.Deleted)
             {
                 return;
             }

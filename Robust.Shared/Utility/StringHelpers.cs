@@ -6,7 +6,7 @@ namespace Robust.Shared.Utility {
     public static class StringHelpers {
 
         /// <summary>
-        ///    Reads data from YAML
+        ///    Capitalizes the first letter of all words in the given string (first letter and all letters after a space).
         /// </summary>
         public static string CapitalizeAllWords(string input) {
             char[] chars = input.ToCharArray();

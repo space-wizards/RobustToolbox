@@ -20,6 +20,7 @@ mapname = "stationstation"
 maxplayers = 64
 type = 1
 welcomemsg = "Welcome to the server!"
+diagonalmovement = true
 
 [console]
 width = 120

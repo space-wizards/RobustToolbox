@@ -25,27 +25,11 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = _eyeManager.CurrentMap;
             }
 
-            var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
-            var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
+            SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
+            SetTexture(TextureUnit.Texture1, _lightingReady ? LightRenderTarget.Texture : _stockTextureWhite);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
+            var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
 
-            GL.ActiveTexture(TextureUnit.Texture1);
-            if (_lightingReady)
-            {
-                var lightTexture = _loadedTextures[LightRenderTarget.Texture.TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, lightTexture.Handle);
-            }
-            else
-            {
-                var white = _loadedTextures[_stockTextureWhite.TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
-            }
-
-            var instance = _shaderInstances[_defaultShader.Handle];
-            var gridProgram = _loadedShaders[instance.ShaderHandle].Program;
-            gridProgram.Use();
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
@@ -86,8 +70,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     GL.BindVertexArray(datum.VAO);
-                    datum.EBO.Use();
-                    datum.VBO.Use();
 
                     _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);

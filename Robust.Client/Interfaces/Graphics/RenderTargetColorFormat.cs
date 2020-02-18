@@ -23,5 +23,7 @@ namespace Robust.Client.Interfaces.Graphics
         Rgba16F,
 
         R11FG11FB10F,
+
+        R8,
     }
 }

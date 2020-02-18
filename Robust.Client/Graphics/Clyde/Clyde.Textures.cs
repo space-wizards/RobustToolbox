@@ -16,6 +16,7 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private ClydeTexture _stockTextureWhite;
+        private ClydeTexture _stockTextureBlack;
         private ClydeTexture _stockTextureTransparent;
 
         private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
@@ -26,10 +27,9 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
             // Load using Rgba32.
-            using (var image = Image.Load(stream))
-            {
-                return LoadTextureFromImage(image, name, loadParams);
-            }
+            using var image = Image.Load(stream);
+
+            return LoadTextureFromImage(image, name, loadParams);
         }
 
         public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
@@ -191,6 +191,10 @@ namespace Robust.Client.Graphics.Clyde
             white[0, 0] = Rgba32.White;
             _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
 
+            var black = new Image<Rgba32>(1, 1);
+            black[0, 0] = Rgba32.Black;
+            _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
+
             var blank = new Image<Rgba32>(1, 1);
             blank[0, 0] = Rgba32.Transparent;
             _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
@@ -256,6 +260,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ClydeStockTexture.White => _stockTextureWhite,
                 ClydeStockTexture.Transparent => _stockTextureTransparent,
+                ClydeStockTexture.Black => _stockTextureBlack,
                 _ => throw new ArgumentException(nameof(stockTexture))
             };
         }

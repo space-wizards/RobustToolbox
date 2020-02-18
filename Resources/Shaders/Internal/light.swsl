@@ -12,6 +12,7 @@ uniform vec2 lightCenter;
 uniform float lightRange;
 uniform float lightPower;
 uniform float lightIndex;
+uniform sampler2D shadowMap;
 
 void vertex()
 {
@@ -29,7 +30,7 @@ void fragment()
     vec2 diff = worldPosition - lightCenter;
     float dist = dot(diff, diff) + LIGHTING_HEIGHT;
 
-    if (doesOcclude(diff, lightIndex))
+    if (doesOcclude(diff, shadowMap, lightIndex))
     {
         discard;
     }

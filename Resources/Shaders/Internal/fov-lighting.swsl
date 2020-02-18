@@ -3,11 +3,9 @@ preset raw;
 #include "/Shaders/Internal/shadow_cast_shared.swsl"
 
 varying vec2 worldPosition;
-varying vec2 screenPos;
 
 // Center of the FOV, in world coordinates.
 uniform vec2 center;
-uniform sampler2D wallMask;
 
 void vertex()
 {
@@ -16,18 +14,15 @@ void vertex()
     transformed = projectionMatrix * viewMatrix * transformed;
 
     VERTEX = transformed.xy;
-    screenPos = (VERTEX + vec2(1)) / 2;
 }
 
 void fragment()
 {
-    float mask = abs(texture(wallMask, screenPos).r - 1);
     vec2 diff = worldPosition - center;
-
     if (!doesOcclude(diff, TEXTURE, 0.5))
     {
         discard;
     }
 
-    COLOR = vec4(0, 0, 0, mask);
+    COLOR = vec4(0, 0, 0, 1);
 }

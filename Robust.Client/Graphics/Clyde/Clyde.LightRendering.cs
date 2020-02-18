@@ -16,16 +16,25 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private const int ShadowMapSize = 512;
+        private const int FovMapSize = 2048;
         private const int MaxLightsPerScene = 64;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
+
         private ClydeHandle _lightShaderHandle;
+        private ClydeHandle _fovShaderHandle;
+        private ClydeHandle _fovLightShaderHandle;
+
+        private Matrix4 _fovProjection;
 
         private RenderTarget _fovRenderTarget;
         private ClydeTexture _fovDepthTextureObject;
 
         private RenderTarget _shadowRenderTarget;
         private ClydeTexture _shadowTextureObject;
+
+        private RenderTarget _wallMaskRenderTarget;
+        private ClydeTexture _wallMaskTextureObject;
 
         private GLShaderProgram _fovCalculationProgram;
 
@@ -59,7 +68,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.EnableVertexAttribArray(0);
 
             // FOV FBO.
-            _fovRenderTarget = CreateRenderTarget((ShadowMapSize, 1),
+            _fovRenderTarget = CreateRenderTarget((FovMapSize, 1),
                 new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
 
@@ -85,6 +94,12 @@ namespace Robust.Client.Graphics.Clyde
 
             var shaderSource = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/light.swsl");
             _lightShaderHandle = shaderSource.ClydeHandle;
+
+            shaderSource = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/fov.swsl");
+            _fovShaderHandle = shaderSource.ClydeHandle;
+
+            shaderSource = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/fov-lighting.swsl");
+            _fovLightShaderHandle = shaderSource.ClydeHandle;
         }
 
         private void DrawFov(IEye eye)
@@ -92,13 +107,14 @@ namespace Robust.Client.Graphics.Clyde
             var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
             var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
-            DrawOcclusionDepth(eye.Position.Position, maxDist, 0, out _);
+            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 0, out _fovProjection);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Disable(EnableCap.DepthTest);
         }
 
-        private void DrawOcclusionDepth(Vector2 lightPos, float maxDist, int viewportY, out Matrix4 projMatrix)
+        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY,
+            out Matrix4 projMatrix)
         {
             projMatrix = default; // Gets overriden below.
 
@@ -113,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
                 maxDist / 1000,
                 maxDist * 1.1f);
 
-            const int step = ShadowMapSize / 4;
+            var step = width / 4;
 
             for (var i = 0; i < 4; i++)
             {
@@ -167,6 +183,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            GenerateWallMask(eye.Position.MapId);
+
             UpdateOcclusionGeometry(eye.Position.MapId);
 
             PrepareDepthDraw(_fovRenderTarget);
@@ -186,7 +204,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 var transform = component.Owner.Transform;
-                var lightPos = transform.WorldPosition;
+                var lightPos = transform.WorldMatrix.Transform(component.Offset);
 
                 var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
 
@@ -216,15 +234,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var (light, lightPos) = lights[i];
 
-                    DrawOcclusionDepth(lightPos, light.Radius, i, out shadowMatrices[i]);
+                    DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out shadowMatrices[i]);
                 }
             }
 
             GL.Disable(EnableCap.DepthTest);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, LightRenderTarget.ObjectHandle.Handle);
-            var converted = Color.FromSrgb(new Color(0.1f, 0.1f, 0.1f));
-            GL.ClearColor(converted.R, converted.G, converted.B, 1);
+            ClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             var (lightW, lightH) = GetLightMapSize();
@@ -233,10 +250,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
 
-            var shadowHandle = _loadedTextures[_shadowTextureObject.TextureId].OpenGLObject;
-            GL.ActiveTexture(TextureUnit.Texture1);
-            GL.BindTexture(TextureTarget.Texture2D, shadowHandle.Handle);
-
+            SetTexture(TextureUnit.Texture1, _shadowTextureObject);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
@@ -274,9 +288,7 @@ namespace Robust.Client.Graphics.Clyde
                 var maskTexture = mask ?? Texture.White;
                 if (lastMask != maskTexture)
                 {
-                    var maskHandle = _loadedTextures[((ClydeTexture) maskTexture).TextureId].OpenGLObject;
-                    GL.ActiveTexture(TextureUnit.Texture0);
-                    GL.BindTexture(TextureTarget.Texture2D, maskHandle.Handle);
+                    SetTexture(TextureUnit.Texture0, maskTexture);
                     lastMask = maskTexture;
                     lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
@@ -318,15 +330,74 @@ namespace Robust.Client.Graphics.Clyde
 
                 (matrix.R0C2, matrix.R1C2) = lightPos;
 
-                _drawQuad(-offset, offset, ref matrix, lightShader);
+                _drawQuad(-offset, offset, matrix, lightShader);
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            ApplyLightingFovToBuffer(eye);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
             _lightingReady = true;
+        }
+
+        private void GenerateWallMask(MapId map)
+        {
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _wallMaskRenderTarget.ObjectHandle.Handle);
+            GL.ClearColor(0, 0, 0, 0);
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+
+            foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
+            {
+                if (occluder.Owner.Transform.MapID != map)
+                {
+                    continue;
+                }
+
+                _renderHandle.SetModelTransform(occluder.Owner.Transform.WorldMatrix);
+                _renderHandle.DrawingHandleWorld.DrawTextureRect(Texture.White, occluder.BoundingBox);
+            }
+
+            FlushRenderQueue();
+        }
+
+        private void ApplyFovToBuffer(IEye eye)
+        {
+            var fovShader = _loadedShaders[_fovShaderHandle].Program;
+            fovShader.Use();
+
+            SetTexture(TextureUnit.Texture0, _fovDepthTextureObject);
+            SetTexture(TextureUnit.Texture1, _wallMaskTextureObject);
+
+            fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
+            fovShader.SetUniformMaybe("center", eye.Position.Position);
+            fovShader.SetUniformTextureMaybe("wallMask", TextureUnit.Texture1);
+
+            DrawBlit(fovShader);
+        }
+
+        private void ApplyLightingFovToBuffer(IEye eye)
+        {
+            var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
+            fovShader.Use();
+
+            SetTexture(TextureUnit.Texture0, _fovDepthTextureObject);
+
+            fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
+            fovShader.SetUniformMaybe("center", eye.Position.Position);
+
+            DrawBlit(fovShader);
+        }
+
+        private void DrawBlit(GLShaderProgram shader)
+        {
+            _drawQuad(_eyeManager.ScreenToMap((-1, -1)).Position,
+                _eyeManager.ScreenToMap(ScreenSize + Vector2i.One).Position,
+                Matrix3.Identity, shader);
         }
 
         private void UpdateOcclusionGeometry(MapId map)
@@ -401,10 +472,15 @@ namespace Robust.Client.Graphics.Clyde
         private void RegenerateLightingRenderTargets()
         {
             LightRenderTarget?.Delete();
-
             LightRenderTarget = CreateRenderTarget(GetLightMapSize(), RenderTargetColorFormat.R11FG11FB10F,
                 new TextureSampleParameters {Filter = true},
                 nameof(LightRenderTarget));
+
+            _wallMaskRenderTarget?.Delete();
+            _wallMaskRenderTarget = CreateRenderTarget(ScreenSize, RenderTargetColorFormat.R8,
+                name: nameof(_wallMaskRenderTarget));
+
+            _wallMaskTextureObject = _wallMaskRenderTarget.Texture;
         }
 
         private Vector2i GetLightMapSize()

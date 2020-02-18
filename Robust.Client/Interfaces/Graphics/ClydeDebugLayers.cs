@@ -4,5 +4,6 @@ namespace Robust.Client.Interfaces.Graphics
     {
         None,
         Fov,
+        Light,
     }
 }

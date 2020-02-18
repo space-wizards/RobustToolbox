@@ -99,6 +99,8 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.WorldSpace);
 
+            ApplyFovToBuffer(eye);
+
             _lightingReady = false;
 
             SetSpaceFull(CurrentSpace.ScreenSpace);

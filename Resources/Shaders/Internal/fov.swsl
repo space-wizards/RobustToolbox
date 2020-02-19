@@ -7,7 +7,6 @@ varying vec2 screenPos;
 
 // Center of the FOV, in world coordinates.
 uniform vec2 center;
-uniform sampler2D wallMask;
 
 void vertex()
 {
@@ -21,13 +20,7 @@ void vertex()
 
 void fragment()
 {
-    float mask = abs(texture(wallMask, screenPos).r - 1);
     vec2 diff = worldPosition - center;
 
-    if (!doesOcclude(diff, TEXTURE, 0.5))
-    {
-        discard;
-    }
-
-    COLOR = vec4(0, 0, 0, mask);
+    COLOR = vec4(0, 0, 0, doesOcclude(diff, TEXTURE, 0.75) ? 1 : 0);
 }

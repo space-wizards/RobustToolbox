@@ -5,10 +5,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    public sealed class OccluderComponent : Component
+    public class OccluderComponent : Component
     {
-        public override string Name => "Occluder";
-        public override uint? NetID => NetIDs.OCCLUDER;
+        public sealed override string Name => "Occluder";
+        public sealed override uint? NetID => NetIDs.OCCLUDER;
 
         private bool _enabled = true;
         private Box2 _boundingBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);

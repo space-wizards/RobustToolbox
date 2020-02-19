@@ -7,10 +7,9 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
+using static Robust.Client.GameObjects.ClientOccluderComponent;
 using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -101,7 +100,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             // FOV FBO.
-            _fovRenderTarget = CreateRenderTarget((FovMapSize, 1),
+            _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
                 new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
 
@@ -145,6 +144,14 @@ namespace Robust.Client.Graphics.Clyde
             var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
             DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 0, out _fovProjection);
+
+            GL.Enable(EnableCap.CullFace);
+            GL.FrontFace(FrontFaceDirection.Cw);
+            GL.CullFace(CullFaceMode.Front);
+
+            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 1, out _fovProjection);
+
+            GL.Disable(EnableCap.CullFace);
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Disable(EnableCap.DepthTest);
@@ -224,9 +231,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
 
-            var occluders = Get2DOcclusionGeometry(map, expandedBounds);
-
-            UpdateOcclusionGeometry(occluders);
+            UpdateOcclusionGeometry(map, expandedBounds);
 
             GenerateWallMask();
 
@@ -357,43 +362,6 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
             _lightingReady = true;
-        }
-
-        private RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)>
-            Get2DOcclusionGeometry(MapId map, in Box2 expandedBounds)
-        {
-            var list = new RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)>(128);
-
-            // TODO: More accurate bounds check.
-            expandedBounds.Enlarged(2);
-
-            foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
-            {
-                var transform = occluder.Owner.Transform;
-                if (!occluder.Enabled || transform.MapID != map)
-                {
-                    continue;
-                }
-
-                var worldTransform = transform.WorldMatrix;
-                var box = occluder.BoundingBox;
-
-                var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
-
-                if (!expandedBounds.Contains(centerPos))
-                {
-                    continue;
-                }
-
-                ref var t = ref list.AllocAdd();
-
-                t.tl = worldTransform.Transform(box.TopLeft);
-                t.tr = worldTransform.Transform(box.TopRight);
-                t.bl = worldTransform.Transform(box.BottomLeft);
-                t.br = worldTransform.Transform(box.BottomRight);
-            }
-
-            return list;
         }
 
         private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
@@ -528,12 +496,10 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.Use();
 
             SetTexture(TextureUnit.Texture0, FovDepthTextureObject);
-            SetTexture(TextureUnit.Texture1, WallMaskTextureObject);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
-            fovShader.SetUniformTextureMaybe("wallMask", TextureUnit.Texture1);
 
             DrawBlit(fovShader);
         }
@@ -559,30 +525,51 @@ namespace Robust.Client.Graphics.Clyde
                 Matrix3.Identity, shader);
         }
 
-        private void UpdateOcclusionGeometry(RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)> occluders)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds)
         {
+            const int maxOccluders = 2048;
+            const float polygonHeight = 500;
+
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(occluders.Count * 8);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(occluders.Count * 11);
+            // TODO: More accurate bounds check.
+            expandedBounds.Enlarged(2);
 
-            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(occluders.Count * 5);
+            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
 
-            var ai = 0;
-            var ami = 0;
-            var ii = 0;
-            var imi = 0;
+            var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxOccluders * 4);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 5);
 
             try
             {
-                foreach (ref var t in occluders)
-                {
-                    var (tlX, tlY) = t.tl;
-                    var (trX, trY) = t.tr;
-                    var (blX, blY) = t.bl;
-                    var (brX, brY) = t.br;
+                var ai = 0;
+                var ami = 0;
+                var ii = 0;
+                var imi = 0;
 
-                    const float polygonHeight = 500;
+                foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
+                {
+                    var transform = occluder.Owner.Transform;
+                    if (!occluder.Enabled || transform.MapID != map)
+                    {
+                        continue;
+                    }
+
+                    var worldTransform = transform.WorldMatrix;
+                    var box = occluder.BoundingBox;
+
+                    var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
+
+                    if (!expandedBounds.Contains(centerPos))
+                    {
+                        continue;
+                    }
+
+                    var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
+                    var (trX, trY) = worldTransform.Transform(box.TopRight);
+                    var (blX, blY) = worldTransform.Transform(box.BottomLeft);
+                    var (brX, brY) = worldTransform.Transform(box.BottomRight);
 
                     arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
                     arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
@@ -593,17 +580,54 @@ namespace Robust.Client.Graphics.Clyde
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
-                    indexBuffer[ii + 0] = (ushort) (ai + 0);
-                    indexBuffer[ii + 1] = (ushort) (ai + 1);
-                    indexBuffer[ii + 2] = (ushort) (ai + 2);
-                    indexBuffer[ii + 3] = (ushort) (ai + 3);
-                    indexBuffer[ii + 4] = (ushort) (ai + 4);
-                    indexBuffer[ii + 5] = (ushort) (ai + 5);
-                    indexBuffer[ii + 6] = (ushort) (ai + 6);
-                    indexBuffer[ii + 7] = (ushort) (ai + 7);
-                    indexBuffer[ii + 8] = (ushort) (ai + 0);
-                    indexBuffer[ii + 9] = (ushort) (ai + 1);
-                    indexBuffer[ii + 10] = ushort.MaxValue; // Primitive restart
+                    // North face.
+                    if (occluder.IsOccluding(OccluderDir.East))
+                    {
+                        indexBuffer[ii + 0] = (ushort) (ai + 0);
+                        indexBuffer[ii + 1] = (ushort) (ai + 1);
+                        indexBuffer[ii + 2] = (ushort) (ai + 2);
+                        indexBuffer[ii + 3] = (ushort) (ai + 3);
+                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
+                        ii += 5;
+                    }
+
+                    // East face.
+                    if (occluder.IsOccluding(OccluderDir.South))
+                    {
+                        indexBuffer[ii + 0] = (ushort) (ai + 2);
+                        indexBuffer[ii + 1] = (ushort) (ai + 3);
+                        indexBuffer[ii + 2] = (ushort) (ai + 4);
+                        indexBuffer[ii + 3] = (ushort) (ai + 5);
+                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
+                        ii += 5;
+                    }
+
+                    // South face.
+                    if (occluder.IsOccluding(OccluderDir.West))
+                    {
+                        indexBuffer[ii + 0] = (ushort) (ai + 4);
+                        indexBuffer[ii + 1] = (ushort) (ai + 5);
+                        indexBuffer[ii + 2] = (ushort) (ai + 6);
+                        indexBuffer[ii + 3] = (ushort) (ai + 7);
+                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
+                        ii += 5;
+                    }
+
+                    // West face.
+                    if (occluder.IsOccluding(OccluderDir.North))
+                    {
+                        indexBuffer[ii + 0] = (ushort) (ai + 6);
+                        indexBuffer[ii + 1] = (ushort) (ai + 7);
+                        indexBuffer[ii + 2] = (ushort) (ai + 0);
+                        indexBuffer[ii + 3] = (ushort) (ai + 1);
+                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
+                        ii += 5;
+                    }
+
+                    arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
+                    arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
+                    arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
+                    arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
 
                     indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
                     indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
@@ -612,7 +636,6 @@ namespace Robust.Client.Graphics.Clyde
                     indexMaskBuffer[imi + 4] = ushort.MaxValue; // Primitive restart
 
                     ai += 8;
-                    ii += 11;
                     ami += 4;
                     imi += 5;
                 }
@@ -627,12 +650,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.BindVertexArray(_occlusionMaskVao.Handle);
 
-                _occlusionMaskVbo.Reallocate(occluders.GetSpan());
+                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(..ami));
                 _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(..imi));
             }
             finally
             {
                 ArrayPool<Vector3>.Shared.Return(arrayBuffer);
+                ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
             }

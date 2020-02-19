@@ -50,7 +50,8 @@ namespace Robust.Client.GameObjects
             RegisterReference<ClickableComponent, IClientClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
 
-            Register<OccluderComponent>();
+            Register<ClientOccluderComponent>();
+            RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
             Register<EyeComponent>();
 

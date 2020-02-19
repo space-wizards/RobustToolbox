@@ -34,12 +34,8 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
-        public LineEdit()
-        {
-            MouseFilter = MouseFilterMode.Stop;
-            CanKeyboardFocus = true;
-            KeyboardFocusOnClick = true;
-        }
+        public event Action<LineEditEventArgs> OnTextChanged;
+        public event Action<LineEditEventArgs> OnTextEntered;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -121,6 +117,13 @@ namespace Robust.Client.UserInterface.Controls
         // Third future me is here to say thanks.
         // Fourth future me is here to continue the tradition.
 
+        public LineEdit()
+        {
+            MouseFilter = MouseFilterMode.Stop;
+            CanKeyboardFocus = true;
+            KeyboardFocusOnClick = true;
+        }
+
         public void Clear()
         {
             Text = "";
@@ -133,9 +136,6 @@ namespace Robust.Client.UserInterface.Controls
         public void SelectAll()
         {
         }
-
-        public event Action<LineEditEventArgs> OnTextChanged;
-        public event Action<LineEditEventArgs> OnTextEntered;
 
         public void InsertAtCursor(string text)
         {

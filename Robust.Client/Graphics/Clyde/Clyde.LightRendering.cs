@@ -642,7 +642,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var lightMapSize = GetLightMapSize();
             var lightMapSizeQuart = GetLightMapSize(true);
-            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.Rgba8;
+            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
             _lightRenderTarget?.Delete();

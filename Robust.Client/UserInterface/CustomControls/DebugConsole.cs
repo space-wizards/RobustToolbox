@@ -30,16 +30,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
 
-        private LineEdit CommandBar;
+        private HistoryLineEdit CommandBar;
         private OutputPanel Output;
         private Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
-
-        private readonly List<string> CommandHistory = new List<string>();
-        private int _historyPosition;
-        private bool _currentCommandEdited;
 
         private bool _targetVisible;
 
@@ -77,7 +73,7 @@ namespace Robust.Client.UserInterface.CustomControls
                                 SizeFlagsVertical = SizeFlags.FillExpand,
                                 StyleBoxOverride = styleBox
                             }),
-                            (CommandBar = new LineEdit {PlaceHolder = "Command Here"})
+                            (CommandBar = new HistoryLineEdit {PlaceHolder = "Command Here"})
                         }
                     })
                 }
@@ -88,13 +84,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
-            CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
 
             _console.AddString += (_, args) => AddLine(args.Text, args.Color);
             _console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
             _console.ClearText += (_, args) => Clear();
 
-            _loadHistoryFromDisk();
+            //_loadHistoryFromDisk();
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -144,18 +139,7 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 _console.ProcessCommand(args.Text);
                 CommandBar.Clear();
-                if (CommandHistory.Count == 0 || CommandHistory[CommandHistory.Count - 1] != args.Text)
-                {
-                    _currentCommandEdited = false;
-                    CommandHistory.Add(args.Text);
-                    if (CommandHistory.Count > MaxHistorySize)
-                    {
-                        CommandHistory.RemoveAt(0);
-                    }
-
-                    _historyPosition = CommandHistory.Count;
-                    _flushHistoryToDisk();
-                }
+                //_flushHistoryToDisk();
             }
         }
 
@@ -205,42 +189,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 Toggle();
                 return;
             }
-            else if (args.Function == EngineKeyFunctions.TextHistoryPrev)
-            {
-                args.Handle();
-                var current = CommandBar.Text;
-                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                {
-                    // Block up/down if something is typed in.
-                    return;
-                }
-
-                if (_historyPosition <= 0)
-                {
-                    return;
-                }
-
-                CommandBar.Text = CommandHistory[--_historyPosition];
-            }
-            else if (args.Function == EngineKeyFunctions.TextHistoryNext)
-            {
-                args.Handle();
-                var current = CommandBar.Text;
-                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                {
-                    // Block up/down if something is typed in.
-                    return;
-                }
-
-                if (++_historyPosition >= CommandHistory.Count)
-                {
-                    CommandBar.Text = "";
-                    _historyPosition = CommandHistory.Count;
-                    return;
-                }
-
-                CommandBar.Text = CommandHistory[_historyPosition];
-            }
             else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
             {
                 args.Handle();
@@ -248,18 +196,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void CommandBarOnOnTextChanged(LineEdit.LineEditEventArgs obj)
-        {
-            if (string.IsNullOrWhiteSpace(obj.Text))
-            {
-                _currentCommandEdited = false;
-            }
-            else
-            {
-                _currentCommandEdited = true;
-            }
-        }
-
+        /*
         private async void _loadHistoryFromDisk()
         {
             CommandHistory.Clear();
@@ -300,5 +237,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 writer.Write(data);
             }
         }
+        */
     }
 }

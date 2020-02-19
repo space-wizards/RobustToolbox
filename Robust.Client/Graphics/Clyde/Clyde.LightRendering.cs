@@ -7,6 +7,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
@@ -373,11 +374,11 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
 
-            const float interp = 4f;
+            const float interp = 3.7f;
 
             for (var i = 3; i > 0; i--)
             {
-                var scale = (i + 1) * interp * 0.0005f;
+                var scale = (i + 1) * interp * 0.002f;
                 shader.SetUniformMaybe("radius", scale);
 
                 _wallBleedIntermediateRenderTarget1.Bind();
@@ -408,7 +409,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
             {
-                if (occluder.Owner.Transform.MapID != map)
+                if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
                 {
                     continue;
                 }
@@ -435,7 +436,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
             {
-                if (occluder.Owner.Transform.MapID != map)
+                if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
                 {
                     continue;
                 }
@@ -503,7 +504,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
                 {
-                    if (occluder.Owner.Transform.MapID != map)
+                    if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
                     {
                         continue;
                     }

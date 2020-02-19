@@ -30,7 +30,6 @@ namespace Robust.Server.GameObjects
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
             RegisterIgnore("Icon");
-            RegisterIgnore("Occluder");
             RegisterIgnore("Eye");
 
             Register<BasicActorComponent>();
@@ -39,6 +38,7 @@ namespace Robust.Server.GameObjects
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<PointLightComponent>();
+            Register<OccluderComponent>();
 
             RegisterIgnore("Input");
 

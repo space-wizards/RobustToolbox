@@ -84,12 +84,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
+            CommandBar.OnHistoryChanged += OnHistoryChanged;
 
             _console.AddString += (_, args) => AddLine(args.Text, args.Color);
             _console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
             _console.ClearText += (_, args) => Clear();
 
-            //_loadHistoryFromDisk();
+            _loadHistoryFromDisk();
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -139,8 +140,12 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 _console.ProcessCommand(args.Text);
                 CommandBar.Clear();
-                //_flushHistoryToDisk();
             }
+        }
+
+        private void OnHistoryChanged()
+        {
+            _flushHistoryToDisk();
         }
 
         public void AddLine(string text, Color color)
@@ -184,22 +189,19 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (args.Function == EngineKeyFunctions.TextReleaseFocus)
             {
-                CommandBar.ReleaseKeyboardFocus();
-                args.Handle();
                 Toggle();
                 return;
             }
             else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
             {
-                args.Handle();
                 Output.ScrollToBottom();
+                args.Handle();
             }
         }
 
-        /*
         private async void _loadHistoryFromDisk()
         {
-            CommandHistory.Clear();
+            CommandBar.ClearHistory();
             Stream stream;
             try
             {
@@ -216,9 +218,9 @@ namespace Robust.Client.UserInterface.CustomControls
                 using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                 {
                     var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
-                    CommandHistory.Clear();
-                    CommandHistory.AddRange(data);
-                    _historyPosition = CommandHistory.Count;
+                    CommandBar.ClearHistory();
+                    CommandBar.History.AddRange(data);
+                    CommandBar.HistoryIndex = CommandBar.History.Count; 
                 }
             }
             finally
@@ -232,11 +234,10 @@ namespace Robust.Client.UserInterface.CustomControls
             using (var stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Create))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
-                var data = JsonConvert.SerializeObject(CommandHistory);
-                _historyPosition = CommandHistory.Count;
+                var data = JsonConvert.SerializeObject(CommandBar.History);
+                CommandBar.HistoryIndex = CommandBar.History.Count;
                 writer.Write(data);
             }
         }
-        */
     }
 }

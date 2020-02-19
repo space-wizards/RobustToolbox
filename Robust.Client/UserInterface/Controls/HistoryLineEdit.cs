@@ -8,14 +8,22 @@ namespace Robust.Client.UserInterface.Controls
     public class HistoryLineEdit : LineEdit
     {
         private const int MaxHistorySize = 100;
-
-        private readonly List<string> _history = new List<string>();
-        private int _historyIndex = 0;
         private string _historyTemp;
+
+        public List<string> History { get; } = new List<string>();
+        public int HistoryIndex { get; set; } = 0;
+
+        public event Action OnHistoryChanged;
 
         public HistoryLineEdit()
         {
             OnTextEntered += OnSubmit;
+        }
+
+        public void ClearHistory()
+        {
+            History.Clear();
+            HistoryIndex = 0;
         }
 
         private void OnSubmit(LineEditEventArgs args)
@@ -25,15 +33,16 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            if (_history.Count == 0 || _history[_history.Count - 1] != args.Text)
+            if (History.Count == 0 || History[History.Count - 1] != args.Text)
             {
-                _history.Add(args.Text);
-                if (_history.Count > MaxHistorySize)
+                History.Add(args.Text);
+                if (History.Count > MaxHistorySize)
                 {
-                    _history.RemoveAt(0);
+                    History.RemoveAt(0);
                 }
             }
-            _historyIndex = _history.Count;
+            HistoryIndex = History.Count;
+            OnHistoryChanged?.Invoke();
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)
@@ -47,38 +56,38 @@ namespace Robust.Client.UserInterface.Controls
 
             if (args.Function == EngineKeyFunctions.TextHistoryPrev)
             {
-                if (_historyIndex <= 0)
+                if (HistoryIndex <= 0)
                 {
                     return;
                 }
 
-                if (_historyIndex == _history.Count)
+                if (HistoryIndex == History.Count)
                 {
                     _historyTemp = Text;
                 }
 
-                _historyIndex--;
-                Text = _history[_historyIndex];
+                HistoryIndex--;
+                Text = History[HistoryIndex];
                 CursorPos = Text.Length;
 
                 args.Handle();
             }
             else if (args.Function == EngineKeyFunctions.TextHistoryNext)
             {
-                if (_historyIndex >= _history.Count)
+                if (HistoryIndex >= History.Count)
                 {
                     return;
                 }
 
-                _historyIndex++;
+                HistoryIndex++;
 
-                if (_historyIndex == _history.Count)
+                if (HistoryIndex == History.Count)
                 {
                     Text = _historyTemp;
                 }
                 else
                 {
-                    Text = _history[_historyIndex];
+                    Text = History[HistoryIndex];
                 }
 
                 CursorPos = Text.Length;

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Utility;
+using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,6 +11,7 @@ namespace Robust.Shared.GameObjects
     /// Provides a central event bus that EntitySystems can subscribe to. This is the main way that
     /// EntitySystems communicate with each other.
     /// </summary>
+    [PublicAPI]
     public interface IEventBus
     {
         /// <summary>
@@ -41,17 +44,33 @@ namespace Robust.Shared.GameObjects
         /// <param name="sender">Object that raised the event.</param>
         /// <param name="toRaise">Event being raised.</param>
         void QueueEvent(object sender, EntityEventArgs toRaise);
-    }
 
-    /// <inheritdoc />
-    internal interface IEntityEventBus : IEventBus
-    {
+        /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <typeparam name="T">Event type being waited for.</typeparam>
+        /// <returns></returns>
+        Task<T> AwaitEvent<T>()
+            where T : EntityEventArgs;
+
+        /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <typeparam name="T">Event type being waited for.</typeparam>
+        /// <returns></returns>
+        Task<T> AwaitEvent<T>(CancellationToken cancellationToken)
+            where T : EntityEventArgs;
+
         /// <summary>
         /// Unsubscribes all event handlers for a given subscriber.
         /// </summary>
         /// <param name="subscriber">Owner of the handlers being removed.</param>
         void UnsubscribeEvents(IEntityEventSubscriber subscriber);
+    }
 
+    /// <inheritdoc />
+    internal interface IEntityEventBus : IEventBus
+    {
         /// <summary>
         /// Raises all queued events onto the event bus. This needs to be called often.
         /// </summary>
@@ -69,6 +88,10 @@ namespace Robust.Shared.GameObjects
 
         private readonly Queue<(object sender, EntityEventArgs eventArgs)> _eventQueue
             = new Queue<(object, EntityEventArgs)>();
+
+        private readonly Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntityEventArgs>)>
+            _awaitingMessages
+                = new Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntityEventArgs>)>();
 
         /// <inheritdoc />
         public void UnsubscribeEvents(IEntityEventSubscriber subscriber)
@@ -156,6 +179,44 @@ namespace Robust.Shared.GameObjects
             _eventQueue.Enqueue((sender, toRaise));
         }
 
+        /// <inheritdoc />
+        public Task<T> AwaitEvent<T>()
+            where T : EntityEventArgs
+        {
+            return AwaitEvent<T>(default);
+        }
+
+        /// <inheritdoc />
+        public Task<T> AwaitEvent<T>(CancellationToken cancellationToken)
+            where T : EntityEventArgs
+        {
+            var type = typeof(T);
+            if (_awaitingMessages.ContainsKey(type))
+            {
+                throw new InvalidOperationException("Cannot await the same message type twice at once.");
+            }
+
+            var tcs = new TaskCompletionSource<EntityEventArgs>();
+            CancellationTokenRegistration reg = default;
+            if (cancellationToken != default)
+            {
+                reg = cancellationToken.Register(() =>
+                {
+                    _awaitingMessages.Remove(type);
+                    tcs.TrySetCanceled();
+                });
+            }
+
+            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
+            async Task<T> DoCast(Task<EntityEventArgs> task)
+            {
+                return (T)await task;
+            }
+
+            _awaitingMessages.Add(type, (reg, tcs));
+            return DoCast(tcs.Task);
+        }
+
         private void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
         {
             if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(evh))
@@ -170,12 +231,19 @@ namespace Robust.Shared.GameObjects
             var (sender, eventArgs) = argsTuple;
             var eventType = eventArgs.GetType();
 
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
-                return;
-
-            foreach (var handler in subs)
+            if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
-                handler.DynamicInvoke(sender, eventArgs);
+                foreach (var handler in subs)
+                {
+                    handler.DynamicInvoke(sender, eventArgs);
+                }
+            }
+
+            if (_awaitingMessages.TryGetValue(eventType, out var awaiting))
+            {
+                var (_, tcs) = awaiting;
+                tcs.TrySetResult(eventArgs);
+                _awaitingMessages.Remove(eventType);
             }
         }
     }

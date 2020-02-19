@@ -102,7 +102,7 @@ namespace Robust.Server.GameObjects
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    _entitySystemManager.HandleSystemMessage(message);
+                    _entityManager.EventBus.RaiseEvent(this, message.SystemMessage);
                     return;
             }
         }

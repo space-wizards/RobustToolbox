@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Shared.Interfaces.GameObjects;
@@ -17,7 +16,7 @@ namespace Robust.Shared.GameObjects.Systems
     ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
     /// </remarks>
     [Reflect(false)]
-    public abstract class EntitySystem : IEntityEventSubscriber, IEntitySystem
+    public abstract class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly IEntityManager EntityManager;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
@@ -25,25 +24,6 @@ namespace Robust.Shared.GameObjects.Systems
 
         protected IEntityQuery EntityQuery;
         protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
-
-        private readonly Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntitySystemMessage>)>
-            _awaitingMessages
-                = new Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntitySystemMessage>)>();
-
-        protected EntitySystem()
-        {
-            //EntityManager = IoCManager.Resolve<IEntityManager>();
-            //EntitySystemManager = IoCManager.Resolve<IEntitySystemManager>();
-            //EntityNetworkManager = IoCManager.Resolve<IEntityNetworkManager>();
-        }
-
-        public virtual void RegisterMessageTypes()
-        {
-        }
-
-        public virtual void SubscribeEvents()
-        {
-        }
 
         /// <inheritdoc />
         public virtual void Initialize() { }
@@ -57,34 +37,12 @@ namespace Robust.Shared.GameObjects.Systems
         /// <inheritdoc />
         public virtual void Shutdown() { }
 
-        /// <inheritdoc />
-        public virtual void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
-        {
-            var type = message.GetType();
-            if (_awaitingMessages.TryGetValue(type, out var awaiting))
-            {
-                var (_, tcs) = awaiting;
-                tcs.TrySetResult(message);
-                _awaitingMessages.Remove(type);
-            }
-        }
+        #region Event Proxy
 
-        public void RegisterMessageType<T>()
+        protected void SubscribeEvent<T>(EntityEventHandler<T> handler)
             where T : EntitySystemMessage
         {
-            EntitySystemManager.RegisterMessageType<T>(this);
-        }
-
-        protected void SubscribeEvent<T>(EntityEventHandler<EntitySystemMessage> evh)
-            where T : EntitySystemMessage
-        {
-            EntityManager.EventBus.SubscribeEvent(evh, this);
-        }
-
-        protected void SubscribeEvent<T>(EntityEventHandler<T> evh)
-            where T : EntitySystemMessage
-        {
-            EntityManager.EventBus.SubscribeEvent(evh, this);
+            EntityManager.EventBus.SubscribeEvent(handler, this);
         }
 
         protected void UnsubscribeEvent<T>()
@@ -116,31 +74,9 @@ namespace Robust.Shared.GameObjects.Systems
         protected Task<T> AwaitNetMessage<T>(CancellationToken cancellationToken = default)
             where T : EntitySystemMessage
         {
-            var type = typeof(T);
-            if (_awaitingMessages.ContainsKey(type))
-            {
-                throw new InvalidOperationException("Cannot await the same message type twice at once.");
-            }
-
-            var tcs = new TaskCompletionSource<EntitySystemMessage>();
-            CancellationTokenRegistration reg = default;
-            if (cancellationToken != default)
-            {
-                reg = cancellationToken.Register(() =>
-                {
-                    _awaitingMessages.Remove(type);
-                    tcs.TrySetCanceled();
-                });
-            }
-
-            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
-            async Task<T> DoCast(Task<EntitySystemMessage> task)
-            {
-                return (T) await task;
-            }
-
-            _awaitingMessages.Add(type, (reg, tcs));
-            return DoCast(tcs.Task);
+            return EntityManager.EventBus.AwaitEvent<T>(cancellationToken);
         }
+
+        #endregion
     }
 }

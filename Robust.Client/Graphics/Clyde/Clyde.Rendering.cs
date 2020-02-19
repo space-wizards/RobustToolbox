@@ -267,6 +267,8 @@ namespace Robust.Client.Graphics.Clyde
             // Finish any batches that may have been WiP.
             BreakBatch();
 
+            GL.BindVertexArray(BatchVAO.Handle);
+
             if (BatchVertexIndex != 0)
             {
                 BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, BatchVertexIndex));

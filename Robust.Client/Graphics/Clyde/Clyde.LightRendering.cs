@@ -10,6 +10,7 @@ using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
@@ -21,12 +22,13 @@ namespace Robust.Client.Graphics.Clyde
         private const int MaxLightsPerScene = 64;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
-        private ClydeShaderInstance _mergeWallLayerShaderInstance;
 
         private ClydeHandle _lightShaderHandle;
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
         private ClydeHandle _wallBleedBlurShaderHandle;
+        private ClydeHandle _wallMaskShaderHandle;
+        private ClydeHandle _mergeWallLayerShaderHandle;
 
         private Matrix4 _fovProjection;
 
@@ -44,9 +46,16 @@ namespace Robust.Client.Graphics.Clyde
         private GLShaderProgram _fovCalculationProgram;
 
         private int _occlusionDataLength;
+
         private GLBuffer _occlusionVbo;
         private GLBuffer _occlusionEbo;
         private GLHandle _occlusionVao;
+
+        private int _occlusionMaskDataLength;
+
+        private GLBuffer _occlusionMaskVbo;
+        private GLBuffer _occlusionMaskEbo;
+        private GLHandle _occlusionMaskVao;
 
         private unsafe void InitLighting()
         {
@@ -54,21 +63,42 @@ namespace Robust.Client.Graphics.Clyde
 
             RegenerateLightingRenderTargets();
 
-            // Occlusion VAO.
-            // Only handles positions, no other vertex data necessary.
-            _occlusionVao = new GLHandle(GL.GenVertexArray());
-            GL.BindVertexArray(_occlusionVao.Handle);
+            {
+                // Occlusion VAO.
+                // Only handles positions, no other vertex data necessary.
+                _occlusionVao = new GLHandle(GL.GenVertexArray());
+                GL.BindVertexArray(_occlusionVao.Handle);
 
-            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
+                ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
 
-            _occlusionVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
-                nameof(_occlusionVbo));
+                _occlusionVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionVbo));
 
-            _occlusionEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
-                nameof(_occlusionEbo));
+                _occlusionEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionEbo));
 
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vector3), IntPtr.Zero);
-            GL.EnableVertexAttribArray(0);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vector3), IntPtr.Zero);
+                GL.EnableVertexAttribArray(0);
+            }
+
+            {
+                // Occlusion mask VAO.
+                // Only handles positions, no other vertex data necessary.
+
+                _occlusionMaskVao = new GLHandle(GL.GenVertexArray());
+                GL.BindVertexArray(_occlusionMaskVao.Handle);
+
+                ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionMaskVao, nameof(_occlusionMaskVao));
+
+                _occlusionMaskVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionMaskVbo));
+
+                _occlusionMaskEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionMaskEbo));
+
+                GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(Vector2), IntPtr.Zero);
+                GL.EnableVertexAttribArray(0);
+            }
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 1),
@@ -101,9 +131,8 @@ namespace Robust.Client.Graphics.Clyde
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
-
-            var wallMergeShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/wall-merge.swsl");
-            _mergeWallLayerShaderInstance = (ClydeShaderInstance) InstanceShader(wallMergeShader.ClydeHandle);
+            _wallMaskShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-mask.swsl");
+            _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
 
         private void DrawFov(IEye eye)
@@ -193,41 +222,15 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = eye.Position.MapId;
 
-            GenerateWallMask(eye.Position.MapId);
+            var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
 
-            UpdateOcclusionGeometry(eye.Position.MapId);
+            var occluders = Get2DOcclusionGeometry(map, expandedBounds);
+
+            UpdateOcclusionGeometry(occluders);
+
+            GenerateWallMask();
 
             DrawFov(eye);
-
-            var lights = new List<(PointLightComponent light, Vector2 pos)>();
-            var maxRadius = 123f;
-
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
-            {
-                if (!component.Enabled || component.Owner.Transform.MapID != map)
-                {
-                    continue;
-                }
-
-                var transform = component.Owner.Transform;
-                var lightPos = transform.WorldMatrix.Transform(component.Offset);
-
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
-
-                if (!lightBounds.Intersects(worldBounds))
-                {
-                    continue;
-                }
-
-                lights.Add((component, lightPos));
-                maxRadius = Math.Max(maxRadius, component.Radius);
-
-                if (lights.Count == MaxLightsPerScene)
-                {
-                    // TODO: Allow more than 64 lights.
-                    break;
-                }
-            }
 
             var shadowMatrices = new Matrix4[lights.Count];
 
@@ -274,9 +277,9 @@ namespace Robust.Client.Graphics.Clyde
                 var (component, lightPos) = lights[i];
                 var transform = component.Owner.Transform;
 
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
+                var circle = new Circle(lightPos, component.Radius);
 
-                if (!lightBounds.Intersects(worldBounds))
+                if (!circle.Intersects(worldBounds))
                 {
                     continue;
                 }
@@ -346,9 +349,9 @@ namespace Robust.Client.Graphics.Clyde
 
             ApplyLightingFovToBuffer(eye);
 
-            BlendOntoWalls();
+            BlurOntoWalls();
 
-            MergeWallLayer(map);
+            MergeWallLayer();
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
@@ -356,9 +359,84 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = true;
         }
 
-        private void BlendOntoWalls()
+        private RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)>
+            Get2DOcclusionGeometry(MapId map, in Box2 expandedBounds)
         {
-            using var _ = DebugGroup(nameof(BlendOntoWalls));
+            var list = new RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)>(128);
+
+            // TODO: More accurate bounds check.
+            expandedBounds.Enlarged(2);
+
+            foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
+            {
+                var transform = occluder.Owner.Transform;
+                if (!occluder.Enabled || transform.MapID != map)
+                {
+                    continue;
+                }
+
+                var worldTransform = transform.WorldMatrix;
+                var box = occluder.BoundingBox;
+
+                var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
+
+                if (!expandedBounds.Contains(centerPos))
+                {
+                    continue;
+                }
+
+                ref var t = ref list.AllocAdd();
+
+                t.tl = worldTransform.Transform(box.TopLeft);
+                t.tr = worldTransform.Transform(box.TopRight);
+                t.bl = worldTransform.Transform(box.BottomLeft);
+                t.br = worldTransform.Transform(box.BottomRight);
+            }
+
+            return list;
+        }
+
+        private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
+            GetLightsToRender(MapId map, in Box2 worldBounds)
+        {
+            var lights = new List<(PointLightComponent light, Vector2 pos)>();
+            var expandedBounds = worldBounds;
+
+            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            {
+                var transform = component.Owner.Transform;
+
+                if (!component.Enabled || transform.MapID != map)
+                {
+                    continue;
+                }
+
+                var lightPos = transform.WorldMatrix.Transform(component.Offset);
+
+                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
+
+                if (!lightBounds.Intersects(worldBounds))
+                {
+                    continue;
+                }
+
+                lights.Add((component, lightPos));
+
+                expandedBounds = expandedBounds.ExtendToContain(lightPos);
+
+                if (lights.Count == MaxLightsPerScene)
+                {
+                    // TODO: Allow more than 64 lights.
+                    break;
+                }
+            }
+
+            return (lights, expandedBounds);
+        }
+
+        private void BlurOntoWalls()
+        {
+            using var _ = DebugGroup(nameof(BlurOntoWalls));
 
             GL.Disable(EnableCap.Blend);
             _setSpace(CurrentSpace.ScreenSpace);
@@ -374,11 +452,11 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
 
-            const float interp = 3.7f;
+            const float factor = 3.7f * 0.002f;
 
             for (var i = 3; i > 0; i--)
             {
-                var scale = (i + 1) * interp * 0.002f;
+                var scale = (i + 1) * factor;
                 shader.SetUniformMaybe("radius", scale);
 
                 _wallBleedIntermediateRenderTarget1.Bind();
@@ -399,29 +477,27 @@ namespace Robust.Client.Graphics.Clyde
             _setSpace(CurrentSpace.WorldSpace);
         }
 
-        private void GenerateWallMask(MapId map)
+        private void GenerateWallMask()
         {
             using var _ = DebugGroup(nameof(GenerateWallMask));
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, _wallMaskRenderTarget.ObjectHandle.Handle);
             GL.ClearColor(0, 0, 0, 0);
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Disable(EnableCap.Blend);
 
-            foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
-            {
-                if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
-                {
-                    continue;
-                }
+            var shader = _loadedShaders[_wallMaskShaderHandle].Program;
+            shader.Use();
 
-                _renderHandle.SetModelTransform(occluder.Owner.Transform.WorldMatrix);
-                _renderHandle.DrawingHandleWorld.DrawTextureRect(Texture.White, occluder.BoundingBox);
-            }
+            GL.BindVertexArray(_occlusionMaskVao.Handle);
 
-            FlushRenderQueue();
+            GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+                IntPtr.Zero);
+
+            GL.Enable(EnableCap.Blend);
         }
 
-        private void MergeWallLayer(MapId map)
+        private void MergeWallLayer()
         {
             using var _ = DebugGroup(nameof(MergeWallLayer));
 
@@ -430,22 +506,19 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, _lightRenderTarget.Size.X, _lightRenderTarget.Size.Y);
             GL.Disable(EnableCap.Blend);
 
-            _renderHandle.UseShader(_mergeWallLayerShaderInstance);
+            var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
+            shader.Use();
 
             var tex = _wallBleedIntermediateRenderTarget2.Texture;
+            SetTexture(TextureUnit.Texture0, tex);
 
-            foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
-            {
-                if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
-                {
-                    continue;
-                }
+            shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
-                _renderHandle.SetModelTransform(occluder.Owner.Transform.WorldMatrix);
-                _renderHandle.DrawingHandleWorld.DrawTextureRect(tex, occluder.BoundingBox);
-            }
+            GL.BindVertexArray(_occlusionMaskVao.Handle);
 
-            FlushRenderQueue();
+            GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+                IntPtr.Zero);
+
             GL.Enable(EnableCap.Blend);
         }
 
@@ -486,37 +559,28 @@ namespace Robust.Client.Graphics.Clyde
                 Matrix3.Identity, shader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map)
+        private void UpdateOcclusionGeometry(RefList<(Vector2 tl, Vector2 tr, Vector2 br, Vector2 bl)> occluders)
         {
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            const int maxOccluders = 2048;
+            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(occluders.Count * 8);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(occluders.Count * 11);
 
-            GL.BindVertexArray(_occlusionVao.Handle);
-
-            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 11);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(occluders.Count * 5);
 
             var ai = 0;
+            var ami = 0;
             var ii = 0;
+            var imi = 0;
 
             try
             {
-                foreach (var occluder in _componentManager.GetAllComponents<OccluderComponent>())
+                foreach (ref var t in occluders)
                 {
-                    if (!occluder.Enabled || occluder.Owner.Transform.MapID != map)
-                    {
-                        continue;
-                    }
-
-                    var worldTransform = occluder.Owner.Transform.WorldMatrix;
-
-                    var box = occluder.BoundingBox;
-
-                    var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
-                    var (trX, trY) = worldTransform.Transform(box.TopRight);
-                    var (blX, blY) = worldTransform.Transform(box.BottomLeft);
-                    var (brX, brY) = worldTransform.Transform(box.BottomRight);
+                    var (tlX, tlY) = t.tl;
+                    var (trX, trY) = t.tr;
+                    var (blX, blY) = t.bl;
+                    var (brX, brY) = t.br;
 
                     const float polygonHeight = 500;
 
@@ -541,19 +605,36 @@ namespace Robust.Client.Graphics.Clyde
                     indexBuffer[ii + 9] = (ushort) (ai + 1);
                     indexBuffer[ii + 10] = ushort.MaxValue; // Primitive restart
 
+                    indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
+                    indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
+                    indexMaskBuffer[imi + 2] = (ushort) (ami + 2);
+                    indexMaskBuffer[imi + 3] = (ushort) (ami + 3);
+                    indexMaskBuffer[imi + 4] = ushort.MaxValue; // Primitive restart
+
                     ai += 8;
                     ii += 11;
+                    ami += 4;
+                    imi += 5;
                 }
 
                 _occlusionDataLength = ii;
+                _occlusionMaskDataLength = imi;
+
+                GL.BindVertexArray(_occlusionVao.Handle);
 
                 _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
                 _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
+
+                GL.BindVertexArray(_occlusionMaskVao.Handle);
+
+                _occlusionMaskVbo.Reallocate(occluders.GetSpan());
+                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(..imi));
             }
             finally
             {
                 ArrayPool<Vector3>.Shared.Return(arrayBuffer);
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
+                ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
             }
         }
 
@@ -561,7 +642,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var lightMapSize = GetLightMapSize();
             var lightMapSizeQuart = GetLightMapSize(true);
-            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.Rgba16F;
+            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.Rgba8;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
             _lightRenderTarget?.Delete();

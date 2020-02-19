@@ -84,7 +84,7 @@ namespace Robust.Client.Player
             entity.SendMessage(null, new PlayerAttachedMsg());
 
             // notify ECS Systems
-            ControlledEntity.EntityManager.EventBus.RaiseEvent(this, new PlayerAttachSysMessage(ControlledEntity));
+            ControlledEntity.EntityManager.EventBus.RaiseEvent(new PlayerAttachSysMessage(ControlledEntity));
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Robust.Client.Player
                 previous.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems
-                previous.EntityManager.EventBus.RaiseEvent(this, new PlayerAttachSysMessage(null));
+                previous.EntityManager.EventBus.RaiseEvent(new PlayerAttachSysMessage(null));
             }
 
             ControlledEntity = null;

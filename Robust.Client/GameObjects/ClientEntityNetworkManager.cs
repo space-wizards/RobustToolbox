@@ -78,7 +78,7 @@ namespace Robust.Client.GameObjects
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    _entityManager.EventBus.RaiseEvent(this, message.SystemMessage);
+                    _entityManager.EventBus.RaiseEvent(message.SystemMessage);
                     return;
             }
         }

@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             SubscribeEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         }
 
-        private void PlayAudioPositionalHandler(object sender, PlayAudioPositionalMessage ev)
+        private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
         {
             if (!_mapManager.GridExists(ev.Coordinates.GridID))
             {
@@ -47,12 +47,12 @@ namespace Robust.Client.GameObjects.EntitySystems
             Play(ev.FileName, ev.Coordinates, ev.AudioParams);
         }
 
-        private void PlayAudioGlobalHandler(object sender, PlayAudioGlobalMessage ev)
+        private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
         {
             Play(ev.FileName, ev.AudioParams);
         }
 
-        private void PlayAudioEntityHandler(object sender, PlayAudioEntityMessage ev)
+        private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
             if (!EntityManager.TryGetEntity(ev.EntityUid, out var entity))
             {

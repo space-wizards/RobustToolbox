@@ -236,7 +236,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RaiseEvent(EntityEventArgs toRaise)
         {
-            EntityManager.EventBus.RaiseEvent(this, toRaise);
+            EntityManager.EventBus.RaiseEvent(toRaise);
         }
 
         #endregion Entity Events

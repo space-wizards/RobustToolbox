@@ -34,16 +34,14 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Immediately raises an event onto the bus.
         /// </summary>
-        /// <param name="sender">Object that raised the event.</param>
         /// <param name="toRaise">Event being raised.</param>
-        void RaiseEvent(object sender, EntityEventArgs toRaise);
+        void RaiseEvent(EntityEventArgs toRaise);
 
         /// <summary>
         /// Queues an event to be raised at a later time.
         /// </summary>
-        /// <param name="sender">Object that raised the event.</param>
         /// <param name="toRaise">Event being raised.</param>
-        void QueueEvent(object sender, EntityEventArgs toRaise);
+        void QueueEvent(EntityEventArgs toRaise);
 
         /// <summary>
         /// Waits for an event to be raised. You do not have to subscribe to the event.
@@ -86,8 +84,7 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
             = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
 
-        private readonly Queue<(object sender, EntityEventArgs eventArgs)> _eventQueue
-            = new Queue<(object, EntityEventArgs)>();
+        private readonly Queue<EntityEventArgs> _eventQueue = new Queue<EntityEventArgs>();
 
         private readonly Dictionary<Type, (CancellationTokenRegistration, TaskCompletionSource<EntityEventArgs>)>
             _awaitingMessages
@@ -162,21 +159,21 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseEvent(object sender, EntityEventArgs toRaise)
+        public void RaiseEvent(EntityEventArgs toRaise)
         {
             if(toRaise == null)
                 throw new ArgumentNullException(nameof(toRaise));
 
-            ProcessSingleEvent((sender, toRaise));
+            ProcessSingleEvent(toRaise);
         }
 
         /// <inheritdoc />
-        public void QueueEvent(object sender, EntityEventArgs toRaise)
+        public void QueueEvent(EntityEventArgs toRaise)
         {
             if(toRaise == null)
                 throw new ArgumentNullException(nameof(toRaise));
 
-            _eventQueue.Enqueue((sender, toRaise));
+            _eventQueue.Enqueue(toRaise);
         }
 
         /// <inheritdoc />
@@ -226,16 +223,15 @@ namespace Robust.Shared.GameObjects
                 inverse.Remove(eventType);
         }
 
-        private void ProcessSingleEvent((object sender, EntityEventArgs eventArgs) argsTuple)
+        private void ProcessSingleEvent(EntityEventArgs eventArgs)
         {
-            var (sender, eventArgs) = argsTuple;
             var eventType = eventArgs.GetType();
 
             if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
                 foreach (var handler in subs)
                 {
-                    handler.DynamicInvoke(sender, eventArgs);
+                    handler.DynamicInvoke(eventArgs);
                 }
             }
 

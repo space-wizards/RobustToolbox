@@ -12,7 +12,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         }
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        private static void HandleParentChanged(object sender, EntParentChangedMessage message)
+        private static void HandleParentChanged(EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 

@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             SubscribeEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
         }
 
-        private void OnAttachedEntityChanged(object sender, PlayerAttachSysMessage message)
+        private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
         {
             if (message.AttachedEntity != null) // attach
             {

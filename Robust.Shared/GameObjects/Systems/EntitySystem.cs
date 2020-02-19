@@ -53,12 +53,12 @@ namespace Robust.Shared.GameObjects.Systems
 
         protected void RaiseEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.RaiseEvent(this, message);
+            EntityManager.EventBus.RaiseEvent(message);
         }
 
         protected void QueueEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.QueueEvent(this, message);
+            EntityManager.EventBus.QueueEvent(message);
         }
 
         protected void RaiseNetworkEvent(EntitySystemMessage message)

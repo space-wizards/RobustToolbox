@@ -415,6 +415,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniformMaybe(string uniformName, in Vector2i value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
+                }
+            }
+
             public void SetUniformMaybe(int uniformName, in Vector2 value)
             {
                 if (TryGetUniform(uniformName, out var slot))

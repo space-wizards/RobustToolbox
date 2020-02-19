@@ -139,6 +139,11 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _clyde.DeleteRenderTarget(this);
             }
+
+            public void Bind()
+            {
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, ObjectHandle.Handle);
+            }
         }
     }
 }

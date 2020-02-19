@@ -21,6 +21,6 @@ namespace Robust.Client.Graphics.Clyde
         private const string UniProjViewMatrices = "projectionViewMatrices";
         private const string UniUniformConstants = "uniformConstants";
 
-        private static readonly Color AmbientLightColor = new Color(0.1f, 0.1f, 0.1f);
+        private static readonly Color AmbientLightColor = Color.Black;
     }
 }

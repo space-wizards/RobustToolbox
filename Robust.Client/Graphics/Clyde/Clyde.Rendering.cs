@@ -202,7 +202,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_lightingReady && loaded.HasLighting)
             {
-                SetTexture(TextureUnit.Texture1, LightRenderTarget.Texture);
+                SetTexture(TextureUnit.Texture1, _lightRenderTarget.Texture);
             }
             else
             {

@@ -110,8 +110,16 @@ namespace Robust.Client.Graphics.Clyde
                 _renderHandle.UseShader(_fovDebugShaderInstance);
                 _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                 var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
-                _renderHandle.DrawingHandleScreen.DrawTextureRect(_fovDepthTextureObject, pos);
+                _renderHandle.DrawingHandleScreen.DrawTextureRect(FovDepthTextureObject, pos);
             }
+
+            if (DebugLayers == ClydeDebugLayers.Light)
+            {
+                _renderHandle.UseShader(null);
+                _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                _renderHandle.DrawingHandleScreen.DrawTextureRect(_wallBleedIntermediateRenderTarget2.Texture, UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
+            }
+
 
             RenderOverlays(OverlaySpace.ScreenSpace);
 

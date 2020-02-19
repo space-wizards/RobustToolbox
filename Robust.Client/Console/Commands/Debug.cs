@@ -775,6 +775,7 @@ namespace Robust.Client.Console.Commands
             clyde.DebugLayers = args[0] switch
             {
                 "fov" => ClydeDebugLayers.Fov,
+                "light" => ClydeDebugLayers.Light,
                 _ => ClydeDebugLayers.None
             };
 

@@ -1,0 +1,16 @@
+preset raw;
+
+varying vec2 pos;
+
+void vertex()
+{
+    VERTEX = apply_mvp(VERTEX);
+
+    pos = (VERTEX + vec2(1)) / 2;
+}
+
+
+void fragment()
+{
+    COLOR = texture(TEXTURE, pos);
+}

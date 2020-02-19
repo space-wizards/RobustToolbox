@@ -26,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
-            SetTexture(TextureUnit.Texture1, _lightingReady ? LightRenderTarget.Texture : _stockTextureWhite);
+            SetTexture(TextureUnit.Texture1, _lightingReady ? _lightRenderTarget.Texture : _stockTextureWhite);
 
             var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
 

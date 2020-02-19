@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private void ClearColor(Color color)
+        private void GLClearColor(Color color)
         {
             GL.ClearColor(color.R, color.G, color.B, color.A);
         }

@@ -39,7 +39,7 @@ vec2 pixel_snap(vec2 vertex)
 
 vec2 apply_mvp(vec2 vertex)
 {
-    vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(aPos, 1.0);
+    vec3 transformed = projectionMatrix * viewMatrix * modelMatrix * vec3(vertex, 1.0);
 
     return transformed.xy;
 }

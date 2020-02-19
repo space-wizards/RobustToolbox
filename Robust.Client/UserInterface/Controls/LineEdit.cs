@@ -302,6 +302,7 @@ namespace Robust.Client.UserInterface.Controls
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _cursorPosition -= 1;
                     _updatePseudoClass();
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
                 {
@@ -311,6 +312,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition -= 1;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorRight)
                 {
@@ -320,38 +322,56 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition += 1;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorBegin)
                 {
                     _cursorPosition = 0;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorEnd)
                 {
                     _cursorPosition = _text.Length;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextSubmit)
                 {
-                    if (Editable)
+                    if (!Editable)
                     {
-                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                        return;
                     }
+
+                    OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextPaste)
                 {
-                    if (Editable)
+                    if (!Editable)
                     {
-                        var clipboard = IoCManager.Resolve<IClipboardManager>();
-                        InsertAtCursor(clipboard.GetText());
+                        return;
                     }
+
+                    var clipboard = IoCManager.Resolve<IClipboardManager>();
+                    InsertAtCursor(clipboard.GetText());
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextDelete)
                 {
                     if (_cursorPosition >= _text.Length || !Editable)
+                    {
                         return;
+                    }
 
                     _text = _text.Remove(_cursorPosition, 1);
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _updatePseudoClass();
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+                {
+                    ReleaseKeyboardFocus();
+                    args.Handle();
+                    return;
                 }
             }
             else
@@ -400,6 +420,7 @@ namespace Robust.Client.UserInterface.Controls
                 }
 
                 _cursorPosition = index;
+                args.Handle();
             }
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();

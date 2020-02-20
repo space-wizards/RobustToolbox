@@ -757,6 +757,11 @@ namespace Robust.Client.Console.Commands
             {
                 if (args[0] == "+watch")
                 {
+                    if (_watchers != null)
+                    {
+                        console.AddLine("Already watching.");
+                        return false;
+                    }
                     resC = IoCManager.Resolve<IResourceCache>();
 
                     _watchers = new Dictionary<string, FileSystemWatcher>();

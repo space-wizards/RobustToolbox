@@ -54,6 +54,7 @@ namespace Robust.Client.Graphics.Clyde
                     RenderTargetColorFormat.Rgba8Srgb => PixelInternalFormat.Srgb8Alpha8,
                     RenderTargetColorFormat.R11FG11FB10F => PixelInternalFormat.R11fG11fB10f,
                     RenderTargetColorFormat.R32F => PixelInternalFormat.R32f,
+                    RenderTargetColorFormat.RG32F => PixelInternalFormat.Rg32f,
                     RenderTargetColorFormat.R8 => PixelInternalFormat.R8,
                     _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
                 };

@@ -16,6 +16,7 @@ namespace Robust.Client.Interfaces.Graphics
         Rgba8Srgb,
 
         R32F,
+        RG32F,
 
         /// <summary>
         ///     16 bits per channel floating point linear RGBA.

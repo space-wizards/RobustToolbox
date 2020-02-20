@@ -4,6 +4,8 @@ preset raw;
 
 const float LIGHTING_HEIGHT = 1;
 
+const float g_MinVariance = 0;
+
 varying vec2 worldPosition;
 
 uniform vec4 lightColor;
@@ -23,22 +25,86 @@ void vertex()
     VERTEX = transformed.xy;
 }
 
+float ChebyshevUpperBound(vec2 moments, float t)
+{
+    // One-tailed inequality valid if t > Moments.x
+    float p = float(t <= moments.x);
+    // Compute variance.
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, g_MinVariance);
+    // Compute probabilistic upper bound.
+    float d = t - moments.x;
+    float p_max = variance / (variance + d*d);
+    return max(p, p_max);
+}
+
+float ShadowContribution(vec2 LightTexCoord, float DistanceToLight)
+{
+    // Read the moments from the variance shadow map.
+    vec2 moments = texture(shadowMap, LightTexCoord).xy;
+    // Compute the Chebyshev upper bound.
+    return ChebyshevUpperBound(moments, DistanceToLight);
+}
+
+float shadowContrib(vec2 diff)
+{
+    float dist = length(diff);
+
+    return ChebyshevUpperBound(occludeDepth(diff, shadowMap, lightIndex), dist);
+}
+
 void fragment()
 {
     float mask = texture(TEXTURE, UV).r;
 
     vec2 diff = worldPosition - lightCenter;
-    float dist = dot(diff, diff) + LIGHTING_HEIGHT;
 
-    if (doesOcclude(diff, shadowMap, lightIndex, 2.0/32.0))
+    vec2 perpendicular = normalize(cross(vec3(diff, 0), vec3(0, 0, 1)).xy) * 1.0 / 32.0;
+
+    float ourDist = length(diff);
+
+    vec2 occlDist = occludeDepth(diff, shadowMap, lightIndex);
+
+    float distRatio = (ourDist - occlDist.x) / occlDist.x / 2;
+
+    perpendicular *= distRatio;
+
+    /*
+    float occlusion = float(doesOcclude(diff, shadowMap, lightIndex, 2.0/32.0));
+
+
+    occlusion += float(doesOcclude(diff + perpendicular, shadowMap, lightIndex, 2.0/32.0));
+    occlusion += float(doesOcclude(diff - perpendicular, shadowMap, lightIndex, 2.0/32.0));
+    occlusion += float(doesOcclude(diff + perpendicular * 2, shadowMap, lightIndex, 2.0/32.0));
+    occlusion += float(doesOcclude(diff + perpendicular * 2, shadowMap, lightIndex, 2.0/32.0));
+    occlusion += float(doesOcclude(diff + perpendicular * 3, shadowMap, lightIndex, 2.0/32.0));
+    occlusion += float(doesOcclude(diff + perpendicular * 3, shadowMap, lightIndex, 2.0/32.0));
+
+    occlusion /= 7;*/
+
+    float occlusion = ChebyshevUpperBound(occlDist, ourDist);
+
+
+    occlusion += shadowContrib(diff + perpendicular);
+    occlusion += shadowContrib(diff - perpendicular);
+    occlusion += shadowContrib(diff + perpendicular * 2);
+    occlusion += shadowContrib(diff - perpendicular * 2);
+    occlusion += shadowContrib(diff + perpendicular * 3);
+    occlusion += shadowContrib(diff - perpendicular * 3);
+
+
+    occlusion /= 7;
+
+    if (occlusion == 0.0)
     {
         discard;
     }
 
+    float dist = dot(diff, diff) + LIGHTING_HEIGHT;
     float val = clamp((1 - clamp(sqrt(dist) / lightRange, 0, 1)) * (1 / (sqrt(dist + 1))), 0, 1);
 
     val *= lightPower;
     val *= mask;
 
-    COLOR = vec4(lightColor.rgb, val);
+    COLOR = vec4(lightColor.rgb, val * occlusion);
 }

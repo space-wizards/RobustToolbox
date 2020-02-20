@@ -34,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _wallBleedBlurShaderHandle;
         private ClydeHandle _wallMaskShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
+        private ClydeHandle _blurShadowMapShaderHandle;
 
         // Projection matrix used while rendering FOV.
         // We keep this around so we can reverse the effects while overlaying actual FOV.
@@ -46,9 +47,11 @@ namespace Robust.Client.Graphics.Clyde
 
         // For depth calculation for FOV.
         private RenderTarget _fovRenderTarget;
+        private RenderTarget _fovPostBlurRenderTarget;
 
         // For depth calculation of lighting shadows.
         private RenderTarget _shadowRenderTarget;
+        private RenderTarget _shadowPostBlurRenderTarget;
 
         // Unused, to be removed.
         private RenderTarget _wallMaskRenderTarget;
@@ -59,8 +62,10 @@ namespace Robust.Client.Graphics.Clyde
         private RenderTarget _wallBleedIntermediateRenderTarget2;
 
         // Proxies to textures of some of the above render targets.
-        private ClydeTexture FovDepthTextureObject => _fovRenderTarget.Texture;
-        private ClydeTexture ShadowTextureObject => _shadowRenderTarget.Texture;
+        private ClydeTexture FovTexture => _fovRenderTarget.Texture;
+        private ClydeTexture FovPostBlurTexture => _fovPostBlurRenderTarget.Texture;
+        private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
+        private ClydeTexture ShadowPostBlurTexture => _shadowPostBlurRenderTarget.Texture;
 
         // Shader program used to calculate depth for shadows/FOV.
         private GLShaderProgram _fovCalculationProgram;
@@ -132,13 +137,25 @@ namespace Robust.Client.Graphics.Clyde
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "FOV depth render target");
+                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                nameof(_fovRenderTarget));
+
+            _fovPostBlurRenderTarget = CreateRenderTarget((FovMapSize, 2),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                nameof(_fovPostBlurRenderTarget));
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.R32F, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat}, "Shadow depth render target.");
+                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                nameof(_shadowRenderTarget));
+
+            _shadowPostBlurRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                nameof(_shadowPostBlurRenderTarget));
         }
 
         private void LoadLightingShaders()
@@ -163,6 +180,7 @@ namespace Robust.Client.Graphics.Clyde
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
             _wallMaskShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-mask.swsl");
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
+            _blurShadowMapShaderHandle = LoadShaderHandle("/Shaders/Internal/blur-shadow-map.swsl");
         }
 
         private void DrawFov(IEye eye)
@@ -186,6 +204,27 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             GL.Disable(EnableCap.DepthTest);
+
+            BlurShadowMap(FovTexture, _fovPostBlurRenderTarget);
+        }
+
+        private void BlurShadowMap(Texture source, RenderTarget target)
+        {
+            target.Bind();
+            GL.Viewport(0, 0, target.Size.X, target.Size.Y);
+
+            var shader = _loadedShaders[_blurShadowMapShaderHandle].Program;
+            shader.Use();
+            shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+            shader.SetUniformMaybe("resolution", (Vector2) (target.Size.X, target.Size.Y));
+
+            SetTexture(TextureUnit.Texture0, source);
+
+            GL.Disable(EnableCap.Blend);
+
+            DrawBlit(shader);
+
+            GL.Enable(EnableCap.Blend);
         }
 
         private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY,
@@ -235,7 +274,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void PrepareDepthDraw(RenderTarget target)
         {
-            const float arbitraryDistanceMax = 12345;
+            const float arbitraryDistanceMax = 1234;
 
             GL.Enable(EnableCap.DepthTest);
             GL.DepthFunc(DepthFunction.Lequal);
@@ -243,7 +282,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
             GL.ClearDepth(1);
-            GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax, arbitraryDistanceMax, 1);
+            GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
 
             GL.BindVertexArray(_occlusionVao.Handle);
@@ -288,6 +327,8 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.Disable(EnableCap.DepthTest);
 
+            BlurShadowMap(ShadowTexture, _shadowPostBlurRenderTarget);
+
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, _lightRenderTarget.ObjectHandle.Handle);
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
@@ -298,7 +339,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
 
-            SetTexture(TextureUnit.Texture1, ShadowTextureObject);
+            SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
@@ -360,7 +401,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
-                lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTextureObject.Height);
+                lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
                 lightShader.SetUniformMaybe("shadowMatrix", shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
@@ -526,7 +567,7 @@ namespace Robust.Client.Graphics.Clyde
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
 
-            SetTexture(TextureUnit.Texture0, FovDepthTextureObject);
+            SetTexture(TextureUnit.Texture0, FovTexture);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
@@ -540,7 +581,7 @@ namespace Robust.Client.Graphics.Clyde
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
 
-            SetTexture(TextureUnit.Texture0, FovDepthTextureObject);
+            SetTexture(TextureUnit.Texture0, FovTexture);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
@@ -697,6 +738,7 @@ namespace Robust.Client.Graphics.Clyde
                             blY += bias;
                             brY += bias;
                         }
+
                         if (!wo)
                         {
                             blX += bias;

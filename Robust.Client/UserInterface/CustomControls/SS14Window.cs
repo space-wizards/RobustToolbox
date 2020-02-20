@@ -19,6 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public SS14Window()
         {
+            MouseFilter = MouseFilterMode.Stop;
+
             AddChild(new PanelContainer
             {
                 StyleClasses = {StyleClassWindowPanel}

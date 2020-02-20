@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.Maths;
 
@@ -19,6 +19,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public ScrollContainer()
         {
+            MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
             Action<Range> ev = _scrollValueChanged;

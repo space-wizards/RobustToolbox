@@ -1,4 +1,4 @@
-using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
 
@@ -65,6 +65,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public Slider()
         {
+            MouseFilter = MouseFilterMode.Stop;
+
             AddChild(new LayoutContainer
             {
                 MouseFilter = MouseFilterMode.Ignore,

@@ -203,7 +203,7 @@ namespace Robust.Client.UserInterface
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
+        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Ignore;
 
         /// <summary>
         ///     Whether this control can take keyboard focus.

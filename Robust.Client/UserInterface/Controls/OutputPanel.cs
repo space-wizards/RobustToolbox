@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OutputPanel()
         {
+            MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
             _scrollBar = new VScrollBar

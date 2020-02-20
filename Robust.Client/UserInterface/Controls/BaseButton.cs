@@ -185,6 +185,11 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public event Action<ButtonToggledEventArgs> OnToggled;
 
+        protected BaseButton()
+        {
+            MouseFilter = MouseFilterMode.Pass;
+        }
+
         protected virtual void DrawModeChanged()
         {
         }

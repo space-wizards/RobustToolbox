@@ -646,16 +646,16 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
-            var ai = 0;
-            var ami = 0;
-            var ii = 0;
-            var imi = 0;
+                var ai = 0;
+                var ami = 0;
+                var ii = 0;
+                var imi = 0;
 
                 foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
-            {
+                {
                     var transform = occluder.Owner.Transform;
                     if (!occluder.Enabled || transform.MapID != map)
-                {
+                    {
                         continue;
                     }
 
@@ -740,10 +740,10 @@ namespace Robust.Client.Graphics.Clyde
                     // North face.
                     if (!no || !tlV && !trV)
                     {
-                    indexBuffer[ii + 0] = (ushort) (ai + 0);
-                    indexBuffer[ii + 1] = (ushort) (ai + 1);
-                    indexBuffer[ii + 2] = (ushort) (ai + 2);
-                    indexBuffer[ii + 3] = (ushort) (ai + 3);
+                        indexBuffer[ii + 0] = (ushort) (ai + 0);
+                        indexBuffer[ii + 1] = (ushort) (ai + 1);
+                        indexBuffer[ii + 2] = (ushort) (ai + 2);
+                        indexBuffer[ii + 3] = (ushort) (ai + 3);
                         indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
                         ii += 5;
                     }

@@ -79,9 +79,9 @@ namespace Robust.Client.GameObjects
             CheckDir(Direction.West, OccluderDir.West);
         }
 
-        internal bool IsOccluding(OccluderDir dir)
+        internal bool HasOccludingNeighbor(OccluderDir dir)
         {
-            return _neighbors[(int) dir] == null || !_neighbors[(int) dir].Enabled;
+            return _neighbors[(int) dir] != null && _neighbors[(int) dir].Enabled;
         }
 
         internal enum OccluderDir : byte

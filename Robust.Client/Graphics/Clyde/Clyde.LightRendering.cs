@@ -262,7 +262,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
 
-            UpdateOcclusionGeometry(map, expandedBounds);
+            UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
 
             //GenerateWallMask();
 
@@ -556,8 +556,10 @@ namespace Robust.Client.Graphics.Clyde
                 Matrix3.Identity, shader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
         {
+            // TODO: This code probably does not work correctly with rotated camera.
+
             const int maxOccluders = 2048;
             const float polygonHeight = 500;
 
@@ -613,13 +615,22 @@ namespace Robust.Client.Graphics.Clyde
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
-                    var tlV = true;
-                    var trV = true;
-                    var blV = true;
-                    var brV = true;
+                    var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
+                    var (dTrX, dTrY) = (trX, trY) - eyePosition;
+                    var (dBlX, dBlY) = (blX, blY) - eyePosition;
+                    var (dBrX, dBrY) = (brX, brY) - eyePosition;
+
+                    var tlV = dTlX > 0 && !occluder.HasOccludingNeighbor(OccluderDir.West) ||
+                              dTlY < 0 && !occluder.HasOccludingNeighbor(OccluderDir.North);
+                    var trV = dTrX < 0 && !occluder.HasOccludingNeighbor(OccluderDir.East) ||
+                              dTrY < 0 && !occluder.HasOccludingNeighbor(OccluderDir.North);
+                    var blV = dBlX > 0 && !occluder.HasOccludingNeighbor(OccluderDir.West) ||
+                              dBlY > 0 && !occluder.HasOccludingNeighbor(OccluderDir.South);
+                    var brV = dBrX < 0 && !occluder.HasOccludingNeighbor(OccluderDir.East) ||
+                              dBrY > 0 && !occluder.HasOccludingNeighbor(OccluderDir.South);
 
                     // North face.
-                    if (occluder.IsOccluding(OccluderDir.North) || (!tlV && !trV))
+                    if (!occluder.HasOccludingNeighbor(OccluderDir.North) || !tlV && !trV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 0);
                         indexBuffer[ii + 1] = (ushort) (ai + 1);
@@ -630,7 +641,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // East face.
-                    if (occluder.IsOccluding(OccluderDir.East) || (!brV && !trV))
+                    if (!occluder.HasOccludingNeighbor(OccluderDir.East) || !brV && !trV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 2);
                         indexBuffer[ii + 1] = (ushort) (ai + 3);
@@ -641,7 +652,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // South face.
-                    if (occluder.IsOccluding(OccluderDir.South) || (!brV && !blV))
+                    if (!occluder.HasOccludingNeighbor(OccluderDir.South) || !brV && !blV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 4);
                         indexBuffer[ii + 1] = (ushort) (ai + 5);
@@ -652,7 +663,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // West face.
-                    if (occluder.IsOccluding(OccluderDir.West) || (!blV && !tlV))
+                    if (!occluder.HasOccludingNeighbor(OccluderDir.West) || !blV && !tlV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 6);
                         indexBuffer[ii + 1] = (ushort) (ai + 7);

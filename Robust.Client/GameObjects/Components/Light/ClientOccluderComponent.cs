@@ -38,13 +38,15 @@ namespace Robust.Client.GameObjects
             {
                 _snapGrid.OnPositionChanged -= SnapGridOnOnPositionChanged;
             }
+
+            Disconnect();
         }
 
         private void Disconnect()
         {
             foreach (var neighbor in _neighbors)
             {
-                neighbor.UpdateConnections(false);
+                neighbor?.UpdateConnections(false);
             }
         }
 

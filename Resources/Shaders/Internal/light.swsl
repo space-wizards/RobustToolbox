@@ -30,7 +30,7 @@ void fragment()
     vec2 diff = worldPosition - lightCenter;
     float dist = dot(diff, diff) + LIGHTING_HEIGHT;
 
-    if (doesOcclude(diff, shadowMap, lightIndex))
+    if (doesOcclude(diff, shadowMap, lightIndex, 2.0/32.0))
     {
         discard;
     }

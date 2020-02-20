@@ -620,17 +620,18 @@ namespace Robust.Client.Graphics.Clyde
                     var (dBlX, dBlY) = (blX, blY) - eyePosition;
                     var (dBrX, dBrY) = (brX, brY) - eyePosition;
 
-                    var tlV = dTlX > 0 && !occluder.HasOccludingNeighbor(OccluderDir.West) ||
-                              dTlY < 0 && !occluder.HasOccludingNeighbor(OccluderDir.North);
-                    var trV = dTrX < 0 && !occluder.HasOccludingNeighbor(OccluderDir.East) ||
-                              dTrY < 0 && !occluder.HasOccludingNeighbor(OccluderDir.North);
-                    var blV = dBlX > 0 && !occluder.HasOccludingNeighbor(OccluderDir.West) ||
-                              dBlY > 0 && !occluder.HasOccludingNeighbor(OccluderDir.South);
-                    var brV = dBrX < 0 && !occluder.HasOccludingNeighbor(OccluderDir.East) ||
-                              dBrY > 0 && !occluder.HasOccludingNeighbor(OccluderDir.South);
+                    var no = occluder.HasOccludingNeighbor(OccluderDir.North);
+                    var so = occluder.HasOccludingNeighbor(OccluderDir.South);
+                    var eo = occluder.HasOccludingNeighbor(OccluderDir.East);
+                    var wo = occluder.HasOccludingNeighbor(OccluderDir.West);
+
+                    var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
+                    var trV = dTrX < 0 && !eo || dTrY < 0 && !no;
+                    var blV = dBlX > 0 && !wo || dBlY > 0 && !so;
+                    var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
 
                     // North face.
-                    if (!occluder.HasOccludingNeighbor(OccluderDir.North) || !tlV && !trV)
+                    if (!no || !tlV && !trV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 0);
                         indexBuffer[ii + 1] = (ushort) (ai + 1);
@@ -641,7 +642,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // East face.
-                    if (!occluder.HasOccludingNeighbor(OccluderDir.East) || !brV && !trV)
+                    if (!eo || !brV && !trV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 2);
                         indexBuffer[ii + 1] = (ushort) (ai + 3);
@@ -652,7 +653,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // South face.
-                    if (!occluder.HasOccludingNeighbor(OccluderDir.South) || !brV && !blV)
+                    if (!so || !brV && !blV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 4);
                         indexBuffer[ii + 1] = (ushort) (ai + 5);
@@ -663,7 +664,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // West face.
-                    if (!occluder.HasOccludingNeighbor(OccluderDir.West) || !blV && !tlV)
+                    if (!wo || !blV && !tlV)
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 6);
                         indexBuffer[ii + 1] = (ushort) (ai + 7);
@@ -671,6 +672,36 @@ namespace Robust.Client.Graphics.Clyde
                         indexBuffer[ii + 3] = (ushort) (ai + 1);
                         indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
                         ii += 5;
+                    }
+
+                    if (_quartResLights)
+                    {
+                        // On low-res lights we bias the occlusion mask inwards.
+                        // This avoids wall lighting going onto the tile next to them at certain tile alignments.
+                        const float bias = 1f / EyeManager.PIXELSPERMETER;
+
+                        if (!no)
+                        {
+                            tlY -= bias;
+                            trY -= bias;
+                        }
+
+                        if (!eo)
+                        {
+                            trX -= bias;
+                            brX -= bias;
+                        }
+
+                        if (!so)
+                        {
+                            blY += bias;
+                            brY += bias;
+                        }
+                        if (!wo)
+                        {
+                            blX += bias;
+                            tlX += bias;
+                        }
                     }
 
                     arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);

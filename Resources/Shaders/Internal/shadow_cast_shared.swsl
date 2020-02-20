@@ -2,7 +2,7 @@ const float PI = 3.1415926535897932384626433; // That enough digits?
 
 uniform mat4 shadowMatrix;
 
-bool doesOcclude(vec2 diff, sampler2D shadowMap, float mapOffsetY)
+bool doesOcclude(vec2 diff, sampler2D shadowMap, float mapOffsetY, float bias)
 {
     float angle = atan(diff.y, -diff.x) + PI + radians(135.0);
 
@@ -35,9 +35,9 @@ bool doesOcclude(vec2 diff, sampler2D shadowMap, float mapOffsetY)
     vec4 s = shadowMatrix * vec4(shadowPoint, 0.0, 1.0);
     s.xyz /= s.w;
     float su = s.x * 0.5 + 0.5;
-    float sz = s.z * 0.5 + 0.5;
+    float sz = distance(diff, vec2(0));
 
     float shadowDepth = texture(shadowMap, vec2(su / 4 + shadowMapOffset, mapOffsetY)).r;
 
-    return shadowDepth < sz;
+    return shadowDepth + bias < sz;
 }

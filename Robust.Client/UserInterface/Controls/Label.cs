@@ -27,7 +27,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public Label()
         {
-            MouseFilter = MouseFilterMode.Ignore;
             SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
 

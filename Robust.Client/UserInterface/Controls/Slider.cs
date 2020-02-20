@@ -69,25 +69,12 @@ namespace Robust.Client.UserInterface.Controls
 
             AddChild(new LayoutContainer
             {
-                MouseFilter = MouseFilterMode.Ignore,
                 Children =
                 {
-                    (_backgroundPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_fillPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_foregroundPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_grabber = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    })
+                    (_backgroundPanel = new PanelContainer()),
+                    (_fillPanel = new PanelContainer()),
+                    (_foregroundPanel = new PanelContainer()),
+                    (_grabber = new PanelContainer())
                 }
             });
 

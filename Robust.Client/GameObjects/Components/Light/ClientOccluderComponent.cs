@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
 
         internal bool IsOccluding(OccluderDir dir)
         {
-            return _neighbors[(int) dir] == null;
+            return _neighbors[(int) dir] == null || !_neighbors[(int) dir].Enabled;
         }
 
         internal enum OccluderDir : byte

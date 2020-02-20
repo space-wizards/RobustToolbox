@@ -7,6 +7,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
@@ -172,9 +173,18 @@ namespace Robust.Client.Graphics.Clyde
 
             ClydeHandle LoadShaderHandle(string path)
             {
-                var shaderSource = _resourceCache.GetResource<ShaderSourceResource>(path);
-                return shaderSource.ClydeHandle;
+                try
+                {
+                    var shaderSource = _resourceCache.GetResource<ShaderSourceResource>(path);
+                    return shaderSource.ClydeHandle;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Can't load shader {path}, {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                    return default;
+                }
             }
+
 
             _lightShaderHandle = LoadShaderHandle("/Shaders/Internal/light.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
@@ -636,16 +646,16 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
-                var ai = 0;
-                var ami = 0;
-                var ii = 0;
-                var imi = 0;
+            var ai = 0;
+            var ami = 0;
+            var ii = 0;
+            var imi = 0;
 
                 foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
-                {
+            {
                     var transform = occluder.Owner.Transform;
                     if (!occluder.Enabled || transform.MapID != map)
-                    {
+                {
                         continue;
                     }
 
@@ -730,10 +740,10 @@ namespace Robust.Client.Graphics.Clyde
                     // North face.
                     if (!no || !tlV && !trV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 0);
-                        indexBuffer[ii + 1] = (ushort) (ai + 1);
-                        indexBuffer[ii + 2] = (ushort) (ai + 2);
-                        indexBuffer[ii + 3] = (ushort) (ai + 3);
+                    indexBuffer[ii + 0] = (ushort) (ai + 0);
+                    indexBuffer[ii + 1] = (ushort) (ai + 1);
+                    indexBuffer[ii + 2] = (ushort) (ai + 2);
+                    indexBuffer[ii + 3] = (ushort) (ai + 3);
                         indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
                         ii += 5;
                     }

@@ -1,8 +1,10 @@
 ﻿using System.IO;
+using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -30,10 +32,24 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
 
         public override void Reload(IResourceCache cache, ResourcePath path)
         {
-            using (var stream = cache.ContentFileRead(path))
-            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
+            for (;;)
             {
-                ParsedShader = ShaderParser.Parse(reader, cache);
+                try
+                {
+                    using var stream = cache.ContentFileRead(path);
+                    using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+                    ParsedShader = ShaderParser.Parse(reader, cache);
+                    break;
+                }
+                catch (IOException ioe)
+                {
+                    if (!PathHelpers.IsFileInUse(ioe))
+                    {
+                        throw;
+                    }
+
+                    Thread.Sleep(3);
+                }
             }
 
             var clyde = IoCManager.Resolve<IClydeInternal>();

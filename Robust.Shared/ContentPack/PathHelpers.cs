@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.ContentPack
 {
@@ -60,5 +61,18 @@ namespace Robust.Shared.ContentPack
                 }
             }
         }
+
+        public static bool IsFileInUse(IOException exception)
+        {
+            var errorCode = exception.HResult & 0xFFFF;
+            return errorCode switch
+            {
+                // TODO: verify works on non-win systems
+                32 => /* sharing not allowed */ true,
+                33 => /* file is locked */ true,
+                _ => false
+            };
+        }
+
     }
 }

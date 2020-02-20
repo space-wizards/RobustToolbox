@@ -818,9 +818,17 @@ namespace Robust.Client.Console.Commands
                                     var resPaths = reversePathResolution[changed.FullPath];
                                     foreach (var resPath in resPaths)
                                     {
-                                        IoCManager.Resolve<IResourceCache>()
-                                            .ReloadResource<ShaderSourceResource>(resPath);
-                                        console.AddLine($"Reloaded shader: {resPath}");
+                                        try
+                                        {
+                                            IoCManager.Resolve<IResourceCache>()
+                                                .ReloadResource<ShaderSourceResource>(resPath);
+                                            console.AddLine($"Reloaded shader: {resPath}");
+                                        }
+                                        catch (Exception)
+                                        {
+                                            console.AddLine($"Failed to reload shader: {resPath}");
+                                        }
+
                                         _reloadShadersQueued.TryRemove(changed.FullPath, out var _);
                                     }
                                 }, ev);
@@ -878,7 +886,14 @@ namespace Robust.Client.Console.Commands
 
             foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {
-                resC.ReloadResource<ShaderSourceResource>(path);
+                try
+                {
+                    resC.ReloadResource<ShaderSourceResource>(path);
+                }
+                catch (Exception)
+                {
+                    console.AddLine($"Failed to reload shader: {path}");
+                }
             }
 
             console.AddLine("Done.");

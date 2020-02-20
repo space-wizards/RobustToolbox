@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Network;
@@ -15,7 +16,7 @@ namespace Robust.Shared.GameObjects.Systems
     /// <remarks>
     ///     This class is instantiated by the <c>EntitySystemManager</c>, and any IoC Dependencies will be resolved.
     /// </remarks>
-    [Reflect(false)]
+    [Reflect(false), PublicAPI]
     public abstract class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly IEntityManager EntityManager;
@@ -39,26 +40,38 @@ namespace Robust.Shared.GameObjects.Systems
 
         #region Event Proxy
 
-        protected void SubscribeEvent<T>(EntityEventHandler<T> handler)
+        protected void SubscribeNetworkEvent<T>(EntityEventHandler<T> handler)
             where T : EntitySystemMessage
         {
-            EntityManager.EventBus.SubscribeEvent(handler, this);
+            EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler);
         }
 
-        protected void UnsubscribeEvent<T>()
+        protected void SubscribeLocalEvent<T>(EntityEventHandler<T> handler)
             where T : EntitySystemMessage
         {
-            EntityManager.EventBus.UnsubscribeEvent<T>(this);
+            EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler);
         }
 
-        protected void RaiseEvent(EntitySystemMessage message)
+        protected void UnsubscribeNetworkEvent<T>()
+            where T : EntitySystemMessage
         {
-            EntityManager.EventBus.RaiseEvent(message);
+            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Network, this);
         }
 
-        protected void QueueEvent(EntitySystemMessage message)
+        protected void UnsubscribeLocalEvent<T>()
+            where T : EntitySystemMessage
         {
-            EntityManager.EventBus.QueueEvent(message);
+            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
+        }
+
+        protected void RaiseLocalEvent(EntitySystemMessage message)
+        {
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+        }
+
+        protected void QueueLocalEvent(EntitySystemMessage message)
+        {
+            EntityManager.EventBus.QueueEvent(EventSource.Local, message);
         }
 
         protected void RaiseNetworkEvent(EntitySystemMessage message)
@@ -71,10 +84,10 @@ namespace Robust.Shared.GameObjects.Systems
             EntityNetworkManager.SendSystemNetworkMessage(message, channel);
         }
 
-        protected Task<T> AwaitNetMessage<T>(CancellationToken cancellationToken = default)
+        protected Task<T> AwaitNetworkEvent<T>(CancellationToken cancellationToken)
             where T : EntitySystemMessage
         {
-            return EntityManager.EventBus.AwaitEvent<T>(cancellationToken);
+            return EntityManager.EventBus.AwaitEvent<T>(EventSource.Network, cancellationToken);
         }
 
         #endregion

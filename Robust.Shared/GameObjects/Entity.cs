@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
@@ -216,30 +216,6 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion Component Messaging
-
-        #region Entity Events
-
-        /// <inheritdoc />
-        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            EntityManager.EventBus.SubscribeEvent(evh, s);
-        }
-
-        /// <inheritdoc />
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(s);
-        }
-
-        /// <inheritdoc />
-        public void RaiseEvent(EntityEventArgs toRaise)
-        {
-            EntityManager.EventBus.RaiseEvent(toRaise);
-        }
-
-        #endregion Entity Events
 
         #region Components
 

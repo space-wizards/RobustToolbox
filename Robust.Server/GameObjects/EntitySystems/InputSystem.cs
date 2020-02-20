@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Initialize()
         {
-            SubscribeEvent<FullInputCmdMessage>(InputMessageHandler);
+            SubscribeNetworkEvent<FullInputCmdMessage>(InputMessageHandler);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 

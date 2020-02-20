@@ -31,9 +31,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Initialize()
         {
-            SubscribeEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
-            SubscribeEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
-            SubscribeEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
+            SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
+            SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
+            SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
         }
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)

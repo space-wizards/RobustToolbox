@@ -67,7 +67,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override void Initialize()
         {
-            SubscribeEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+            SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
         }
 
         private void OnAttachedEntityChanged(PlayerAttachSysMessage message)

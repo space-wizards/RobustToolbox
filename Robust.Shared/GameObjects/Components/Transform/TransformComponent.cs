@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
@@ -13,7 +12,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -143,7 +141,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
                 var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.EventBus.RaiseEvent(entMessage);
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
                 Owner.SendMessage(this, compMessage);
             }
         }

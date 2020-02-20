@@ -39,7 +39,8 @@ namespace Robust.Client.GameObjects
         {
             base.Initialize();
 
-            SubscribeEvent<EffectSystemMessage>(CreateEffect);
+            SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
+            SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
             var overlay = new EffectOverlay(this, prototypeManager, _mapManager);
             overlayManager.AddOverlay(overlay);

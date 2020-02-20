@@ -8,7 +8,7 @@ namespace Robust.Server.GameObjects.EntitySystems
     {
         public override void Initialize()
         {
-            SubscribeEvent<EntParentChangedMessage>(HandleParentChanged);
+            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
         }
 
         // Eject entities from their parent container if the parent change is done by the transform only.

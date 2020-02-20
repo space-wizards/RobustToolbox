@@ -2,6 +2,7 @@
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -84,7 +85,7 @@ namespace Robust.Client.Player
             entity.SendMessage(null, new PlayerAttachedMsg());
 
             // notify ECS Systems
-            ControlledEntity.EntityManager.EventBus.RaiseEvent(new PlayerAttachSysMessage(ControlledEntity));
+            ControlledEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
         }
 
         /// <summary>
@@ -99,7 +100,7 @@ namespace Robust.Client.Player
                 previous.SendMessage(null, new PlayerDetachedMsg());
 
                 // notify ECS Systems
-                previous.EntityManager.EventBus.RaiseEvent(new PlayerAttachSysMessage(null));
+                previous.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
             }
 
             ControlledEntity = null;

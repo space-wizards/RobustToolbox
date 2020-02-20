@@ -38,13 +38,6 @@ float ChebyshevUpperBound(vec2 moments, float t)
     return max(p, p_max);
 }
 
-float ShadowContribution(vec2 LightTexCoord, float DistanceToLight)
-{
-    // Read the moments from the variance shadow map.
-    vec2 moments = texture(shadowMap, LightTexCoord).xy;
-    // Compute the Chebyshev upper bound.
-    return ChebyshevUpperBound(moments, DistanceToLight);
-}
 
 float shadowContrib(vec2 diff)
 {
@@ -69,21 +62,7 @@ void fragment()
 
     perpendicular *= distRatio;
 
-    /*
-    float occlusion = float(doesOcclude(diff, shadowMap, lightIndex, 2.0/32.0));
-
-
-    occlusion += float(doesOcclude(diff + perpendicular, shadowMap, lightIndex, 2.0/32.0));
-    occlusion += float(doesOcclude(diff - perpendicular, shadowMap, lightIndex, 2.0/32.0));
-    occlusion += float(doesOcclude(diff + perpendicular * 2, shadowMap, lightIndex, 2.0/32.0));
-    occlusion += float(doesOcclude(diff + perpendicular * 2, shadowMap, lightIndex, 2.0/32.0));
-    occlusion += float(doesOcclude(diff + perpendicular * 3, shadowMap, lightIndex, 2.0/32.0));
-    occlusion += float(doesOcclude(diff + perpendicular * 3, shadowMap, lightIndex, 2.0/32.0));
-
-    occlusion /= 7;*/
-
     float occlusion = ChebyshevUpperBound(occlDist, ourDist);
-
 
     occlusion += shadowContrib(diff + perpendicular);
     occlusion += shadowContrib(diff - perpendicular);
@@ -91,7 +70,6 @@ void fragment()
     occlusion += shadowContrib(diff - perpendicular * 2);
     occlusion += shadowContrib(diff + perpendicular * 3);
     occlusion += shadowContrib(diff - perpendicular * 3);
-
 
     occlusion /= 7;
 

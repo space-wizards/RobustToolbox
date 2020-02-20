@@ -14,6 +14,9 @@ using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
+    // This file handles everything about light rendering.
+    // That includes shadow casting and also FOV.
+
     internal partial class Clyde
     {
         private const int ShadowMapSize = 512;
@@ -22,6 +25,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeShaderInstance _fovDebugShaderInstance;
 
+        // Various shaders used in the light rendering process.
+        // We keep ClydeHandles into the _loadedShaders dict so they can be reloaded.
+        // They're all .swsl now.
         private ClydeHandle _lightShaderHandle;
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
@@ -29,29 +35,54 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _wallMaskShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
 
+        // Projection matrix used while rendering FOV.
+        // We keep this around so we can reverse the effects while overlaying actual FOV.
         private Matrix4 _fovProjection;
 
+        // Various render targets used in the light rendering process.
+
+        // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
         private RenderTarget _lightRenderTarget;
+
+        // For depth calculation for FOV.
         private RenderTarget _fovRenderTarget;
+
+        // For depth calculation of lighting shadows.
         private RenderTarget _shadowRenderTarget;
+
+        // Unused, to be removed.
         private RenderTarget _wallMaskRenderTarget;
+
+        // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
+        // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
         private RenderTarget _wallBleedIntermediateRenderTarget1;
         private RenderTarget _wallBleedIntermediateRenderTarget2;
 
+        // Proxies to textures of some of the above render targets.
         private ClydeTexture FovDepthTextureObject => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTextureObject => _shadowRenderTarget.Texture;
-        private ClydeTexture WallMaskTextureObject => _wallMaskRenderTarget.Texture;
 
+        // Shader program used to calculate depth for shadows/FOV.
         private GLShaderProgram _fovCalculationProgram;
 
+        // Occlusion geometry used to render shadows and FOV.
+
+        // Amount of indices in _occlusionEbo, so how much we have to draw when drawing _occlusionVao.
         private int _occlusionDataLength;
 
+        // Actual GL objects used for rendering.
         private GLBuffer _occlusionVbo;
         private GLBuffer _occlusionEbo;
         private GLHandle _occlusionVao;
 
+
+        // Occlusion mask geometry that represents the area with occluders.
+        // This is used to merge _wallBleedIntermediateRenderTarget2 onto _lightRenderTarget after wall bleed is done.
+
+        // Amount of indices in _occlusionMaskEbo, so how much we have to draw when drawing _occlusionMaskVao.
         private int _occlusionMaskDataLength;
 
+        // Actual GL objects used for rendering.
         private GLBuffer _occlusionMaskVbo;
         private GLBuffer _occlusionMaskEbo;
         private GLHandle _occlusionMaskVao;
@@ -233,7 +264,7 @@ namespace Robust.Client.Graphics.Clyde
 
             UpdateOcclusionGeometry(map, expandedBounds);
 
-            GenerateWallMask();
+            //GenerateWallMask();
 
             DrawFov(eye);
 

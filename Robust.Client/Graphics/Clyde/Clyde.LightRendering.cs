@@ -566,10 +566,12 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
                     }
 
-                    var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
-                    var (trX, trY) = worldTransform.Transform(box.TopRight);
-                    var (blX, blY) = worldTransform.Transform(box.BottomLeft);
-                    var (brX, brY) = worldTransform.Transform(box.BottomRight);
+                    // Because angle 0 == east, these values might not make sense.
+                    // We're rotating them 90 degrees here.
+                    var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
+                    var (trX, trY) = worldTransform.Transform(box.TopLeft);
+                    var (brX, brY) = worldTransform.Transform(box.TopRight);
+                    var (blX, blY) = worldTransform.Transform(box.BottomRight);
 
                     arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
                     arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
@@ -580,8 +582,13 @@ namespace Robust.Client.Graphics.Clyde
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
+                    var tlV = true;
+                    var trV = true;
+                    var blV = true;
+                    var brV = true;
+
                     // North face.
-                    if (occluder.IsOccluding(OccluderDir.East))
+                    if (occluder.IsOccluding(OccluderDir.North) || (!tlV && !trV))
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 0);
                         indexBuffer[ii + 1] = (ushort) (ai + 1);
@@ -592,7 +599,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // East face.
-                    if (occluder.IsOccluding(OccluderDir.South))
+                    if (occluder.IsOccluding(OccluderDir.East) || (!brV && !trV))
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 2);
                         indexBuffer[ii + 1] = (ushort) (ai + 3);
@@ -603,7 +610,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // South face.
-                    if (occluder.IsOccluding(OccluderDir.West))
+                    if (occluder.IsOccluding(OccluderDir.South) || (!brV && !blV))
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 4);
                         indexBuffer[ii + 1] = (ushort) (ai + 5);
@@ -614,7 +621,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     // West face.
-                    if (occluder.IsOccluding(OccluderDir.North))
+                    if (occluder.IsOccluding(OccluderDir.West) || (!blV && !tlV))
                     {
                         indexBuffer[ii + 0] = (ushort) (ai + 6);
                         indexBuffer[ii + 1] = (ushort) (ai + 7);

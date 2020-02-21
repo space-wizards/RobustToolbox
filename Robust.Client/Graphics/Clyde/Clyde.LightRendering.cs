@@ -385,7 +385,7 @@ namespace Robust.Client.Graphics.Clyde
 
             ApplyLightingFovToBuffer(eye);
 
-            BlurOntoWalls();
+            BlurOntoWalls(eye);
 
             MergeWallLayer();
 
@@ -433,9 +433,13 @@ namespace Robust.Client.Graphics.Clyde
             return (lights, expandedBounds);
         }
 
-        private void BlurOntoWalls()
+        private void BlurOntoWalls(IEye eye)
         {
+            const float refHeight = 14;
+
             using var _ = DebugGroup(nameof(BlurOntoWalls));
+
+            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PIXELSPERMETER;
 
             GL.Disable(EnableCap.Blend);
             _setSpace(CurrentSpace.ScreenSpace);
@@ -451,7 +455,7 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
 
-            const float factor = 3.7f * 0.002f;
+            var factor = 7e-3f * (refHeight / cameraSize);
 
             for (var i = 3; i > 0; i--)
             {

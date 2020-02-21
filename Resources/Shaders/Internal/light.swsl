@@ -25,25 +25,11 @@ void vertex()
     VERTEX = transformed.xy;
 }
 
-float ChebyshevUpperBound(vec2 moments, float t)
-{
-    // One-tailed inequality valid if t > Moments.x
-    float p = float(t <= moments.x);
-    // Compute variance.
-    float variance = moments.y - (moments.x * moments.x);
-    variance = max(variance, g_MinVariance);
-    // Compute probabilistic upper bound.
-    float d = t - moments.x;
-    float p_max = variance / (variance + d*d);
-    return max(p, p_max);
-}
-
-
 float shadowContrib(vec2 diff)
 {
     float dist = length(diff);
 
-    return ChebyshevUpperBound(occludeDepth(diff, shadowMap, lightIndex), dist);
+    return smoothstep(0, 1, ChebyshevUpperBound(occludeDepth(diff, shadowMap, lightIndex), dist));
 }
 
 void fragment()
@@ -62,7 +48,7 @@ void fragment()
 
     perpendicular *= distRatio;
 
-    float occlusion = ChebyshevUpperBound(occlDist, ourDist);
+    float occlusion = smoothstep(0.1, 1, ChebyshevUpperBound(occlDist, ourDist));
 
     occlusion += shadowContrib(diff + perpendicular);
     occlusion += shadowContrib(diff - perpendicular);

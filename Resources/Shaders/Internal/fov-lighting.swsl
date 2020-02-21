@@ -9,27 +9,6 @@ varying vec2 worldPosition;
 // Center of the FOV, in world coordinates.
 uniform vec2 center;
 
-float ChebyshevUpperBound(vec2 moments, float t)
-{
-    // One-tailed inequality valid if t > Moments.x
-    float p = float(t <= moments.x);
-    // Compute variance.
-    float variance = moments.y - (moments.x * moments.x);
-    variance = max(variance, g_MinVariance);
-    // Compute probabilistic upper bound.
-    float d = t - moments.x;
-    float p_max = variance / (variance + d*d);
-    return max(p, p_max);
-}
-
-float shadowContrib(sampler2D sampler, vec2 diff)
-{
-    float dist = length(diff);
-
-    return ChebyshevUpperBound(occludeDepth(diff, sampler, 0.25), dist);
-}
-
-
 void vertex()
 {
     vec3 transformed = modelMatrix * vec3(VERTEX, 1.0);
@@ -43,31 +22,11 @@ void fragment()
 {
     vec2 diff = worldPosition - center;
 
-    vec2 perpendicular = normalize(cross(vec3(diff, 0), vec3(0, 0, 1)).xy) * 1.0 / 32.0;
-
     float ourDist = length(diff);
 
     vec2 occlDist = occludeDepth(diff, TEXTURE, 0.25);
 
-    float distRatio = (ourDist - occlDist.x) / occlDist.x / 2;
-
-    perpendicular *= distRatio;
-
     float occlusion = ChebyshevUpperBound(occlDist, ourDist);
-
-    occlusion += shadowContrib(TEXTURE, diff + perpendicular);
-    occlusion += shadowContrib(TEXTURE, diff - perpendicular);
-    occlusion += shadowContrib(TEXTURE, diff + perpendicular * 2);
-    occlusion += shadowContrib(TEXTURE, diff - perpendicular * 2);
-    occlusion += shadowContrib(TEXTURE, diff + perpendicular * 3);
-    occlusion += shadowContrib(TEXTURE, diff - perpendicular * 3);
-
-    occlusion /= 7;
-
-    if (occlusion <= 0.0)
-    {
-        discard;
-    }
 
     COLOR = vec4(0, 0, 0, 1 - occlusion);
 }

@@ -60,6 +60,7 @@ namespace Robust.Client.Graphics.Clyde
         // Proxies to textures of some of the above render targets.
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
+        private GLHandle _fovFilterSampler;
 
         // Shader program used to calculate depth for shadows/FOV.
         private GLShaderProgram _fovCalculationProgram;
@@ -132,8 +133,14 @@ namespace Robust.Client.Graphics.Clyde
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
                 new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
-                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
+                new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
+
+            _fovFilterSampler = new GLHandle(GL.GenSampler());
+            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
+            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
+            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
+            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
@@ -174,10 +181,12 @@ namespace Robust.Client.Graphics.Clyde
             var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
             var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
-            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 0, out _fovProjection);
-
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
+            GL.CullFace(CullFaceMode.Back);
+
+            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 0, out _fovProjection);
+
             GL.CullFace(CullFaceMode.Front);
 
             DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 1, out _fovProjection);
@@ -526,11 +535,15 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
+            GL.BindSampler(0, _fovFilterSampler.Handle);
+
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             DrawBlit(fovShader);
+
+            GL.BindSampler(0, 0);
         }
 
         private void DrawBlit(GLShaderProgram shader)

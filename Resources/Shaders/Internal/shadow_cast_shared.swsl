@@ -45,3 +45,16 @@ bool doesOcclude(vec2 diff, sampler2D shadowMap, float mapOffsetY, float bias)
 
     return occludeDepth(diff, shadowMap, mapOffsetY).x + bias < ourDist;
 }
+
+float ChebyshevUpperBound(vec2 moments, float t)
+{
+    // One-tailed inequality valid if t > Moments.x
+    float p = float(t <= moments.x);
+    // Compute variance.
+    float variance = moments.y - (moments.x * moments.x);
+    variance = max(variance, g_MinVariance);
+    // Compute probabilistic upper bound.
+    float d = t - moments.x;
+    float p_max = variance / (variance + d*d);
+    return max(p, p_max);
+}

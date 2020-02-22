@@ -61,8 +61,8 @@ namespace Robust.Client.GameObjects
         {
             if (SnapGrid != null)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(Owner,
-                    new OccluderDirtyEvent(_lastPosition, SnapGrid.Offset));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new OccluderDirtyEvent(Owner, _lastPosition, SnapGrid.Offset));
             }
         }
 

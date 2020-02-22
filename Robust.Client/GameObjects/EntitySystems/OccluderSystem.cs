@@ -21,11 +21,11 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private uint _updateGeneration;
 
-        public override void SubscribeEvents()
+        public override void Initialize()
         {
-            base.SubscribeEvents();
+            base.Initialize();
 
-            SubscribeEvent<OccluderDirtyEvent>(HandleDirtyEvent);
+            SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -52,15 +52,16 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
         }
 
-        private void HandleDirtyEvent(object sender, OccluderDirtyEvent ev)
+        private void HandleDirtyEvent(OccluderDirtyEvent ev)
         {
-            if (sender is IEntity senderEnt && senderEnt.IsValid() &&
-                senderEnt.TryGetComponent(out ClientOccluderComponent iconSmooth)
+            var sender = ev.Sender;
+            if (sender.IsValid() &&
+                sender.TryGetComponent(out ClientOccluderComponent iconSmooth)
                 && iconSmooth.Running)
             {
-                var snapGrid = senderEnt.GetComponent<SnapGridComponent>();
+                var snapGrid = sender.GetComponent<SnapGridComponent>();
 
-                _dirtyEntities.Enqueue(senderEnt);
+                _dirtyEntities.Enqueue(sender);
                 AddValidEntities(snapGrid.GetInDir(Direction.North));
                 AddValidEntities(snapGrid.GetInDir(Direction.South));
                 AddValidEntities(snapGrid.GetInDir(Direction.East));
@@ -102,7 +103,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntitySystemMessage
     {
-        public OccluderDirtyEvent((GridId grid, MapIndices pos)? lastPosition, SnapGridOffset offset)
+        public OccluderDirtyEvent(IEntity sender, (GridId grid, MapIndices pos)? lastPosition, SnapGridOffset offset)
         {
             LastPosition = lastPosition;
             Offset = offset;
@@ -110,5 +111,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public (GridId grid, MapIndices pos)? LastPosition { get; }
         public SnapGridOffset Offset { get; }
+        public IEntity Sender { get; set; }
     }
 }

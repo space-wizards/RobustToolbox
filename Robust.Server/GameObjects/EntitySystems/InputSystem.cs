@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 
 namespace Robust.Server.GameObjects.EntitySystems
@@ -29,14 +27,9 @@ namespace Robust.Server.GameObjects.EntitySystems
         public ICommandBindMapping BindMap => _bindMap;
 
         /// <inheritdoc />
-        public override void RegisterMessageTypes()
-        {
-            RegisterMessageType<FullInputCmdMessage>();
-        }
-
-        /// <inheritdoc />
         public override void Initialize()
         {
+            SubscribeNetworkEvent<FullInputCmdMessage>(InputMessageHandler);
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 
@@ -46,9 +39,12 @@ namespace Robust.Server.GameObjects.EntitySystems
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         }
 
-        /// <inheritdoc />
-        public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
+        private void InputMessageHandler(InputCmdMessage message)
         {
+            var channel = message.NetChannel;
+            if(channel == null)
+                return;
+
             if (!(message is FullInputCmdMessage msg))
                 return;
 

@@ -1,7 +1,4 @@
-﻿using Robust.Shared.IoC;
-using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Systems;
-using Robust.Shared.Network.Messages;
+﻿using Robust.Shared.Interfaces.GameObjects.Systems;
 
 namespace Robust.Shared.Interfaces.GameObjects
 {
@@ -15,26 +12,12 @@ namespace Robust.Shared.Interfaces.GameObjects
     /// <item>
     /// <description>Periodically ticking them through <see cref="IEntitySystem.Update(float)"/>.</description>
     /// </item>
-    /// <item>
-    /// <description>
-    /// Relaying <see cref="EntitySystemData"/> messages from the network through
-    /// <see cref="IEntitySystem.HandleNetMessage"/>.
-    /// </description>
-    /// </item>
     /// </list>
     /// Periodically ticks <see cref="IEntitySystem"/> instances.
     /// </remarks>
     /// <seealso cref="IEntitySystem"/>
     public interface IEntitySystemManager
     {
-        /// <summary>
-        /// Register an <see cref="EntitySystemMessage"/> type to be sent to the specified system.
-        /// </summary>
-        /// <typeparam name="T">The type of system message that will be relayed.</typeparam>
-        /// <param name="regSystem">The <see cref="IEntitySystem"/> that will be receiving the messages.</param>
-        /// <seealso cref="HandleSystemMessage(EntitySystemData)"/>
-        void RegisterMessageType<T>(IEntitySystem regSystem) where T : EntitySystemMessage;
-
         /// <summary>
         /// Get an entity system of the specified type.
         /// </summary>
@@ -61,14 +44,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <seealso cref="IEntitySystem.Shutdown"/>
         void Shutdown();
-
-        /// <summary>
-        /// Handle an <see cref="EntitySystemData"/> by routing it to the registered <see cref="IEntitySystem"/>.
-        /// </summary>
-        /// <param name="sysMsg">The message to route.</param>
-        /// <seealso cref="RegisterMessageType{T}(IEntitySystem)"/>
-        /// <seealso cref="IEntitySystem.HandleNetMessage"/>
-        void HandleSystemMessage(MsgEntity sysMsg);
 
         /// <summary>
         /// Update all systems.

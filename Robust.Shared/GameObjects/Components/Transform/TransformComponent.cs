@@ -143,6 +143,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
                 Owner.SendMessage(this, compMessage);
+                Dirty();
             }
         }
 

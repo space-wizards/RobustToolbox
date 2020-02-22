@@ -1,5 +1,8 @@
+using System;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -7,69 +10,78 @@ namespace Robust.Client.GameObjects
 {
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
-        private SnapGridComponent _snapGrid;
+        internal SnapGridComponent SnapGrid { get; private set; }
+        [ViewVariables] private (GridId, MapIndices) _lastPosition;
+        [ViewVariables] internal OccluderDir Occluding { get; private set; }
+        [ViewVariables] internal uint UpdateGeneration { get; set; }
 
-        [ViewVariables]
-        private readonly ClientOccluderComponent[] _neighbors = new ClientOccluderComponent[4];
+        public override bool Enabled
+        {
+            get => base.Enabled;
+            set
+            {
+                base.Enabled = value;
+
+                SendDirty();
+            }
+        }
 
         protected override void Startup()
         {
             base.Startup();
 
-            if (Owner.TryGetComponent(out _snapGrid))
+            if (Owner.TryGetComponent(out SnapGridComponent snap))
             {
-                _snapGrid.OnPositionChanged += SnapGridOnOnPositionChanged;
-            }
+                SnapGrid = snap;
+                SnapGrid.OnPositionChanged += SnapGridOnPositionChanged;
 
-            UpdateConnections(true);
+                SnapGridOnPositionChanged();
+            }
         }
 
-        private void SnapGridOnOnPositionChanged()
+        private void SnapGridOnPositionChanged()
         {
-            Disconnect();
-            UpdateConnections(true);
+            SendDirty();
+            _lastPosition = (Owner.Transform.GridID, SnapGrid.Position);
         }
 
         protected override void Shutdown()
         {
             base.Shutdown();
 
-            if (_snapGrid != null)
+            if (SnapGrid != null)
             {
-                _snapGrid.OnPositionChanged -= SnapGridOnOnPositionChanged;
+                SnapGrid.OnPositionChanged -= SnapGridOnPositionChanged;
             }
 
-            Disconnect();
+            SendDirty();
         }
 
-        private void Disconnect()
+        private void SendDirty()
         {
-            foreach (var neighbor in _neighbors)
+            if (SnapGrid != null)
             {
-                neighbor?.UpdateConnections(false);
+                Owner.EntityManager.EventBus.RaiseEvent(Owner,
+                    new OccluderDirtyEvent(_lastPosition, SnapGrid.Offset));
             }
         }
 
-        private void UpdateConnections(bool propagate)
+        internal void Update()
         {
-            _neighbors[0] = _neighbors[1] = _neighbors[2] = _neighbors[3] = null;
+            Occluding = OccluderDir.None;
 
-            if (Deleted || _snapGrid == null)
+            if (Deleted || SnapGrid == null)
             {
                 return;
             }
 
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                foreach (var neighbor in _snapGrid.GetInDir(dir))
+                foreach (var neighbor in SnapGrid.GetInDir(dir))
                 {
-                    if (neighbor.TryGetComponent(out ClientOccluderComponent comp))
+                    if (neighbor.TryGetComponent(out ClientOccluderComponent comp) && comp.Enabled)
                     {
-                        _neighbors[(int)oclDir] = comp;
-                        if (propagate)
-                        {
-                            comp.UpdateConnections(false);
-                        }
+                        Occluding |= oclDir;
                         break;
                     }
                 }
@@ -81,17 +93,14 @@ namespace Robust.Client.GameObjects
             CheckDir(Direction.West, OccluderDir.West);
         }
 
-        internal bool HasOccludingNeighbor(OccluderDir dir)
-        {
-            return _neighbors[(int) dir] != null && _neighbors[(int) dir].Enabled;
-        }
-
+        [Flags]
         internal enum OccluderDir : byte
         {
-            North = 0,
-            East = 1,
-            South = 2,
-            West = 3,
+            None = 0,
+            North = 1,
+            East = 1 << 1,
+            South = 1 << 2,
+            West = 1 << 3,
         }
     }
 }

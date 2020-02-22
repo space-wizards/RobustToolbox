@@ -714,10 +714,10 @@ namespace Robust.Client.Graphics.Clyde
                     var (dBrX, dBrY) = (brX, brY) - eyePosition;
 
                     // Get which neighbors are occluding.
-                    var no = occluder.HasOccludingNeighbor(OccluderDir.North);
-                    var so = occluder.HasOccludingNeighbor(OccluderDir.South);
-                    var eo = occluder.HasOccludingNeighbor(OccluderDir.East);
-                    var wo = occluder.HasOccludingNeighbor(OccluderDir.West);
+                    var no = occluder.Occluding.HasFlag(OccluderDir.North);
+                    var so = occluder.Occluding.HasFlag(OccluderDir.South);
+                    var eo = occluder.Occluding.HasFlag(OccluderDir.East);
+                    var wo = occluder.Occluding.HasFlag(OccluderDir.West);
 
                     // Do visibility tests for occluders (described above).
                     var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;

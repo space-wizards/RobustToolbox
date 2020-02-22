@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Enabled
+        public virtual bool Enabled
         {
             get => _enabled;
             set

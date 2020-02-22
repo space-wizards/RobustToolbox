@@ -189,20 +189,23 @@ namespace Robust.Client.Graphics.Clyde
 
             PrepareDepthDraw(_fovRenderTarget);
 
-            // Calculate maximum distance for the projection based on screen size.
-            var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
-            var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
+            if (eye.DrawFov)
+            {
+                // Calculate maximum distance for the projection based on screen size.
+                var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
+                var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
-            // FOV is rendered twice.
-            // Once with back face culling like regular lighting.
-            // Then once with front face culling for the final FOV pass (so you see "into" walls).
-            GL.CullFace(CullFaceMode.Back);
+                // FOV is rendered twice.
+                // Once with back face culling like regular lighting.
+                // Then once with front face culling for the final FOV pass (so you see "into" walls).
+                GL.CullFace(CullFaceMode.Back);
 
-            DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
 
-            GL.CullFace(CullFaceMode.Front);
+                GL.CullFace(CullFaceMode.Front);
 
-            DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
+            }
 
             FinalizeDepthDraw();
         }

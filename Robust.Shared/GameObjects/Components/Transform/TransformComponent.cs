@@ -146,6 +146,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public EntityUid ParentUid
+        {
+            get => _parent;
+            set => Parent = _entityManager.GetEntity(value).Transform;
+        }
+
         /// <inheritdoc />
         public Matrix3 WorldMatrix
         {

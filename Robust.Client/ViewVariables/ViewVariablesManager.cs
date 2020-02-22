@@ -6,6 +6,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -172,6 +173,11 @@ namespace Robust.Client.ViewVariables
             if (type == typeof(GridCoordinates))
             {
                 return new ViewVariablesPropertyEditorGridLocalCoordinates();
+            }
+
+            if (type == typeof(EntityUid))
+            {
+                return new ViewVariablesPropertyEditorEntityUid();
             }
 
             if (type == typeof(Color))

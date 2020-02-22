@@ -65,6 +65,11 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ITransformComponent Parent { get; }
 
         /// <summary>
+        /// The UID of the parent entity that this entity is attached to.
+        /// </summary>
+        public EntityUid ParentUid { get; set; }
+
+        /// <summary>
         /// Whether or not this entity is on the map, AKA it has no parent.
         /// </summary>
         bool IsMapTransform { get; }

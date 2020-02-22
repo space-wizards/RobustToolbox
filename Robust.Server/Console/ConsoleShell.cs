@@ -60,13 +60,13 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            // register console admin global password. DO NOT ADD THE REPLICATED FLAG
+            // register console host global password. DO NOT ADD THE REPLICATED FLAG
             if (!_configMan.IsCVarRegistered("console.password"))
                 _configMan.RegisterCVar("console.password", string.Empty,
                     CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
 
-            if (!_configMan.IsCVarRegistered("console.adminGroup"))
-                _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
+            if (!_configMan.IsCVarRegistered("console.hostGroup"))
+                _configMan.RegisterCVar("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
 
             ReloadCommands();
 
@@ -190,7 +190,7 @@ namespace Robust.Server.Console
                 return false;
 
             // success!
-            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.adminGroup")));
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.hostGroup")));
 
             return true;
         }
@@ -198,7 +198,7 @@ namespace Robust.Server.Console
         private class LoginCommand : IClientCommand
         {
             public string Command => "login";
-            public string Description => "Elevates client to admin permission group.";
+            public string Description => "Elevates client to host permission group.";
             public string Help => "login";
 
             public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)

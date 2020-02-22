@@ -107,10 +107,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             LastPosition = lastPosition;
             Offset = offset;
+            Sender = sender;
         }
 
         public (GridId grid, MapIndices pos)? LastPosition { get; }
         public SnapGridOffset Offset { get; }
-        public IEntity Sender { get; set; }
+        public IEntity Sender { get; }
     }
 }

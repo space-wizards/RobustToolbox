@@ -118,7 +118,7 @@ namespace Robust.Shared.ContentPack
             if (!AssemblyTypeChecker.CheckAssembly(diskPath))
                 return;
 
-            InitMod<T>(Assembly.LoadFrom(diskPath));
+            InitMod<T>(_loadContext.LoadFromAssemblyPath(diskPath));
         }
 
         protected void InitMod<T>(Assembly assembly) where T : GameShared

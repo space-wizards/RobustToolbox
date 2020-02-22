@@ -26,6 +26,7 @@ void fragment()
 
     float occlDist = occludeDepth(diff, TEXTURE, 0.75).r;
 
+    // *Very* simple biased shadow check for FOV.
     if (!doesOcclude(diff, TEXTURE, 0.75, -0.75/32.0))
     {
         discard;

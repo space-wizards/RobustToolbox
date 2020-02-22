@@ -107,6 +107,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (DebugLayers == ClydeDebugLayers.Fov)
             {
+                // NOTE
                 _renderHandle.UseShader(_fovDebugShaderInstance);
                 _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                 var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));

@@ -16,10 +16,16 @@ namespace Robust.Client.Graphics.Clyde
 {
     // This file handles everything about light rendering.
     // That includes shadow casting and also FOV.
+    // A detailed explanation of how all this works can be found on HackMD:
+    // https://hackmd.io/@ss14/lighting-fov
 
     internal partial class Clyde
     {
+        // Horizontal width, in pixels, of the shadow maps used to render regular lights.
         private const int ShadowMapSize = 512;
+
+        // Horizontal width, in pixels, of the shadow maps used to render FOV.
+        // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
         private const int FovMapSize = 2048;
         private const int MaxLightsPerScene = 64;
 
@@ -59,10 +65,15 @@ namespace Robust.Client.Graphics.Clyde
 
         // Proxies to textures of some of the above render targets.
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
+
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
+
+        // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
+        // (it uses VSM unlike final FOV).
         private GLHandle _fovFilterSampler;
 
         // Shader program used to calculate depth for shadows/FOV.
+        // Sadly not .swsl since it has a different vertex format and such.
         private GLShaderProgram _fovCalculationProgram;
 
         // Occlusion geometry used to render shadows and FOV.
@@ -178,25 +189,34 @@ namespace Robust.Client.Graphics.Clyde
 
             PrepareDepthDraw(_fovRenderTarget);
 
+            // Calculate maximum distance for the projection based on screen size.
             var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
             var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
-            GL.Enable(EnableCap.CullFace);
-            GL.FrontFace(FrontFaceDirection.Cw);
+            // FOV is rendered twice.
+            // Once with back face culling like regular lighting.
+            // Then once with front face culling for the final FOV pass (so you see "into" walls).
             GL.CullFace(CullFaceMode.Back);
 
-            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 0, out _fovProjection);
+            DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
 
             GL.CullFace(CullFaceMode.Front);
 
-            DrawOcclusionDepth(eye.Position.Position, FovMapSize, maxDist, 1, out _fovProjection);
+            DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
 
-            GL.Disable(EnableCap.CullFace);
-
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Disable(EnableCap.DepthTest);
+            FinalizeDepthDraw();
         }
 
+        /// <summary>
+        ///     Draws depths for lighting & FOV into the currently bound framebuffer.
+        /// </summary>
+        /// <param name="lightPos">The position of the light source.</param>
+        /// <param name="width">The width of the current framebuffer.</param>
+        /// <param name="maxDist">The maximum distance of this light.</param>
+        /// <param name="viewportY">Y index of the row to render the depth at in the framebuffer.</param>
+        /// <param name="projMatrix">
+        ///     Projection matrix necessary to later un-project the depth map when applying it.
+        /// </param>
         private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY,
             out Matrix4 projMatrix)
         {
@@ -205,6 +225,7 @@ namespace Robust.Client.Graphics.Clyde
             var (posX, posY) = lightPos;
             var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
 
+            // The light is now the center of the universe.
             _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
 
             var baseProj = Matrix4.CreatePerspectiveFieldOfView(
@@ -217,6 +238,11 @@ namespace Robust.Client.Graphics.Clyde
 
             for (var i = 0; i < 4; i++)
             {
+                // The occlusion geometry has to be rotated for every orientation and also corrected
+                // so that the 2D coordinates make more sense in 3D.
+                // These quaternions do that.
+                // They're just two 90 degree rotations around (at most) 2 of the axes of rotation but uhhh.
+                // I couldn't get LookRotation to work, ok?
                 var orientation = i switch
                 {
                     0 => new Quaternion(-0.707f, 0, 0, 0.707f),
@@ -231,10 +257,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (i == 0)
                 {
+                    // First projection matrix is necessary to undo the projection inside the application shader.
+                    // So store it.
                     projMatrix = proj;
                 }
 
                 _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
+                // Shift viewport around so we write to the correct quadrant of the depth map.
                 GL.Viewport(step * i, viewportY, step, 1);
 
                 GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
@@ -250,6 +279,9 @@ namespace Robust.Client.Graphics.Clyde
             GL.DepthFunc(DepthFunction.Lequal);
             GL.DepthMask(true);
 
+            GL.Enable(EnableCap.CullFace);
+            GL.FrontFace(FrontFaceDirection.Cw);
+
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
             GL.ClearDepth(1);
             GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
@@ -258,6 +290,12 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindVertexArray(_occlusionVao.Handle);
 
             _fovCalculationProgram.Use();
+        }
+
+        private static void FinalizeDepthDraw()
+        {
+            GL.Disable(EnableCap.DepthTest);
+            GL.Disable(EnableCap.CullFace);
         }
 
         private void DrawLightsAndFov(Box2 worldBounds, IEye eye)
@@ -273,16 +311,14 @@ namespace Robust.Client.Graphics.Clyde
 
             UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
 
-            //GenerateWallMask();
-
             DrawFov(eye);
 
             var shadowMatrices = new Matrix4[lights.Count];
 
             using (DebugGroup("Draw shadow depth"))
             {
-                // Draw shadow depth.
                 PrepareDepthDraw(_shadowRenderTarget);
+                GL.CullFace(CullFaceMode.Back);
 
                 if (_lightManager.DrawShadows)
                 {
@@ -293,9 +329,9 @@ namespace Robust.Client.Graphics.Clyde
                         DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out shadowMatrices[i]);
                     }
                 }
-            }
 
-            GL.Disable(EnableCap.DepthTest);
+                FinalizeDepthDraw();
+            }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, _lightRenderTarget.ObjectHandle.Handle);
             GLClearColor(Color.FromSrgb(AmbientLightColor));
@@ -407,7 +443,12 @@ namespace Robust.Client.Graphics.Clyde
         private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            var lights = new List<(PointLightComponent light, Vector2 pos)>();
+            var lights = new List<(PointLightComponent light, Vector2 pos)>(64);
+            // When culling occluders later, we can't just remove any occluders outside the worldBounds.
+            // As they could still affect the shadows of (large) light sources.
+            // We expand the world bounds so that it encompasses the center of every light source.
+            // This should make it so no culled occluder can make a difference.
+            // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
             var expandedBounds = worldBounds;
 
             foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
@@ -444,11 +485,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void BlurOntoWalls(IEye eye)
         {
-            const float refHeight = 14;
-
             using var _ = DebugGroup(nameof(BlurOntoWalls));
-
-            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PIXELSPERMETER;
 
             GL.Disable(EnableCap.Blend);
             _setSpace(CurrentSpace.ScreenSpace);
@@ -462,23 +499,34 @@ namespace Robust.Client.Graphics.Clyde
             var size = _wallBleedIntermediateRenderTarget1.Size;
             GL.Viewport(0, 0, size.X, size.Y);
 
+            // Initially we're pulling from the light render target.
+            // So we set it out of the loop so
+            // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
             SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
 
-            var factor = 7e-3f * (refHeight / cameraSize);
+            // Have to scale the blurring radius based on viewport size and camera zoom.
+            const float refCameraHeight = 14;
+            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PIXELSPERMETER;
+            // 7e-3f is just a magic factor that makes it look ok.
+            var factor = 7e-3f * (refCameraHeight / cameraSize);
 
+            // Multi-iteration gaussian blur.
             for (var i = 3; i > 0; i--)
             {
                 var scale = (i + 1) * factor;
+                // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
                 _wallBleedIntermediateRenderTarget1.Bind();
 
+                // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
                 _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, _wallBleedIntermediateRenderTarget1.Texture);
                 _wallBleedIntermediateRenderTarget2.Bind();
 
+                // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
                 _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
 
@@ -516,6 +564,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ApplyFovToBuffer(IEye eye)
         {
+            // Applies FOV to the final framebuffer.
+
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
 
@@ -530,11 +580,15 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ApplyLightingFovToBuffer(IEye eye)
         {
+            // Applies FOV to the lighting framebuffer.
+
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
+            // Have to bind sampler to use linear filtering on the shadow map here.
+            // VSM wants it.
             GL.BindSampler(0, _fovFilterSampler.Handle);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -555,7 +609,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
         {
+            // This method generates two sets of occlusion geometry:
+            // 3D geometry used during depth projection.
+            // 2D mask geometry used to apply wall bleed.
+
             // TODO: This code probably does not work correctly with rotated camera.
+            // TODO: Yes this function throws and index exception if you reach maxOccluders.
 
             const int maxOccluders = 2048;
             const float polygonHeight = 500;
@@ -563,6 +622,7 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
             // TODO: More accurate bounds check.
+            // Yeah just enlarge it a wee bit to accomodate for large occluders maybe. Oh well.
             expandedBounds.Enlarged(2);
 
             var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
@@ -596,13 +656,15 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
                     }
 
-                    // Because angle 0 == east, these values might not make sense.
-                    // We're rotating them 90 degrees here.
+                    // So uh, angle 0 = east... Apparently...
+                    // We account for that here so I don't go insane.
                     var (tlX, tlY) = worldTransform.Transform(box.BottomLeft);
                     var (trX, trY) = worldTransform.Transform(box.TopLeft);
                     var (brX, brY) = worldTransform.Transform(box.TopRight);
                     var (blX, blY) = worldTransform.Transform(box.BottomRight);
 
+                    // Vertices used as main occlusion geometry.
+                    // We always send all of these (see below) to keep code complexity down.
                     arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
                     arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
                     arrayBuffer[ai + 2] = new Vector3(trX, trY, polygonHeight);
@@ -612,20 +674,55 @@ namespace Robust.Client.Graphics.Clyde
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
+                    //
+                    // Buckle up.
+                    // For the front-face culled final FOV to work, we obviously cannot have faces inside a series
+                    // of walls that are perpendicular to you.
+                    // This next code does that by only writing render indices for faces that should be rendered.
+                    //
+
+                    //
+                    // Keep in mind, a face only blocks light from *leaving* from the back.
+                    // It does not block light entering.
+                    //
+                    // So first rule: a face always exists if there's no neighboring occluder in that direction.
+                    // Can't have holes after all.
+                    // Second rule: otherwise, if either vertex of the face is "visible" from the camera,
+                    // we don't draw the face.
+                    // This visibility check is significantly more simple and resourceful than you might think.
+                    // A corner becomes "occluded" if it's not visible from either cardinal direction it's on.
+                    // So a the top right corner is occluded if there's something blocking visibility
+                    // on the top AND right.
+                    // This "occluded in direction" check has two parts: whether this is a neighboring occluder (duh)
+                    // And whether the is in that direction of the corner.
+                    // (so a corner on the back of a wall is occluded because the camera is position on the other side).
+                    //
+                    // You'll notice that in some cases like corner walls, ALL corners are marked "occluded".
+                    // This is fine! The occlusion only blocks incoming light,
+                    // and the neighboring walls DO treat those corners as visible.
+                    // Yes, you cannot share the handling of overlapping corners of two aligned neighboring occluders.
+                    // They still have different potential behavior, keeps the code simple(ish).
+                    //
+
+                    // Calculate delta positions from camera.
                     var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
                     var (dTrX, dTrY) = (trX, trY) - eyePosition;
                     var (dBlX, dBlY) = (blX, blY) - eyePosition;
                     var (dBrX, dBrY) = (brX, brY) - eyePosition;
 
+                    // Get which neighbors are occluding.
                     var no = occluder.HasOccludingNeighbor(OccluderDir.North);
                     var so = occluder.HasOccludingNeighbor(OccluderDir.South);
                     var eo = occluder.HasOccludingNeighbor(OccluderDir.East);
                     var wo = occluder.HasOccludingNeighbor(OccluderDir.West);
 
+                    // Do visibility tests for occluders (described above).
                     var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
                     var trV = dTrX < 0 && !eo || dTrY < 0 && !no;
                     var blV = dBlX > 0 && !wo || dBlY > 0 && !so;
                     var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
+
+                    // Handle faces, rules described above.
 
                     // North face.
                     if (!no || !tlV && !trV)
@@ -675,7 +772,8 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         // On low-res lights we bias the occlusion mask inwards.
                         // This avoids wall lighting going onto the tile next to them at certain tile alignments.
-                        const float bias = 1f / EyeManager.PIXELSPERMETER;
+                        // It's inwards to avoid seeing disconnected shadows on wall edges.
+                        const float bias = 0.5f / EyeManager.PIXELSPERMETER;
 
                         if (!no)
                         {
@@ -702,11 +800,13 @@ namespace Robust.Client.Graphics.Clyde
                         }
                     }
 
+                    // Generate mask geometry.
                     arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
                     arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
                     arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
                     arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
 
+                    // Generate mask indices.
                     indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
                     indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
                     indexMaskBuffer[imi + 2] = (ushort) (ami + 2);
@@ -721,6 +821,7 @@ namespace Robust.Client.Graphics.Clyde
                 _occlusionDataLength = ii;
                 _occlusionMaskDataLength = imi;
 
+                // Upload geometry to OpenGL.
                 GL.BindVertexArray(_occlusionVao.Handle);
 
                 _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
@@ -742,6 +843,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RegenerateLightingRenderTargets()
         {
+            // All of these depend on screen size so they have to be re-created if it changes.
+
             var lightMapSize = GetLightMapSize();
             var lightMapSizeQuart = GetLightMapSize(true);
             const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;

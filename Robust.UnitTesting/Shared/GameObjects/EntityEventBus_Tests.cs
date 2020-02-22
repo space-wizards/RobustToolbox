@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 
@@ -119,6 +120,24 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         /// <summary>
+        /// Trying to subscribe with <see cref="EventSource.None"/> makes no sense and causes
+        /// a <see cref="ArgumentOutOfRangeException"/> to be thrown.
+        /// </summary>
+        [Test]
+        public void SubscribeEvent_SourceNone_ArgOutOfRange()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+            var subscriber = new TestEventSubscriber();
+
+            // Act
+            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null);
+
+            //Assert
+            Assert.Throws<ArgumentOutOfRangeException>(Code);
+        }
+
+        /// <summary>
         /// Unsubscribing a handler twice does nothing.
         /// </summary>
         [Test]
@@ -169,6 +188,24 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.Throws<ArgumentNullException>(Code);
+        }
+
+        /// <summary>
+        /// An event cannot be subscribed to with <see cref="EventSource.None"/>, so trying to unsubscribe
+        /// with an <see cref="EventSource.None"/> causes a <see cref="ArgumentOutOfRangeException"/> to be thrown.
+        /// </summary>
+        [Test]
+        public void UnsubscribeEvent_SourceNone_ArgOutOfRange()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+            var subscriber = new TestEventSubscriber();
+
+            // Act
+            void Code() => bus.UnsubscribeEvent<TestEventArgs>(EventSource.None, subscriber);
+
+            // Assert
+            Assert.Throws<ArgumentOutOfRangeException>(Code);
         }
 
         /// <summary>
@@ -228,6 +265,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.That(delCallCount, Is.EqualTo(0));
+        }
+
+        /// <summary>
+        /// Trying to raise an event with <see cref="EventSource.None"/> makes no sense and causes
+        /// a <see cref="ArgumentOutOfRangeException"/> to be thrown.
+        /// </summary>
+        [Test]
+        public void RaiseEvent_SourceNone_ArgOutOfRange()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+
+            // Act
+            void Code() => bus.RaiseEvent(EventSource.None, new TestEventArgs());
+
+            // Assert
+            Assert.Throws<ArgumentOutOfRangeException>(Code);
         }
 
         /// <summary>
@@ -324,6 +378,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         /// <summary>
+        /// Trying to queue an event with <see cref="EventSource.None"/> makes no sense and causes
+        /// a <see cref="ArgumentOutOfRangeException"/> to be thrown.
+        /// </summary>
+        [Test]
+        public void QueueEvent_SourceNone_ArgOutOfRange()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+
+            // Act
+            void Code() => bus.QueueEvent(EventSource.None, new TestEventArgs());
+
+            // Assert
+            Assert.Throws<ArgumentOutOfRangeException>(Code);
+        }
+
+        /// <summary>
         /// Queued events are raised when the queue is processed.
         /// </summary>
         [Test]
@@ -344,6 +415,49 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.That(delCallCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task AwaitEvent()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+            var args = new TestEventArgs();
+
+            // Act
+            var task = bus.AwaitEvent<TestEventArgs>(EventSource.Local);
+            bus.RaiseEvent(EventSource.Local, args);
+            var result = await task;
+
+            // Assert
+            Assert.That(result, Is.EqualTo(args));
+        }
+
+        [Test]
+        public void AwaitEvent_SourceNone_ArgOutOfRange()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+
+            // Act
+            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.None);
+
+            // Assert
+            Assert.Throws<ArgumentOutOfRangeException>(Code);
+        }
+
+        [Test]
+        public void AwaitEvent_DoubleTask_InvalidException()
+        {
+            // Arrange
+            var bus = new EntityEventBus();
+            bus.AwaitEvent<TestEventArgs>(EventSource.Local);
+
+            // Act
+            void Code() => bus.AwaitEvent<TestEventArgs>(EventSource.Local);
+
+            // Assert
+            Assert.Throws<InvalidOperationException>(Code);
         }
     }
 

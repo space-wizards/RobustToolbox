@@ -88,6 +88,8 @@ namespace Robust.Shared.GameObjects
         None    = 0b0000,
         Local   = 0b0001,
         Network = 0b0010,
+
+        All = Local | Network,
     }
 
     /// <inheritdoc />
@@ -108,6 +110,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void UnsubscribeEvents(IEntityEventSubscriber subscriber)
         {
+            if (subscriber == null)
+                throw new ArgumentNullException(nameof(subscriber));
+
             if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var val))
                 return;
 
@@ -132,6 +137,9 @@ namespace Robust.Shared.GameObjects
         public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler)
             where T : EntityEventArgs
         {
+            if (source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
 
@@ -168,6 +176,12 @@ namespace Robust.Shared.GameObjects
         public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber)
             where T : EntityEventArgs
         {
+            if (source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
+            if (subscriber == null)
+                throw new ArgumentNullException(nameof(subscriber));
+
             var eventType = typeof(T);
 
             if (_inverseEventSubscriptions.TryGetValue(subscriber, out var inverse)
@@ -211,7 +225,7 @@ namespace Robust.Shared.GameObjects
             where T : EntityEventArgs
         {
             if(source == EventSource.None)
-                throw new ArgumentException("Cannot await with a source of None.");
+                throw new ArgumentOutOfRangeException(nameof(source));
 
             var type = typeof(T);
             if (_awaitingMessages.ContainsKey(type))

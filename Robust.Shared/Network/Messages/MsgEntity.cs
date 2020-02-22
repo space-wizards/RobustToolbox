@@ -40,6 +40,7 @@ namespace Robust.Shared.Network.Messages
                     using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
                     {
                         SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                        SystemMessage.NetChannel = MsgChannel;
                     }
                 }
                     break;

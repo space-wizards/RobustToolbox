@@ -195,14 +195,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
 
-        void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void RaiseEvent(EntityEventArgs toRaise);
-
         void Dirty();
     }
 }

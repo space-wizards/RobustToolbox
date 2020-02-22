@@ -3,18 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -41,7 +38,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
@@ -145,7 +141,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
                 var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
                 _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.EventBus.RaiseEvent(Owner, entMessage);
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
                 Owner.SendMessage(this, compMessage);
             }
         }

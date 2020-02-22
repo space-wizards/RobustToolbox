@@ -6,7 +6,6 @@ using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Client.Interfaces.Graphics;
@@ -14,7 +13,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
-using System.IO;
 using JetBrains.Annotations;
 
 namespace Robust.Client.GameObjects.EntitySystems
@@ -23,26 +21,52 @@ namespace Robust.Client.GameObjects.EntitySystems
     public class AudioSystem : EntitySystem
     {
 #pragma warning disable 649
-        [Dependency] private readonly IResourceCache resourceCache;
+        [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IClydeAudio _clyde;
 #pragma warning restore 649
 
-        private readonly List<PlayingStream> PlayingClydeStreams = new List<PlayingStream>();
+        private readonly List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
 
-        public override void RegisterMessageTypes()
+        /// <inheritdoc />
+        public override void Initialize()
         {
-            base.RegisterMessageTypes();
+            SubscribeNetworkEvent<PlayAudioEntityMessage>(PlayAudioEntityHandler);
+            SubscribeNetworkEvent<PlayAudioGlobalMessage>(PlayAudioGlobalHandler);
+            SubscribeNetworkEvent<PlayAudioPositionalMessage>(PlayAudioPositionalHandler);
+        }
 
-            RegisterMessageType<PlayAudioEntityMessage>();
-            RegisterMessageType<PlayAudioGlobalMessage>();
-            RegisterMessageType<PlayAudioPositionalMessage>();
+        private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
+        {
+            if (!_mapManager.GridExists(ev.Coordinates.GridID))
+            {
+                Logger.Error($"Server tried to play sound on grid {ev.Coordinates.GridID.Value}, which does not exist. Ignoring.");
+                return;
+            }
+
+            Play(ev.FileName, ev.Coordinates, ev.AudioParams);
+        }
+
+        private void PlayAudioGlobalHandler(PlayAudioGlobalMessage ev)
+        {
+            Play(ev.FileName, ev.AudioParams);
+        }
+
+        private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
+        {
+            if (!EntityManager.TryGetEntity(ev.EntityUid, out var entity))
+            {
+                Logger.Error($"Server tried to play audio file {ev.FileName} on entity {ev.EntityUid} which does not exist.");
+                return;
+            }
+
+            Play(ev.FileName, entity, ev.AudioParams);
         }
 
         public override void FrameUpdate(float frameTime)
         {
             // Update positions of streams every frame.
-            foreach (var stream in PlayingClydeStreams)
+            foreach (var stream in _playingClydeStreams)
             {
                 if (!stream.Source.IsPlaying)
                 {
@@ -62,7 +86,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            PlayingClydeStreams.RemoveAll(p => p.Done);
+            _playingClydeStreams.RemoveAll(p => p.Done);
         }
 
         /// <summary>
@@ -72,7 +96,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public IPlayingAudioStream Play(string filename, AudioParams? audioParams = null)
         {
-            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), audioParams);
+            if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+            {
+                return Play(audio, audioParams);
+            }
+
+            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            return default;
         }
 
         /// <summary>
@@ -91,7 +121,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 Source = source
             };
-            PlayingClydeStreams.Add(playing);
+            _playingClydeStreams.Add(playing);
             return playing;
         }
 
@@ -103,7 +133,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public IPlayingAudioStream Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), entity, audioParams);
+            if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+            {
+                return Play(audio, entity, audioParams);
+            }
+
+            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            return default;
         }
 
         /// <summary>
@@ -124,7 +160,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 Source = source,
                 TrackingEntity = entity,
             };
-            PlayingClydeStreams.Add(playing);
+            _playingClydeStreams.Add(playing);
             return playing;
         }
 
@@ -136,7 +172,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         public IPlayingAudioStream Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
-            return Play(resourceCache.GetResource<AudioResource>(new ResourcePath(filename)), coordinates, audioParams);
+            if(_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
+            {
+                return Play(audio, coordinates, audioParams);
+            }
+
+            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            return default;
         }
 
         /// <summary>
@@ -158,7 +200,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 Source = source,
                 TrackingCoordinates = coordinates,
             };
-            PlayingClydeStreams.Add(playing);
+            _playingClydeStreams.Add(playing);
             return playing;
         }
 
@@ -173,51 +215,6 @@ namespace Robust.Client.GameObjects.EntitySystems
             source.SetVolume(audioParams.Value.Volume);
             source.SetPlaybackPosition(audioParams.Value.PlayOffsetSeconds);
             source.IsLooping = audioParams.Value.Loop;
-        }
-
-        public override void HandleNetMessage(INetChannel channel, EntitySystemMessage message)
-        {
-            base.HandleNetMessage(channel, message);
-
-            if (!(message is AudioMessage msg))
-            {
-                return;
-            }
-
-            try
-            {
-                switch (message)
-                {
-                    case PlayAudioGlobalMessage globalmsg:
-                        Play(globalmsg.FileName, globalmsg.AudioParams);
-                        break;
-
-                    case PlayAudioEntityMessage entitymsg:
-                        if (!EntityManager.TryGetEntity(entitymsg.EntityUid, out var entity))
-                        {
-                            Logger.Error(
-                                $"Server tried to play audio file {entitymsg.FileName} on entity {entitymsg.EntityUid} which does not exist.");
-                            break;
-                        }
-
-                        Play(entitymsg.FileName, entity, entitymsg.AudioParams);
-                        break;
-
-                    case PlayAudioPositionalMessage posmsg:
-                        if (!_mapManager.GridExists(posmsg.Coordinates.GridID))
-                        {
-                            Logger.Error($"Server tried to play sound on grid {posmsg.Coordinates.GridID.Value}, which does not exist. Ignoring.");
-                            break;
-                        }
-
-                        Play(posmsg.FileName, posmsg.Coordinates, posmsg.AudioParams);
-                        break;
-                }
-            }
-            catch (FileNotFoundException)
-            {
-                Logger.Error($"Server tried to play audio file {msg.FileName} which does not exist.");
-            }
         }
 
         private class PlayingStream : IPlayingAudioStream

@@ -364,6 +364,19 @@ namespace Robust.Server.GameObjects
                 {
                     if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
                     {
+                        if (AnyParentInSet(uid, seenMovers))
+                        {
+                            // parent is moving
+                            continue;
+                        }
+                        if (MathF.Abs(body.AngularVelocity) > 0)
+                        {
+                            if (entity.TryGetComponent(out TransformComponent txf) && txf.ChildCount > 0 )
+                            {
+                                // has children spinning
+                                continue;
+                            }
+                        }
                         seenMovers.Remove(uid);
                     }
                 }
@@ -736,8 +749,11 @@ namespace Robust.Server.GameObjects
 
                 if (!lastSeen.TryGetValue(entityUid, out var tick))
                 {
-                    // never saw it other than tick 0
-                    continue;
+                    // never saw it other than first tick or was cleared
+                    if (!AnyParentMoving(player, entityUid))
+                    {
+                        continue;
+                    }
                 }
 
                 if (tick >= currentTick)
@@ -760,6 +776,39 @@ namespace Robust.Server.GameObjects
             }
 
             return updated;
+        }
+
+        private bool AnyParentMoving(IPlayerSession player, EntityUid entityUid)
+            => AnyParentInSet(entityUid, GetSeenMovers(player));
+
+        private bool AnyParentInSet(EntityUid entityUid, ISet<EntityUid> set)
+        {
+            for (;;)
+            {
+                if (!TryGetEntity(entityUid, out var ent))
+                {
+                    return false;
+                }
+
+                if (!ent.TryGetComponent(out TransformComponent txf))
+                {
+                    return false;
+                }
+
+                entityUid = txf.ParentUid;
+
+                if (entityUid == EntityUid.Invalid)
+                {
+                    return false;
+                }
+
+                if (set.Contains(entityUid))
+                {
+                    return true;
+                }
+
+            }
+
         }
 
         #endregion IEntityManager Members

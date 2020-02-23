@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Vector2 _nextPosition;
         private Angle _nextRotation;
 
-        [ViewVariables] private readonly List<EntityUid> _children = new List<EntityUid>();
+        [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
@@ -136,14 +136,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public ITransformComponent Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
-            private set
+            set
             {
-                var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
-                var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
-                _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
-                Owner.SendMessage(this, compMessage);
-                Dirty();
+                if (value != null)
+                {
+                    AttachParent(value);
+                }
+                else
+                {
+                    DetachParent();
+                }
             }
         }
 
@@ -386,20 +388,33 @@ namespace Robust.Shared.GameObjects.Components.Transform
             var mapPos = MapPosition;
 
             // nothing to do
-            if (Parent == null)
+            var oldParent = Parent;
+            if (oldParent == null)
+            {
                 return;
+            }
 
             var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
 
             // this would be a no-op
-            if (newMapEntity == Parent.Owner)
+            var oldParentEnt = oldParent.Owner;
+            if (newMapEntity == oldParentEnt)
+            {
                 return;
+            }
 
-            var concrete = (TransformComponent) Parent;
+            var concrete = (TransformComponent) oldParent;
             concrete._children.Remove(Owner.Uid);
 
             // attach to map
-            Parent = newMapEntity.Transform;
+            var newParent = newMapEntity.Transform;
+            var entMessage = new EntParentChangedMessage(Owner, oldParentEnt);
+            var newParentEnt = newParent.Owner;
+            var compMessage = new ParentChangedMessage(newParentEnt, oldParentEnt);
+            _parent = newParentEnt.Uid;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.SendMessage(this, compMessage);
+
             MapPosition = mapPos;
 
             Dirty();
@@ -410,27 +425,38 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Sets another entity as the parent entity.
         /// </summary>
-        /// <param name="parent"></param>
-        public virtual void AttachParent(ITransformComponent parent)
+        /// <param name="newParent"></param>
+        public virtual void AttachParent(ITransformComponent newParent)
         {
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (parent == null)
+            if (newParent == null)
                 return;
 
             // That's already our parent, don't bother attaching again.
-            if (parent.Owner.Uid == _parent)
+            var newParentEnt = newParent.Owner;
+            if (newParentEnt.Uid == _parent)
+            {
                 return;
+            }
 
-            var oldConcrete = (TransformComponent) Parent;
-            oldConcrete?._children.Remove(Owner.Uid);
-            var newConcrete = (TransformComponent) parent;
-            newConcrete._children.Add(Owner.Uid);
-            Parent = parent;
+            var oldParent = Parent;
+            var oldConcrete = (TransformComponent) oldParent;
+            var uid = Owner.Uid;
+            oldConcrete?._children.Remove(uid);
+            var newConcrete = (TransformComponent) newParent;
+            newConcrete._children.Add(uid);
+
+            var oldParentOwner = oldParent?.Owner;
+            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
+            var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
+            _parent = newParentEnt.Uid;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.SendMessage(this, compMessage);
 
             // offset position from world to parent
-            SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
+            SetPosition(newParent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
             Dirty();
             UpdateEntityTree();

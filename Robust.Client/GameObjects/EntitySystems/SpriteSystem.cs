@@ -50,7 +50,13 @@ namespace Robust.Client.GameObjects.EntitySystems
                 var child = EntityManager.GetEntity(childUid);
                 if (child.TryGetComponent(out ISpriteComponent sprite))
                 {
-                    var worldPosition = Matrix3.Transform(matrix, child.Transform.LocalPosition);
+                    var localPos = child.Transform.LocalPosition;
+                    if (!float.IsFinite(localPos.X) || !float.IsFinite(localPos.Y))
+                    {
+                        continue;
+                    }
+
+                    var worldPosition = Matrix3.Transform(matrix, localPos);
 
                     if (!sprite.IsInert && bounds.Contains(worldPosition))
                     {

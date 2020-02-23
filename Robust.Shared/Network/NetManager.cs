@@ -641,6 +641,12 @@ namespace Robust.Shared.Network
             {
                 instance.ReadFromBuffer(msg);
             }
+            catch (InvalidCastException ice)
+            {
+                Logger.ErrorS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                throw;
+            }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
                 Logger.WarningS("net",

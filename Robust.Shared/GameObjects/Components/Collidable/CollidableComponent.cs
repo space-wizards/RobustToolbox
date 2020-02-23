@@ -75,8 +75,8 @@ namespace Robust.Shared.GameObjects.Components
                     shape.ApplyState();
                 }
 
-                UpdateEntityTree();
                 Dirty();
+                UpdateEntityTree();
             }
         }
 

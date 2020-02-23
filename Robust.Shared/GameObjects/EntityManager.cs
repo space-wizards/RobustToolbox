@@ -499,6 +499,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range)
+        {
+            var aabb = new Box2(point, point).Enlarged(range);
+            return GetEntitiesIntersecting(mapId, aabb);
+        }
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
         {
             if (entity.TryGetComponent<ICollidableComponent>(out var component))
@@ -535,7 +542,7 @@ namespace Robust.Shared.GameObjects
         private ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
             new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
 
-        public bool UpdateEntityTree(IEntity entity)
+        public virtual bool UpdateEntityTree(IEntity entity)
         {
             if (entity.Deleted)
             {
@@ -597,7 +604,7 @@ namespace Robust.Shared.GameObjects
                 growthFunc: x => x == 16 ? 3840 : x + 256
             );
 
-        private static Box2 GetWorldAabbFromEntity(in IEntity ent)
+        protected static Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
@@ -610,6 +617,11 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        public virtual void Update()
+        {
+        }
+
     }
 
     public enum EntityMessageType

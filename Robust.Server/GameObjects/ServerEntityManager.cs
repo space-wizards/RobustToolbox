@@ -173,13 +173,16 @@ namespace Robust.Server.GameObjects
 
         private static readonly Vector2 Vector2NaN = new Vector2(float.NaN, float.NaN);
 
+        private IDictionary<EntityUid, GameTick> GetLastSeen(IPlayerSession player)
+        {
+            var lastSeen = GetLastSeen(player);
+
+            return lastSeen;
+        }
+
         private GameTick GetLastSeenTick(IPlayerSession player, EntityUid uid)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             if (!lastSeen.TryGetValue(uid, out var tick))
             {
@@ -191,11 +194,7 @@ namespace Robust.Server.GameObjects
 
         private GameTick UpdateLastSeenTick(IPlayerSession player, EntityUid uid, GameTick newTick)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             if (!lastSeen.TryGetValue(uid, out var oldTick))
             {
@@ -209,11 +208,7 @@ namespace Robust.Server.GameObjects
 
         private IEnumerable<EntityUid> GetLastSeenAfter(IPlayerSession player, GameTick fromTick)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             foreach (var (uid, tick) in lastSeen)
             {
@@ -226,11 +221,7 @@ namespace Robust.Server.GameObjects
 
         private IEnumerable<EntityUid> GetLastSeenOn(IPlayerSession player, GameTick fromTick)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             foreach (var (uid, tick) in lastSeen)
             {
@@ -243,22 +234,14 @@ namespace Robust.Server.GameObjects
 
         private void SetLastSeenTick(IPlayerSession player, EntityUid uid, GameTick tick)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             lastSeen[uid] = tick;
         }
 
         private void ClearLastSeenTick(IPlayerSession player, EntityUid uid)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
-            {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen[player] = lastSeen;
-            }
+            var lastSeen = GetLastSeen(player);
 
             lastSeen.Remove(uid);
         }

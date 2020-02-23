@@ -370,11 +370,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // map does not have a parent node
             if (Parent != null)
             {
-                var concrete = (TransformComponent) Parent;
-                concrete._children.Remove(Owner.Uid);
-
-                // detach
-                Parent = null;
+                DetachParentToNull();
             }
 
             base.OnRemove();
@@ -383,10 +379,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public virtual void DetachParent()
+        public void DetachParent()
         {
-            var mapPos = MapPosition;
-
             // nothing to do
             var oldParent = Parent;
             if (oldParent == null)
@@ -394,6 +388,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 return;
             }
 
+            var mapPos = MapPosition;
             var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
 
             // this would be a no-op
@@ -403,23 +398,36 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 return;
             }
 
-            var concrete = (TransformComponent) oldParent;
-            concrete._children.Remove(Owner.Uid);
-
-            // attach to map
-            var newParent = newMapEntity.Transform;
-            var entMessage = new EntParentChangedMessage(Owner, oldParentEnt);
-            var newParentEnt = newParent.Owner;
-            var compMessage = new ParentChangedMessage(newParentEnt, oldParentEnt);
-            _parent = newParentEnt.Uid;
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
-            Owner.SendMessage(this, compMessage);
+            AttachParent(newMapEntity);
 
             MapPosition = mapPos;
 
             Dirty();
-            UpdateEntityTree();
-            UpdatePhysicsTree();
+        }
+
+        private void DetachParentToNull()
+        {
+            var oldParent = Parent;
+            if (oldParent == null)
+            {
+                return;
+            }
+
+            var oldConcrete = (TransformComponent) oldParent;
+            var uid = Owner.Uid;
+            oldConcrete._children.Remove(uid);
+
+            var oldParentOwner = oldParent?.Owner;
+
+            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
+            var compMessage = new ParentChangedMessage(null, oldParentOwner);
+            _parent = EntityUid.Invalid;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.SendMessage(this, compMessage);
+
+            // Does it even make sense to call these since this is called purely from OnRemove right now?
+            RebuildMatrices();
+            Dirty();
         }
 
         /// <summary>
@@ -680,7 +688,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
-        private bool UpdatePhysicsTree() => Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
+
+        private bool UpdatePhysicsTree() =>
+            Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

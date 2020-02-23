@@ -32,8 +32,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new ConcurrentQueue<ClydeHandle>();
 
-        private GLShaderProgram _lightShader;
-
         private class LoadedShader
         {
             public GLShaderProgram Program;
@@ -118,11 +116,6 @@ namespace Robust.Client.Graphics.Clyde
             _defaultShader = (ClydeShaderInstance) InstanceShader(defaultLoadedShader);
 
             _queuedShader = _defaultShader.Handle;
-
-            var lightVert = ReadEmbeddedShader("light.vert");
-            var lightFrag = ReadEmbeddedShader("light.frag");
-
-            _lightShader = _compileProgram(lightVert, lightFrag, "_lightShader");
         }
 
         private string ReadEmbeddedShader(string fileName)
@@ -189,16 +182,22 @@ namespace Robust.Client.Graphics.Clyde
         {
             var headerUniforms = new StringBuilder();
 
+            foreach (var constant in shader.Constants.Values)
+            {
+                headerUniforms.AppendFormat("const {0} {1} = {2};\n", constant.Type.GetNativeType(), constant.Name,
+                    constant.Value);
+            }
+
             foreach (var uniform in shader.Uniforms.Values)
             {
                 if (uniform.DefaultValue != null)
                 {
-                    headerUniforms.AppendFormat("uniform {0} {1} = {2};", uniform.Type.GetNativeType(), uniform.Name,
+                    headerUniforms.AppendFormat("uniform {0} {1} = {2};\n", uniform.Type.GetNativeType(), uniform.Name,
                         uniform.DefaultValue);
                 }
                 else
                 {
-                    headerUniforms.AppendFormat("uniform {0} {1};", uniform.Type.GetNativeType(), uniform.Name);
+                    headerUniforms.AppendFormat("uniform {0} {1};\n", uniform.Type.GetNativeType(), uniform.Name);
                 }
             }
 
@@ -207,8 +206,8 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var (name, varying) in shader.Varyings)
             {
-                varyingsFragment.AppendFormat("in {0} {1};", varying.Type.GetNativeType(), name);
-                varyingsVertex.AppendFormat("out {0} {1};", varying.Type.GetNativeType(), name);
+                varyingsFragment.AppendFormat("in {0} {1};\n", varying.Type.GetNativeType(), name);
+                varyingsVertex.AppendFormat("out {0} {1};\n", varying.Type.GetNativeType(), name);
             }
 
             ShaderFunctionDefinition fragmentMain = null;

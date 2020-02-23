@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Animations;
@@ -54,8 +55,11 @@ namespace Robust.Client.GameObjects.Components.Animations
                 if (!keep)
                 {
                     _playingAnimations.Remove(key);
+                    AnimationCompleted?.Invoke(key);
                 }
             }
         }
+
+        public event Action<string> AnimationCompleted;
     }
 }

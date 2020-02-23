@@ -29,16 +29,16 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
     {
 #pragma warning disable 649
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly ILogManager _logManager;
+        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IEntityManager _entityManager;
         [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly ILightManager _lightManager;
+        [Dependency] private readonly ILogManager _logManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly ILightManager _lightManager;
-        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
@@ -89,8 +89,9 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Ready()
         {
-            Logger.Debug("ready");
             _drawingSplash = false;
+
+            InitLighting();
         }
 
         public IClydeDebugInfo DebugInfo { get; private set; }
@@ -155,8 +156,6 @@ namespace Robust.Client.Graphics.Clyde
             _renderHandle = new RenderHandle(this);
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
-
-            InitLighting();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -309,19 +308,19 @@ namespace Robust.Client.Graphics.Clyde
             switch (severity)
             {
                 case DebugSeverity.DontCare:
-                    sawmill.Info(category, contents);
+                    sawmill.Info(contents);
                     break;
                 case DebugSeverity.DebugSeverityNotification:
-                    sawmill.Info(category, contents);
+                    sawmill.Info(contents);
                     break;
                 case DebugSeverity.DebugSeverityHigh:
-                    sawmill.Error(category, contents);
+                    sawmill.Error(contents);
                     break;
                 case DebugSeverity.DebugSeverityMedium:
-                    sawmill.Error(category, contents);
+                    sawmill.Error(contents);
                     break;
                 case DebugSeverity.DebugSeverityLow:
-                    sawmill.Warning(category, contents);
+                    sawmill.Warning(contents);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(severity), severity, null);

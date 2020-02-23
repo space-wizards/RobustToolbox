@@ -391,6 +391,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniformMaybe(string uniformName, in Matrix4 value, bool transpose=true)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value, transpose);
+                }
+            }
+
             public void SetUniformMaybe(int uniformName, in Matrix3 value)
             {
                 if (TryGetUniform(uniformName, out var slot))
@@ -407,11 +415,35 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniformMaybe(string uniformName, in Vector2i value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    SetUniformDirect(slot, value);
+                }
+            }
+
             public void SetUniformMaybe(int uniformName, in Vector2 value)
             {
                 if (TryGetUniform(uniformName, out var slot))
                 {
                     SetUniformDirect(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, int value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    GL.Uniform1(slot, value);
+                }
+            }
+
+            public void SetUniformMaybe(string uniformName, float value)
+            {
+                if (TryGetUniform(uniformName, out var slot))
+                {
+                    GL.Uniform1(slot, value);
                 }
             }
 

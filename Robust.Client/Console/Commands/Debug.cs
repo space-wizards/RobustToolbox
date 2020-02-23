@@ -607,6 +607,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ToggleShadows : IConsoleCommand
+    {
+        public string Command => "toggleshadows";
+        public string Description => "Toggles shadow rendering.";
+        public string Help => "toggleshadows";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.DrawShadows = !mgr.DrawShadows;
+            return false;
+        }
+    }
+
     internal class GcCommand : IConsoleCommand
     {
         public string Command => "gc";
@@ -761,6 +775,7 @@ namespace Robust.Client.Console.Commands
             clyde.DebugLayers = args[0] switch
             {
                 "fov" => ClydeDebugLayers.Fov,
+                "light" => ClydeDebugLayers.Light,
                 _ => ClydeDebugLayers.None
             };
 

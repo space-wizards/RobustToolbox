@@ -33,7 +33,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IConfigurationManager _configurationManager;
 #pragma warning restore 649
 
-        private bool ParallelStates => _configurationManager.GetCVar<bool>("net.parallelstates");
+        public bool PvsEnabled => _configurationManager.GetCVar<bool>("net.pvs");
 
         /// <inheritdoc />
         public void Initialize()
@@ -44,7 +44,7 @@ namespace Robust.Server.GameStates
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
 
-            _configurationManager.RegisterCVar("net.parallelstates", false, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("net.pvs", true, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
 
@@ -123,7 +123,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var entStates = lastAck == GameTick.Zero
+                var entStates = lastAck == GameTick.Zero && PvsEnabled
                     ? _entityManager.GetEntityStates(lastAck)
                     : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);

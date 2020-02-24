@@ -146,9 +146,10 @@ namespace Robust.Shared.GameObjects
             return query.Match(this);
         }
 
-        public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position)
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false)
         {
-            foreach (var entity in _entityTreesPerMap[mapId].Query(position))
+            foreach (var entity in _entityTreesPerMap[mapId].Query(position, approximate))
             {
                 var transform = entity.Transform;
                 if (FloatMath.CloseTo(transform.GridPosition.X, position.X) &&
@@ -203,7 +204,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void FlushEntities()
         {
-            foreach (IEntity e in GetEntities())
+            foreach (var e in GetEntities())
             {
                 e.Shutdown();
             }
@@ -349,7 +350,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
+            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out _))
                 NetworkMessageBuffer.Enqueue(incomingEntity);
             else
                 ProcessEntityMessage(incomingEntity.Message);
@@ -423,13 +424,13 @@ namespace Robust.Shared.GameObjects
         #region Spatial Queries
 
         /// <inheritdoc />
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box) =>
-            _entityTreesPerMap[mapId].Query(box).Any(ent => !ent.Deleted);
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false) =>
+            _entityTreesPerMap[mapId].Query(box, approximate).Any(ent => !ent.Deleted);
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
-            var newResults = _entityTreesPerMap[mapId].Query(position); // .ToArray();
+            var newResults = _entityTreesPerMap[mapId].Query(position, approximate); // .ToArray();
 
             foreach (var entity in newResults)
             {
@@ -443,7 +444,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false)
         {
             const float range = .00001f / 2;
             var aabb = new Box2(position, position).Enlarged(range);
@@ -453,7 +454,7 @@ namespace Robust.Shared.GameObjects
                 yield break;
             }
 
-            var newResults = _entityTreesPerMap[mapId].Query(aabb);
+            var newResults = _entityTreesPerMap[mapId].Query(aabb, approximate);
 
 
             foreach (var entity in newResults)
@@ -477,72 +478,69 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false)
         {
-            return GetEntitiesIntersecting(position.MapId, position.Position);
+            return GetEntitiesIntersecting(position.MapId, position.Position, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approximate = false)
         {
             var mapPos = position.ToMap(_mapManager);
-            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position);
+            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
         {
             if (entity.TryGetComponent<ICollidableComponent>(out var component))
             {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB);
+                return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
             }
 
-            return GetEntitiesIntersecting(entity.Transform.GridPosition);
+            return GetEntitiesIntersecting(entity.Transform.GridPosition, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approximate = false)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2),
                 position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approximate = false)
         {
             var aabb = box.Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb);
+            return GetEntitiesIntersecting(mapId, aabb, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approximate = false)
         {
             var aabb = new Box2(point, point).Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb);
+            return GetEntitiesIntersecting(mapId, aabb, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
         {
             if (entity.TryGetComponent<ICollidableComponent>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range);
+                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
             }
-            else
-            {
-                GridCoordinates coords = entity.Transform.GridPosition;
-                return GetEntitiesInRange(coords, range);
-            }
+
+            return GetEntitiesInRange(entity.Transform.GridPosition, range, approximate);
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction,
-            float arcWidth)
+            float arcWidth, bool approximate = false)
         {
             var position = coordinates.ToMap(_mapManager).Position;
 
-            foreach (var entity in GetEntitiesInRange(coordinates, range * 2))
+            foreach (var entity in GetEntitiesInRange(coordinates, range * 2, approximate))
             {
                 var angle = new Angle(entity.Transform.WorldPosition - position);
                 if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
@@ -556,7 +554,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
+        private readonly ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
             new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
 
         public virtual bool UpdateEntityTree(IEntity entity)

@@ -255,7 +255,6 @@ namespace Robust.Shared.GameObjects
 
             Entities[entity.Uid] = entity;
             AllEntities.Add(entity);
-            UpdateEntityTree(entity);
 
             return entity;
         }
@@ -269,8 +268,18 @@ namespace Robust.Shared.GameObjects
                 return AllocEntity(uid);
 
             var entity = AllocEntity(prototypeName, uid);
-            EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, null);
-            return entity;
+            try
+            {
+                EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, null);
+                return entity;
+            }
+            catch
+            {
+                // Exception during entity loading.
+                // Need to delete the entity to avoid corrupt state causing crashes later.
+                DeleteEntity(entity);
+                throw;
+            }
         }
 
         private protected void LoadEntity(Entity entity, IEntityLoadContext context)
@@ -278,10 +287,18 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private protected static void InitializeAndStartEntity(Entity entity)
+        private protected void InitializeAndStartEntity(Entity entity)
         {
-            InitializeEntity(entity);
-            StartEntity(entity);
+            try
+            {
+                InitializeEntity(entity);
+                StartEntity(entity);
+            }
+            catch
+            {
+                DeleteEntity(entity);
+                throw;
+            }
         }
 
         private protected static void InitializeEntity(Entity entity)

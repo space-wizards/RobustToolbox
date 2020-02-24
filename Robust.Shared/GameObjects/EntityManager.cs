@@ -273,12 +273,12 @@ namespace Robust.Shared.GameObjects
                 EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, null);
                 return entity;
             }
-            catch
+            catch (Exception e)
             {
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
-                throw;
+                throw new EntityCreationException("Exception inside CreateEntity", e);
             }
         }
 
@@ -294,10 +294,10 @@ namespace Robust.Shared.GameObjects
                 InitializeEntity(entity);
                 StartEntity(entity);
             }
-            catch
+            catch (Exception e)
             {
                 DeleteEntity(entity);
-                throw;
+                throw new EntityCreationException("Exception inside InitializeAndStartEntity", e);
             }
         }
 

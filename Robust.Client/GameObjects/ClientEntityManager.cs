@@ -248,7 +248,7 @@ namespace Robust.Client.GameObjects
 #if EXCEPTION_TOLERANCE
                     _runtimeLog.LogException(wrapper, "Component state apply");
 #else
-                    throw e
+                    throw wrapper;
 #endif
                 }
             }

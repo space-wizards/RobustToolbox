@@ -410,9 +410,9 @@ namespace Robust.Shared.GameObjects
             _entityTreesPerMap[mapId].Query(box).Any(ent => !ent.Deleted);
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approx = false)
         {
-            var newResults = _entityTreesPerMap[mapId].Query(position); // .ToArray();
+            var newResults = _entityTreesPerMap[mapId].Query(position, approx); // .ToArray();
 
             foreach (var entity in newResults)
             {
@@ -426,7 +426,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approx = false)
         {
             const float range = .00001f / 2;
             var aabb = new Box2(position, position).Enlarged(range);
@@ -436,7 +436,7 @@ namespace Robust.Shared.GameObjects
                 yield break;
             }
 
-            var newResults = _entityTreesPerMap[mapId].Query(aabb);
+            var newResults = _entityTreesPerMap[mapId].Query(aabb, approx);
 
 
             foreach (var entity in newResults)
@@ -460,16 +460,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approx = false)
         {
-            return GetEntitiesIntersecting(position.MapId, position.Position);
+            return GetEntitiesIntersecting(position.MapId, position.Position, approx);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approx = false)
         {
             var mapPos = position.ToMap(_mapManager);
-            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position);
+            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, approx);
         }
 
         /// <inheritdoc />
@@ -484,33 +484,33 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approx = false)
         {
             var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2),
                 position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb);
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb, approx);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approx = false)
         {
             var aabb = box.Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb);
+            return GetEntitiesIntersecting(mapId, aabb, approx);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approx = false)
         {
             var aabb = new Box2(point, point).Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb);
+            return GetEntitiesIntersecting(mapId, aabb, approx);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range)
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approx = false)
         {
             if (entity.TryGetComponent<ICollidableComponent>(out var component))
             {
-                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range);
+                return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approx);
             }
             else
             {

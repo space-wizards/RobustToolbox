@@ -132,26 +132,29 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position);
+        /// <param name="approx"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approx = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position);
+        /// <param name="approx"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approx = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position);
+        /// <param name="approx"></param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approx = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point in coordinate form
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position);
+        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approx = false);
 
         /// <summary>
         /// Gets entities that intersect with this entity
@@ -163,14 +166,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="position"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range);
+        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approx = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range);
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approx = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
@@ -178,7 +181,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="mapID"></param>
         /// <param name="box"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range);
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range, bool approx = false);
 
         /// <summary>
         /// Get entities with bounding box in range of this whose center is within a certain directional arc, angle specifies center bisector of arc

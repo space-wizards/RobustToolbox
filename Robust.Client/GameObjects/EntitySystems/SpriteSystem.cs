@@ -28,40 +28,23 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             var eye = _eyeManager.CurrentEye;
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            // TODO: Make this check more accurate.
-            var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _clyde.ScreenSize / EyeManager.PIXELSPERMETER * eye.Zoom).Enlarged(5);
+            var worldBounds = _eyeManager.GetWorldViewport().Enlarged(1f);
 
-            var mapEntity = _mapManager.GetMapEntityId(eye.Position.MapId);
+            var entities = EntityManager.GetEntitiesIntersecting(_eyeManager.CurrentMap, worldBounds, true);
 
-            var parentMatrix = Matrix3.Identity;
-            RunUpdatesRecurse(frameTime, worldBounds, EntityManager.GetEntity(mapEntity), ref parentMatrix);
-        }
-
-        private void RunUpdatesRecurse(float frameTime, Box2 bounds, IEntity entity, ref Matrix3 parentMatrix)
-        {
-            var localMatrix = entity.Transform.GetLocalMatrix();
-            Matrix3.Multiply(ref localMatrix, ref parentMatrix, out var matrix);
-
-            foreach (var childUid in entity.Transform.ChildEntityUids)
+            foreach (var entity in entities)
             {
-                var child = EntityManager.GetEntity(childUid);
-                if (child.TryGetComponent(out ISpriteComponent sprite))
+                if (!entity.TryGetComponent(out ISpriteComponent sprite))
                 {
-                    var worldPosition = Matrix3.Transform(matrix, child.Transform.LocalPosition);
-
-                    if (!sprite.IsInert && bounds.Contains(worldPosition))
-                    {
-                        sprite.FrameUpdate(frameTime);
-                    }
+                    continue;
                 }
 
-                if (child.Transform.ChildCount != 0)
+                if (sprite.IsInert)
                 {
-                    RunUpdatesRecurse(frameTime, bounds, child, ref matrix);
+                    continue;
                 }
+
+                sprite.FrameUpdate(frameTime);
             }
         }
     }

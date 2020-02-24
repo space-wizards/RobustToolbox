@@ -11,7 +11,6 @@ namespace Robust.Server.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IServerNetManager _mNetManager;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
         [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
@@ -58,7 +57,7 @@ namespace Robust.Server.GameObjects
         #endregion IEntityNetworkManager Members
 
         #region Sending
-        
+
         /// <summary>
         /// Sends a message to the relevant system(s) on all clients.
         /// </summary>

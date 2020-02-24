@@ -68,6 +68,14 @@ namespace Robust.Client.GameObjects
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
+
+#if DEBUG
+            Register<DebugExceptionOnAddComponent>();
+            Register<DebugExceptionExposeDataComponent>();
+            Register<DebugExceptionInitializeComponent>();
+            Register<DebugExceptionStartupComponent>();
+#endif
+
         }
     }
 }

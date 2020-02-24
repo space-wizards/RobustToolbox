@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -21,6 +19,7 @@ namespace Robust.Client.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IRuntimeLog _runtimeLog;
 #pragma warning restore 649
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
@@ -178,7 +177,7 @@ namespace Robust.Client.GameObjects
             return new EntityUid(_nextClientEntityUid++);
         }
 
-        private static void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
             EntityState nextState)
         {
             var compStateWork = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
@@ -244,8 +243,13 @@ namespace Robust.Client.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("entity", $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}\n  {e}");
-                    DebugTools.Assert(e.Message);
+                    var wrapper = new ComponentStateApplyException(
+                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+#if EXCEPTION_TOLERANCE
+                    _runtimeLog.LogException(wrapper, "Component state apply");
+#else
+                    throw wrapper;
+#endif
                 }
             }
         }

@@ -104,49 +104,61 @@ namespace Robust.Client.GameObjects
                 DeleteEntity(id);
             }
 
+#if EXCEPTION_TOLERANCE
             HashSet<Entity> brokenEnts = new HashSet<Entity>();
+#endif
 
             foreach (var entity in toInitialize)
             {
+#if EXCEPTION_TOLERANCE
                 try
                 {
+#endif
                     InitializeEntity(entity);
+#if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
                 {
                     Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
                     brokenEnts.Add(entity);
                 }
+#endif
             }
 
             foreach (var entity in toInitialize)
             {
+#if EXCEPTION_TOLERANCE
                 if(brokenEnts.Contains(entity))
                     continue;
 
                 try
                 {
+#endif
                     StartEntity(entity);
+#if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
                 {
                     Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
                     brokenEnts.Add(entity);
                 }
+#endif
             }
 
             foreach (var entity in toInitialize)
             {
+#if EXCEPTION_TOLERANCE
                 if(brokenEnts.Contains(entity))
                     continue;
-
+#endif
                 UpdateEntityTree(entity);
             }
-
+#if EXCEPTION_TOLERANCE
             foreach (var entity in brokenEnts)
             {
                 entity.Delete();
             }
+#endif
         }
 
         public void Dispose()

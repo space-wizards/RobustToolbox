@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
@@ -142,6 +143,59 @@ namespace Robust.Shared.Serialization
                 }
 
                 WriteMap.Add(key, val);
+            }
+        }
+
+
+        public override void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
+        {
+            if (o == null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            if (expr == null)
+            {
+                throw new ArgumentNullException(nameof(expr));
+            }
+
+            if (!(expr.Body is MemberExpression mExpr))
+            {
+                throw new NotImplementedException(expr.Body.GetType().FullName);
+            }
+
+            // the below looks like duplicate code, but PropertyInfo and FieldInfo have no common
+            // base or interface for GetValue/SetValue
+
+            object value;
+            switch (mExpr.Member)
+            {
+                case FieldInfo fi:
+                    value = fi.GetValue(o);
+                    DataField(ref value, name, defaultValue, alwaysWrite);
+                    if (Writing)
+                    {
+                        if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                        {
+                            fi.SetValue(o, value);
+                        }
+                    }
+
+                    break;
+                case PropertyInfo pi:
+                    value = pi.GetValue(o);
+                    DataField(ref value, name, defaultValue, alwaysWrite);
+                    if (Writing)
+                    {
+                        if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                        {
+                            pi.SetValue(o, value);
+                        }
+                    }
+
+                    break;
+                default:
+                    throw new NotImplementedException(mExpr.Member.GetType().FullName);
             }
         }
 
@@ -566,7 +620,7 @@ namespace Robust.Shared.Serialization
                 foreach (var entry in (IEnumerable)obj)
                 {
                     var entryNode = TypeToNode(entry);
-                    
+
                     // write the concrete type tag
                     if (listType.IsAbstract || listType.IsInterface)
                     {

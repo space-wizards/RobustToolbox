@@ -104,6 +104,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return $"ofs/pos: {Offset}/{Position}";
         }
 
+        public GridCoordinates DirectionToGrid(Direction direction)
+        {
+            var ownerGrid = _mapManager.GetGrid(Owner.Transform.GridID);
+            var grid = ownerGrid.GridTileToLocal(SnapGridPosAt(direction));
+
+            return grid;
+        }
+
         MapIndices SnapGridPosAt(Direction dir, int dist = 1)
         {
             switch (dir)

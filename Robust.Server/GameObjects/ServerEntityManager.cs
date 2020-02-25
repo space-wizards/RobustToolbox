@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
@@ -13,7 +11,6 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -255,7 +252,7 @@ namespace Robust.Server.GameObjects
             _playerLastSeen.Remove(player);
         }
 
-        private IEnumerable<IEntity> IncludeRelatives(IEnumerable<IEntity> children)
+        private ISet<IEntity> IncludeRelatives(IEnumerable<IEntity> children)
         {
             var set = new HashSet<IEntity>();
             foreach (var child in children)
@@ -450,7 +447,14 @@ namespace Robust.Server.GameObjects
             var currentTick = CurrentTick;
 
             // scan pvs box and include children and parents recursively
-            foreach (var entity in IncludeRelatives(GetEntitiesInRange(mapId, position, range)))
+            var entities = IncludeRelatives(GetEntitiesInRange(mapId, position, range));
+
+            // Always send updates for all grid and map entities.
+            // If we don't, the client-side game state manager WILL blow up.
+            // TODO: Make map manager netcode aware of PVS to avoid the need for this workaround.
+            IncludeMapCriticalEntities(entities);
+
+            foreach (var entity in entities)
             {
                 DebugTools.Assert(entity.Initialized && !entity.Deleted);
 
@@ -876,6 +880,24 @@ namespace Robust.Server.GameObjects
             return new EntityState(entityUid, changed, compStates);
         }
 
-    }
 
+        private void IncludeMapCriticalEntities(ISet<IEntity> set)
+        {
+            foreach (var mapId in _mapManager.GetAllMapIds())
+            {
+                if (_mapManager.HasMapEntity(mapId))
+                {
+                    set.Add(_mapManager.GetMapEntity(mapId));
+                }
+            }
+
+            foreach (var grid in _mapManager.GetAllGrids())
+            {
+                if (grid.GridEntityId != EntityUid.Invalid)
+                {
+                    set.Add(GetEntity(grid.GridEntityId));
+                }
+            }
+        }
+    }
 }

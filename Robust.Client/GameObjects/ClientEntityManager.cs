@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -103,19 +104,48 @@ namespace Robust.Client.GameObjects
                 DeleteEntity(id);
             }
 
+            HashSet<Entity> brokenEnts = new HashSet<Entity>();
+
             foreach (var entity in toInitialize)
             {
-                InitializeEntity(entity);
+                try
+                {
+                    InitializeEntity(entity);
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
             }
 
             foreach (var entity in toInitialize)
             {
-                StartEntity(entity);
+                if(brokenEnts.Contains(entity))
+                    continue;
+
+                try
+                {
+                    StartEntity(entity);
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
             }
 
             foreach (var entity in toInitialize)
             {
+                if(brokenEnts.Contains(entity))
+                    continue;
+
                 UpdateEntityTree(entity);
+            }
+
+            foreach (var entity in brokenEnts)
+            {
+                entity.Delete();
             }
         }
 

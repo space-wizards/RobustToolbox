@@ -217,12 +217,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
         {
+            EntityPrototype prototype = null;
+            if (!string.IsNullOrWhiteSpace(prototypeName))
+            {
+                // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
+                prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+            }
+
             var entity = AllocEntity(uid);
 
-            if (String.IsNullOrWhiteSpace(prototypeName))
-                return entity;
-
-            var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             entity.Prototype = prototype;
 
             return entity;

@@ -34,8 +34,9 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ray">Ray to cast in the world.</param>
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
+        /// <param name="ignoreNonHardCollidables">If true, the RayCast will ignore any bodies that aren't hard collidables.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null);
+        RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false);
 
         event Action<DebugRayData> DebugDrawRay;
 

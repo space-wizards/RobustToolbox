@@ -15,11 +15,6 @@ namespace Robust.Client.UserInterface.Controls
         private const int DefaultSeparation = 1;
         private protected abstract bool Vertical { get; }
 
-        protected BoxContainer()
-        {
-            MouseFilter = MouseFilterMode.Pass;
-        }
-
         /// <summary>
         ///     Specifies "where" the controls should be laid out.
         /// </summary>

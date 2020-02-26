@@ -64,6 +64,7 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize()
         {
             EntityNetworkManager.SetupNetworking();
+            ComponentManager.Clear();
             _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 

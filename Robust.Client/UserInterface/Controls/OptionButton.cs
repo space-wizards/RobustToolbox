@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -21,8 +20,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public string Prefix { get; set; }
 
-        public OptionButton()
+        public OptionButton() : base()
         {
+            AddStyleClass(StyleClassButton);
             Prefix = "";
             OnPressed += _onPressed;
 

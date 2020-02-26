@@ -99,7 +99,10 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.WorldSpace);
 
-            ApplyFovToBuffer(eye);
+            if (_lightManager.Enabled && eye.DrawFov)
+            {
+                ApplyFovToBuffer(eye);
+            }
 
             _lightingReady = false;
 

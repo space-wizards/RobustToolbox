@@ -433,6 +433,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
+            if (mapId == MapId.Nullspace)
+            {
+                yield break;
+            }
+
             var newResults = _entityTreesPerMap[mapId].Query(position, approximate); // .ToArray();
 
             foreach (var entity in newResults)

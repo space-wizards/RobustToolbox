@@ -384,9 +384,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             var mapPos = MapPosition;
             var mapGrid = _mapManager.FindGridAt(mapPos.MapId, mapPos.Position);
-            var newMapEntity = mapGrid == null
+            var newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+            /* // TODO: reinstate this once entities can be picked up from the map
+            var newMapEntity = mapGrid.IsDefaultGrid
                 ? _mapManager.GetMapEntity(mapPos.MapId)
                 : _entityManager.GetEntity(mapGrid.GridEntityId);
+            */
 
 
             // this would be a no-op

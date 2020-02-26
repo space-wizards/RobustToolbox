@@ -297,12 +297,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public MapCoordinates MapPosition
         {
             get => new MapCoordinates(WorldPosition, MapID);
-            set
-            {
-                AttachParent(_mapManager.GetMapEntity(value.MapId));
-
-                WorldPosition = value.Position;
-            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -389,7 +383,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
 
             var mapPos = MapPosition;
-            var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+            var mapGrid = _mapManager.FindGridAt(mapPos.MapId, mapPos.Position);
+            var newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+            /* // TODO: reinstate this once entities can be picked up from the map
+            var newMapEntity = mapGrid.IsDefaultGrid
+                ? _mapManager.GetMapEntity(mapPos.MapId)
+                : _entityManager.GetEntity(mapGrid.GridEntityId);
+            */
+
 
             // this would be a no-op
             var oldParentEnt = oldParent.Owner;
@@ -400,7 +401,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             AttachParent(newMapEntity);
 
-            MapPosition = mapPos;
+            WorldPosition = mapPos.Position;
 
             Dirty();
         }

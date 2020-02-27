@@ -164,38 +164,32 @@ namespace Robust.Shared.Serialization
                 throw new NotImplementedException(expr.Body.GetType().FullName);
             }
 
-            // the below looks like duplicate code, but PropertyInfo and FieldInfo have no common
-            // base or interface for GetValue/SetValue
-
-            object value;
+            Func<T> getter;
+            Action<T> setter;
             switch (mExpr.Member)
             {
                 case FieldInfo fi:
-                    value = fi.GetValue(o);
-                    DataField(ref value, name, defaultValue, alwaysWrite);
-                    if (Writing)
-                    {
-                        if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
-                        {
-                            fi.SetValue(o, value);
-                        }
-                    }
-
+                    getter = () => (T) fi.GetValue(o);
+                    setter = (v) => fi.SetValue(o, v);
                     break;
                 case PropertyInfo pi:
-                    value = pi.GetValue(o);
-                    DataField(ref value, name, defaultValue, alwaysWrite);
-                    if (Writing)
-                    {
-                        if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
-                        {
-                            pi.SetValue(o, value);
-                        }
-                    }
-
+                    getter = () => (T) pi.GetValue(o);
+                    setter = (v) => pi.SetValue(o, v);
                     break;
                 default:
                     throw new NotImplementedException(mExpr.Member.GetType().FullName);
+            }
+
+            var value = getter();
+            DataField(ref value, name, defaultValue, alwaysWrite);
+            if (!Writing)
+            {
+                return;
+            }
+
+            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+            {
+                setter(value);
             }
         }
 

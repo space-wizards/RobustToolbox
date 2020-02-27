@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -25,6 +25,7 @@ using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
@@ -765,7 +766,10 @@ namespace Robust.Client.Console.Commands
                     resC = IoCManager.Resolve<IResourceCache>();
 
                     _watchers = new Dictionary<string, FileSystemWatcher>();
-                    var stringComparer = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal;
+
+                    var stringComparer = PathHelpers.IsFileSystemCaseSensitive()
+                        ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
+
                     var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
 
                     var syncCtx = SynchronizationContext.Current;

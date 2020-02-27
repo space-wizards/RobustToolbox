@@ -180,7 +180,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error($"Can't load shader {path}, {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}");
+                    Logger.Warning($"Can't load shader {path}\n{ex.GetType().Name}: {ex.Message}");
                     return default;
                 }
             }

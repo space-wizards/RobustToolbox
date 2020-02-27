@@ -30,8 +30,10 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
             ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
         }
 
-        public override void Reload(IResourceCache cache, ResourcePath path)
+        public override void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
         {
+            ct = ct != default ? ct : new CancellationTokenSource(30000).Token;
+
             for (;;)
             {
                 try
@@ -47,6 +49,8 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
                     {
                         throw;
                     }
+
+                    ct.ThrowIfCancellationRequested();
 
                     Thread.Sleep(3);
                 }

@@ -46,11 +46,21 @@ namespace Robust.Server.Console.Commands
             else
                 mapId = transform.MapID;
 
-            var grid = mapMgr.FindGridAt(mapId, position);
-            var gridPos = grid.WorldToLocal(position);
-            transform.GridPosition = new GridCoordinates(gridPos, grid);
+            if (mapMgr.TryFindGridAt(mapId, position, out var grid))
+            {
+                var gridPos = grid.WorldToLocal(position);
 
-            shell.SendText(player, $"Teleported {player} to {grid.ParentMapId}:{posX},{posY}.");
+                transform.GridPosition = new GridCoordinates(gridPos, grid);
+            }
+            else
+            {
+                var mapEnt = mapMgr.GetMapEntity(mapId);
+
+                transform.AttachParent(mapEnt);
+                transform.WorldPosition = position;
+            }
+
+            shell.SendText(player, $"Teleported {player} to {mapId}:{posX},{posY}.");
         }
     }
 

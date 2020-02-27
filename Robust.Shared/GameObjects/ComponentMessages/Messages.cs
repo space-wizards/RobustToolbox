@@ -54,16 +54,4 @@ namespace Robust.Shared.GameObjects
             OldParent = oldParent;
         }
     }
-
-    public class MoveMessage : ComponentMessage
-    {
-        public MoveMessage(GridCoordinates oldPos, GridCoordinates newPos)
-        {
-            OldPosition = oldPos;
-            NewPosition = newPos;
-        }
-
-        public GridCoordinates OldPosition { get; }
-        public GridCoordinates NewPosition { get; }
-    }
 }

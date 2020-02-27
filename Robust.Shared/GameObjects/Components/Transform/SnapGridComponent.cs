@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -41,12 +40,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
-        protected override void Startup()
-        {
-            base.Startup();
-        }
-
-        /// <inheritdoc />
         protected override void Shutdown()
         {
             base.Shutdown();
@@ -60,16 +53,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 IsSet = false;
-            }
-        }
-
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
-        {
-            base.HandleMessage(message, netChannel, component);
-
-            if (message is MoveMessage msg && Running)
-            {
-                UpdatePosition();
             }
         }
 
@@ -163,7 +146,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        private void UpdatePosition()
+        internal void UpdatePosition()
         {
             if (IsSet)
             {

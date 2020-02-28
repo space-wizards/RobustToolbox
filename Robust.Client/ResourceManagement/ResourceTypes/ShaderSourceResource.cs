@@ -1,8 +1,10 @@
 ﻿using System.IO;
+using System.Threading;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -28,12 +30,30 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
             ClydeHandle = clyde.LoadShader(ParsedShader, path.ToString());
         }
 
-        public override void Reload(IResourceCache cache, ResourcePath path)
+        public override void Reload(IResourceCache cache, ResourcePath path, CancellationToken ct = default)
         {
-            using (var stream = cache.ContentFileRead(path))
-            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
+            ct = ct != default ? ct : new CancellationTokenSource(30000).Token;
+
+            for (;;)
             {
-                ParsedShader = ShaderParser.Parse(reader, cache);
+                try
+                {
+                    using var stream = cache.ContentFileRead(path);
+                    using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+                    ParsedShader = ShaderParser.Parse(reader, cache);
+                    break;
+                }
+                catch (IOException ioe)
+                {
+                    if (!PathHelpers.IsFileInUse(ioe))
+                    {
+                        throw;
+                    }
+
+                    ct.ThrowIfCancellationRequested();
+
+                    Thread.Sleep(3);
+                }
             }
 
             var clyde = IoCManager.Resolve<IClydeInternal>();

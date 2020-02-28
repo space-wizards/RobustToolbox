@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -9,7 +10,7 @@ namespace Robust.Client.Graphics.Shaders
         public ParsedShader(IReadOnlyDictionary<string, ShaderUniformDefinition> uniforms,
             IReadOnlyDictionary<string, ShaderVaryingDefinition> varyings,
             IReadOnlyDictionary<string, ShaderConstantDefinition> constants, IList<ShaderFunctionDefinition> functions,
-            ShaderLightMode lightMode, ShaderBlendMode blendMode, ShaderPreset preset)
+            ShaderLightMode lightMode, ShaderBlendMode blendMode, ShaderPreset preset, ICollection<ResourcePath> includes)
         {
             Uniforms = uniforms;
             Varyings = varyings;
@@ -17,6 +18,7 @@ namespace Robust.Client.Graphics.Shaders
             LightMode = lightMode;
             BlendMode = blendMode;
             Preset = preset;
+            Includes = includes;
             Constants = constants;
         }
 
@@ -27,6 +29,8 @@ namespace Robust.Client.Graphics.Shaders
         public ShaderLightMode LightMode { get; }
         public ShaderBlendMode BlendMode { get; }
         public ShaderPreset Preset { get; }
+        public ICollection<ResourcePath> Includes { get; }
+
     }
 
     internal sealed class ShaderFunctionDefinition

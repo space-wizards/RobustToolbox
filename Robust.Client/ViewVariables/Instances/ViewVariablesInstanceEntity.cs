@@ -10,6 +10,7 @@ using Robust.Client.ViewVariables.Editors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Instances
@@ -123,7 +124,7 @@ namespace Robust.Client.ViewVariables.Instances
             var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
             foreach (var component in componentList)
             {
-                var button = new Button {Text = component.GetType().ToString(), TextAlign = Button.AlignMode.Left};
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType().ToString()), TextAlign = Label.AlignMode.Left};
                 button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
                 clientComponents.AddChild(button);
             }
@@ -219,11 +220,11 @@ namespace Robust.Client.ViewVariables.Instances
             componentsBlob.ComponentTypes.Sort();
             foreach (var componentType in componentsBlob.ComponentTypes.OrderBy(t => t.Stringified))
             {
-                var button = new Button {Text = componentType.Stringified, TextAlign = Button.AlignMode.Left};
+                var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
                 button.OnPressed += args =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.Qualified));
+                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
                 };
                 _serverComponents.AddChild(button);
             }

@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.Interfaces.Placement
@@ -61,5 +62,7 @@ namespace Robust.Server.Interfaces.Placement
         ///  Removes all building Permissions for given mob.
         /// </summary>
         void RevokeAllBuildPermissions(IEntity mob);
+
+        Func<MsgPlacement, bool> AllowPlacementFunc { get; set; }
     }
 }

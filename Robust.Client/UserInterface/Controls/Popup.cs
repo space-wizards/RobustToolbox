@@ -12,6 +12,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action OnPopupHide;
 
+        private Vector2 _desiredSize;
+
         public void Open(UIBox2? box = null)
         {
             if (Visible)
@@ -19,10 +21,12 @@ namespace Robust.Client.UserInterface.Controls
                 UserInterfaceManagerInternal.RemoveModal(this);
             }
 
-            if (box != null)
+            if (box != null && _desiredSize != box.Value.Size)
             {
-                LayoutContainer.SetPosition(this, box.Value.TopLeft);
-                LayoutContainer.SetSize(this, box.Value.Size);
+                PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
+
+                _desiredSize = box.Value.Size;
+                MinimumSizeChanged();
             }
 
             Visible = true;
@@ -35,6 +39,11 @@ namespace Robust.Client.UserInterface.Controls
 
             Visible = false;
             OnPopupHide?.Invoke();
+        }
+
+        protected override Vector2 CalculateMinimumSize()
+        {
+            return Vector2.ComponentMax(_desiredSize, base.CalculateMinimumSize());
         }
     }
 }

@@ -1,0 +1,24 @@
+float toLinear(float sRGB)
+{
+    bool cutoff = sRGB < 0.04045;
+    float higher = pow((sRGB + 0.055)/1.055, 2.4);
+    float lower = sRGB/12.92;
+
+    return mix(higher, lower, cutoff);
+}
+
+void fragment()
+{
+    // NOTE: This shader does NOT work correctly!!!
+    // This assumes the depth is projected onto a circle, which it IS NOT.
+
+    float PI = 3.1415;
+    vec2 uv = (UV * 2) - 1;
+    float angle = atan(uv.y, -uv.x) + PI + radians(135.0);
+
+    angle = mod(angle, 2 * PI);
+    angle /= (PI * 2);
+
+    float val = texture(TEXTURE, vec2(angle, 0.5)).r / 8;
+    COLOR = vec4(vec3(toLinear(val)), 0.5);
+}

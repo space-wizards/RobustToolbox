@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Animations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -15,12 +16,14 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertyFontColor = "font-color";
         public const string StylePropertyFont = "font";
+        public const string StylePropertyAlignMode = "alignMode";
 
         private int _cachedTextHeight;
         private readonly List<int> _cachedTextWidths = new List<int>();
         private bool _textDimensionCacheValid;
         private string _text;
         private bool _clipText;
+        private AlignMode _align;
 
         public Label()
         {
@@ -55,7 +58,18 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        [ViewVariables] public AlignMode Align { get; set; }
+        [ViewVariables] public AlignMode Align {
+            get
+            {
+                if (TryGetStyleProperty<AlignMode>(StylePropertyAlignMode, out var alignMode))
+                {
+                    return alignMode;
+                }
+
+                return _align;
+            }
+            set => _align = value;
+        }
 
         [ViewVariables] public VAlignMode VAlign { get; set; }
 
@@ -99,6 +113,8 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color? FontColorOverride { get; set; }
 
         public int? ShadowOffsetXOverride { get; set; }

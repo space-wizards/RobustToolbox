@@ -33,6 +33,8 @@ namespace Robust.Shared.Input
 
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
+        public static readonly BoundKeyFunction TextCursorBegin = "TextCursorBegin";
+        public static readonly BoundKeyFunction TextCursorEnd = "TextCursorEnd";
         public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
         public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
         public static readonly BoundKeyFunction TextPaste = "TextPaste";
@@ -40,6 +42,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
         public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
+        public static readonly BoundKeyFunction TextDelete = "TextDelete";
     }
 
     [Serializable, NetSerializable]

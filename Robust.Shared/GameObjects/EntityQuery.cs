@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects

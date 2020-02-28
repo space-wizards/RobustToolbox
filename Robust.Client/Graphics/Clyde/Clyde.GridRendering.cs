@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL;
+using OpenTK.Graphics.OpenGL4;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -26,27 +25,11 @@ namespace Robust.Client.Graphics.Clyde
                 mapId = _eyeManager.CurrentMap;
             }
 
-            var atlasTexture = _tileDefinitionManager.TileTextureAtlas;
-            var loadedTex = _loadedTextures[((ClydeTexture) atlasTexture).TextureId];
+            SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
+            SetTexture(TextureUnit.Texture1, _lightingReady ? _lightRenderTarget.Texture : _stockTextureWhite);
 
-            GL.ActiveTexture(TextureUnit.Texture0);
-            GL.BindTexture(TextureTarget.Texture2D, loadedTex.OpenGLObject.Handle);
+            var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
 
-            GL.ActiveTexture(TextureUnit.Texture1);
-            if (_lightingReady)
-            {
-                var lightTexture = _loadedTextures[LightRenderTarget.Texture.TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, lightTexture.Handle);
-            }
-            else
-            {
-                var white = _loadedTextures[((ClydeTexture) Texture.White).TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
-            }
-
-            var instance = _shaderInstances[_defaultShader.Handle];
-            var gridProgram = _loadedShaders[instance.ShaderHandle].Program;
-            gridProgram.Use();
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
@@ -87,8 +70,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     GL.BindVertexArray(datum.VAO);
-                    datum.EBO.Use();
-                    datum.VBO.Use();
 
                     _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);
@@ -142,8 +123,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindVertexArray(datum.VAO);
                 datum.EBO.Use();
                 datum.VBO.Use();
-                datum.EBO.WriteSubData(new Span<ushort>(indexBuffer, 0, i * 5));
-                datum.VBO.WriteSubData(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
+                datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * 5));
+                datum.VBO.Reallocate(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
                 datum.Dirty = false;
                 datum.TileCount = i;
             }
@@ -162,12 +143,12 @@ namespace Robust.Client.Graphics.Clyde
             var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
 
-            var vbo = new Buffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+            var vbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                 vboSize, $"Grid {grid.Index} chunk {chunk.Indices} VBO");
-            var ebo = new Buffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
+            var ebo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                 eboSize, $"Grid {grid.Index} chunk {chunk.Indices} EBO");
 
-            _objectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Index} chunk {chunk.Indices} VAO");
+            ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, vao, $"Grid {grid.Index} chunk {chunk.Indices} VAO");
             // Vertex Coords
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
             GL.EnableVertexAttribArray(0);
@@ -247,8 +228,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool Dirty;
             public uint VAO;
-            public Buffer VBO;
-            public Buffer EBO;
+            public GLBuffer VBO;
+            public GLBuffer EBO;
             public int TileCount;
         }
     }

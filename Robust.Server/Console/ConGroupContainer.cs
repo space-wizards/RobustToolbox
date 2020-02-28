@@ -138,5 +138,16 @@ namespace Robust.Server.Console
         {
             return _groups.ContainsKey(index);
         }
+
+        public bool CanAdminPlace(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanAdminPlace;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
     }
 }

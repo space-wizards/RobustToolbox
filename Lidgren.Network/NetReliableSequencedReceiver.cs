@@ -29,6 +29,12 @@ namespace Lidgren.Network
 
 			if (relate == 0)
 			{
+				// Log("Received message #" + message.SequenceNumber + " right on time");
+
+				//
+				// excellent, right on time
+				//
+
 				AdvanceWindow();
 				m_peer.ReleaseMessage(message);
 				return;
@@ -36,6 +42,7 @@ namespace Lidgren.Network
 
 			if (relate < 0)
 			{
+				m_connection.m_statistics.MessageDropped();
 				m_peer.LogVerbose("Received message #" + message.m_sequenceNumber + " DROPPING LATE or DUPE");
 				return;
 			}
@@ -44,6 +51,7 @@ namespace Lidgren.Network
 			if (relate > m_windowSize)
 			{
 				// too early message!
+				m_connection.m_statistics.MessageDropped();
 				m_peer.LogDebug("Received " + message + " TOO EARLY! Expected " + m_windowStart);
 				return;
 			}

@@ -1,0 +1,43 @@
+preset raw;
+
+uniform vec2 direction;
+uniform vec2 size;
+uniform float radius;
+
+varying vec2 pos;
+varying vec4 blurPos1;
+varying vec4 blurPos2;
+
+
+void vertex()
+{
+    float aspect = size.y / size.x;
+    float horRadius = aspect * radius;
+
+    vec2 offset = vec2(horRadius, radius) * direction;
+
+    VERTEX = apply_mvp(VERTEX);
+
+    pos = (VERTEX + vec2(1)) / 2;
+
+    blurPos1.xy = pos + offset;
+    blurPos1.zw = pos - offset;
+    blurPos2.xy = pos + offset * 2;
+    blurPos2.zw = pos - offset * 2;
+}
+
+
+void fragment()
+{
+    // Very simple gaussian blur.
+    vec4 sum = texture(TEXTURE, pos) * 0.375;
+    sum += texture(TEXTURE, blurPos1.xy) * 0.25;
+    sum += texture(TEXTURE, blurPos1.zw) * 0.25;
+    sum += texture(TEXTURE, blurPos2.xy) * 0.0625;
+    sum += texture(TEXTURE, blurPos2.zw) * 0.0625;
+
+    // We actually "add" energy to the wall here while blurring with the * 1.2.
+    // Keep in mind that the wall is pitch black right now
+    // so it'd look like half brightness of the surroundings otherwise..
+    COLOR = sum * 1.2;
+}

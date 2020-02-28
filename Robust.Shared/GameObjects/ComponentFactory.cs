@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
@@ -62,6 +63,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
+
+        private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
 
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
         {
@@ -287,6 +290,11 @@ namespace Robust.Shared.GameObjects
                     RegisterReference(type, refType);
                 }
             }
+        }
+
+        public IEnumerable<Type> GetAllRefTypes()
+        {
+            return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
     }
 

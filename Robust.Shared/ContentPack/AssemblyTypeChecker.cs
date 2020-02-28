@@ -196,43 +196,61 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <param name="assembly">Assembly to load.</param>
         /// <returns></returns>
-        public static bool CheckAssembly(byte[] assembly)
+        public static bool CheckAssembly(Stream assembly)
         {
-            using (var asmDefStream = new MemoryStream(assembly))
+            if (WouldNoOp)
             {
-                var asmDef = AssemblyDefinition.ReadAssembly(asmDefStream);
+                // This method is a no-op in this case so don't bother
+                return true;
+            }
 
-                if (DumpTypes)
-                    AnalyzeTypes(asmDef.MainModule.GetTypeReferences());
+            var asmDef = AssemblyDefinition.ReadAssembly(assembly);
 
-                if (DisableTypeCheck)
-                    return true;
+            if (DumpTypes)
+                AnalyzeTypes(asmDef.MainModule.GetTypeReferences());
 
-                foreach (var typeRef in asmDef.MainModule.GetTypeReferences())
+            if (DisableTypeCheck)
+                return true;
+
+            foreach (var typeRef in asmDef.MainModule.GetTypeReferences())
+            {
+                // Assemblies are guilty until proven innocent in a court of law.
+                var safe = false;
+                foreach (var typeName in _typeWhiteList)
                 {
-                    // Assemblies are guilty until proven innocent in a court of law.
-                    var safe = false;
-                    foreach (var typeName in _typeWhiteList)
-                    {
-                        if (typeRef.FullName.StartsWith(typeName))
-                            safe = true;
-                    }
-
-                    foreach (var typeName in _typeBlackList)
-                    {
-                        if (typeRef.FullName.StartsWith(typeName))
-                            safe = false;
-                    }
-
-                    if (safe)
-                        continue;
-
-                    Logger.ErrorS("res.typecheck", $"Cannot load {asmDef.MainModule.Name}, {typeRef.FullName} is not whitelisted.");
-                    return false;
+                    if (typeRef.FullName.StartsWith(typeName))
+                        safe = true;
                 }
+
+                foreach (var typeName in _typeBlackList)
+                {
+                    if (typeRef.FullName.StartsWith(typeName))
+                        safe = false;
+                }
+
+                if (safe)
+                    continue;
+
+                Logger.ErrorS("res.typecheck", $"Cannot load {asmDef.MainModule.Name}, {typeRef.FullName} is not whitelisted.");
+                return false;
             }
 
             return true;
+        }
+
+        private static bool WouldNoOp => !DumpTypes && DisableTypeCheck;
+
+        public static bool CheckAssembly(string diskPath)
+        {
+            if (WouldNoOp)
+            {
+                // This method is a no-op in this case so don't bother
+                return true;
+            }
+
+            using var file = File.OpenRead(diskPath);
+
+            return CheckAssembly(file);
         }
 
         /// <summary>

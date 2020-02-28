@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK;
 using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL;
-using OpenTK.Platform;
+using OpenTK.Graphics.OpenGL4;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -37,20 +37,57 @@ namespace Robust.Client.Graphics.Clyde
         private GLFWCallbacks.ScrollCallback _scrollCallback;
         private GLFWCallbacks.WindowCloseCallback _windowCloseCallback;
         private GLFWCallbacks.WindowSizeCallback _windowSizeCallback;
+        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback;
+        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback;
 
-        private bool _glfwInitialized = false;
+        private bool _glfwInitialized;
 
         private GraphicsContext _graphicsContext;
         private Window* _glfwWindow;
 
-        private Vector2i _screenSize;
+        private Vector2i _framebufferSize;
+        private Vector2i _windowSize;
+        private Vector2 _windowScale;
+        private Vector2 _pixelRatio;
         private Thread _mainThread;
 
         private Vector2 _lastMousePos;
 
-        public override Vector2i ScreenSize => _screenSize;
+        // NOTE: in engine we pretend the framebuffer size is the screen size..
+        // For practical reasons like UI rendering.
+        public override Vector2i ScreenSize => _framebufferSize;
 
         public Vector2 MouseScreenPosition => _lastMousePos;
+
+        public string GetKeyName(Keyboard.Key key)
+        {
+            var name = Keyboard.GetSpecialKeyName(key);
+            if (name != null)
+            {
+                return Loc.GetString(name);
+            }
+
+            name = GLFW.GetKeyName(Keyboard.ConvertGlfwKeyReverse(key), 0);
+            if (name != null)
+            {
+                return name.ToUpper();
+            }
+
+            return Loc.GetString("<unknown key>");
+        }
+
+        public string GetKeyNameScanCode(int scanCode)
+        {
+            return GLFW.GetKeyName(Keys.Unknown, scanCode);
+        }
+
+        public int GetKeyScanCode(Keyboard.Key key)
+        {
+            return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
+        }
+
+        private List<Exception> _glfwExceptionList;
+        private bool _isMinimized;
 
         private bool InitGlfw()
         {
@@ -119,13 +156,23 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetWindowSizeCallback(_glfwWindow, _windowSizeCallback);
             GLFW.SetScrollCallback(_glfwWindow, _scrollCallback);
             GLFW.SetMouseButtonCallback(_glfwWindow, _mouseButtonCallback);
+            GLFW.SetWindowContentScaleCallback(_glfwWindow, _windowContentScaleCallback);
+            GLFW.SetWindowIconifyCallback(_glfwWindow, _windowIconifyCallback);
 
             GLFW.MakeContextCurrent(_glfwWindow);
 
             VSyncChanged();
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
-            _screenSize = (fbW, fbH);
+            _framebufferSize = (fbW, fbH);
+
+            GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
+            _windowScale = (scaleX, scaleY);
+
+            GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
+            _windowSize = (w, h);
+
+            _pixelRatio = _framebufferSize / _windowSize;
 
             InitGLContext();
 
@@ -214,27 +261,55 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwChar(Window* window, uint codepoint)
         {
-            _gameController.TextEntered(new TextEventArgs(codepoint));
+            try
+            {
+                _gameController.TextEntered(new TextEventArgs(codepoint));
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwCursorPos(Window* window, double x, double y)
         {
-            var newPos = new Vector2((float) x, (float) y);
-            var delta = newPos - _lastMousePos;
-            _lastMousePos = newPos;
+            try
+            {
+                var newPos = ((float) x, (float) y) * _pixelRatio;
+                var delta = newPos - _lastMousePos;
+                _lastMousePos = newPos;
 
-            var ev = new MouseMoveEventArgs(delta, newPos);
-            _gameController.MouseMove(ev);
+                var ev = new MouseMoveEventArgs(delta, newPos);
+                _gameController.MouseMove(ev);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwKey(Window* window, Keys key, int scanCode, InputAction action, KeyModifiers mods)
         {
-            EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
+            try
+            {
+                EmitKeyEvent(Keyboard.ConvertGlfwKey(key), action, mods);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwMouseButton(Window* window, MouseButton button, InputAction action, KeyModifiers mods)
         {
-            EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
+            try
+            {
+                EmitKeyEvent(Mouse.MouseButtonToKey(Mouse.ConvertGlfwButton(button)), action, mods);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
@@ -265,28 +340,79 @@ namespace Robust.Client.Graphics.Clyde
 
         private void OnGlfwScroll(Window* window, double offsetX, double offsetY)
         {
-            var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
-            _gameController.MouseWheel(ev);
+            try
+            {
+                var ev = new MouseWheelEventArgs(((float) offsetX, (float) offsetY), _lastMousePos);
+                _gameController.MouseWheel(ev);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwWindowClose(Window* window)
         {
-            _gameController.Shutdown("Window closed");
+            try
+            {
+                _gameController.Shutdown("Window closed");
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void OnGlfwWindowSize(Window* window, int width, int height)
         {
-            var oldSize = _screenSize;
-            GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
-            _screenSize = (fbW, fbH);
-
-            GL.Viewport(0, 0, fbW, fbH);
-            if (fbW != 0 && fbH != 0)
+            try
             {
-                _regenerateLightRenderTarget();
-            }
+                var oldSize = _framebufferSize;
+                GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
+                _framebufferSize = (fbW, fbH);
+                _windowSize = (width, height);
 
-            OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
+                if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
+                    return;
+
+                _pixelRatio = _framebufferSize / _windowSize;
+
+                GL.Viewport(0, 0, fbW, fbH);
+                if (fbW != 0 && fbH != 0)
+                {
+                    RegenerateLightingRenderTargets();
+                }
+
+                OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
+        }
+
+        private void OnGlfwWindownContentScale(Window* window, float xScale, float yScale)
+        {
+            try
+            {
+                _windowScale = (xScale, yScale);
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
+        }
+
+        private void OnGlfwWindowIconify(Window* window, bool iconified)
+        {
+            try
+            {
+                _isMinimized = iconified;
+            }
+            catch (Exception e)
+            {
+                CatchCallbackException(e);
+            }
         }
 
         private void StoreCallbacks()
@@ -299,6 +425,8 @@ namespace Robust.Client.Graphics.Clyde
             _scrollCallback = OnGlfwScroll;
             _windowCloseCallback = OnGlfwWindowClose;
             _windowSizeCallback = OnGlfwWindowSize;
+            _windowContentScaleCallback = OnGlfwWindownContentScale;
+            _windowIconifyCallback = OnGlfwWindowIconify;
         }
 
         public override void SetWindowTitle(string title)
@@ -314,6 +442,28 @@ namespace Robust.Client.Graphics.Clyde
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             GLFW.PollEvents();
+
+            if (_glfwExceptionList == null || _glfwExceptionList.Count == 0)
+            {
+                return;
+            }
+
+            // Exception handling.
+            // See CatchCallbackException for details.
+
+            if (_glfwExceptionList.Count == 1)
+            {
+                var exception = _glfwExceptionList[0];
+                _glfwExceptionList = null;
+
+                // Rethrow without losing stack trace.
+                ExceptionDispatchInfo.Capture(exception).Throw();
+                throw exception; // Unreachable.
+            }
+
+            var list = _glfwExceptionList;
+            _glfwExceptionList = null;
+            throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
         }
 
         private void SwapBuffers()
@@ -361,93 +511,18 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetClipboardString(_glfwWindow, text);
         }
 
-        private sealed class ClydeWindowInfo : IWindowInfo
+        // We can't let exceptions unwind into GLFW, as that can cause the CLR to crash.
+        // And it probably messes up GLFW too.
+        // So all the callbacks are passed to this method.
+        // So they can be queued for re-throw at the end of ProcessInputs().
+        private void CatchCallbackException(Exception e)
         {
-            public ClydeWindowInfo(Window* handle)
+            if (_glfwExceptionList == null)
             {
-                Handle = (IntPtr) handle;
+                _glfwExceptionList = new List<Exception>();
             }
 
-            public void Dispose()
-            {
-                // Nothing.
-            }
-
-            public IntPtr Handle { get; }
+            _glfwExceptionList.Add(e);
         }
     }
 }
-/*
-var width = _configurationManager.GetCVar<int>("display.width");
-var height = _configurationManager.GetCVar<int>("display.height");
-
-_window = new GameWindow(
-    width,
-    height,
-    GraphicsMode.Default,
-    string.Empty,
-    GameWindowFlags.Default,
-    DisplayDevice.Default,
-    3, 3,
-#if DEBUG
-    GraphicsContextFlags.Debug | GraphicsContextFlags.ForwardCompatible
-#else
-    GraphicsContextFlags.ForwardCompatible
-#endif
-)
-{
-    Visible = true
-};
-
-// Actually set VSync.
-VSyncChanged();
-WindowModeChanged();
-
-var winSize = _window.ClientSize;
-_screenSize = new Vector2i(winSize.Width, winSize.Height);
-
-_mainThread = Thread.CurrentThread;
-
-_window.KeyDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-_window.KeyUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-_window.Closed += _onWindowClosed;
-_window.Resize += (sender, eventArgs) =>
-{
-    var oldSize = _screenSize;
-    var newWinSize = _window.ClientSize;
-    _screenSize = new Vector2i(newWinSize.Width, newWinSize.Height);
-    GL.Viewport(0, 0, newWinSize.Width, newWinSize.Height);
-    if (newWinSize.Width != 0 && newWinSize.Height != 0)
-    {
-        _regenerateLightRenderTarget();
-    }
-
-    OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _screenSize));
-};
-_window.MouseDown += (sender, eventArgs) => { _gameController.KeyDown((KeyEventArgs) eventArgs); };
-_window.MouseUp += (sender, eventArgs) => { _gameController.KeyUp((KeyEventArgs) eventArgs); };
-_window.MouseMove += (sender, eventArgs) =>
-{
-    MouseScreenPosition = new Vector2(eventArgs.X, eventArgs.Y);
-    _gameController.MouseMove((MouseMoveEventArgs) eventArgs);
-};
-_window.MouseWheel += (sender, eventArgs) =>
-{
-    _gameController.MouseWheel((MouseWheelEventArgs) eventArgs);
-};
-_window.KeyPress += (sender, eventArgs) =>
-{
-    // If this is a surrogate it has to be specifically handled and I'm not doing that yet.
-    DebugTools.Assert(!char.IsSurrogate(eventArgs.KeyChar));
-
-    _gameController.TextEntered(new TextEventArgs(eventArgs.KeyChar));
-};
-
-using (var iconFile = _resourceCache.ContentFileRead("/Textures/Logo/icon.ico"))
-{
-    _window.Icon = new Icon(iconFile);
-}
-
-InitGLContext();
-InitOpenGL();
-*/

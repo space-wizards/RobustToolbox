@@ -1,23 +1,23 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
+    [UsedImplicitly]
     internal class PhysicsSystem : EntitySystem
     {
 #pragma warning disable 649
         [Dependency] private readonly IPauseManager _pauseManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
 #pragma warning restore 649
@@ -32,26 +32,48 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
+            // TODO: manifolds
             var entities = EntityManager.GetEntities(EntityQuery);
-            _physicsManager.BuildCollisionGrid();
+            SimulateWorld(frameTime, entities);
+        }
+
+        private void SimulateWorld(float frameTime, IEnumerable<IEntity> entities)
+        {
+            // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
             {
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
                 if (_pauseManager.IsEntityPaused(entity))
                 {
                     continue;
                 }
 
-                HandleMovement(entity, frameTime);
+                HandleMovement(_mapManager, _tileDefinitionManager, entity, frameTime);
             }
 
             foreach (var entity in entities)
             {
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
                 DoMovement(entity, frameTime);
             }
         }
 
-        private void HandleMovement(IEntity entity, float frameTime)
+        private static void HandleMovement(IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IEntity entity, float frameTime)
         {
+            if (entity.Deleted)
+            {
+                // Ugh let's hope this fixes the crashes.
+                return;
+            }
+
             var velocity = entity.GetComponent<PhysicsComponent>();
             if (velocity.DidMovementCalculations)
             {
@@ -86,10 +108,10 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var consumer in velocityConsumers)
                 {
                     totalMass += consumer.Mass;
-                    var movement = lowestMovement * velocity.Mass / totalMass;
+                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass : 1);
                     consumer.AngularVelocity = velocity.AngularVelocity;
                     consumer.LinearVelocity = movement;
-                    copy.Add(CalculateMovement(consumer, frameTime, consumer.Owner) / frameTime);
+                    copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
                 }
 
                 copy.Sort(LengthComparer);
@@ -110,6 +132,13 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private static void DoMovement(IEntity entity, float frameTime)
         {
+            // TODO: Terrible hack to fix bullets crashing the server.
+            // Should be handled with deferred physics events instead.
+            if (entity.Deleted)
+            {
+                return;
+            }
+
             var velocity = entity.GetComponent<PhysicsComponent>();
 
             if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
@@ -126,14 +155,21 @@ namespace Robust.Server.GameObjects.EntitySystems
             transform.WorldPosition += velocity.LinearVelocity * frameTime;
         }
 
-        private Vector2 CalculateMovement(PhysicsComponent velocity, float frameTime, IEntity entity)
+        private static Vector2 CalculateMovement(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, PhysicsComponent velocity, float frameTime, IEntity entity)
         {
+            if (velocity.Deleted)
+            {
+                // Help crashes.
+                return default;
+            }
+
             var movement = velocity.LinearVelocity * frameTime;
             if (movement.LengthSquared <= Epsilon)
             {
                 return Vector2.Zero;
             }
 
+            //TODO This is terrible. This needs to calculate the manifold between the two objects.
             //Check for collision
             if (entity.TryGetComponent(out CollidableComponent collider))
             {
@@ -159,9 +195,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (movement != Vector2.Zero && collider.IsScrapingFloor)
                 {
                     var location = entity.Transform;
-                    var grid = _mapManager.GetGrid(location.GridPosition.GridID);
+                    var grid = mapManager.GetGrid(location.GridPosition.GridID);
                     var tile = grid.GetTileRef(location.GridPosition);
-                    var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
+                    var tileDef = tileDefinitionManager[tile.Tile.TypeId];
                     if (tileDef.Friction != 0)
                     {
                         movement -= movement * tileDef.Friction;

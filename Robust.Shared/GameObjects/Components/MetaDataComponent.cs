@@ -80,9 +80,6 @@ namespace Robust.Shared.GameObjects
         public override uint? NetID => NetIDs.META_DATA;
 
         /// <inheritdoc />
-        public override Type StateType => typeof(MetaDataComponentState);
-
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityName
         {
@@ -173,6 +170,15 @@ namespace Robust.Shared.GameObjects
             //serializer.DataField(ref _entityPrototype, "proto", null,
             //    s => _prototypes.Index<EntityPrototype>(s),
             //    p => p.ID);
+        }
+
+        internal override void ClearTicks()
+        {
+            // Do not clear modified ticks.
+            // MetaDataComponent is used in the game state system to carry initial data like prototype ID.
+            // So it ALWAYS has to be sent.
+            // (Creation can still be cleared though)
+            ClearCreationTick();
         }
     }
 }

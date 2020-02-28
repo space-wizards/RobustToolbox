@@ -1,6 +1,4 @@
 ﻿using Robust.Shared.GameObjects;
-using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Players;
 
 namespace Robust.Shared.Interfaces.GameObjects.Systems
 {
@@ -10,12 +8,8 @@ namespace Robust.Shared.Interfaces.GameObjects.Systems
     ///     They have a set of entities to run over and run every once in a while.
     ///     They get managed by an <see cref="IEntitySystemManager" />.
     /// </summary>
-    public interface IEntitySystem
+    public interface IEntitySystem : IEntityEventSubscriber
     {
-        void RegisterMessageTypes();
-
-        void SubscribeEvents();
-
         /// <summary>
         ///     Called once when the system is created to initialize its state.
         /// </summary>
@@ -25,13 +19,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Systems
         ///     Called once before the system is destroyed so that the system can clean up.
         /// </summary>
         void Shutdown();
-
-        /// <summary>
-        /// Handler for all incoming network messages.
-        /// </summary>
-        /// <param name="channel"></param>
-        /// <param name="message"></param>
-        void HandleNetMessage(INetChannel channel, EntitySystemMessage message);
 
         /// <summary>
         ///     Called once per frame/tick to update the system.

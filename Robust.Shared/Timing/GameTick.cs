@@ -10,6 +10,7 @@ namespace Robust.Shared.Timing
     public readonly struct GameTick : IEquatable<GameTick>, IComparable<GameTick>
     {
         public static readonly GameTick Zero = new GameTick(0);
+        public static readonly GameTick First = new GameTick(1);
         public static readonly GameTick MaxValue = new GameTick(uint.MaxValue);
 
         public readonly uint Value;

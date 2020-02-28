@@ -1,7 +1,7 @@
-﻿using System;
-using Robust.Client.Graphics;
+﻿using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -16,7 +16,6 @@ namespace Robust.Client.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
-        public override Type StateType => typeof(PointLightComponentState);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
@@ -53,6 +52,7 @@ namespace Robust.Client.GameObjects
         ///     Local rotation of the light mask around the center origin
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Angle Rotation
         {
             get => _rotation;

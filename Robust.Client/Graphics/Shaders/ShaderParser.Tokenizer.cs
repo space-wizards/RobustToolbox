@@ -1,27 +1,64 @@
-using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
     internal partial class ShaderParser
     {
-        private void _tokenize()
+        private TextParser _currentParser;
+        private string _currentFileName;
+        private readonly Stack<(TextParser parser, string fileName)> _parserStack = new Stack<(TextParser, string)>();
+
+        private void PushTokenize(TextReader reader, string fileName)
         {
-            while (!_textParser.IsEOF())
+            if (_currentParser != null)
             {
-                if (_textParser.IsEOL())
+                _parserStack.Push((_currentParser, _currentFileName));
+            }
+
+            _currentParser = new TextParser(reader);
+            _currentFileName = fileName;
+
+            Tokenize();
+
+            if (_parserStack.Count != 0)
+            {
+                (_currentParser, _currentFileName) = _parserStack.Pop();
+            }
+            else
+            {
+                _currentParser = null;
+                _currentFileName = null;
+            }
+        }
+
+        private void Tokenize()
+        {
+            while (!_currentParser.IsEOF())
+            {
+                if (_currentParser.IsEOL())
                 {
-                    _textParser.NextLine();
+                    _currentParser.NextLine();
                     continue;
                 }
 
-                var chr = _textParser.Peek();
+                var chr = _currentParser.Peek();
 
                 // Eat whitespace.
                 if (char.IsWhiteSpace(chr))
                 {
-                    _textParser.Take();
+                    _currentParser.Take();
+                    continue;
+                }
+
+                if (chr == '#')
+                {
+                    // Possible preprocessor things.
+                    _currentParser.Take();
+                    HandleProcessor();
                     continue;
                 }
 
@@ -39,18 +76,18 @@ namespace Robust.Client.Graphics.Shaders
                     continue;
                 }
 
-                _textParser.Take();
+                _currentParser.Take();
                 if (chr == '/')
                 {
                     // Is this a comment?
-                    if (_textParser.Peek() == '/')
+                    if (_currentParser.Peek() == '/')
                     {
                         // Line comment, eat until next line.
                         _eatLineComment();
                         continue;
                     }
 
-                    else if (_textParser.Peek() == '*')
+                    else if (_currentParser.Peek() == '*')
                     {
                         // Start of a block comment.
                         _eatBlockComment();
@@ -63,248 +100,334 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
+        private void HandleProcessor()
+        {
+            _currentParser.EatWhitespace();
+            var word = _parseWord();
+
+            if (word.Word != "include")
+            {
+                throw new ShaderParseException($"Unknown preprocessor directive '{word.Word}'");
+            }
+
+            HandleInclude();
+        }
+
+        private void HandleInclude()
+        {
+            _currentParser.EatWhitespace();
+
+            var quote = _currentParser.Take();
+
+            if (quote != '"')
+            {
+                throw new ShaderParseException("Expected '\"' after 'include'.");
+            }
+
+            var pathParsing = new List<char>();
+            while (_currentParser.Peek() != '"' && !_currentParser.IsEOL())
+            {
+                pathParsing.Add(_currentParser.Take());
+            }
+
+            if (_currentParser.IsEOL())
+            {
+                throw new ShaderParseException("Unterminated include path.");
+            }
+
+            _currentParser.Take(); // Quote.
+
+            var pathString = new string(pathParsing.ToArray());
+            var path = new ResourcePath(pathString);
+            _includes.AddLast(path);
+            using var stream = _resManager.ContentFileRead(path);
+            using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+
+            PushTokenize(reader, pathString);
+        }
+
         private TokenSymbol _parseSymbol(char chr)
         {
-            var startPos = _textParser.CurrentIndex - 1;
-            var line = _textParser.CurrentLine;
-            var next = _textParser.Peek();
-            Symbols symbol;
+            var startPos = _currentParser.CurrentIndex - 1;
+            var line = _currentParser.CurrentLine;
+            var next = _currentParser.Peek();
 
+            Symbols symbol;
             if (chr == ';')
             {
                 symbol = Symbols.Semicolon;
             }
+
             else if (chr == ',')
             {
                 symbol = Symbols.Comma;
             }
+
             else if (chr == '.')
             {
                 symbol = Symbols.Period;
             }
+
             else if (chr == '=')
             {
                 if (next == '=')
                 {
                     symbol = Symbols.DoubleEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Equals;
                 }
             }
+
             else if (chr == '(')
             {
                 symbol = Symbols.ParenOpen;
             }
+
             else if (chr == ')')
             {
                 symbol = Symbols.ParenClosed;
             }
+
             else if (chr == '[')
             {
                 symbol = Symbols.BracketOpen;
             }
+
             else if (chr == ']')
             {
                 symbol = Symbols.BracketClosed;
             }
+
             else if (chr == '{')
             {
                 symbol = Symbols.BraceOpen;
             }
+
             else if (chr == '}')
             {
                 symbol = Symbols.BraceClosed;
             }
+
             else if (chr == '+')
             {
                 if (next == '+')
                 {
                     symbol = Symbols.Increment;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else if (next == '=')
                 {
                     symbol = Symbols.PlusEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Plus;
                 }
             }
+
             else if (chr == '-')
             {
                 if (next == '-')
                 {
                     symbol = Symbols.Decrement;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else if (next == '=')
                 {
                     symbol = Symbols.MinusEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Minus;
                 }
             }
+
             else if (chr == '*')
             {
                 if (next == '=')
                 {
                     symbol = Symbols.MultiplyEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Multiply;
                 }
             }
+
             else if (chr == '/')
             {
                 if (next == '=')
                 {
                     symbol = Symbols.DivideEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Divide;
                 }
             }
+
             else if (chr == '%')
             {
                 if (next == '=')
                 {
                     symbol = Symbols.ModuleEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Modulo;
                 }
             }
+
             else if (chr == '~')
             {
                 symbol = Symbols.BitNot;
             }
+
             else if (chr == '!')
             {
                 if (next == '=')
                 {
                     symbol = Symbols.NotEquals;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Not;
                 }
             }
+
             else if (chr == '<')
             {
                 if (next == '<')
                 {
                     symbol = Symbols.ShiftLeft;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else if (next == '=')
                 {
                     symbol = Symbols.LessOrEq;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Less;
                 }
             }
+
             else if (chr == '>')
             {
                 if (next == '>')
                 {
                     symbol = Symbols.ShiftRight;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else if (next == '=')
                 {
                     symbol = Symbols.GreaterOrEq;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Greater;
                 }
             }
+
             else if (chr == '^')
             {
-                symbol = Symbols.Xor;
+                if (next == '^')
+                {
+                    symbol = Symbols.LogicXor;
+                    _currentParser.Take();
+                }
+                else
+                {
+                    symbol = Symbols.Xor;
+                }
             }
+
             else if (chr == '&')
             {
                 if (next == '&')
                 {
                     symbol = Symbols.LogicAnd;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.And;
                 }
             }
+
             else if (chr == '|')
             {
                 if (next == '|')
                 {
                     symbol = Symbols.LogicOr;
-                    _textParser.Take();
+                    _currentParser.Take();
                 }
                 else
                 {
                     symbol = Symbols.Or;
                 }
             }
+
+            else if (chr == '?')
+            {
+                symbol = Symbols.QuestionMark;
+            }
+
+            else if (chr == ':')
+            {
+                symbol = Symbols.Colon;
+            }
+
             else
             {
                 // Unknown symbol
                 throw new ShaderParseException($"Unknown symbol '{chr}'");
             }
 
-            var endPos = _textParser.CurrentIndex;
-
-            return new TokenSymbol(symbol, new TextFileRange(line, startPos, endPos));
+            var endPos = _currentParser.CurrentIndex;
+            return new TokenSymbol(symbol, new TextFileRange(_currentFileName, line, startPos, endPos));
         }
 
         private void _eatBlockComment()
         {
-            var startLine = new TextFileRange(_textParser.CurrentLine, _textParser.CurrentIndex);
+            var startLine =
+                new TextFileRange(_currentFileName, _currentParser.CurrentLine, _currentParser.CurrentIndex);
 
             // Handle nested /* nicely.
             var depth = 1;
-            // Take the * of the /*.
-            _textParser.Take();
 
-            while (!_textParser.IsEOF())
+            // Take the * of the /*.
+            _currentParser.Take();
+            while (!_currentParser.IsEOF())
             {
-                if (_textParser.IsEOL())
+                if (_currentParser.IsEOL())
                 {
-                    _textParser.NextLine();
+                    _currentParser.NextLine();
                     continue;
                 }
 
-                var chr = _textParser.Take();
-                if (chr == '/' && _textParser.Peek() == '*')
+                var chr = _currentParser.Take();
+                if (chr == '/' && _currentParser.Peek() == '*')
                 {
-                    _textParser.Take();
+                    _currentParser.Take();
                     depth += 1;
                     continue;
                 }
 
-                if (chr == '*' && _textParser.Peek() == '/')
+                if (chr == '*' && _currentParser.Peek() == '/')
                 {
-                    _textParser.Take();
+                    _currentParser.Take();
                     depth -= 1;
                     if (depth <= 0)
                     {
@@ -319,37 +442,41 @@ namespace Robust.Client.Graphics.Shaders
 
         private void _eatLineComment()
         {
-            while (!_textParser.IsEOL())
+            while (!_currentParser.IsEOL())
             {
-                _textParser.Take();
+                _currentParser.Take();
             }
         }
 
         private TokenWord _parseWord()
         {
-            var start = _textParser.CurrentIndex;
+            var start = _currentParser.CurrentIndex;
+
             var chars = new List<char>();
-            while (_isWordChar(_textParser.Peek()))
+            while (_isWordChar(_currentParser.Peek()))
             {
-                chars.Add(_textParser.Take());
+                chars.Add(_currentParser.Take());
             }
 
-            var end = _textParser.CurrentIndex;
-
-            return new TokenWord(new string(chars.ToArray()), new TextFileRange(_textParser.CurrentLine, start, end));
+            var end = _currentParser.CurrentIndex;
+            return new TokenWord(new string(chars.ToArray()), new TextFileRange(_currentFileName,
+                _currentParser.CurrentLine, start, end));
         }
 
         private TokenNumber _parseDigit()
         {
-            var start = _textParser.CurrentIndex;
-            var end = _textParser.CurrentIndex;
+            var start = _currentParser.CurrentIndex;
+            var end = _currentParser.CurrentIndex;
+
             var chars = new List<char>();
-            while (_isNumberChar(_textParser.Peek()))
+            while (_isNumberChar(_currentParser.Peek()))
             {
-                chars.Add(_textParser.Take());
+                chars.Add(_currentParser.Take());
             }
 
-            return new TokenNumber(new string(chars.ToArray()), new TextFileRange(_textParser.CurrentLine, start, end));
+            return new TokenNumber(new string(chars.ToArray()), new TextFileRange(_currentFileName,
+                _currentParser.CurrentLine,
+                start, end));
         }
 
         private static bool _isWordBeginChar(char chr)
@@ -375,7 +502,6 @@ namespace Robust.Client.Graphics.Shaders
         private string _tokensToString(IEnumerable<Token> tokens)
         {
             var builder = new StringBuilder();
-
             foreach (var token in tokens)
             {
                 switch (token)
@@ -405,6 +531,7 @@ namespace Robust.Client.Graphics.Shaders
             public TextFileRange Position { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Word) + "}")]
         private sealed class TokenWord : Token
         {
             public TokenWord(string word, TextFileRange position) : base(position)
@@ -415,6 +542,7 @@ namespace Robust.Client.Graphics.Shaders
             public string Word { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Number) + "}")]
         private sealed class TokenNumber : Token
         {
             public TokenNumber(string number, TextFileRange position) : base(position)
@@ -425,6 +553,7 @@ namespace Robust.Client.Graphics.Shaders
             public string Number { get; }
         }
 
+        [DebuggerDisplay("{" + nameof(Symbol) + "}")]
         private sealed class TokenSymbol : Token
         {
             public TokenSymbol(Symbols symbol, TextFileRange position) : base(position)
@@ -470,10 +599,13 @@ namespace Robust.Client.Graphics.Shaders
             Or,
             LogicAnd,
             LogicOr,
+            LogicXor,
             Less,
             Greater,
             LessOrEq,
             GreaterOrEq,
+            QuestionMark,
+            Colon,
         }
 
         private static readonly Dictionary<Symbols, string> _symbolStringMap = new Dictionary<Symbols, string>
@@ -495,7 +627,7 @@ namespace Robust.Client.Graphics.Shaders
             {Symbols.Minus, "-"},
             {Symbols.MinusEquals, "-="},
             {Symbols.Multiply, "*"},
-            {Symbols.MultiplyEquals, "-="},
+            {Symbols.MultiplyEquals, "*="},
             {Symbols.Modulo, "%"},
             {Symbols.ModuleEquals, "%="},
             {Symbols.Divide, "/"},
@@ -509,12 +641,15 @@ namespace Robust.Client.Graphics.Shaders
             {Symbols.And, "&"},
             {Symbols.Xor, "^"},
             {Symbols.Or, "|"},
-            {Symbols.LogicAnd, "&"},
-            {Symbols.LogicOr, "|"},
+            {Symbols.LogicAnd, "&&"},
+            {Symbols.LogicOr, "||"},
+            {Symbols.LogicXor, "^^"},
             {Symbols.Less, "<"},
             {Symbols.LessOrEq, "<="},
             {Symbols.Greater, ">"},
             {Symbols.GreaterOrEq, ">="},
+            {Symbols.QuestionMark, "?"},
+            {Symbols.Colon, ":"},
         };
     }
 }

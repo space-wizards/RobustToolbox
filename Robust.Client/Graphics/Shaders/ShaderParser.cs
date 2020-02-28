@@ -4,44 +4,48 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
     internal sealed partial class ShaderParser
     {
-        private readonly TextParser _textParser;
+        private readonly IResourceManager _resManager;
         private int _tokenIndex;
         private readonly List<Token> _tokens = new List<Token>();
 
         private readonly List<ShaderUniformDefinition> _uniformsParsing = new List<ShaderUniformDefinition>();
+        private readonly List<ShaderConstantDefinition> _constantsParsing = new List<ShaderConstantDefinition>();
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new List<ShaderVaryingDefinition>();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new List<ShaderFunctionDefinition>();
+        private readonly LinkedList<ResourcePath> _includes = new LinkedList<ResourcePath>();
 
-        public static ParsedShader Parse(TextReader reader)
+        public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {
-            return new ShaderParser(reader)._parse();
+            var parser = new ShaderParser(resManager);
+            parser.PushTokenize(reader, "<anonymous>");
+
+            return parser._parse();
         }
 
-        public static ParsedShader Parse(string code)
+        public static ParsedShader Parse(string code, IResourceManager resManager)
         {
-            using (var reader = new StringReader(code))
-            {
-                return Parse(reader);
-            }
+            using var reader = new StringReader(code);
+
+            return Parse(reader, resManager);
         }
 
-        private ShaderParser(TextReader reader)
+        private ShaderParser(IResourceManager resManager)
         {
-            _textParser = new TextParser(reader);
+            _resManager = resManager;
         }
 
         private ParsedShader _parse()
         {
-            _tokenize();
-
             ShaderLightMode? lightMode = null;
             ShaderBlendMode? blendMode = null;
+            ShaderPreset? preset = null;
 
             Token token;
 
@@ -56,7 +60,8 @@ namespace Robust.Client.Graphics.Shaders
 
                 if (!(token is TokenWord word))
                 {
-                    throw new ShaderParseException("Expected 'light_mode', 'blend_mode', 'uniform', 'varying' or type.",
+                    throw new ShaderParseException(
+                        "Expected 'light_mode', 'blend_mode', 'uniform', 'varying', 'preset' or type.",
                         token.Position);
                 }
 
@@ -66,6 +71,7 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         throw new ShaderParseException("Already specified 'light_mode' before!");
                     }
+
                     _takeToken();
                     token = _takeToken();
                     if (!(token is TokenWord unshadedWord) || unshadedWord.Word != "unshaded")
@@ -88,25 +94,50 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         throw new ShaderParseException("Already specified 'blend_mode' before!");
                     }
+
                     _takeToken();
                     token = _takeToken();
 
-                    switch (token)
+                    blendMode = token switch
                     {
-                        case TokenWord t when t.Word == "mix":
-                            blendMode = ShaderBlendMode.Mix;
-                            break;
-                        case TokenWord t when t.Word == "add":
-                            blendMode = ShaderBlendMode.Add;
-                            break;
-                        case TokenWord t when t.Word == "subtract":
-                            blendMode = ShaderBlendMode.Subtract;
-                            break;
-                        case TokenWord t when t.Word == "multiply":
-                            blendMode = ShaderBlendMode.Multiply;
-                            break;
-                        default:
-                            throw new ShaderParseException("Expected 'mix', 'add', 'subtract' or 'multiply'.");
+                        TokenWord t when t.Word == "mix" => ShaderBlendMode.Mix,
+                        TokenWord t when t.Word == "add" => ShaderBlendMode.Add,
+                        TokenWord t when t.Word == "subtract" => ShaderBlendMode.Subtract,
+                        TokenWord t when t.Word == "multiply" => ShaderBlendMode.Multiply,
+                        TokenWord t when t.Word == "none" => ShaderBlendMode.None,
+                        _ => throw new ShaderParseException("Expected 'mix', 'add', 'subtract', 'none' or 'multiply'.")
+                    };
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
+                    }
+                }
+                else if (word.Word == "preset")
+                {
+                    if (preset != null)
+                    {
+                        throw new ShaderParseException("Already specified 'preset' before!");
+                    }
+
+                    _takeToken();
+
+                    token = _takeToken();
+
+                    preset = token switch
+                    {
+                        TokenWord t when t.Word == "default" => ShaderPreset.Default,
+                        TokenWord t when t.Word == "raw" => ShaderPreset.Raw,
+                        _ => throw new ShaderParseException("Expected 'default' or 'raw'.")
+                    };
+
+                    token = _takeToken();
+                    if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
+                        semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
+                    {
+                        throw new ShaderParseException("Expected ';'", token.Position);
                     }
                 }
                 else
@@ -143,13 +174,24 @@ namespace Robust.Client.Graphics.Shaders
                     continue;
                 }
 
+                if (word.Word == "const")
+                {
+                    ParseConstant();
+                    continue;
+                }
+
                 _parseFunction();
             }
 
             return new ParsedShader(
                 _uniformsParsing.ToDictionary(p => p.Name, p => p),
                 _varyingsParsing.ToDictionary(p => p.Name, p => p),
-                _functionsParsing, lightMode ?? ShaderLightMode.Default, blendMode ?? ShaderBlendMode.Mix);
+                _constantsParsing.ToDictionary(p => p.Name, p => p),
+                _functionsParsing,
+                lightMode ?? ShaderLightMode.Default,
+                blendMode ?? ShaderBlendMode.Mix,
+                preset ?? ShaderPreset.Default,
+                _includes);
         }
 
         private void _parseFunction()
@@ -190,7 +232,6 @@ namespace Robust.Client.Graphics.Shaders
                 // Parse parameters.
                 while (true)
                 {
-                    token = _takeToken();
                     if (!(token is TokenWord paramTypeOrQualifierToken))
                     {
                         throw new ShaderParseException("Expected type, 'in', 'out' or 'inout'.", token.Position);
@@ -244,6 +285,7 @@ namespace Robust.Client.Graphics.Shaders
                     {
                         if (commaOrCloseParenToken.Symbol == Symbols.Comma)
                         {
+                            token = _takeToken();
                             continue;
                         }
 
@@ -361,6 +403,54 @@ namespace Robust.Client.Graphics.Shaders
             throw new ShaderParseException("Expected ';' or '='", defaultValueMaybe.Position);
         }
 
+        private void ParseConstant()
+        {
+            _takeToken();
+            var typeToken = _takeToken();
+            if (!(typeToken is TokenWord wordType))
+            {
+                throw new ShaderParseException("Expected type.", typeToken.Position);
+            }
+
+            var type = _parseShaderType(wordType);
+
+            var nameToken = _takeToken();
+            if (!(nameToken is TokenWord wordName))
+            {
+                throw new ShaderParseException("Expected constant name.", nameToken.Position);
+            }
+
+            var name = wordName.Word;
+
+            var equals = _takeToken();
+
+            if (!(equals is TokenSymbol equalsSymbol) || equalsSymbol.Symbol != Symbols.Equals)
+            {
+                throw new ShaderParseException("Expected '='", equals.Position);
+            }
+
+            var tokens = new List<Token>();
+            while (true)
+            {
+                var token = _takeToken();
+                if (token == null)
+                {
+                    throw new ShaderParseException("Got EOF while parsing uniform default value.");
+                }
+
+                if (token is TokenSymbol tokenSymbol && tokenSymbol.Symbol == Symbols.Semicolon)
+                {
+                    break;
+                }
+
+                tokens.Add(token);
+            }
+
+            var defValue = _tokensToString(tokens);
+            var def = new ShaderConstantDefinition(name, type, defValue);
+            _constantsParsing.Add(def);
+        }
+
         private void _parseVarying()
         {
             _takeToken();
@@ -454,29 +544,33 @@ namespace Robust.Client.Graphics.Shaders
         [PublicAPI]
         internal readonly struct TextFileRange
         {
+            public readonly string FileName;
             public readonly int LineStart;
             public readonly int LineEnd;
             public readonly int ColumnStart;
             public readonly int ColumnEnd;
 
-            public TextFileRange(int lineStart, int lineEnd, int columnStart, int columnEnd)
+            public TextFileRange(string fileName, int lineStart, int lineEnd, int columnStart, int columnEnd)
             {
+                FileName = fileName;
                 LineStart = lineStart;
                 LineEnd = lineEnd;
                 ColumnStart = columnStart;
                 ColumnEnd = columnEnd;
             }
 
-            public TextFileRange(int line, int columnStart, int columnEnd)
+            public TextFileRange(string fileName, int line, int columnStart, int columnEnd)
             {
+                FileName = fileName;
                 LineStart = line;
                 LineEnd = line;
                 ColumnStart = columnStart;
                 ColumnEnd = columnEnd;
             }
 
-            public TextFileRange(int line, int column) : this()
+            public TextFileRange(string fileName, int line, int column)
             {
+                FileName = fileName;
                 LineStart = line;
                 LineEnd = line;
                 ColumnStart = column;

@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -31,7 +30,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public MapId ParentMapId { get; set; }
 
-        public EntityUid GridEntity { get; internal set; }
+        public EntityUid GridEntityId { get; internal set; }
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -70,7 +69,10 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
 
+        /// <inheritdoc />
         public Box2 LocalBounds { get; private set; }
+
+        public bool SuppressCollisionRegeneration { get; set; }
 
         /// <inheritdoc />
         public ushort ChunkSize { get; }
@@ -95,8 +97,8 @@ namespace Robust.Shared.Map
                     return Vector2.Zero;
 
                 //TODO: Make grids real parents of entities.
-                if(GridEntity.IsValid())
-                    return IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition;
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
                 return Vector2.Zero;
             }
             set
@@ -104,7 +106,7 @@ namespace Robust.Shared.Map
                 if (IsDefaultGrid) // Default grids cannot be moved.
                     return;
 
-                IoCManager.Resolve<IEntityManager>().GetEntity(GridEntity).Transform.WorldPosition = value;
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -113,9 +115,7 @@ namespace Robust.Shared.Map
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
         /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
         /// </summary>
-        /// <param name="gridTile">The new tile to check.</param>
-        /// <param name="empty"></param>
-        private void UpdateAABB(MapIndices gridTile, bool empty)
+        private void UpdateAABB()
         {
             LocalBounds = new Box2();
             foreach (var chunk in _chunks.Values)
@@ -142,7 +142,7 @@ namespace Robust.Shared.Map
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
             LastModifiedTick = _mapManager.GameTiming.CurTick;
-            UpdateAABB(tileRef.GridIndices, tileRef.Tile.IsEmpty);
+            UpdateAABB();
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
         }
 
@@ -271,6 +271,11 @@ namespace Robust.Shared.Map
 
         #region ChunkAccess
 
+        public void RegenerateCollision()
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     The total number of allocated chunks in the grid.
         /// </summary>
@@ -315,15 +320,32 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices SnapGridCellFor(GridCoordinates worldPos, SnapGridOffset offset)
+        public MapIndices SnapGridCellFor(GridCoordinates gridPos, SnapGridOffset offset)
         {
-            var local = worldPos.ConvertToGrid(_mapManager, this);
+            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(gridPos.GridID).ParentMapId);
+
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            return SnapGridCellFor(local, offset);
+        }
+
+        /// <inheritdoc />
+        public MapIndices SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset)
+        {
+            DebugTools.Assert(ParentMapId == worldPos.MapId);
+
+            var localPos = WorldToLocal(worldPos.Position);
+            return SnapGridCellFor(localPos, offset);
+        }
+
+        /// <inheritdoc />
+        public MapIndices SnapGridCellFor(Vector2 localPos, SnapGridOffset offset)
+        {
             if (offset == SnapGridOffset.Edge)
             {
-                local = local.Offset(new Vector2(TileSize / 2f, TileSize / 2f));
+                localPos += new Vector2(TileSize / 2f, TileSize / 2f);
             }
-            var x = (int)Math.Floor(local.X / TileSize);
-            var y = (int)Math.Floor(local.Y / TileSize);
+            var x = (int)Math.Floor(localPos.X / TileSize);
+            var y = (int)Math.Floor(localPos.Y / TileSize);
             return new MapIndices(x, y);
         }
 
@@ -395,9 +417,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToTile(GridCoordinates posWorld)
+        public MapIndices WorldToTile(GridCoordinates gridPos)
         {
-            var local = posWorld.ConvertToGrid(_mapManager, this);
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new MapIndices(x, y);
@@ -406,12 +428,27 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to chunk indices relative to grid origin.
         /// </summary>
-        public MapIndices LocalToChunkIndices(GridCoordinates posWorld)
+        public MapIndices LocalToChunkIndices(GridCoordinates gridPos)
         {
-            var local = posWorld.ConvertToGrid(_mapManager, this);
+            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new MapIndices(x, y);
+        }
+
+        public bool CollidesWithGrid(MapIndices indices)
+        {
+            var chunkIndices = GridTileToChunkIndices(indices);
+            if (!_chunks.TryGetValue(chunkIndices, out var chunk))
+                return false;
+
+            var cTileIndices = chunk.GridTileToChunkTile(indices);
+            return chunk.CollidesWithChunk(cTileIndices);
+        }
+
+        public bool CollidesWithGrid(Box2 aabb)
+        {
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
@@ -427,6 +464,19 @@ namespace Robust.Shared.Map
         public GridCoordinates GridTileToLocal(MapIndices gridTile)
         {
             return new GridCoordinates(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f), this);
+        }
+
+        public Vector2 GridTileToWorldPos(MapIndices gridTile)
+        {
+            var locX = gridTile.X * TileSize + (TileSize / 2f);
+            var locY = gridTile.Y * TileSize + (TileSize / 2f);
+
+            return new Vector2(locX, locY) + WorldPosition;
+        }
+
+        public MapCoordinates GridTileToWorld(MapIndices gridTile)
+        {
+            return new MapCoordinates(GridTileToWorldPos(gridTile), ParentMapId);
         }
 
         /// <inheritdoc />

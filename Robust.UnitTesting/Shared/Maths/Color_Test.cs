@@ -41,6 +41,17 @@ namespace Robust.UnitTesting.Shared.Maths
             (0, 0, 0, f)
         }).Distinct();
 
+        private static IEnumerable<(string hex, Color expected)> HexColorsParsingSource = new[]
+        {
+            ("#FFFFFFFF", new Color(0xff, 0xff, 0xff)),
+            ("#FFFFFF", new Color(0xff, 0xff, 0xff)),
+            ("#12345678", new Color(0x12, 0x34, 0x56, 0x78)),
+            ("#123456", new Color(0x12, 0x34, 0x56)),
+            ("#FFF", new Color(0xff, 0xff, 0xff)),
+            ("#AAA", new Color(0xaa, 0xaa, 0xaa)),
+            ("#963", new Color(0x99, 0x66, 0x33)),
+        };
+
         [Test, Sequential]
         public void ColorConstructorFloat([ValueSource(nameof(FourFloatsSource))] (float, float, float, float) floats,
                                           [ValueSource(nameof(FourBytesSource))] (byte, byte, byte, byte) bytes)
@@ -427,6 +438,14 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.Throws<ArgumentException>(() => Color.FromHex("#a"));
             Assert.Throws<ArgumentException>(() => Color.FromHex("#"));
             Assert.Throws<ArgumentException>(() => Color.FromHex(""));
+        }
+
+        [Test]
+        public void FromHex([ValueSource(nameof(HexColorsParsingSource))] (string hex, Color expected) data)
+        {
+            var (hex, expected) = data;
+
+            Assert.That(Color.FromHex(hex), Is.EqualTo(expected));
         }
     }
 }

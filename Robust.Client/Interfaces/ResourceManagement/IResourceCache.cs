@@ -1,4 +1,5 @@
-﻿using Robust.Client.ResourceManagement;
+﻿using System.Collections.Generic;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
@@ -32,6 +33,8 @@ namespace Robust.Client.Interfaces.ResourceManagement
 
         T GetFallback<T>()
             where T : BaseResource, new();
+
+        IEnumerable<KeyValuePair<ResourcePath, T>> GetAllResources<T>() where T : BaseResource, new();
     }
 
     internal interface IResourceCacheInternal : IResourceCache, IResourceManagerInternal

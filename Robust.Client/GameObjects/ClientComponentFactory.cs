@@ -5,6 +5,7 @@ using Robust.Client.GameObjects.Components.UserInterface;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
@@ -49,7 +50,8 @@ namespace Robust.Client.GameObjects
             RegisterReference<ClickableComponent, IClientClickableComponent>();
             RegisterReference<ClickableComponent, IClickableComponent>();
 
-            Register<OccluderComponent>();
+            Register<ClientOccluderComponent>();
+            RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
             Register<EyeComponent>();
 
@@ -66,6 +68,14 @@ namespace Robust.Client.GameObjects
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
+
+#if DEBUG
+            Register<DebugExceptionOnAddComponent>();
+            Register<DebugExceptionExposeDataComponent>();
+            Register<DebugExceptionInitializeComponent>();
+            Register<DebugExceptionStartupComponent>();
+#endif
+
         }
     }
 }

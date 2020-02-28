@@ -1,4 +1,4 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization;
@@ -52,12 +52,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Entity that this component is attached to.
         /// </summary>
         IEntity Owner { get; }
-
-        /// <summary>
-        ///     Class Type that deserializes this component. This is the type that GetComponentState returns,
-        ///     and is the type that is passed to HandleComponentState.
-        /// </summary>
-        Type StateType { get; }
 
         /// <summary>
         /// Component has been properly initialized.
@@ -127,8 +121,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Handles an incoming component state from the server.
         /// </summary>
-        /// <param name="curState"></param>
-        /// <param name="nextState"></param>
-        void HandleComponentState(ComponentState curState, ComponentState nextState);
+        /// <remarks>
+        /// This function should only be called on the client.
+        /// Both, one, or neither of the two states can be null.
+        /// On the next tick, curState will be nextState.
+        /// Passing null for both arguments should do nothing.
+        /// </remarks>
+        /// <param name="curState">Current component state for this tick.</param>
+        /// <param name="nextState">Next component state for the next tick.</param>
+        void HandleComponentState([CanBeNull]ComponentState curState, [CanBeNull]ComponentState nextState);
     }
 }

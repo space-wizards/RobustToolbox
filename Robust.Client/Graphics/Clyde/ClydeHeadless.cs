@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
+using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -26,6 +27,17 @@ namespace Robust.Client.Graphics.Clyde
         public Vector2 MouseScreenPosition => ScreenSize / 2;
         public IClydeDebugInfo DebugInfo => null;
         public IClydeDebugStats DebugStats => null;
+
+        public Texture GetStockTexture(ClydeStockTexture stockTexture)
+        {
+            return new DummyTexture((1, 1));
+        }
+
+        public ClydeDebugLayers DebugLayers { get; set; }
+
+        public string GetKeyName(Keyboard.Key key) => string.Empty;
+        public string GetKeyNameScanCode(int scanCode) => string.Empty;
+        public int GetKeyScanCode(Keyboard.Key key) => default;
 
         public override void SetWindowTitle(string title)
         {
@@ -71,7 +83,7 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture((image.Width, image.Height));
         }
 
-        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetColorFormat colorFormat,
+        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string name = null)
         {
             return new DummyRenderTarget(size, new DummyTexture(size));
@@ -80,6 +92,11 @@ namespace Robust.Client.Graphics.Clyde
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             return default;
+        }
+
+        public void ReloadShader(ClydeHandle handle, ParsedShader newShader)
+        {
+            // Nada.
         }
 
         public void Ready()
@@ -141,9 +158,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetPosition(Vector2 position)
+            public bool SetPosition(Vector2 position)
             {
-                // Nada.
+                return true;
             }
 
             public void SetPitch(float pitch)
@@ -222,52 +239,76 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyShaderInstance : ShaderInstance
         {
-            protected override ShaderInstance DuplicateImpl()
+            private protected override ShaderInstance DuplicateImpl()
             {
                 return new DummyShaderInstance();
             }
 
-            protected override void SetParameterImpl(string name, float value)
+            private protected override void SetParameterImpl(string name, float value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Vector2 value)
+            private protected override void SetParameterImpl(string name, Vector2 value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Vector3 value)
+            private protected override void SetParameterImpl(string name, Vector3 value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Vector4 value)
+            private protected override void SetParameterImpl(string name, Vector4 value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Color value)
+            private protected override void SetParameterImpl(string name, Color value)
             {
             }
 
-            protected override void SetParameterImpl(string name, int value)
+            private protected override void SetParameterImpl(string name, int value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Vector2i value)
+            private protected override void SetParameterImpl(string name, Vector2i value)
             {
             }
 
-            protected override void SetParameterImpl(string name, bool value)
+            private protected override void SetParameterImpl(string name, bool value)
             {
             }
 
-            protected override void SetParameterImpl(string name, in Matrix3 value)
+            private protected override void SetParameterImpl(string name, in Matrix3 value)
             {
             }
 
-            protected override void SetParameterImpl(string name, in Matrix4 value)
+            private protected override void SetParameterImpl(string name, in Matrix4 value)
             {
             }
 
-            protected override void SetParameterImpl(string name, Texture value)
+            private protected override void SetParameterImpl(string name, Texture value)
+            {
+            }
+
+            private protected override void SetStencilOpImpl(StencilOp op)
+            {
+            }
+
+            private protected override void SetStencilFuncImpl(StencilFunc func)
+            {
+            }
+
+            private protected override void SetStencilTestEnabledImpl(bool enabled)
+            {
+            }
+
+            private protected override void SetStencilRefImpl(int @ref)
+            {
+            }
+
+            private protected override void SetStencilWriteMaskImpl(int mask)
+            {
+            }
+
+            private protected override void SetStencilReadMaskRefImpl(int mask)
             {
             }
         }

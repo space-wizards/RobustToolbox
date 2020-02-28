@@ -21,7 +21,6 @@ namespace Robust.Shared.Network.Messages
         public EntityMessageType Type { get; set; }
 
         public EntitySystemMessage SystemMessage { get; set; }
-        public EntityEventArgs EntityMessage { get; set; }
         public ComponentMessage ComponentMessage { get; set; }
 
         public EntityUid EntityUid { get; set; }
@@ -40,21 +39,11 @@ namespace Robust.Shared.Network.Messages
                     using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
                     {
                         SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
+                        SystemMessage.NetChannel = MsgChannel;
                     }
                 }
                     break;
-                case EntityMessageType.EntityMessage:
-                {
-                    EntityUid = new EntityUid(buffer.ReadInt32());
 
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int messageLength = buffer.ReadInt32();
-                    using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
-                    {
-                        EntityMessage = serializer.Deserialize<EntityEventArgs>(stream);
-                    }
-                }
-                    break;
                 case EntityMessageType.ComponentMessage:
                 {
                     EntityUid = new EntityUid(buffer.ReadInt32());
@@ -88,19 +77,7 @@ namespace Robust.Shared.Network.Messages
                     }
                 }
                     break;
-                case EntityMessageType.EntityMessage:
-                {
-                    buffer.Write((int)EntityUid);
 
-                    var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    using (var stream = new MemoryStream())
-                    {
-                        serializer.Serialize(stream, EntityMessage);
-                        buffer.Write((int)stream.Length);
-                        buffer.Write(stream.ToArray());
-                    }
-                }
-                    break;
                 case EntityMessageType.ComponentMessage:
                 {
                     buffer.Write((int)EntityUid);

@@ -3,6 +3,7 @@ using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
@@ -29,7 +30,6 @@ namespace Robust.Server.GameObjects
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
             RegisterIgnore("Icon");
-            RegisterIgnore("Occluder");
             RegisterIgnore("Eye");
 
             Register<BasicActorComponent>();
@@ -38,6 +38,7 @@ namespace Robust.Server.GameObjects
             Register<CollidableComponent>();
             RegisterReference<CollidableComponent, ICollidableComponent>();
             Register<PointLightComponent>();
+            Register<OccluderComponent>();
 
             RegisterIgnore("Input");
 
@@ -59,6 +60,13 @@ namespace Robust.Server.GameObjects
             Register<IgnorePauseComponent>();
 
             RegisterIgnore("AnimationPlayer");
+
+#if DEBUG
+            Register<DebugExceptionOnAddComponent>();
+            Register<DebugExceptionExposeDataComponent>();
+            Register<DebugExceptionInitializeComponent>();
+            Register<DebugExceptionStartupComponent>();
+#endif
         }
     }
 }

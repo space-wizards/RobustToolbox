@@ -37,9 +37,10 @@ Contains data for all the grids. The section is an ordered sequence. Each sequen
   * `tilesize`: An integer representing the length of one side of a grid tile, in world units (meters).
   * `chunksize`: An integer representing the tile dimensions of a chunk in this grid. Basically, when chunksize is `x`, a single chunk contains a square region of `x` by `x` tiles.
   * `snapsize`: A float representing snap grid size.
-  * `worldpos`: Position in the world of this grid.
 
 * `chunks`: A sequence containing the actual chunk data for this grid. See below.
+
+Grids also have their **grid entity** serialized like regular entities.
 
 ### The `entities` Section
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime;
 using System.Text;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
@@ -8,6 +9,7 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 
 namespace Robust.Server.Console.Commands
 {
@@ -137,9 +139,76 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                GC.Collect(int.Parse(args[0]));
+                if(int.TryParse(args[0], out int result))
+                    GC.Collect(result);
+                else
+                    shell.SendText(player, "Failed to parse argument.");
             }
         }
+    }
+
+    internal class GcModeCommand : IClientCommand
+    {
+
+        public string Command => "gc_mode";
+
+        public string Description => "Change the GC Latency mode.";
+
+        public string Help => "gc_mode [type]";
+
+        public void Execute(IConsoleShell console, IPlayerSession player, params string[] args)
+        {
+            var prevMode = GCSettings.LatencyMode;
+            if (args.Length == 0)
+            {
+                console.SendText(player,$"current gc latency mode: {(int) prevMode} ({prevMode})");
+                console.SendText(player,"possible modes:");
+                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                {
+                    console.SendText(player,$" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
+                }
+            }
+            else
+            {
+                GCLatencyMode mode;
+                if (char.IsDigit(args[0][0]) && int.TryParse(args[0], out var modeNum))
+                {
+                    mode = (GCLatencyMode) modeNum;
+                }
+                else if (!Enum.TryParse(args[0], true, out mode))
+                {
+                    console.SendText(player,$"unknown gc latency mode: {args[0]}");
+                    return;
+                }
+
+                console.SendText(player,$"attempting gc latency mode change: {(int) prevMode} ({prevMode}) -> {(int) mode} ({mode})");
+                GCSettings.LatencyMode = mode;
+                console.SendText(player,$"resulting gc latency mode: {(int) GCSettings.LatencyMode} ({GCSettings.LatencyMode})");
+            }
+
+            return;
+        }
+
+    }
+
+    internal class SerializeStatsCommand : IClientCommand
+    {
+
+        public string Command => "szr_stats";
+
+        public string Description => "Report serializer statistics.";
+
+        public string Help => "szr_stats";
+
+        public void Execute(IConsoleShell console, IPlayerSession player, params string[] args)
+        {
+
+            console.SendText(player,$"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
+            console.SendText(player,$"largest serialized: {RobustSerializer.LargestObjectSerializedBytes} bytes, {RobustSerializer.LargestObjectSerializedType} objects");
+            console.SendText(player,$"deserialized: {RobustSerializer.BytesDeserialized} bytes, {RobustSerializer.ObjectsDeserialized} objects");
+            console.SendText(player,$"largest serialized: {RobustSerializer.LargestObjectDeserializedBytes} bytes, {RobustSerializer.LargestObjectDeserializedType} objects");
+        }
+
     }
 
     internal sealed class MemCommand : IClientCommand

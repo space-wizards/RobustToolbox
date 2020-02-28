@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects.Components
 {
     [Serializable, NetSerializable]
     public class CollidableComponentState : ComponentState

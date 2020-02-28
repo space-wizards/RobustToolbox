@@ -164,7 +164,7 @@ namespace Robust.Client
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
-            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer.Session));
+            PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
             _stateManager.RequestStateChange<MainScreen>();
 

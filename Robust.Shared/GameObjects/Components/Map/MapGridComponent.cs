@@ -36,9 +36,6 @@ namespace Robust.Shared.GameObjects.Components.Map
         public override uint? NetID => NetIDs.MAP_GRID;
 
         /// <inheritdoc />
-        public override Type StateType => typeof(MapGridComponentState);
-
-        /// <inheritdoc />
         public GridId GridIndex
         {
             get => _gridIndex;
@@ -50,12 +47,12 @@ namespace Robust.Shared.GameObjects.Components.Map
 
         public void ClearGridId()
         {
-            _gridIndex = GridId.Nullspace;
+            _gridIndex = GridId.Invalid;
         }
 
         public override void OnRemove()
         {
-            if(GridIndex != GridId.Nullspace) // MapManager won't let us delete nullspace, no point trying
+            if(GridIndex != GridId.Invalid)
             {
                 if(_mapManager.GridExists(_gridIndex))
                 {
@@ -89,7 +86,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _gridIndex, "index", GridId.Nullspace);
+            serializer.DataField(ref _gridIndex, "index", GridId.Invalid);
         }
     }
 

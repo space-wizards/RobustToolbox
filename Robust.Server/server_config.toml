@@ -11,8 +11,8 @@ port = 1212
 bindto = "::,0.0.0.0"
 
 [status]
-enabled = false
-bind = "localhost:1212"
+enabled = true
+bind = "*:1212"
 
 [game]
 hostname = "MyServer"

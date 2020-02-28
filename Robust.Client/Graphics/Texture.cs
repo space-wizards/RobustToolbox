@@ -37,8 +37,14 @@ namespace Robust.Client.Graphics
             Size = size;
         }
 
-        public static Texture Transparent { get; internal set; }
-        public static Texture White { get; internal set; }
+        public static Texture Transparent =>
+            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Transparent);
+
+        public static Texture White =>
+            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.White);
+
+        public static Texture Black =>
+            IoCManager.Resolve<IClydeInternal>().GetStockTexture(ClydeStockTexture.Black);
 
         /// <summary>
         ///     Loads a new texture an existing image.

@@ -37,9 +37,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IEntity Owner { get; set; }
 
-        /// <inheritdoc />
-        public virtual Type StateType => typeof(ComponentState);
-
         /// <summary>
         ///     True if this entity is a client-only entity.
         ///     That is, it does not exist on the server, only THIS client.
@@ -103,6 +100,8 @@ namespace Robust.Shared.GameObjects
 
             if (Deleted)
                 throw new InvalidOperationException("Cannot Add a Deleted component!");
+
+            CreationTick = Owner.EntityManager.CurrentTick;
         }
 
         /// <inheritdoc />
@@ -118,8 +117,6 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Cannot Initialize a Deleted component!");
 
             Initialized = true;
-
-            CreationTick = Owner.EntityManager.CurrentTick;
         }
 
         /// <summary>
@@ -209,5 +206,18 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public virtual void HandleComponentState(ComponentState curState, ComponentState nextState) { }
+
+        // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
+        // This is used as optimization in the game state system to avoid sending redundant component data.
+        internal virtual void ClearTicks()
+        {
+            LastModifiedTick = GameTick.Zero;
+            ClearCreationTick();
+        }
+
+        internal void ClearCreationTick()
+        {
+            CreationTick = GameTick.Zero;
+        }
     }
 }

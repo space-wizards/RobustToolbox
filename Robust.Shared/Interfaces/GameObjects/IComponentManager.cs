@@ -34,7 +34,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         void Clear();
 
-        #region Component Management
+        void Initialize();
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
@@ -153,8 +153,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, out T component)
-            where T : class;
+        bool TryGetComponent<T>(EntityUid uid, out T component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -192,7 +191,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<T> GetComponents<T>(EntityUid uid);
 
         /// <summary>
-        ///     Returns ALL networked components on an entity.
+        ///     Returns ALL networked components on an entity, including deleted ones.
         /// </summary>
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>All components that have a network ID.</returns>
@@ -217,7 +216,5 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
-
-        #endregion
     }
 }

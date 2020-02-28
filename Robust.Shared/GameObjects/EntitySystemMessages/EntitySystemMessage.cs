@@ -1,5 +1,5 @@
 ﻿using System;
-using Robust.Shared.Players;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
@@ -8,7 +8,14 @@ namespace Robust.Shared.GameObjects
     public class EntitySystemMessage : EntityEventArgs
     {
         /// <summary>
-        ///     Entity this message is raised for.
+        /// Remote network channel this message came from.
+        /// If this is null, the message was raised locally.
+        /// </summary>
+        [field: NonSerialized]
+        public INetChannel NetChannel { get; set; }
+
+        /// <summary>
+        /// Entity this message is raised for.
         /// </summary>
         public EntityUid Owner { get; set; }
     }

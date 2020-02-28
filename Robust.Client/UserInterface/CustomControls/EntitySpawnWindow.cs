@@ -116,7 +116,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
                             (OverrideMenu = new OptionButton
                             {
-                                ToggleMode = false,
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                                 ToolTip = _loc.GetString("Override placement")
                             })
@@ -139,6 +138,7 @@ namespace Robust.Client.UserInterface.CustomControls
             BuildEntityList();
 
             this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            SearchBar.GrabKeyboardFocus();
         }
 
         public override void Close()
@@ -186,6 +186,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
             SearchBar.Clear();
+            BuildEntityList("");
         }
 
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
@@ -293,7 +294,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Index = index // We track this index purely for debugging.
             };
             button.ActualButton.OnToggled += OnItemButtonToggled;
-            button.EntityLabel.Text = prototype.Name;
+            button.EntityLabel.Text = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
 
             if (prototype == SelectedPrototype)
             {

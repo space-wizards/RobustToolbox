@@ -14,5 +14,6 @@
         public const uint APPEARANCE = 22;
         public const uint USERINTERFACE = 24;
         public const uint CONTAINER_MANAGER = 25;
+        public const uint OCCLUDER = 26;
     }
 }

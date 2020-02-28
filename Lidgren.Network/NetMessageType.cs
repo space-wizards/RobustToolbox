@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -169,6 +169,8 @@ namespace Lidgren.Network
 		DiscoveryResponse = 137,
 		NatPunchMessage = 138, // send between peers
 		NatIntroduction = 139, // send to master server
+		NatIntroductionConfirmRequest = 142,
+		NatIntroductionConfirmed = 143,
 		ExpandMTURequest = 140,
 		ExpandMTUSuccess = 141,
 	}

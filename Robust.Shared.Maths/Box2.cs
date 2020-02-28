@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Maths
 {
@@ -76,6 +77,7 @@ namespace Robust.Shared.Maths
                    other.Left <= this.Right;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Enlarged(float size)
         {
             return new Box2(Left - size, Bottom - size, Right + size, Top + size);
@@ -86,10 +88,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Box2 Intersect(in Box2 other)
         {
-            var left   = Math.Max(Left,   other.Left);
-            var right  = Math.Min(Right,  other.Right);
+            var left = Math.Max(Left, other.Left);
+            var right = Math.Min(Right, other.Right);
             var bottom = Math.Max(Bottom, other.Bottom);
-            var top    = Math.Min(Top,    other.Top);
+            var top = Math.Min(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -100,12 +102,13 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Union(in Box2 other)
         {
-            var left   = Math.Min(Left,   other.Left);
-            var right  = Math.Max(Right,  other.Right);
+            var left = Math.Min(Left, other.Left);
+            var right = Math.Max(Right, other.Right);
             var bottom = Math.Min(Bottom, other.Bottom);
-            var top    = Math.Max(Top,    other.Top);
+            var top = Math.Max(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -113,22 +116,33 @@ namespace Robust.Shared.Maths
             return new Box2();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEmpty()
         {
             return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Encloses(in Box2 inner)
         {
             return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right &&
                    this.Top > inner.Top;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Contains(in Box2 inner)
+            => Left <= inner.Left
+               && Bottom <= inner.Bottom
+               && Right >= inner.Right
+               && Top >= inner.Top;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(float x, float y)
         {
             return Contains(new Vector2(x, y));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOk = closedRegion
@@ -173,7 +187,7 @@ namespace Robust.Shared.Maths
                    Bottom.Equals(other.Bottom);
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is Box2 box2 && Equals(box2);
@@ -210,6 +224,37 @@ namespace Robust.Shared.Maths
         public override string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static float Area(in Box2 box)
+            => box.Width * box.Height;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Perimeter(in Box2 box)
+            => (box.Width + box.Height) * 2;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Box2 Union(in Vector2 a, in Vector2 b)
+            => new Box2(
+                MathF.Min(a.X, b.X),
+                MathF.Min(a.Y, b.Y),
+                MathF.Max(a.X, b.X),
+                MathF.Max(a.Y, b.Y)
+            );
+
+        /// <summary>
+        ///     Returns this box enlarged to also contain the specified position.
+        /// </summary>
+        public Box2 ExtendToContain(Vector2 vec)
+        {
+            var (x, y) = vec;
+
+            return new Box2(
+                Math.Min(x, Left),
+                Math.Min(y, Bottom),
+                Math.Max(x, Right),
+                Math.Max(y, Top));
         }
     }
 }

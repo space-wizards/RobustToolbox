@@ -38,6 +38,7 @@ namespace Robust.Shared
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IMapManager, MapManager>();
+            IoCManager.Register<IMapManagerInternal, MapManager>();
             IoCManager.Register<IModLoader, ModLoader>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();

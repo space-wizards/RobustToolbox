@@ -1,7 +1,8 @@
-﻿using Robust.Shared.Maths;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections;
+
+using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.Graphics
@@ -50,30 +51,23 @@ namespace Robust.Client.Graphics
             return GetEnumerator();
         }
 
-        [Flags]
-        public enum Selectors
-        {
-            None = 0,
-        }
-
         /// <summary>
-        ///     Represents a name+selector pair used to reference states in an RSI.
+        ///     Represents an ID used to reference states in an RSI.
+        ///     Kept around as a simple wrapper around the state Name, to avoid breaking existing code.
         /// </summary>
         public struct StateId : IEquatable<StateId>
         {
             public readonly string Name;
-            public readonly Selectors Selectors;
 
-            public StateId(string name, Selectors selectors = Selectors.None)
+            public StateId(string name)
             {
                 Name = name;
-                Selectors = selectors;
             }
 
             /// <summary>
             ///     Effectively the "null" of <c>StateId</c>, because you can't have a null for structs.
             /// </summary>
-            public static readonly StateId Invalid = new StateId(null, Selectors.None);
+            public static readonly StateId Invalid = new StateId(null);
             public bool IsValid => Name != null;
 
             public override string ToString()
@@ -83,7 +77,7 @@ namespace Robust.Client.Graphics
 
             public static implicit operator StateId(string key)
             {
-                return new StateId(key, Selectors.None);
+                return new StateId(key);
             }
 
             public override bool Equals(object obj)
@@ -93,7 +87,7 @@ namespace Robust.Client.Graphics
 
             public bool Equals(StateId id)
             {
-                return id.Name == Name && id.Selectors == Selectors;
+                return id.Name == Name;
             }
 
             public static bool operator ==(StateId a, StateId b)
@@ -108,7 +102,7 @@ namespace Robust.Client.Graphics
 
             public override int GetHashCode()
             {
-                return Name.GetHashCode() ^ (int)Selectors;
+                return Name.GetHashCode();
             }
         }
     }

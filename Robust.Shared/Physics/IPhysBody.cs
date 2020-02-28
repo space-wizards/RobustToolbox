@@ -65,5 +65,10 @@ namespace Robust.Shared.Physics
         ///     The map index this physBody is located upon
         /// </summary>
         MapId MapID { get; }
+
+        /// <summary>
+        /// Broad Phase proxy ID.
+        /// </summary>
+        int ProxyId { get; set; }
     }
 }

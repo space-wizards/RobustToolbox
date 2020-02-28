@@ -2,6 +2,7 @@
 using Robust.Shared.Console;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects

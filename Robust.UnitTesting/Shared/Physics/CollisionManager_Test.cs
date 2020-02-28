@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -161,7 +162,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(0, 1), Vector2.UnitX, 1);
+            var ray = new CollisionRay(new Vector2(0, 1), Vector2.UnitX, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();
@@ -174,7 +175,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.True);
@@ -188,7 +189,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             // Arrange
             var box = new Box2(5, -5, 10, 6);
-            var ray = new Ray(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
+            var ray = new CollisionRay(new Vector2(4.99999f, 1), Vector2.UnitY, 1);
             var manager = new PhysicsManager();
 
             var mock = new Mock<IPhysBody>();
@@ -200,7 +201,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(ray);
+            var result = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
             Assert.That(result.DidHitObject, Is.False);
@@ -215,6 +216,9 @@ namespace Robust.UnitTesting.Shared.Physics
             var results = new List<IPhysBody>(1);
             var manager = new PhysicsManager();
 
+            var mockEntity0 = new Mock<IEntity>().Object;
+            var mockEntity1 = new Mock<IEntity>().Object;
+
             var mock0 = new Mock<IPhysBody>();
             mock0.Setup(foo => foo.WorldAABB).Returns(new Box2(-3, -3, 6, 6));
             mock0.Setup(foo => foo.IsHardCollidable).Returns(true);
@@ -222,6 +226,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock0.Setup(foo => foo.CollisionEnabled).Returns(true);
             mock0.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock0.Setup(foo => foo.CollisionMask).Returns(0x04);
+            mock0.Setup(foo => foo.Owner).Returns(mockEntity0);
             var staticBody = mock0.Object;
             manager.AddBody(staticBody);
 
@@ -232,10 +237,10 @@ namespace Robust.UnitTesting.Shared.Physics
             mock1.Setup(foo => foo.CollisionEnabled).Returns(true);
             mock1.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock1.Setup(foo => foo.CollisionMask).Returns(0x04);
+            mock1.Setup(foo => foo.Owner).Returns(mockEntity1);
             var testBody = mock1.Object;
             manager.AddBody(testBody);
 
-            manager.BuildCollisionGrid();
             // Act
             manager.DoCollisionTest(testBody, testBody.WorldAABB, results);
 

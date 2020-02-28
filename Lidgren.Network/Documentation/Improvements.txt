@@ -1,4 +1,4 @@
-
+﻿
 Improvements over last version of library:
 
 * New delivery type: Reliable sequenced (Lost packets are resent but late arrivals are dropped)

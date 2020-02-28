@@ -4,6 +4,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Utility
@@ -26,6 +27,7 @@ namespace Robust.Client.Utility
                             return state.Frame0;
                         }
                     }
+                    Logger.Error("Failed to load RSI {0}", rsi.RsiPath);
                     return resc.GetFallback<TextureResource>();
 
                 default:

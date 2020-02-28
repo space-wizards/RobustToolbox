@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
@@ -24,6 +25,9 @@ namespace Robust.Client.GameObjects.Components.Containers
             throw new NotSupportedException("Cannot modify containers on the client.");
         }
 
+        public override IEnumerable<IContainer> GetAllContainers() =>
+            _containers.Values.Where(c => !c.Deleted);
+
         public override IContainer GetContainer(string id)
         {
             return _containers[id];
@@ -39,6 +43,22 @@ namespace Robust.Client.GameObjects.Components.Containers
             var ret = _containers.TryGetValue(id, out var cont);
             container = cont;
             return ret;
+        }
+
+        /// <inheritdoc />
+        public override bool TryGetContainer(IEntity entity, out IContainer container)
+        {
+            foreach (var contain in _containers.Values)
+            {
+                if (!contain.Deleted && contain.Contains(entity))
+                {
+                    container = contain;
+                    return true;
+                }
+            }
+
+            container = default;
+            return false;
         }
 
         public override bool ContainsEntity(IEntity entity)
@@ -61,7 +81,8 @@ namespace Robust.Client.GameObjects.Components.Containers
 
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
         {
-            var cast = (ContainerManagerComponentState) curState;
+            if(!(curState is ContainerManagerComponentState cast))
+                return;
 
             // Delete now-gone containers.
             List<string> toDelete = null;
@@ -84,13 +105,18 @@ namespace Robust.Client.GameObjects.Components.Containers
             }
 
             // Add new containers and update existing contents.
-            foreach (var (id, entities) in cast.Containers)
+            foreach (var (id, contEnts) in cast.Containers)
             {
+                var (show, entities) = contEnts;
+
                 if (!_containers.TryGetValue(id, out var container))
                 {
                     container = new ClientContainer(id, this);
                     _containers.Add(id, container);
                 }
+
+                // sync show flag
+                container.ShowContents = show;
 
                 // Remove gone entities.
                 List<IEntity> toRemove = null;

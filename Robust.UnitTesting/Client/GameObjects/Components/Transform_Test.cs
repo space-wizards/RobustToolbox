@@ -38,8 +38,12 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
+            var compMan = IoCManager.Resolve<IComponentManager>();
+            compMan.Initialize();
             EntityManager = IoCManager.Resolve<IClientEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
+            MapManager.Initialize();
+            MapManager.Startup();
 
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(PROTOTYPES));
@@ -68,16 +72,16 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var parentTrans = parent.Transform;
             var childTrans = child.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), GridB.Index, new Angle(0), GridB.GridEntity);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), new Angle(0), GridB.GridEntityId);
             parentTrans.HandleComponentState(compState, null);
 
-            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, new Angle(0), GridB.GridEntity);
+            compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), new Angle(0), GridB.GridEntityId);
             childTrans.HandleComponentState(compState, null);
             // World pos should be 6, 6 now.
 
             // Act
             var oldWpos = childTrans.WorldPosition;
-            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, new Angle(0), parent.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState, null);
             var newWpos = childTrans.WorldPosition;
 
@@ -105,11 +109,11 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2Trans = node2.Transform;
             var node3Trans = node3.Transform;
 
-            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), GridB.Index, Angle.FromDegrees(135), GridB.GridEntity);
+            var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), GridB.GridEntityId);
             node1Trans.HandleComponentState(compState, null);
-            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), GridB.Index, Angle.FromDegrees(45), node1.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), node1.Uid);
             node2Trans.HandleComponentState(compState, null);
-            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), GridB.Index, Angle.FromDegrees(45), node2.Uid);
+            compState = new TransformComponent.TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), node2.Uid);
             node3Trans.HandleComponentState(compState, null);
 
             // Act

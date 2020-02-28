@@ -87,7 +87,7 @@ namespace Robust.Shared.Timing
         // ReSharper disable once NotAccessedField.Local
         private readonly IRuntimeLog _runtimeLog;
 
-#if RELEASE
+#if EXCEPTION_TOLERANCE
         private int _tickExceptions;
 #endif
 
@@ -143,14 +143,14 @@ namespace Robust.Shared.Timing
 
                 _timing.StartFrame();
                 realFrameEvent = new FrameEventArgs((float) _timing.RealFrameTime.TotalSeconds);
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
                     // process Net/KB/Mouse input
                     Input?.Invoke(this, realFrameEvent);
                 }
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Input");
@@ -172,13 +172,13 @@ namespace Robust.Shared.Timing
 
                     // update the simulation
                     simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                     var threw = false;
                     try
                     {
 #endif
                     Tick?.Invoke(this, simFrameEvent);
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                     }
                     catch (Exception exp)
                     {
@@ -215,13 +215,13 @@ namespace Robust.Shared.Timing
                 // update out of the simulation
 
                 simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
                     Update?.Invoke(this, simFrameEvent);
                 }
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Update");
@@ -229,13 +229,13 @@ namespace Robust.Shared.Timing
 #endif
 
                 // render the simulation
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
                     Render?.Invoke(this, realFrameEvent);
                 }
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 catch (Exception exp)
                 {
                     _runtimeLog.LogException(exp, "GameLoop Render");

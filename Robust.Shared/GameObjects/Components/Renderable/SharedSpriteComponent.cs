@@ -11,7 +11,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
     {
         public override string Name => "Sprite";
         public override uint? NetID => NetIDs.SPRITE;
-        public override Type StateType => typeof(SpriteComponentState);
 
         /// <summary>
         ///     The resource path from which all texture paths are relative to.

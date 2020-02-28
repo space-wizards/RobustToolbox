@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
@@ -14,7 +15,7 @@ namespace Robust.Server.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    public class PhysicsComponent : Component, Shared.Interfaces.GameObjects.Components.ICollideSpecial
+    public class PhysicsComponent : Component, ICollideSpecial
     {
         private float _mass;
         private Vector2 _linVelocity;

@@ -203,23 +203,40 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public void LoadDirectory(ResourcePath path)
         {
-            foreach (var filePath in _resources.ContentFindFiles(path))
-            {
-                if (filePath.Extension != "yml" || filePath.Filename.StartsWith("."))
-                {
-                    continue;
-                }
-
-                using (var reader = new StreamReader(_resources.ContentFileRead(filePath), EncodingHelpers.UTF8))
+            var sawmill = Logger.GetSawmill("eng");
+            _hasEverBeenReloaded = true;
+            var yamlStreams = _resources.ContentFindFiles(path).ToList().AsParallel()
+                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
+                .Select(filePath =>
                 {
                     try
                     {
-                        LoadFromStream(reader);
+                        using var reader = new StreamReader(_resources.ContentFileRead(filePath), EncodingHelpers.UTF8);
+                        var yamlStream = new YamlStream();
+                        yamlStream.Load(reader);
+
+                        return (yamlStream, filePath);
+                    }
+                    catch (YamlException e)
+                    {
+                        sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", filePath, e.Message);
+                        return (null, null);
+                    }
+                })
+                .Where(p => p.yamlStream != null) // Filter out loading errors.
+                .ToList();
+
+            foreach (var (stream, filePath) in yamlStreams)
+            {
+                for (var i = 0; i < stream.Documents.Count; i++)
+                {
+                    try
+                    {
+                        LoadFromDocument(stream.Documents[i]);
                     }
                     catch (Exception e)
-                        when (e is YamlException || e is PrototypeLoadException)
                     {
-                        Logger.ErrorS("eng", $"Exception whilst loading prototypes from {filePath}: {e}");
+                        Logger.ErrorS("eng", $"Exception whilst loading prototypes from {filePath}#{i}:\n{e}");
                     }
                 }
             }

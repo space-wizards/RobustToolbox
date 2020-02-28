@@ -6,13 +6,21 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public struct GridId : IEquatable<GridId>
     {
-        public static readonly GridId Nullspace = new GridId(0);
+        /// <summary>
+        /// An invalid grid ID.
+        /// </summary>
+        public static readonly GridId Invalid = new GridId(0);
 
         internal readonly int Value;
 
         public GridId(int value)
         {
             Value = value;
+        }
+
+        public bool IsValid()
+        {
+            return Value > 0;
         }
 
         /// <inheritdoc />

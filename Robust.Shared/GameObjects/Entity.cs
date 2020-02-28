@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Robust.Shared.Animations;
+using System.Linq;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -58,7 +57,16 @@ namespace Robust.Shared.GameObjects
         public bool Initialized { get; private set; }
 
         [ViewVariables]
-        public bool Initializing { get; private set; }
+        public bool Initializing {
+            get => _initializing;
+            private set {
+                _initializing = value;
+                if (value)
+                {
+                    EntityManager.UpdateEntityTree(this);
+                }
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -70,6 +78,8 @@ namespace Robust.Shared.GameObjects
         public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
 
         private IMetaDataComponent _metaData;
+
+        private bool _initializing;
         /// <inheritdoc />
         [ViewVariables]
         public IMetaDataComponent MetaData => _metaData ?? (_metaData = GetComponent<IMetaDataComponent>());
@@ -162,6 +172,20 @@ namespace Robust.Shared.GameObjects
             // Startup() can modify _components
             // TODO: This code can only handle additions to the list. Is there a better way?
             var components = EntityManager.ComponentManager.GetComponents(Uid);
+
+            foreach (var t in components.OfType<ITransformComponent>())
+            {
+                if (t.Initialized && !t.Deleted)
+                    t.Running = true;
+            }
+            foreach (var t in components.OfType<ICollidableComponent>())
+            {
+                if (t.Initialized && !t.Deleted)
+                    t.Running = true;
+            }
+
+            EntityManager.UpdateEntityTree(this);
+
             foreach (var t in components)
             {
                 var comp = (Component)t;
@@ -193,30 +217,6 @@ namespace Robust.Shared.GameObjects
 
         #endregion Component Messaging
 
-        #region Entity Events
-
-        /// <inheritdoc />
-        public void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            EntityManager.EventBus.SubscribeEvent(evh, s);
-        }
-
-        /// <inheritdoc />
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(s);
-        }
-
-        /// <inheritdoc />
-        public void RaiseEvent(EntityEventArgs toRaise)
-        {
-            EntityManager.EventBus.RaiseEvent(this, toRaise);
-        }
-
-        #endregion Entity Events
-
         #region Components
 
         /// <summary>
@@ -236,20 +236,10 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.AddComponent<T>(this);
         }
 
-        private void AddComponent(Component component, bool overwrite)
-        {
-            EntityManager.ComponentManager.AddComponent(this, component, overwrite);
-        }
-
         /// <inheritdoc />
         public void RemoveComponent<T>()
         {
             EntityManager.ComponentManager.RemoveComponent<T>(Uid);
-        }
-
-        private void RemoveComponent(IComponent component)
-        {
-            EntityManager.ComponentManager.RemoveComponent(Uid, component);
         }
 
         /// <inheritdoc />
@@ -262,11 +252,6 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent(Type type)
         {
             return EntityManager.ComponentManager.HasComponent(Uid, type);
-        }
-
-        private bool HasComponent(uint netId)
-        {
-            return EntityManager.ComponentManager.HasComponent(Uid, netId);
         }
 
         /// <inheritdoc />
@@ -295,7 +280,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public bool TryGetComponent<T>(out T component)
-            where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
@@ -348,132 +332,6 @@ namespace Robust.Shared.GameObjects
         #endregion Components
 
         #region GameState
-
-        private readonly Dictionary<uint, (ComponentState curState, ComponentState nextState)> _compStateWork
-            = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
-
-        /// <summary>
-        ///     Applies an entity state to this entity.
-        /// </summary>
-        /// <param name="curState">State to apply.</param>
-        internal void HandleEntityState(EntityState curState, EntityState nextState)
-        {
-            _compStateWork.Clear();
-
-            if(curState?.ComponentChanges != null)
-            {
-                foreach (var compChange in curState.ComponentChanges)
-                {
-                    if (compChange.Deleted)
-                    {
-                        if (TryGetComponent(compChange.NetID, out var comp))
-                        {
-                            RemoveComponent(comp);
-                        }
-                    }
-                    else
-                    {
-                        if (HasComponent(compChange.NetID))
-                            continue;
-
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(compChange.ComponentName);
-                        newComp.Owner = this;
-                        AddComponent(newComp, true);
-                    }
-                }
-            }
-
-            if(curState?.ComponentStates != null)
-            {
-                foreach (var compState in curState.ComponentStates)
-                {
-                    _compStateWork[compState.NetID] = (compState, null);
-                }
-            }
-
-            if(nextState?.ComponentStates != null)
-            {
-                foreach (var compState in nextState.ComponentStates)
-                {
-                    if (_compStateWork.TryGetValue(compState.NetID, out var state))
-                    {
-                        _compStateWork[compState.NetID] = (state.curState, compState);
-                    }
-                    else
-                    {
-                        _compStateWork[compState.NetID] = (null, compState);
-                    }
-                }
-            }
-
-            foreach (var kvStates in _compStateWork)
-            {
-                if (!TryGetComponent(kvStates.Key, out var component))
-                {
-                    DebugTools.Assert("Component does not exist for state.");
-                    continue;
-                }
-
-                DebugTools.Assert(kvStates.Value.curState == null
-                                  || kvStates.Value.curState.GetType() == component.StateType,
-                    "Component state is of the wrong type.");
-
-                component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-            }
-        }
-
-        /// <inheritdoc />
-        public EntityState GetEntityState(GameTick fromTick)
-        {
-            var compStates = GetComponentStates(fromTick);
-
-            var changed = new List<ComponentChanged>();
-
-            foreach (var c in EntityManager.ComponentManager.GetNetComponents(Uid))
-            {
-                //TODO: This method is completely broken, GetNetComponents() does not return deleted components.
-                DebugTools.Assert(c.Initialized);
-
-                //Ticks start at 1
-                DebugTools.Assert(c.CreationTick != GameTick.Zero && c.LastModifiedTick != GameTick.Zero);
-
-                if (c.CreationTick >= fromTick && !c.Deleted)
-                {
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(c.NetID.Value, c.Name));
-                }
-                else if (c.Deleted && c.LastModifiedTick >= fromTick)
-                {
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(c.NetID.Value));
-                }
-            }
-
-            var es = new EntityState(Uid, changed, compStates);
-            return es;
-        }
-
-        /// <summary>
-        ///     Server-side method to get the state of all our components
-        /// </summary>
-        /// <returns></returns>
-        private List<ComponentState> GetComponentStates(GameTick fromTick)
-        {
-            var list = new List<ComponentState>();
-            foreach (var component in EntityManager.ComponentManager.GetNetComponents(Uid))
-            {
-                if (!component.NetSyncEnabled || component.LastModifiedTick < fromTick)
-                {
-                    continue;
-                }
-
-                list.Add(component.GetComponentState());
-            }
-
-            return list;
-        }
 
         /// <summary>
         ///     Marks this entity as dirty so that the networking will sync it with clients.

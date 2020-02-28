@@ -3,9 +3,11 @@ using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -31,7 +33,10 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IPlayerManager _playerManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IEntitySystemManager _systemManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
 #pragma warning restore 649
+
+        public bool PvsEnabled => _configurationManager.GetCVar<bool>("net.pvs");
 
         /// <inheritdoc />
         public void Initialize()
@@ -41,18 +46,23 @@ namespace Robust.Server.GameStates
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
+
+            _configurationManager.RegisterCVar("net.pvs", true, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
-        
+
         private void HandleClientConnected(object sender, NetChannelArgs e)
         {
-            if(!_ackedStates.ContainsKey(e.Channel.ConnectionId))
+            if (!_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Add(e.Channel.ConnectionId, GameTick.Zero);
             else
                 _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
         }
-        
+
         private void HandleClientDisconnect(object sender, NetChannelArgs e)
         {
+            _entityManager.DropPlayerState(_playerManager.GetSessionById(e.Channel.SessionId));
+
             if (_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Remove(e.Channel.ConnectionId);
         }
@@ -77,6 +87,7 @@ namespace Robust.Server.GameStates
                     //Performance/Abuse: Should this be rate limited?
                     _ackedStates[uniqueIdentifier] = GameTick.Zero;
                 }
+
                 //else stateAcked was out of order or client is being silly, just ignore
             }
             else
@@ -87,6 +98,8 @@ namespace Robust.Server.GameStates
         public void SendGameStateUpdate()
         {
             DebugTools.Assert(_networkManager.IsServer);
+
+            _entityManager.Update();
 
             if (!_networkManager.IsConnected)
             {
@@ -99,39 +112,51 @@ namespace Robust.Server.GameStates
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
 
             var oldestAck = GameTick.MaxValue;
+
+
             foreach (var channel in _networkManager.Channels)
             {
                 var session = _playerManager.GetSessionByChannel(channel);
-                if (session == null || session.Status != SessionStatus.InGame) // client still joining, maybe iterate over sessions instead?
+                if (session == null || session.Status != SessionStatus.InGame)
+                {
+                    // client still joining, maybe iterate over sessions instead?
                     continue;
+                }
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
                 {
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
-                
-                //TODO: Cull these based on client view rectangle, remember the issues with transform parenting
-                var entities = _entityManager.GetEntityStates(lastAck);
-                var players = _playerManager.GetPlayerStates(lastAck);
+
+                var entStates = lastAck == GameTick.Zero || !PvsEnabled
+                    ? _entityManager.GetEntityStates(lastAck)
+                    : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
+                var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
+
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var state = new GameState(lastAck, _gameTiming.CurTick, inputSystem.GetLastInputCommand(session), entities, players, deletions, mapData);
+                var state = new GameState(lastAck, _gameTiming.CurTick, inputSystem.GetLastInputCommand(session), entStates, playerStates, deletions, mapData);
+                if (lastAck < oldestAck)
+                {
+                    oldestAck = lastAck;
+                }
 
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
-                // we are not going to send a full state every tick (rip bandwidth) until they ack, so assume they receive it
-                // and start the deltas from the full state.
-                // the client will signal to us if they need another one.
-                if (lastAck == GameTick.Zero)
+                // If the state is too big we let Lidgren send it reliably.
+                // This is to avoid a situation where a state is so large that it consistently gets dropped
+                // (or, well, part of it).
+                // When we send them reliably, we immediately update the ack so that the next state will not be huge.
+                if (stateUpdateMessage.ShouldSendReliably())
+                {
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                }
 
-                if (lastAck < oldestAck)
-                    oldestAck = lastAck;
             }
 
             // keep the deletion history buffers clean
@@ -142,5 +167,6 @@ namespace Robust.Server.GameStates
                 _mapManager.CullDeletionHistory(oldestAck);
             }
         }
+
     }
 }

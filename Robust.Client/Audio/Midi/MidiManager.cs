@@ -158,6 +158,11 @@ namespace Robust.Client.Audio.Midi
 
         public void FrameUpdate(float frameTime)
         {
+            if (!FluidsynthInitialized)
+            {
+                return;
+            }
+
             // Update positions of streams every frame.
             lock (_renderers)
                 for (var i = 0; i < _renderers.Count; i++)
@@ -171,11 +176,19 @@ namespace Robust.Client.Audio.Midi
 
                     if (renderer.TrackingCoordinates != null)
                     {
-                        renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToWorld(_mapManager).Position);
+                        if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
+                        {
+                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
+                            renderer.Source.StopPlaying();
+                        }
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition);
+                        if (!renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition))
+                        {
+                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
+                            renderer.Source.StopPlaying();
+                        }
                     }
                 }
         }

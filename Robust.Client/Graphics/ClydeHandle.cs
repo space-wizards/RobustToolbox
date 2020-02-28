@@ -4,19 +4,19 @@ namespace Robust.Client.Graphics
 {
     internal struct ClydeHandle : IEquatable<ClydeHandle>
     {
-        public ClydeHandle(int value)
+        public ClydeHandle(long value)
         {
             Value = value;
         }
 
-        public int Value { get; }
+        public long Value { get; }
 
-        public static explicit operator ClydeHandle(int x)
+        public static explicit operator ClydeHandle(long x)
         {
             return new ClydeHandle(x);
         }
 
-        public static explicit operator int(ClydeHandle h)
+        public static explicit operator long(ClydeHandle h)
         {
             return h.Value;
         }
@@ -33,7 +33,7 @@ namespace Robust.Client.Graphics
 
         public override int GetHashCode()
         {
-            return Value;
+            return Value.GetHashCode();
         }
 
         public static bool operator ==(ClydeHandle left, ClydeHandle right)

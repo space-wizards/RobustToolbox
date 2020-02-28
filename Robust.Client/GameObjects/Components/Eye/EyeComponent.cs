@@ -23,6 +23,7 @@ namespace Robust.Client.GameObjects
 
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize;
+        private bool setDrawFovOnInitialize;
         private Vector2 setZoomOnInitialize = Vector2.One;
         private Vector2 offset = Vector2.Zero;
 
@@ -76,6 +77,23 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool DrawFov
+        {
+            get => _eye?.DrawFov ?? setDrawFovOnInitialize;
+            set
+            {
+                if (_eye == null)
+                {
+                    setDrawFovOnInitialize = value;
+                }
+                else
+                {
+                    _eye.DrawFov = value;
+                }
+            }
+        }
+
         [ViewVariables]
         public MapCoordinates? Position => _eye?.Position;
 
@@ -88,6 +106,7 @@ namespace Robust.Client.GameObjects
             {
                 Position = Owner.Transform.MapPosition,
                 Zoom = setZoomOnInitialize,
+                DrawFov = setDrawFovOnInitialize
             };
 
             if (_eyeManager.CurrentEye == _eye != setCurrentOnInitialize)
@@ -109,6 +128,7 @@ namespace Robust.Client.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One);
+            serializer.DataFieldCached(ref setDrawFovOnInitialize, "drawFov", true);
         }
 
         /// <summary>

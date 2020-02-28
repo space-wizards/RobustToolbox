@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.Utility;
+using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,77 +11,117 @@ namespace Robust.Shared.GameObjects
     /// Provides a central event bus that EntitySystems can subscribe to. This is the main way that
     /// EntitySystems communicate with each other.
     /// </summary>
+    [PublicAPI]
     public interface IEventBus
     {
         /// <summary>
         /// Subscribes an event handler for a event type.
         /// </summary>
         /// <typeparam name="T">Event type to subscribe to.</typeparam>
-        /// <param name="eventHandler">Delegate that handles the event.</param>
+        /// <param name="source"></param>
         /// <param name="subscriber">Subscriber that owns the handler.</param>
-        void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber subscriber)
+        /// <param name="eventHandler">Delegate that handles the event.</param>
+        void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler)
             where T : EntityEventArgs;
 
         /// <summary>
         /// Unsubscribes all event handlers of a given type.
         /// </summary>
         /// <typeparam name="T">Event type being unsubscribed from.</typeparam>
+        /// <param name="source"></param>
         /// <param name="subscriber">Subscriber that owns the handlers.</param>
-        void UnsubscribeEvent<T>(IEntityEventSubscriber subscriber)
+        void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber)
             where T : EntityEventArgs;
 
         /// <summary>
         /// Immediately raises an event onto the bus.
         /// </summary>
-        /// <param name="sender">Object that raised the event.</param>
+        /// <param name="source"></param>
         /// <param name="toRaise">Event being raised.</param>
-        void RaiseEvent(object sender, EntityEventArgs toRaise);
+        void RaiseEvent(EventSource source, EntityEventArgs toRaise);
 
         /// <summary>
         /// Queues an event to be raised at a later time.
         /// </summary>
-        /// <param name="sender">Object that raised the event.</param>
+        /// <param name="source"></param>
         /// <param name="toRaise">Event being raised.</param>
-        void QueueEvent(object sender, EntityEventArgs toRaise);
+        void QueueEvent(EventSource source, EntityEventArgs toRaise);
+
+        /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <typeparam name="T">Event type being waited for.</typeparam>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        Task<T> AwaitEvent<T>(EventSource source)
+            where T : EntityEventArgs;
+
+        /// <summary>
+        /// Waits for an event to be raised. You do not have to subscribe to the event.
+        /// </summary>
+        /// <typeparam name="T">Event type being waited for.</typeparam>
+        /// <param name="source"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken)
+            where T : EntityEventArgs;
+
+        /// <summary>
+        /// Unsubscribes all event handlers for a given subscriber.
+        /// </summary>
+        /// <param name="subscriber">Owner of the handlers being removed.</param>
+        void UnsubscribeEvents(IEntityEventSubscriber subscriber);
     }
 
     /// <inheritdoc />
     internal interface IEntityEventBus : IEventBus
     {
         /// <summary>
-        /// Unsubscribes all event handlers for a given subscriber.
-        /// </summary>
-        /// <param name="subscriber">Owner of the handlers being removed.</param>
-        void UnsubscribeEvents(IEntityEventSubscriber subscriber);
-
-        /// <summary>
         /// Raises all queued events onto the event bus. This needs to be called often.
         /// </summary>
         void ProcessEventQueue();
     }
 
+    [Flags]
+    public enum EventSource
+    {
+        None    = 0b0000,
+        Local   = 0b0001,
+        Network = 0b0010,
+
+        All = Local | Network,
+    }
+
     /// <inheritdoc />
     internal class EntityEventBus : IEntityEventBus
     {
-        private readonly Dictionary<Type, List<Delegate>> _eventSubscriptions
-            = new Dictionary<Type, List<Delegate>>();
+        private delegate void EventHandler(EntityEventArgs ev);
 
-        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>> _inverseEventSubscriptions
-            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Delegate>>();
+        private readonly Dictionary<Type, List<(EventSource mask, Delegate originalHandler, EventHandler callback)>> _eventSubscriptions
+            = new Dictionary<Type, List<(EventSource mask, Delegate originalHandler, EventHandler callback)>>();
 
-        private readonly Queue<(object sender, EntityEventArgs eventArgs)> _eventQueue
-            = new Queue<(object, EntityEventArgs)>();
+        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate originalHandler, EventHandler handler)>> _inverseEventSubscriptions
+            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate originalHandler, EventHandler handler)>>();
+
+        private readonly Queue<(EventSource source, EntityEventArgs args)> _eventQueue = new Queue<(EventSource source, EntityEventArgs args)>();
+
+        private readonly Dictionary<Type, (EventSource, CancellationTokenRegistration, TaskCompletionSource<EntityEventArgs>)>
+            _awaitingMessages
+                = new Dictionary<Type, (EventSource, CancellationTokenRegistration, TaskCompletionSource<EntityEventArgs>)>();
 
         /// <inheritdoc />
         public void UnsubscribeEvents(IEntityEventSubscriber subscriber)
         {
+            if (subscriber == null)
+                throw new ArgumentNullException(nameof(subscriber));
+
             if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var val))
                 return;
 
             // UnsubscribeEvent modifies _inverseEventSubscriptions, requires val to be cached
-            foreach (var (type, @delegate) in val.ToList())
+            foreach (var (type, (source, originalHandler, handler)) in val.ToList())
             {
-                UnsubscribeEvent(type, @delegate, subscriber);
+                UnsubscribeEvent(source, type, originalHandler, handler, subscriber);
             }
         }
 
@@ -88,14 +130,18 @@ namespace Robust.Shared.GameObjects
         {
             while (_eventQueue.Count != 0)
             {
-                ProcessSingleEvent(_eventQueue.Dequeue());
+                var eventTuple = _eventQueue.Dequeue();
+                ProcessSingleEvent(eventTuple.source, eventTuple.args);
             }
         }
 
         /// <inheritdoc />
-        public void SubscribeEvent<T>(EntityEventHandler<T> eventHandler, IEntityEventSubscriber subscriber)
+        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler)
             where T : EntityEventArgs
         {
+            if (source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
 
@@ -103,16 +149,17 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentNullException(nameof(subscriber));
 
             var eventType = typeof(T);
+            var subscriptionTuple = (source, eventHandler, (EventHandler) (ev => eventHandler((T) ev)));
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
-                _eventSubscriptions.Add(eventType, new List<Delegate> {eventHandler});
-            else if (!subscriptions.Contains(eventHandler))
-                subscriptions.Add(eventHandler);
+                _eventSubscriptions.Add(eventType, new List<(EventSource, Delegate, EventHandler)> {subscriptionTuple});
+            else if (!subscriptions.Any(p => p.mask == source && p.originalHandler == (Delegate) eventHandler))
+                subscriptions.Add(subscriptionTuple);
 
             if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var inverseSubscription))
             {
-                inverseSubscription = new Dictionary<Type, Delegate>
+                inverseSubscription = new Dictionary<Type, (EventSource, Delegate, EventHandler)>
                 {
-                    {eventType, eventHandler}
+                    {eventType, subscriptionTuple}
                 };
 
                 _inverseEventSubscriptions.Add(
@@ -123,59 +170,124 @@ namespace Robust.Shared.GameObjects
 
             else if (!inverseSubscription.ContainsKey(eventType))
             {
-                inverseSubscription.Add(eventType, eventHandler);
+                inverseSubscription.Add(eventType, subscriptionTuple);
             }
         }
 
         /// <inheritdoc />
-        public void UnsubscribeEvent<T>(IEntityEventSubscriber subscriber)
+        public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber)
             where T : EntityEventArgs
         {
+            if (source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
+            if (subscriber == null)
+                throw new ArgumentNullException(nameof(subscriber));
+
             var eventType = typeof(T);
 
             if (_inverseEventSubscriptions.TryGetValue(subscriber, out var inverse)
-                && inverse.TryGetValue(eventType, out var @delegate))
-                UnsubscribeEvent(eventType, @delegate, subscriber);
+                && inverse.TryGetValue(eventType, out var tuple))
+                UnsubscribeEvent(source, eventType, tuple.originalHandler, tuple.handler, subscriber);
         }
 
         /// <inheritdoc />
-        public void RaiseEvent(object sender, EntityEventArgs toRaise)
+        public void RaiseEvent(EventSource source, EntityEventArgs toRaise)
         {
-            if(toRaise == null)
+            if (source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
+            if (toRaise == null)
                 throw new ArgumentNullException(nameof(toRaise));
 
-            ProcessSingleEvent((sender, toRaise));
+            ProcessSingleEvent(source, toRaise);
         }
 
         /// <inheritdoc />
-        public void QueueEvent(object sender, EntityEventArgs toRaise)
+        public void QueueEvent(EventSource source, EntityEventArgs toRaise)
         {
+            if(source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
             if(toRaise == null)
                 throw new ArgumentNullException(nameof(toRaise));
 
-            _eventQueue.Enqueue((sender, toRaise));
+            _eventQueue.Enqueue((source, toRaise));
         }
 
-        private void UnsubscribeEvent(Type eventType, Delegate evh, IEntityEventSubscriber s)
+        /// <inheritdoc />
+        public Task<T> AwaitEvent<T>(EventSource source)
+            where T : EntityEventArgs
         {
-            if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(evh))
-                subscriptions.Remove(evh);
+            return AwaitEvent<T>(source,default);
+        }
 
-            if (_inverseEventSubscriptions.TryGetValue(s, out var inverse) && inverse.ContainsKey(eventType))
+        /// <inheritdoc />
+        public Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken)
+            where T : EntityEventArgs
+        {
+            if(source == EventSource.None)
+                throw new ArgumentOutOfRangeException(nameof(source));
+
+            var type = typeof(T);
+            if (_awaitingMessages.ContainsKey(type))
+            {
+                throw new InvalidOperationException("Cannot await the same message type twice at once.");
+            }
+
+            var tcs = new TaskCompletionSource<EntityEventArgs>();
+            CancellationTokenRegistration reg = default;
+            if (cancellationToken != default)
+            {
+                reg = cancellationToken.Register(() =>
+                {
+                    _awaitingMessages.Remove(type);
+                    tcs.TrySetCanceled();
+                });
+            }
+
+            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
+            async Task<T> DoCast(Task<EntityEventArgs> task)
+            {
+                return (T)await task;
+            }
+
+            _awaitingMessages.Add(type, (source, reg, tcs));
+            return DoCast(tcs.Task);
+        }
+
+        private void UnsubscribeEvent(EventSource source, Type eventType, Delegate originalHandler, EventHandler handler, IEntityEventSubscriber subscriber)
+        {
+            var tuple = (source, originalHandler, evh: handler);
+            if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(tuple))
+                subscriptions.Remove(tuple);
+
+            if (_inverseEventSubscriptions.TryGetValue(subscriber, out var inverse) && inverse.ContainsKey(eventType))
                 inverse.Remove(eventType);
         }
 
-        private void ProcessSingleEvent((object sender, EntityEventArgs eventArgs) argsTuple)
+        private void ProcessSingleEvent(EventSource source, EntityEventArgs eventArgs)
         {
-            var (sender, eventArgs) = argsTuple;
             var eventType = eventArgs.GetType();
 
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
-                return;
-
-            foreach (var handler in subs)
+            if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
-                handler.DynamicInvoke(sender, eventArgs);
+                foreach (var handler in subs)
+                {
+                    if((handler.mask & source) != 0)
+                        handler.callback(eventArgs);
+                }
+            }
+
+            if (_awaitingMessages.TryGetValue(eventType, out var awaiting))
+            {
+                var (mask, _, tcs) = awaiting;
+
+                if((source & mask) != 0)
+                {
+                    tcs.TrySetResult(eventArgs);
+                    _awaitingMessages.Remove(eventType);
+                }
             }
         }
     }

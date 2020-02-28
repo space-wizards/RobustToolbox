@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
-    public partial class MapManager
+    internal partial class MapManager
     {
 #pragma warning disable 649
         [Dependency] private readonly INetManager _netManager;
@@ -240,11 +240,11 @@ namespace Robust.Shared.Map
                     var grid = _grids[kvNewGrid.Key];
 
                     // this was already linked in a previous state.
-                    if(!grid.GridEntity.IsClientSide())
+                    if(!grid.GridEntityId.IsClientSide())
                         continue;
 
                     // remove the existing client entity.
-                    var cEntity = _entityManager.GetEntity(grid.GridEntity);
+                    var cEntity = _entityManager.GetEntity(grid.GridEntityId);
                     var cGridComp = cEntity.GetComponent<IMapGridComponent>();
                     cGridComp.ClearGridId();
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
@@ -254,13 +254,13 @@ namespace Robust.Shared.Map
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)
                         {
-                            grid.GridEntity = gridComp.Owner.Uid;
-                            Logger.DebugS("map", $"Grid {grid.Index} pivoted bound entity from {cEntity.Uid} to {grid.GridEntity}.");
+                            grid.GridEntityId = gridComp.Owner.Uid;
+                            Logger.DebugS("map", $"Grid {grid.Index} pivoted bound entity from {cEntity.Uid} to {grid.GridEntityId}.");
                             break;
                         }
                     }
 
-                    DebugTools.Assert(!grid.GridEntity.IsClientSide());
+                    DebugTools.Assert(!grid.GridEntityId.IsClientSide());
                 }
             }
 

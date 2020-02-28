@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
@@ -8,6 +9,8 @@ namespace Robust.Shared.Map
         GameTick LastModifiedTick { get; }
 
         GameTick CurTick { get; }
+
+        Box2 LocalBounds { get; }
 
         /// <summary>
         ///     The total number of chunks contained on this grid.

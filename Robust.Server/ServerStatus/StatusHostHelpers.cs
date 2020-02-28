@@ -1,33 +1,36 @@
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using Microsoft.AspNetCore.Http;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
+
     public static class StatusHostHelpers
     {
-        public static bool IsGetLike(this HttpMethod method)
-        {
-            return method == HttpMethod.Get || method == HttpMethod.Head;
-        }
 
-        public static void Respond(this HttpListenerResponse response, HttpMethod method, string text, HttpStatusCode code,
-            string contentType)
+        public static bool IsGetLike(this HttpMethod method) =>
+            method == HttpMethod.Get || method == HttpMethod.Head;
+
+        public static void Respond(this HttpResponse response, string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain") =>
+            response.Respond(text, (int) code, contentType);
+
+        public static void Respond(this HttpResponse response, string text, int code = 200, string contentType = "text/plain")
         {
-            response.StatusCode = (int) code;
-            response.ContentEncoding = EncodingHelpers.UTF8;
+            response.StatusCode = code;
             response.ContentType = contentType;
 
-            if (method != HttpMethod.Head)
+            if (response.HttpContext.Request.Method == "HEAD")
             {
-                using (var writer = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8))
-                {
-                    writer.Write(text);
-                }
+                return;
             }
 
-            response.Close();
+            using var writer = new StreamWriter(response.Body, EncodingHelpers.UTF8);
+
+            writer.Write(text);
         }
+
     }
+
 }

@@ -135,8 +135,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent<T>(out T component)
-            where T : class;
+        bool TryGetComponent<T>(out T component);
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
@@ -195,20 +194,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
-
-        /// <summary>
-        ///     Serverside method to prepare an entity state object
-        /// </summary>
-        /// <returns></returns>
-        EntityState GetEntityState(GameTick fromTick);
-
-        void SubscribeEvent<T>(EntityEventHandler<EntityEventArgs> evh, IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void UnsubscribeEvent<T>(IEntityEventSubscriber s)
-            where T : EntityEventArgs;
-
-        void RaiseEvent(EntityEventArgs toRaise);
 
         void Dirty();
     }

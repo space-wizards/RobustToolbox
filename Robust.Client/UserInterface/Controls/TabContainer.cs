@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -67,7 +68,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public string GetTabTitle(int tab)
         {
-            return _tabData[tab].Name ?? GetChild(tab).Name;
+            return _tabData[tab].Name ?? GetChild(tab).Name ?? Loc.GetString("No title");
         }
 
         public void SetTabTitle(int tab, string title)

@@ -14,7 +14,7 @@ namespace Robust.Client.Graphics.ClientEye
 
         /// <inheritdoc />
         public virtual MapCoordinates Position { get; internal set; }
-        
+
         /// <inheritdoc />
         public Matrix3 GetViewMatrix()
         {
@@ -25,5 +25,7 @@ namespace Robust.Client.Graphics.ClientEye
             matrix.R1C2 = -Position.Y / Zoom.Y;
             return matrix;
         }
+
+        public bool DrawFov { get; set; } = true;
     }
 }

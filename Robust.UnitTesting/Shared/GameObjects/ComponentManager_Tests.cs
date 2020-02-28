@@ -249,6 +249,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<IComponent>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
+            mockFactory.Setup(x => x.GetAllRefTypes()).Returns(new[] { typeof(DummyComponent) });
             dependencies.RegisterInstance<IComponentFactory>(mockFactory.Object);
 
             // set up the entity manager
@@ -257,6 +258,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var manager = new ComponentManager();
             dependencies.InjectDependencies(manager);
+            manager.Initialize();
 
             entityManager = mockEntMan.Object;
             return manager;

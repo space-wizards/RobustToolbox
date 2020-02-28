@@ -12,7 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
-    public static class YamlGridSerializer
+    internal static class YamlGridSerializer
     {
         public static YamlMappingNode SerializeGrid(IMapGrid mapGrid)
         {
@@ -28,7 +28,6 @@ namespace Robust.Server.Maps
             info.Add("chunksize", grid.ChunkSize.ToString(CultureInfo.InvariantCulture));
             info.Add("tilesize", grid.TileSize.ToString(CultureInfo.InvariantCulture));
             info.Add("snapsize", grid.SnapSize.ToString(CultureInfo.InvariantCulture));
-            info.Add("worldpos", $"{grid.WorldPosition.X},{grid.WorldPosition.Y}");
 
             var chunks = grid.GetMapChunks();
             foreach (var chunk in chunks)
@@ -80,14 +79,13 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManager mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
+        public static void DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager)
         {
             ushort csz = 0;
             ushort tsz = 0;
             float sgsz = 0.0f;
-            var worldPos = Vector2.Zero;
 
             foreach (var kvInfo in info)
             {
@@ -99,50 +97,53 @@ namespace Robust.Server.Maps
                     tsz = ushort.Parse(val);
                 else if (key == "snapsize")
                     sgsz = float.Parse(val);
-                else if (key == "worldpos")
-                    worldPos = kvInfo.Value.AsVector2();
             }
 
-            var grid = mapMan.CreateGrid(mapId, gridId);
+            var grid = mapMan.CreateGridNoEntity(mapId, gridId);
 
             gridId = grid.Index;
 
-            foreach (YamlMappingNode chunkNode in chunks.Cast<YamlMappingNode>())
+            foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {
                 DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
         }
 
-        private static void DeserializeChunk(IMapManager mapMan, IMapGrid grid, YamlMappingNode chunk, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
+        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {
-            var indNode = chunk["ind"];
-            var tileNode = chunk["tiles"];
+            var indNode = chunkData["ind"];
+            var tileNode = chunkData["tiles"];
 
-            var (chunkOffsetX, chunkOffsetY) = indNode.AsVector2i() * grid.ChunkSize;
+            var (chunkOffsetX, chunkOffsetY) = indNode.AsVector2i();
             var tileBytes = Convert.FromBase64String(tileNode.ToString());
 
-            using (var stream = new MemoryStream(tileBytes))
-            using (var reader = new BinaryReader(stream))
+            using var stream = new MemoryStream(tileBytes);
+            using var reader = new BinaryReader(stream);
+
+            mapMan.SuppressOnTileChanged = true;
+
+            var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+
+            chunk.SuppressCollisionRegeneration = true;
+
+            for (ushort y = 0; y < grid.ChunkSize; y++)
             {
-                mapMan.SuppressOnTileChanged = true;
-
-                for (var y = 0; y < grid.ChunkSize; y++)
+                for (ushort x = 0; x < grid.ChunkSize; x++)
                 {
-                    for (var x = 0; x < grid.ChunkSize; x++)
-                    {
-                        var id = reader.ReadUInt16();
-                        var data = reader.ReadUInt16();
+                    var id = reader.ReadUInt16();
+                    var data = reader.ReadUInt16();
 
-                        var defName = tileDefMapping[id];
-                        id = tileDefinitionManager[defName].TileId;
+                    var defName = tileDefMapping[id];
+                    id = tileDefinitionManager[defName].TileId;
 
-                        var tile = new Tile(id, data);
-                        grid.SetTile(new MapIndices(chunkOffsetX + x, chunkOffsetY + y), tile);
-                    }
+                    var tile = new Tile(id, data);
+                    chunk.SetTile(x, y, tile);
                 }
-
-                mapMan.SuppressOnTileChanged = false;
             }
+
+            chunk.SuppressCollisionRegeneration = false;
+            chunk.RegenerateCollision();
+            mapMan.SuppressOnTileChanged = false;
         }
     }
 }

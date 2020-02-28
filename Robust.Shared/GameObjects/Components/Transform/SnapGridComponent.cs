@@ -32,11 +32,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public SnapGridOffset Offset => _offset;
 
         /// <inheritdoc />
-        protected override void Startup()
+        public override void Initialize()
         {
-            base.Startup();
+            base.Initialize();
 
-            Owner.Transform.OnMove += OnTransformMove;
             UpdatePosition();
         }
 
@@ -45,21 +44,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
         {
             base.Shutdown();
 
-            Owner.Transform.OnMove -= OnTransformMove;
             if (IsSet)
             {
-                if (!_mapManager.TryGetGrid(_lastGrid, out var grid))
+                if (_mapManager.TryGetGrid(_lastGrid, out var grid))
                 {
-                    Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
+                    grid.RemoveFromSnapGridCell(Position, Offset, this);
                     return;
                 }
 
-                grid.RemoveFromSnapGridCell(Position, Offset, this);
                 IsSet = false;
             }
         }
-
-        void OnTransformMove(object sender, object eventArgs) => UpdatePosition();
 
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -92,32 +87,66 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return $"ofs/pos: {Offset}/{Position}";
         }
 
-        MapIndices SnapGridPosAt(Direction dir)
+        public GridCoordinates DirectionToGrid(Direction direction)
+        {
+            var ownerGrid = _mapManager.GetGrid(Owner.Transform.GridID);
+            var grid = ownerGrid.GridTileToLocal(SnapGridPosAt(direction));
+
+            return grid;
+        }
+
+        MapIndices SnapGridPosAt(Direction dir, int dist = 1)
         {
             switch (dir)
             {
                 case Direction.East:
-                    return Position + new MapIndices(1, 0);
+                    return Position + new MapIndices(dist, 0);
                 case Direction.SouthEast:
-                    return Position + new MapIndices(1, -1);
+                    return Position + new MapIndices(dist, -dist);
                 case Direction.South:
-                    return Position + new MapIndices(0, -1);
+                    return Position + new MapIndices(0, -dist);
                 case Direction.SouthWest:
-                    return Position + new MapIndices(-1, -1);
+                    return Position + new MapIndices(-dist, -dist);
                 case Direction.West:
-                    return Position + new MapIndices(-1, 0);
+                    return Position + new MapIndices(-dist, 0);
                 case Direction.NorthWest:
-                    return Position + new MapIndices(-1, 1);
+                    return Position + new MapIndices(-dist, dist);
                 case Direction.North:
-                    return Position + new MapIndices(0, 1);
+                    return Position + new MapIndices(0, dist);
                 case Direction.NorthEast:
-                    return Position + new MapIndices(1, 1);
+                    return Position + new MapIndices(dist, dist);
                 default:
                     throw new NotImplementedException();
             }
         }
 
-        private void UpdatePosition()
+        public IEnumerable<SnapGridComponent> GetCardinalNeighborCells()
+        {
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+            foreach (var cell in grid.GetSnapGridCell(Position, Offset))
+                yield return cell;
+            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(0, 1), Offset))
+                yield return cell;
+            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(0, -1), Offset))
+                yield return cell;
+            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(1, 0), Offset))
+                yield return cell;
+            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(-1, 0), Offset))
+                yield return cell;
+        }
+
+        public IEnumerable<SnapGridComponent> GetCellsInSquareArea(int n = 1)
+        {
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+            for (var y = -n; y <= n; ++y)
+            for (var x = -n; x <= n; ++x)
+            {
+                foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(x, y), Offset))
+                    yield return cell;
+            }
+        }
+
+        internal void UpdatePosition()
         {
             if (IsSet)
             {

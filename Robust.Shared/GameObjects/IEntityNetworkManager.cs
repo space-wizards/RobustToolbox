@@ -4,8 +4,21 @@ using Robust.Shared.Interfaces.Network;
 
 namespace Robust.Shared.GameObjects
 {
+    /// <summary>
+    /// Manages the sending and receiving of network messages between the server and client(s).
+    /// </summary>
     public interface IEntityNetworkManager
     {
+        /// <summary>
+        /// This event is raised when a component message comes in from the network.
+        /// </summary>
+        event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+
+        /// <summary>
+        /// This event is raised when a component message comes in from the network.
+        /// </summary>
+        event EventHandler<EntitySystemMessage> ReceivedSystemMessage;
+
         /// <summary>
         /// Initializes networking for this manager. This should only be called once.
         /// </summary>
@@ -24,13 +37,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="message">Message to send.</param>
         void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
             ComponentMessage message);
-
-        /// <summary>
-        /// Sends an arbitrary entity network message
-        /// </summary>
-        /// <param name="entity">The entity the message is going from(and to, on the other end)</param>
-        /// <param name="message">Message that should be sent.</param>
-        void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message);
 
         /// <summary>
         /// Sends an Entity System Message to relevant System(s).

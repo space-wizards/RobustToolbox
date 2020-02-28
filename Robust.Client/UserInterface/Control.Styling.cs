@@ -210,7 +210,7 @@ namespace Robust.Client.UserInterface
 
             public IEnumerator<string> GetEnumerator()
             {
-                return _owner.StyleClasses.GetEnumerator();
+                return _owner._styleClasses.GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()

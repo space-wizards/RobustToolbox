@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Utility;
+using static Robust.Client.Animations.AnimationPlaybackShared;
 
 namespace Robust.Client.GameObjects.Components.Animations
 {
@@ -28,12 +28,6 @@ namespace Robust.Client.GameObjects.Components.Animations
         {
             var playback = new AnimationPlayback(animation);
 
-            for (var i = 0; i < animation.AnimationTracks.Count; i++)
-            {
-                var (keyFrame, left) = animation.AnimationTracks[i].InitPlayback();
-                playback.TrackPlaybacks[i] = new AnimationTrackPlayback(keyFrame, left);
-            }
-
             _playingAnimations.Add(key, playback);
         }
 
@@ -57,59 +51,15 @@ namespace Robust.Client.GameObjects.Components.Animations
             // TODO: Get rid of this ToArray() allocation.
             foreach (var (key, playback) in _playingAnimations.ToArray())
             {
-                var keep = _updatePlayback(playback, frameTime);
+                var keep = UpdatePlayback(Owner, playback, frameTime);
                 if (!keep)
                 {
                     _playingAnimations.Remove(key);
+                    AnimationCompleted?.Invoke(key);
                 }
             }
         }
 
-        private bool _updatePlayback(AnimationPlayback playback, float frameTime)
-        {
-            var animation = playback.Animation;
-            for (var i = 0; i < animation.AnimationTracks.Count; i++)
-            {
-                var track = animation.AnimationTracks[i];
-                ref var trackPlayback = ref playback.TrackPlaybacks[i];
-
-                var (keyFrame, playing) = track.AdvancePlayback(Owner, trackPlayback.KeyFrameIndex,
-                    trackPlayback.KeyFrameTimePlaying, frameTime);
-
-                trackPlayback.KeyFrameIndex = keyFrame;
-                trackPlayback.KeyFrameTimePlaying = playing;
-            }
-
-            playback.PlayTime += frameTime;
-            return TimeSpan.FromSeconds(playback.PlayTime) <= animation.Length;
-        }
-
-        private sealed class AnimationPlayback
-        {
-            public readonly Animation Animation;
-
-            // Indices here correspond to the track indices in Animation.
-            public readonly AnimationTrackPlayback[] TrackPlaybacks;
-
-            public float PlayTime;
-
-            public AnimationPlayback(Animation animation)
-            {
-                Animation = animation;
-                TrackPlaybacks = new AnimationTrackPlayback[animation.AnimationTracks.Count];
-            }
-        }
-
-        private struct AnimationTrackPlayback
-        {
-            public int KeyFrameIndex;
-            public float KeyFrameTimePlaying;
-
-            public AnimationTrackPlayback(int keyFrameIndex, float keyFrameTimePlaying)
-            {
-                KeyFrameIndex = keyFrameIndex;
-                KeyFrameTimePlaying = keyFrameTimePlaying;
-            }
-        }
+        public event Action<string> AnimationCompleted;
     }
 }

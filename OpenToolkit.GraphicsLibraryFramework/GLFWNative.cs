@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 namespace OpenToolkit.GraphicsLibraryFramework
@@ -102,6 +102,9 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
         [DllImport(LibraryName)]
         public static extern void glfwGetWindowFrameSize(Window* window, int* left, int* top, int* right, int* bottom);
+
+        [DllImport(LibraryName)]
+        public static extern void glfwGetWindowContentScale(Window* window, float* xscale, float* yscale);
 
         [DllImport(LibraryName)]
         public static extern float glfwGetWindowOpacity(Window* window);
@@ -339,6 +342,9 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
         [DllImport(LibraryName)]
         public static extern IntPtr glfwSetWindowIconifyCallback(Window* window, IntPtr callback);
+
+        [DllImport(LibraryName)]
+        public static extern IntPtr glfwSetWindowContentScaleCallback(Window* window, IntPtr callback);
 
         [DllImport(LibraryName)]
         public static extern void glfwSetWindowTitle(Window* window, byte* title);

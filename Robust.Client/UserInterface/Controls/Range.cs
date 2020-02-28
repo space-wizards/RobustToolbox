@@ -19,6 +19,11 @@ namespace Robust.Client.UserInterface.Controls
             return (_value - _minValue) / (_maxValue - _minValue);
         }
 
+        public void SetAsRatio(float value)
+        {
+            Value = value * (_maxValue - _minValue) + _minValue;
+        }
+
         [ViewVariables]
         public float Page
         {

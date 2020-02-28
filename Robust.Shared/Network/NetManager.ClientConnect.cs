@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
-using Timer = Robust.Shared.Timers.Timer;
 
 namespace Robust.Shared.Network
 {
@@ -16,7 +15,9 @@ namespace Robust.Shared.Network
     {
         private CancellationTokenSource _cancelConnectTokenSource;
 
-        private readonly Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)> _awaitingStatusChange
+        private readonly
+            Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)>
+            _awaitingStatusChange
                 = new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<string>)>();
 
         private readonly
@@ -46,7 +47,7 @@ namespace Robust.Shared.Network
             Logger.DebugS("net", "Attempting to connect to {0} port {1}", host, port);
 
             // Get list of potential IP addresses for the domain.
-            var endPoints = await NetUtility.ResolveAsync(host);
+            var endPoints = await ResolveDnsAsync(host);
 
             if (mainCancelToken.IsCancellationRequested)
             {
@@ -114,6 +115,20 @@ namespace Robust.Shared.Network
             NetConnection secondConnection = null;
             string secondReason = null;
 
+            async Task<string> AwaitNonInitStatusChange(NetConnection connection, CancellationToken cancellationToken)
+            {
+                NetConnectionStatus status;
+                string reason;
+
+                do
+                {
+                    reason = await AwaitStatusChange(connection, cancellationToken);
+                    status = connection.Status;
+                } while (status == NetConnectionStatus.InitiatedConnect);
+
+                return reason;
+            }
+
             async Task ConnectSecondDelayed(CancellationToken cancellationToken)
             {
                 DebugTools.AssertNotNull(second);
@@ -127,7 +142,7 @@ namespace Robust.Shared.Network
                 secondPeer = CreatePeerForIp(second);
                 secondConnection = secondPeer.Connect(new IPEndPoint(second, port));
 
-                secondReason = await AwaitStatusChange(secondConnection, cancellationToken);
+                secondReason = await AwaitNonInitStatusChange(secondConnection, cancellationToken);
             }
 
             NetPeer winningPeer;
@@ -139,7 +154,7 @@ namespace Robust.Shared.Network
                 {
                     // We have two addresses to try.
                     var cancellation = CancellationTokenSource.CreateLinkedTokenSource(mainCancelToken);
-                    var firstPeerChanged = AwaitStatusChange(firstConnection, cancellation.Token);
+                    var firstPeerChanged = AwaitNonInitStatusChange(firstConnection, cancellation.Token);
                     var secondPeerChanged = ConnectSecondDelayed(cancellation.Token);
 
                     var firstChange = await Task.WhenAny(firstPeerChanged, secondPeerChanged);
@@ -182,6 +197,7 @@ namespace Robust.Shared.Network
                             Logger.DebugS("net", "Second peer succeeded.");
                             cancellation.Cancel();
                             firstPeer.Shutdown("Second connection attempt won.");
+                            _toCleanNetPeers.Add(firstPeer);
                             winningPeer = secondPeer;
                             winningConnection = secondConnection;
                         }
@@ -200,7 +216,7 @@ namespace Robust.Shared.Network
                 else
                 {
                     // Only one address to try. Pretty straight forward.
-                    firstReason = await AwaitStatusChange(firstConnection, mainCancelToken);
+                    firstReason = await AwaitNonInitStatusChange(firstConnection, mainCancelToken);
                     winningPeer = firstPeer;
                     winningConnection = firstConnection;
                 }
@@ -292,7 +308,8 @@ namespace Robust.Shared.Network
             return tcs.Task;
         }
 
-        private Task<NetIncomingMessage> AwaitData(NetConnection connection, CancellationToken cancellationToken= default)
+        private Task<NetIncomingMessage> AwaitData(NetConnection connection,
+            CancellationToken cancellationToken = default)
         {
             if (_awaitingData.ContainsKey(connection))
             {
@@ -313,5 +330,37 @@ namespace Robust.Shared.Network
             _awaitingData.Add(connection, (reg, tcs));
             return tcs.Task;
         }
+
+        public static async Task<IPAddress[]> ResolveDnsAsync(string ipOrHost)
+        {
+            if (string.IsNullOrEmpty(ipOrHost))
+            {
+                throw new ArgumentException("Supplied string must not be empty", nameof(ipOrHost));
+            }
+
+            ipOrHost = ipOrHost.Trim();
+
+            if (IPAddress.TryParse(ipOrHost, out var ipAddress))
+            {
+                if (ipAddress.AddressFamily == AddressFamily.InterNetwork
+                    || ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+                {
+                    return new[] {ipAddress};
+                }
+
+                throw new ArgumentException("This method will not currently resolve other than IPv4 or IPv6 addresses");
+            }
+
+            try
+            {
+                var entry = await Dns.GetHostEntryAsync(ipOrHost);
+                return entry.AddressList;
+            }
+            catch (SocketException)
+            {
+                return null;
+            }
+        }
+
     }
 }

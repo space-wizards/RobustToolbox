@@ -1,0 +1,59 @@
+# Config file for the abbreviations system (TypeAbbreviations.cs).
+# Format should be pretty self explanatory.
+# Each abbreviation has a long, a short and (optionally) a list of sub abbreviations.
+# The sub abbreviations get tried if their owner passed.
+# Only one abbreviation can pass in a set of abbreviations
+#   (and then that passing one's sub abbreviations get considered).
+
+- long: "System"
+  short: "S"
+  sub:
+  - long: "Collections"
+    short: "C"
+    sub:
+    - long: "Generic"
+      short: "G"
+
+- long: "Robust"
+  short: "R"
+  sub:
+  - long: "Shared"
+    short: "Sh"
+    sub:
+    - long: "Maths"
+      short: "M"
+
+    - &GO
+      long: "GameObjects"
+      short: "GO"
+      sub:
+      - long: "Components"
+        short: "C"
+
+  - long: "Server"
+    short: "Se"
+    sub:
+    - *GO
+
+  - long: "Client"
+    short: "C"
+    sub:
+    - *GO
+
+- long: "Content"
+  short: "C"
+  sub:
+  - long: "Shared"
+    short: "Sh"
+    sub:
+    - *GO
+
+  - long: "Server"
+    short: "Se"
+    sub:
+    - *GO
+
+  - long: "Client"
+    short: "C"
+    sub:
+    - *GO

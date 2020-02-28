@@ -11,5 +11,10 @@ namespace Robust.Client.Input
 #pragma warning restore 649
 
         public override Vector2 MouseScreenPosition => _clyde.MouseScreenPosition;
+
+        public override string GetKeyName(Keyboard.Key key)
+        {
+            return _clyde.GetKeyName(key);
+        }
     }
 }

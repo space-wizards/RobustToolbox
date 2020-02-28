@@ -118,7 +118,9 @@ namespace Robust.UnitTesting.Shared.IoC
         {
             // This will explicitly cause the DynamicMethod code path to be taken.
             // To ensure that works.
-            IoCManager.InjectDependencies(new ExplicitInjectionTest());
+            var test = new ExplicitInjectionTest();
+            IoCManager.InjectDependencies(test);
+            Assert.That(test.DependencyCollection, Is.Not.Null);
         }
     }
 
@@ -200,6 +202,6 @@ namespace Robust.UnitTesting.Shared.IoC
 
     public class ExplicitInjectionTest
     {
-        [Dependency] private readonly IDependencyCollection _dependencyCollection;
+        [Dependency] public readonly IDependencyCollection DependencyCollection;
     }
 }

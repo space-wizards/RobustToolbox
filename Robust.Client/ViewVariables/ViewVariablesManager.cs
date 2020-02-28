@@ -6,6 +6,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -27,6 +28,7 @@ namespace Robust.Client.ViewVariables
 #pragma warning restore 649
 
         private uint _nextReqId = 1;
+        private readonly Vector2i _defaultWindowSize = (640, 420);
 
         private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
             new Dictionary<ViewVariablesInstance, SS14Window>();
@@ -173,6 +175,11 @@ namespace Robust.Client.ViewVariables
                 return new ViewVariablesPropertyEditorGridLocalCoordinates();
             }
 
+            if (type == typeof(EntityUid))
+            {
+                return new ViewVariablesPropertyEditorEntityUid();
+            }
+
             if (type == typeof(Color))
             {
                 return new ViewVariablesPropertyEditorColor();
@@ -209,7 +216,7 @@ namespace Robust.Client.ViewVariables
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
             window.Open();
-            LayoutContainer.SetSize(window, (500, 300));
+            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
@@ -250,7 +257,7 @@ namespace Robust.Client.ViewVariables
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
             window.Open();
-            LayoutContainer.SetSize(window, (500, 300));
+            LayoutContainer.SetSize(window, _defaultWindowSize);
         }
 
         public Task<ViewVariablesRemoteSession> RequestSession(ViewVariablesObjectSelector selector)

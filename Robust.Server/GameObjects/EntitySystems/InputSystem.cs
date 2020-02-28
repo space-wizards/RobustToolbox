@@ -37,9 +37,6 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private void HandleCommandMessage(IPlayerSession session, InputCmdHandler cmdHandler, FullInputCmdMessage msg)
         {
-            if (_lastProcessedInputCmd[session] < msg.InputSequence)
-                _lastProcessedInputCmd[session] = msg.InputSequence;
-
             cmdHandler.HandleCmdMessage(session, msg);
         }
 
@@ -67,6 +64,9 @@ namespace Robust.Server.GameObjects.EntitySystems
             //Client Sanitization: bad enum key state value
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
+
+            if (_lastProcessedInputCmd[session] < msg.InputSequence)
+                _lastProcessedInputCmd[session] = msg.InputSequence;
 
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore

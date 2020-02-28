@@ -241,7 +241,7 @@ namespace Robust.Client.GameStates
             if (!Extrapolation && curState == null && futureState != null)
             {
                 //this is not actually extrapolation
-                curState = ExtrapolateState(_highestFromSequence, curTick);
+                curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
                 return true; // keep moving, we have a future state
             }
 

@@ -20,7 +20,6 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
 #pragma warning restore 649
 
         private const float Epsilon = 1.0e-6f;

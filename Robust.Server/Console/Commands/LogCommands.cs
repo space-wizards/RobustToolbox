@@ -9,7 +9,9 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loglevel";
         public string Description => "Changes the log level for a provided sawmill.";
-        public string Help => "loglevel <sawmill> <level>";
+        public string Help => "Usage: loglevel <sawmill> <level>"
+                            + "\n    sawmill: A label prefixing log messages. This is the one you're setting the level for."
+                            + "\n    level: The log level. Must match one of the values of the LogLevel enum.";
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
@@ -28,7 +30,12 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                level = (LogLevel)Enum.Parse(typeof(LogLevel), levelname);
+                if (!Enum.TryParse<LogLevel>(levelname, out var result))
+                {
+                    shell.SendText(player, "Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                    return;
+                }
+                level = result;
             }
             Logger.GetSawmill(name).Level = level;
         }
@@ -38,7 +45,10 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "testlog";
         public string Description => "Writes a test log to a sawmill.";
-        public string Help => "testlog <sawmill> <level> <messagage>";
+        public string Help => "Usage: testlog <sawmill> <level> <message>"
+                            + "\n    sawmill: A label prefixing the logged message."
+                            + "\n    level: The log level. Must match one of the values of the LogLevel enum."
+                            + "\n    message: The message to be logged. Wrap this in double quotes if you want to use spaces.";
 
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
@@ -51,7 +61,12 @@ namespace Robust.Server.Console.Commands
             var name = args[0];
             var levelname = args[1];
             var message = args[2]; // yes this doesn't support spaces idgaf.
-            var level = (LogLevel)Enum.Parse(typeof(LogLevel), levelname);
+            if (!Enum.TryParse<LogLevel>(levelname, out var result))
+            {
+                shell.SendText(player, "Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
+                return;
+            }
+            var level = result;
 
             Logger.LogS(level, name, message, level);
         }

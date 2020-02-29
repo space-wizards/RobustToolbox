@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -21,6 +20,9 @@ namespace Robust.Client.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+#if EXCEPTION_TOLERANCE
+        [Dependency] private readonly IRuntimeLog _runtimeLog;
+#endif
 #pragma warning restore 649
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
@@ -38,7 +40,8 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions, List<EntityState> nextEntStates)
+        public void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
+            List<EntityState> nextEntStates)
         {
             var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
@@ -55,7 +58,8 @@ namespace Robust.Client.GameObjects
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState)es.ComponentStates.First(c => c.NetID == NetIDs.META_DATA);
+                        var metaState =
+                            (MetaDataComponentState) es.ComponentStates.First(c => c.NetID == NetIDs.META_DATA);
                         var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
@@ -85,8 +89,9 @@ namespace Robust.Client.GameObjects
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
-                var entity = (Entity)ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1, kvStates.Value.Item2);
+                var entity = (Entity) ent;
+                HandleEntityState(entity.EntityManager.ComponentManager, entity, kvStates.Value.Item1,
+                    kvStates.Value.Item2);
             }
 
             foreach (var kvp in toApply)
@@ -99,20 +104,61 @@ namespace Robust.Client.GameObjects
                 DeleteEntity(id);
             }
 
+#if EXCEPTION_TOLERANCE
+            HashSet<Entity> brokenEnts = new HashSet<Entity>();
+#endif
+
             foreach (var entity in toInitialize)
             {
-                InitializeEntity(entity);
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
+                    InitializeEntity(entity);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
+#endif
             }
 
             foreach (var entity in toInitialize)
             {
-                StartEntity(entity);
+#if EXCEPTION_TOLERANCE
+                if(brokenEnts.Contains(entity))
+                    continue;
+
+                try
+                {
+#endif
+                    StartEntity(entity);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    brokenEnts.Add(entity);
+                }
+#endif
             }
 
             foreach (var entity in toInitialize)
             {
+#if EXCEPTION_TOLERANCE
+                if(brokenEnts.Contains(entity))
+                    continue;
+#endif
                 UpdateEntityTree(entity);
             }
+#if EXCEPTION_TOLERANCE
+            foreach (var entity in brokenEnts)
+            {
+                entity.Delete();
+            }
+#endif
         }
 
         public void Dispose()
@@ -136,6 +182,7 @@ namespace Robust.Client.GameObjects
                 newEntity.Transform.AttachParent(GetEntity(gridEntityId));
                 newEntity.Transform.LocalPosition = coordinates.Position;
             }
+
             return newEntity;
         }
 
@@ -152,7 +199,7 @@ namespace Robust.Client.GameObjects
         public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity)newEnt);
+            InitializeAndStartEntity((Entity) newEnt);
             UpdateEntityTree(newEnt);
             return newEnt;
         }
@@ -161,7 +208,7 @@ namespace Robust.Client.GameObjects
         public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity)entity);
+            InitializeAndStartEntity((Entity) entity);
             UpdateEntityTree(entity);
             return entity;
         }
@@ -178,13 +225,13 @@ namespace Robust.Client.GameObjects
             return new EntityUid(_nextClientEntityUid++);
         }
 
-        private static void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
             EntityState nextState)
         {
             var compStateWork = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
             var entityUid = entity.Uid;
 
-            if(curState?.ComponentChanges != null)
+            if (curState?.ComponentChanges != null)
             {
                 foreach (var compChange in curState.ComponentChanges)
                 {
@@ -200,14 +247,15 @@ namespace Robust.Client.GameObjects
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>().GetComponent(compChange.ComponentName);
+                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>()
+                            .GetComponent(compChange.ComponentName);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
                     }
                 }
             }
 
-            if(curState?.ComponentStates != null)
+            if (curState?.ComponentStates != null)
             {
                 foreach (var compState in curState.ComponentStates)
                 {
@@ -215,7 +263,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if(nextState?.ComponentStates != null)
+            if (nextState?.ComponentStates != null)
             {
                 foreach (var compState in nextState.ComponentStates)
                 {
@@ -244,8 +292,13 @@ namespace Robust.Client.GameObjects
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("entity", $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}\n  {e}");
-                    DebugTools.Assert(e.Message);
+                    var wrapper = new ComponentStateApplyException(
+                        $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+#if EXCEPTION_TOLERANCE
+                    _runtimeLog.LogException(wrapper, "Component state apply");
+#else
+                    throw wrapper;
+#endif
                 }
             }
         }

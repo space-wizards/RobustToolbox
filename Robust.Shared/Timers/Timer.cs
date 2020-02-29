@@ -51,13 +51,13 @@ namespace Robust.Shared.Timers
 
                 if (_timeCounter <= 0)
                 {
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                     try
 #endif
                     {
                         OnFired();
                     }
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                     catch (Exception e)
                     {
                         runtimeLog.LogException(e, "Timer Callback");

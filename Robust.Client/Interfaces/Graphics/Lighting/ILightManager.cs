@@ -3,5 +3,6 @@
     public interface ILightManager
     {
         bool Enabled { get; set; }
+        bool DrawShadows { get; set; }
     }
 }

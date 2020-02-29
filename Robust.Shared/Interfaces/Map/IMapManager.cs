@@ -103,8 +103,30 @@ namespace Robust.Shared.Interfaces.Map
         bool TryGetGrid(GridId gridId, out IMapGrid grid);
         bool GridExists(GridId gridID);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
-        IMapGrid FindGridAt(MapId mapId, Vector2 worldPos);
-        IMapGrid FindGridAt(MapCoordinates mapCoords);
+
+        /// <summary>
+        /// Attempts to find the map grid under the map location.
+        /// </summary>
+        /// <remarks>
+        /// This method will never return the map's default grid.
+        /// </remarks>
+        /// <param name="mapId">Map to search.</param>
+        /// <param name="worldPos">Location on the map to check for a grid.</param>
+        /// <param name="grid">Grid that was found, if any.</param>
+        /// <returns>Returns true when a grid was found under the location.</returns>
+        bool TryFindGridAt(MapId mapId, Vector2 worldPos, out IMapGrid grid);
+
+        /// <summary>
+        /// Attempts to find the map grid under the map location.
+        /// </summary>
+        /// <remarks>
+        /// This method will never return the map's default grid.
+        /// </remarks>
+        /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
+        /// <param name="grid">Grid that was found, if any.</param>
+        /// <returns>Returns true when a grid was found under the location.</returns>
+        bool TryFindGridAt(MapCoordinates mapCoordinates, out IMapGrid grid);
+
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
         void DeleteGrid(GridId gridID);
 

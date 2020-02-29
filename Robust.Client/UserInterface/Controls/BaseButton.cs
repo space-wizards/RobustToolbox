@@ -211,9 +211,9 @@ namespace Robust.Client.UserInterface.Controls
                 if (ToggleMode)
                 {
                     // Can't un press a radio button directly.
-                    if (Group == null || !_pressed)
+                    if (Group == null || !Pressed)
                     {
-                        _pressed = !_pressed;
+                        Pressed = !Pressed;
                         OnPressed?.Invoke(buttonEventArgs);
                         OnToggled?.Invoke(new ButtonToggledEventArgs(Pressed, this, args));
                         UnsetOtherGroupButtons();
@@ -249,11 +249,11 @@ namespace Robust.Client.UserInterface.Controls
                 this == UserInterfaceManagerInternal.MouseGetControl(args.PointerLocation.Position))
             {
                 // Can't un press a radio button directly.
-                if (Group == null || !_pressed)
+                if (Group == null || !Pressed)
                 {
                     if (ToggleMode)
                     {
-                        _pressed = !_pressed;
+                        Pressed = !Pressed;
                     }
 
                     OnPressed?.Invoke(buttonEventArgs);

@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
     internal sealed class ParsedShader
     {
         public ParsedShader(IReadOnlyDictionary<string, ShaderUniformDefinition> uniforms,
-            IReadOnlyDictionary<string, ShaderVaryingDefinition> varyings, IList<ShaderFunctionDefinition> functions,
-            ShaderLightMode lightMode, ShaderBlendMode blendMode, ShaderPreset preset)
+            IReadOnlyDictionary<string, ShaderVaryingDefinition> varyings,
+            IReadOnlyDictionary<string, ShaderConstantDefinition> constants, IList<ShaderFunctionDefinition> functions,
+            ShaderLightMode lightMode, ShaderBlendMode blendMode, ShaderPreset preset, ICollection<ResourcePath> includes)
         {
             Uniforms = uniforms;
             Varyings = varyings;
@@ -16,14 +18,19 @@ namespace Robust.Client.Graphics.Shaders
             LightMode = lightMode;
             BlendMode = blendMode;
             Preset = preset;
+            Includes = includes;
+            Constants = constants;
         }
 
         public IReadOnlyDictionary<string, ShaderUniformDefinition> Uniforms { get; }
         public IReadOnlyDictionary<string, ShaderVaryingDefinition> Varyings { get; }
+        public IReadOnlyDictionary<string, ShaderConstantDefinition> Constants { get; }
         public IList<ShaderFunctionDefinition> Functions { get; }
         public ShaderLightMode LightMode { get; }
         public ShaderBlendMode BlendMode { get; }
         public ShaderPreset Preset { get; }
+        public ICollection<ResourcePath> Includes { get; }
+
     }
 
     internal sealed class ShaderFunctionDefinition
@@ -81,6 +88,20 @@ namespace Robust.Client.Graphics.Shaders
         public string Name { get; }
         public ShaderDataType Type { get; }
         public string DefaultValue { get; }
+    }
+
+    internal sealed class ShaderConstantDefinition
+    {
+        public ShaderConstantDefinition(string name, ShaderDataType type, string value)
+        {
+            Name = name;
+            Type = type;
+            Value = value;
+        }
+
+        public string Name { get; }
+        public ShaderDataType Type { get; }
+        public string Value { get; }
     }
 
 

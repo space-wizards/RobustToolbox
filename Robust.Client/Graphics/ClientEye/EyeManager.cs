@@ -85,19 +85,14 @@ namespace Robust.Client.Graphics.ClientEye
 
         public GridCoordinates ScreenToWorld(Vector2 point)
         {
-            var mapPos = ScreenToMap(point).Position;
+            var mapCoords = ScreenToMap(point);
 
-            IMapGrid grid;
-            var mapId = currentEye.Position.MapId;
-            if (_mapManager.MapExists(mapId))
+            if (!_mapManager.TryFindGridAt(mapCoords, out var grid))
             {
-                grid = _mapManager.FindGridAt(mapId, mapPos);
+                grid = _mapManager.GetDefaultGrid(mapCoords.MapId);
             }
-            else
-            {
-                grid = _mapManager.GetGrid(GridId.Invalid);
-            }
-            return new GridCoordinates(grid.WorldToLocal(mapPos), grid);
+
+            return new GridCoordinates(grid.WorldToLocal(mapCoords.Position), grid.Index);
         }
 
         public MapCoordinates ScreenToMap(Vector2 point)

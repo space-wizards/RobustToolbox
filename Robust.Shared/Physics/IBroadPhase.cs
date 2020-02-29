@@ -27,8 +27,6 @@ namespace Robust.Shared.Physics {
             get;
         }
 
-        int Count { get; }
-
         bool Add(in T item);
 
         bool Remove(in T item);

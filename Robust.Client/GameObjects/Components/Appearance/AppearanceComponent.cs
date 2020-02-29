@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Appearance;
 using Robust.Shared.Interfaces.GameObjects;
@@ -21,7 +22,7 @@ namespace Robust.Client.GameObjects
 
         private static bool _didRegisterSerializer;
 
-        public bool AppearanceDirty { get; internal set; } = false;
+        private bool _appearanceDirty;
 
         public override void SetData(string key, object value)
         {
@@ -35,17 +36,17 @@ namespace Robust.Client.GameObjects
 
         public override T GetData<T>(string key)
         {
-            return (T)data[key];
+            return (T) data[key];
         }
 
         public override T GetData<T>(Enum key)
         {
-            return (T)data[key];
+            return (T) data[key];
         }
 
         internal T GetData<T>(object key)
         {
-            return (T)data[key];
+            return (T) data[key];
         }
 
         public override bool TryGetData<T>(Enum key, out T data)
@@ -62,7 +63,7 @@ namespace Robust.Client.GameObjects
         {
             if (this.data.TryGetValue(key, out var dat))
             {
-                data = (T)dat;
+                data = (T) dat;
                 return true;
             }
 
@@ -74,7 +75,7 @@ namespace Robust.Client.GameObjects
         {
             data[key] = value;
 
-            AppearanceDirty = true;
+            MarkDirty();
         }
 
         public override void HandleComponentState(ComponentState curState, ComponentState nextState)
@@ -82,16 +83,34 @@ namespace Robust.Client.GameObjects
             if (curState == null)
                 return;
 
-            var actualState = (AppearanceComponentState)curState;
+            var actualState = (AppearanceComponentState) curState;
             data = actualState.Data;
-            AppearanceDirty = true;
+            MarkDirty();
+        }
+
+        internal void MarkDirty()
+        {
+            if (_appearanceDirty)
+            {
+                return;
+            }
+
+            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AppearanceSystem>()
+                .EnqueueAppearanceUpdate(this);
+            _appearanceDirty = true;
+        }
+
+        internal void UnmarkDirty()
+        {
+            _appearanceDirty = false;
         }
 
         public override void ExposeData(ObjectSerializer serializer)
         {
             if (!_didRegisterSerializer)
             {
-                YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer), new VisualizerTypeSerializer(_reflectionManager));
+                YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer),
+                    new VisualizerTypeSerializer(_reflectionManager));
                 _didRegisterSerializer = true;
             }
 
@@ -119,7 +138,7 @@ namespace Robust.Client.GameObjects
 
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var mapping = (YamlMappingNode)node;
+                var mapping = (YamlMappingNode) node;
                 var nodeType = mapping.GetNode("type");
                 switch (nodeType.AsString())
                 {
@@ -134,6 +153,7 @@ namespace Robust.Client.GameObjects
                         {
                             key = keyString;
                         }
+
                         var layer = mapping.GetNode("layer").AsInt();
                         return new SpriteLayerToggle(key, layer);
 
@@ -143,7 +163,8 @@ namespace Robust.Client.GameObjects
                         {
                             throw new InvalidOperationException();
                         }
-                        var vis = (AppearanceVisualizer)Activator.CreateInstance(visType);
+
+                        var vis = (AppearanceVisualizer) Activator.CreateInstance(visType);
                         vis.LoadData(mapping);
                         return vis;
                 }
@@ -164,11 +185,12 @@ namespace Robust.Client.GameObjects
                         {
                             key = new YamlScalarNode(spriteLayerToggle.Key.ToString());
                         }
+
                         return new YamlMappingNode
                         {
-                            { new YamlScalarNode("type"), new YamlScalarNode(SpriteLayerToggle.NAME) },
-                            { new YamlScalarNode("key"), key },
-                            { new YamlScalarNode("layer"), new YamlScalarNode(spriteLayerToggle.SpriteLayer.ToString()) },
+                            {new YamlScalarNode("type"), new YamlScalarNode(SpriteLayerToggle.NAME)},
+                            {new YamlScalarNode("key"), key},
+                            {new YamlScalarNode("layer"), new YamlScalarNode(spriteLayerToggle.SpriteLayer.ToString())},
                         };
                     default:
                         // TODO: A proper way to do serialization here.

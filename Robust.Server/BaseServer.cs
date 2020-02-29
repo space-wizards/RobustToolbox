@@ -216,7 +216,6 @@ namespace Robust.Server
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
 
             _stateManager.Initialize();
-            _entities.Initialize();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             _mapManager.Initialize();
             _mapManager.Startup();
@@ -226,6 +225,8 @@ namespace Robust.Server
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
+
+            _entities.Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
@@ -367,7 +368,7 @@ namespace Robust.Server
             UpdateTitle();
             _systemConsole.Update();
 
-            IoCManager.Resolve<IServerNetManager>().ProcessPackets();
+            _network.ProcessPackets();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
 

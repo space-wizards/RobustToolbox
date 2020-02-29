@@ -42,6 +42,8 @@ namespace Robust.Server.Maps
         private readonly IServerEntityManagerInternal _serverEntityManager;
 
         [Dependency] private readonly IPauseManager _pauseManager;
+        [Dependency] private readonly IComponentManager _componentManager;
+        [Dependency] private readonly IComponentFactory _componentFactory;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -49,7 +51,7 @@ namespace Robust.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentFactory, _componentManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -109,7 +111,7 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, mapId);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentFactory, _componentManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
                 grid = context.Grids[0];
 
@@ -128,7 +130,7 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveMap(MapId mapId, string yamlPath)
         {
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentFactory, _componentManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
@@ -190,7 +192,7 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, (YamlMappingNode)data.RootNode, mapId);
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentFactory, _componentManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
@@ -212,6 +214,8 @@ namespace Robust.Server.Maps
             private readonly ITileDefinitionManager _tileDefinitionManager;
             private readonly IServerEntityManagerInternal _serverEntityManager;
             private readonly IPauseManager _pauseManager;
+            private readonly IComponentFactory _componentFactory;
+            private readonly IComponentManager _componentManager;
 
             private readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
             public readonly List<IMapGrid> Grids = new List<IMapGrid>();
@@ -239,23 +243,27 @@ namespace Robust.Server.Maps
 
             public bool MapIsPostInit { get; private set; }
 
-            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager)
+            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentFactory componentFactory, IComponentManager componentManager)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
                 _pauseManager = pauseManager;
+                _componentFactory = componentFactory;
+                _componentManager = componentManager;
 
                 RootNode = new YamlMappingNode();
             }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs, IServerEntityManagerInternal entities,
-                IPauseManager pauseManager, YamlMappingNode node, MapId targetMapId)
+                IPauseManager pauseManager, IComponentFactory componentFactory, IComponentManager componentManager, YamlMappingNode node, MapId targetMapId)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
                 _pauseManager = pauseManager;
+                _componentFactory = componentFactory;
+                _componentManager = componentManager;
 
                 RootNode = node;
                 TargetMap = targetMapId;
@@ -278,6 +286,10 @@ namespace Robust.Server.Maps
                 // Actually instance components and run ExposeData on them.
                 FinishEntitiesLoad();
 
+                // Clear the net tick numbers so that components from prototypes (not modified by map)
+                // aren't sent over the wire initially.
+                ResetNetTicks();
+
                 // Grid entities were NOT created inside ReadGridSection().
                 // We have to fix the created grids up with the grid entities deserialized from the map.
                 FixMapEntities();
@@ -291,6 +303,46 @@ namespace Robust.Server.Maps
 
                 // Run Startup on all components.
                 FinishEntitiesStartup();
+            }
+
+            private void ResetNetTicks()
+            {
+                foreach (var (entity, data) in _entitiesToDeserialize)
+                {
+                    if (!data.TryGetNode("components", out YamlSequenceNode componentList))
+                    {
+                        continue;
+                    }
+
+                    if (entity.Prototype == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (var component in _componentManager.GetNetComponents(entity.Uid))
+                    {
+                        var castComp = (Component) component;
+
+                        if (componentList.Any(p => p["type"].AsString() == component.Name))
+                        {
+                            if (entity.Prototype.Components.ContainsKey(component.Name))
+                            {
+                                // This component is modified by the map so we have to send state.
+                                // Though it's still in the prototype itself so creation doesn't need to be sent.
+                                castComp.ClearCreationTick();
+                            }
+                            else
+                            {
+                                // New component that the prototype normally does not have, need to sync full data.
+                                continue;
+                            }
+                        }
+
+                        // This component is not modified by the map file,
+                        // so the client will have the same data after instantiating it from prototype ID.
+                        castComp.ClearTicks();
+                    }
+                }
             }
 
             private void AttachMapEntities()

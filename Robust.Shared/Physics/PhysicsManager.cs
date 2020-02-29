@@ -192,13 +192,10 @@ namespace Robust.Shared.Physics
         /// <param name="physBody"></param>
         public void RemoveBody(IPhysBody physBody)
         {
-
-            var removeAttempted = false;
             var removed = false;
 
             if (physBody.Owner.Deleted || physBody.Owner.Transform.Deleted)
             {
-                removeAttempted = true;
                 foreach (var mapId in _mapManager.GetAllMapIds())
                 {
                     removed = this[mapId].Remove(physBody);
@@ -216,9 +213,8 @@ namespace Robust.Shared.Physics
                 {
                     removed = this[physBody.MapID].Remove(physBody);
                 }
-                catch (InvalidOperationException ioex)
+                catch (InvalidOperationException)
                 {
-                    removeAttempted = true;
                     // TODO: TryGetMapId or something
                     foreach (var mapId in _mapManager.GetAllMapIds())
                     {
@@ -250,7 +246,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null)
+        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
         {
             RayCastResults result = default;
 
@@ -272,6 +268,11 @@ namespace Robust.Shared.Physics
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (ignoreNonHardCollidables && !body.IsHardCollidable)
                 {
                     return true;
                 }

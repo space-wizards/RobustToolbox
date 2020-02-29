@@ -1,0 +1,36 @@
+preset raw;
+
+#include "/Shaders/Internal/shadow_cast_shared.swsl"
+
+const float g_MinVariance = 0;
+
+varying vec2 worldPosition;
+
+// Center of the FOV, in world coordinates.
+uniform vec2 center;
+
+void vertex()
+{
+    vec3 transformed = modelMatrix * vec3(VERTEX, 1.0);
+    worldPosition = transformed.xy;
+    transformed = projectionMatrix * viewMatrix * transformed;
+
+    VERTEX = transformed.xy;
+}
+
+void fragment()
+{
+    vec2 diff = worldPosition - center;
+
+    float ourDist = length(diff);
+
+    float occlDist = occludeDepth(diff, TEXTURE, 0.75).r;
+
+    // *Very* simple biased shadow check for FOV.
+    if (!doesOcclude(diff, TEXTURE, 0.75, -0.75/32.0))
+    {
+        discard;
+    }
+
+    COLOR = vec4(0, 0, 0, 1);
+}

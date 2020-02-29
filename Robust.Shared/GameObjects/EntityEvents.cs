@@ -4,7 +4,7 @@ namespace Robust.Shared.GameObjects
 {
     public interface IEntityEventSubscriber { }
 
-    public delegate void EntityEventHandler<in T>(object sender, T ev)
+    public delegate void EntityEventHandler<in T>(T ev)
         where T : EntityEventArgs;
 
     public class EntityEventArgs : EventArgs { }

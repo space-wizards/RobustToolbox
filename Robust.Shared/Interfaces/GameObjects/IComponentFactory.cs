@@ -140,6 +140,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Automatically create registrations for all components with a <see cref="RegisterComponentAttribute" />
         /// </summary>
         void DoAutoRegistrations();
+
+        IEnumerable<Type> GetAllRefTypes();
     }
 
     /// <summary>

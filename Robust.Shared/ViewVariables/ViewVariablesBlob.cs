@@ -156,7 +156,7 @@ namespace Robust.Shared.ViewVariables
                 return string.Compare(Stringified, other.Stringified, StringComparison.Ordinal);
             }
 
-            public string Qualified { get; set; }
+            public string FullName { get; set; }
             public string Stringified { get; set; }
         }
     }

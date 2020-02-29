@@ -69,6 +69,8 @@ namespace Robust.Shared.Network
         ///     The list of network peers we are listening on.
         /// </summary>
         private readonly List<NetPeer> _netPeers = new List<NetPeer>();
+
+        // Client connect happens during status changed and such callbacks, so we need to defer deletion of these.
         private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
 
         /// <inheritdoc />
@@ -182,6 +184,7 @@ namespace Robust.Shared.Network
             {
                 // That's comma-separated, btw.
                 _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
+                _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
             }
 
 #if DEBUG
@@ -201,6 +204,9 @@ namespace Robust.Shared.Network
             DebugTools.Assert(!IsRunning);
 
             var binds = _config.GetCVar<string>("net.bindto").Split(',');
+            var dualStack = _config.GetCVar<bool>("net.dualstack");
+
+            var foundIpv6 = false;
 
             foreach (var bindAddress in binds)
             {
@@ -214,7 +220,13 @@ namespace Robust.Shared.Network
                 config.Port = Port;
                 config.EnableMessageType(NetIncomingMessageType.ConnectionApproval);
 
-                var peer = new NetPeer(config);
+                if (address.AddressFamily == AddressFamily.InterNetworkV6 && dualStack)
+                {
+                    foundIpv6 = true;
+                    config.DualStack = true;
+                }
+
+                var peer = IsServer ? (NetPeer) new NetServer(config) : new NetClient(config);
                 peer.Start();
                 _netPeers.Add(peer);
             }
@@ -223,6 +235,12 @@ namespace Robust.Shared.Network
             {
                 Logger.WarningS("net",
                     "Exactly 0 addresses have been bound to, nothing will be able to connect to the server.");
+            }
+
+            if (!foundIpv6 && dualStack)
+            {
+                Logger.WarningS("net",
+                    "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
         }
 
@@ -418,13 +436,13 @@ namespace Robust.Shared.Network
             var sender = msg.SenderConnection;
             msg.ReadByte();
             var reason = msg.ReadString();
-            Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}");
+            Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}, reason: {reason}");
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
+                _awaitingStatusChange.Remove(sender);
                 resume.Item1.Dispose();
                 resume.Item2.SetResult(reason);
-                _awaitingStatusChange.Remove(sender);
                 return;
             }
 
@@ -623,6 +641,12 @@ namespace Robust.Shared.Network
             {
                 instance.ReadFromBuffer(msg);
             }
+            catch (InvalidCastException ice)
+            {
+                Logger.ErrorS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
+                throw;
+            }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
                 Logger.WarningS("net",
@@ -739,7 +763,7 @@ namespace Robust.Shared.Network
             foreach (var peer in _netPeers)
             {
                 var packet = BuildMessage(message, peer);
-                var method = GetMethod(message.MsgGroup);
+                var method = message.DeliveryMethod;
                 if (peer.ConnectionsCount == 0)
                 {
                     continue;
@@ -758,7 +782,8 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
-            peer.SendMessage(packet, channel.Connection, NetDeliveryMethod.ReliableOrdered);
+            var method = message.DeliveryMethod;
+            peer.SendMessage(packet, channel.Connection, method);
         }
 
         /// <inheritdoc />
@@ -788,7 +813,7 @@ namespace Robust.Shared.Network
 
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer);
-            var method = GetMethod(message.MsgGroup);
+            var method = message.DeliveryMethod;
             peer.SendMessage(packet, peer.Connections[0], method);
         }
 
@@ -832,22 +857,6 @@ namespace Robust.Shared.Network
         public event EventHandler<NetChannelArgs> Disconnect;
 
         #endregion Events
-
-        private static NetDeliveryMethod GetMethod(MsgGroups group)
-        {
-            switch (group)
-            {
-                case MsgGroups.Entity:
-                    return NetDeliveryMethod.Unreliable;
-                case MsgGroups.Core:
-                case MsgGroups.String:
-                case MsgGroups.Command:
-                case MsgGroups.EntityEvent:
-                    return NetDeliveryMethod.ReliableUnordered;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(group), group, null);
-            }
-        }
 
         private enum ClientConnectionState
         {

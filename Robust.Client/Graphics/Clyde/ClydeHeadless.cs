@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
+using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -33,6 +34,10 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public ClydeDebugLayers DebugLayers { get; set; }
+
+        public string GetKeyName(Keyboard.Key key) => string.Empty;
+        public string GetKeyNameScanCode(int scanCode) => string.Empty;
+        public int GetKeyScanCode(Keyboard.Key key) => default;
 
         public override void SetWindowTitle(string title)
         {
@@ -153,9 +158,9 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetPosition(Vector2 position)
+            public bool SetPosition(Vector2 position)
             {
-                // Nada.
+                return true;
             }
 
             public void SetPitch(float pitch)

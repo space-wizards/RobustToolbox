@@ -200,16 +200,13 @@ namespace Robust.Client.Graphics.Clyde
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
 
-            GL.ActiveTexture(TextureUnit.Texture1);
             if (_lightingReady && loaded.HasLighting)
             {
-                var lightTexture = _loadedTextures[LightRenderTarget.Texture.TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, lightTexture.Handle);
+                SetTexture(TextureUnit.Texture1, _lightRenderTarget.Texture);
             }
             else
             {
-                var white = _loadedTextures[_stockTextureWhite.TextureId].OpenGLObject;
-                GL.BindTexture(TextureTarget.Texture2D, white.Handle);
+                SetTexture(TextureUnit.Texture1, _stockTextureWhite);
             }
 
             program.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -238,7 +235,7 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastGLDrawCalls += 1;
         }
 
-        private PrimitiveType MapPrimitiveType(BatchPrimitiveType type)
+        private static PrimitiveType MapPrimitiveType(BatchPrimitiveType type)
         {
             return type switch
             {
@@ -249,7 +246,7 @@ namespace Robust.Client.Graphics.Clyde
             };
         }
 
-        private void _drawQuad(Vector2 a, Vector2 b, ref Matrix3 modelMatrix, GLShaderProgram program)
+        private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
             GL.BindVertexArray(QuadVAO.Handle);
             var rectTransform = Matrix3.Identity;
@@ -269,6 +266,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Finish any batches that may have been WiP.
             BreakBatch();
+
+            GL.BindVertexArray(BatchVAO.Handle);
 
             if (BatchVertexIndex != 0)
             {

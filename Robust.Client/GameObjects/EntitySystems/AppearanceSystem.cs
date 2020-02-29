@@ -1,29 +1,22 @@
-﻿using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.GameObjects;
+﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects.Systems;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
-    sealed class AppearanceSystem : EntitySystem
+    internal sealed class AppearanceSystem : EntitySystem
     {
-        public AppearanceSystem()
-        {
-            EntityQuery = new TypeEntityQuery(typeof(AppearanceComponent));
-        }
+        private readonly Queue<AppearanceComponent> _updatesQueued = new Queue<AppearanceComponent>();
 
         public override void FrameUpdate(float frameTime)
         {
-            foreach (var entity in RelevantEntities)
+            while (_updatesQueued.TryDequeue(out var appearance))
             {
-                var component = entity.GetComponent<AppearanceComponent>();
-                if (component.AppearanceDirty)
-                {
-                    UpdateComponent(component);
-                    component.AppearanceDirty = false;
-                }
+                UpdateComponent(appearance);
+                appearance.UnmarkDirty();
             }
         }
 
-        static void UpdateComponent(AppearanceComponent component)
+        private static void UpdateComponent(AppearanceComponent component)
         {
             foreach (var visualizer in component.Visualizers)
             {
@@ -40,11 +33,16 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
         }
 
-        static void UpdateSpriteLayerToggle(AppearanceComponent component, AppearanceComponent.SpriteLayerToggle toggle)
+        private static void UpdateSpriteLayerToggle(AppearanceComponent component, AppearanceComponent.SpriteLayerToggle toggle)
         {
             component.TryGetData(toggle.Key, out bool visible);
             var sprite = component.Owner.GetComponent<SpriteComponent>();
             sprite.LayerSetVisible(toggle.SpriteLayer, visible);
+        }
+
+        public void EnqueueAppearanceUpdate(AppearanceComponent component)
+        {
+            _updatesQueued.Enqueue(component);
         }
     }
 }

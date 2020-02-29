@@ -9,6 +9,9 @@ float toLinear(float sRGB)
 
 void fragment()
 {
+    // NOTE: This shader does NOT work correctly!!!
+    // This assumes the depth is projected onto a circle, which it IS NOT.
+
     float PI = 3.1415;
     vec2 uv = (UV * 2) - 1;
     float angle = atan(uv.y, -uv.x) + PI + radians(135.0);

@@ -30,16 +30,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
 
-        private LineEdit CommandBar;
+        private HistoryLineEdit CommandBar;
         private OutputPanel Output;
         private Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
-
-        private readonly List<string> CommandHistory = new List<string>();
-        private int _historyPosition;
-        private bool _currentCommandEdited;
 
         private bool _targetVisible;
 
@@ -77,7 +73,7 @@ namespace Robust.Client.UserInterface.CustomControls
                                 SizeFlagsVertical = SizeFlags.FillExpand,
                                 StyleBoxOverride = styleBox
                             }),
-                            (CommandBar = new LineEdit {PlaceHolder = "Command Here"})
+                            (CommandBar = new HistoryLineEdit {PlaceHolder = "Command Here"})
                         }
                     })
                 }
@@ -88,7 +84,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
-            CommandBar.OnTextChanged += CommandBarOnOnTextChanged;
+            CommandBar.OnHistoryChanged += OnHistoryChanged;
 
             _console.AddString += (_, args) => AddLine(args.Text, args.Color);
             _console.AddFormatted += (_, args) => AddFormattedLine(args.Message);
@@ -144,19 +140,12 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 _console.ProcessCommand(args.Text);
                 CommandBar.Clear();
-                if (CommandHistory.Count == 0 || CommandHistory[CommandHistory.Count - 1] != args.Text)
-                {
-                    _currentCommandEdited = false;
-                    CommandHistory.Add(args.Text);
-                    if (CommandHistory.Count > MaxHistorySize)
-                    {
-                        CommandHistory.RemoveAt(0);
-                    }
-
-                    _historyPosition = CommandHistory.Count;
-                    _flushHistoryToDisk();
-                }
             }
+        }
+
+        private void OnHistoryChanged()
+        {
+            _flushHistoryToDisk();
         }
 
         public void AddLine(string text, Color color)
@@ -200,69 +189,19 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             if (args.Function == EngineKeyFunctions.TextReleaseFocus)
             {
-                CommandBar.ReleaseKeyboardFocus();
-                args.Handle();
                 Toggle();
                 return;
             }
-            else if (args.Function == EngineKeyFunctions.TextHistoryPrev)
-            {
-                args.Handle();
-                var current = CommandBar.Text;
-                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                {
-                    // Block up/down if something is typed in.
-                    return;
-                }
-
-                if (_historyPosition <= 0)
-                {
-                    return;
-                }
-
-                CommandBar.Text = CommandHistory[--_historyPosition];
-            }
-            else if (args.Function == EngineKeyFunctions.TextHistoryNext)
-            {
-                args.Handle();
-                var current = CommandBar.Text;
-                if (!string.IsNullOrWhiteSpace(current) && _currentCommandEdited)
-                {
-                    // Block up/down if something is typed in.
-                    return;
-                }
-
-                if (++_historyPosition >= CommandHistory.Count)
-                {
-                    CommandBar.Text = "";
-                    _historyPosition = CommandHistory.Count;
-                    return;
-                }
-
-                CommandBar.Text = CommandHistory[_historyPosition];
-            }
             else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
             {
-                args.Handle();
                 Output.ScrollToBottom();
-            }
-        }
-
-        private void CommandBarOnOnTextChanged(LineEdit.LineEditEventArgs obj)
-        {
-            if (string.IsNullOrWhiteSpace(obj.Text))
-            {
-                _currentCommandEdited = false;
-            }
-            else
-            {
-                _currentCommandEdited = true;
+                args.Handle();
             }
         }
 
         private async void _loadHistoryFromDisk()
         {
-            CommandHistory.Clear();
+            CommandBar.ClearHistory();
             Stream stream;
             try
             {
@@ -279,9 +218,9 @@ namespace Robust.Client.UserInterface.CustomControls
                 using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
                 {
                     var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
-                    CommandHistory.Clear();
-                    CommandHistory.AddRange(data);
-                    _historyPosition = CommandHistory.Count;
+                    CommandBar.ClearHistory();
+                    CommandBar.History.AddRange(data);
+                    CommandBar.HistoryIndex = CommandBar.History.Count; 
                 }
             }
             finally
@@ -295,8 +234,8 @@ namespace Robust.Client.UserInterface.CustomControls
             using (var stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Create))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
-                var data = JsonConvert.SerializeObject(CommandHistory);
-                _historyPosition = CommandHistory.Count;
+                var data = JsonConvert.SerializeObject(CommandBar.History);
+                CommandBar.HistoryIndex = CommandBar.History.Count;
                 writer.Write(data);
             }
         }

@@ -8,7 +8,7 @@ using Robust.Shared.Network;
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]
-    public class PlayerState
+    public sealed class PlayerState
     {
         public NetSessionId SessionId { get; set; }
 

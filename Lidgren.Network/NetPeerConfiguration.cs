@@ -1,4 +1,4 @@
-/* Copyright (c) 2010 Michael Lidgren
+﻿/* Copyright (c) 2010 Michael Lidgren
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 and associated documentation files (the "Software"), to deal in the Software without
@@ -27,6 +27,20 @@ namespace Lidgren.Network
 	/// </summary>
 	public sealed class NetPeerConfiguration
 	{
+		// Maximum transmission unit
+		// Ethernet can take 1500 bytes of payload, so lets stay below that.
+		// The aim is for a max full packet to be 1440 bytes (30 x 48 bytes, lower than 1468)
+		// -20 bytes IP header
+		//  -8 bytes UDP header
+		//  -4 bytes to be on the safe side and align to 8-byte boundary
+		// Total 1408 bytes
+		// Note that lidgren headers (5 bytes) are not included here; since it's part of the "mtu payload"
+
+		/// <summary>
+		/// Default MTU value in bytes
+		/// </summary>
+		public const int kDefaultMTU = 1408;
+
 		private const string c_isLockedMessage = "You may not modify the NetPeerConfiguration after it has been used to initialize a NetPeer";
 
 		private bool m_isLocked;
@@ -34,14 +48,19 @@ namespace Lidgren.Network
 		private string m_networkThreadName;
 		private IPAddress m_localAddress;
 		private IPAddress m_broadcastAddress;
+        private bool m_dualStack;
+
 		internal bool m_acceptIncomingConnections;
 		internal int m_maximumConnections;
 		internal int m_defaultOutgoingMessageCapacity;
 		internal float m_pingInterval;
 		internal bool m_useMessageRecycling;
+		internal int m_recycledCacheMaxCount;
 		internal float m_connectionTimeout;
 		internal bool m_enableUPnP;
 		internal bool m_autoFlushSendQueue;
+		private NetUnreliableSizeBehaviour m_unreliableSizeBehaviour;
+		internal bool m_suppressUnreliableUnorderedAcks;
 
 		internal NetIncomingMessageType m_disabledTypes;
 		internal int m_port;
@@ -69,12 +88,12 @@ namespace Lidgren.Network
 		{
 			if (string.IsNullOrEmpty(appIdentifier))
 				throw new NetException("App identifier must be at least one character long");
-			m_appIdentifier = appIdentifier.ToString(System.Globalization.CultureInfo.InvariantCulture);
+			m_appIdentifier = appIdentifier;
 
 			//
 			// default values
 			//
-			m_disabledTypes = NetIncomingMessageType.ConnectionApproval | NetIncomingMessageType.UnconnectedData | NetIncomingMessageType.VerboseDebugMessage | NetIncomingMessageType.ConnectionLatencyUpdated;
+			m_disabledTypes = NetIncomingMessageType.ConnectionApproval | NetIncomingMessageType.UnconnectedData | NetIncomingMessageType.VerboseDebugMessage | NetIncomingMessageType.ConnectionLatencyUpdated | NetIncomingMessageType.NatIntroductionSuccess;
 			m_networkThreadName = "Lidgren network thread";
 			m_localAddress = IPAddress.Any;
 			m_broadcastAddress = IPAddress.Broadcast;
@@ -92,22 +111,17 @@ namespace Lidgren.Network
 			m_pingInterval = 4.0f;
 			m_connectionTimeout = 25.0f;
 			m_useMessageRecycling = true;
+			m_recycledCacheMaxCount = 64;
 			m_resendHandshakeInterval = 3.0f;
 			m_maximumHandshakeAttempts = 5;
 			m_autoFlushSendQueue = true;
+			m_suppressUnreliableUnorderedAcks = false;
 
-			// Maximum transmission unit
-			// Ethernet can take 1500 bytes of payload, so lets stay below that.
-			// The aim is for a max full packet to be 1440 bytes (30 x 48 bytes, lower than 1468)
-			// -20 bytes IP header
-			//  -8 bytes UDP header
-			//  -4 bytes to be on the safe side and align to 8-byte boundary
-			// Total 1408 bytes
-			// Note that lidgren headers (5 bytes) are not included here; since it's part of the "mtu payload"
-			m_maximumTransmissionUnit = 1408;
+			m_maximumTransmissionUnit = kDefaultMTU;
 			m_autoExpandMTU = false;
 			m_expandMTUFrequency = 2.0f;
 			m_expandMTUFailAttempts = 5;
+			m_unreliableSizeBehaviour = NetUnreliableSizeBehaviour.IgnoreMTU;
 
 			m_loss = 0.0f;
 			m_minimumOneWayLatency = 0.0f;
@@ -163,6 +177,15 @@ namespace Lidgren.Network
 		public bool IsMessageTypeEnabled(NetIncomingMessageType type)
 		{
 			return !((m_disabledTypes & type) == type);
+		}
+
+		/// <summary>
+		/// Gets or sets the behaviour of unreliable sends above MTU
+		/// </summary>
+		public NetUnreliableSizeBehaviour UnreliableSizeBehaviour
+		{
+			get { return m_unreliableSizeBehaviour; }
+			set { m_unreliableSizeBehaviour = value; }
 		}
 
 		/// <summary>
@@ -242,6 +265,20 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
+		/// Gets or sets the maximum number of incoming/outgoing messages to keep in the recycle cache.
+		/// </summary>
+		public int RecycledCacheMaxCount
+		{
+			get { return m_recycledCacheMaxCount; }
+			set
+			{
+				if (m_isLocked)
+					throw new NetException(c_isLockedMessage);
+				m_recycledCacheMaxCount = value;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the number of seconds timeout will be postponed on a successful ping/pong
 		/// </summary>
 		public float ConnectionTimeout
@@ -279,6 +316,20 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
+		/// If true, will not send acks for unreliable unordered messages. This will save bandwidth, but disable flow control and duplicate detection for this type of messages.
+		/// </summary>
+		public bool SuppressUnreliableUnorderedAcks
+		{
+			get { return m_suppressUnreliableUnorderedAcks; }
+			set
+			{
+				if (m_isLocked)
+					throw new NetException(c_isLockedMessage);
+				m_suppressUnreliableUnorderedAcks = value;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the local ip address to bind to. Defaults to IPAddress.Any. Cannot be changed once NetPeer is initialized.
 		/// </summary>
 		public IPAddress LocalAddress
@@ -292,10 +343,26 @@ namespace Lidgren.Network
 			}
 		}
 
-		/// <summary>
-		/// Gets or sets the local broadcast address to use when broadcasting
-		/// </summary>
-		public IPAddress BroadcastAddress
+        /// <summary>
+        /// Gets or sets a value indicating whether the library should use IPv6 dual stack mode.
+        /// If you enable this you should make sure that the <see cref="LocalAddress"/> is an IPv6 address.
+        /// Cannot be changed once NetPeer is initialized.
+        /// </summary>
+        public bool DualStack
+        {
+            get { return m_dualStack;  }
+            set
+            {
+                if (m_isLocked)
+                    throw new NetException(c_isLockedMessage);
+                m_dualStack = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the local broadcast address to use when broadcasting
+        /// </summary>
+        public IPAddress BroadcastAddress
 		{
 			get { return m_broadcastAddress; }
 			set
@@ -467,5 +534,26 @@ namespace Lidgren.Network
 			retval.m_isLocked = false;
 			return retval;
 		}
+	}
+
+	/// <summary>
+	/// Behaviour of unreliable sends above MTU
+	/// </summary>
+	public enum NetUnreliableSizeBehaviour
+	{
+		/// <summary>
+		/// Sending an unreliable message will ignore MTU and send everything in a single packet; this is the new default
+		/// </summary>
+		IgnoreMTU = 0,
+
+		/// <summary>
+		/// Old behaviour; use normal fragmentation for unreliable messages - if a fragment is dropped, memory for received fragments are never reclaimed!
+		/// </summary>
+		NormalFragmentation = 1,
+
+		/// <summary>
+		/// Alternate behaviour; just drops unreliable messages above MTU
+		/// </summary>
+		DropAboveMTU = 2,
 	}
 }

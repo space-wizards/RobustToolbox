@@ -88,10 +88,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Box2 Intersect(in Box2 other)
         {
-            var left   = Math.Max(Left,   other.Left);
-            var right  = Math.Min(Right,  other.Right);
+            var left = Math.Max(Left, other.Left);
+            var right = Math.Min(Right, other.Right);
             var bottom = Math.Max(Bottom, other.Bottom);
-            var top    = Math.Min(Top,    other.Top);
+            var top = Math.Min(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -105,10 +105,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Union(in Box2 other)
         {
-            var left   = Math.Min(Left,   other.Left);
-            var right  = Math.Max(Right,  other.Right);
+            var left = Math.Min(Left, other.Left);
+            var right = Math.Max(Right, other.Right);
             var bottom = Math.Min(Bottom, other.Bottom);
-            var top    = Math.Max(Top,    other.Top);
+            var top = Math.Max(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -126,15 +126,15 @@ namespace Robust.Shared.Maths
         public bool Encloses(in Box2 inner)
         {
             return this.Left < inner.Left && this.Bottom < inner.Bottom && this.Right > inner.Right &&
-                this.Top > inner.Top;
+                   this.Top > inner.Top;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(in Box2 inner)
             => Left <= inner.Left
-                && Bottom <= inner.Bottom
-                && Right >= inner.Right
-                && Top >= inner.Top;
+               && Bottom <= inner.Bottom
+               && Right >= inner.Right
+               && Top >= inner.Top;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(float x, float y)
@@ -243,5 +243,18 @@ namespace Robust.Shared.Maths
                 MathF.Max(a.Y, b.Y)
             );
 
+        /// <summary>
+        ///     Returns this box enlarged to also contain the specified position.
+        /// </summary>
+        public Box2 ExtendToContain(Vector2 vec)
+        {
+            var (x, y) = vec;
+
+            return new Box2(
+                Math.Min(x, Left),
+                Math.Min(y, Bottom),
+                Math.Max(x, Right),
+                Math.Max(y, Top));
+        }
     }
 }

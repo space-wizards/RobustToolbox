@@ -3,18 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -37,11 +34,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Vector2 _nextPosition;
         private Angle _nextRotation;
 
-        [ViewVariables] private readonly List<EntityUid> _children = new List<EntityUid>();
+        [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
 
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
@@ -106,9 +102,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 SetRotation(value);
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
             }
         }
 
@@ -140,14 +136,24 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public ITransformComponent Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
-            private set
+            set
             {
-                var entMessage = new EntParentChangedMessage(Owner, Parent?.Owner);
-                var compMessage = new ParentChangedMessage(value?.Owner, Parent?.Owner);
-                _parent = value?.Owner.Uid ?? EntityUid.Invalid;
-                Owner.EntityManager.EventBus.RaiseEvent(Owner, entMessage);
-                Owner.SendMessage(this, compMessage);
+                if (value != null)
+                {
+                    AttachParent(value);
+                }
+                else
+                {
+                    DetachParent();
+                }
             }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public EntityUid ParentUid
+        {
+            get => _parent;
+            set => Parent = _entityManager.GetEntity(value).Transform;
         }
 
         /// <inheritdoc />
@@ -233,12 +239,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (Running)
                 {
                     RebuildMatrices();
-                    Owner.SendMessage(this, new MoveMessage(GridPosition, value));
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, GridPosition, value));
                 }
 
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
             }
         }
 
@@ -279,11 +286,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 SetPosition(newPos);
 
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
 
-                Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
 
@@ -291,12 +299,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public MapCoordinates MapPosition
         {
             get => new MapCoordinates(WorldPosition, MapID);
-            set
-            {
-                AttachParent(_mapManager.GetMapEntity(value.MapId));
-
-                WorldPosition = value.Position;
-            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -309,10 +311,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var oldPos = GridPosition;
                 SetPosition(value);
                 RebuildMatrices();
+                Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Dirty();
-                Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
             }
         }
 
@@ -347,8 +350,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             // Keep the cached matrices in sync with the fields.
             RebuildMatrices();
-            UpdateEntityTree();
             Dirty();
+            UpdateEntityTree();
         }
 
         /// <inheritdoc />
@@ -364,11 +367,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // map does not have a parent node
             if (Parent != null)
             {
-                var concrete = (TransformComponent) Parent;
-                concrete._children.Remove(Owner.Uid);
-
-                // detach
-                Parent = null;
+                DetachParentToNull();
             }
 
             base.OnRemove();
@@ -377,59 +376,100 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public virtual void DetachParent()
+        public void DetachParent()
         {
+            // nothing to do
+            var oldParent = Parent;
+            if (oldParent == null)
+            {
+                return;
+            }
+
             var mapPos = MapPosition;
 
-            // nothing to do
-            if (Parent == null)
-                return;
-
-            var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+            IEntity newMapEntity;
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+                newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+            else
+                newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
 
             // this would be a no-op
-            if (newMapEntity == Parent.Owner)
+            var oldParentEnt = oldParent.Owner;
+            if (newMapEntity == oldParentEnt)
+            {
                 return;
+            }
 
-            var concrete = (TransformComponent) Parent;
-            concrete._children.Remove(Owner.Uid);
+            AttachParent(newMapEntity);
 
-            // attach to map
-            Parent = newMapEntity.Transform;
-            MapPosition = mapPos;
+            WorldPosition = mapPos.Position;
 
-            UpdateEntityTree();
-            UpdatePhysicsTree();
+            Dirty();
+        }
+
+        private void DetachParentToNull()
+        {
+            var oldParent = Parent;
+            if (oldParent == null)
+            {
+                return;
+            }
+
+            var oldConcrete = (TransformComponent) oldParent;
+            var uid = Owner.Uid;
+            oldConcrete._children.Remove(uid);
+
+            var oldParentOwner = oldParent?.Owner;
+
+            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
+            var compMessage = new ParentChangedMessage(null, oldParentOwner);
+            _parent = EntityUid.Invalid;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.SendMessage(this, compMessage);
+
+            // Does it even make sense to call these since this is called purely from OnRemove right now?
+            RebuildMatrices();
             Dirty();
         }
 
         /// <summary>
         /// Sets another entity as the parent entity.
         /// </summary>
-        /// <param name="parent"></param>
-        public virtual void AttachParent(ITransformComponent parent)
+        /// <param name="newParent"></param>
+        public virtual void AttachParent(ITransformComponent newParent)
         {
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (parent == null)
+            if (newParent == null)
                 return;
 
             // That's already our parent, don't bother attaching again.
-            if (parent.Owner.Uid == _parent)
+            var newParentEnt = newParent.Owner;
+            if (newParentEnt.Uid == _parent)
+            {
                 return;
+            }
 
-            var oldConcrete = (TransformComponent) Parent;
-            oldConcrete?._children.Remove(Owner.Uid);
-            var newConcrete = (TransformComponent) parent;
-            newConcrete._children.Add(Owner.Uid);
-            Parent = parent;
+            var oldParent = Parent;
+            var oldConcrete = (TransformComponent) oldParent;
+            var uid = Owner.Uid;
+            oldConcrete?._children.Remove(uid);
+            var newConcrete = (TransformComponent) newParent;
+            newConcrete._children.Add(uid);
+
+            var oldParentOwner = oldParent?.Owner;
+            var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
+            var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
+            _parent = newParentEnt.Uid;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
+            Owner.SendMessage(this, compMessage);
 
             // offset position from world to parent
-            SetPosition(parent.InvWorldMatrix.Transform(GetLocalPosition()));
+            SetPosition(newParent.InvWorldMatrix.Transform(GetLocalPosition()));
             RebuildMatrices();
-            UpdateEntityTree();
             Dirty();
+            UpdateEntityTree();
         }
 
         public void AttachParent(IEntity parent)
@@ -528,7 +568,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         SetPosition(newState.LocalPosition);
                     }
 
-                    Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
                     rebuildMatrices = true;
                 }
 
@@ -537,9 +578,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     RebuildMatrices();
                 }
 
+                Dirty();
                 UpdateEntityTree();
                 TryUpdatePhysicsTree();
-                Dirty();
             }
 
             if (nextState != null)
@@ -650,7 +691,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
-        private bool UpdatePhysicsTree() => Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
+
+        private bool UpdatePhysicsTree() =>
+            Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
@@ -694,5 +737,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 ParentID = parentId;
             }
         }
+    }
+
+    public class MoveEvent : EntitySystemMessage
+    {
+        public MoveEvent(IEntity sender, GridCoordinates oldPos, GridCoordinates newPos)
+        {
+            Sender = sender;
+            OldPosition = oldPos;
+            NewPosition = newPos;
+        }
+
+        public IEntity Sender { get; }
+        public GridCoordinates OldPosition { get; }
+        public GridCoordinates NewPosition { get; }
     }
 }

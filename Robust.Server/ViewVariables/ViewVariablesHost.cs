@@ -24,6 +24,7 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IComponentManager _componentManager;
         [Dependency] private readonly IConGroupController _groupController;
         [Dependency] private readonly IRobustSerializer _robustSerializer;
+        [Dependency] private readonly IReflectionManager _reflectionManager;
 #pragma warning restore 649
 
         private readonly Dictionary<uint, ViewVariablesSession>
@@ -114,7 +115,7 @@ namespace Robust.Server.ViewVariables
             switch (message.Selector)
             {
                 case ViewVariablesComponentSelector componentSelector:
-                    var compType = Type.GetType(componentSelector.ComponentType);
+                    var compType = _reflectionManager.GetType(componentSelector.ComponentType);
                     if (compType == null ||
                         !_componentManager.TryGetComponent(componentSelector.Entity, compType, out var component))
                     {

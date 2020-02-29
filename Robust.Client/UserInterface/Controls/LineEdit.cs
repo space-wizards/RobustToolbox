@@ -34,12 +34,8 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
-        public LineEdit()
-        {
-            MouseFilter = MouseFilterMode.Stop;
-            CanKeyboardFocus = true;
-            KeyboardFocusOnClick = true;
-        }
+        public event Action<LineEditEventArgs> OnTextChanged;
+        public event Action<LineEditEventArgs> OnTextEntered;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -121,6 +117,13 @@ namespace Robust.Client.UserInterface.Controls
         // Third future me is here to say thanks.
         // Fourth future me is here to continue the tradition.
 
+        public LineEdit()
+        {
+            MouseFilter = MouseFilterMode.Stop;
+            CanKeyboardFocus = true;
+            KeyboardFocusOnClick = true;
+        }
+
         public void Clear()
         {
             Text = "";
@@ -133,9 +136,6 @@ namespace Robust.Client.UserInterface.Controls
         public void SelectAll()
         {
         }
-
-        public event Action<LineEditEventArgs> OnTextChanged;
-        public event Action<LineEditEventArgs> OnTextEntered;
 
         public void InsertAtCursor(string text)
         {
@@ -302,6 +302,7 @@ namespace Robust.Client.UserInterface.Controls
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _cursorPosition -= 1;
                     _updatePseudoClass();
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
                 {
@@ -311,6 +312,7 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition -= 1;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorRight)
                 {
@@ -320,38 +322,56 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     _cursorPosition += 1;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorBegin)
                 {
                     _cursorPosition = 0;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorEnd)
                 {
                     _cursorPosition = _text.Length;
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextSubmit)
                 {
-                    if (Editable)
+                    if (!Editable)
                     {
-                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                        return;
                     }
+
+                    OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextPaste)
                 {
-                    if (Editable)
+                    if (!Editable)
                     {
-                        var clipboard = IoCManager.Resolve<IClipboardManager>();
-                        InsertAtCursor(clipboard.GetText());
+                        return;
                     }
+
+                    var clipboard = IoCManager.Resolve<IClipboardManager>();
+                    InsertAtCursor(clipboard.GetText());
+                    args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextDelete)
                 {
                     if (_cursorPosition >= _text.Length || !Editable)
+                    {
                         return;
+                    }
 
                     _text = _text.Remove(_cursorPosition, 1);
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _updatePseudoClass();
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+                {
+                    ReleaseKeyboardFocus();
+                    args.Handle();
+                    return;
                 }
             }
             else
@@ -394,12 +414,13 @@ namespace Robust.Client.UserInterface.Controls
                 // Same but left side.
                 var distanceLeft = clickPosX - lastChrPostX;
                 // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
-                if (distanceRight > distanceLeft)
+                if (index > 0 && distanceRight > distanceLeft)
                 {
                     index -= 1;
                 }
 
                 _cursorPosition = index;
+                args.Handle();
             }
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();

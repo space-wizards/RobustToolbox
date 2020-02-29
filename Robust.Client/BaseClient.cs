@@ -28,32 +28,23 @@ namespace Robust.Client
 #pragma warning disable 649
         private readonly IClientNetManager _net;
 
-        [Dependency]
-        private readonly IPlayerManager _playMan;
+        [Dependency] private readonly IPlayerManager _playMan;
 
-        [Dependency]
-        private readonly IStateManager _stateManager;
+        [Dependency] private readonly IStateManager _stateManager;
 
-        [Dependency]
-        private readonly IConfigurationManager _configManager;
+        [Dependency] private readonly IConfigurationManager _configManager;
 
-        [Dependency]
-        private readonly IClientEntityManager _entityManager;
+        [Dependency] private readonly IClientEntityManager _entityManager;
 
-        [Dependency]
-        private readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
-        [Dependency]
-        private readonly IDiscordRichPresence _discord;
+        [Dependency] private readonly IDiscordRichPresence _discord;
 
-        [Dependency]
-        private readonly IGameTiming _timing;
+        [Dependency] private readonly IGameTiming _timing;
 
-        [Dependency]
-        private readonly IClientGameStateManager _gameStates;
+        [Dependency] private readonly IClientGameStateManager _gameStates;
 
-        [Dependency]
-        private readonly IDebugDrawingManager _debugDrawMan;
+        [Dependency] private readonly IDebugDrawingManager _debugDrawMan;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -72,6 +63,7 @@ namespace Robust.Client
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
+            _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
@@ -89,12 +81,12 @@ namespace Robust.Client
                 _net.Shutdown("Client mashing that connect button.");
                 Reset();
             }
+
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
             _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
-
         }
 
         /// <inheritdoc />
@@ -197,6 +189,11 @@ namespace Robust.Client
             _playMan.LocalPlayer.SessionId = info.SessionId;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+        }
+
+        private void HandleSetTickRate(MsgSetTickRate message)
+        {
+            _timing.TickRate = message.NewTickRate;
         }
 
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)

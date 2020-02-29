@@ -49,6 +49,11 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public int CurrentBufferSize => _processor.CurrentBufferSize;
 
+        public bool Predicting { get; private set; }
+
+        private uint _lastProcessedSeq;
+        private GameTick _lastProcessedTick = GameTick.Zero;
+
         /// <inheritdoc />
         public event Action<GameStateAppliedArgs> GameStateApplied;
 
@@ -61,18 +66,15 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            if(!_config.IsCVarRegistered("net.interp"))
-                _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
-
-            if (!_config.IsCVarRegistered("net.interp_ratio"))
-                _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
-
-            if (!_config.IsCVarRegistered("net.logging"))
-                _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
+            _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
+            _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
+            _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
+            _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
 
             _processor.Interpolation = _config.GetCVar<bool>("net.interp");
             _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
             _processor.Logging = _config.GetCVar<bool>("net.logging");
+            Predicting = _config.GetCVar<bool>("net.predict");
         }
 
         /// <inheritdoc />
@@ -92,12 +94,18 @@ namespace Robust.Client.GameStates
 
         public void InputCommandDispatched(FullInputCmdMessage message)
         {
+            if (!Predicting)
+            {
+                return;
+            }
+
             message.InputSequence = _nextInputCmdSeq;
             _pendingInputs.Enqueue(message);
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            Logger.DebugS("State", $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            Logger.DebugS("State",
+                $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
 
@@ -110,9 +118,6 @@ namespace Robust.Client.GameStates
             // we always ack everything we receive, even if it is late
             AckGameState(state.ToSequence);
         }
-
-        private uint lastProcessedSeq;
-        GameTick lastProcessedTick = GameTick.Zero;
 
         /// <inheritdoc />
         public void ApplyGameState()
@@ -127,37 +132,39 @@ namespace Robust.Client.GameStates
             var inputMan = IoCManager.Resolve<IInputManager>();
             var input = sysMan.GetEntitySystem<InputSystem>();
 
-            if (lastProcessedSeq < curState.LastProcessedInput)
+            if (_lastProcessedSeq < curState.LastProcessedInput)
             {
-                Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={lastProcessedSeq}");
-                lastProcessedSeq = curState.LastProcessedInput;
+                Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                _lastProcessedSeq = curState.LastProcessedInput;
             }
 
             // remove old pending inputs
-            while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= lastProcessedSeq)
+            while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedSeq)
             {
                 var inCmd = _pendingInputs.Dequeue();
-                lastProcessedTick = inCmd.Tick;
+                _lastProcessedTick = inCmd.Tick;
 
                 inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("State", $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+                Logger.DebugS("State",
+                    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
             DebugTools.Assert(_timing.InSimulation);
             GameTick realCurrentTick = _timing.CurTick;
 
-            if(_pendingInputs.Count > 0)
+            if (_pendingInputs.Count > 0)
                 Logger.DebugS("State", $"CL> Predicted:");
 
             //Replay pending inputs
             foreach (var inputCmd in _pendingInputs)
             {
                 //Queue is assumed to be in chronological order
-                DebugTools.Assert(inputCmd.Tick.Value >= lastProcessedTick.Value);
-                var deltaTick = new GameTick(inputCmd.Tick.Value - lastProcessedTick.Value);
+                DebugTools.Assert(inputCmd.Tick.Value >= _lastProcessedTick.Value);
+                var deltaTick = new GameTick(inputCmd.Tick.Value - _lastProcessedTick.Value);
 
                 inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("State", $"    seq={inputCmd.InputSequence}, dTick={deltaTick}, func={boundFunc.FunctionName}, state={inputCmd.State}");
+                Logger.DebugS("State",
+                    $"    seq={inputCmd.InputSequence}, dTick={deltaTick}, func={boundFunc.FunctionName}, state={inputCmd.State}");
 
                 _timing.CurTick = new GameTick(realCurrentTick.Value + deltaTick.Value);
                 input.PredictInputCommand(inputCmd);

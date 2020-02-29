@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System.Collections.Generic;
 using Robust.Shared.Enums;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
@@ -25,10 +26,12 @@ namespace Robust.Shared.Network.Messages
 
         public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
+        public GameTick SourceTick { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             Type = (EntityMessageType)buffer.ReadByte();
+            SourceTick = buffer.ReadGameTick();
 
             switch (Type)
             {
@@ -63,6 +66,7 @@ namespace Robust.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write((byte)Type);
+            buffer.Write(SourceTick);
 
             switch (Type)
             {

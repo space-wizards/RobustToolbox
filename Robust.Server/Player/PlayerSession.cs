@@ -87,7 +87,7 @@ namespace Robust.Server.Player
                 return;
             }
 
-            var actorComponent = a.AddComponent<BasicActorComponent>();
+            var actorComponent = a.EnsureComponent<BasicActorComponent>();
             actorComponent.playerSession = this;
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));

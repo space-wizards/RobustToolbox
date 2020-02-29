@@ -182,7 +182,8 @@ namespace Robust.Shared.Serialization
 
             var value = getter();
             DataField(ref value, name, defaultValue, alwaysWrite);
-            if (!Writing)
+
+            if (Writing)
             {
                 return;
             }

@@ -1,11 +1,8 @@
 ﻿using Robust.Client.Graphics.Drawing;
-using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -22,14 +19,14 @@ namespace Robust.Client.UserInterface.CustomControls
             _contents = new Label
             {
                 FontColorShadowOverride = Color.Black,
-                /*MarginTop = 5,
-                MarginLeft = 5*/
             };
             AddChild(_contents);
 
             PanelOverride = new StyleBoxFlat
             {
-                BackgroundColor = new Color(67, 105, 255, 138),
+                BackgroundColor = new Color(35, 134, 37, 138),
+                ContentMarginLeftOverride = 5,
+                ContentMarginTopOverride = 5
             };
 
             MouseFilter = _contents.MouseFilter = MouseFilterMode.Ignore;
@@ -47,7 +44,8 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick},
-CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}, CurFrame: {_gameTiming.CurFrame}";
+CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}, CurFrame: {_gameTiming.CurFrame}
+TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
 
             MinimumSizeChanged();
         }

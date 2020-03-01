@@ -26,12 +26,13 @@ namespace Robust.Shared.Input
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
         public static InputCmdHandler FromDelegate(StateInputCmdDelegate enabled = null,
-            StateInputCmdDelegate disabled = null)
+            StateInputCmdDelegate disabled = null, bool handle=true)
         {
             return new StateInputCmdHandler
             {
                 EnabledDelegate = enabled,
                 DisabledDelegate = disabled,
+                Handle = handle,
             };
         }
 
@@ -39,6 +40,7 @@ namespace Robust.Shared.Input
         {
             public StateInputCmdDelegate EnabledDelegate;
             public StateInputCmdDelegate DisabledDelegate;
+            public bool Handle { get; set; }
 
             public override void Enabled(ICommonSession session)
             {
@@ -59,10 +61,10 @@ namespace Robust.Shared.Input
                 {
                     case BoundKeyState.Up:
                         Disabled(session);
-                        return true;
+                        return Handle;
                     case BoundKeyState.Down:
                         Enabled(session);
-                        return true;
+                        return Handle;
                 }
 
                 //Client Sanitization: unknown key state, just ignore

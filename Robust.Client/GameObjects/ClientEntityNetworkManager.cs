@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -17,7 +17,7 @@ namespace Robust.Client.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IClientNetManager _networkManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects
 
         public void Update()
         {
-            while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameTiming.CurTick)
+            while (_queue.Count != 0 && _queue.Peek().SourceTick <= _gameStateManager.CurServerTick)
             {
                 DispatchMsgEntity(_queue.Take());
             }
@@ -73,7 +73,7 @@ namespace Robust.Client.GameObjects
 
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
-            if (message.SourceTick <= _gameTiming.CurTick)
+            if (message.SourceTick <= _gameStateManager.CurServerTick)
             {
                 DispatchMsgEntity(message);
                 return;

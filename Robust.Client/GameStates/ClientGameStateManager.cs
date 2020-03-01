@@ -144,6 +144,10 @@ namespace Robust.Client.GameStates
 
             if (Predicting)
             {
+                // Disable IsFirstTimePredicted while re-running HandleComponentState here.
+                // Helps with debugging.
+                using var _ = _timing.StartPastPredictionArea();
+
                 ResetPredictedEntities(_timing.CurTick);
             }
 
@@ -192,7 +196,7 @@ namespace Robust.Client.GameStates
                 var ping = _network.ServerChannel.Ping / 1000f; // seconds.
                 var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping;
 
-                Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+                //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
                 for (var t = _lastProcessedTick.Value; t < targetTick; t++)
                 {

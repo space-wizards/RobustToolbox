@@ -54,6 +54,8 @@ namespace Robust.Client.GameStates
 
         public bool Predicting { get; private set; }
 
+        public int PredictSize { get; private set; }
+
         private uint _lastProcessedSeq;
         private GameTick _lastProcessedTick = GameTick.Zero;
 
@@ -75,11 +77,13 @@ namespace Robust.Client.GameStates
             _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
             _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
             _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
+            _config.RegisterCVar("net.predict_size", 2, CVar.ARCHIVE, i => PredictSize = i);
 
             _processor.Interpolation = _config.GetCVar<bool>("net.interp");
             _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
             _processor.Logging = _config.GetCVar<bool>("net.logging");
             Predicting = _config.GetCVar<bool>("net.predict");
+            PredictSize = _config.GetCVar<int>("net.predict_size");
         }
 
         /// <inheritdoc />
@@ -194,7 +198,7 @@ namespace Robust.Client.GameStates
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
 
                 var ping = _network.ServerChannel.Ping / 1000f; // seconds.
-                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping;
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping + PredictSize;
 
                 //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 

@@ -4,6 +4,7 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -18,6 +19,7 @@ namespace Robust.Client.GameObjects
 #pragma warning disable 649
         [Dependency] private readonly IClientNetManager _networkManager;
         [Dependency] private readonly IClientGameStateManager _gameStateManager;
+        [Dependency] private readonly IGameTiming _gameTiming;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -48,6 +50,10 @@ namespace Robust.Client.GameObjects
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
+            msg.SourceTick = _gameTiming.CurTick;
+
+            System.Console.WriteLine($"{msg.SourceTick}");
+
             _networkManager.ClientSendMessage(msg);
         }
 
@@ -68,6 +74,8 @@ namespace Robust.Client.GameObjects
             msg.EntityUid = entity.Uid;
             msg.NetId = component.NetID.Value;
             msg.ComponentMessage = message;
+            msg.SourceTick = _gameTiming.CurTick;
+
             _networkManager.ClientSendMessage(msg);
         }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
@@ -20,6 +21,9 @@ namespace Robust.Client.GameStates
         private GameTick _lastProcessedRealState;
         private GameTick _highestFromSequence;
 
+        private readonly Dictionary<EntityUid, Dictionary<uint, ComponentState>> _lastStateFullRep
+            = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
+
         /// <inheritdoc />
         public int MinBufferSize => Interpolation ? 3 : 2;
 
@@ -27,7 +31,7 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => MinBufferSize + InterpRatio;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _stateBuffer.Count(s => s.ToSequence >= _timing.CurTick);
+        public int CurrentBufferSize => CalculateBufferSize(_timing.CurTick);
 
         /// <inheritdoc />
         public bool Interpolation { get; set; }
@@ -77,7 +81,7 @@ namespace Robust.Client.GameStates
 
             if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
-                if (Logging)
+                if (false && Logging)
                     Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
@@ -91,7 +95,7 @@ namespace Robust.Client.GameStates
                 if (state.ToSequence != iState.ToSequence)
                     continue;
 
-                if (Logging)
+                if (false && Logging)
                     Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
@@ -100,7 +104,7 @@ namespace Robust.Client.GameStates
             // this is a good state that we will be using.
             _stateBuffer.Add(state);
 
-            if (Logging)
+            if (false && Logging)
                 Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
         }
 
@@ -135,10 +139,70 @@ namespace Robust.Client.GameStates
                 _timing.TickTimingAdjustment = 0f;
             }
 
-            if (Logging && applyNextState)
-                Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+            if (applyNextState)
+            {
+                if (Logging)
+                {
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                }
+
+                if (!curState.Extrapolated)
+                {
+                    UpdateFullRep(curState);
+                }
+            }
 
             return applyNextState;
+        }
+
+        private void UpdateFullRep(GameState state)
+        {
+            if (state.FromSequence == GameTick.Zero)
+            {
+                // Full state.
+                _lastStateFullRep.Clear();
+            }
+            else
+            {
+                if (state.EntityDeletions != null)
+                {
+                    foreach (var deletion in state.EntityDeletions)
+                    {
+                        _lastStateFullRep.Remove(deletion);
+                    }
+                }
+            }
+
+            if (state.EntityStates != null)
+            {
+                foreach (var entityState in state.EntityStates)
+                {
+                    if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
+                    {
+                        compData = new Dictionary<uint, ComponentState>();
+                        _lastStateFullRep.Add(entityState.Uid, compData);
+                    }
+
+                    if (entityState.ComponentChanges != null)
+                    {
+                        foreach (var change in entityState.ComponentChanges)
+                        {
+                            if (change.Deleted)
+                            {
+                                compData.Remove(change.NetID);
+                            }
+                        }
+                    }
+
+                    if (entityState.ComponentStates != null)
+                    {
+                        foreach (var compState in entityState.ComponentStates)
+                        {
+                            compData[compState.NetID] = compState;
+                        }
+                    }
+                }
+            }
         }
 
         private bool CalculateFullState(out GameState curState, out GameState nextState, int targetBufferSize)
@@ -285,6 +349,32 @@ namespace Robust.Client.GameStates
             _stateBuffer.Clear();
             _lastFullState = null;
             _waitingForFull = true;
+        }
+
+        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data)
+        {
+            foreach (var (uid, compData) in data)
+            {
+                var fullRep = _lastStateFullRep[uid];
+
+                foreach (var (netId, compState) in compData)
+                {
+                    if (!fullRep.ContainsKey(netId))
+                    {
+                        fullRep.Add(netId, compState);
+                    }
+                }
+            }
+        }
+
+        public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
+        {
+            return _lastStateFullRep[entity];
+        }
+
+        public int CalculateBufferSize(GameTick fromTick)
+        {
+            return _stateBuffer.Count(s => s.ToSequence >= fromTick);
         }
     }
 }

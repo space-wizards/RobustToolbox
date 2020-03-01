@@ -70,6 +70,16 @@ namespace Robust.Shared.Timing
         public static bool operator <(GameTick a, GameTick b) => a.Value < b.Value;
         public static bool operator <=(GameTick a, GameTick b) => a.Value <= b.Value;
 
+        public static GameTick operator +(GameTick a, uint b)
+        {
+            return new GameTick(a.Value + b);
+        }
+
+        public static GameTick operator -(GameTick a, uint b)
+        {
+            return new GameTick(a.Value - b);
+        }
+
         /// <inheritdoc />
         public override string ToString()
         {

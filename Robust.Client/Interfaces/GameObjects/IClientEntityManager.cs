@@ -6,6 +6,7 @@ namespace Robust.Client.Interfaces.GameObjects
 {
     public interface IClientEntityManager : IEntityManager
     {
-        void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions, List<EntityState> nextEntStates);
+        List<EntityUid> ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
+            List<EntityState> nextEntStates);
     }
 }

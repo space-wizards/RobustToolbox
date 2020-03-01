@@ -2,6 +2,7 @@
 using Robust.Shared.Serialization;
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
@@ -41,8 +42,10 @@ namespace Robust.Shared.GameStates
 
         public readonly uint LastProcessedInput;
 
+        [CanBeNull]
         public readonly List<EntityState> EntityStates;
         public readonly List<PlayerState> PlayerStates;
+        [CanBeNull]
         public readonly List<EntityUid> EntityDeletions;
         public readonly GameStateMapData MapData;
     }

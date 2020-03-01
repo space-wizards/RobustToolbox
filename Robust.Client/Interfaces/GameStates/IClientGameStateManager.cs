@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.GameStates;
 using Robust.Shared.Input;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.GameStates
 {
@@ -28,6 +29,8 @@ namespace Robust.Client.Interfaces.GameStates
         ///     Number of game states currently in the state buffer.
         /// </summary>
         int CurrentBufferSize { get; }
+
+        GameTick CurServerTick { get; }
 
         /// <summary>
         ///     This is called after the game state has been applied for the current tick.

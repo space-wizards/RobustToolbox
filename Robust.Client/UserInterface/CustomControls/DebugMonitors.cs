@@ -1,4 +1,5 @@
-﻿using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.Interfaces.GameStates;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.State;
@@ -8,6 +9,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -55,10 +57,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _debugNetPanel = new DebugNetPanel(netManager, gameTiming1);
             AddChild(_debugNetPanel);
 
-            _timeDebug = new DebugTimePanel(gameTiming1)
-            {
-                Visible = false,
-            };
+            _timeDebug = new DebugTimePanel(gameTiming1, IoCManager.Resolve<IClientGameStateManager>());
             AddChild(_timeDebug);
 
             _frameGraph = new FrameGraph(gameTiming1);

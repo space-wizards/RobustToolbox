@@ -251,13 +251,13 @@ namespace Robust.Client
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
             _userInterfaceManager.Update(frameEventArgs);
-            _stateManager.Update(frameEventArgs);
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
                 _gameStateManager.ApplyGameState();
             }
 
+            _stateManager.Update(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 

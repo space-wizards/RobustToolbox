@@ -1,4 +1,5 @@
 ﻿using Robust.Client.Graphics.Drawing;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
@@ -9,12 +10,14 @@ namespace Robust.Client.UserInterface.CustomControls
     public class DebugTimePanel : PanelContainer
     {
         private readonly IGameTiming _gameTiming;
+        private readonly IClientGameStateManager _gameState;
 
         private Label _contents;
 
-        public DebugTimePanel(IGameTiming gameTiming)
+        public DebugTimePanel(IGameTiming gameTiming, IClientGameStateManager gameState)
         {
             _gameTiming = gameTiming;
+            _gameState = gameState;
 
             _contents = new Label
             {
@@ -43,8 +46,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick},
-CurTime: {_gameTiming.CurTime}, RealTime: {_gameTiming.RealTime}, CurFrame: {_gameTiming.CurFrame}
+            _contents.Text = $@"Paused: {_gameTiming.Paused}, CurTick: {_gameTiming.CurTick}, CurServerTick: {_gameState.CurServerTick}, Pred: {_gameTiming.CurTick.Value - _gameState.CurServerTick.Value}
+CurTime: {_gameTiming.CurTime:hh\:mm\:ss\.ff}, RealTime: {_gameTiming.RealTime:hh\:mm\:ss\.ff}, CurFrame: {_gameTiming.CurFrame}
 TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
 
             MinimumSizeChanged();

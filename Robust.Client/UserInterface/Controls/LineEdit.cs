@@ -21,7 +21,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassPlaceholder = "placeholder";
 
         [NotNull] private string _text = "";
-        [NotNull] private string _textBuffer = "";
+        private int _overflowChars = 0;
         private bool _editable = true;
         [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _cursorCurrentlyLit;
         private const float BlinkTime = 0.5f;
 
-        protected bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
+        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public event Action<LineEditEventArgs> OnTextChanged;
         public event Action<LineEditEventArgs> OnTextEntered;
@@ -60,17 +60,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public string TextBuffer
+        public int UnrenderedChars
         {
-            get => _textBuffer;
+            get => _overflowChars;
             set
             {
                 if (value == null)
                 {
-                    value = "";
+                    value = 0;
                 }
 
-                if (!SetVisibleText(value))
+                if (!SetUnrenderedChars(value))
                 {
                     return;
                 }
@@ -191,17 +191,17 @@ namespace Robust.Client.UserInterface.Controls
             return true;
         }
 
-        protected bool SetVisibleText(string newText)
+        protected bool SetUnrenderedChars(int charCount)
         {
-            if (IsValid != null && !IsValid(newText))
+            if ( IsValid != null )
             {
                 return false;
             }
 
-            _textBuffer = newText;
+            _overflowChars = charCount;
             return true;
         }
-
+        
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getStyleBox();
@@ -215,6 +215,7 @@ namespace Robust.Client.UserInterface.Controls
             var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + contentBox.TopLeft;
 
             string renderedText;
+            int startRenderPos = _overflowChars;
 
             if (IsPlaceHolderVisible)
             {
@@ -233,7 +234,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var count = 0;
-            foreach (var chr in renderedText)
+            foreach (var chr in renderedText.Substring(startRenderPos))
             {
                 if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
@@ -244,10 +245,7 @@ namespace Robust.Client.UserInterface.Controls
                 // Glyph would be outside the bounding box, abort.
                 if (baseLine.X + metrics.Width + metrics.BearingX > contentBox.Right)
                 {
-                    TextBuffer += renderedText[0].ToString();
-                    Text = renderedText.Substring(1);
-                    _cursorPosition = count;
-                    break;
+                    UnrenderedChars += 1;
                 }
 
                 font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
@@ -328,11 +326,9 @@ namespace Robust.Client.UserInterface.Controls
                     }
                     _text = _text.Remove(_cursorPosition - 1, 1);
 
-                    if (!String.IsNullOrEmpty(_textBuffer))
+                    if ( _overflowChars != 0 )
                     {
-                        _text = _text.Insert(0, _textBuffer.Substring(0, 1));
-                        _textBuffer = _textBuffer.Remove(0, 1);
-                        _cursorPosition += 1;
+                        _overflowChars -= 1;
                     }
 
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
@@ -350,7 +346,7 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    _cursorPosition -= _text.Length;
+                    _cursorPosition = 0;
                 }
                 else if (args.Function == EngineKeyFunctions.TextEnd)
                 {

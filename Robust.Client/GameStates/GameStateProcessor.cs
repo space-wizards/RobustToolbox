@@ -81,7 +81,7 @@ namespace Robust.Client.GameStates
 
             if (state.ToSequence <= lastTick && !_waitingForFull) // CurTick isn't set properly when WaitingForFull
             {
-                if (false && Logging)
+                if (Logging)
                     Logger.DebugS("net.state", $"Received Old GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
@@ -95,7 +95,7 @@ namespace Robust.Client.GameStates
                 if (state.ToSequence != iState.ToSequence)
                     continue;
 
-                if (false && Logging)
+                if (Logging)
                     Logger.DebugS("net.state", $"Received Dupe GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
 
                 return;
@@ -104,7 +104,7 @@ namespace Robust.Client.GameStates
             // this is a good state that we will be using.
             _stateBuffer.Add(state);
 
-            if (false && Logging)
+            if (Logging)
                 Logger.DebugS("net.state", $"Received New GameState: cTick={_timing.CurTick}, fSeq={state.FromSequence}, tSeq={state.ToSequence}, sz={state.PayloadSize}, buf={_stateBuffer.Count}");
         }
 

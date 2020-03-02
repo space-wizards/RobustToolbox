@@ -1,10 +1,14 @@
-﻿using Robust.Shared.GameStates;
+﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
     /// <summary>
     ///     Holds a collection of game states and calculates which ones to apply at a given game tick.
+    ///     It also stores a copy of all the last entity states from the server,
+    ///     allowing the game to be reset to a server-like condition at any point.
     /// </summary>
     internal interface IGameStateProcessor
     {
@@ -26,6 +30,7 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Number of game states currently in the state buffer.
         /// </summary>
+        /// <seealso cref="CalculateBufferSize"/>
         int CurrentBufferSize { get; }
 
         /// <summary>
@@ -71,5 +76,31 @@ namespace Robust.Client.GameStates
         ///     Resets the processor back to its initial state.
         /// </summary>
         void Reset();
+
+        /// <summary>
+        ///     Merges entity data into the full copy of the server states.
+        /// </summary>
+        /// <remarks>
+        ///     This is necessary because the server does not send data
+        ///     that can be inferred from entity creation on new entity states.
+        ///     This data thus has to be re-constructed client-side and merged with this method.
+        /// </remarks>
+        /// <param name="data">
+        ///     The data to merge.
+        ///     It's a dictionary of entity ID -> (component net ID -> ComponentState)
+        /// </param>
+        void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data);
+
+        /// <summary>
+        ///     Get the last state data from the server for an entity.
+        /// </summary>
+        /// <returns>Dictionary (net ID -> ComponentState)</returns>
+        Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity);
+
+        /// <summary>
+        ///     Calculate the size of the game state buffer from a given tick.
+        /// </summary>
+        /// <param name="fromTick">The tick to calculate from.</param>
+        int CalculateBufferSize(GameTick fromTick);
     }
 }

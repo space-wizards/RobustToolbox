@@ -30,6 +30,12 @@ namespace Robust.Client.Interfaces.GameStates
         /// </summary>
         int CurrentBufferSize { get; }
 
+        /// <summary>
+        ///     The current tick of the last server game state applied.
+        /// </summary>
+        /// <remarks>
+        ///     Use this to synchronize server-sent simulation events with the client's game loop.
+        /// </remarks>
         GameTick CurServerTick { get; }
 
         /// <summary>

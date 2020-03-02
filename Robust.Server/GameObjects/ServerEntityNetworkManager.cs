@@ -60,8 +60,6 @@ namespace Robust.Server.GameObjects
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
 
-            System.Console.WriteLine($"{msg.SourceTick}");
-
             //Send the message
             if (channel == null)
                 _networkManager.ServerSendToAll(msg);
@@ -77,8 +75,6 @@ namespace Robust.Server.GameObjects
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
 
-            System.Console.WriteLine($"{newMsg.SourceTick}");
-
             _networkManager.ServerSendToAll(newMsg);
         }
 
@@ -89,8 +85,6 @@ namespace Robust.Server.GameObjects
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
             newMsg.SourceTick = _gameTiming.CurTick;
-
-            System.Console.WriteLine($"{newMsg.SourceTick}");
 
             _networkManager.ServerSendMessage(newMsg, targetConnection);
         }

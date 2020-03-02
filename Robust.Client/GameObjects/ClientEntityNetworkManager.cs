@@ -52,8 +52,6 @@ namespace Robust.Client.GameObjects
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
 
-            System.Console.WriteLine($"{msg.SourceTick}");
-
             _networkManager.ClientSendMessage(msg);
         }
 

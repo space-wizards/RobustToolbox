@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
-using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -25,6 +21,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassPlaceholder = "placeholder";
 
         [NotNull] private string _text = "";
+        [NotNull] private string _textBuffer = "";
         private bool _editable = true;
         [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
@@ -32,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _cursorCurrentlyLit;
         private const float BlinkTime = 0.5f;
 
-        private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
+        protected bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
         public event Action<LineEditEventArgs> OnTextChanged;
         public event Action<LineEditEventArgs> OnTextEntered;
@@ -59,6 +56,24 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _cursorPosition = 0;
+                _updatePseudoClass();
+            }
+        }
+
+        public string TextBuffer
+        {
+            get => _textBuffer;
+            set
+            {
+                if (value == null)
+                {
+                    value = "";
+                }
+
+                if (!SetVisibleText(value))
+                {
+                    return;
+                }
                 _updatePseudoClass();
             }
         }
@@ -176,6 +191,17 @@ namespace Robust.Client.UserInterface.Controls
             return true;
         }
 
+        protected bool SetVisibleText(string newText)
+        {
+            if (IsValid != null && !IsValid(newText))
+            {
+                return false;
+            }
+
+            _textBuffer = newText;
+            return true;
+        }
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getStyleBox();
@@ -218,6 +244,9 @@ namespace Robust.Client.UserInterface.Controls
                 // Glyph would be outside the bounding box, abort.
                 if (baseLine.X + metrics.Width + metrics.BearingX > contentBox.Right)
                 {
+                    TextBuffer += renderedText[0].ToString();
+                    Text = renderedText.Substring(1);
+                    _cursorPosition = count;
                     break;
                 }
 
@@ -297,13 +326,76 @@ namespace Robust.Client.UserInterface.Controls
                     {
                         return;
                     }
-
                     _text = _text.Remove(_cursorPosition - 1, 1);
+
+                    if (!String.IsNullOrEmpty(_textBuffer))
+                    {
+                        _text = _text.Insert(0, _textBuffer.Substring(0, 1));
+                        _textBuffer = _textBuffer.Remove(0, 1);
+                        _cursorPosition += 1;
+                    }
+
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
                     _cursorPosition -= 1;
+
                     _updatePseudoClass();
                     args.Handle();
                 }
+
+
+                if (args.Function == EngineKeyFunctions.TextHome)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
+                    }
+
+                    _cursorPosition -= _text.Length;
+                }
+                else if (args.Function == EngineKeyFunctions.TextEnd)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
+                    }
+
+                    _cursorPosition += _text.Length;
+                }
+
+                if (args.Function == EngineKeyFunctions.TextCtrlRight)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
+                    }
+
+                    int length = 0;
+                    int wordsLength = _text.Replace(" ", String.Empty).Length;
+                    var individualWords = _text.Split(" ");
+                    var numSpaces = individualWords.Length - 1;
+                    int wordEnd = 0;
+
+                    for (int index = 0; index < individualWords.Length; index++)
+                    {
+                        var word = individualWords[index];
+                        wordEnd = wordEnd + word.Length;
+                        var wordStart = wordEnd - word.Length;
+
+                        if ((_cursorPosition - index) <= wordStart)
+                        {
+                            _cursorPosition = wordEnd + index;
+                        }
+                    }
+
+                }
+                else if (args.Function == EngineKeyFunctions.TextCtrlLeft)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
+                    }
+                }
+
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
                 {
                     if (_cursorPosition == 0)

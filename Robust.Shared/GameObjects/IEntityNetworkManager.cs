@@ -47,6 +47,11 @@ namespace Robust.Shared.GameObjects
         /// <param name="message">Message that should be sent.</param>
         void SendSystemNetworkMessage(EntitySystemMessage message);
 
+        void SendSystemNetworkMessage(EntitySystemMessage message, uint sequence)
+        {
+            throw new NotSupportedException();
+        }
+
         /// <summary>
         /// Sends an Entity System Message to relevant System on a client.
         /// Server: Sends the message to the relevant systems of the client on <paramref name="channel"/>

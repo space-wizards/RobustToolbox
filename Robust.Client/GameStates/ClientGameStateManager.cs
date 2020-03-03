@@ -29,7 +29,9 @@ namespace Robust.Client.GameStates
         private GameStateProcessor _processor;
 
         private uint _nextInputCmdSeq = 1;
-        private Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+        private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg)> _pendingSystemMessages
+            = new Queue<(uint, GameTick, EntitySystemMessage)>();
 
 #pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entities;
@@ -121,6 +123,18 @@ namespace Robust.Client.GameStates
             _nextInputCmdSeq++;
         }
 
+        public uint SystemMessageDispatched(EntitySystemMessage message)
+        {
+            if (!Predicting)
+            {
+                return default;
+            }
+
+            _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message));
+
+            return _nextInputCmdSeq++;
+        }
+
         private void HandleStateMessage(MsgState message)
         {
             var state = message.State;
@@ -180,6 +194,11 @@ namespace Robust.Client.GameStates
                     $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
+            while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedSeq)
+            {
+                _pendingSystemMessages.Dequeue();
+            }
+
             DebugTools.Assert(_timing.InSimulation);
             _lastProcessedTick = _timing.CurTick;
 
@@ -195,6 +214,7 @@ namespace Robust.Client.GameStates
                 */
 
                 var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+                var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
 
                 var ping = _network.ServerChannel.Ping / 1000f; // seconds.
@@ -221,6 +241,13 @@ namespace Robust.Client.GameStates
                             */
 
                         input.PredictInputCommand(inputCmd);
+                    }
+
+                    while (hasPendingInput && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                    {
+                        hasPendingInput = pendingInputEnumerator.MoveNext();
+
+                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.msg);
                     }
 
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);

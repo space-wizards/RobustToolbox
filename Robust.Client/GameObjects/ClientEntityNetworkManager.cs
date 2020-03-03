@@ -47,10 +47,16 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public void SendSystemNetworkMessage(EntitySystemMessage message)
         {
+            SendSystemNetworkMessage(message, default(uint));
+        }
+
+        public void SendSystemNetworkMessage(EntitySystemMessage message, uint sequence)
+        {
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
+            msg.Sequence = sequence;
 
             _networkManager.ClientSendMessage(msg);
         }

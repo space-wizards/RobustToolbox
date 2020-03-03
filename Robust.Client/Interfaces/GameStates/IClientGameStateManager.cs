@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.GameStates;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Timing;
 
@@ -63,5 +64,7 @@ namespace Robust.Client.Interfaces.GameStates
         /// </summary>
         /// <param name="message">Message being dispatched.</param>
         void InputCommandDispatched(FullInputCmdMessage message);
+
+        uint SystemMessageDispatched(EntitySystemMessage message);
     }
 }

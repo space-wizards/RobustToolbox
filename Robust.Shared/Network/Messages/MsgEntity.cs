@@ -26,6 +26,7 @@ namespace Robust.Shared.Network.Messages
 
         public EntityUid EntityUid { get; set; }
         public uint NetId { get; set; }
+        public uint Sequence { get; set; }
         public GameTick SourceTick { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)

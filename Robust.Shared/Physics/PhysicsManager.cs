@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -141,6 +142,10 @@ namespace Robust.Shared.Physics
                 // TODO: Terrible hack to fix bullets crashing the server.
                 // Should be handled with deferred physics events instead.
                 if (body.Owner.Deleted) {
+                    continue;
+                }
+                if(physBody.Owner.IsInsideMe(body.Owner))
+                {
                     continue;
                 }
 

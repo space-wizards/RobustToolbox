@@ -28,6 +28,20 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        public static bool IsInsideMe(this IEntity me, IEntity entity)
+        {
+            DebugTools.Assert(me != null);
+            DebugTools.Assert(!me.Deleted);
+            DebugTools.Assert(entity != null);
+            DebugTools.Assert(!entity.Deleted);
+
+            if (TryGetManagerComp(me, out var containerComp))
+            {
+                return containerComp.ContainsEntity(entity);
+            }
+            return false;
+        }
+
         /// <summary>
         /// Tries to find the container manager that this entity is inside (if any).
         /// </summary>

@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -216,8 +217,10 @@ namespace Robust.UnitTesting.Shared.Physics
             var results = new List<IPhysBody>(1);
             var manager = new PhysicsManager();
 
-            var mockEntity0 = new Mock<IEntity>().Object;
-            var mockEntity1 = new Mock<IEntity>().Object;
+            var mockEntity0 = new Mock<IEntity>();
+            mockEntity0.Setup(foo => foo.Transform).Returns(new Mock<ITransformComponent>().Object);
+            var mockEntity1 = new Mock<IEntity>();
+            mockEntity1.Setup(foo => foo.Transform).Returns(new Mock<ITransformComponent>().Object);
 
             var mock0 = new Mock<IPhysBody>();
             mock0.Setup(foo => foo.WorldAABB).Returns(new Box2(-3, -3, 6, 6));
@@ -226,7 +229,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock0.Setup(foo => foo.CollisionEnabled).Returns(true);
             mock0.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock0.Setup(foo => foo.CollisionMask).Returns(0x04);
-            mock0.Setup(foo => foo.Owner).Returns(mockEntity0);
+            mock0.Setup(foo => foo.Owner).Returns(mockEntity0.Object);
             var staticBody = mock0.Object;
             manager.AddBody(staticBody);
 
@@ -237,7 +240,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock1.Setup(foo => foo.CollisionEnabled).Returns(true);
             mock1.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock1.Setup(foo => foo.CollisionMask).Returns(0x04);
-            mock1.Setup(foo => foo.Owner).Returns(mockEntity1);
+            mock1.Setup(foo => foo.Owner).Returns(mockEntity1.Object);
             var testBody = mock1.Object;
             manager.AddBody(testBody);
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
@@ -355,7 +357,7 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    _cursorPosition += _text.Length;
+                    _cursorPosition = _text.Length;
                 }
 
                 if (args.Function == EngineKeyFunctions.TextCtrlRight)
@@ -365,31 +367,40 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    int length = 0;
-                    int wordsLength = _text.Replace(" ", String.Empty).Length;
-                    var individualWords = _text.Split(" ");
-                    var numSpaces = individualWords.Length - 1;
-                    int wordEnd = 0;
-
-                    for (int index = 0; index < individualWords.Length; index++)
+                    // Calculate word boundaries in _text, move to first boundary after _cursorPosition
+                    var boundaryAheadPat = @"\b";
+                    var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
+                    
+                    foreach (Match boundary in wordBoundaries)
                     {
-                        var word = individualWords[index];
-                        wordEnd = wordEnd + word.Length;
-                        var wordStart = wordEnd - word.Length;
-
-                        if ((_cursorPosition - index) <= wordStart)
+                        if (boundary.Index > _cursorPosition)
                         {
-                            _cursorPosition = wordEnd + index;
+                            _cursorPosition = boundary.Index;
+                            break;
                         }
                     }
 
                 }
+                
                 else if (args.Function == EngineKeyFunctions.TextCtrlLeft)
                 {
                     if (!this.HasKeyboardFocus())
                     {
                         return;
                     }
+                    
+                    var boundaryAheadPat = @"\b";
+                    var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
+                    
+                    foreach (Match boundary in wordBoundaries.Reverse())
+                    {
+                        if (boundary.Index < _cursorPosition)
+                        {
+                            _cursorPosition = boundary.Index;
+                            break;
+                        }
+                    }
+
                 }
 
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)

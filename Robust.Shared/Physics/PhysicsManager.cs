@@ -144,7 +144,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                if (TestMask(physBody, body))
+                if (CollidesOnMask(physBody, body))
                 {
                     results.Add(body);
                 }
@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics
             return any;
         }
 
-        private static bool TestMask(IPhysBody a, IPhysBody b)
+        private static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
                 return false;
@@ -163,8 +163,7 @@ namespace Robust.Shared.Physics
             if (!a.CollisionEnabled || !b.CollisionEnabled)
                 return false;
 
-            if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
-                (b.CollisionMask & a.CollisionLayer) == 0x0)
+            if ((a.CollisionMask & b.CollisionLayer) == 0x0)
                 return false;
 
             return true;

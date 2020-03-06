@@ -105,6 +105,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 totalMass = 0;
                 lowestMovement = initialMovement;
                 var copy = new List<Vector2>(velocityConsumers.Count);
+                float totalFriction = 0;
                 foreach (var consumer in velocityConsumers)
                 {
                     totalMass += consumer.Mass;
@@ -112,10 +113,16 @@ namespace Robust.Server.GameObjects.EntitySystems
                     consumer.AngularVelocity = velocity.AngularVelocity;
                     consumer.LinearVelocity = movement;
                     copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
+                    totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner, copy[copy.Count - 1]);
                 }
 
                 copy.Sort(LengthComparer);
                 lowestMovement = copy[0];
+                lowestMovement -= lowestMovement * totalFriction;
+                if (lowestMovement.LengthSquared <= velocity.Mass * Epsilon / (1 - totalFriction))
+                {
+                    lowestMovement = Vector2.Zero;
+                }
                 velocityConsumers = velocity.GetVelocityConsumers();
             } while (velocityConsumers.Count != velocityConsumerCount);
 
@@ -191,25 +198,34 @@ namespace Robust.Server.GameObjects.EntitySystems
                         movement = new Vector2(0, 0);
                     }
                 }
-
-                if (movement != Vector2.Zero && collider.IsScrapingFloor)
-                {
-                    var location = entity.Transform;
-                    var grid = mapManager.GetGrid(location.GridPosition.GridID);
-                    var tile = grid.GetTileRef(location.GridPosition);
-                    var tileDef = tileDefinitionManager[tile.Tile.TypeId];
-                    if (tileDef.Friction != 0)
-                    {
-                        movement -= movement * tileDef.Friction;
-                        if (movement.LengthSquared <= velocity.Mass * Epsilon / (1 - tileDef.Friction))
-                        {
-                            movement = Vector2.Zero;
-                        }
-                    }
-                }
+                //movement = GetFriction(tileDefinitionManager, mapManager, velocity, entity, movement, collider);
             }
 
             return movement;
+        }
+
+        private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity, Vector2 movement)
+        {
+            if (movement != Vector2.Zero && entity.TryGetComponent(out CollidableComponent collider) && collider.IsScrapingFloor)
+            {
+                var location = entity.Transform;
+                var grid = mapManager.GetGrid(location.GridPosition.GridID);
+                var tile = grid.GetTileRef(location.GridPosition);
+                var tileDef = tileDefinitionManager[tile.Tile.TypeId];
+                return tileDef.Friction;
+                //    if (tileDef.Friction != 0)
+                //    {
+                //        movement -= movement * tileDef.Friction;
+                //        if (movement.LengthSquared <= velocity.Mass * Epsilon / (1 - tileDef.Friction))
+                //        {
+                //            movement = Vector2.Zero;
+                //        }
+                //    }
+                //}
+
+                //return movement;
+            }
+            return 0;
         }
 
         private static readonly IComparer<Vector2> LengthComparer =

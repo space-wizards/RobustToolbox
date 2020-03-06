@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -7,9 +6,9 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using System.Collections.Generic;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -198,7 +197,6 @@ namespace Robust.Server.GameObjects.EntitySystems
                         movement = new Vector2(0, 0);
                     }
                 }
-                //movement = GetFriction(tileDefinitionManager, mapManager, velocity, entity, movement, collider);
             }
 
             return movement;
@@ -213,17 +211,6 @@ namespace Robust.Server.GameObjects.EntitySystems
                 var tile = grid.GetTileRef(location.GridPosition);
                 var tileDef = tileDefinitionManager[tile.Tile.TypeId];
                 return tileDef.Friction;
-                //    if (tileDef.Friction != 0)
-                //    {
-                //        movement -= movement * tileDef.Friction;
-                //        if (movement.LengthSquared <= velocity.Mass * Epsilon / (1 - tileDef.Friction))
-                //        {
-                //            movement = Vector2.Zero;
-                //        }
-                //    }
-                //}
-
-                //return movement;
             }
             return 0;
         }

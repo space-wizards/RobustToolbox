@@ -108,20 +108,15 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var consumer in velocityConsumers)
                 {
                     totalMass += consumer.Mass;
-                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass : 1);
+                    totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner);
+                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass + (totalMass * totalFriction) : 1);
                     consumer.AngularVelocity = velocity.AngularVelocity;
                     consumer.LinearVelocity = movement;
                     copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
-                    totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner, copy[copy.Count - 1]);
                 }
 
                 copy.Sort(LengthComparer);
                 lowestMovement = copy[0];
-                lowestMovement -= lowestMovement * totalFriction;
-                if (lowestMovement.LengthSquared <= velocity.Mass * Epsilon / (1 - totalFriction))
-                {
-                    lowestMovement = Vector2.Zero;
-                }
                 velocityConsumers = velocity.GetVelocityConsumers();
             } while (velocityConsumers.Count != velocityConsumerCount);
 
@@ -202,9 +197,9 @@ namespace Robust.Server.GameObjects.EntitySystems
             return movement;
         }
 
-        private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity, Vector2 movement)
+        private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity)
         {
-            if (movement != Vector2.Zero && entity.TryGetComponent(out CollidableComponent collider) && collider.IsScrapingFloor)
+            if (entity.TryGetComponent(out CollidableComponent collider) && collider.IsScrapingFloor)
             {
                 var location = entity.Transform;
                 var grid = mapManager.GetGrid(location.GridPosition.GridID);

@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics
             return any;
         }
 
-        private static bool CollidesOnMask(IPhysBody a, IPhysBody b)
+        public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
                 return false;

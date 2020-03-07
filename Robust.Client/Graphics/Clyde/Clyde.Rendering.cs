@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
@@ -85,22 +85,20 @@ namespace Robust.Client.Graphics.Clyde
         {
             var eye = _eyeManager.CurrentEye;
 
-            var toScreen = _eyeManager.WorldToScreen(eye.Position.Position);
-            // Round camera position to a screen pixel to avoid weird issues on odd screen sizes.
-            toScreen = ((float) Math.Floor(toScreen.X), (float) Math.Floor(toScreen.Y));
-            var cameraWorldAdjusted = _eyeManager.ScreenToMap(toScreen);
+            eye.GetViewMatrix(out var viewMatrixWorld);
 
-            var viewMatrixWorld = Matrix3.Identity;
-            viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;
-            viewMatrixWorld.R1C1 = 1 / eye.Zoom.Y;
-            viewMatrixWorld.R0C2 = -cameraWorldAdjusted.X / eye.Zoom.X;
-            viewMatrixWorld.R1C2 = -cameraWorldAdjusted.Y / eye.Zoom.Y;
-
-            var projMatrixWorld = Matrix3.Identity;
-            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.X;
-            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.Y;
+            CalcWorldProjectionMatrix(out var projMatrixWorld);
 
             return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+        }
+
+        /// <inheritdoc />
+        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
+        {
+            var projMatrixWorld = Matrix3.Identity;
+            projMatrixWorld.R0C0 = EyeManager.PixelsPerMeter * 2f / ScreenSize.X;
+            projMatrixWorld.R1C1 = EyeManager.PixelsPerMeter * 2f / ScreenSize.Y;
+            projMatrix = projMatrixWorld;
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)

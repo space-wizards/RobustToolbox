@@ -152,7 +152,6 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);

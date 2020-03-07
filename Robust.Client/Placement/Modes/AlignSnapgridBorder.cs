@@ -22,7 +22,7 @@ namespace Robust.Client.Placement.Modes
         {
             if (onGrid)
             {
-                const int ppm = EyeManager.PIXELSPERMETER;
+                const int ppm = EyeManager.PixelsPerMeter;
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
                 var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
                 var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;

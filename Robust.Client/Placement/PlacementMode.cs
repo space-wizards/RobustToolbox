@@ -108,7 +108,7 @@ namespace Robust.Client.Placement
             foreach (var coordinate in locationcollection)
             {
                 var worldPos = pManager.MapManager.GetGrid(coordinate.GridID).LocalToWorld(coordinate).Position;
-                var pos = worldPos - (size/(float)EyeManager.PIXELSPERMETER) / 2f;
+                var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 handle.DrawTexture(SpriteToDraw, pos, color);
             }

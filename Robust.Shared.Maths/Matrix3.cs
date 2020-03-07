@@ -330,6 +330,12 @@ namespace Robust.Shared.Maths
         public static Matrix3 CreateTranslation(float x, float y)
         {
             var result = Identity;
+
+            /* column major
+             0 0 x
+             0 0 y
+             0 0 1
+            */
             result.R0C2 = x;
             result.R1C2 = y;
             return result;
@@ -352,12 +358,35 @@ namespace Robust.Shared.Maths
 
             var result = Identity;
 
+            /* column major
+             cos -sin 0
+             sin  cos 0
+              0    0  1
+            */
             result.R0C0 = cos;
             result.R1C0 = sin;
             result.R0C1 = -sin;
             result.R1C1 = cos;
-
             return result;
+        }
+
+        public static Matrix3 CreateScale(float x, float y)
+        {
+            var result = Identity;
+
+            /* column major
+             x 0 0
+             0 y 0
+             0 0 1
+            */
+            result.R0C0 = x;
+            result.R1C1 = y;
+            return result;
+        }
+
+        public static Matrix3 CreateScale(in Vector2 scale)
+        {
+            return CreateScale(scale.X, scale.Y);
         }
 
         #endregion Constructors
@@ -604,7 +633,7 @@ namespace Robust.Shared.Maths
             result.R2C2 = matrix.R2C0 * R0C2 + matrix.R2C1 * R1C2 + matrix.R2C2 * R2C2;
         }
 
-        /// <summary>Multiply left matrix times left matrix.</summary>
+        /// <summary>Multiply left matrix times right matrix.</summary>
         /// <param name="left">The matrix on the matrix side of the equation.</param>
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
@@ -798,11 +827,60 @@ namespace Robust.Shared.Maths
             result.Z = R2C0 * vector.X + R2C1 * vector.Y + R2C2 * vector.Z;
         }
 
-        public static void Transform(ref Matrix3 matrix, ref Vector3 vector, out Vector3 result)
+        /// <summary>
+        /// Post-multiplies a 3x3 matrix with a 3x1 vector.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <param name="result">Transformed vector.</param>
+        public static void Transform(in Matrix3 matrix, in Vector3 vector, out Vector3 result)
         {
-            result.X = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
-            result.Y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
-            result.Z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
+            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2 * vector.Z;
+            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2 * vector.Z;
+            var z = matrix.R2C0 * vector.X + matrix.R2C1 * vector.Y + matrix.R2C2 * vector.Z;
+            result = new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Post-multiplies a 3x3 matrix with a 2x1 vector. The column-major 3x3 matrix is treated as
+        /// a 3x2 matrix for this calculation.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <param name="result">Transformed vector.</param>
+        public static void Transform(in Matrix3 matrix, in Vector2 vector, out Vector2 result)
+        {
+            var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
+            var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
+            result = new Vector2(x, y);
+        }
+
+        /// <summary>
+        /// Pre-multiples a 1x3 vector with a 3x3 matrix.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <param name="result">Transformed vector.</param>
+        public static void Transform(in Vector3 vector, in Matrix3 matrix, out Vector3 result)
+        {
+            var x = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (vector.Z * matrix.R2C0);
+            var y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (vector.Z * matrix.R2C1);
+            var z = (vector.X * matrix.R0C2) + (vector.Y * matrix.R1C2) + (vector.Z * matrix.R2C2);
+            result = new Vector3(x, y, z);
+        }
+
+        /// <summary>
+        /// Pre-multiples a 1x2 vector with a 3x3 matrix. The row-major 3x3 matrix is treated as
+        /// a 2x3 matrix for this calculation.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <param name="result">Transformed vector.</param>
+        public static void Transform(in Vector2 vector, in Matrix3 matrix, out Vector2 result)
+        {
+            var x = (vector.X * matrix.R0C0) + (vector.Y * matrix.R1C0) + (matrix.R2C0);
+            var y = (vector.X * matrix.R0C1) + (vector.Y * matrix.R1C1) + (matrix.R2C1);
+            result = new Vector2(x, y);
         }
 
         public void Rotate(float angle)
@@ -894,6 +972,57 @@ namespace Robust.Shared.Maths
         }
 
         #endregion Transformation Functions
+
+        #region Operator Overloads
+
+        /// <summary>
+        /// Post-multiplies a 3x3 matrix with a 3x1 vector.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <returns>Transformed vector.</returns>
+        public static Vector3 operator *(in Matrix3 matrix, in Vector3 vector)
+        {
+            Transform(in matrix, in vector, out var result);
+            return result;
+        }
+
+        /// <summary>
+        /// Post-multiplies a 3x3 matrix with a 2x1 vector. The 3x3 matrix is treated as
+        /// a 3x2 matrix for this calculation.
+        /// </summary>
+        /// <param name="matrix">Matrix containing the transformation.</param>
+        /// <param name="vector">Input vector to transform.</param>
+        /// <returns>Transformed vector.</returns>
+        public static Vector2 operator *(in Matrix3 matrix, in Vector2 vector)
+        {
+            Transform(in matrix, in vector, out var result);
+            return result;
+        }
+
+        public static Vector3 operator *(in Vector3 vector, in Matrix3 matrix)
+        {
+            Transform(in vector, in matrix, out var result);
+            return result;
+        }
+
+        public static Vector2 operator *(in Vector2 vector, in Matrix3 matrix)
+        {
+            Transform(in vector, in matrix, out var result);
+            return result;
+        }
+
+        /// <summary>Multiply left matrix times right matrix.</summary>
+        /// <param name="left">The matrix on the matrix side of the equation.</param>
+        /// <param name="right">The matrix on the right side of the equation</param>
+        /// <returns>The resulting matrix of the multiplication.</returns>
+        public static Matrix3 operator *(Matrix3 left, Matrix3 right)
+        {
+            Multiply(ref left, ref right, out var result);
+            return result;
+        }
+
+        #endregion
 
         #region Constants
 

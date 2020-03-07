@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Input;
+using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -29,12 +31,18 @@ namespace Robust.Client.UserInterface.Controls
         private int _cursorPosition;
         private float _cursorBlinkTimer;
         private bool _cursorCurrentlyLit;
+        private string _selectedText;
+        private int _startSelection;
+        private int _endSelection;
         private const float BlinkTime = 0.5f;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
-
+        
         public event Action<LineEditEventArgs> OnTextChanged;
         public event Action<LineEditEventArgs> OnTextEntered;
+
+        public event Action<LineEditEventArgs> OnMouseClicked;
+        public event Action<LineEditEventArgs> OnMouseReleased;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -76,7 +84,6 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return;
                 }
-                _updatePseudoClass();
             }
         }
 
@@ -146,12 +153,28 @@ namespace Robust.Client.UserInterface.Controls
             Text = "";
         }
 
+        public void StartSelect()
+        {
+            OnMouseClicked?.Invoke(MouseButtonEventArgs, this);
+
+            _startSelection = _cursorPosition;
+        }
+
+        public void EndSelect()
+        {
+            OnMouseReleased?.Invoke(MouseButtonEventArgs, this);
+
+            _endSelection = _cursorPosition;
+        }
+        
         public void Select(int from = 0, int to = -1)
         {
+            _selectedText = _text.AsSpan(@from, to).ToString();
         }
 
         public void SelectAll()
         {
+            var clipboard = IoCManager.Resolve<IClipboardManager>();
         }
 
         public void InsertAtCursor(string text)
@@ -339,8 +362,6 @@ namespace Robust.Client.UserInterface.Controls
                     _updatePseudoClass();
                     args.Handle();
                 }
-
-
                 if (args.Function == EngineKeyFunctions.TextHome)
                 {
                     if (!this.HasKeyboardFocus())
@@ -370,6 +391,7 @@ namespace Robust.Client.UserInterface.Controls
                     // Calculate word boundaries in _text, move to first boundary after _cursorPosition
                     var boundaryAheadPat = @"\b";
                     var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
+                    
                     
                     foreach (Match boundary in wordBoundaries)
                     {
@@ -443,6 +465,17 @@ namespace Robust.Client.UserInterface.Controls
                     OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
                     args.Handle();
                 }
+                else if (args.Function == EngineKeyFunctions.TextCopy)
+                {
+                    if (!Editable)
+                    {
+                        return;
+                    }
+
+                    var clipboard = IoCManager.Resolve<IClipboardManager>();
+                    clipboard.SetText(_selectedText);
+
+                }
                 else if (args.Function == EngineKeyFunctions.TextPaste)
                 {
                     if (!Editable)
@@ -475,54 +508,59 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
-                // Find closest cursor position under mouse.
-                var style = _getStyleBox();
-                var contentBox = style.GetContentBox(PixelSizeBox);
-
-                var clickPosX = args.RelativePosition.X * UIScale;
-
-                var font = _getFont();
-                var index = 0;
-                var chrPosX = contentBox.Left;
-                var lastChrPostX = contentBox.Left;
-                foreach (var chr in _text)
-                {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
-                    {
-                        index += 1;
-                        continue;
-                    }
-
-                    if (chrPosX > clickPosX)
-                    {
-                        break;
-                    }
-
-                    lastChrPostX = chrPosX;
-                    chrPosX += metrics.Advance;
-                    index += 1;
-
-                    if (chrPosX > contentBox.Right)
-                    {
-                        break;
-                    }
-                }
-
-                // Distance between the right side of the glyph overlapping the mouse and the mouse.
-                var distanceRight = chrPosX - clickPosX;
-                // Same but left side.
-                var distanceLeft = clickPosX - lastChrPostX;
-                // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
-                if (index > 0 && distanceRight > distanceLeft)
-                {
-                    index -= 1;
-                }
-
-                _cursorPosition = index;
-                args.Handle();
+                _getCursorUnderMouse(args);
             }
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();
+        }
+
+        private void _getCursorUnderMouse(GUIBoundKeyEventArgs args)
+        {
+            // Find closest cursor position under mouse.
+            var style = _getStyleBox();
+            var contentBox = style.GetContentBox(PixelSizeBox);
+                
+            var clickPosX = args.RelativePosition.X * UIScale;
+
+            var font = _getFont();
+            var index = 0;
+            var chrPosX = contentBox.Left;
+            var lastChrPostX = contentBox.Left;
+            foreach (var chr in _text)
+            {
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                {
+                    index += 1;
+                    continue;
+                }
+
+                if (chrPosX > clickPosX)
+                {
+                    break;
+                }
+
+                lastChrPostX = chrPosX;
+                chrPosX += metrics.Advance;
+                index += 1;
+
+                if (chrPosX > contentBox.Right)
+                {
+                    break;
+                }
+            }
+
+            // Distance between the right side of the glyph overlapping the mouse and the mouse.
+            var distanceRight = chrPosX - clickPosX;
+            // Same but left side.
+            var distanceLeft = clickPosX - lastChrPostX;
+            // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
+            if (index > 0 && distanceRight > distanceLeft)
+            {
+                index -= 1;
+            }
+
+            _cursorPosition = index; 
+            args.Handle();
         }
 
         protected internal override void FocusEntered()

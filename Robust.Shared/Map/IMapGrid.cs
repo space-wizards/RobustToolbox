@@ -140,6 +140,11 @@ namespace Robust.Shared.Map
         Vector2 WorldToLocal(Vector2 posWorld);
 
         /// <summary>
+        /// Transforms map coordinates to grid coordinates.
+        /// </summary>
+        GridCoordinates MapToGrid(MapCoordinates posWorld);
+
+        /// <summary>
         ///     Transforms world-space coordinates from the local grid origin to the global origin.
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>

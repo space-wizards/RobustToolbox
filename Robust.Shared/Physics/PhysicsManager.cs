@@ -163,7 +163,8 @@ namespace Robust.Shared.Physics
             if (!a.CollisionEnabled || !b.CollisionEnabled)
                 return false;
 
-            if ((a.CollisionMask & b.CollisionLayer) == 0x0)
+            if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
+                (b.CollisionMask & a.CollisionLayer) == 0x0)
                 return false;
 
             return true;

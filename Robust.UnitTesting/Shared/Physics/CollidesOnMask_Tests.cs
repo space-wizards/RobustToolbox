@@ -42,6 +42,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [TestCase(1, 1, 0, 1, true)]
         [TestCase(1, 1, 1, 0, true)]
         [TestCase(1, 1, 1, 1, true)]
+        [TestCase(31, 30, 32, 0, false)]
         public void GivenMasksAndLayers_WhenCollidesOnMask_ThenExpected(int layerA, int maskA, int layerB, int maskB, bool expected)
         {
             //Arrange
@@ -54,16 +55,6 @@ namespace Robust.UnitTesting.Shared.Physics
             Act();
             //Assert
             Assert.AreEqual(expected, Result);
-        }
-
-        [Test]
-        public void GivenLockerAndItem_WhenCollidesOnMask_ThenFalse()
-        {
-            var layerA = 31;
-            var maskA = 30;
-            var layerB = 32;
-            var maskB = 0;
-            GivenMasksAndLayers_WhenCollidesOnMask_ThenExpected(layerA, maskA, layerB, maskB, false);
         }
     }
 }

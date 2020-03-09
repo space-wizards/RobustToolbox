@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using JetBrains.Annotations;
+using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Reflection;
@@ -328,9 +330,18 @@ namespace Robust.Client.Input
             }
         }
 
+        /// <inheritdoc />
+        public void RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
+            Key baseKey, Key? mod1, Key? mod2, Key? mod3)
+        {
+            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false,
+                mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+
+            RegisterBinding(binding);
+        }
+
         private void RegisterBinding(KeyBinding binding)
         {
-            //TODO: Assert there are no duplicate binding combos
             _bindings.Add(binding);
 
             // reversed a,b for descending order
@@ -518,5 +529,52 @@ namespace Robust.Client.Input
         Unknown = 0,
         Enabled,
         Disabled,
+    }
+
+    [UsedImplicitly]
+    internal class BindCommand : IConsoleCommand
+    {
+        public string Command => "bind";
+        public string Description => "Binds an input key to an input command.";
+        public string Help => "bind <KeyName> <BindMode> <InputCommand>";
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length < 3)
+            {
+                console.AddLine("Too few arguments.");
+                return false;
+            }
+
+            if (args.Length > 3)
+            {
+                console.AddLine("Too many arguments.");
+                return false;
+            }
+
+            var keyName = args[0];
+
+            if (!Enum.TryParse(typeof(Keyboard.Key), keyName, true, out var keyIdObj))
+            {
+                console.AddLine($"Key '{keyName}' is unrecognized.");
+                return false;
+            }
+
+            var keyId = (Keyboard.Key) keyIdObj;
+
+            if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
+            {
+                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
+                return false;
+            }
+            var keyMode = (KeyBindingType)keyModeObj;
+
+            var inputCommand = args[2];
+
+            var inputMan = IoCManager.Resolve<IInputManager>();
+
+            inputMan.RegisterBinding(new BoundKeyFunction(inputCommand), keyMode, keyId, null, null, null);
+
+            return false;
+        }
     }
 }

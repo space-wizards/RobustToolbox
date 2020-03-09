@@ -37,6 +37,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextCursorEnd = "TextCursorEnd";
         public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
         public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
+        public static readonly BoundKeyFunction TextSelectAll = "TextSelectAll";
         public static readonly BoundKeyFunction TextCopy = "TextCopy";
         public static readonly BoundKeyFunction TextPaste = "TextPaste";
         public static readonly BoundKeyFunction TextHistoryPrev = "TextHistoryPrev";

@@ -36,6 +36,8 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextEnd);
             common.AddFunction(EngineKeyFunctions.TextBackspace);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
+            common.AddFunction(EngineKeyFunctions.TextCopy);
+            common.AddFunction(EngineKeyFunctions.TextSelectAll);
             common.AddFunction(EngineKeyFunctions.TextPaste);
             common.AddFunction(EngineKeyFunctions.TextHistoryPrev);
             common.AddFunction(EngineKeyFunctions.TextHistoryNext);

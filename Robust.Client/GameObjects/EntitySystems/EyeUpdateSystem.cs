@@ -45,7 +45,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and is initialized
             var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
-            inputSystem.BindMap.BindFunction(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler());
+            inputSystem.BindMap.UnbindFunction(EngineKeyFunctions.CameraRotateRight);
 
             base.Shutdown();
         }

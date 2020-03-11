@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Interfaces.Resources;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -18,6 +19,7 @@ namespace Robust.Client.Graphics.Shaders
         private readonly List<ShaderConstantDefinition> _constantsParsing = new List<ShaderConstantDefinition>();
         private readonly List<ShaderVaryingDefinition> _varyingsParsing = new List<ShaderVaryingDefinition>();
         private readonly List<ShaderFunctionDefinition> _functionsParsing = new List<ShaderFunctionDefinition>();
+        private readonly LinkedList<ResourcePath> _includes = new LinkedList<ResourcePath>();
 
         public static ParsedShader Parse(TextReader reader, IResourceManager resManager)
         {
@@ -188,7 +190,8 @@ namespace Robust.Client.Graphics.Shaders
                 _functionsParsing,
                 lightMode ?? ShaderLightMode.Default,
                 blendMode ?? ShaderBlendMode.Mix,
-                preset ?? ShaderPreset.Default);
+                preset ?? ShaderPreset.Default,
+                _includes);
         }
 
         private void _parseFunction()

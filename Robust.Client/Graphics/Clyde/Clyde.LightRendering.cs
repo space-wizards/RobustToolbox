@@ -7,6 +7,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
@@ -172,9 +173,18 @@ namespace Robust.Client.Graphics.Clyde
 
             ClydeHandle LoadShaderHandle(string path)
             {
-                var shaderSource = _resourceCache.GetResource<ShaderSourceResource>(path);
-                return shaderSource.ClydeHandle;
+                try
+                {
+                    var shaderSource = _resourceCache.GetResource<ShaderSourceResource>(path);
+                    return shaderSource.ClydeHandle;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning($"Can't load shader {path}\n{ex.GetType().Name}: {ex.Message}");
+                    return default;
+                }
             }
+
 
             _lightShaderHandle = LoadShaderHandle("/Shaders/Internal/light.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");

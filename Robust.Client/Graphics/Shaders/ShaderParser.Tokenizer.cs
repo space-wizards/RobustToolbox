@@ -138,8 +138,8 @@ namespace Robust.Client.Graphics.Shaders
             _currentParser.Take(); // Quote.
 
             var pathString = new string(pathParsing.ToArray());
-
             var path = new ResourcePath(pathString);
+            _includes.AddLast(path);
             using var stream = _resManager.ContentFileRead(path);
             using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
 

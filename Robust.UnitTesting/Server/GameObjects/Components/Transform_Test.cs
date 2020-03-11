@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -38,6 +39,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
+            var compMan = IoCManager.Resolve<IComponentManager>();
+            compMan.Initialize();
+
             EntityManager = IoCManager.Resolve<IServerEntityManager>();
             MapManager = IoCManager.Resolve<IMapManager>();
             MapManager.Initialize();

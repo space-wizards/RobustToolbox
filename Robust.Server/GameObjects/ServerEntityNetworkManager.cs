@@ -7,37 +7,37 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.GameObjects
 {
+    /// <summary>
+    /// The server implementation of the Entity Network Manager.
+    /// </summary>
     public class ServerEntityNetworkManager : IEntityNetworkManager
     {
 #pragma warning disable 649
-        [Dependency] private readonly IServerNetManager _mNetManager;
-        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IServerNetManager _networkManager;
 #pragma warning restore 649
 
-        #region IEntityNetworkManager Members
+        /// <inheritdoc />
+        public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+
+        /// <inheritdoc />
+        public event EventHandler<EntitySystemMessage> ReceivedSystemMessage;
 
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            _mNetManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
-        }
-
-        /// <inheritdoc />
-        public void SendEntityNetworkMessage(IEntity entity, EntityEventArgs message)
-        {
-            throw new NotImplementedException();
+            _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
         }
 
         /// <inheritdoc />
         public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
         {
-            if (_mNetManager.IsClient)
+            if (_networkManager.IsClient)
                 return;
 
             if (!component.NetID.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 
-            var msg = _mNetManager.CreateNetMessage<MsgEntity>();
+            var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
             msg.EntityUid = entity.Uid;
             msg.NetId = component.NetID.Value;
@@ -45,63 +45,41 @@ namespace Robust.Server.GameObjects
 
             //Send the message
             if (channel == null)
-            {
-                _mNetManager.ServerSendToAll(msg);
-            }
+                _networkManager.ServerSendToAll(msg);
             else
-            {
-                _mNetManager.ServerSendMessage(msg, channel);
-            }
+                _networkManager.ServerSendMessage(msg, channel);
         }
 
-        #endregion IEntityNetworkManager Members
-
-        #region Sending
-
-        /// <summary>
-        /// Sends a message to the relevant system(s) on all clients.
-        /// </summary>
+        /// <inheritdoc />
         public void SendSystemNetworkMessage(EntitySystemMessage message)
         {
-            var newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
+            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
 
-            _mNetManager.ServerSendToAll(newMsg);
+            _networkManager.ServerSendToAll(newMsg);
         }
 
-        /// <summary>
-        /// Sends a message to the relevant system(s) on the target client.
-        /// </summary>
+        /// <inheritdoc />
         public void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel targetConnection)
         {
-            var newMsg = _mNetManager.CreateNetMessage<MsgEntity>();
+            var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
             newMsg.Type = EntityMessageType.SystemMessage;
             newMsg.SystemMessage = message;
 
-            _mNetManager.ServerSendMessage(newMsg, targetConnection);
+            _networkManager.ServerSendMessage(newMsg, targetConnection);
         }
 
-        #endregion Sending
-
-        /// <summary>
-        /// Handles an incoming entity message
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
         private void HandleEntityNetworkMessage(MsgEntity message)
         {
             switch (message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                    _entityManager.HandleEntityNetworkMessage(message);
-                    return;
-
-                case EntityMessageType.EntityMessage:
+                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message));
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    _entityManager.EventBus.RaiseEvent(EventSource.Network, message.SystemMessage);
+                    ReceivedSystemMessage?.Invoke(this, message.SystemMessage);
                     return;
             }
         }

@@ -11,7 +11,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -52,8 +51,6 @@ namespace Robust.Shared.GameObjects
 
         protected readonly List<IEntity> AllEntities = new List<IEntity>();
 
-        protected readonly Queue<IncomingEntityMessage> NetworkMessageBuffer = new Queue<IncomingEntityMessage>();
-
         private readonly IEntityEventBus _eventBus = new EntityEventBus();
 
         /// <inheritdoc />
@@ -64,7 +61,10 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize()
         {
             EntityNetworkManager.SetupNetworking();
-            ComponentManager.Clear();
+            EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
+            EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
+
+            ComponentManager.Initialize();
             _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
         }
 
@@ -82,7 +82,6 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
-            ProcessMessageBuffer();
             EntitySystemManager.Update(frameTime);
             _eventBus.ProcessEventQueue();
             CullDeletedEntities();
@@ -340,76 +339,16 @@ namespace Robust.Shared.GameObjects
 
         #endregion Entity Management
 
-        #region message processing
-
-        /// <inheritdoc />
-        public void HandleEntityNetworkMessage(MsgEntity msg)
+        private void DispatchComponentMessage(NetworkComponentMessage netMsg)
         {
-            var incomingEntity = new IncomingEntityMessage(msg);
-
-            if (!Started)
-            {
-                if (incomingEntity.Message.Type != EntityMessageType.Error)
-                    NetworkMessageBuffer.Enqueue(incomingEntity);
-                return;
-            }
-
-            if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out _))
-                NetworkMessageBuffer.Enqueue(incomingEntity);
-            else
-                ProcessEntityMessage(incomingEntity.Message);
-        }
-
-        private void ProcessMessageBuffer()
-        {
-            if (!Started) return;
-
-            if (NetworkMessageBuffer.Count == 0) return;
-
-            var misses = new List<IncomingEntityMessage>();
-
-            while (NetworkMessageBuffer.Count != 0)
-            {
-                var incomingEntity = NetworkMessageBuffer.Dequeue();
-                if (!Entities.TryGetValue(incomingEntity.Message.EntityUid, out var entity))
-                {
-                    incomingEntity.LastProcessingAttempt = DateTime.Now;
-                    if ((incomingEntity.LastProcessingAttempt - incomingEntity.ReceivedTime).TotalSeconds >
-                        incomingEntity.Expires)
-                        misses.Add(incomingEntity);
-                }
-                else
-                {
-                    ProcessEntityMessage(incomingEntity.Message);
-                }
-            }
-
-            foreach (var miss in misses)
-            {
-                NetworkMessageBuffer.Enqueue(miss);
-            }
-        }
-
-        private void ProcessEntityMessage(MsgEntity msgEntity)
-        {
-            switch (msgEntity.Type)
-            {
-                case EntityMessageType.ComponentMessage:
-                    DispatchComponentMessage(msgEntity);
-                    break;
-            }
-        }
-
-        private void DispatchComponentMessage(MsgEntity msgEntity)
-        {
-            var compMsg = msgEntity.ComponentMessage;
-            var compChannel = msgEntity.MsgChannel;
+            var compMsg = netMsg.Message;
+            var compChannel = netMsg.Channel;
             compMsg.Remote = true;
 
-            var uid = msgEntity.EntityUid;
+            var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
-                if (_componentManager.TryGetComponent(uid, msgEntity.NetId, out var component))
+                if (_componentManager.TryGetComponent(uid, netMsg.NetId, out var component))
                     component.HandleMessage(compMsg, compChannel);
             }
             else
@@ -420,8 +359,6 @@ namespace Robust.Shared.GameObjects
                 }
             }
         }
-
-        #endregion message processing
 
         protected abstract EntityUid GenerateEntityUid();
 
@@ -652,7 +589,6 @@ namespace Robust.Shared.GameObjects
     {
         Error = 0,
         ComponentMessage,
-        EntityMessage,
         SystemMessage
     }
 }

@@ -36,6 +36,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs> ComponentDeleted;
 
+        public void Initialize()
+        {
+            FillComponentDict();
+        }
+
         /// <inheritdoc />
         public void Clear()
         {

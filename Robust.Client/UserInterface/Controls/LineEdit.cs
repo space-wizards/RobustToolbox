@@ -76,9 +76,7 @@ namespace Robust.Client.UserInterface.Controls
                     value = "";
                 }
 
-                if (!SetSelectionBuffer(value))
-                {
-                }
+                _selectedText = value;
             }
         }
       
@@ -87,10 +85,11 @@ namespace Robust.Client.UserInterface.Controls
             get => _overflowChars;
             set
             {
-                if (value < 0)
+                if (_overflowChars < 0)
                 {
-                    value = 0;
+                    _overflowChars = 0;
                 }
+
                 _overflowChars = value;
             }
         }
@@ -178,12 +177,6 @@ namespace Robust.Client.UserInterface.Controls
                 selectionLength = _text.Length;
             }
 
-            if (_overflowChars > 0)
-            {
-                startPoint -= _overflowChars;
-            }
-            
-            //if (!SetSelectionBuffer(_text.AsSpan(startPoint, selectionLength).ToString())) ;
             _selectedText = _text.AsSpan(startPoint, selectionLength).ToString();
         }
 
@@ -228,13 +221,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _text = newText;
-            return true;
-        }
-
-        protected bool SetSelectionBuffer(string newText)
-        {
-
-            _selectedText = newText;
             return true;
         }
 
@@ -379,19 +365,14 @@ namespace Robust.Client.UserInterface.Controls
                     
                     if (_selectedText.Length > 0)
                     {
-                        if (_cursorPosition == 0)
-                        {
-                            _text = _text.Remove(1, _selectedText.Length);
-                        }
-                        else
-                        {
-                            _text = _text.Remove(Math.Min(_startSelection, _endSelection),_selectedText.Length);
-                        }
-
+                        var selectionStart = Math.Min(_startSelection, _endSelection) - 1;
+                        _text = _text.Remove(selectionStart,_selectedText.Length);
+                        
                         if (_overflowChars < _selectedText.Length)
                         {
                             _overflowChars = 0;
                         }
+                        
                         if (_overflowChars > 0)
                         {
                             _overflowChars -= _selectedText.Length;

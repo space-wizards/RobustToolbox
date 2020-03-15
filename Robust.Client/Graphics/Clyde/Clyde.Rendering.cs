@@ -838,6 +838,13 @@ namespace Robust.Client.Graphics.Clyde
                     return cmp;
                 }
 
+                cmp = b.Owner.Transform.WorldPosition.Y.CompareTo(a.Owner.Transform.WorldPosition.Y);
+
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
                 return a.Owner.Uid.CompareTo(b.Owner.Uid);
             }
         }

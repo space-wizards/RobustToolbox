@@ -194,6 +194,7 @@ namespace Robust.Client.UserInterface.Controls
 
             public MenuBarTopButton(Menu menu)
             {
+                MouseFilter = MouseFilterMode.Pass;
                 Menu = menu;
                 AddChild(Label = new Label {Text = menu.Title});
             }

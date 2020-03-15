@@ -221,8 +221,6 @@ namespace Robust.Client.State.States
 
             private void PerformLayout()
             {
-                MouseFilter = MouseFilterMode.Ignore;
-
                 LayoutContainer.SetAnchorPreset(this, LayoutContainer.LayoutPreset.Wide);
 
                 var layout = new LayoutContainer();

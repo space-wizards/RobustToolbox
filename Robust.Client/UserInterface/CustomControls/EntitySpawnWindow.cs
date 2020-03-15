@@ -83,7 +83,6 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (SearchBar = new LineEdit
                             {
-                                MouseFilter = MouseFilterMode.Stop,
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                                 PlaceHolder = _loc.GetString("Search")
                             }),
@@ -409,11 +408,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             public const float Separation = 2;
 
-            public PrototypeListContainer()
-            {
-                MouseFilter = MouseFilterMode.Ignore;
-            }
-
             protected override Vector2 CalculateMinimumSize()
             {
                 if (ChildCount == 0)
@@ -469,13 +463,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 AddChild(new HBoxContainer
                 {
-                    MouseFilter = MouseFilterMode.Ignore,
                     Children =
                     {
                         (EntityTextureRect = new TextureRect
                         {
                             CustomMinimumSize = (32, 32),
-                            MouseFilter = MouseFilterMode.Ignore,
                             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
                             SizeFlagsVertical = SizeFlags.ShrinkCenter,
                             Stretch = TextureRect.StretchMode.KeepAspectCentered,

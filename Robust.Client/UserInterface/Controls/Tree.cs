@@ -28,6 +28,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public Tree()
         {
+            MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
             _scrollBar = new VScrollBar
@@ -99,6 +100,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _selectedIndex = item.Index;
                 OnItemSelected?.Invoke();
+                args.Handle();
             }
         }
 

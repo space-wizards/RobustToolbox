@@ -34,6 +34,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpinBox() : base()
         {
+            MouseFilter = MouseFilterMode.Pass;
+
             _lineEdit = new LineEdit
             {
                 CustomMinimumSize = new Vector2(40, 0),

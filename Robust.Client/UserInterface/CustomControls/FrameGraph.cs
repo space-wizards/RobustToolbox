@@ -41,7 +41,6 @@ namespace Robust.Client.UserInterface.CustomControls
             _gameTiming = gameTiming;
 
             SizeFlagsHorizontal = SizeFlags.None;
-            MouseFilter = MouseFilterMode.Ignore;
         }
 
         protected override Vector2 CalculateMinimumSize()

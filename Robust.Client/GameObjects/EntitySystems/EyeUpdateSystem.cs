@@ -38,6 +38,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and  is initialized
             var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
             inputSystem.BindMap.BindFunction(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler());
+            inputSystem.BindMap.BindFunction(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler());
         }
 
         /// <inheritdoc />
@@ -46,6 +47,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and is initialized
             var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
             inputSystem.BindMap.UnbindFunction(EngineKeyFunctions.CameraRotateRight);
+            inputSystem.BindMap.UnbindFunction(EngineKeyFunctions.CameraRotateLeft);
 
             base.Shutdown();
         }
@@ -80,14 +82,11 @@ namespace Robust.Client.GameObjects.EntitySystems
                 var currentDir = currentEye.Rotation.ToVec();
 
                 var dot = Vector2.Dot(closestDir, currentDir);
-                if (FloatMath.CloseTo(dot, 1, 0.01f))
+                if (FloatMath.CloseTo(dot, 1, CameraSnapTolerance))
                 {
                     currentEye.Rotation = closestDir.ToAngle();
                 }
             }
-
-
-
 
             foreach (var entity in RelevantEntities)
             {

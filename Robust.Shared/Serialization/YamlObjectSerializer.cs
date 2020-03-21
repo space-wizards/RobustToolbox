@@ -428,7 +428,7 @@ namespace Robust.Shared.Serialization
                 return node.ToString();
 
             // val primitives
-            if (type.IsPrimitive)
+            if (type.IsPrimitive || type == typeof(decimal))
                 return StringToType(type, node.ToString());
 
             // val enum

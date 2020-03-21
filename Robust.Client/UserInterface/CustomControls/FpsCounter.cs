@@ -16,8 +16,6 @@ namespace Robust.Client.UserInterface.CustomControls
             FontColorShadowOverride = Color.Black;
             ShadowOffsetXOverride = 1;
             ShadowOffsetYOverride = 1;
-
-            MouseFilter = MouseFilterMode.Ignore;
         }
 
         protected override void Update(FrameEventArgs args)

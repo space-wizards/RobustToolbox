@@ -1,4 +1,4 @@
-using Robust.Client.UserInterface.Controls;
+﻿using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -14,8 +14,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Tooltip()
         {
-            MouseFilter = MouseFilterMode.Ignore;
-
             AddChild(_label = new Label());
         }
     }

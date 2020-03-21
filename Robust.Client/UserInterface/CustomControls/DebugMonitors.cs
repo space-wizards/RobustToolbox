@@ -36,7 +36,6 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             var gameTiming1 = gameTiming;
 
-            MouseFilter = MouseFilterMode.Ignore;
             Visible = false;
 
             /*

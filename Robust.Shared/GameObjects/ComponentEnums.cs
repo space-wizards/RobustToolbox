@@ -18,8 +18,8 @@
         WallTops = 5,
         WallMountedItems = 6,
         Objects = 7,
-        Mobs = 8,
-        Items = 9,
+        Items = 8,
+        Mobs = 9,
         Overlays = 10,
     }
 }

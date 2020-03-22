@@ -30,8 +30,10 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
             common.AddFunction(EngineKeyFunctions.TextCursorBegin);
             common.AddFunction(EngineKeyFunctions.TextCursorEnd);
-            common.AddFunction(EngineKeyFunctions.TextCtrlLeft);
-            common.AddFunction(EngineKeyFunctions.TextCtrlRight);
+            common.AddFunction(EngineKeyFunctions.MoveWordLeft);
+            common.AddFunction(EngineKeyFunctions.MoveWordRight);
+            common.AddFunction(EngineKeyFunctions.SelectWordLeft);
+            common.AddFunction(EngineKeyFunctions.SelectWordRight);
             common.AddFunction(EngineKeyFunctions.TextHome);
             common.AddFunction(EngineKeyFunctions.TextEnd);
             common.AddFunction(EngineKeyFunctions.TextBackspace);

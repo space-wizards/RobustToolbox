@@ -1,20 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
-using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
-using SharpFont.TrueType;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -28,7 +23,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePseudoClassPlaceholder = "placeholder";
 
         [NotNull] private string _text = "";
-        private int _overflowChars = 0;
+        private int _overflowChars;
         private bool _editable = true;
         [CanBeNull] private string _placeHolder;
         private int _cursorPosition;
@@ -81,27 +76,21 @@ namespace Robust.Client.UserInterface.Controls
                     value = "";
                 }
 
-                if (!SetSelectionBuffer(value))
-                {
-                    return;
-                }
+                _selectedText = value;
             }
         }
 
-        public int UnrenderedChars
+        public int OverflowChars
         {
             get => _overflowChars;
             set
             {
-                if (value == null)
+                if (_overflowChars < 0)
                 {
-                    value = 0;
+                    _overflowChars = 0;
                 }
 
-                if (!SetUnrenderedChars(value))
-                {
-                    return;
-                }
+                _overflowChars = value;
             }
         }
 
@@ -171,16 +160,6 @@ namespace Robust.Client.UserInterface.Controls
             Text = "";
         }
 
-        public void StartSelect()
-        {
-            _startSelection = _cursorPosition;
-        }
-
-        public void EndSelect()
-        {
-            _endSelection = _cursorPosition;
-        }
-
         public void ClearSelection()
         {
             _selectedText = "";
@@ -193,12 +172,12 @@ namespace Robust.Client.UserInterface.Controls
             var startPoint = Math.Min(from, to);
             var selectionLength = Math.Abs(to - from);
 
-            if (selectionLength >= _text.Length)
+            if (selectionLength > _text.Length)
             {
                 selectionLength = _text.Length;
             }
 
-            if (!SetSelectionBuffer(_text.AsSpan(startPoint, selectionLength).ToString())) ;
+            _selectedText = _text.AsSpan(startPoint, selectionLength).ToString();
         }
 
         public void SelectAll()
@@ -245,24 +224,6 @@ namespace Robust.Client.UserInterface.Controls
             return true;
         }
 
-        protected bool SetSelectionBuffer(string newText)
-        {
-
-            _selectedText = newText;
-            return true;
-        }
-
-        protected bool SetUnrenderedChars(int charCount)
-        {
-            if ( IsValid != null )
-            {
-                return false;
-            }
-
-            _overflowChars = charCount;
-            return true;
-        }
-
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             var styleBox = _getStyleBox();
@@ -271,7 +232,8 @@ namespace Robust.Client.UserInterface.Controls
             styleBox.Draw(handle, drawBox);
             var font = _getFont();
             var renderedTextColor = _getFontColor();
-            var selectedTextColor = Color.Red;
+
+            var highlightedTextColor = Color.Gold.WithAlpha(25);
 
             var offsetY = (int) (contentBox.Height - font.GetHeight(UIScale)) / 2;
             var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + contentBox.TopLeft;
@@ -296,7 +258,8 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var count = 0;
-            foreach (var chr in renderedText.Substring(startRenderPos))
+            float highlightStart = 0;
+            foreach (var chr in renderedText.AsSpan(startRenderPos))
             {
                 if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
                 {
@@ -307,18 +270,23 @@ namespace Robust.Client.UserInterface.Controls
                 // Glyph would be outside the bounding box, abort.
                 if (baseLine.X + metrics.Width + metrics.BearingX > contentBox.Right)
                 {
-                    UnrenderedChars += 1;
+                    _overflowChars += 1;
                 }
 
-                // Is the chr selected?
-                if ( _selectedText != "" && Enumerable.Range(Math.Min(_startSelection, _endSelection), _selectedText.Length).Contains(count) )
+                var selectionStart = Math.Min(_startSelection, _endSelection);
+
+                // If chr is selected, render a highlight over it
+                if ( _selectedText != "" && Enumerable.Range(selectionStart, _selectedText.Length).Contains(count) )
                 {
-                    font.DrawChar(handle, chr, baseLine, UIScale, selectedTextColor);
+                    if (count == selectionStart)
+                    {
+                        highlightStart = baseLine.X;
+                    }
+
+                    handle.DrawRect(new UIBox2(highlightStart, contentBox.Top, baseLine.X + metrics.Advance, contentBox.Bottom), highlightedTextColor);
                 }
-                else
-                {
-                    font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
-                }
+
+                font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
 
                 baseLine += new Vector2(metrics.Advance, 0);
                 count += 1;
@@ -391,41 +359,46 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 if (args.Function == EngineKeyFunctions.TextBackspace)
                 {
-                    if (_cursorPosition == 0 || !Editable)
+                    if (!Editable)
                     {
                         return;
                     }
-                    // if text is selected, just remove that
-                    if (_selectedText != _text)
+
+                    if (_selectedText.Length > 0)
                     {
-                        _text = _text.Remove(_startSelection, _endSelection);
+                        var selectionStart = Math.Min(_startSelection, _endSelection) - 1;
+                        _text = _text.Remove(selectionStart,_selectedText.Length);
+
+                        if (_overflowChars < _selectedText.Length)
+                        {
+                            _overflowChars = 0;
+                        }
+
+                        if (_overflowChars > 0)
+                        {
+                            _overflowChars -= _selectedText.Length;
+                        }
+
+                        _selectedText = "";
                     }
                     else
                     {
                         _text = _text.Remove(_cursorPosition - 1, 1);
-                    }
+                        _cursorPosition -= 1;
 
-
-                    if ( _overflowChars != 0 )
-                    {
-                        _overflowChars -= 1;
+                        if (_overflowChars > 0)
+                        {
+                            _overflowChars -= 1;
+                        }
                     }
 
                     OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
-                    _cursorPosition -= 1;
+
 
                     _updatePseudoClass();
                     args.Handle();
                 }
-                if (args.Function == EngineKeyFunctions.TextHome)
-                {
-                    if (!this.HasKeyboardFocus())
-                    {
-                        return;
-                    }
 
-                    _cursorPosition = 0;
-                }
                 else if (args.Function == EngineKeyFunctions.TextEnd)
                 {
                     if (!this.HasKeyboardFocus())
@@ -436,48 +409,59 @@ namespace Robust.Client.UserInterface.Controls
                     _cursorPosition = _text.Length;
                 }
 
-                if (args.Function == EngineKeyFunctions.TextCtrlRight)
+                if (args.Function == EngineKeyFunctions.MoveWordRight)
                 {
                     if (!this.HasKeyboardFocus())
                     {
                         return;
                     }
 
-                    // Calculate word boundaries in _text, move to first boundary after _cursorPosition
-                    var boundaryAheadPat = @"\b";
-                    var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
-
-
-                    foreach (Match boundary in wordBoundaries)
-                    {
-                        if (boundary.Index > _cursorPosition)
-                        {
-                            _cursorPosition = boundary.Index;
-                            break;
-                        }
-                    }
-
+                    var nextBoundary = _getNextWordBoundary();
+                    _cursorPosition = nextBoundary;
                 }
 
-                else if (args.Function == EngineKeyFunctions.TextCtrlLeft)
+                else if (args.Function == EngineKeyFunctions.MoveWordLeft)
                 {
                     if (!this.HasKeyboardFocus())
                     {
                         return;
                     }
 
-                    var boundaryAheadPat = @"\b";
-                    var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
-
-                    foreach (Match boundary in wordBoundaries.Reverse())
+                    var nextBoundary = _getNextWordBoundary() - 2;
+                    if (nextBoundary < 0)
                     {
-                        if (boundary.Index < _cursorPosition)
-                        {
-                            _cursorPosition = boundary.Index;
-                            break;
-                        }
+                        nextBoundary = 0;
+                    }
+                    _cursorPosition = nextBoundary;
+                }
+
+                if (args.Function == EngineKeyFunctions.SelectWordRight)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
                     }
 
+                    var nextBoundary = _getNextWordBoundary();
+                    Select(_cursorPosition, nextBoundary);
+                    _cursorPosition = nextBoundary;
+                }
+
+                if (args.Function == EngineKeyFunctions.SelectWordLeft)
+                {
+                    if (!this.HasKeyboardFocus())
+                    {
+                        return;
+                    }
+
+                    var nextBoundary = _getNextWordBoundary() - 2;
+                    if (nextBoundary < 0)
+                    {
+                        nextBoundary = 0;
+                    }
+
+                    Select(_cursorPosition, nextBoundary);
+                    _cursorPosition = nextBoundary;
                 }
 
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
@@ -588,12 +572,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.Handled)
-            {
-                return;
-            }
-
-            if (!Editable)
+            if (args.Handled || !Editable)
             {
                 return;
             }
@@ -669,6 +648,23 @@ namespace Robust.Client.UserInterface.Controls
             _cursorPosition = index;
 
             return index;
+        }
+
+        private int _getNextWordBoundary()
+        {
+            // Calculate word boundaries in _text, return first word boundary past _cursorPosition
+            var boundaryAheadPat = @"\b";
+            var wordBoundaries = Regex.Matches(_text, boundaryAheadPat);
+
+
+            foreach (Match boundary in wordBoundaries)
+            {
+                if (boundary.Index > _cursorPosition)
+                {
+                    return boundary.Index;
+                }
+            }
+            return 0;
         }
 
         protected internal override void FocusEntered()

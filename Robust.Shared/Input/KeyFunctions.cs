@@ -44,11 +44,11 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
         public static readonly BoundKeyFunction TextReleaseFocus = "TextReleaseFocus";
         public static readonly BoundKeyFunction TextScrollToBottom = "TextScrollToBottom";
-        public static readonly BoundKeyFunction TextShiftLeft = "TextShiftLeft";
-        public static readonly BoundKeyFunction TextShiftRight = "TextShiftRight";
+        public static readonly BoundKeyFunction SelectWordLeft = "SelectWordLeft";
+        public static readonly BoundKeyFunction SelectWordRight = "SelectWordRight";
         public static readonly BoundKeyFunction TextDelete = "TextDelete";
-        public static readonly BoundKeyFunction TextCtrlLeft = "TextCtrlLeft";
-        public static readonly BoundKeyFunction TextCtrlRight = "TextCtrlRight";
+        public static readonly BoundKeyFunction MoveWordLeft = "MoveWordLeft";
+        public static readonly BoundKeyFunction MoveWordRight = "MoveWordRight";
         public static readonly BoundKeyFunction TextEnd = "TextEnd";
         public static readonly BoundKeyFunction TextHome = "TextHome";
     }

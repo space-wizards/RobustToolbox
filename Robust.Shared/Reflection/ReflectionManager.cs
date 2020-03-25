@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
 {
@@ -22,6 +23,7 @@ namespace Robust.Shared.Reflection
 
         public event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
 
+        [ViewVariables]
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
         /// <inheritdoc />

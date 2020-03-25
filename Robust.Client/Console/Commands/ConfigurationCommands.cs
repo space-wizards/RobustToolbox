@@ -53,4 +53,19 @@ namespace Robust.Client.Console.Commands
             return false;
         }
     }
+
+    [UsedImplicitly]
+    public class SaveConfig : IConsoleCommand
+    {
+        public string Command => "saveconfig";
+        public string Description => "Saves the client configuration to the config file";
+        public string Help => "saveconfig";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            IoCManager.Resolve<IConfigurationManager>().SaveToFile();
+            return false;
+        }
+    }
+
 }

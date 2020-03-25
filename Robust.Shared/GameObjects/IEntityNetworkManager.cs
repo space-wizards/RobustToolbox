@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// This event is raised when a component message comes in from the network.
         /// </summary>
-        event EventHandler<EntitySystemMessage> ReceivedSystemMessage;
+        event EventHandler<object> ReceivedSystemMessage;
 
         /// <summary>
         /// Initializes networking for this manager. This should only be called once.

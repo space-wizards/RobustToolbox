@@ -193,7 +193,7 @@ namespace Robust.Client.Player
                     _sessions.Add(state.SessionId, newSession);
                     if (state.SessionId == LocalPlayer.SessionId)
                     {
-                        LocalPlayer.Session = newSession;
+                        LocalPlayer.InternalSession = newSession;
 
                         // We just connected to the server, hurray!
                         LocalPlayer.SwitchState(SessionStatus.Connecting, newSession.Status);

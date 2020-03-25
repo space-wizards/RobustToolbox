@@ -25,7 +25,7 @@ namespace Robust.Server.GameObjects
         public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
 
         /// <inheritdoc />
-        public event EventHandler<EntitySystemMessage> ReceivedSystemMessage;
+        public event EventHandler<object> ReceivedSystemMessage;
 
         private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageTickComparer());
 

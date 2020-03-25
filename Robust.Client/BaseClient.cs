@@ -118,7 +118,7 @@ namespace Robust.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedServer(PlayerSession session)
+        private void OnPlayerJoinedServer(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
@@ -133,7 +133,7 @@ namespace Robust.Client
         ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedGame(PlayerSession session)
+        private void OnPlayerJoinedGame(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
@@ -256,12 +256,12 @@ namespace Robust.Client
         /// <summary>
         ///     The session that triggered the event.
         /// </summary>
-        private PlayerSession Session { get; }
+        private IPlayerSession Session { get; }
 
         /// <summary>
         ///     Constructs a new instance of the class.
         /// </summary>
-        public PlayerEventArgs(PlayerSession session)
+        public PlayerEventArgs(IPlayerSession session)
         {
             Session = session;
         }

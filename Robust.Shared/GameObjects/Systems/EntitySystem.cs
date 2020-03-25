@@ -46,10 +46,22 @@ namespace Robust.Shared.GameObjects.Systems
             EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler);
         }
 
+        protected void SubscribeNetworkEvent<T>(EntitySessionEventHandler<T> handler)
+            where T : EntitySystemMessage
+        {
+            EntityManager.EventBus.SubscribeSessionEvent(EventSource.Network, this, handler);
+        }
+
         protected void SubscribeLocalEvent<T>(EntityEventHandler<T> handler)
             where T : EntitySystemMessage
         {
             EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler);
+        }
+
+        protected void SubscribeLocalEvent<T>(EntitySessionEventHandler<T> handler)
+            where T : EntitySystemMessage
+        {
+            EntityManager.EventBus.SubscribeSessionEvent(EventSource.Local, this, handler);
         }
 
         protected void UnsubscribeNetworkEvent<T>()

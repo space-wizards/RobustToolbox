@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -12,7 +13,7 @@ namespace Robust.Server.GameObjects.EntitySystems
     /// <summary>
     ///     Server side processing of incoming user commands.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
 #pragma warning disable 649
         [Dependency] private readonly IPlayerManager _playerManager;
@@ -26,7 +27,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <summary>
         ///     Server side input command binds.
         /// </summary>
-        public ICommandBindMapping BindMap => _bindMap;
+        public override ICommandBindMapping BindMap => _bindMap;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -46,12 +47,8 @@ namespace Robust.Server.GameObjects.EntitySystems
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         }
 
-        private void InputMessageHandler(InputCmdMessage message)
+        private void InputMessageHandler(InputCmdMessage message, EntitySessionEventArgs eventArgs)
         {
-            var channel = message.NetChannel;
-            if(channel == null)
-                return;
-
             if (!(message is FullInputCmdMessage msg))
                 return;
 
@@ -59,11 +56,11 @@ namespace Robust.Server.GameObjects.EntitySystems
             if (!_playerManager.KeyMap.TryGetKeyFunction(msg.InputFunctionId, out var function))
                 return;
 
-            var session = _playerManager.GetSessionByChannel(channel);
-
             //Client Sanitization: bad enum key state value
             if (!Enum.IsDefined(typeof(BoundKeyState), msg.State))
                 return;
+
+            var session = (IPlayerSession) eventArgs.SenderSession;
 
             if (_lastProcessedInputCmd[session] < msg.InputSequence)
                 _lastProcessedInputCmd[session] = msg.InputSequence;

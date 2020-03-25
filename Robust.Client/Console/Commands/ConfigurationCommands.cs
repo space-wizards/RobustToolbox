@@ -1,3 +1,5 @@
+using System;
+using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
@@ -6,6 +8,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Console.Commands
 {
+    [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IConsoleCommand
     {
         public bool Execute(IDebugConsole console, params string[] args)
@@ -36,8 +39,15 @@ namespace Robust.Client.Console.Commands
                 // Write CVar
                 var value = args[1];
                 var type = configManager.GetCVarType(name);
-                var parsed = ParseObject(type, value);
-                configManager.SetCVar(name, parsed);
+                try
+                {
+                    var parsed = ParseObject(type, value);
+                    configManager.SetCVar(name, parsed);
+                }
+                catch (FormatException)
+                {
+                    console.AddLine($"Input value is in incorrect format for type {type}");
+                }
             }
 
             return false;

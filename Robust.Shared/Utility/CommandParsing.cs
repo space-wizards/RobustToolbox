@@ -1,50 +1,65 @@
+using System;
 using System.Collections.Generic;
+
+#nullable enable
 
 namespace Robust.Shared.Utility
 {
-    public class CommandParsing
+    internal static class CommandParsing
     {
         /// <summary>
-        /// Command parsing func
+        /// Parses a full console command into a list of arguments.
         /// </summary>
-        /// <param name="text">full input string</param>
-        /// <param name="args">List of arguments, including the command as #0</param>
-        static public void ParseArguments(string text, List<string> args)
+        /// <param name="text">Full input string.</param>
+        /// <param name="args">List of arguments to write into.</param>
+        public static void ParseArguments(ReadOnlySpan<char> text, List<string> args)
         {
-            string buf = "";
-            bool inquotes = false;
-            for (int i = 0; i < text.Length; i++)
+            var curStart = -1;
+            var inQuotes = false;
+
+            for (var i = 0; i < text.Length; i++)
             {
-                if (text[i] == '*')
-                    continue;
-                else if (inquotes && text[i] == '"')
+                if (inQuotes)
                 {
-                    inquotes = false;
-                    args.Add(buf);
-                    buf = "";
-                    i++; //skip the following space.
+                    if (text[i] == '"')
+                    {
+                        inQuotes = false;
+                        args.Add(text[curStart..i].ToString());
+                        curStart = -1;
+                    }
+
                     continue;
                 }
-                else if (!inquotes && text[i] == '"')
+
+                if (text[i] == '"')
                 {
-                    inquotes = true;
+                    inQuotes = true;
+                    curStart = i + 1;
                     continue;
                 }
-                else if (text[i] == ' ' && !inquotes)
+
+                if (text[i] == ' ')
                 {
-                    args.Add(buf);
-                    buf = "";
+                    if (curStart != -1)
+                    {
+                        args.Add(text[curStart..i].ToString());
+                    }
+
+                    curStart = -1;
+
                     continue;
                 }
-                else
+
+                if (curStart == -1)
                 {
-                    buf += text[i];
-                    continue;
+                    curStart = i;
                 }
             }
 
-            if (buf != "")
-                args.Add(buf);
+            if (curStart != -1)
+            {
+                args.Add(text[curStart..].ToString());
+            }
         }
     }
 }

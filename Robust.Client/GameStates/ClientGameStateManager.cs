@@ -30,8 +30,10 @@ namespace Robust.Client.GameStates
 
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
-        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg)> _pendingSystemMessages
-            = new Queue<(uint, GameTick, EntitySystemMessage)>();
+
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
+            _pendingSystemMessages
+                = new Queue<(uint, GameTick, EntitySystemMessage, object)>();
 
 #pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entities;
@@ -123,14 +125,16 @@ namespace Robust.Client.GameStates
             _nextInputCmdSeq++;
         }
 
-        public uint SystemMessageDispatched(EntitySystemMessage message)
+        public uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage
         {
             if (!Predicting)
             {
                 return default;
             }
 
-            _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message));
+            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer.Session);
+            _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
+                new EntitySessionMessage<T>(evArgs, message)));
 
             return _nextInputCmdSeq++;
         }
@@ -216,9 +220,11 @@ namespace Robust.Client.GameStates
                 var pendingInputEnumerator = _pendingInputs.GetEnumerator();
                 var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
                 var hasPendingInput = pendingInputEnumerator.MoveNext();
+                var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
                 var ping = _network.ServerChannel.Ping / 1000f; // seconds.
-                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping + PredictSize;
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping +
+                                 PredictSize;
 
                 //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
@@ -231,8 +237,6 @@ namespace Robust.Client.GameStates
                     {
                         var inputCmd = pendingInputEnumerator.Current;
 
-                        hasPendingInput = pendingInputEnumerator.MoveNext();
-
                         inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
                         /*
                         Logger.DebugS("State",
@@ -241,13 +245,20 @@ namespace Robust.Client.GameStates
                             */
 
                         input.PredictInputCommand(inputCmd);
+
+                        hasPendingInput = pendingInputEnumerator.MoveNext();
                     }
 
-                    while (hasPendingInput && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                    while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
                     {
-                        hasPendingInput = pendingInputEnumerator.MoveNext();
+                        var msg = pendingMessagesEnumerator.Current.msg;
 
-                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.msg);
+                        _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
+
+                        hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+                        Logger.DebugS("State", "doot");
                     }
 
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
@@ -325,7 +336,8 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyGameState(GameState curState, GameState nextState)
         {
             _mapManager.ApplyGameStatePre(curState.MapData);
-            var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState?.EntityStates);
+            var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
+                nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);
             _mapManager.ApplyGameStatePost(curState.MapData);
 

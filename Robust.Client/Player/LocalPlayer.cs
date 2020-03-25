@@ -77,6 +77,7 @@ namespace Robust.Client.Player
             DetachEntity();
 
             ControlledEntity = entity;
+            InternalSession.AttachedEntity = entity;
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {

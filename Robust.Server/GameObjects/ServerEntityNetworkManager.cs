@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Server.Interfaces.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -19,6 +20,7 @@ namespace Robust.Server.GameObjects
 #pragma warning disable 649
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IGameTiming _gameTiming;
+        [Dependency] private readonly IPlayerManager _playerManager;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -117,7 +119,11 @@ namespace Robust.Server.GameObjects
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    ReceivedSystemMessage?.Invoke(this, message.SystemMessage);
+                    var player = _playerManager.GetSessionByChannel(message.MsgChannel);
+                    var msg = message.SystemMessage;
+                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg);
+                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }
         }

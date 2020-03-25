@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -82,6 +83,43 @@ namespace Robust.UnitTesting.Shared.Serialization
                 Assert.That(data[kvEntry.Key], Is.EqualTo(kvEntry.Value));
         }
 
+        [Test]
+        public void DeserializeExpressionTest()
+        {
+            var dummy = new DummyClass();
+
+            var rootNode = YamlTextToNode("foo: 5\nbar: \"baz\"");
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(dummy, d => d.Foo, "foo", 4);
+            serializer.DataField(dummy, d => d.Bar, "bar", "honk");
+            serializer.DataField(dummy, d => d.Baz, "baz", Color.Black);
+
+            Assert.That(dummy.Foo, Is.EqualTo(5));
+            Assert.That(dummy.Bar, Is.EqualTo("baz"));
+            Assert.That(dummy.Baz, Is.EqualTo(Color.Black));
+        }
+
+        [Test]
+        public void SerializeExpressionTest()
+        {
+            var dummy = new DummyClass
+            {
+                Bar = "honk!",
+                Baz = Color.Black,
+                Foo = 5
+            };
+
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            serializer.DataField(dummy, d => d.Foo, "foo", 1);
+            serializer.DataField(dummy, d => d.Bar, "bar", "*silence*");
+            serializer.DataField(dummy, d => d.Baz, "baz", Color.Black);
+
+            Assert.That(mapping, Is.EquivalentTo(new YamlMappingNode {{"bar", "honk!"}, {"foo", "5"}}));
+        }
+
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
@@ -124,6 +162,13 @@ namespace Robust.UnitTesting.Shared.Serialization
 
                 return (YamlMappingNode)firstDoc.RootNode;
             }
+        }
+
+        private class DummyClass
+        {
+            public int Foo { get; set; }
+            public string Bar { get; set; }
+            public Color Baz { get; set; } = Color.Orange;
         }
     }
 }

@@ -161,37 +161,27 @@ namespace Robust.Shared.Serialization
 
             if (!(expr.Body is MemberExpression mExpr))
             {
-                throw new NotImplementedException(expr.Body.GetType().FullName);
+                throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
             }
 
-            Func<T> getter;
-            Action<T> setter;
+
+            WriteFunctionDelegate<T> getter;
+            ReadFunctionDelegate<T> setter;
             switch (mExpr.Member)
             {
                 case FieldInfo fi:
                     getter = () => (T) fi.GetValue(o);
-                    setter = (v) => fi.SetValue(o, v);
+                    setter = v => fi.SetValue(o, v);
                     break;
                 case PropertyInfo pi:
                     getter = () => (T) pi.GetValue(o);
-                    setter = (v) => pi.SetValue(o, v);
+                    setter = v => pi.SetValue(o, v);
                     break;
                 default:
-                    throw new NotImplementedException(mExpr.Member.GetType().FullName);
+                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
             }
 
-            var value = getter();
-            DataField(ref value, name, defaultValue, alwaysWrite);
-
-            if (Writing)
-            {
-                return;
-            }
-
-            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
-            {
-                setter(value);
-            }
+            DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
         }
 
         /// <inheritdoc />

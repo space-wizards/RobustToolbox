@@ -94,8 +94,8 @@ namespace Robust.Client.Graphics.Clyde
                     var viewMatrix = Matrix3.Identity;
                     viewMatrix.R0C0 = scale.X;
                     viewMatrix.R1C1 = scale.Y;
-                    viewMatrix.R0C2 = ofsX / EyeManager.PIXELSPERMETER;
-                    viewMatrix.R1C2 = -ofsY / EyeManager.PIXELSPERMETER;
+                    viewMatrix.R0C2 = ofsX / EyeManager.PixelsPerMeter;
+                    viewMatrix.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
 
                     SetViewTransform(viewMatrix);
                 }

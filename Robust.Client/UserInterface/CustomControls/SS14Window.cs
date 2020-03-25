@@ -19,6 +19,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public SS14Window()
         {
+            MouseFilter = MouseFilterMode.Stop;
+
             AddChild(new PanelContainer
             {
                 StyleClasses = {StyleClassWindowPanel}
@@ -31,7 +33,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     new PanelContainer
                     {
-                        MouseFilter = MouseFilterMode.Ignore,
                         StyleClasses = {StyleClassWindowHeader},
                         CustomMinimumSize = (0, HEADER_SIZE_Y),
                         Children =
@@ -44,7 +45,6 @@ namespace Robust.Client.UserInterface.CustomControls
                                     {
                                         MarginLeftOverride = 5,
                                         SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                        MouseFilter = MouseFilterMode.Ignore,
                                         Children =
                                         {
                                             (TitleLabel = new Label
@@ -73,7 +73,6 @@ namespace Robust.Client.UserInterface.CustomControls
                         MarginRightOverride = 10,
                         MarginTopOverride = 10,
                         RectClipContent = true,
-                        MouseFilter = MouseFilterMode.Ignore,
                         SizeFlagsVertical = SizeFlags.FillExpand
                     })
                 }
@@ -321,6 +320,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 UserInterfaceManager.WindowRoot.AddChild(this);
             }
+
+            Opened();
         }
 
         public void OpenCentered()
@@ -339,6 +340,11 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             Open();
             LayoutContainer.SetPosition(this, (0, (Parent.Size.Y - Size.Y) / 2));
+        }
+
+        protected virtual void Opened()
+        {
+
         }
 
         // Prevent window headers from getting off screen due to game window resizes.

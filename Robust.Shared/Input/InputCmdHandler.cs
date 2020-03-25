@@ -147,4 +147,17 @@ namespace Robust.Shared.Input
             return false;
         }
     }
+
+    /// <summary>
+    /// Consumes both up and down states without calling any handler delegates. Primarily used on the client to
+    /// prevent an input message from being sent to the server.
+    /// </summary>
+    public class NullInputCmdHandler : InputCmdHandler
+    {
+        /// <inheritdoc />
+        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        {
+            return true;
+        }
+    }
 }

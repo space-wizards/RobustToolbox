@@ -40,6 +40,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public ItemList()
         {
+            MouseFilter = MouseFilterMode.Pass;
+
             RectClipContent = true;
 
             _scrollBar = new VScrollBar

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
@@ -87,6 +87,11 @@ namespace Robust.Client.Graphics.Clyde
             TextureSampleParameters? sampleParameters = null, string name = null)
         {
             return new DummyRenderTarget(size, new DummyTexture(size));
+        }
+
+        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
+        {
+            projMatrix = Matrix3.Identity;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)

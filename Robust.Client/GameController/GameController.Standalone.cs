@@ -23,7 +23,7 @@ namespace Robust.Client
             Start(args);
         }
 
-        public static void Start(string[] args)
+        public static void Start(string[] args, bool contentStart = false)
         {
             if (_hasStarted)
             {
@@ -34,11 +34,11 @@ namespace Robust.Client
 
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed);
+                ParsedMain(parsed, contentStart);
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
             IoCManager.InitThread();
 
@@ -48,6 +48,7 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
+            gc._disableAssemblyLoadContext = contentStart;
             if (!gc.Startup())
             {
                 Logger.Fatal("Failed to start game controller!");

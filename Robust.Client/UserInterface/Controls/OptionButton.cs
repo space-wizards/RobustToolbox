@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -21,15 +20,13 @@ namespace Robust.Client.UserInterface.Controls
 
         public string Prefix { get; set; }
 
-        public OptionButton()
+        public OptionButton() : base()
         {
+            AddStyleClass(StyleClassButton);
             Prefix = "";
             OnPressed += _onPressed;
 
-            var hBox = new HBoxContainer
-            {
-                MouseFilter = MouseFilterMode.Ignore
-            };
+            var hBox = new HBoxContainer();
             AddChild(hBox);
 
             _popup = new Popup();
@@ -41,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 StyleClasses = { StyleClassOptionButton },
                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(_label);
 
@@ -49,7 +45,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 StyleClasses = { StyleClassOptionTriangle },
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(textureRect);
         }

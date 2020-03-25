@@ -1090,7 +1090,7 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(layer.Shader);
                 }
 
-                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PIXELSPERMETER),
+                drawingHandle.DrawTexture(texture, -(Vector2) texture.Size / (2f * EyeManager.PixelsPerMeter),
                     color * layer.Color);
 
                 if (layer.Shader != null)

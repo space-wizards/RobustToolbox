@@ -519,23 +519,34 @@ namespace Robust.Shared.Map
             return _grids.Values.Where(m => m.ParentMapId == mapId);
         }
 
-        public IMapGrid FindGridAt(MapId mapId, Vector2 worldPos)
+        /// <inheritdoc />
+        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out IMapGrid grid)
         {
-            var defaultGrid = GetDefaultGrid(mapId);
-            foreach (var grid in GetAllMapGrids(mapId))
-                if (grid.WorldBounds.Contains(worldPos) && grid != defaultGrid)
-                    return grid;
-            return defaultGrid;
+            foreach (var mapGrid in _grids.Values)
+            {
+                if(mapGrid.ParentMapId != mapId || mapGrid.IsDefaultGrid)
+                    continue;
+
+                if(!mapGrid.WorldBounds.Contains(worldPos))
+                    continue;
+
+                grid = mapGrid;
+                return true;
+            }
+
+            grid = default;
+            return false;
         }
 
-        public IMapGrid FindGridAt(MapCoordinates mapCoords)
+        /// <inheritdoc />
+        public bool TryFindGridAt(MapCoordinates mapCoordinates, out IMapGrid grid)
         {
-            return FindGridAt(mapCoords.MapId, mapCoords.Position);
+            return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
-            return GetAllMapGrids(mapId).Where(grid => grid.WorldBounds.Intersects(worldArea));
+            return _grids.Values.Where(g => g.ParentMapId == mapId && !g.IsDefaultGrid && g.WorldBounds.Intersects(worldArea));
         }
 
         public void DeleteGrid(GridId gridID)

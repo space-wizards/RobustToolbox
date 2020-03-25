@@ -71,6 +71,7 @@ namespace Robust.Client
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
+        private bool _disableAssemblyLoadContext;
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
@@ -136,6 +137,10 @@ namespace Robust.Client
 
             _fontManager.Initialize();
 
+            // Disable load context usage on content start.
+            // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
+            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
+
             //identical code for server in baseserver
             if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
             {
@@ -152,7 +157,6 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);

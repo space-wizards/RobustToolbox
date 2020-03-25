@@ -7,12 +7,13 @@ namespace Robust.Client.UserInterface.Controls
     public class ContainerButton : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";
+        public const string StyleClassButton = "button";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassPressed = "pressed";
         public const string StylePseudoClassHover = "hover";
         public const string StylePseudoClassDisabled = "disabled";
 
-        public ContainerButton()
+        public ContainerButton() : base()
         {
             DrawModeChanged();
         }

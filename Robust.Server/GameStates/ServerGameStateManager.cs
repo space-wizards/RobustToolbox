@@ -123,7 +123,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var entStates = lastAck == GameTick.Zero && PvsEnabled
+                var entStates = lastAck == GameTick.Zero || !PvsEnabled
                     ? _entityManager.GetEntityStates(lastAck)
                     : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);

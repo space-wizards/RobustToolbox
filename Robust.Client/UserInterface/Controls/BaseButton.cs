@@ -185,6 +185,11 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public event Action<ButtonToggledEventArgs> OnToggled;
 
+        protected BaseButton()
+        {
+            MouseFilter = MouseFilterMode.Pass;
+        }
+
         protected virtual void DrawModeChanged()
         {
         }
@@ -245,8 +250,7 @@ namespace Robust.Client.UserInterface.Controls
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress &&
-                this == UserInterfaceManagerInternal.MouseGetControl(args.PointerLocation.Position))
+            if (Mode == ActionMode.Release && _attemptingPress && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
             {
                 // Can't un press a radio button directly.
                 if (Group == null || !Pressed)

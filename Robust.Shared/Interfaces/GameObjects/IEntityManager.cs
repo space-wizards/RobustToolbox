@@ -2,7 +2,6 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -106,71 +105,77 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #endregion Entity Management
 
-        #region ComponentEvents
-
-        /// <summary>
-        /// Converts a raw NetIncomingMessage to an IncomingEntityMessage object
-        /// </summary>
-        /// <param name="message">raw network message</param>
-        /// <returns>An IncomingEntityMessage object</returns>
-        void HandleEntityNetworkMessage(MsgEntity message);
-        #endregion ComponentEvents
-
         #region Spatial Queries
 
-        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position);
+        /// <summary>
+        /// Gets entities with a origin at the position.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="position"></param>
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false);
 
         /// <summary>
         /// Checks if any entity is intersecting the box
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="box"></param>
-        bool AnyEntitiesIntersecting(MapId mapId, Box2 box);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this box
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false);
 
         /// <summary>
         /// Gets entities with a bounding box that intersects this point in coordinate form
         /// </summary>
         /// <param name="position"></param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approximate = false);
 
         /// <summary>
         /// Gets entities that intersect with this entity
         /// </summary>
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity);
+        /// <param name="entity"></param>
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this local coordinate
         /// </summary>
         /// <param name="position"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approximate = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
@@ -178,7 +183,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="mapID"></param>
         /// <param name="box"></param>
         /// <param name="range"></param>
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range);
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapID, Box2 box, float range, bool approximate = false);
 
         /// <summary>
         /// Get entities with bounding box in range of this whose center is within a certain directional arc, angle specifies center bisector of arc
@@ -187,8 +193,9 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="range"></param>
         /// <param name="direction"></param>
         /// <param name="arcWidth"></param>
+        /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth);
+        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
 
         #endregion
 

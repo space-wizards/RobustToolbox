@@ -144,7 +144,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                if (TestMask(physBody, body))
+                if (CollidesOnMask(physBody, body))
                 {
                     results.Add(body);
                 }
@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics
             return any;
         }
 
-        private static bool TestMask(IPhysBody a, IPhysBody b)
+        public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
                 return false;
@@ -246,7 +246,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null)
+        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
         {
             RayCastResults result = default;
 
@@ -268,6 +268,11 @@ namespace Robust.Shared.Physics
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (ignoreNonHardCollidables && !body.IsHardCollidable)
                 {
                     return true;
                 }

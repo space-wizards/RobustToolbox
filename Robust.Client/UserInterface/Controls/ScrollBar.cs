@@ -41,9 +41,9 @@ namespace Robust.Client.UserInterface.Controls
 
         protected ScrollBar(OrientationMode orientation)
         {
-            _orientation = orientation;
-
             MouseFilter = MouseFilterMode.Pass;
+
+            _orientation = orientation;
         }
 
         public bool IsAtEnd

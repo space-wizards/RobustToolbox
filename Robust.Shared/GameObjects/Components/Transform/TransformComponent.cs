@@ -239,7 +239,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (Running)
                 {
                     RebuildMatrices();
-                    Owner.SendMessage(this, new MoveMessage(GridPosition, value));
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, GridPosition, value));
                 }
 
                 Dirty();
@@ -289,7 +290,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 UpdateEntityTree();
                 UpdatePhysicsTree();
 
-                Owner.SendMessage(this, new MoveMessage(GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
             }
         }
 
@@ -297,12 +299,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public MapCoordinates MapPosition
         {
             get => new MapCoordinates(WorldPosition, MapID);
-            set
-            {
-                AttachParent(_mapManager.GetMapEntity(value.MapId));
-
-                WorldPosition = value.Position;
-            }
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -318,7 +314,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
-                Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
             }
         }
 
@@ -389,7 +386,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
 
             var mapPos = MapPosition;
-            var newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+
+            IEntity newMapEntity;
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+                newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+            else
+                newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
 
             // this would be a no-op
             var oldParentEnt = oldParent.Owner;
@@ -400,7 +402,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             AttachParent(newMapEntity);
 
-            MapPosition = mapPos;
+            WorldPosition = mapPos.Position;
 
             Dirty();
         }
@@ -566,7 +568,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         SetPosition(newState.LocalPosition);
                     }
 
-                    Owner.SendMessage(this, new MoveMessage(oldPos, GridPosition));
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
                     rebuildMatrices = true;
                 }
 
@@ -734,5 +737,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 ParentID = parentId;
             }
         }
+    }
+
+    public class MoveEvent : EntitySystemMessage
+    {
+        public MoveEvent(IEntity sender, GridCoordinates oldPos, GridCoordinates newPos)
+        {
+            Sender = sender;
+            OldPosition = oldPos;
+            NewPosition = newPos;
+        }
+
+        public IEntity Sender { get; }
+        public GridCoordinates OldPosition { get; }
+        public GridCoordinates NewPosition { get; }
     }
 }

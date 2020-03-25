@@ -95,11 +95,13 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc />
     internal class EntityEventBus : IEntityEventBus
     {
-        private readonly Dictionary<Type, List<(EventSource mask, Delegate callback)>> _eventSubscriptions
-            = new Dictionary<Type, List<(EventSource source, Delegate handler)>>();
+        private delegate void EventHandler(EntityEventArgs ev);
 
-        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate handler)>> _inverseEventSubscriptions
-            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate handler)>>();
+        private readonly Dictionary<Type, List<(EventSource mask, Delegate originalHandler, EventHandler callback)>> _eventSubscriptions
+            = new Dictionary<Type, List<(EventSource mask, Delegate originalHandler, EventHandler callback)>>();
+
+        private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate originalHandler, EventHandler handler)>> _inverseEventSubscriptions
+            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, (EventSource source, Delegate originalHandler, EventHandler handler)>>();
 
         private readonly Queue<(EventSource source, EntityEventArgs args)> _eventQueue = new Queue<(EventSource source, EntityEventArgs args)>();
 
@@ -117,9 +119,9 @@ namespace Robust.Shared.GameObjects
                 return;
 
             // UnsubscribeEvent modifies _inverseEventSubscriptions, requires val to be cached
-            foreach (var (type, subscription) in val.ToList())
+            foreach (var (type, (source, originalHandler, handler)) in val.ToList())
             {
-                UnsubscribeEvent(subscription.source, type, subscription.handler, subscriber);
+                UnsubscribeEvent(source, type, originalHandler, handler, subscriber);
             }
         }
 
@@ -147,15 +149,15 @@ namespace Robust.Shared.GameObjects
                 throw new ArgumentNullException(nameof(subscriber));
 
             var eventType = typeof(T);
-            var subscriptionTuple = (source, eventHandler);
+            var subscriptionTuple = (source, eventHandler, (EventHandler) (ev => eventHandler((T) ev)));
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
-                _eventSubscriptions.Add(eventType, new List<(EventSource, Delegate)> {subscriptionTuple});
-            else if (!subscriptions.Contains(subscriptionTuple))
+                _eventSubscriptions.Add(eventType, new List<(EventSource, Delegate, EventHandler)> {subscriptionTuple});
+            else if (!subscriptions.Any(p => p.mask == source && p.originalHandler == (Delegate) eventHandler))
                 subscriptions.Add(subscriptionTuple);
 
             if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var inverseSubscription))
             {
-                inverseSubscription = new Dictionary<Type, (EventSource, Delegate)>
+                inverseSubscription = new Dictionary<Type, (EventSource, Delegate, EventHandler)>
                 {
                     {eventType, subscriptionTuple}
                 };
@@ -186,7 +188,7 @@ namespace Robust.Shared.GameObjects
 
             if (_inverseEventSubscriptions.TryGetValue(subscriber, out var inverse)
                 && inverse.TryGetValue(eventType, out var tuple))
-                UnsubscribeEvent(source, eventType, tuple.handler, subscriber);
+                UnsubscribeEvent(source, eventType, tuple.originalHandler, tuple.handler, subscriber);
         }
 
         /// <inheritdoc />
@@ -254,9 +256,9 @@ namespace Robust.Shared.GameObjects
             return DoCast(tcs.Task);
         }
 
-        private void UnsubscribeEvent(EventSource source, Type eventType, Delegate handler, IEntityEventSubscriber subscriber)
+        private void UnsubscribeEvent(EventSource source, Type eventType, Delegate originalHandler, EventHandler handler, IEntityEventSubscriber subscriber)
         {
-            var tuple = (source, evh: handler);
+            var tuple = (source, originalHandler, evh: handler);
             if (_eventSubscriptions.TryGetValue(eventType, out var subscriptions) && subscriptions.Contains(tuple))
                 subscriptions.Remove(tuple);
 
@@ -273,7 +275,7 @@ namespace Robust.Shared.GameObjects
                 foreach (var handler in subs)
                 {
                     if((handler.mask & source) != 0)
-                        handler.callback.DynamicInvoke(eventArgs);
+                        handler.callback(eventArgs);
                 }
             }
 

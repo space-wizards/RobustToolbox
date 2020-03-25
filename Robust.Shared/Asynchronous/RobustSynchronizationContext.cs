@@ -40,13 +40,13 @@ namespace Robust.Shared.Asynchronous
         {
             while (_pending.TryTake(out var task))
             {
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
                     task.d(task.state);
                 }
-#if RELEASE
+#if EXCEPTION_TOLERANCE
                 catch (Exception e)
                 {
                     _runtimeLog.LogException(e, "Async Queued Callback");

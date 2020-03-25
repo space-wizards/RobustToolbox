@@ -34,6 +34,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         void Clear();
 
+        void Initialize();
+
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.

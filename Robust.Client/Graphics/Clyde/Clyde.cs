@@ -220,7 +220,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
                 UniformConstantsUBO.ObjectHandle);
 
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
+            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
         }

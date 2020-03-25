@@ -21,6 +21,9 @@ namespace Robust.UnitTesting.Shared.Map
         [OneTimeSetUp]
         public void Setup()
         {
+            var compMan = IoCManager.Resolve<IComponentManager>();
+            compMan.Initialize();
+
             var mapMan = IoCManager.Resolve<IMapManager>();
 
             mapMan.Initialize();

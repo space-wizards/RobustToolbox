@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
@@ -27,6 +27,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public OutputPanel()
         {
+            MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
             _scrollBar = new VScrollBar
@@ -59,10 +60,10 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.Value = 0;
         }
 
-        public void RemoveLine(int line)
+        public void RemoveEntry(Index index)
         {
-            var entry = _entries[line];
-            _entries.RemoveAt(line);
+            var entry = _entries[index];
+            _entries.RemoveAt(index.GetOffset(_entries.Count));
 
             var font = _getFont();
             _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
@@ -72,6 +73,13 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+        }
+
+        public void AddText(string text)
+        {
+            var msg = new FormattedMessage();
+            msg.AddText(text);
+            AddMessage(msg);
         }
 
         public void AddMessage(FormattedMessage message)

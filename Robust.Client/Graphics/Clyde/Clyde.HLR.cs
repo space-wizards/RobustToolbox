@@ -80,7 +80,7 @@ namespace Robust.Client.Graphics.Clyde
             // Calculate world-space AABB for camera, to cull off-screen things.
             var eye = _eyeManager.CurrentEye;
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _framebufferSize / (float) EyeManager.PIXELSPERMETER * eye.Zoom);
+                _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
             using (DebugGroup("Lights"))
             {
@@ -99,7 +99,10 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.WorldSpace);
 
-            ApplyFovToBuffer(eye);
+            if (_lightManager.Enabled && eye.DrawFov)
+            {
+                ApplyFovToBuffer(eye);
+            }
 
             _lightingReady = false;
 

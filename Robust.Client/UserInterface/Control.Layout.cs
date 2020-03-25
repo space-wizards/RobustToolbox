@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -365,7 +365,7 @@ namespace Robust.Client.UserInterface
             }
             else if ((child.SizeFlagsHorizontal & SizeFlags.Fill) != 0)
             {
-                newSizeX = box.Width;
+                newSizeX = Math.Max(box.Width, newSizeX);
             }
 
             var newPosY = box.Top;
@@ -381,7 +381,7 @@ namespace Robust.Client.UserInterface
             }
             else if ((child.SizeFlagsVertical & SizeFlags.Fill) != 0)
             {
-                newSizeY = box.Height;
+                newSizeY = Math.Max(box.Height, newSizeY);
             }
 
             child.Position = new Vector2(newPosX, newPosY);

@@ -394,6 +394,15 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public GridCoordinates MapToGrid(MapCoordinates posWorld)
+        {
+            if(posWorld.MapId != ParentMapId)
+                throw new ArgumentException($"Grid {Index} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
+
+            return new GridCoordinates(WorldToLocal(posWorld.Position), Index);
+        }
+
+        /// <inheritdoc />
         public GridCoordinates LocalToWorld(GridCoordinates posLocal)
         {
             return new GridCoordinates(posLocal.Position + WorldPosition,

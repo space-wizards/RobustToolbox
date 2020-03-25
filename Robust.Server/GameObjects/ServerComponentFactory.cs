@@ -60,6 +60,13 @@ namespace Robust.Server.GameObjects
             Register<IgnorePauseComponent>();
 
             RegisterIgnore("AnimationPlayer");
+
+#if DEBUG
+            Register<DebugExceptionOnAddComponent>();
+            Register<DebugExceptionExposeDataComponent>();
+            Register<DebugExceptionInitializeComponent>();
+            Register<DebugExceptionStartupComponent>();
+#endif
         }
     }
 }

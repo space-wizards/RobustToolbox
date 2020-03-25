@@ -26,6 +26,8 @@ namespace Robust.Client.ViewVariables
 
         public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IResourceCache resourceCache)
         {
+            MouseFilter = MouseFilterMode.Pass;
+
             _viewVariablesManager = viewVars;
             _resourceCache = resourceCache;
 
@@ -34,7 +36,7 @@ namespace Robust.Client.ViewVariables
 
         private void PerformLayout()
         {
-            MouseFilter = MouseFilterMode.Stop;
+            MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
             CustomMinimumSize = new Vector2(0, 25);
 

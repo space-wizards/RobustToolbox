@@ -338,7 +338,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"({Position.X}, {Position.Y}, map: {MapId})";
+            return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}";
         }
 
         /// <inheritdoc />

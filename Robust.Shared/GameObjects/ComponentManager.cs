@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
-using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -38,12 +36,18 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs> ComponentDeleted;
 
+        public void Initialize()
+        {
+            FillComponentDict();
+        }
+
         /// <inheritdoc />
         public void Clear()
         {
             _dictComponents.Clear();
             _netComponents.Clear();
             _deleteList.Clear();
+            FillComponentDict();
         }
 
         #region Component Management
@@ -99,14 +103,7 @@ namespace Robust.Shared.GameObjects
             // add the component to the grid
             foreach (var type in reg.References)
             {
-                // new types can be added at any time
-                if (!_dictComponents.TryGetValue(type, out var typeDict))
-                {
-                    typeDict = new Dictionary<EntityUid, Component>(EntityCapacity);
-                    _dictComponents.Add(type, typeDict);
-                }
-
-                typeDict.Add(entity.Uid, component);
+                _dictComponents[type].Add(entity.Uid, component);
             }
 
             // add the component to the netId grid
@@ -379,33 +376,25 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            var results = new List<IComponent>();
-
-            foreach (var kvTypeDict in _dictComponents.Values)
+            foreach (var (type, kvTypeDict) in _dictComponents)
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp) && !results.Contains(comp) && !comp.Deleted)
+                if (kvTypeDict.TryGetValue(uid, out var comp) && type == comp.GetType() && !comp.Deleted)
                 {
-                    results.Add(comp);
+                    yield return comp;
                 }
             }
-
-            return results;
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var results = new List<T>();
-
-            foreach (var kvTypeDict in _dictComponents.Values)
+            foreach (var (type, kvTypeDict) in _dictComponents)
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp) && comp is T t && !results.Contains(t) && !comp.Deleted)
+                if (kvTypeDict.TryGetValue(uid, out var comp) && comp is T t && type == comp.GetType() && !comp.Deleted)
                 {
-                    results.Add(t);
+                    yield return t;
                 }
             }
-
-            return results;
         }
 
         /// <inheritdoc />
@@ -460,6 +449,14 @@ namespace Robust.Shared.GameObjects
 
         }
         #endregion
+
+        private void FillComponentDict()
+        {
+            foreach (var refType in _componentFactory.GetAllRefTypes())
+            {
+                _dictComponents.Add(refType, new Dictionary<EntityUid, Component>());
+            }
+        }
     }
 
     /// <summary>

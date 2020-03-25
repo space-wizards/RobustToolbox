@@ -78,7 +78,7 @@ namespace Robust.Shared.ContentPack
 
         private static int _modLoaderId;
 
-        private bool _useLoadContext;
+        private bool _useLoadContext = true;
 
         public ModLoader()
         {
@@ -115,7 +115,7 @@ namespace Robust.Shared.ContentPack
             }
             else
             {
-                gameAssembly = Assembly.Load(assembly.CopyToArray(), symbols.CopyToArray());
+                gameAssembly = Assembly.Load(assembly.CopyToArray(), symbols?.CopyToArray());
             }
 
             InitMod<T>(gameAssembly);

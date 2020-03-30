@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
@@ -9,7 +11,6 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Noise;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface
@@ -38,15 +39,15 @@ namespace Robust.Client.UserInterface
             DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
         }
 
-        public async Task<string> OpenFile()
+        public async Task<string> OpenFile(FileDialogFilters filters = null)
         {
 #if LINUX
             if (await IsKDialogAvailable())
             {
-                return await OpenFileKDialog();
+                return await OpenFileKDialog(filters);
             }
 #endif
-            return await OpenFileNfd();
+            return await OpenFileNfd(filters);
         }
 
         public async Task<string> SaveFile()
@@ -71,14 +72,34 @@ namespace Robust.Client.UserInterface
             return await OpenFolderNfd();
         }
 
-        private unsafe Task<string> OpenFileNfd()
+        private unsafe Task<string> OpenFileNfd(FileDialogFilters filters)
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
             {
+                var filterPtr = IntPtr.Zero;
                 byte* outPath;
 
-                var result = sw_NFD_OpenDialog(null, null, &outPath);
+                if (filters != null)
+                {
+                    var filterString = string.Join(';', filters.Groups.Select(f => string.Join(',', f.Extensions)));
+
+                    filterPtr = Marshal.StringToCoTaskMemUTF8(filterString);
+                }
+
+                sw_nfdresult result;
+
+                try
+                {
+                    result = sw_NFD_OpenDialog((byte*) filterPtr, null, &outPath);
+                }
+                finally
+                {
+                    if (filterPtr != IntPtr.Zero)
+                    {
+                        Marshal.FreeCoTaskMem(filterPtr);
+                    }
+                }
 
                 return HandleNfdResult(result, outPath);
             });
@@ -153,6 +174,12 @@ namespace Robust.Client.UserInterface
 #if LINUX
         private async Task CheckKDialogSupport()
         {
+            var currentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
+            if (currentDesktop == null || !currentDesktop.Contains("KDE"))
+            {
+                return;
+            }
+
             try
             {
                 var process = Process.Start(
@@ -185,9 +212,41 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static Task<string> OpenFileKDialog()
+        private static Task<string> OpenFileKDialog(FileDialogFilters filters)
         {
-            return RunKDialog("--getopenfilename");
+            var sb = new StringBuilder();
+
+            if (filters != null && filters.Groups.Count != 0)
+            {
+                var first = true;
+                foreach (var group in filters.Groups)
+                {
+                    if (!first)
+                    {
+                        sb.Append('|');
+                    }
+
+                    foreach (var extension in group.Extensions)
+                    {
+                        sb.AppendFormat(".{0} ", extension);
+                    }
+
+                    sb.Append('(');
+
+                    foreach (var extension in group.Extensions)
+                    {
+                        sb.AppendFormat("*.{0} ", extension);
+                    }
+
+                    sb.Append(')');
+
+                    first = false;
+                }
+
+                sb.Append("| All Files (*)");
+            }
+
+            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME"), sb.ToString());
         }
 
         private static Task<string> SaveFileKDialog()
@@ -200,17 +259,22 @@ namespace Robust.Client.UserInterface
             return RunKDialog("--getexistingdirectory");
         }
 
-        private static async Task<string> RunKDialog(string option)
+        private static async Task<string> RunKDialog(params string[] options)
         {
-            var process = Process.Start(
-                new ProcessStartInfo
-                {
-                    FileName = "kdialog",
-                    Arguments = option,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    StandardOutputEncoding = EncodingHelpers.UTF8
-                });
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "kdialog",
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                StandardOutputEncoding = EncodingHelpers.UTF8
+            };
+
+            foreach (var option in options)
+            {
+                startInfo.ArgumentList.Add(option);
+            }
+
+            var process = Process.Start(startInfo);
 
             DebugTools.AssertNotNull(process);
 

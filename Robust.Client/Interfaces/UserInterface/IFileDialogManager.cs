@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Robust.Client.Interfaces.UserInterface
@@ -15,7 +16,7 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Open a file dialog used for opening a single file.
         /// </summary>
         /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
-        Task<string> OpenFile();
+        Task<string> OpenFile(FileDialogFilters filters = null);
 
         /// <summary>
         ///     Open a file dialog used for saving a single file.
@@ -28,5 +29,33 @@ namespace Robust.Client.Interfaces.UserInterface
         /// </summary>
         /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
         Task<string> OpenFolder();
+    }
+
+    public class FileDialogFilters
+    {
+        public FileDialogFilters(IReadOnlyList<Group> groups)
+        {
+            Groups = groups;
+        }
+
+        public FileDialogFilters(params Group[] groups) : this((IReadOnlyList<Group>) groups)
+        {
+        }
+
+        public IReadOnlyList<Group> Groups { get; }
+
+        public class Group
+        {
+            public Group(IReadOnlyList<string> extensions)
+            {
+                Extensions = extensions;
+            }
+
+            public Group(params string[] extensions) : this((IReadOnlyList<string>) extensions)
+            {
+            }
+
+            public IReadOnlyList<string> Extensions { get; }
+        }
     }
 }

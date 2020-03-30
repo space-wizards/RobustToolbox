@@ -170,6 +170,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             {
                 if (args.NewStatus == SessionStatus.Disconnected)
                 {
+                    var msg = new CloseBoundInterfaceMessage();
+                    OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
                     _subscribedSessions.Remove(session);
                 }
             };

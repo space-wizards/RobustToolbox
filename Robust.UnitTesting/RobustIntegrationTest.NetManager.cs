@@ -237,6 +237,8 @@ namespace Robust.UnitTesting
             }
 
             INetChannel IClientNetManager.ServerChannel => ServerChannel;
+            public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
+            public event Action<ClientConnectionState> ClientConnectStateChanged;
 
             private IntegrationNetChannel ServerChannel
             {

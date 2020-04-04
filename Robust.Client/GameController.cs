@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using System.IO;
 using Robust.Client.Console;
@@ -14,7 +14,6 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
-using Robust.Client.State.States;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -174,15 +173,6 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
-
-            if (_commandLineArgs?.Launcher == true)
-            {
-                _stateManager.RequestStateChange<LauncherConnecting>();
-            }
-            else
-            {
-                _stateManager.RequestStateChange<MainScreen>();
-            }
 
             if (_commandLineArgs?.Username != null)
             {

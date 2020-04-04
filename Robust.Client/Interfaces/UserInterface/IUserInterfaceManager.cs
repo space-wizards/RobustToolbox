@@ -12,6 +12,11 @@ namespace Robust.Client.Interfaces.UserInterface
     public interface IUserInterfaceManager
     {
         UITheme ThemeDefaults { get; }
+
+        /// <summary>
+        ///     Default style sheet that applies to all controls
+        ///     that do not have a more specific style sheet via <see cref="Control.Stylesheet"/>.
+        /// </summary>
         Stylesheet Stylesheet { get; set; }
 
         Control KeyboardFocused { get; }

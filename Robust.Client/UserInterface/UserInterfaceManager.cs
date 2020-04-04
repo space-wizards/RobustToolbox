@@ -40,7 +40,21 @@ namespace Robust.Client.UserInterface
 #pragma warning restore 649
 
         public UITheme ThemeDefaults { get; private set; }
-        public Stylesheet Stylesheet { get; set; }
+
+        public Stylesheet Stylesheet
+        {
+            get => _stylesheet;
+            set
+            {
+                _stylesheet = value;
+
+                if (RootControl?.Stylesheet != null)
+                {
+                    RootControl.StylesheetUpdateRecursive();
+                }
+            }
+        }
+
         public Control KeyboardFocused { get; private set; }
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
@@ -67,6 +81,7 @@ namespace Robust.Client.UserInterface
 
         private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
         private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+        private Stylesheet _stylesheet;
 
         public void Initialize()
         {

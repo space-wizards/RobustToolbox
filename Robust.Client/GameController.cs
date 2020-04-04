@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using Robust.Client.Console;
@@ -72,6 +72,8 @@ namespace Robust.Client
         private CommandLineArgs _commandLineArgs;
         private bool _disableAssemblyLoadContext;
 
+        public InitialLaunchState LaunchState { get; private set; }
+
         public bool LoadConfigAndUserData { get; set; } = true;
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -81,6 +83,8 @@ namespace Robust.Client
 
         public bool Startup()
         {
+            ReadInitialLaunchState();
+
             SetupLogging(_logManager);
 
             _taskManager.Initialize();
@@ -203,6 +207,21 @@ namespace Robust.Client
             return true;
         }
 
+        private void ReadInitialLaunchState()
+        {
+            if (_commandLineArgs == null)
+            {
+                LaunchState = new InitialLaunchState(false, null, null);
+            }
+            else
+            {
+                LaunchState = new InitialLaunchState(
+                    _commandLineArgs.Launcher,
+                    _commandLineArgs.ConnectAddress,
+                    _commandLineArgs.Ss14Address);
+            }
+        }
+
         private void _checkOpenGLVersion()
         {
             var debugInfo = _clyde.DebugInfo;
@@ -217,6 +236,7 @@ namespace Robust.Client
             var window = new BadOpenGLVersionWindow(debugInfo);
             window.OpenCentered();
         }
+
 
         public void Shutdown(string reason = null)
         {

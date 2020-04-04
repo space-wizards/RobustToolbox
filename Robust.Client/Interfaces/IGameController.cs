@@ -5,6 +5,8 @@ namespace Robust.Client.Interfaces
 {
     public interface IGameController
     {
+        InitialLaunchState LaunchState { get; }
+
         void Shutdown(string reason=null);
     }
 
@@ -20,5 +22,19 @@ namespace Robust.Client.Interfaces
         void MouseMove(MouseMoveEventArgs mouseMoveEventArgs);
         void MouseWheel(MouseWheelEventArgs mouseWheelEventArgs);
         void OverrideMainLoop(IGameLoop gameLoop);
+    }
+
+    public sealed class InitialLaunchState
+    {
+        public bool FromLauncher { get; }
+        public string ConnectAddress { get; }
+        public string Ss14Address { get; }
+
+        public InitialLaunchState(bool fromLauncher, string connectAddress, string ss14Address)
+        {
+            FromLauncher = fromLauncher;
+            ConnectAddress = connectAddress;
+            Ss14Address = ss14Address;
+        }
     }
 }

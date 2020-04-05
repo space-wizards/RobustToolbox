@@ -121,7 +121,11 @@ namespace Robust.Shared.GameObjects.Components
         public bool CollisionEnabled
         {
             get => _collisionEnabled;
-            set => _collisionEnabled = value;
+            set
+            {
+                _collisionEnabled = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, value));
+            }
         }
 
         /// <inheritdoc />
@@ -201,7 +205,7 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Startup()
         {
             base.Startup();
-
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, _collisionEnabled));
             _physicsManager.AddBody(this);
         }
 
@@ -209,7 +213,7 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Shutdown()
         {
             _physicsManager.RemoveBody(this);
-
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, false));
             base.Shutdown();
         }
 
@@ -226,5 +230,16 @@ namespace Robust.Shared.GameObjects.Components
             => _physicsManager.Update(this);
 
         private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
+    }
+
+    public class CollisionEnabledEvent : EntitySystemMessage
+    {
+        public bool Value { get; }
+
+        public CollisionEnabledEvent(EntityUid uid, bool value)
+        {
+            Owner = uid;
+            Value = value;
+        }
     }
 }

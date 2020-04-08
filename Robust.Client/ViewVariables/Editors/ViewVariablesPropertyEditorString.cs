@@ -17,15 +17,15 @@ namespace Robust.Client.ViewVariables.Editors
 
             if (!ReadOnly)
             {
-                lineEdit.OnTextEntered += HandleEvent();
+                lineEdit.OnTextEntered += EventHandler;
             }
 
             return lineEdit;
         }
 
-        protected virtual Action<LineEdit.LineEditEventArgs> HandleEvent()
+        protected virtual void EventHandler(LineEdit.LineEditEventArgs e)
         {
-            return e => ValueChanged(e.Text);
+            ValueChanged(e.Text);
         }
 
         protected virtual string ToText(object value)

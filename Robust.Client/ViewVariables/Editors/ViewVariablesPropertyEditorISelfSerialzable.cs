@@ -6,14 +6,12 @@ namespace Robust.Client.ViewVariables.Editors
 {
     internal class ViewVariablesPropertyEditorISelfSerialzable<T> : ViewVariablesPropertyEditorString where T : ISelfSerialize
     {
-        protected override Action<LineEdit.LineEditEventArgs> HandleEvent()
+        protected override void EventHandler(LineEdit.LineEditEventArgs e)
         {
-            return e =>
-            {
-                var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
-                instance.Deserialize(e.Text);
-                ValueChanged(instance);
-            };
+            
+            var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
+            instance.Deserialize(e.Text);
+            ValueChanged(instance);
         }
 
         protected override string ToText(object value)

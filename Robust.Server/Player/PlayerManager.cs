@@ -7,6 +7,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
@@ -204,6 +205,22 @@ namespace Robust.Server.Player
                 return
                     _sessions.Values.Where(x => x.AttachedEntity != null &&
                                                 worldPos.InRange(_mapManager, x.AttachedEntity.Transform.GridPosition, range))
+                        .Cast<IPlayerSession>()
+                        .ToList();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
+        }
+
+        public List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate)
+        {
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return
+                    _sessions.Values.Where(predicate)
                         .Cast<IPlayerSession>()
                         .ToList();
             }

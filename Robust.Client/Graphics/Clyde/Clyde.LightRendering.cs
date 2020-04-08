@@ -202,7 +202,7 @@ namespace Robust.Client.Graphics.Clyde
             if (eye.DrawFov)
             {
                 // Calculate maximum distance for the projection based on screen size.
-                var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
+                var screenSizeCut = ScreenSize / EyeManager.PixelsPerMeter;
                 var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
@@ -519,7 +519,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PIXELSPERMETER;
+            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -786,7 +786,7 @@ namespace Robust.Client.Graphics.Clyde
                         // On low-res lights we bias the occlusion mask inwards.
                         // This avoids wall lighting going onto the tile next to them at certain tile alignments.
                         // It's inwards to avoid seeing disconnected shadows on wall edges.
-                        const float bias = 0.5f / EyeManager.PIXELSPERMETER;
+                        const float bias = 0.5f / EyeManager.PixelsPerMeter;
 
                         if (!no)
                         {

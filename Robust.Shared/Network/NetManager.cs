@@ -101,8 +101,6 @@ namespace Robust.Shared.Network
 
         public bool IsRunning => _netPeers.Count != 0;
 
-        private ClientConnectionState _clientConnectionState;
-
         public NetworkStats Statistics
         {
             get
@@ -272,7 +270,7 @@ namespace Robust.Shared.Network
             _strings.Reset();
 
             _cancelConnectTokenSource?.Cancel();
-            _clientConnectionState = ClientConnectionState.NotConnecting;
+            ClientConnectState = ClientConnectionState.NotConnecting;
         }
 
         public void ProcessPackets()
@@ -355,6 +353,7 @@ namespace Robust.Shared.Network
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
+            netConfig.MaximumHandshakeAttempts = 1;
 
             if (IsServer)
             {
@@ -583,7 +582,7 @@ namespace Robust.Shared.Network
                 _strings.Reset();
 
                 _cancelConnectTokenSource?.Cancel();
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
             }
         }
 
@@ -857,34 +856,6 @@ namespace Robust.Shared.Network
         public event EventHandler<NetChannelArgs> Disconnect;
 
         #endregion Events
-
-        private enum ClientConnectionState
-        {
-            /// <summary>
-            ///     We are not connected and not trying to get connected either. Quite lonely huh.
-            /// </summary>
-            NotConnecting,
-
-            /// <summary>
-            ///     Resolving the DNS query for the address of the server.
-            /// </summary>
-            ResolvingHost,
-
-            /// <summary>
-            ///     Attempting to establish a connection to the server.
-            /// </summary>
-            EstablishingConnection,
-
-            /// <summary>
-            ///     Connection established, going through regular handshake business.
-            /// </summary>
-            Handshake,
-
-            /// <summary>
-            ///     Connection is solid and handshake is done go wild.
-            /// </summary>
-            Connected
-        }
 
         [Serializable]
         public class ClientDisconnectedException : Exception

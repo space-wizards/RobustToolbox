@@ -14,7 +14,6 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
-using Robust.Client.State.States;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -71,6 +70,9 @@ namespace Robust.Client
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
+        private bool _disableAssemblyLoadContext;
+
+        public InitialLaunchState LaunchState { get; private set; }
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
@@ -81,6 +83,8 @@ namespace Robust.Client
 
         public bool Startup()
         {
+            ReadInitialLaunchState();
+
             SetupLogging(_logManager);
 
             _taskManager.Initialize();
@@ -136,6 +140,10 @@ namespace Robust.Client
 
             _fontManager.Initialize();
 
+            // Disable load context usage on content start.
+            // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
+            _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
+
             //identical code for server in baseserver
             if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
             {
@@ -152,7 +160,6 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            _eyeManager.Initialize();
             _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
@@ -170,15 +177,6 @@ namespace Robust.Client
             _client.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
-
-            if (_commandLineArgs?.Launcher == true)
-            {
-                _stateManager.RequestStateChange<LauncherConnecting>();
-            }
-            else
-            {
-                _stateManager.RequestStateChange<MainScreen>();
-            }
 
             if (_commandLineArgs?.Username != null)
             {
@@ -209,6 +207,21 @@ namespace Robust.Client
             return true;
         }
 
+        private void ReadInitialLaunchState()
+        {
+            if (_commandLineArgs == null)
+            {
+                LaunchState = new InitialLaunchState(false, null, null);
+            }
+            else
+            {
+                LaunchState = new InitialLaunchState(
+                    _commandLineArgs.Launcher,
+                    _commandLineArgs.ConnectAddress,
+                    _commandLineArgs.Ss14Address);
+            }
+        }
+
         private void _checkOpenGLVersion()
         {
             var debugInfo = _clyde.DebugInfo;
@@ -223,6 +236,7 @@ namespace Robust.Client
             var window = new BadOpenGLVersionWindow(debugInfo);
             window.OpenCentered();
         }
+
 
         public void Shutdown(string reason = null)
         {

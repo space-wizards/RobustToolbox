@@ -357,7 +357,7 @@ namespace Robust.Client.GameObjects
                         new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
                     worldHandle.DrawTexture(effectSprite,
-                        -((Vector2) effectSprite.Size / EyeManager.PIXELSPERMETER) / 2, ToColor(effect.Color));
+                        -((Vector2) effectSprite.Size / EyeManager.PixelsPerMeter) / 2, ToColor(effect.Color));
                 }
             }
         }

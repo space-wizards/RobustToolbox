@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.Drawing
 {
     public abstract class DrawingHandleWorld : DrawingHandleBase
     {
-        private const int Ppm = EyeManager.PIXELSPERMETER;
+        private const int Ppm = EyeManager.PixelsPerMeter;
 
         public abstract void DrawRect(Box2 rect, Color color, bool filled = true);
         public abstract void DrawRect(in Box2Rotated rect, Color color, bool filled = true);

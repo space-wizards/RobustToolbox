@@ -144,7 +144,7 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                if (TestMask(physBody, body))
+                if (CollidesOnMask(physBody, body))
                 {
                     results.Add(body);
                 }
@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics
             return any;
         }
 
-        private static bool TestMask(IPhysBody a, IPhysBody b)
+        public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
                 return false;

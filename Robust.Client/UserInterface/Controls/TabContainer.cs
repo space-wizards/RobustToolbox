@@ -66,6 +66,11 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<int> OnTabChanged;
 
+        public TabContainer()
+        {
+            MouseFilter = MouseFilterMode.Pass;
+        }
+
         public string GetTabTitle(int tab)
         {
             return _tabData[tab].Name ?? GetChild(tab).Name ?? Loc.GetString("No title");

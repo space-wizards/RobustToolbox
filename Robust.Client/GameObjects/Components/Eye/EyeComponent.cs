@@ -19,6 +19,7 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public override string Name => "Eye";
 
+        [ViewVariables]
         private Eye _eye;
 
         // Horrible hack to get around ordering issues.
@@ -60,6 +61,17 @@ namespace Robust.Client.GameObjects
                 {
                     _eye.Zoom = value;
                 }
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Angle Rotation
+        {
+            get => _eye.Rotation;
+            set
+            {
+                if (_eye != null)
+                    _eye.Rotation = value;
             }
         }
 

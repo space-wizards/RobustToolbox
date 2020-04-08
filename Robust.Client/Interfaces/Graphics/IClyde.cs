@@ -21,6 +21,8 @@ namespace Robust.Client.Interfaces.Graphics
 
         IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string name = null);
+
+        void CalcWorldProjectionMatrix(out Matrix3 projMatrix);
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

@@ -44,7 +44,7 @@ namespace Robust.Client.Map
         private void _genTextureAtlas()
         {
             var defList = TileDefs.Where(t => !string.IsNullOrEmpty(t.SpriteName)).ToList();
-            const int tileSize = EyeManager.PIXELSPERMETER;
+            const int tileSize = EyeManager.PixelsPerMeter;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(defList.Count));
             var dimensionY = (int) Math.Ceiling((float) defList.Count / dimensionX);
@@ -77,7 +77,7 @@ namespace Robust.Client.Map
 
                 _tileRegions.Add(def.TileId,
                     Box2.FromDimensions(
-                        point.X / w, (h - point.Y - EyeManager.PIXELSPERMETER) / h,
+                        point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                         tileSize / w, tileSize / h));
             }
 

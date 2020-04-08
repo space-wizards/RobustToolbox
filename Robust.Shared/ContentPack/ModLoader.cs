@@ -78,6 +78,8 @@ namespace Robust.Shared.ContentPack
 
         private static int _modLoaderId;
 
+        private bool _useLoadContext = true;
+
         public ModLoader()
         {
             var id = Interlocked.Increment(ref _modLoaderId);
@@ -86,6 +88,11 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
+        }
+
+        public void SetUseLoadContext(bool useLoadContext)
+        {
+            _useLoadContext = useLoadContext;
         }
 
         public virtual void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
@@ -101,7 +108,15 @@ namespace Robust.Shared.ContentPack
 
             assembly.Position = 0;
 
-            var gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
+            Assembly gameAssembly;
+            if (_useLoadContext)
+            {
+                gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
+            }
+            else
+            {
+                gameAssembly = Assembly.Load(assembly.CopyToArray(), symbols?.CopyToArray());
+            }
 
             InitMod<T>(gameAssembly);
         }
@@ -118,7 +133,16 @@ namespace Robust.Shared.ContentPack
             if (!AssemblyTypeChecker.CheckAssembly(diskPath))
                 return;
 
-            InitMod<T>(_loadContext.LoadFromAssemblyPath(diskPath));
+            Assembly assembly;
+            if (_useLoadContext)
+            {
+                assembly = _loadContext.LoadFromAssemblyPath(diskPath);
+            }
+            else
+            {
+                assembly = Assembly.LoadFrom(diskPath);
+            }
+            InitMod<T>(assembly);
         }
 
         protected void InitMod<T>(Assembly assembly) where T : GameShared

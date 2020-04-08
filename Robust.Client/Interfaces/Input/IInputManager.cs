@@ -27,6 +27,18 @@ namespace Robust.Client.Interfaces.Input
         void KeyUp(KeyEventArgs e);
 
         /// <summary>
+        /// Registers a new key binding in the input manager.
+        /// </summary>
+        /// <param name="function">The function the key binding is bound to.</param>
+        /// <param name="bindingType"></param>
+        /// <param name="baseKey"></param>
+        /// <param name="mod1"></param>
+        /// <param name="mod2"></param>
+        /// <param name="mod3"></param>
+        void RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
+            Keyboard.Key baseKey, Keyboard.Key? mod1, Keyboard.Key? mod2, Keyboard.Key? mod3);
+
+        /// <summary>
         ///     Gets a key binding according to the function it is bound to.
         /// </summary>
         /// <param name="function">The function the key binding is bound to.</param>

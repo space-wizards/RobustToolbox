@@ -3,22 +3,29 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using JetBrains.Annotations;
 using NFluidsynth;
-using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Audio.Midi
 {
     public interface IMidiManager
     {
         /// <summary>
-        ///     This method returns a midi renderer ready to be used.
+        ///     This method tries to return a midi renderer ready to be used.
         ///     You only need to set the <see cref="IMidiRenderer.MidiProgram"/> afterwards.
         /// </summary>
-        IMidiRenderer GetNewRenderer();
+        /// <remarks>
+        ///     This method can fail if MIDI support is not available.
+        /// </remarks>
+        /// <returns>
+        ///     <c>null</c> if MIDI support is not available.
+        /// </returns>
+        [CanBeNull] IMidiRenderer GetNewRenderer();
 
         /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
@@ -36,24 +43,39 @@ namespace Robust.Client.Audio.Midi
         /// </remarks>
         bool IsSoundfontFile(string filename);
 
-
         /// <summary>
         ///     Method called every frame.
         ///     Should be used to update positional audio.
         /// </summary>
         /// <param name="frameTime"></param>
         void FrameUpdate(float frameTime);
+
+        /// <summary>
+        ///     If true, MIDI support is available.
+        /// </summary>
+        bool IsAvailable { get; }
     }
 
     internal class MidiManager : IDisposable, IMidiManager
     {
 #pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 #pragma warning restore 649
+
+        public bool IsAvailable
+        {
+            get
+            {
+                InitializeFluidsynth();
+
+                return FluidsynthInitialized;
+            }
+        }
+
+        private readonly List<MidiRenderer> _renderers = new List<MidiRenderer>();
 
         private bool _alive = true;
         private Settings _settings;
-        private List<MidiRenderer> _renderers = new List<MidiRenderer>();
         private Thread _midiThread;
 
         private static readonly string[] LinuxSoundfonts =
@@ -66,31 +88,44 @@ namespace Robust.Client.Audio.Midi
             "/usr/share/sounds/sf2/TimGM6mb.sf2",
         };
 
-        private static readonly string WindowsSoundfont = "c:\\WINDOWS\\system32\\drivers\\gm.dls";
+        private const string WindowsSoundfont = @"C:\WINDOWS\system32\drivers\gm.dls";
 
-        private static readonly string OSXSoundfont =
+        private const string OsxSoundfont =
             "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
-        private static readonly string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
+        private const string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
 
         private ResourceLoaderCallbacks _soundfontLoaderCallbacks;
 
-        public bool FluidsynthInitialized { get; private set; } = false;
+        private bool FluidsynthInitialized;
+        private bool _failedInitialize;
 
         private void InitializeFluidsynth()
         {
-            if (FluidsynthInitialized) return;
+            if (FluidsynthInitialized || _failedInitialize) return;
+
+            try
+            {
+                NFluidsynth.Logger.SetLoggerMethod(null); // Will cause a safe DllNotFoundException if not available.
 
                 _settings = new Settings();
-            _settings["synth.sample-rate"].DoubleValue = 48000;
-            _settings["player.timing-source"].StringValue = "sample";
-            _settings["synth.lock-memory"].IntValue = 0;
-            _settings["synth.threadsafe-api"].IntValue = 1;
-            _settings["synth.gain"].DoubleValue = 0.5d;
-            _settings["audio.driver"].StringValue = "file";
-            _settings["midi.autoconnect"].IntValue = 1;
-            _settings["player.reset-synth"].IntValue = 0;
-            _settings["synth.midi-bank-select"].StringValue = "gm";
+                _settings["synth.sample-rate"].DoubleValue = 48000;
+                _settings["player.timing-source"].StringValue = "sample";
+                _settings["synth.lock-memory"].IntValue = 0;
+                _settings["synth.threadsafe-api"].IntValue = 1;
+                _settings["synth.gain"].DoubleValue = 0.5d;
+                _settings["audio.driver"].StringValue = "file";
+                _settings["midi.autoconnect"].IntValue = 1;
+                _settings["player.reset-synth"].IntValue = 0;
+                _settings["synth.midi-bank-select"].StringValue = "gm";
+            }
+            catch (Exception e)
+            {
+                Logger.WarningS("midi",
+                    "Failed to initialize fluidsynth due to exception, disabling MIDI support:\n{0}", e);
+                _failedInitialize = true;
+                return;
+            }
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
@@ -112,8 +147,15 @@ namespace Robust.Client.Audio.Midi
 
         public IMidiRenderer GetNewRenderer()
         {
-            if(!FluidsynthInitialized)
+            if (!FluidsynthInitialized)
+            {
                 InitializeFluidsynth();
+
+                if (!FluidsynthInitialized) // init failed
+                {
+                    return null;
+                }
+            }
 
             var soundfontLoader = SoundFontLoader.NewDefaultSoundFontLoader(_settings);
             soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
@@ -140,13 +182,15 @@ namespace Robust.Client.Audio.Midi
 
                     break;
                 }
-            } else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                if(File.Exists(OSXSoundfont) && SoundFont.IsSoundFont(OSXSoundfont))
-                    renderer.LoadSoundfont(OSXSoundfont, true);
-            } else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
+                    renderer.LoadSoundfont(OsxSoundfont, true);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                if(File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
+                if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                     renderer.LoadSoundfont(WindowsSoundfont, true);
             }
 
@@ -200,11 +244,11 @@ namespace Robust.Client.Audio.Midi
         {
             while (_alive)
             {
-                lock(_renderers)
+                lock (_renderers)
                     for (var i = 0; i < _renderers.Count; i++)
                     {
                         var renderer = _renderers[i];
-                        if(renderer != null && !renderer.Disposed)
+                        if (renderer != null && !renderer.Disposed)
                             renderer.Render();
                         else
                             _renderers.RemoveAt(i);
@@ -272,6 +316,7 @@ namespace Robust.Client.Audio.Midi
                 {
                     return -1;
                 }
+
                 buffer.CopyTo(span);
                 return 0;
             }

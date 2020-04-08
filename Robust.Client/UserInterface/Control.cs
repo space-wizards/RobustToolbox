@@ -32,8 +32,6 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control> OnVisibilityChanged;
 
-        private bool _stylingDirty;
-
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
@@ -203,7 +201,7 @@ namespace Robust.Client.UserInterface
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
+        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Ignore;
 
         /// <summary>
         ///     Whether this control can take keyboard focus.
@@ -488,7 +486,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
-            Restyle();
+            StylesheetUpdateRecursive();
             UpdateLayout();
         }
 

@@ -50,7 +50,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private void PerformLayout()
         {
             Visible = false;
-            MouseFilter = MouseFilterMode.Ignore;
 
             var styleBox = new StyleBoxFlat
             {
@@ -60,7 +59,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             AddChild(new LayoutContainer
             {
-                MouseFilter = MouseFilterMode.Ignore,
                 Children =
                 {
                     (MainControl = new VBoxContainer

@@ -70,33 +70,32 @@ namespace Robust.Client.UserInterface.CustomControls
             var mouseScreenPos = inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
 
-            int mouseWorldMap;
-            GridCoordinates mouseWorldPos;
+            MapCoordinates mouseWorldMap;
+            GridCoordinates mouseGridPos;
             TileRef tile;
-            try
-            {
-                var coords = eyeManager.ScreenToWorld(new ScreenCoordinates(mouseScreenPos));
-                mouseWorldMap = (int) _mapManager.GetGrid(coords.GridID).ParentMapId;
-                mouseWorldPos = coords;
 
-                tile = _mapManager.GetGrid(coords.GridID).GetTileRef(coords);
-            }
-            catch
+            mouseWorldMap = eyeManager.ScreenToMap(mouseScreenPos);
+
+            if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGrid))
             {
-                mouseWorldPos = GridCoordinates.InvalidGrid;
-                mouseWorldMap = 0;
-                tile = new TileRef();
+                mouseGridPos = mouseGrid.MapToGrid(mouseWorldMap);
+                tile = mouseGrid.GetTileRef(mouseGridPos);
+            }
+            else
+            {
+                mouseGridPos = new GridCoordinates(mouseWorldMap.Position, GridId.Invalid);
+                tile = default;
             }
 
             stringBuilder.AppendFormat(@"Positioning Debug:
 Screen Size: {0}
 Mouse Pos:
     Screen: {1}
-    World: {2}
-    Map: {3}
-    Tile: {5}
-    GUI: {4}", screenSize, mouseScreenPos, mouseWorldPos, mouseWorldMap,
-                UserInterfaceManager.CurrentlyHovered, tile);
+    {2}
+    {3}
+    {4}
+    GUI: {5}", screenSize, mouseScreenPos, mouseWorldMap, mouseGridPos,
+                tile, UserInterfaceManager.CurrentlyHovered);
 
             stringBuilder.AppendLine("\nAttached Entity:");
             if (playerManager.LocalPlayer?.ControlledEntity == null)
@@ -107,13 +106,23 @@ Mouse Pos:
             else
             {
                 var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
-                var playerWorldOffset = entityTransform.WorldPosition;
-                var playerScreen = eyeManager.WorldToScreen(playerWorldOffset);
+                var playerWorldOffset = entityTransform.MapPosition;
+                var playerScreen = eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                stringBuilder.AppendFormat(@"    World: {0}
-    Screen: {1}
-    Grid: {2}
-    Map: {3}", playerWorldOffset, playerScreen, entityTransform.GridID, entityTransform.MapID);
+                GridCoordinates playerGridPos;
+                if (_mapManager.TryFindGridAt(playerWorldOffset, out var playerGrid))
+                {
+                    playerGridPos = playerGrid.MapToGrid(playerWorldOffset);
+                }
+                else
+                {
+                    playerGridPos = new GridCoordinates(playerWorldOffset.Position, GridId.Invalid);
+                }
+
+                stringBuilder.AppendFormat(@"    Screen: {0}
+    {1}
+    {2}
+    EntityUid: {3}", playerScreen, playerWorldOffset, playerGridPos, entityTransform.Owner.Uid);
             }
 
             contents.Text = stringBuilder.ToString();

@@ -129,7 +129,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             Assert.That(value, Is.EqualTo("bar"));
 
             childA.TryGetStyleProperty("foo", out value);
-            Assert.That(value, Is.EqualTo("bar"));
+            Assert.That(value, Is.EqualTo("honk!"));
 
             childB.TryGetStyleProperty("foo", out value);
             Assert.That(value, Is.EqualTo("honk!"));

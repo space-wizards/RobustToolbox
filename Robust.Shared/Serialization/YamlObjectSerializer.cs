@@ -558,6 +558,14 @@ namespace Robust.Shared.Serialization
                 return instance;
             }
 
+            // ISelfSerialize
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            {
+                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                instance.Deserialize(node.ToString());
+                return instance;
+            }
+
             // other val (struct)
             if (type.IsValueType)
                 return _structSerializer.NodeToType(type, (YamlMappingNode)node, this);
@@ -589,7 +597,7 @@ namespace Robust.Shared.Serialization
             var type = obj.GetType();
 
             // val primitives and val enums
-            if (type.IsPrimitive || type.IsEnum)
+            if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
             {
                 // All primitives and enums implement IConvertible.
                 // Need it for the culture overload.
@@ -667,6 +675,13 @@ namespace Robust.Shared.Serialization
                 }
                 exposable.ExposeData(fork);
                 return mapping;
+            }
+
+            // ISelfSerialize
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            {
+                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                return instance.Serialize();
             }
 
             // other val (struct)

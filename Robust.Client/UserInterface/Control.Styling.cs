@@ -155,7 +155,7 @@ namespace Robust.Client.UserInterface
             {
                 _actualStylesheetCached = UserInterfaceManager.Stylesheet;
 
-                for (var p = Parent; p != null; p = p.Parent)
+                for (var p = this; p != null; p = p.Parent)
                 {
                     if (p.Stylesheet != null)
                     {

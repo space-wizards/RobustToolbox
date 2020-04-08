@@ -320,6 +320,8 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 UserInterfaceManager.WindowRoot.AddChild(this);
             }
+
+            Opened();
         }
 
         public void OpenCentered()
@@ -338,6 +340,11 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             Open();
             LayoutContainer.SetPosition(this, (0, (Parent.Size.Y - Size.Y) / 2));
+        }
+
+        protected virtual void Opened()
+        {
+
         }
 
         // Prevent window headers from getting off screen due to game window resizes.

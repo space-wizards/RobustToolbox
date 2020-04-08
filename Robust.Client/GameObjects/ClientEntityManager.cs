@@ -20,6 +20,7 @@ namespace Robust.Client.GameObjects
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IComponentFactory _compFactory;
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog;
 #endif
@@ -247,8 +248,7 @@ namespace Robust.Client.GameObjects
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>()
-                            .GetComponent(compChange.ComponentName);
+                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
                     }
@@ -282,7 +282,10 @@ namespace Robust.Client.GameObjects
             {
                 if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
                 {
-                    DebugTools.Assert("Component does not exist for state.");
+                    var eUid = entityUid;
+                    var eExpectedNetUid = kvStates.Key;
+                    var eRegisteredNetUidName = _compFactory.GetRegistration(eExpectedNetUid).Name;
+                    DebugTools.Assert($"Component does not exist for state: entUid={eUid}, expectedNetId={eExpectedNetUid}, expectedName={eRegisteredNetUidName}");
                     continue;
                 }
 

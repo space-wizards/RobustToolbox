@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface
@@ -9,15 +10,22 @@ namespace Robust.Client.UserInterface
     {
         public const string StylePropertyModulateSelf = "modulate-self";
 
-        private readonly Dictionary<string, object> _styleProperties = new Dictionary<string, object>();
-        private readonly HashSet<string> _styleClasses = new HashSet<string>();
-        private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
+        /// <summary>
+        ///     Overrides the style sheet used for this control and its descendants.
+        /// </summary>
+        /// <seealso cref="IUserInterfaceManager.Stylesheet"/>
+        public Stylesheet Stylesheet
+        {
+            get => _stylesheet;
+            set
+            {
+                _stylesheet = value;
+                StylesheetUpdateRecursive();
+            }
+        }
+
         public ICollection<string> StyleClasses { get; }
-        public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass; 
-
-        private string _styleIdentifier;
-
-        internal int RestyleGeneration;
+        public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass;
 
         [ViewVariables]
         public string StyleIdentifier
@@ -29,6 +37,21 @@ namespace Robust.Client.UserInterface
                 Restyle();
             }
         }
+
+        private readonly Dictionary<string, object> _styleProperties = new Dictionary<string, object>();
+        private readonly HashSet<string> _styleClasses = new HashSet<string>();
+        private readonly HashSet<string> _stylePseudoClass = new HashSet<string>();
+
+        // Styling needs to be updated.
+        private bool _stylingDirty;
+        // _actualStylesheetCached needs update.
+        private bool _stylesheetUpdateNeeded;
+        internal int RestyleGeneration;
+
+        private string _styleIdentifier;
+
+        private Stylesheet _actualStylesheetCached;
+        private Stylesheet _stylesheet;
 
         public bool HasStylePseudoClass(string className)
         {
@@ -102,13 +125,49 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.QueueStyleUpdate(this);
         }
 
+        private void StyleSheetUpdate()
+        {
+            _stylesheetUpdateNeeded = true;
+
+            Restyle();
+        }
+
+        internal void StylesheetUpdateRecursive()
+        {
+            StyleSheetUpdate();
+
+            foreach (var child in Children)
+            {
+                // Don't descent into children that have a style sheet since those aren't affected.
+                if (child.Stylesheet == null)
+                {
+                    child.StylesheetUpdateRecursive();
+                }
+            }
+        }
+
         internal void DoStyleUpdate()
         {
             _stylingDirty = false;
             _styleProperties.Clear();
 
-            // TODO: probably gonna need support for multiple stylesheets.
-            var stylesheet = UserInterfaceManager.Stylesheet;
+            if (_stylesheetUpdateNeeded)
+            {
+                _actualStylesheetCached = UserInterfaceManager.Stylesheet;
+
+                for (var p = Parent; p != null; p = p.Parent)
+                {
+                    if (p.Stylesheet != null)
+                    {
+                        _actualStylesheetCached = p.Stylesheet;
+                        break;
+                    }
+                }
+
+                _stylesheetUpdateNeeded = false;
+            }
+
+            var stylesheet = _actualStylesheetCached;
             if (stylesheet == null)
             {
                 return;

@@ -92,7 +92,6 @@ namespace Robust.Server.Player
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
-            SetAttachedEntityName();
             UpdatePlayerState();
         }
 

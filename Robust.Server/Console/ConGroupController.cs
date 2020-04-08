@@ -59,7 +59,7 @@ namespace Robust.Server.Console
                 var address = session.ConnectedClient.RemoteEndPoint.Address;
                 if (Equals(address, IPAddress.Loopback) || Equals(address, IPAddress.IPv6Loopback))
                 {
-                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.adminGroup")));
+                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.hostGroup")));
                     UpdateClientData(session);
                 }
             }

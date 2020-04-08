@@ -64,6 +64,7 @@ namespace Robust.Server.Interfaces.Player
 
         void DetachAll();
         List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState> GetPlayerStates(GameTick fromTick);
     }

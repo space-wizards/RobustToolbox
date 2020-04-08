@@ -7,7 +7,7 @@ namespace Robust.Client
 #if FULL_RELEASE
             throw new System.InvalidOperationException("ContentStart is not available on a full release.");
 #else
-            GameController.Start(args);
+            GameController.Start(args, true);
 #endif
         }
     }

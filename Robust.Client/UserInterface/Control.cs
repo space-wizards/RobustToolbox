@@ -32,8 +32,6 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control> OnVisibilityChanged;
 
-        private bool _stylingDirty;
-
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
@@ -488,7 +486,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
-            Restyle();
+            StylesheetUpdateRecursive();
             UpdateLayout();
         }
 

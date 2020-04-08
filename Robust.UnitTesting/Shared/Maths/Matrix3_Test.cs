@@ -53,23 +53,21 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Test]
-        public void MultiplyTest()
+        public void MultiplyTransformOrder()
         {
-            var startPoint = new Vector3(2, 0, 1);
-            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 2.0)); // 1. rotate 90 degrees upward
-            var translateMatrix = Matrix3.CreateTranslation(new Vector2(0, -2)); // 2. translate 0, -2 downwards.
+            var startPoint = new Vector3(1, 0, 1);
+            var scaleMatrix = Matrix3.CreateScale(new Vector2(2, 2));
+            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 2.0));
+            var translateMatrix = Matrix3.CreateTranslation(new Vector2(-5, -3));
 
-            // NOTE: Matrix Product is NOT commutative. OpenTK (and this) uses pre-multiplication, OpenGL and all the tutorials
-            // you will read about it use post-multiplication. So in OpenTK MVP = M*V*P; in OpenGL it is MVP = P*V*M.
-            // OpenGL: TransformedVector = TranslationMatrix * RotationMatrix * ScaleMatrix * OriginalVector;
-            Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
+            // 1. Take the start point  -> ( 1, 0)
+            // 2. Scale it by 2         -> ( 2, 0)
+            // 3. Rotate by +90 degrees -> ( 0, 2)
+            // 4. Translate by (-5, -3) -> (-5,-1)
+            var result = (scaleMatrix * rotateMatrix * translateMatrix) * startPoint;
 
-            var result = startPoint;
-            Matrix3.Transform(transformMatrix, ref result);
-
-            // (2,0) -> (0,2) -> (0,0)
-            Assert.That(FloatMath.CloseTo(result.X, 0), Is.True, result.ToString);
-            Assert.That(FloatMath.CloseTo(result.Y, 0), Is.True, result.ToString);
+            Assert.That(result.X, Is.Approximately(-5f));
+            Assert.That(result.Y, Is.Approximately(-1f));
         }
 
         [Test]
@@ -133,10 +131,10 @@ namespace Robust.UnitTesting.Shared.Maths
             Matrix3.Multiply(ref rotateMatrix, ref translateMatrix, out var transformMatrix);
 
             // Act
-            Matrix3.Transform(ref transformMatrix, ref startPoint, out var localPoint);
+            Matrix3.Transform(in transformMatrix, in startPoint, out var localPoint);
 
             var invMatrix = Matrix3.Invert(transformMatrix);
-            Matrix3.Transform(ref invMatrix, ref localPoint, out var result);
+            Matrix3.Transform(in invMatrix, in localPoint, out var result);
 
             // Assert
             Assert.That(FloatMath.CloseTo(startPoint.X, result.X), Is.True, result.ToString);

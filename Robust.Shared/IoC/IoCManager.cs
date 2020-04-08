@@ -166,11 +166,11 @@ namespace Robust.Shared.IoC
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
         /// <seealso cref="BuildGraph"/>
-        public static void InjectDependencies(object obj)
+        public static T InjectDependencies<T>(T obj)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-
             _container.Value.InjectDependencies(obj);
+            return obj;
         }
     }
 }

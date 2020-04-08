@@ -6,7 +6,6 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.State.States;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
@@ -165,8 +164,6 @@ namespace Robust.Client
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
-
-            _stateManager.RequestStateChange<MainScreen>();
 
             _gameStates.Reset();
             _playMan.Shutdown();

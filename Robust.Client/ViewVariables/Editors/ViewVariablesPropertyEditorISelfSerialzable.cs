@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var lineEdit = new LineEdit
             {
-                Text = ((ISelfSerialize)value).ToString(),
+                Text = ((ISelfSerialize)value).Serialize(),
                 Editable = !ReadOnly,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
             };

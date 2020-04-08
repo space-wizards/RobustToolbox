@@ -49,7 +49,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         /// The string that describes this entity via examine
         /// </summary>
-        string Description { get; }
+        string Description { get; set; }
 
         /// <summary>
         ///     Determines if this entity is still valid.

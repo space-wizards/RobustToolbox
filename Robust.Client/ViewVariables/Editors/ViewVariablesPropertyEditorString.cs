@@ -1,26 +1,36 @@
-using Robust.Client.UserInterface;
+﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Maths;
+using System;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorString : ViewVariablesPropertyEditor
+    internal class ViewVariablesPropertyEditorString : ViewVariablesPropertyEditor
     {
         protected override Control MakeUI(object value)
         {
             var lineEdit = new LineEdit
             {
-                Text = (string) value,
+                Text = ToText(value),
                 Editable = !ReadOnly,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
             };
 
             if (!ReadOnly)
             {
-                lineEdit.OnTextEntered += e => ValueChanged(e.Text);
+                lineEdit.OnTextEntered += HandleEvent();
             }
 
             return lineEdit;
+        }
+
+        protected virtual Action<LineEdit.LineEditEventArgs> HandleEvent()
+        {
+            return e => ValueChanged(e.Text);
+        }
+
+        protected virtual string ToText(object value)
+        {
+            return (string) value;
         }
     }
 }

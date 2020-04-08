@@ -1,21 +1,32 @@
-﻿using Robust.Client.UserInterface.Controls;
+﻿using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Interfaces.Serialization;
 using System;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal class ViewVariablesPropertyEditorISelfSerialzable<T> : ViewVariablesPropertyEditorString where T : ISelfSerialize
+    internal class ViewVariablesPropertyEditorISelfSerialzable<T> : ViewVariablesPropertyEditor where T : ISelfSerialize
     {
-        protected override void EventHandler(LineEdit.LineEditEventArgs e)
+        protected override Control MakeUI(object value)
         {
-            var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
-            instance.Deserialize(e.Text);
-            ValueChanged(instance);
-        }
+            var lineEdit = new LineEdit
+            {
+                Text = ((ISelfSerialize)value).ToString(),
+                Editable = !ReadOnly,
+                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
+            };
 
-        protected override string ToText(object value)
-        {
-            return base.ToText(((ISelfSerialize)value).ToString());
+            if (!ReadOnly)
+            {
+                lineEdit.OnTextEntered += e =>
+                {
+                    var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
+                    instance.Deserialize(e.Text);
+                    ValueChanged(instance);
+                };
+            }
+
+            return lineEdit;
         }
     }
 }

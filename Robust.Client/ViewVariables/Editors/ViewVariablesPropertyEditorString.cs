@@ -9,27 +9,17 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var lineEdit = new LineEdit
             {
-                Text = ToText(value),
+                Text = (string)value,
                 Editable = !ReadOnly,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
             };
 
             if (!ReadOnly)
             {
-                lineEdit.OnTextEntered += EventHandler;
+                lineEdit.OnTextEntered += e => ValueChanged(e.Text);
             }
 
             return lineEdit;
-        }
-
-        protected virtual void EventHandler(LineEdit.LineEditEventArgs e)
-        {
-            ValueChanged(e.Text);
-        }
-
-        protected virtual string ToText(object value)
-        {
-            return (string) value;
         }
     }
 }

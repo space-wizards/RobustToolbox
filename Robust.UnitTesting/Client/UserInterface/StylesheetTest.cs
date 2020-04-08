@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface;
 using Robust.Shared.IoC;
@@ -104,8 +104,11 @@ namespace Robust.UnitTesting.Client.UserInterface
             uiMgr.Stylesheet = null;
 
             var baseControl = new Control();
+            baseControl.AddStyleClass("A");
             var childA = new Control();
+            childA.AddStyleClass("A");
             var childB = new Control();
+            childB.AddStyleClass("A");
 
             uiMgr.StateRoot.AddChild(baseControl);
 
@@ -114,21 +117,21 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             baseControl.ForceRunStyleUpdate();
 
-            Assert.That(baseControl.TryGetStyleProperty("A", out object _), Is.False);
+            Assert.That(baseControl.TryGetStyleProperty("foo", out object _), Is.False);
 
-            uiMgr.Stylesheet = sheetA;
+            uiMgr.RootControl.Stylesheet = sheetA;
             childA.Stylesheet = sheetB;
 
             // Assign sheets.
             baseControl.ForceRunStyleUpdate();
 
-            baseControl.TryGetStyleProperty("A", out object value);
+            baseControl.TryGetStyleProperty("foo", out object value);
             Assert.That(value, Is.EqualTo("bar"));
 
-            childA.TryGetStyleProperty("A", out value);
-            Assert.That(value, Is.EqualTo("honk!"));
+            childA.TryGetStyleProperty("foo", out value);
+            Assert.That(value, Is.EqualTo("bar"));
 
-            childA.TryGetStyleProperty("A", out value);
+            childB.TryGetStyleProperty("foo", out value);
             Assert.That(value, Is.EqualTo("honk!"));
         }
     }

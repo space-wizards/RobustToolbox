@@ -1,6 +1,5 @@
 ﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using System;
 
 namespace Robust.Client.ViewVariables.Editors
 {

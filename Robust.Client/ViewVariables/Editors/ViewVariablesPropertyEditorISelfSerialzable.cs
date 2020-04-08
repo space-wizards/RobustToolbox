@@ -8,7 +8,6 @@ namespace Robust.Client.ViewVariables.Editors
     {
         protected override void EventHandler(LineEdit.LineEditEventArgs e)
         {
-            
             var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
             instance.Deserialize(e.Text);
             ValueChanged(instance);

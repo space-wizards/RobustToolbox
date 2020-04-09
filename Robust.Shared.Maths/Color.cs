@@ -1,4 +1,4 @@
-﻿//
+//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -733,6 +733,28 @@ namespace Robust.Shared.Maths
             var luminance = 0.30f * rgb.R + 0.59f * rgb.G + 0.11f * rgb.B;
 
             return new Vector4(hue, c, luminance, rgb.A);
+        }
+
+
+        public static Vector4 ToCmyk(Color rgb)
+        {
+            var (r, g, b) = rgb;
+            var k = 1 - Math.Max(r, Math.Max(g, b));
+            var c = (1 - r - k) / (1 - k);
+            var m = (1 - g - k) / (1 - k);
+            var y = (1 - b - k) / (1 - k);
+
+            return (c, m, y, k);
+        }
+
+        public static Color FromCmyk(Vector4 cmyk)
+        {
+            var (c, m, y, k) = cmyk;
+            var r = (1 - c) * (1 - k);
+            var g = (1 - m) * (1 - k);
+            var b = (1 - y) * (1 - k);
+
+            return (r, g, b);
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-//
+﻿//
 // The Open Toolkit Library License
 //
 // Copyright (c) 2006 - 2008 the Open Toolkit library, except where noted.
@@ -149,6 +149,31 @@ namespace Robust.Shared.Maths
         public static implicit operator Color(System.Drawing.Color color)
         {
             return new Color(color.R, color.G, color.B, color.A);
+        }
+
+        public static implicit operator Color((float r, float g, float b, float a) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b, tuple.a);
+        }
+
+        public static implicit operator Color((float r, float g, float b) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b);
+        }
+
+        public void Deconstruct(out float r, out float g, out float b, out float a)
+        {
+            r = R;
+            g = G;
+            b = B;
+            a = A;
+        }
+
+        public void Deconstruct(out float r, out float g, out float b)
+        {
+            r = R;
+            g = G;
+            b = B;
         }
 
         /// <summary>

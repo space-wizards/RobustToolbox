@@ -9,6 +9,7 @@ using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -123,6 +124,11 @@ namespace Robust.Client.ViewVariables
             if (type == typeof(string))
             {
                 return new ViewVariablesPropertyEditorString();
+            }
+
+            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            {
+                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerialzable<>).MakeGenericType(type));
             }
 
             if (type.IsEnum)

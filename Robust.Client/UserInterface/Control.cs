@@ -409,7 +409,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Make this child an orphan. e.g. remove it from its parent if it has one.
+        ///     Make this child an orphan. i.e. remove it from its parent if it has one.
         /// </summary>
         public void Orphan()
         {

@@ -151,6 +151,31 @@ namespace Robust.Shared.Maths
             return new Color(color.R, color.G, color.B, color.A);
         }
 
+        public static implicit operator Color((float r, float g, float b, float a) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b, tuple.a);
+        }
+
+        public static implicit operator Color((float r, float g, float b) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b);
+        }
+
+        public void Deconstruct(out float r, out float g, out float b, out float a)
+        {
+            r = R;
+            g = G;
+            b = B;
+            a = A;
+        }
+
+        public void Deconstruct(out float r, out float g, out float b)
+        {
+            r = R;
+            g = G;
+            b = B;
+        }
+
         /// <summary>
         ///     Converts the specified Color4 to a System.Drawing.Color structure.
         /// </summary>
@@ -733,6 +758,28 @@ namespace Robust.Shared.Maths
             var luminance = 0.30f * rgb.R + 0.59f * rgb.G + 0.11f * rgb.B;
 
             return new Vector4(hue, c, luminance, rgb.A);
+        }
+
+
+        public static Vector4 ToCmyk(Color rgb)
+        {
+            var (r, g, b) = rgb;
+            var k = 1 - Math.Max(r, Math.Max(g, b));
+            var c = (1 - r - k) / (1 - k);
+            var m = (1 - g - k) / (1 - k);
+            var y = (1 - b - k) / (1 - k);
+
+            return (c, m, y, k);
+        }
+
+        public static Color FromCmyk(Vector4 cmyk)
+        {
+            var (c, m, y, k) = cmyk;
+            var r = (1 - c) * (1 - k);
+            var g = (1 - m) * (1 - k);
+            var b = (1 - y) * (1 - k);
+
+            return (r, g, b);
         }
 
         /// <summary>

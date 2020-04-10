@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
@@ -448,6 +449,9 @@ namespace Robust.Server.GameObjects
 
             // scan pvs box and include children and parents recursively
             var entities = IncludeRelatives(GetEntitiesInRange(mapId, position, range));
+
+            // Exclude any entities that are currently invisible to the player.
+            ExcludeInvisible(entities, player.VisibilityMask);
 
             // Always send updates for all grid and map entities.
             // If we don't, the client-side game state manager WILL blow up.
@@ -897,6 +901,18 @@ namespace Robust.Server.GameObjects
                 {
                     set.Add(GetEntity(grid.GridEntityId));
                 }
+            }
+        }
+
+        private void ExcludeInvisible(ISet<IEntity> set, int visibilityMask)
+        {
+            foreach (var entity in set.ToArray())
+            {
+                if (!entity.TryGetComponent(out VisibilityComponent visibility))
+                    continue;
+
+                if ((visibilityMask & visibility.Layer) == 0)
+                    set.Remove(entity);
             }
         }
     }

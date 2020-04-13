@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
@@ -55,9 +54,10 @@ namespace Robust.Shared.GameObjects
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>())
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
-                //Force initialization of all systems
+                // Force IoC inject of all systems
                 var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
-                AddSystem(instance);
+
+                _systems.Add(type, instance);
             }
 
             foreach (var system in _systems.Values)
@@ -66,37 +66,17 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddSystem(IEntitySystem system)
-        {
-            var type = system.GetType();
-            if (_systems.ContainsKey(type))
-            {
-                RemoveSystem(system);
-            }
-
-            _systems.Add(type, system);
-        }
-
-        private void RemoveSystem(IEntitySystem system)
-        {
-            var type = system.GetType();
-            if (_systems.ContainsKey(type))
-            {
-                _systems[type].Shutdown();
-                _entityManager.EventBus.UnsubscribeEvents(_systems[type]);
-                _systems.Remove(type);
-            }
-        }
-
         /// <inheritdoc />
         public void Shutdown()
         {
             // System.Values is modified by RemoveSystem
-            var values = _systems.Values.ToArray();
-            foreach (var system in values)
+            foreach (var system in _systems.Values)
             {
-                RemoveSystem(system);
+                system.Shutdown();
+                _entityManager.EventBus.UnsubscribeEvents(system);
             }
+
+            _systems.Clear();
         }
 
         /// <inheritdoc />

@@ -104,7 +104,7 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     A client has just disconnected from the server.
         /// </summary>
-        event EventHandler<NetChannelArgs> Disconnect;
+        event EventHandler<NetDisconnectedArgs> Disconnect;
 
         #region StringTable
 

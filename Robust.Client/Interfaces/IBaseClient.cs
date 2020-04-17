@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace Robust.Client.Interfaces
 {
@@ -28,6 +29,8 @@ namespace Robust.Client.Interfaces
         /// </summary>
         string PlayerNameOverride { get; set; }
 
+        string LastDisconnectReason { get; }
+
         /// <summary>
         ///     Raised when the client RunLevel is changed.
         /// </summary>
@@ -56,7 +59,12 @@ namespace Robust.Client.Interfaces
         /// <summary>
         ///     Connects the Initialized BaseClient to a remote server.
         /// </summary>
-        void ConnectToServer(string ip, ushort port);
+        void ConnectToServer(string ip, ushort port)
+        {
+            ConnectToServer(new DnsEndPoint(ip, port));
+        }
+
+        void ConnectToServer(DnsEndPoint endPoint);
 
         /// <summary>
         ///     Disconnects the connected BaseClient from a remote server.

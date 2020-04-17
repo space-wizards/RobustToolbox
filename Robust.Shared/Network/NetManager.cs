@@ -340,7 +340,7 @@ namespace Robust.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
-            Disconnect?.Invoke(this, new NetChannelArgs(ServerChannel));
+            Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             Shutdown(reason);
         }
 
@@ -572,7 +572,7 @@ namespace Robust.Shared.Network
             Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
             _assignedSessions.Remove(connection);
 
-            OnDisconnected(channel);
+            OnDisconnected(channel, reason);
             _channels.Remove(connection);
 
             if (IsClient)
@@ -838,9 +838,9 @@ namespace Robust.Shared.Network
             Connected?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnDisconnected(INetChannel channel)
+        protected virtual void OnDisconnected(INetChannel channel, string reason)
         {
-            Disconnect?.Invoke(this, new NetChannelArgs(channel));
+            Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, reason));
         }
 
         /// <inheritdoc />
@@ -853,7 +853,7 @@ namespace Robust.Shared.Network
         public event EventHandler<NetChannelArgs> Connected;
 
         /// <inheritdoc />
-        public event EventHandler<NetChannelArgs> Disconnect;
+        public event EventHandler<NetDisconnectedArgs> Disconnect;
 
         #endregion Events
 

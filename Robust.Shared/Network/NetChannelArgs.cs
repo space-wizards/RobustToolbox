@@ -64,4 +64,14 @@ namespace Robust.Shared.Network
 
         public string Reason { get; }
     }
+
+    public class NetDisconnectedArgs : NetChannelArgs
+    {
+        public NetDisconnectedArgs(INetChannel channel, string reason) : base(channel)
+        {
+            Reason = reason;
+        }
+
+        public string Reason { get; }
+    }
 }

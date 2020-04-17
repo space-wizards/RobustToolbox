@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.GameObjects;
@@ -27,32 +28,23 @@ namespace Robust.Client
 #pragma warning disable 649
         private readonly IClientNetManager _net;
 
-        [Dependency]
-        private readonly IPlayerManager _playMan;
+        [Dependency] private readonly IPlayerManager _playMan;
 
-        [Dependency]
-        private readonly IStateManager _stateManager;
+        [Dependency] private readonly IStateManager _stateManager;
 
-        [Dependency]
-        private readonly IConfigurationManager _configManager;
+        [Dependency] private readonly IConfigurationManager _configManager;
 
-        [Dependency]
-        private readonly IClientEntityManager _entityManager;
+        [Dependency] private readonly IClientEntityManager _entityManager;
 
-        [Dependency]
-        private readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager;
 
-        [Dependency]
-        private readonly IDiscordRichPresence _discord;
+        [Dependency] private readonly IDiscordRichPresence _discord;
 
-        [Dependency]
-        private readonly IGameTiming _timing;
+        [Dependency] private readonly IGameTiming _timing;
 
-        [Dependency]
-        private readonly IClientGameStateManager _gameStates;
+        [Dependency] private readonly IClientGameStateManager _gameStates;
 
-        [Dependency]
-        private readonly IDebugDrawingManager _debugDrawMan;
+        [Dependency] private readonly IDebugDrawingManager _debugDrawMan;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -66,6 +58,8 @@ namespace Robust.Client
 
         /// <inheritdoc />
         public string PlayerNameOverride { get; set; }
+
+        public string LastDisconnectReason { get; private set; }
 
         /// <inheritdoc />
         public void Initialize()
@@ -81,19 +75,20 @@ namespace Robust.Client
         }
 
         /// <inheritdoc />
-        public void ConnectToServer(string ip, ushort port)
+        public void ConnectToServer(DnsEndPoint endPoint)
         {
             if (RunLevel == ClientRunLevel.Connecting)
             {
                 _net.Shutdown("Client mashing that connect button.");
                 Reset();
             }
+
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
-
+            _net.ClientConnect(endPoint.Host, endPoint.Port,
+                PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />
@@ -159,11 +154,13 @@ namespace Robust.Client
             Reset();
         }
 
-        private void OnNetDisconnect(object sender, NetChannelArgs args)
+        private void OnNetDisconnect(object sender, NetDisconnectedArgs args)
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
+
+            LastDisconnectReason = args.Reason;
 
             _gameStates.Reset();
             _playMan.Shutdown();

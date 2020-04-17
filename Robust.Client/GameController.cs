@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
@@ -187,6 +188,21 @@ namespace Robust.Client
 
             if (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
             {
+                _client.ConnectToServer(LaunchState.ConnectEndpoint);
+            }
+
+            _checkOpenGLVersion();
+            return true;
+        }
+
+        private void ReadInitialLaunchState()
+        {
+            if (_commandLineArgs == null)
+            {
+                LaunchState = new InitialLaunchState(false, null, null, null);
+            }
+            else
+            {
                 var addr = _commandLineArgs.ConnectAddress;
                 if (!addr.Contains("://"))
                 {
@@ -200,25 +216,11 @@ namespace Robust.Client
                     Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
-                _client.ConnectToServer(uri.Host, (ushort) (uri.IsDefaultPort ? 1212 : uri.Port));
-            }
-
-            _checkOpenGLVersion();
-            return true;
-        }
-
-        private void ReadInitialLaunchState()
-        {
-            if (_commandLineArgs == null)
-            {
-                LaunchState = new InitialLaunchState(false, null, null);
-            }
-            else
-            {
                 LaunchState = new InitialLaunchState(
                     _commandLineArgs.Launcher,
                     _commandLineArgs.ConnectAddress,
-                    _commandLineArgs.Ss14Address);
+                    _commandLineArgs.Ss14Address,
+                    new DnsEndPoint(uri.Host, uri.IsDefaultPort ? 1212 : uri.Port));
             }
         }
 

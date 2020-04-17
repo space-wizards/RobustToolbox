@@ -188,6 +188,14 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var kvTypeDict in _dictComponents)
             {
+                if (kvTypeDict.Value.TryGetValue(uid, out var comp))
+                {
+                    comp.Running = false;
+                }
+            }
+
+            foreach (var kvTypeDict in _dictComponents)
+            {
                 // because we are iterating over references instead of instances, and a comp instance
                 // can have multiple references, we filter out already deleted instances.
                 if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)

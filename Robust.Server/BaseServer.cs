@@ -70,6 +70,8 @@ namespace Robust.Server
         private int _lastReceivedBytes;
         private int _lastSentBytes;
 
+        private string _shutdownReason;
+
         private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         /// <inheritdoc />
@@ -94,6 +96,8 @@ namespace Robust.Server
                 Logger.InfoS("srv", "Shutting down...");
             else
                 Logger.InfoS("srv", $"{reason}, shutting down...");
+
+            _shutdownReason = reason;
 
             _mainLoop.Running = false;
             _log.RootSawmill.RemoveHandler(fileLogHandler);
@@ -338,7 +342,7 @@ namespace Robust.Server
         private void Cleanup()
         {
             // shut down networking, kicking all players.
-            _network.Shutdown("Server Shutdown");
+            _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
             _entities.Shutdown();

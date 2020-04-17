@@ -305,7 +305,7 @@ namespace Robust.Server.Console.Commands
             var gridId = new GridId(int.Parse(args[0]));
             var xpos = float.Parse(args[1]);
             var ypos = float.Parse(args[2]);
-            
+
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             if (mapManager.TryGetGrid(gridId, out var grid))
@@ -398,10 +398,11 @@ namespace Robust.Server.Console.Commands
 
             foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
-                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3} , grids: {4}\n",
+                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3}, ent: {5}, grids: {4}\n",
                     mapId, mapManager.GetDefaultGridId(mapId), pauseManager.IsMapInitialized(mapId),
                     pauseManager.IsMapPaused(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)));
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
+                    mapManager.GetMapEntityId(mapId));
             }
 
             shell.SendText(player, msg.ToString());
@@ -422,8 +423,8 @@ namespace Robust.Server.Console.Commands
 
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
-                msg.AppendFormat("{0}: map: {1}, default: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMapId, grid.IsDefaultGrid, grid.WorldPosition);
+                msg.AppendFormat("{0}: map: {1}, ent: {4}, default: {2}, pos: {3} \n",
+                    grid.Index, grid.ParentMapId, grid.IsDefaultGrid, grid.WorldPosition, grid.GridEntityId);
             }
 
             shell.SendText(player, msg.ToString());

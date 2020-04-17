@@ -74,9 +74,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 if (!stream.Source.IsPlaying)
                 {
-                    stream.Source.Dispose();
-                    stream.Done = true;
-                    stream.DoPlaybackDone();
+                    StreamDone(stream);
                     continue;
                 }
 
@@ -87,6 +85,12 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
                 else if (stream.TrackingEntity != null)
                 {
+                    if (stream.TrackingEntity.Deleted)
+                    {
+                        StreamDone(stream);
+                        continue;
+                    }
+
                     mapPos = stream.TrackingEntity.Transform.MapPosition;
                 }
 
@@ -111,6 +115,13 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
 
             _playingClydeStreams.RemoveAll(p => p.Done);
+        }
+
+        private static void StreamDone(PlayingStream stream)
+        {
+            stream.Source.Dispose();
+            stream.Done = true;
+            stream.DoPlaybackDone();
         }
 
         /// <summary>

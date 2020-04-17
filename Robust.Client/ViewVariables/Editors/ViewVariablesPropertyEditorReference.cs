@@ -1,10 +1,7 @@
 using System;
-using System.Collections.Generic;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
-using Robust.Shared.IoC;
 using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
@@ -23,9 +20,15 @@ namespace Robust.Client.ViewVariables.Editors
             // Only thing we can really rely on is that ToString works out correctly.
             // This is because of reference tokens, but due to simplicity the object ref is still passed.
 
+            var toString = value.ToString();
+            if (value.GetType().FullName == toString)
+            {
+                toString = TypeAbbreviation.Abbreviate(toString);
+            }
+
             var button = new Button
             {
-                Text = $"Reference: {value}",
+                Text = $"Reference: {toString}",
                 ClipText = true,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand
             };

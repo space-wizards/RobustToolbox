@@ -5,6 +5,7 @@ using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
@@ -20,6 +21,8 @@ namespace Robust.Shared.GameObjects
         /// Maps system types to instances.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        [ViewVariables]
+        private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
         /// <exception cref="InvalidEntitySystemException">Thrown if the provided type is not registered.</exception>
         public T GetEntitySystem<T>()

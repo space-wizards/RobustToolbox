@@ -84,6 +84,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
+            FlushCursorDisposeQueue();
             ClearDeadShaderInstances();
         }
 

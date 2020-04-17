@@ -94,6 +94,21 @@ namespace Robust.Client.Graphics.Clyde
             projMatrix = Matrix3.Identity;
         }
 
+        public ICursor GetStandardCursor(StandardCursorShape shape)
+        {
+            return new DummyCursor();
+        }
+
+        public ICursor CreateCursor(Image<Rgba32> image, Vector2i hotSpot)
+        {
+            return new DummyCursor();
+        }
+
+        public void SetCursor(ICursor cursor)
+        {
+            // Nada.
+        }
+
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             return default;
@@ -139,6 +154,14 @@ namespace Robust.Client.Graphics.Clyde
         public void SetText(string text)
         {
             // Nada.
+        }
+
+        private class DummyCursor : ICursor
+        {
+            public void Dispose()
+            {
+                // Nada.
+            }
         }
 
         private class DummyAudioSource : IClydeAudioSource

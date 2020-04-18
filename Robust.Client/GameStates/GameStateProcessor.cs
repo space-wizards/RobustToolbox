@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
@@ -20,6 +21,9 @@ namespace Robust.Client.GameStates
         private GameTick _lastProcessedRealState;
         private GameTick _highestFromSequence;
 
+        private readonly Dictionary<EntityUid, Dictionary<uint, ComponentState>> _lastStateFullRep
+            = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
+
         /// <inheritdoc />
         public int MinBufferSize => Interpolation ? 3 : 2;
 
@@ -27,7 +31,7 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => MinBufferSize + InterpRatio;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _stateBuffer.Count(s => s.ToSequence >= _timing.CurTick);
+        public int CurrentBufferSize => CalculateBufferSize(_timing.CurTick);
 
         /// <inheritdoc />
         public bool Interpolation { get; set; }
@@ -119,7 +123,7 @@ namespace Robust.Client.GameStates
 
             if (applyNextState && !curState.Extrapolated)
                 _lastProcessedRealState = curState.ToSequence;
-            
+
             if (!_waitingForFull)
             {
                 if (!applyNextState)
@@ -135,10 +139,70 @@ namespace Robust.Client.GameStates
                 _timing.TickTimingAdjustment = 0f;
             }
 
-            if (Logging && applyNextState)
-                Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+            if (applyNextState)
+            {
+                if (Logging)
+                {
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                }
+
+                if (!curState.Extrapolated)
+                {
+                    UpdateFullRep(curState);
+                }
+            }
 
             return applyNextState;
+        }
+
+        private void UpdateFullRep(GameState state)
+        {
+            if (state.FromSequence == GameTick.Zero)
+            {
+                // Full state.
+                _lastStateFullRep.Clear();
+            }
+            else
+            {
+                if (state.EntityDeletions != null)
+                {
+                    foreach (var deletion in state.EntityDeletions)
+                    {
+                        _lastStateFullRep.Remove(deletion);
+                    }
+                }
+            }
+
+            if (state.EntityStates != null)
+            {
+                foreach (var entityState in state.EntityStates)
+                {
+                    if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
+                    {
+                        compData = new Dictionary<uint, ComponentState>();
+                        _lastStateFullRep.Add(entityState.Uid, compData);
+                    }
+
+                    if (entityState.ComponentChanges != null)
+                    {
+                        foreach (var change in entityState.ComponentChanges)
+                        {
+                            if (change.Deleted)
+                            {
+                                compData.Remove(change.NetID);
+                            }
+                        }
+                    }
+
+                    if (entityState.ComponentStates != null)
+                    {
+                        foreach (var compState in entityState.ComponentStates)
+                        {
+                            compData[compState.NetID] = compState;
+                        }
+                    }
+                }
+            }
         }
 
         private bool CalculateFullState(out GameState curState, out GameState nextState, int targetBufferSize)
@@ -206,6 +270,7 @@ namespace Robust.Client.GameStates
             nextState = null;
 
             GameState futureState = null;
+            uint lastStateInput = 0;
 
             for (var i = 0; i < _stateBuffer.Count; i++)
             {
@@ -225,6 +290,10 @@ namespace Robust.Client.GameStates
                 {
                     futureState = state;
                 }
+                else if (state.ToSequence == lastTick)
+                {
+                    lastStateInput = state.LastProcessedInput;
+                }
                 else if (state.ToSequence < _highestFromSequence) // remove any old states we find to keep the buffer clean
                 {
                     _stateBuffer.RemoveSwap(i);
@@ -236,7 +305,7 @@ namespace Robust.Client.GameStates
             if (!Extrapolation && curState == null && futureState != null)
             {
                 //this is not actually extrapolation
-                curState = ExtrapolateState(_highestFromSequence, curTick); 
+                curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
                 return true; // keep moving, we have a future state
             }
 
@@ -253,12 +322,12 @@ namespace Robust.Client.GameStates
 
             if (curState == null)
             {
-                curState = ExtrapolateState(_highestFromSequence, curTick);
+                curState = ExtrapolateState(_highestFromSequence, curTick, lastStateInput);
             }
 
             if (nextState == null && Interpolation)
             {
-                nextState = ExtrapolateState(_highestFromSequence, nextTick);
+                nextState = ExtrapolateState(_highestFromSequence, nextTick, lastStateInput);
             }
 
             return true;
@@ -267,9 +336,9 @@ namespace Robust.Client.GameStates
         /// <summary>
         ///     Generates a completely fake GameState.
         /// </summary>
-        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence)
+        private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence, uint lastInput)
         {
-            var state = new GameState(fromSequence, toSequence, null, null, null, null);
+            var state = new GameState(fromSequence, toSequence, lastInput, null, null, null, null);
             state.Extrapolated = true;
             return state;
         }
@@ -280,6 +349,32 @@ namespace Robust.Client.GameStates
             _stateBuffer.Clear();
             _lastFullState = null;
             _waitingForFull = true;
+        }
+
+        public void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data)
+        {
+            foreach (var (uid, compData) in data)
+            {
+                var fullRep = _lastStateFullRep[uid];
+
+                foreach (var (netId, compState) in compData)
+                {
+                    if (!fullRep.ContainsKey(netId))
+                    {
+                        fullRep.Add(netId, compState);
+                    }
+                }
+            }
+        }
+
+        public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
+        {
+            return _lastStateFullRep[entity];
+        }
+
+        public int CalculateBufferSize(GameTick fromTick)
+        {
+            return _stateBuffer.Count(s => s.ToSequence >= fromTick);
         }
     }
 }

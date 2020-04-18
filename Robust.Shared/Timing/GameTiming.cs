@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing
 {
@@ -152,6 +153,24 @@ namespace Robust.Shared.Timing
         {
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
+        }
+
+        public bool IsFirstTimePredicted { get; private set; } = true;
+
+        public void StartPastPrediction()
+        {
+            // Don't allow recursive predictions.
+            // Not sure if it's necessary yet and if not, great!
+            DebugTools.Assert(IsFirstTimePredicted);
+
+            IsFirstTimePredicted = false;
+        }
+
+        public void EndPastPrediction()
+        {
+            DebugTools.Assert(!IsFirstTimePredicted);
+
+            IsFirstTimePredicted = true;
         }
 
         /// <summary>

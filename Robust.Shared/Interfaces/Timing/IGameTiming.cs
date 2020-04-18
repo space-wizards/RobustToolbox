@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.Timing
@@ -101,5 +102,18 @@ namespace Robust.Shared.Interfaces.Timing
         ///     Resets the real uptime of the server.
         /// </summary>
         void ResetRealTime();
+
+        bool IsFirstTimePredicted { get; }
+
+        void StartPastPrediction();
+        void EndPastPrediction();
+
+        [MustUseReturnValue]
+        PredictionGuard StartPastPredictionArea()
+        {
+            StartPastPrediction();
+
+            return new PredictionGuard(this);
+        }
     }
 }

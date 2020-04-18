@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.GameObjects.Components;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
@@ -21,6 +23,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
         [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IClientGameStateManager _stateManager;
 #pragma warning restore 649
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
@@ -35,6 +38,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         ///     Holds the keyFunction -> handler bindings for the simulation.
         /// </summary>
         public ICommandBindMapping BindMap => _bindMap;
+
+        /// <summary>
+        /// If the input system is currently predicting input.
+        /// </summary>
+        public bool Predicted { get; private set; }
 
         /// <summary>
         ///     Inserts an Input Command into the simulation.
@@ -52,6 +60,11 @@ namespace Robust.Client.GameObjects.EntitySystems
             #endif
 
             // set state, state change is updated regardless if it is locally bound
+            if (_cmdStates.GetState(function) == message.State)
+            {
+                return;
+            }
+
             _cmdStates.SetState(function, message.State);
 
             // handle local binds before sending off
@@ -62,6 +75,32 @@ namespace Robust.Client.GameObjects.EntitySystems
                     return;
             }
 
+            // send it off to the client
+            DispatchInputCommand(message);
+        }
+
+        /// <summary>
+        /// Handle a predicted input command.
+        /// </summary>
+        /// <param name="inputCmd">Input command to handle as predicted.</param>
+        public void PredictInputCommand(FullInputCmdMessage inputCmd)
+        {
+            var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
+
+            if (!_bindMap.TryGetHandler(keyFunc, out var handler))
+                return;
+
+            Predicted = true;
+
+            var session = _playerManager.LocalPlayer.Session;
+            handler.HandleCmdMessage(session, inputCmd);
+
+            Predicted = false;
+        }
+
+        private void DispatchInputCommand(FullInputCmdMessage message)
+        {
+            _stateManager.InputCommandDispatched(message);
             RaiseNetworkEvent(message);
         }
 

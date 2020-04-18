@@ -170,6 +170,7 @@ namespace Robust.Shared.Network
 
             _config.RegisterCVar("net.sendbuffersize", 131071, CVar.ARCHIVE);
             _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
+            _config.RegisterCVar("net.verbose", false, CVar.ARCHIVE, NetVerboseChanged);
 
             if (!isServer)
             {
@@ -194,6 +195,14 @@ namespace Robust.Shared.Network
             _strings.Initialize(this, () => { OnConnected(ServerChannel); });
 
             _initialized = true;
+        }
+
+        private void NetVerboseChanged(bool on)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Configuration.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, on);
+            }
         }
 
         public void StartServer()
@@ -348,12 +357,15 @@ namespace Robust.Shared.Network
         {
             var netConfig = new NetPeerConfiguration("SS14_NetTag");
 
-            // ping the client 4 times every second.
-            netConfig.PingInterval = 0.25f;
+            // ping the client once per second.
+            netConfig.PingInterval = 1f;
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
             netConfig.MaximumHandshakeAttempts = 1;
+
+            var verbose = _config.GetCVar<bool>("net.verbose");
+            netConfig.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, verbose);
 
             if (IsServer)
             {

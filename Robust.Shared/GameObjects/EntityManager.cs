@@ -82,6 +82,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Update(float frameTime)
         {
+            EntityNetworkManager.Update();
             EntitySystemManager.Update(frameTime);
             _eventBus.ProcessEventQueue();
             CullDeletedEntities();

@@ -1,17 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
+using Robust.Client.Interfaces.Input;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared.Configuration;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -19,7 +27,14 @@ namespace Robust.Client.GameStates
     public class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor;
-        
+
+        private uint _nextInputCmdSeq = 1;
+        private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
+
+        private readonly Queue<(uint sequence, GameTick sourceTick, EntitySystemMessage msg, object sessionMsg)>
+            _pendingSystemMessages
+                = new Queue<(uint, GameTick, EntitySystemMessage, object)>();
+
 #pragma warning disable 649
         [Dependency] private readonly IClientEntityManager _entities;
         [Dependency] private readonly IPlayerManager _players;
@@ -28,6 +43,8 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IGameTiming _timing;
         [Dependency] private readonly IConfigurationManager _config;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
+        [Dependency] private readonly IComponentManager _componentManager;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -37,7 +54,16 @@ namespace Robust.Client.GameStates
         public int TargetBufferSize => _processor.TargetBufferSize;
 
         /// <inheritdoc />
-        public int CurrentBufferSize => _processor.CurrentBufferSize;
+        public int CurrentBufferSize => _processor.CalculateBufferSize(CurServerTick);
+
+        public bool Predicting { get; private set; }
+
+        public int PredictSize { get; private set; }
+
+        private uint _lastProcessedSeq;
+        private GameTick _lastProcessedTick = GameTick.Zero;
+
+        public GameTick CurServerTick => _lastProcessedTick;
 
         /// <inheritdoc />
         public event Action<GameStateAppliedArgs> GameStateApplied;
@@ -51,24 +77,26 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            if(!_config.IsCVarRegistered("net.interp"))
-                _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
-
-            if (!_config.IsCVarRegistered("net.interp_ratio"))
-                _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
-
-            if (!_config.IsCVarRegistered("net.logging"))
-                _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
+            _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
+            _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
+            _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
+            _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
+            _config.RegisterCVar("net.predict_size", 2, CVar.ARCHIVE, i => PredictSize = i);
 
             _processor.Interpolation = _config.GetCVar<bool>("net.interp");
             _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
             _processor.Logging = _config.GetCVar<bool>("net.logging");
+            Predicting = _config.GetCVar<bool>("net.predict");
+            PredictSize = _config.GetCVar<int>("net.predict_size");
         }
 
         /// <inheritdoc />
         public void Reset()
         {
             _processor.Reset();
+
+            _lastProcessedTick = GameTick.Zero;
+            _lastProcessedSeq = 0;
         }
 
         private void RunLevelChanged(object sender, RunLevelChangedEventArgs args)
@@ -80,23 +108,222 @@ namespace Robust.Client.GameStates
             }
         }
 
+        public void InputCommandDispatched(FullInputCmdMessage message)
+        {
+            if (!Predicting)
+            {
+                return;
+            }
+
+            message.InputSequence = _nextInputCmdSeq;
+            _pendingInputs.Enqueue(message);
+
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
+            Logger.DebugS("State",
+                $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            _nextInputCmdSeq++;
+        }
+
+        public uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage
+        {
+            if (!Predicting)
+            {
+                return default;
+            }
+
+            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer.Session);
+            _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
+                new EntitySessionMessage<T>(evArgs, message)));
+
+            return _nextInputCmdSeq++;
+        }
+
         private void HandleStateMessage(MsgState message)
         {
             var state = message.State;
+
+            var lastCurTick = _timing.CurTick;
+            _timing.CurTick = _lastProcessedTick + 1;
 
             _processor.AddNewState(state);
 
             // we always ack everything we receive, even if it is late
             AckGameState(state.ToSequence);
+
+            _timing.CurTick = lastCurTick;
         }
-        
+
         /// <inheritdoc />
         public void ApplyGameState()
         {
-            if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
-                return;
+            _timing.CurTick = _lastProcessedTick + 1;
 
-            ApplyGameState(curState, nextState);
+            if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
+            {
+                return;
+            }
+
+            if (Predicting)
+            {
+                // Disable IsFirstTimePredicted while re-running HandleComponentState here.
+                // Helps with debugging.
+                using var _ = _timing.StartPastPredictionArea();
+
+                ResetPredictedEntities(_timing.CurTick);
+            }
+
+            // apply current state
+            var createdEntities = ApplyGameState(curState, nextState);
+
+            MergeImplicitData(createdEntities);
+
+            var sysMan = IoCManager.Resolve<IEntitySystemManager>();
+            var inputMan = IoCManager.Resolve<IInputManager>();
+            var input = sysMan.GetEntitySystem<InputSystem>();
+
+            if (_lastProcessedSeq < curState.LastProcessedInput)
+            {
+                Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                _lastProcessedSeq = curState.LastProcessedInput;
+            }
+
+            // remove old pending inputs
+            while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedSeq)
+            {
+                var inCmd = _pendingInputs.Dequeue();
+
+                inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
+                Logger.DebugS("State",
+                    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+            }
+
+            while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedSeq)
+            {
+                _pendingSystemMessages.Dequeue();
+            }
+
+            DebugTools.Assert(_timing.InSimulation);
+            _lastProcessedTick = _timing.CurTick;
+
+            if (Predicting)
+            {
+                using var _ = _timing.StartPastPredictionArea();
+
+                /*
+                if (_pendingInputs.Count > 0)
+                {
+                    Logger.DebugS("State", "CL> Predicted:");
+                }
+                */
+
+                var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+                var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+                var hasPendingInput = pendingInputEnumerator.MoveNext();
+                var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+                var ping = _network.ServerChannel.Ping / 1000f; // seconds.
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping +
+                                 PredictSize;
+
+                //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+
+                for (var t = _lastProcessedTick.Value; t < targetTick; t++)
+                {
+                    var tick = new GameTick(t);
+                    _timing.CurTick = tick;
+
+                    while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
+                    {
+                        var inputCmd = pendingInputEnumerator.Current;
+
+                        inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
+                        /*
+                        Logger.DebugS("State",
+                            $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                            $"state={inputCmd.State}");
+                            */
+
+                        input.PredictInputCommand(inputCmd);
+
+                        hasPendingInput = pendingInputEnumerator.MoveNext();
+                    }
+
+                    while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
+                    {
+                        var msg = pendingMessagesEnumerator.Current.msg;
+
+                        _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
+
+                        hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+                        Logger.DebugS("State", "doot");
+                    }
+
+                    _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
+                }
+            }
+        }
+
+        private void ResetPredictedEntities(GameTick curTick)
+        {
+            foreach (var entity in _entities.GetEntities())
+            {
+                // TODO: 99% there's an off-by-one here.
+                if (entity.Uid.IsClientSide() || entity.LastModifiedTick < curTick)
+                {
+                    continue;
+                }
+
+                Logger.DebugS("State", $"Entity {entity.Uid} was made dirty.");
+
+                var last = _processor.GetLastServerStates(entity.Uid);
+
+                // TODO: handle component deletions/creations.
+                foreach (var comp in _componentManager.GetNetComponents(entity.Uid))
+                {
+                    DebugTools.AssertNotNull(comp.NetID);
+
+                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(comp.NetID.Value, out var compState))
+                    {
+                        continue;
+                    }
+
+                    Logger.DebugS("State", $"  And also its component {comp.Name}");
+                    // TODO: Handle interpolation.
+                    comp.HandleComponentState(compState, null);
+                }
+            }
+        }
+
+        private void MergeImplicitData(List<EntityUid> createdEntities)
+        {
+            // The server doesn't send data that the server can replicate itself on entity creation.
+            // As such, GameStateProcessor doesn't have that data either.
+            // We have to feed it back this data by calling GetComponentState() and such,
+            // so that we can later roll back to it (if necessary).
+            var outputData = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
+
+            foreach (var createdEntity in createdEntities)
+            {
+                var compData = new Dictionary<uint, ComponentState>();
+                outputData.Add(createdEntity, compData);
+
+                foreach (var component in _componentManager.GetNetComponents(createdEntity))
+                {
+                    var state = component.GetComponentState();
+
+                    if (state.GetType() == typeof(ComponentState))
+                    {
+                        continue;
+                    }
+
+                    compData.Add(state.NetID, state);
+                }
+            }
+
+            _processor.MergeImplicitData(outputData);
         }
 
         private void AckGameState(GameTick sequence)
@@ -106,14 +333,16 @@ namespace Robust.Client.GameStates
             _network.ClientSendMessage(msg);
         }
 
-        private void ApplyGameState(GameState curState, GameState nextState)
+        private List<EntityUid> ApplyGameState(GameState curState, GameState nextState)
         {
             _mapManager.ApplyGameStatePre(curState.MapData);
-            _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions, nextState?.EntityStates);
+            var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
+                nextState?.EntityStates);
             _players.ApplyPlayerStates(curState.PlayerStates);
             _mapManager.ApplyGameStatePost(curState.MapData);
 
             GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
+            return createdEntities;
         }
     }
 

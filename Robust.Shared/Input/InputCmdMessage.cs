@@ -10,7 +10,7 @@ namespace Robust.Shared.Input
     ///     Abstract class that all Input Commands derive from.
     /// </summary>
     [Serializable, NetSerializable]
-    public abstract class InputCmdMessage : EntitySystemMessage
+    public abstract class InputCmdMessage : EntitySystemMessage, IComparable<InputCmdMessage>
     {
         /// <summary>
         ///     Client tick this was created.
@@ -23,6 +23,11 @@ namespace Robust.Shared.Input
         public KeyFunctionId InputFunctionId { get; }
 
         /// <summary>
+        /// Sequence number of this input command.
+        /// </summary>
+        public uint InputSequence { get; set; }
+
+        /// <summary>
         ///     Creates an instance of <see cref="InputCmdMessage"/>.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
@@ -31,6 +36,13 @@ namespace Robust.Shared.Input
         {
             Tick = tick;
             InputFunctionId = inputFunctionId;
+        }
+
+        public int CompareTo(InputCmdMessage other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+            return InputSequence.CompareTo(other.InputSequence);
         }
     }
 
@@ -143,11 +155,12 @@ namespace Robust.Shared.Input
         ///     Creates an instance of <see cref="FullInputCmdMessage"/>.
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
+        /// <param name="inputSequence"></param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="screenCoordinates"></param>
-        public FullInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
+        public FullInputCmdMessage(GameTick tick, int inputSequence, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
             : this(tick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
 
         /// <summary>

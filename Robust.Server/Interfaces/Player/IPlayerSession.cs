@@ -9,7 +9,6 @@ namespace Robust.Server.Interfaces.Player
 {
     public interface IPlayerSession : ICommonSession
     {
-        IEntity AttachedEntity { get; }
         EntityUid? AttachedEntityUid { get; }
         INetChannel ConnectedClient { get; }
         DateTime ConnectedTime { get; }

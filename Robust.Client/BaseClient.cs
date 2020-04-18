@@ -65,6 +65,7 @@ namespace Robust.Client
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
+            _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
@@ -120,7 +121,7 @@ namespace Robust.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedServer(PlayerSession session)
+        private void OnPlayerJoinedServer(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
@@ -135,7 +136,7 @@ namespace Robust.Client
         ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedGame(PlayerSession session)
+        private void OnPlayerJoinedGame(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
@@ -191,6 +192,11 @@ namespace Robust.Client
             _playMan.LocalPlayer.SessionId = info.SessionId;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
+        }
+
+        private void HandleSetTickRate(MsgSetTickRate message)
+        {
+            _timing.TickRate = message.NewTickRate;
         }
 
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
@@ -253,12 +259,12 @@ namespace Robust.Client
         /// <summary>
         ///     The session that triggered the event.
         /// </summary>
-        private PlayerSession Session { get; }
+        private IPlayerSession Session { get; }
 
         /// <summary>
         ///     Constructs a new instance of the class.
         /// </summary>
-        public PlayerEventArgs(PlayerSession session)
+        public PlayerEventArgs(IPlayerSession session)
         {
             Session = session;
         }

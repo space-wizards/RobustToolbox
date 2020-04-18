@@ -41,7 +41,10 @@ namespace Robust.Client.Player
         /// <summary>
         ///     Session of the local client.
         /// </summary>
-        [ViewVariables] public PlayerSession Session { get; set; }
+        [ViewVariables]
+        public IPlayerSession Session => InternalSession;
+
+        internal PlayerSession InternalSession { get; set; }
 
         /// <summary>
         ///     OOC name of the local player.
@@ -74,6 +77,7 @@ namespace Robust.Client.Player
             DetachEntity();
 
             ControlledEntity = entity;
+            InternalSession.AttachedEntity = entity;
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {

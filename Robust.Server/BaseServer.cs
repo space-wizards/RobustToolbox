@@ -34,6 +34,7 @@ using Robust.Shared.Localization;
 using Robust.Server.Interfaces.Debugging;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Network.Messages;
 
 namespace Robust.Server
 {
@@ -170,6 +171,7 @@ namespace Robust.Server
             {
                 netMan.Initialize(true);
                 netMan.StartServer();
+                netMan.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME);
             }
             catch (Exception e)
             {
@@ -325,7 +327,12 @@ namespace Robust.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER, i =>
+            {
+                var b = (byte) i;
+                _time.TickRate = b;
+                SendTickRateUpdateToClients(b);
+            });
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
@@ -336,6 +343,14 @@ namespace Robust.Server
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+        }
+
+        private void SendTickRateUpdateToClients(byte newTickRate)
+        {
+            var msg = _network.CreateNetMessage<MsgSetTickRate>();
+            msg.NewTickRate = newTickRate;
+
+            _network.ServerSendToAll(msg);
         }
 
         // called right before main loop returns, do all saving/cleanup in here

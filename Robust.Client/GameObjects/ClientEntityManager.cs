@@ -41,11 +41,12 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
+        public List<EntityUid> ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
             List<EntityState> nextEntStates)
         {
             var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
+            var created = new List<EntityUid>();
             deletions ??= new EntityUid[0];
 
             if (curEntStates != null && curEntStates.Count != 0)
@@ -64,6 +65,7 @@ namespace Robust.Client.GameObjects
                         var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
+                        created.Add(newEntity.Uid);
                     }
                 }
             }
@@ -160,6 +162,8 @@ namespace Robust.Client.GameObjects
                 entity.Delete();
             }
 #endif
+
+            return created;
         }
 
         public void Dispose()

@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.Serialization;
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -8,7 +9,9 @@ namespace Robust.Shared.GameObjects
     public sealed class EntityState
     {
         public EntityUid Uid { get; }
+        [CanBeNull]
         public List<ComponentChanged> ComponentChanges { get; }
+        [CanBeNull]
         public List<ComponentState> ComponentStates { get; }
 
         public EntityState(EntityUid uid, List<ComponentChanged> changedComponents, List<ComponentState> componentStates)

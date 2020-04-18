@@ -2,6 +2,7 @@ using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network
 {
@@ -43,6 +44,16 @@ namespace Robust.Shared.Network
         public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
         {
             message.Write((int)entityUid);
+        }
+
+        public static GameTick ReadGameTick(this NetIncomingMessage message)
+        {
+            return new GameTick(message.ReadUInt32());
+        }
+
+        public static void Write(this NetOutgoingMessage message, GameTick tick)
+        {
+            message.Write(tick.Value);
         }
     }
 }

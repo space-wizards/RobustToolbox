@@ -2,6 +2,7 @@
 using Robust.Shared.Serialization;
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
@@ -25,10 +26,11 @@ namespace Robust.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(GameTick fromSequence, GameTick toSequence, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions, GameStateMapData mapData)
+        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, List<EntityState> entities, List<PlayerState> players, List<EntityUid> deletions, GameStateMapData mapData)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
+            LastProcessedInput = lastInput;
             EntityStates = entities;
             PlayerStates = players;
             EntityDeletions = deletions;
@@ -38,8 +40,12 @@ namespace Robust.Shared.GameStates
         public readonly GameTick FromSequence;
         public readonly GameTick ToSequence;
 
+        public readonly uint LastProcessedInput;
+
+        [CanBeNull]
         public readonly List<EntityState> EntityStates;
         public readonly List<PlayerState> PlayerStates;
+        [CanBeNull]
         public readonly List<EntityUid> EntityDeletions;
         public readonly GameStateMapData MapData;
     }

@@ -68,6 +68,9 @@ namespace Robust.Server.Console
             if (!_configMan.IsCVarRegistered("console.adminGroup"))
                 _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
 
+            if (!_configMan.IsCVarRegistered("console.hostGroup"))
+                _configMan.RegisterCVar("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
+
             ReloadCommands();
 
             // setup networking with clients

@@ -148,7 +148,7 @@ namespace Robust.UnitTesting
                             {
                                 if (_channels.TryGetValue(disconnect.Connection, out var channel))
                                 {
-                                    Disconnect?.Invoke(this, new NetChannelArgs(channel));
+                                    Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
 
                                     _channels.Remove(disconnect.Connection);
                                 }
@@ -218,7 +218,7 @@ namespace Robust.UnitTesting
 
             public event EventHandler<NetConnectingArgs> Connecting;
             public event EventHandler<NetChannelArgs> Connected;
-            public event EventHandler<NetChannelArgs> Disconnect;
+            public event EventHandler<NetDisconnectedArgs> Disconnect;
 
             public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null) where T : NetMessage
             {
@@ -237,6 +237,8 @@ namespace Robust.UnitTesting
             }
 
             INetChannel IClientNetManager.ServerChannel => ServerChannel;
+            public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
+            public event Action<ClientConnectionState> ClientConnectStateChanged;
 
             private IntegrationNetChannel ServerChannel
             {
@@ -267,7 +269,7 @@ namespace Robust.UnitTesting
             public void ClientDisconnect(string reason)
             {
                 DebugTools.Assert(IsClient);
-                Disconnect?.Invoke(this, new NetChannelArgs(ServerChannel));
+                Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
                 Shutdown(reason);
             }
 

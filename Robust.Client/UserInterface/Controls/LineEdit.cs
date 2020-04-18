@@ -69,13 +69,15 @@ namespace Robust.Client.UserInterface.Controls
             set
             {
                 _editable = value;
-                if (!_editable)
+                if (_editable)
                 {
-                    AddStyleClass(StyleClassLineEditNotEditable);
+                    DefaultCursorShape = CursorShape.IBeam;
+                    RemoveStyleClass(StyleClassLineEditNotEditable);
                 }
                 else
                 {
-                    RemoveStyleClass(StyleClassLineEditNotEditable);
+                    DefaultCursorShape = CursorShape.Arrow;
+                    AddStyleClass(StyleClassLineEditNotEditable);
                 }
             }
         }
@@ -122,6 +124,8 @@ namespace Robust.Client.UserInterface.Controls
             MouseFilter = MouseFilterMode.Stop;
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
+
+            DefaultCursorShape = CursorShape.IBeam;
         }
 
         public void Clear()

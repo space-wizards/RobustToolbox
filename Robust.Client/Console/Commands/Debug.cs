@@ -21,7 +21,6 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.ResourceManagement.ResourceTypes;
-using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -234,7 +233,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
-            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
             return false;
         }
     }

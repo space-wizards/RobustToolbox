@@ -68,6 +68,10 @@ namespace Robust.Server.Player
         public DateTime ConnectedTime { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public int VisibilityMask { get; set; } = 1;
+
+        /// <inheritdoc />
         [ViewVariables]
         public NetSessionId SessionId { get; }
 
@@ -92,7 +96,6 @@ namespace Robust.Server.Player
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
-            SetAttachedEntityName();
             UpdatePlayerState();
         }
 

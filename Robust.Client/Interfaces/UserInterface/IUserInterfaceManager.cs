@@ -12,6 +12,11 @@ namespace Robust.Client.Interfaces.UserInterface
     public interface IUserInterfaceManager
     {
         UITheme ThemeDefaults { get; }
+
+        /// <summary>
+        ///     Default style sheet that applies to all controls
+        ///     that do not have a more specific style sheet via <see cref="Control.Stylesheet"/>.
+        /// </summary>
         Stylesheet Stylesheet { get; set; }
 
         Control KeyboardFocused { get; }
@@ -63,6 +68,11 @@ namespace Robust.Client.Interfaces.UserInterface
         /// </exception>
         /// <seealso cref="ReleaseKeyboardFocus()"/>
         void ReleaseKeyboardFocus(Control ifControl);
+
+        /// <summary>
+        ///     Cursor automatically used when the mouse is not over any UI control.
+        /// </summary>
+        ICursor WorldCursor { get; set; }
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
@@ -102,6 +112,7 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void QueueStyleUpdate(Control control);
         void QueueLayoutUpdate(Control control);
+        void CursorChanged(Control control);
     }
 }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
@@ -14,7 +15,6 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
-using Robust.Client.State.States;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -73,6 +73,8 @@ namespace Robust.Client
         private CommandLineArgs _commandLineArgs;
         private bool _disableAssemblyLoadContext;
 
+        public InitialLaunchState LaunchState { get; private set; }
+
         public bool LoadConfigAndUserData { get; set; } = true;
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -82,6 +84,8 @@ namespace Robust.Client
 
         public bool Startup()
         {
+            ReadInitialLaunchState();
+
             SetupLogging(_logManager);
 
             _taskManager.Initialize();
@@ -175,15 +179,6 @@ namespace Robust.Client
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
-            if (_commandLineArgs?.Launcher == true)
-            {
-                _stateManager.RequestStateChange<LauncherConnecting>();
-            }
-            else
-            {
-                _stateManager.RequestStateChange<MainScreen>();
-            }
-
             if (_commandLineArgs?.Username != null)
             {
                 _client.PlayerNameOverride = _commandLineArgs.Username;
@@ -192,6 +187,21 @@ namespace Robust.Client
             _clyde.Ready();
 
             if (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+            {
+                _client.ConnectToServer(LaunchState.ConnectEndpoint);
+            }
+
+            _checkOpenGLVersion();
+            return true;
+        }
+
+        private void ReadInitialLaunchState()
+        {
+            if (_commandLineArgs == null)
+            {
+                LaunchState = new InitialLaunchState(false, null, null, null);
+            }
+            else
             {
                 var addr = _commandLineArgs.ConnectAddress;
                 if (!addr.Contains("://"))
@@ -206,11 +216,12 @@ namespace Robust.Client
                     Logger.Warning($"connect-address '{uri}' does not have URI scheme of udp://..");
                 }
 
-                _client.ConnectToServer(uri.Host, (ushort) (uri.IsDefaultPort ? 1212 : uri.Port));
+                LaunchState = new InitialLaunchState(
+                    _commandLineArgs.Launcher,
+                    _commandLineArgs.ConnectAddress,
+                    _commandLineArgs.Ss14Address,
+                    new DnsEndPoint(uri.Host, uri.IsDefaultPort ? 1212 : uri.Port));
             }
-
-            _checkOpenGLVersion();
-            return true;
         }
 
         private void _checkOpenGLVersion()
@@ -227,6 +238,7 @@ namespace Robust.Client
             var window = new BadOpenGLVersionWindow(debugInfo);
             window.OpenCentered();
         }
+
 
         public void Shutdown(string reason = null)
         {

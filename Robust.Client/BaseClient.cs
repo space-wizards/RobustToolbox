@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.GameObjects;
@@ -6,7 +7,6 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.State.States;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
@@ -59,6 +59,8 @@ namespace Robust.Client
         /// <inheritdoc />
         public string PlayerNameOverride { get; set; }
 
+        public string LastDisconnectReason { get; private set; }
+
         /// <inheritdoc />
         public void Initialize()
         {
@@ -74,7 +76,7 @@ namespace Robust.Client
         }
 
         /// <inheritdoc />
-        public void ConnectToServer(string ip, ushort port)
+        public void ConnectToServer(DnsEndPoint endPoint)
         {
             if (RunLevel == ClientRunLevel.Connecting)
             {
@@ -86,7 +88,8 @@ namespace Robust.Client
             DebugTools.Assert(!_net.IsConnected);
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
+            _net.ClientConnect(endPoint.Host, endPoint.Port,
+                PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />
@@ -152,13 +155,13 @@ namespace Robust.Client
             Reset();
         }
 
-        private void OnNetDisconnect(object sender, NetChannelArgs args)
+        private void OnNetDisconnect(object sender, NetDisconnectedArgs args)
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
-            _stateManager.RequestStateChange<MainScreen>();
+            LastDisconnectReason = args.Reason;
 
             _gameStates.Reset();
             _playMan.Shutdown();

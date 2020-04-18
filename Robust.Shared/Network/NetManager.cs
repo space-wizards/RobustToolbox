@@ -101,8 +101,6 @@ namespace Robust.Shared.Network
 
         public bool IsRunning => _netPeers.Count != 0;
 
-        private ClientConnectionState _clientConnectionState;
-
         public NetworkStats Statistics
         {
             get
@@ -272,7 +270,7 @@ namespace Robust.Shared.Network
             _strings.Reset();
 
             _cancelConnectTokenSource?.Cancel();
-            _clientConnectionState = ClientConnectionState.NotConnecting;
+            ClientConnectState = ClientConnectionState.NotConnecting;
         }
 
         public void ProcessPackets()
@@ -342,7 +340,7 @@ namespace Robust.Shared.Network
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
-            Disconnect?.Invoke(this, new NetChannelArgs(ServerChannel));
+            Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             Shutdown(reason);
         }
 
@@ -355,6 +353,7 @@ namespace Robust.Shared.Network
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
+            netConfig.MaximumHandshakeAttempts = 1;
 
             if (IsServer)
             {
@@ -573,7 +572,7 @@ namespace Robust.Shared.Network
             Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
             _assignedSessions.Remove(connection);
 
-            OnDisconnected(channel);
+            OnDisconnected(channel, reason);
             _channels.Remove(connection);
 
             if (IsClient)
@@ -583,7 +582,7 @@ namespace Robust.Shared.Network
                 _strings.Reset();
 
                 _cancelConnectTokenSource?.Cancel();
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
             }
         }
 
@@ -839,9 +838,9 @@ namespace Robust.Shared.Network
             Connected?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnDisconnected(INetChannel channel)
+        protected virtual void OnDisconnected(INetChannel channel, string reason)
         {
-            Disconnect?.Invoke(this, new NetChannelArgs(channel));
+            Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, reason));
         }
 
         /// <inheritdoc />
@@ -854,37 +853,9 @@ namespace Robust.Shared.Network
         public event EventHandler<NetChannelArgs> Connected;
 
         /// <inheritdoc />
-        public event EventHandler<NetChannelArgs> Disconnect;
+        public event EventHandler<NetDisconnectedArgs> Disconnect;
 
         #endregion Events
-
-        private enum ClientConnectionState
-        {
-            /// <summary>
-            ///     We are not connected and not trying to get connected either. Quite lonely huh.
-            /// </summary>
-            NotConnecting,
-
-            /// <summary>
-            ///     Resolving the DNS query for the address of the server.
-            /// </summary>
-            ResolvingHost,
-
-            /// <summary>
-            ///     Attempting to establish a connection to the server.
-            /// </summary>
-            EstablishingConnection,
-
-            /// <summary>
-            ///     Connection established, going through regular handshake business.
-            /// </summary>
-            Handshake,
-
-            /// <summary>
-            ///     Connection is solid and handshake is done go wild.
-            /// </summary>
-            Connected
-        }
 
         [Serializable]
         public class ClientDisconnectedException : Exception

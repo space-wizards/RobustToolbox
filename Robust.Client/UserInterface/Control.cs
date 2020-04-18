@@ -32,8 +32,6 @@ namespace Robust.Client.UserInterface
 
         public event Action<Control> OnVisibilityChanged;
 
-        private bool _stylingDirty;
-
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
@@ -411,7 +409,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Make this child an orphan. e.g. remove it from its parent if it has one.
+        ///     Make this child an orphan. i.e. remove it from its parent if it has one.
         /// </summary>
         public void Orphan()
         {
@@ -488,7 +486,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
-            Restyle();
+            StylesheetUpdateRecursive();
             UpdateLayout();
         }
 
@@ -715,32 +713,8 @@ namespace Robust.Client.UserInterface
             ProcessAnimations(args);
         }
 
-        public enum CursorShape
-        {
-            Arrow = 0,
-            IBeam = 1,
-            PointingHand = 2,
-            Cross = 3,
-            Wait = 4,
-            Busy = 5,
-            Drag = 6,
-            CanDrop = 7,
-            Forbidden = 8,
-            VSize = 9,
-            HSize = 10,
-            BDiagSize = 11,
-            FDiagSize = 12,
-            Move = 13,
-            VSplit = 14,
-            HSplit = 15,
-            Help = 16,
-        }
-
-        public CursorShape DefaultCursorShape
-        {
-            get => default;
-            set { }
-        }
+        // These are separate from StandardCursorShape so that
+        // in the future we could have an API to override the styling.
 
         public override string ToString()
         {

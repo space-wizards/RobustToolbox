@@ -54,15 +54,15 @@ namespace Robust.Server
 
                     var cvar = enumerator.Current;
                     DebugTools.AssertNotNull(cvar);
-                    var split = cvar.Split("=");
+                    var pos = cvar.IndexOf('=');
 
-                    if (split.Length < 2)
+                    if (pos == -1)
                     {
                         C.WriteLine("Expected = in cvar.");
                         return false;
                     }
 
-                    cvars.Add((split[0], split[1]));
+                    cvars.Add((cvar[..pos], cvar[(pos + 1)..]));
                 }
                 else if (arg == "--help")
                 {

@@ -185,6 +185,12 @@ namespace Robust.Shared.Maths
             w = W;
         }
 
+        public static implicit operator Vector4((float x, float y, float z, float w) tuple)
+        {
+            var (x, y, z, w) = tuple;
+            return new Vector4(x, y, z, w);
+        }
+
         #endregion Constructors
 
         #region Public Members

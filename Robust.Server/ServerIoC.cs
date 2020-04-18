@@ -69,6 +69,7 @@ namespace Robust.Server
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
+            IoCManager.Register<IWatchdogApi, WatchdogApi>();
         }
     }
 }

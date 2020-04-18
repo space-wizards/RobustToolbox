@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
@@ -21,6 +21,8 @@ namespace Robust.Shared.GameObjects
         /// Maps system types to instances.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        [ViewVariables]
+        private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
         /// <exception cref="InvalidEntitySystemException">Thrown if the provided type is not registered.</exception>
         public T GetEntitySystem<T>()
@@ -55,9 +57,10 @@ namespace Robust.Shared.GameObjects
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>())
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
-                //Force initialization of all systems
+                // Force IoC inject of all systems
                 var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
-                AddSystem(instance);
+
+                _systems.Add(type, instance);
             }
 
             foreach (var system in _systems.Values)
@@ -66,37 +69,17 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void AddSystem(IEntitySystem system)
-        {
-            var type = system.GetType();
-            if (_systems.ContainsKey(type))
-            {
-                RemoveSystem(system);
-            }
-
-            _systems.Add(type, system);
-        }
-
-        private void RemoveSystem(IEntitySystem system)
-        {
-            var type = system.GetType();
-            if (_systems.ContainsKey(type))
-            {
-                _systems[type].Shutdown();
-                _entityManager.EventBus.UnsubscribeEvents(_systems[type]);
-                _systems.Remove(type);
-            }
-        }
-
         /// <inheritdoc />
         public void Shutdown()
         {
             // System.Values is modified by RemoveSystem
-            var values = _systems.Values.ToArray();
-            foreach (var system in values)
+            foreach (var system in _systems.Values)
             {
-                RemoveSystem(system);
+                system.Shutdown();
+                _entityManager.EventBus.UnsubscribeEvents(system);
             }
+
+            _systems.Clear();
         }
 
         /// <inheritdoc />

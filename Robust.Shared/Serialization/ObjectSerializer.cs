@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 
@@ -42,6 +43,23 @@ namespace Robust.Shared.Serialization
         /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
         public abstract void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false);
+
+        /// <summary>
+        ///     Writes or reads a field or property via reflection.
+        /// </summary>
+        /// <param name="root">The reference to the object that has the property or field referenced.</param>
+        /// <param name="expr">The reference to the field or property that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
+        /// <typeparam name="TRoot">The type of the object that has the property or field referenced.</typeparam>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        /// <remarks>
+        /// <example>
+        ///     szr.DataField(this, x => x.SomeProperty, "some-property", SomeDefaultValue);
+        /// </example>
+        /// </remarks>
+        public abstract void DataField<TRoot, T>(TRoot root, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false);
 
         /// <summary>
         ///     Writes or reads a simple field by reference.

@@ -40,7 +40,21 @@ namespace Robust.Client.UserInterface
 #pragma warning restore 649
 
         public UITheme ThemeDefaults { get; private set; }
-        public Stylesheet Stylesheet { get; set; }
+
+        public Stylesheet Stylesheet
+        {
+            get => _stylesheet;
+            set
+            {
+                _stylesheet = value;
+
+                if (RootControl?.Stylesheet != null)
+                {
+                    RootControl.StylesheetUpdateRecursive();
+                }
+            }
+        }
+
         public Control KeyboardFocused { get; private set; }
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
@@ -67,6 +81,9 @@ namespace Robust.Client.UserInterface
 
         private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
         private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+        private Stylesheet _stylesheet;
+        private ICursor _worldCursor;
+        private bool _needUpdateActiveCursor;
 
         public void Initialize()
         {
@@ -78,7 +95,8 @@ namespace Robust.Client.UserInterface
             DebugConsole = new DebugConsole(_console, _resourceManager);
             RootControl.AddChild(DebugConsole);
 
-            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager, _displayManager, _netManager, _mapManager);
+            _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
+                _displayManager, _netManager, _mapManager);
             RootControl.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
@@ -191,6 +209,12 @@ namespace Robust.Client.UserInterface
             {
                 _showTooltip();
             }
+
+            if (_needUpdateActiveCursor)
+            {
+                _needUpdateActiveCursor = false;
+                UpdateActiveCursor();
+            }
         }
 
         public void KeyBindDown(BoundKeyEventArgs args)
@@ -278,6 +302,8 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered?.MouseExited();
                 CurrentlyHovered = newHovered;
                 CurrentlyHovered?.MouseEntered();
+
+                _needUpdateActiveCursor = true;
             }
 
             var target = _controlFocused ?? newHovered;
@@ -291,6 +317,37 @@ namespace Robust.Client.UserInterface
 
                 _doMouseGuiInput(target, guiArgs, (c, ev) => c.MouseMove(ev));
             }
+        }
+
+        private void UpdateActiveCursor()
+        {
+            // Consider mouse input focus first so that dragging windows don't act up etc.
+            var cursorTarget = _controlFocused ?? CurrentlyHovered;
+
+            if (cursorTarget == null)
+            {
+                _displayManager.SetCursor(_worldCursor);
+                return;
+            }
+
+            if (cursorTarget.CustomCursorShape != null)
+            {
+                _displayManager.SetCursor(cursorTarget.CustomCursorShape);
+                return;
+            }
+
+            var shape = cursorTarget.DefaultCursorShape switch
+            {
+                Control.CursorShape.Arrow => StandardCursorShape.Arrow,
+                Control.CursorShape.IBeam => StandardCursorShape.IBeam,
+                Control.CursorShape.Hand => StandardCursorShape.Hand,
+                Control.CursorShape.Crosshair => StandardCursorShape.Crosshair,
+                Control.CursorShape.VResize => StandardCursorShape.VResize,
+                Control.CursorShape.HResize => StandardCursorShape.HResize,
+                _ => StandardCursorShape.Arrow
+            };
+
+            _displayManager.SetCursor(_displayManager.GetStandardCursor(shape));
         }
 
         public void MouseWheel(MouseWheelEventArgs args)
@@ -387,6 +444,16 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        public ICursor WorldCursor
+        {
+            get => _worldCursor;
+            set
+            {
+                _worldCursor = value;
+                _needUpdateActiveCursor = true;
+            }
+        }
+
         public void ControlHidden(Control control)
         {
             // Does the same thing but it could later be changed so..
@@ -440,6 +507,14 @@ namespace Robust.Client.UserInterface
         public void QueueLayoutUpdate(Control control)
         {
             _layoutUpdateQueue.Enqueue(control);
+        }
+
+        public void CursorChanged(Control control)
+        {
+            if (control == _controlFocused || control == CurrentlyHovered)
+            {
+                _needUpdateActiveCursor = true;
+            }
         }
 
         private static void _render(IRenderHandle renderHandle, Control control, Vector2i position, Color modulate,
@@ -653,6 +728,7 @@ namespace Robust.Client.UserInterface
             {
                 args.Handle();
             }
+
             if (args.State == BoundKeyState.Down)
             {
                 KeyBindDown(args);

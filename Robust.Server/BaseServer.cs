@@ -32,6 +32,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Server.Interfaces.Debugging;
+using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
 
@@ -59,6 +60,7 @@ namespace Robust.Server
         [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private IRuntimeLog runtimeLog;
         [Dependency] private readonly IModLoader _modLoader;
+        [Dependency] private readonly IWatchdogApi _watchdogApi;
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
@@ -68,6 +70,8 @@ namespace Robust.Server
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
+
+        private string _shutdownReason;
 
         private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
@@ -93,6 +97,8 @@ namespace Robust.Server
                 Logger.InfoS("srv", "Shutting down...");
             else
                 Logger.InfoS("srv", $"{reason}, shutting down...");
+
+            _shutdownReason = reason;
 
             _mainLoop.Running = false;
             _log.RootSawmill.RemoveHandler(fileLogHandler);
@@ -246,6 +252,8 @@ namespace Robust.Server
 
             AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
 
+            _watchdogApi.Initialize();
+
             return false;
         }
 
@@ -349,7 +357,7 @@ namespace Robust.Server
         private void Cleanup()
         {
             // shut down networking, kicking all players.
-            _network.Shutdown("Server Shutdown");
+            _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
             _entities.Shutdown();
@@ -396,6 +404,8 @@ namespace Robust.Server
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
 
             _stateManager.SendGameStateUpdate();
+
+            _watchdogApi.Heartbeat();
         }
     }
 

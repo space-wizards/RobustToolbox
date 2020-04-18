@@ -14,6 +14,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -24,6 +25,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         [Dependency] private readonly IResourceCache _resourceCache;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IClydeAudio _clyde;
+        [Dependency] private readonly IEyeManager _eyeManager;
 #pragma warning restore 649
 
         private readonly List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
@@ -65,28 +67,46 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override void FrameUpdate(float frameTime)
         {
+            var currentMap = _eyeManager.CurrentMap;
+
             // Update positions of streams every frame.
             foreach (var stream in _playingClydeStreams)
             {
                 if (!stream.Source.IsPlaying)
                 {
-                    stream.Source.Dispose();
-                    stream.Done = true;
-                    stream.DoPlaybackDone();
+                    StreamDone(stream);
                     continue;
                 }
 
+                MapCoordinates? mapPos = null;
                 if (stream.TrackingCoordinates != null)
                 {
-                    if (!stream.Source.SetPosition(stream.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                    {
-                        Logger.Warning("Interrupting positional audio, can't set position.");
-                        stream.Source.StopPlaying();
-                    }
+                    mapPos = stream.TrackingCoordinates.Value.ToMap(_mapManager);
                 }
                 else if (stream.TrackingEntity != null)
                 {
-                    if(!stream.Source.SetPosition(stream.TrackingEntity.Transform.WorldPosition))
+                    if (stream.TrackingEntity.Deleted)
+                    {
+                        StreamDone(stream);
+                        continue;
+                    }
+
+                    mapPos = stream.TrackingEntity.Transform.MapPosition;
+                }
+
+                if (mapPos != null)
+                {
+                    var pos = mapPos.Value;
+                    if (pos.MapId != currentMap)
+                    {
+                        stream.Source.SetVolume(-10000000);
+                    }
+                    else
+                    {
+                        stream.Source.SetVolume(stream.Volume);
+                    }
+
+                    if (!stream.Source.SetPosition(pos.Position))
                     {
                         Logger.Warning("Interrupting positional audio, can't set position.");
                         stream.Source.StopPlaying();
@@ -95,6 +115,13 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
 
             _playingClydeStreams.RemoveAll(p => p.Done);
+        }
+
+        private static void StreamDone(PlayingStream stream)
+        {
+            stream.Source.Dispose();
+            stream.Done = true;
+            stream.DoPlaybackDone();
         }
 
         /// <summary>
@@ -127,7 +154,8 @@ namespace Robust.Client.GameObjects.EntitySystems
             source.StartPlaying();
             var playing = new PlayingStream
             {
-                Source = source
+                Source = source,
+                Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
             return playing;
@@ -173,6 +201,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 Source = source,
                 TrackingEntity = entity,
+                Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
             return playing;
@@ -220,6 +249,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 Source = source,
                 TrackingCoordinates = coordinates,
+                Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
             return playing;
@@ -244,6 +274,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             public IEntity TrackingEntity;
             public GridCoordinates? TrackingCoordinates;
             public bool Done;
+            public float Volume;
 
             public void Stop()
             {

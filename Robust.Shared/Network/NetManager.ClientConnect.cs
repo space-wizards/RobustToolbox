@@ -6,6 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -14,6 +15,19 @@ namespace Robust.Shared.Network
     public partial class NetManager
     {
         private CancellationTokenSource _cancelConnectTokenSource;
+        private ClientConnectionState _clientConnectState;
+
+        public ClientConnectionState ClientConnectState
+        {
+            get => _clientConnectState;
+            private set
+            {
+                _clientConnectState = value;
+                ClientConnectStateChanged?.Invoke(value);
+            }
+        }
+
+        public event Action<ClientConnectionState> ClientConnectStateChanged;
 
         private readonly
             Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)>
@@ -26,23 +40,25 @@ namespace Robust.Shared.Network
                 new Dictionary<NetConnection, (CancellationTokenRegistration, TaskCompletionSource<NetIncomingMessage>)
                 >();
 
+
         /// <inheritdoc />
         public async void ClientConnect(string host, int port, string userNameRequest)
         {
             DebugTools.Assert(!IsServer, "Should never be called on the server.");
-            if (_clientConnectionState == ClientConnectionState.Connected)
+            if (ClientConnectState == ClientConnectionState.Connected)
             {
                 throw new InvalidOperationException("The client is already connected to a server.");
             }
 
-            if (_clientConnectionState != ClientConnectionState.NotConnecting)
+            if (ClientConnectState != ClientConnectionState.NotConnecting)
             {
                 throw new InvalidOperationException("A connect attempt is already in progress. Cancel it first.");
             }
 
             _cancelConnectTokenSource = new CancellationTokenSource();
             var mainCancelToken = _cancelConnectTokenSource.Token;
-            _clientConnectionState = ClientConnectionState.ResolvingHost;
+
+            ClientConnectState = ClientConnectionState.ResolvingHost;
 
             Logger.DebugS("net", "Attempting to connect to {0} port {1}", host, port);
 
@@ -51,14 +67,14 @@ namespace Robust.Shared.Network
 
             if (mainCancelToken.IsCancellationRequested)
             {
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
             if (endPoints == null)
             {
                 OnConnectFailed($"Unable to resolve domain '{host}'");
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
@@ -69,11 +85,11 @@ namespace Robust.Shared.Network
             if (ipv4 == null && ipv6 == null)
             {
                 OnConnectFailed($"Domain '{host}' has no associated IP addresses");
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
-            _clientConnectionState = ClientConnectionState.EstablishingConnection;
+            ClientConnectState = ClientConnectionState.EstablishingConnection;
 
             IPAddress first;
             IPAddress second = null;
@@ -232,7 +248,7 @@ namespace Robust.Shared.Network
                     _toCleanNetPeers.Add(secondPeer);
                 }
 
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
@@ -243,11 +259,11 @@ namespace Robust.Shared.Network
                 winningPeer.Shutdown("You failed");
                 _toCleanNetPeers.Add(winningPeer);
                 OnConnectFailed(secondReason ?? firstReason);
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
-            _clientConnectionState = ClientConnectionState.Handshake;
+            ClientConnectState = ClientConnectionState.Handshake;
 
             // We're connected start handshaking.
 
@@ -269,7 +285,7 @@ namespace Robust.Shared.Network
             {
                 winningPeer.Shutdown("Cancelled");
                 _toCleanNetPeers.Add(secondPeer);
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
             catch (Exception e)
@@ -278,11 +294,11 @@ namespace Robust.Shared.Network
                 Logger.ErrorS("net", "Exception during handshake: {0}", e);
                 winningPeer.Shutdown("Something happened.");
                 _toCleanNetPeers.Add(secondPeer);
-                _clientConnectionState = ClientConnectionState.NotConnecting;
+                ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
-            _clientConnectionState = ClientConnectionState.Connected;
+            ClientConnectState = ClientConnectionState.Connected;
             Logger.DebugS("net", "Handshake completed, connection established.");
         }
 

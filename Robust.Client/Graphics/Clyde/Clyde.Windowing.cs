@@ -115,6 +115,7 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
+            InitCursors();
             InitWindow();
             return true;
         }

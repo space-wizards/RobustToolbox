@@ -323,8 +323,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
 
+        [ViewVariables]
         public IEnumerable<EntityUid> ChildEntityUids => _children;
 
+        [ViewVariables]
         public int ChildCount => _children.Count;
 
         /// <inheritdoc />
@@ -334,6 +336,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public override void Initialize()
         {
             base.Initialize();
+
+            // Has to be done if _parent is set from ExposeData.
+            if (_parent.IsValid())
+            {
+                // Note that _children is a SortedSet<EntityUid>,
+                // so duplicate additions (which will happen) don't matter.
+                ((TransformComponent) Parent)._children.Add(Owner.Uid);
+            }
 
             // Verifies MapID can be resolved.
             // If it cannot, then this is an orphan entity, and an exception will be thrown.

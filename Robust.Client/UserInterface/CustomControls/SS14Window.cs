@@ -215,22 +215,22 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     case DragMode.Top:
                     case DragMode.Bottom:
-                        cursor = CursorShape.VSplit;
+                        cursor = CursorShape.VResize;
                         break;
 
                     case DragMode.Left:
                     case DragMode.Right:
-                        cursor = CursorShape.HSplit;
+                        cursor = CursorShape.HResize;
                         break;
 
                     case DragMode.Bottom | DragMode.Left:
                     case DragMode.Top | DragMode.Right:
-                        cursor = CursorShape.BDiagSize;
+                        cursor = CursorShape.Crosshair;
                         break;
 
                     case DragMode.Bottom | DragMode.Right:
                     case DragMode.Top | DragMode.Left:
-                        cursor = CursorShape.FDiagSize;
+                        cursor = CursorShape.Crosshair;
                         break;
                 }
 

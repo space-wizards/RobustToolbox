@@ -12,7 +12,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertySeparation = "separation";
 
-        private const int DefaultSeparation = 1;
+        private const int DefaultSeparation = 0;
         private protected abstract bool Vertical { get; }
 
         /// <summary>

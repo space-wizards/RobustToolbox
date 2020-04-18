@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -357,8 +357,8 @@ namespace Robust.Shared.Network
         {
             var netConfig = new NetPeerConfiguration("SS14_NetTag");
 
-            // ping the client 4 times every second.
-            netConfig.PingInterval = 0.25f;
+            // ping the client once per second.
+            netConfig.PingInterval = 1f;
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");

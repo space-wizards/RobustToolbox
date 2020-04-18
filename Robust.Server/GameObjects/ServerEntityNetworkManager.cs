@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -15,7 +18,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// The server implementation of the Entity Network Manager.
     /// </summary>
-    public class ServerEntityNetworkManager : IEntityNetworkManager
+    public class ServerEntityNetworkManager : IServerEntityNetworkManager
     {
 #pragma warning disable 649
         [Dependency] private readonly IServerNetManager _networkManager;
@@ -29,12 +32,17 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public event EventHandler<object> ReceivedSystemMessage;
 
-        private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageTickComparer());
+        private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageSequenceComparer());
+
+        private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
+            new Dictionary<IPlayerSession, uint>();
 
         /// <inheritdoc />
         public void SetupNetworking()
         {
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
+
+            _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         }
 
         public void Update()
@@ -43,6 +51,11 @@ namespace Robust.Server.GameObjects
             {
                 DispatchEntityNetworkMessage(_queue.Take());
             }
+        }
+
+        public uint GetLastMessageSequence(IPlayerSession session)
+        {
+            return _lastProcessedSequencesCmd[session];
         }
 
         /// <inheritdoc />
@@ -95,12 +108,13 @@ namespace Robust.Server.GameObjects
         {
             var msgT = message.SourceTick;
             var cT = _gameTiming.CurTick;
+            Logger.Info($"{msgT}, {cT}");
             if (msgT <= cT)
             {
                 if (msgT < cT)
                 {
                     Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
-                        (int)msgT.Value - (int)cT.Value, message.MsgChannel.SessionId, msgT, cT);
+                        (int) msgT.Value - (int) cT.Value, message.MsgChannel.SessionId, msgT, cT);
                 }
 
                 DispatchEntityNetworkMessage(message);
@@ -112,6 +126,16 @@ namespace Robust.Server.GameObjects
 
         private void DispatchEntityNetworkMessage(MsgEntity message)
         {
+            var player = _playerManager.GetSessionByChannel(message.MsgChannel);
+
+            if (message.Sequence != 0)
+            {
+                if (_lastProcessedSequencesCmd[player] < message.Sequence)
+                {
+                    _lastProcessedSequencesCmd[player] = message.Sequence;
+                }
+            }
+
             switch (message.Type)
             {
                 case EntityMessageType.ComponentMessage:
@@ -119,7 +143,6 @@ namespace Robust.Server.GameObjects
                     return;
 
                 case EntityMessageType.SystemMessage:
-                    var player = _playerManager.GetSessionByChannel(message.MsgChannel);
                     var msg = message.SystemMessage;
                     var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
                     var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg);
@@ -128,14 +151,28 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private sealed class MessageTickComparer : IComparer<MsgEntity>
+        private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        {
+            switch (args.NewStatus)
+            {
+                case SessionStatus.Connected:
+                    _lastProcessedSequencesCmd.Add(args.Session, 0);
+                    break;
+
+                case SessionStatus.Disconnected:
+                    _lastProcessedSequencesCmd.Remove(args.Session);
+                    break;
+            }
+        }
+
+        private sealed class MessageSequenceComparer : IComparer<MsgEntity>
         {
             public int Compare(MsgEntity x, MsgEntity y)
             {
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
-                return y.SourceTick.CompareTo(x.SourceTick);
+                return y.Sequence.CompareTo(x.Sequence);
             }
         }
     }

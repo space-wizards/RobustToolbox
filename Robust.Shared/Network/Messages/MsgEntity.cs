@@ -33,6 +33,7 @@ namespace Robust.Shared.Network.Messages
         {
             Type = (EntityMessageType)buffer.ReadByte();
             SourceTick = buffer.ReadGameTick();
+            Sequence = buffer.ReadUInt32();
 
             switch (Type)
             {
@@ -67,6 +68,7 @@ namespace Robust.Shared.Network.Messages
         {
             buffer.Write((byte)Type);
             buffer.Write(SourceTick);
+            buffer.Write(Sequence);
 
             switch (Type)
             {

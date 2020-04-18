@@ -28,8 +28,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 20)));
-            // Keep the separation in mind!
-            Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 21)));
+            Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 20)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(50, 30)));
             Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 60)));
         }
@@ -53,8 +52,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             root.ForceRunLayoutUpdate();
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
-            Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 29)));
-            // Keep the separation in mind!
+            Assert.That(control1.Size, Is.EqualTo(new Vector2(50, 30)));
             Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 30)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(50, 30)));
             Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 60)));
@@ -73,14 +71,14 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             boxContainer.AddChild(control1);
             boxContainer.AddChild(control2);
 
-            Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 81)));
+            Assert.That(boxContainer.CombinedMinimumSize, Is.EqualTo(new Vector2(50, 80)));
         }
 
         [Test]
         public void TestTwoExpand()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {CustomMinimumSize = (30, 82)};
+            var boxContainer = new VBoxContainer {CustomMinimumSize = (30, 80)};
             var control1 = new Control
             {
                 SizeFlagsVertical = Control.SizeFlags.FillExpand
@@ -101,9 +99,9 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 
             Assert.That(control1.Position, Is.EqualTo(Vector2.Zero));
             Assert.That(control1.Size, Is.EqualTo(new Vector2(30, 15)));
-            Assert.That(control3.Position, Is.EqualTo(new Vector2(0, 16)));
+            Assert.That(control3.Position, Is.EqualTo(new Vector2(0, 15)));
             Assert.That(control3.Size, Is.EqualTo(new Vector2(30, 50)));
-            Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 67)));
+            Assert.That(control2.Position, Is.EqualTo(new Vector2(0, 65)));
             Assert.That(control2.Size, Is.EqualTo(new Vector2(30, 15)));
         }
     }

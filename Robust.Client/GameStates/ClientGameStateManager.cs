@@ -120,8 +120,8 @@ namespace Robust.Client.GameStates
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            Logger.DebugS("State",
-                $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            //Logger.DebugS("State",
+            //    $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
 
@@ -184,7 +184,7 @@ namespace Robust.Client.GameStates
 
             if (_lastProcessedSeq < curState.LastProcessedInput)
             {
-                Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                //Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
                 _lastProcessedSeq = curState.LastProcessedInput;
             }
 
@@ -194,8 +194,8 @@ namespace Robust.Client.GameStates
                 var inCmd = _pendingInputs.Dequeue();
 
                 inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("State",
-                    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+                //Logger.DebugS("State",
+                //    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
             while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedSeq)
@@ -257,8 +257,6 @@ namespace Robust.Client.GameStates
                         _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
 
                         hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-
-                        Logger.DebugS("State", "doot");
                     }
 
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
@@ -276,7 +274,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                Logger.DebugS("State", $"Entity {entity.Uid} was made dirty.");
+                // Logger.DebugS("State", $"Entity {entity.Uid} was made dirty.");
 
                 var last = _processor.GetLastServerStates(entity.Uid);
 
@@ -290,7 +288,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    Logger.DebugS("State", $"  And also its component {comp.Name}");
+                    // Logger.DebugS("State", $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
                     comp.HandleComponentState(compState, null);
                 }

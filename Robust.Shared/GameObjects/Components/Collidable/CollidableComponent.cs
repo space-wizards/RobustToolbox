@@ -235,6 +235,8 @@ namespace Robust.Shared.GameObjects.Components
     public class CollisionEnabledEvent : EntitySystemMessage
     {
         public bool Value { get; }
+        public EntityUid Owner { get; }
+
 
         public CollisionEnabledEvent(EntityUid uid, bool value)
         {

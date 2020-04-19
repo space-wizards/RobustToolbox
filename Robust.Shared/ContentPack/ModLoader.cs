@@ -204,7 +204,7 @@ namespace Robust.Shared.ContentPack
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
-#if DEBUG
+#if !FULL_RELEASE
             if (resMan.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
@@ -224,7 +224,7 @@ namespace Robust.Shared.ContentPack
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
-#if DEBUG
+#if !FULL_RELEASE
                 // see if debug info is present
                 if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"), out var gamePdb))
                 {

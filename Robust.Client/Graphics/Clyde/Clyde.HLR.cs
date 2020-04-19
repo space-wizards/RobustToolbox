@@ -21,9 +21,9 @@ namespace Robust.Client.Graphics.Clyde
     {
         public ClydeDebugLayers DebugLayers { get; set; }
 
-        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation)> _drawingSpriteList
+        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)> _drawingSpriteList
             =
-            new RefList<(SpriteComponent, Matrix3, Angle)>();
+            new RefList<(SpriteComponent, Matrix3, Angle, float)>();
 
         public void Render()
         {
@@ -212,7 +212,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void ProcessSpriteEntities(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
-            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle)> list)
+            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle, float yWorldPos)> list)
         {
             entity.TryGetComponent(out ContainerManagerComponent containerManager);
 
@@ -246,6 +246,7 @@ namespace Robust.Client.Graphics.Clyde
 
                         entry.Item1 = sprite;
                         entry.Item3 = childWorldRotation;
+                        entry.yWorldPos = worldPosition.Y;
                     }
                 }
 

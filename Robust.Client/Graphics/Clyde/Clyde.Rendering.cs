@@ -811,9 +811,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class SpriteDrawingOrderComparer : IComparer<int>
         {
-            private readonly RefList<(SpriteComponent, Matrix3, Angle)> _drawList;
+            private readonly RefList<(SpriteComponent, Matrix3, Angle, float)> _drawList;
 
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle)> drawList)
+            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle, float)> drawList)
             {
                 _drawList = drawList;
             }
@@ -836,7 +836,7 @@ namespace Robust.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                cmp = b.Owner.Transform.WorldPosition.Y.CompareTo(a.Owner.Transform.WorldPosition.Y);
+                cmp = _drawList[x].Item4.CompareTo(_drawList[y].Item4);
 
                 if (cmp != 0)
                 {

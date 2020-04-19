@@ -108,7 +108,7 @@ namespace Robust.Server.GameObjects
         {
             var msgT = message.SourceTick;
             var cT = _gameTiming.CurTick;
-            Logger.Info($"{msgT}, {cT}");
+
             if (msgT <= cT)
             {
                 if (msgT < cT)

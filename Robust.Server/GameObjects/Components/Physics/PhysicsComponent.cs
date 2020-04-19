@@ -5,6 +5,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -108,9 +109,30 @@ namespace Robust.Server.GameObjects
             return new PhysicsComponentState(_mass, _linVelocity);
         }
 
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null)
+        public override void HandleMessage(ComponentMessage message, IComponent component)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleMessage(message, component);
+
+            switch (message)
+            {
+                case BumpedEntMsg msg:
+                    if (Anchored)
+                    {
+                        return;
+                    }
+
+                    if (!msg.Entity.TryGetComponent(out PhysicsComponent physicsComponent))
+                    {
+                        return;
+                    }
+                    physicsComponent.AddVelocityConsumer(this);
+                    break;
+            }
+        }
+
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null)
+        {
+            base.HandleNetworkMessage(message, netChannel, session);
 
             switch (message)
             {

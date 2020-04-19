@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -205,7 +206,7 @@ namespace Robust.Shared.GameObjects
             foreach (var component in components)
             {
                 if (owner != component)
-                    component.HandleMessage(message, null, owner);
+                    component.HandleMessage(message, owner);
             }
         }
 

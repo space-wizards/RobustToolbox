@@ -139,7 +139,9 @@ namespace Robust.Server.GameObjects
             switch (message.Type)
             {
                 case EntityMessageType.ComponentMessage:
-                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message));
+                    // Get player session
+                    var session = _playerManager.GetSessionByChannel(message.MsgChannel);
+                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, session));
                     return;
 
                 case EntityMessageType.SystemMessage:

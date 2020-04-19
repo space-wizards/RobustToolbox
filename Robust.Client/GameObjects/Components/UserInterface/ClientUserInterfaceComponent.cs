@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
@@ -44,10 +45,45 @@ namespace Robust.Client.GameObjects.Components.UserInterface
             _interfaceData = interfaceData;
         }
 
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
-            IComponent component = null)
+        public override void HandleMessage(ComponentMessage message, IComponent component)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleMessage(message, component);
+
+            switch (message)
+            {
+                case BoundInterfaceMessageWrapMessage wrapped:
+                    // Double nested switches who needs readability anyways.
+                    switch (wrapped.Message)
+                    {
+                        case OpenBoundInterfaceMessage _:
+                            if (_openInterfaces.ContainsKey(wrapped.UiKey))
+                            {
+                                return;
+                            }
+
+                            OpenInterface(wrapped);
+                            break;
+
+                        case CloseBoundInterfaceMessage _:
+                            Close(wrapped.UiKey, true);
+                            break;
+
+                        default:
+                            if (_openInterfaces.TryGetValue(wrapped.UiKey, out var bi))
+                            {
+                                bi.InternalReceiveMessage(wrapped.Message);
+                            }
+                            break;
+                    }
+
+                    break;
+            }
+        }
+
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
+            ICommonSession session = null)
+        {
+            base.HandleNetworkMessage(message, netChannel, session);
 
             switch (message)
             {

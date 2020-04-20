@@ -26,7 +26,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
-        private GridId _gridID;
 
         private Matrix3 _worldMatrix = Matrix3.Identity;
         private Matrix3 _invWorldMatrix = Matrix3.Identity;
@@ -50,21 +49,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables]
-        public MapId MapID
-        {
-            get
-            {
-                // branch or leaf node
-                if (_parent.IsValid())
-                    return Parent.MapID;
-
-                // root node, expected to have map component
-                if (Owner.TryGetComponent(out IMapComponent mapComp))
-                    return mapComp.WorldMap;
-
-                throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-            }
-        }
+        public MapId MapID { get; private set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -343,12 +328,21 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent)._children.Add(Owner.Uid);
-            }
 
-            // Verifies MapID can be resolved.
-            // If it cannot, then this is an orphan entity, and an exception will be thrown.
-            // DO NOT REMOVE THIS LINE
-            var _ = MapID;
+                MapID = Parent.MapID;
+            }
+            else
+            {
+                // second level node, terminates recursion up the branch of the tree
+                if (Owner.TryGetComponent(out IMapComponent mapComp))
+                {
+                    MapID = mapComp.WorldMap;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                }
+            }
 
             UpdateEntityTree();
         }
@@ -436,6 +430,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _parent = EntityUid.Invalid;
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
             Owner.SendMessage(this, compMessage);
+            MapID = MapId.Nullspace;
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             RebuildMatrices();
@@ -471,7 +466,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             var oldParentOwner = oldParent?.Owner;
             var entMessage = new EntParentChangedMessage(Owner, oldParentOwner);
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
+
             _parent = newParentEnt.Uid;
+
+            MapID = newConcrete.MapID;
+            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
+
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
             Owner.SendMessage(this, compMessage);
 
@@ -480,6 +480,20 @@ namespace Robust.Shared.GameObjects.Components.Transform
             RebuildMatrices();
             Dirty();
             UpdateEntityTree();
+        }
+
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)
+        {
+            foreach (var child in _children)
+            {
+                var concrete = comp.GetComponent<TransformComponent>(child);
+                concrete.MapID = newMapId;
+
+                if (concrete.ChildCount != 0)
+                {
+                    concrete.UpdateChildMapIdsRecursive(newMapId, comp);
+                }
+            }
         }
 
         public void AttachParent(IEntity parent)
@@ -531,11 +545,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             serializer.DataField(ref _parent, "parent", new EntityUid());
             serializer.DataField(ref _localPosition, "pos", Vector2.Zero);
             serializer.DataField(ref _localRotation, "rot", new Angle());
-
-            if (serializer.Reading && serializer.TryReadDataField("grid", out GridId grid))
-            {
-                _gridID = grid;
-            }
         }
 
         /// <inheritdoc />

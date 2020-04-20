@@ -299,6 +299,8 @@ namespace Robust.UnitTesting
                 public int ConnectionUid { get; }
                 long INetChannel.ConnectionId => ConnectionUid;
 
+                public bool IsConnected { get; }
+
                 // TODO: Should this port value make sense?
                 public IPEndPoint RemoteEndPoint { get; } = new IPEndPoint(IPAddress.Loopback, 1212);
                 public NetSessionId SessionId { get; }
@@ -311,6 +313,7 @@ namespace Robust.UnitTesting
                     ConnectionUid = uid;
                     SessionId = sessionId;
                     OtherChannel = otherChannel;
+                    IsConnected = true;
                 }
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,

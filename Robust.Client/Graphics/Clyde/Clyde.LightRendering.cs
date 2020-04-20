@@ -28,7 +28,7 @@ namespace Robust.Client.Graphics.Clyde
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
         // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
         private const int FovMapSize = 2048;
-        private const int MaxLightsPerScene = 64;
+        private const int MaxLightsPerScene = 128;
 
         private ClydeShaderInstance _fovDebugShaderInstance;
 

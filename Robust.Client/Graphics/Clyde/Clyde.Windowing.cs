@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -467,6 +468,9 @@ namespace Robust.Client.Graphics.Clyde
             throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
         }
 
+        // Disabling inlining so that I can easily exclude it from profiles.
+        // Doesn't matter anyways, it's a few extra cycles per frame.
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void SwapBuffers()
         {
             GLFW.SwapBuffers(_glfwWindow);

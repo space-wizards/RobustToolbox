@@ -130,27 +130,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null)
-        {
-            base.HandleNetworkMessage(message, netChannel, session);
-
-            switch (message)
-            {
-                case BumpedEntMsg msg:
-                    if (Anchored)
-                    {
-                        return;
-                    }
-
-                    if (!msg.Entity.TryGetComponent(out PhysicsComponent physicsComponent))
-                    {
-                        return;
-                    }
-                    physicsComponent.AddVelocityConsumer(this);
-                    break;
-            }
-        }
-
         private List<PhysicsComponent> VelocityConsumers { get; } = new List<PhysicsComponent>();
 
         public List<PhysicsComponent> GetVelocityConsumers()

@@ -128,17 +128,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null)
-        {
-            base.HandleNetworkMessage(message, netChannel, session);
-
-            if ((message is ParentChangedMessage msg))
-            {
-                HandleTransformParentChanged(msg);
-            }
-        }
-
         private void HandleTransformParentChanged(ParentChangedMessage obj)
         {
             // TODO: this does not work for things nested multiply layers deep.

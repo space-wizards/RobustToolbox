@@ -313,6 +313,7 @@ namespace Robust.UnitTesting
                     ConnectionUid = uid;
                     SessionId = sessionId;
                     OtherChannel = otherChannel;
+                    IsConnected = true;
                 }
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,

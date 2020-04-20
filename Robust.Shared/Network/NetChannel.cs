@@ -24,6 +24,9 @@ namespace Robust.Shared.Network
         public short Ping => (short) Math.Round(_connection.AverageRoundtripTime * 1000);
 
         /// <inheritdoc />
+        public bool IsConnected => _connection.Status == NetConnectionStatus.Connected;
+
+        /// <inheritdoc />
         public IPEndPoint RemoteEndPoint => _connection.RemoteEndPoint;
 
         /// <summary>

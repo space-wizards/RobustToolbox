@@ -127,7 +127,7 @@ namespace Robust.Server.GameObjects
         private void DispatchEntityNetworkMessage(MsgEntity message)
         {
             // Don't try to retrieve the session if the client disconnected
-            if (!message.MsgChannel.NetPeer.IsConnected)
+            if (!message.MsgChannel.IsConnected)
             {
                 return;
             }

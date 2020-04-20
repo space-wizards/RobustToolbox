@@ -36,6 +36,11 @@ namespace Robust.Shared.Interfaces.Network
         short Ping { get; }
 
         /// <summary>
+        ///     Whether or not the channel is currently connected to a remote peer.
+        /// </summary>
+        bool IsConnected { get; }
+
+        /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.
         /// </summary>
         /// <typeparam name="T">The derived NetMessage type to send.</typeparam>

@@ -27,8 +27,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
 
-        private Matrix3 _worldMatrix = Matrix3.Identity;
-        private Matrix3 _invWorldMatrix = Matrix3.Identity;
+        private Matrix3 _localMatrix = Matrix3.Identity;
+        private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
         private Vector2 _nextPosition;
         private Angle _nextRotation;
@@ -652,7 +652,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public Matrix3 GetLocalMatrix()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
-                return _worldMatrix;
+                return _localMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
@@ -669,7 +669,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public Matrix3 GetLocalMatrixInv()
         {
             if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
-                return _invWorldMatrix;
+                return _invLocalMatrix;
 
             // there really is no point trying to cache this because it will only be used in one frame
             var pos = GetLocalPosition();
@@ -699,14 +699,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
 
-            _worldMatrix = transMat;
+            _localMatrix = transMat;
 
             var posImat = Matrix3.Invert(posMat);
             var rotImap = Matrix3.Invert(rotMat);
 
             Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
 
-            _invWorldMatrix = itransMat;
+            _invLocalMatrix = itransMat;
         }
 
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();

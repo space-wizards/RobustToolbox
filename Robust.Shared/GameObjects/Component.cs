@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -193,7 +194,10 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null) { }
+        public virtual void HandleMessage(ComponentMessage message, IComponent component) { }
+
+        /// <inheritdoc />
+        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null) { }
 
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()

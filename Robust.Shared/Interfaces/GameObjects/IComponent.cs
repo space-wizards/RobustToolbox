@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
@@ -104,13 +105,19 @@ namespace Robust.Shared.Interfaces.GameObjects
         void ExposeData(ObjectSerializer serializer);
 
         /// <summary>
-        ///     Handles an incoming component message.
+        ///     Handles a local incoming component message.
         /// </summary>
         /// <param name="message">Incoming event message.</param>
-        /// <param name="netChannel">If this originates from a remote client, this is the channel it came from. If it
-        /// originates locally, this is null.</param>
-        /// <param name="component">If the message originates from a local component, this is the component that sent it.</param>
-        void HandleMessage(ComponentMessage message, INetChannel netChannel = null, IComponent component = null);
+        /// <param name="component">The local component that sent the message.</param>
+        void HandleMessage(ComponentMessage message, IComponent component);
+
+        /// <summary>
+        ///     Handles an incoming component message from the server.
+        /// </summary>
+        /// <param name="message">Incoming event message.</param>
+        /// <param name="netChannel">The channel of the remote client that sent the message.</param>
+        /// <param name="session">The session data for the player who sent this message. Null if this is a client.</param>
+        void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null);
 
         /// <summary>
         ///     Get the component's state for replicating on the client.

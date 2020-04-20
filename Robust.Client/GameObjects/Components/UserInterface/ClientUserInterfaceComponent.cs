@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
@@ -44,10 +45,10 @@ namespace Robust.Client.GameObjects.Components.UserInterface
             _interfaceData = interfaceData;
         }
 
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
-            IComponent component = null)
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
+            ICommonSession session = null)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleNetworkMessage(message, netChannel, session);
 
             switch (message)
             {

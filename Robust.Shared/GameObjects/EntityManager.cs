@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -344,19 +345,20 @@ namespace Robust.Shared.GameObjects
         {
             var compMsg = netMsg.Message;
             var compChannel = netMsg.Channel;
+            var session = netMsg.Session;
             compMsg.Remote = true;
 
             var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
                 if (_componentManager.TryGetComponent(uid, netMsg.NetId, out var component))
-                    component.HandleMessage(compMsg, compChannel);
+                    component.HandleNetworkMessage(compMsg, compChannel, session);
             }
             else
             {
                 foreach (var component in _componentManager.GetComponents(uid))
                 {
-                    component.HandleMessage(compMsg, compChannel);
+                    component.HandleNetworkMessage(compMsg, compChannel, session);
                 }
             }
         }

@@ -92,11 +92,17 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
+                var othercollisionmodifiers = otherCollidable.Owner.GetAllComponents<ICollideSpecial>();
+
                 //Provides component level overrides for collision behavior based on the entity we are trying to collide with
                 var preventcollision = false;
                 foreach (var mods in collisionmodifiers)
                 {
                     preventcollision |= mods.PreventCollide(otherCollidable);
+                }
+                foreach (var othermods in othercollisionmodifiers)
+                {
+                    preventcollision |= othermods.PreventCollide(collidable);
                 }
                 if (preventcollision)
                 {

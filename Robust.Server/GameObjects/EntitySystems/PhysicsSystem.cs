@@ -98,6 +98,9 @@ namespace Robust.Server.GameObjects.EntitySystems
             int velocityConsumerCount;
             float totalMass;
             Vector2 lowestMovement;
+            var tile =
+                mapManager.GetGrid(entity.Transform.GridID).GetTileRef(entity.Transform.GridPosition).Tile;
+            bool hasGravity = mapManager.GetGrid(entity.Transform.GridID).HasGravity && !tile.IsEmpty;
             do
             {
                 velocityConsumerCount = velocityConsumers.Count;
@@ -107,9 +110,13 @@ namespace Robust.Server.GameObjects.EntitySystems
                 float totalFriction = 0;
                 foreach (var consumer in velocityConsumers)
                 {
+                    var movement = lowestMovement;
                     totalMass += consumer.Mass;
-                    totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner);
-                    var movement = lowestMovement * velocity.Mass / (totalMass != 0 ? totalMass + (totalMass * totalFriction) : 1);
+                    if (hasGravity)
+                    {
+                        totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner);
+                        movement *= velocity.Mass / (totalMass != 0 ? totalMass + (totalMass * totalFriction) : 1);
+                    }
                     consumer.AngularVelocity = velocity.AngularVelocity;
                     consumer.LinearVelocity = movement;
                     copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);

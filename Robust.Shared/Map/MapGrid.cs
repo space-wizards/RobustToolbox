@@ -32,6 +32,8 @@ namespace Robust.Shared.Map
 
         public EntityUid GridEntityId { get; internal set; }
 
+        public bool HasGravity { get; set; }
+
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
@@ -56,6 +58,7 @@ namespace Robust.Shared.Map
             SnapSize = snapSize;
             ParentMapId = parentMapId;
             LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
+            HasGravity = false;
         }
 
         /// <summary>

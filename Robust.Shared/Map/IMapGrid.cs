@@ -56,6 +56,11 @@ namespace Robust.Shared.Map
         Vector2 WorldPosition { get; set; }
 
         /// <summary>
+        ///     Whether or not this grid has gravity
+        /// </summary>
+        bool HasGravity { get; set; }
+
+        /// <summary>
         ///     Is this located at a position on the center grid of snap positions, accepts local coordinates
         /// </summary>
         bool OnSnapCenter(Vector2 position);
@@ -129,7 +134,7 @@ namespace Robust.Shared.Map
         void RemoveFromSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
 
         #endregion SnapGridAccess
-        
+
         #region Transforms
 
         /// <summary>
@@ -157,7 +162,7 @@ namespace Robust.Shared.Map
         /// <param name="posLocal">The local vector with this grid as origin.</param>
         /// <returns>The world-space vector with global origin.</returns>
         Vector2 LocalToWorld(Vector2 posLocal);
-        
+
         /// <summary>
         ///     Transforms World position into grid tile indices.
         /// </summary>

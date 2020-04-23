@@ -99,10 +99,10 @@ namespace Robust.Shared.Physics
                 foreach (var mods in collisionmodifiers)
                 {
                     preventcollision |= mods.PreventCollide(otherCollidable);
-                    foreach (var othermods in othercollisionmodifiers)
-                    {
-                        preventcollision |= othermods.PreventCollide(collidable);
-                    }
+                }
+                foreach (var othermods in othercollisionmodifiers)
+                {
+                    preventcollision |= othermods.PreventCollide(collidable);
                 }
                 if (preventcollision)
                 {

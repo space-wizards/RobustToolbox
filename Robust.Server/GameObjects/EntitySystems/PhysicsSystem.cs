@@ -98,7 +98,9 @@ namespace Robust.Server.GameObjects.EntitySystems
             int velocityConsumerCount;
             float totalMass;
             Vector2 lowestMovement;
-            bool hasGravity = mapManager.GetGrid(entity.Transform.GridID).HasGravity;
+            var tile =
+                mapManager.GetGrid(entity.Transform.GridID).GetTileRef(entity.Transform.GridPosition).Tile;
+            bool hasGravity = mapManager.GetGrid(entity.Transform.GridID).HasGravity && !tile.IsEmpty;
             do
             {
                 velocityConsumerCount = velocityConsumers.Count;

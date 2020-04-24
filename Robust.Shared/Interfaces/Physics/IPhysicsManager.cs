@@ -38,6 +38,17 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns>A result object describing the hit, if any.</returns>
         RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false);
 
+        /// <summary>
+        ///     Casts a ray in the world and returns the first thing it hit.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="ray">Ray to cast in the world.</param>
+        /// <param name="maxLength">Maximum length of the ray in meters.</param>
+        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
+        /// <param name="ignoreNonHardCollidables">If true, the RayCast will ignore any bodies that aren't hard collidables.</param>
+        /// <returns>A result object describing the hit, if any.</returns>
+        RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool ignoreNonHardCollidables = false);
+
         event Action<DebugRayData> DebugDrawRay;
 
         IEnumerable<(IPhysBody, IPhysBody)> GetCollisions();

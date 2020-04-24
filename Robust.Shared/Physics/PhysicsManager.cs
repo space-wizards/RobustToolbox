@@ -252,7 +252,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
+        public RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool ignoreNonHardCollidables = false)
         {
             RayCastResults result = default;
 
@@ -263,7 +263,7 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (body.Owner == ignoredEnt)
+                if (predicate.Invoke(body.Owner))
                 {
                     return true;
                 }
@@ -298,6 +298,10 @@ namespace Robust.Shared.Physics
 
             return result;
         }
+
+        /// <inheritdoc />
+        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, ignoreNonHardCollidables);
 
         public event Action<DebugRayData> DebugDrawRay;
 

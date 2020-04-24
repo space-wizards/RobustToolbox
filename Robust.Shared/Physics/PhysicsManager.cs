@@ -301,7 +301,7 @@ namespace Robust.Shared.Physics
 
         /// <inheritdoc />
         public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, ignoreNonHardCollidables);
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity != ignoredEnt, ignoreNonHardCollidables);
 
         public event Action<DebugRayData> DebugDrawRay;
 

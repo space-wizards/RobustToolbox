@@ -12,7 +12,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 using Newtonsoft.Json.Linq;
+#if DEBUG
 using NJsonSchema;
+#endif
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

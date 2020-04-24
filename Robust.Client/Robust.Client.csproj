@@ -20,7 +20,7 @@
     <PackageReference Include="NVorbis" Version="0.9.1" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="NJsonSchema" Version="10.1.4" />
+    <PackageReference Include="NJsonSchema" Version="10.1.4" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="SixLabors.Core" Version="1.0.0-beta0007" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0006" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0006" />
@@ -41,7 +41,7 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Graphics\RSI\RSISchema.json">
+    <EmbeddedResource Include="Graphics\RSI\RSISchema.json" Condition="'$(Configuration)' == 'Debug'">
       <LogicalName>Robust.Client.Graphics.RSI.RSISchema.json</LogicalName>
     </EmbeddedResource>
 

@@ -25,7 +25,8 @@ namespace Robust.Client.Audio.Midi
         /// <returns>
         ///     <c>null</c> if MIDI support is not available.
         /// </returns>
-        [CanBeNull] IMidiRenderer GetNewRenderer();
+        [CanBeNull]
+        IMidiRenderer GetNewRenderer();
 
         /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
@@ -158,46 +159,58 @@ namespace Robust.Client.Audio.Midi
             }
 
             var soundfontLoader = SoundFontLoader.NewDefaultSoundFontLoader(_settings);
-            soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
 
-            var renderer = new MidiRenderer(_settings, soundfontLoader);
+            // Just making double sure these don't get GC'd.
+            // They shouldn't, MidiRenderer keeps a ref, but making sure...
+            var handle = GCHandle.Alloc(soundfontLoader);
 
-            // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
-            renderer.LoadSoundfont(FallbackSoundfont);
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            try
             {
-                foreach (var filepath in LinuxSoundfonts)
+                soundfontLoader.SetCallbacks(_soundfontLoaderCallbacks);
+
+                var renderer = new MidiRenderer(_settings, soundfontLoader);
+
+                // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
+                renderer.LoadSoundfont(FallbackSoundfont);
+
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    if (!File.Exists(filepath) || !SoundFont.IsSoundFont(filepath)) continue;
-
-                    try
+                    foreach (var filepath in LinuxSoundfonts)
                     {
-                        renderer.LoadSoundfont(filepath, true);
-                    }
-                    catch (Exception)
-                    {
-                        continue;
-                    }
+                        if (!File.Exists(filepath) || !SoundFont.IsSoundFont(filepath)) continue;
 
-                    break;
+                        try
+                        {
+                            renderer.LoadSoundfont(filepath, true);
+                        }
+                        catch (Exception)
+                        {
+                            continue;
+                        }
+
+                        break;
+                    }
                 }
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
-                    renderer.LoadSoundfont(OsxSoundfont, true);
-            }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
-                    renderer.LoadSoundfont(WindowsSoundfont, true);
-            }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    if (File.Exists(OsxSoundfont) && SoundFont.IsSoundFont(OsxSoundfont))
+                        renderer.LoadSoundfont(OsxSoundfont, true);
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
+                        renderer.LoadSoundfont(WindowsSoundfont, true);
+                }
 
-            lock (_renderers)
-                _renderers.Add(renderer);
+                lock (_renderers)
+                    _renderers.Add(renderer);
 
-            return renderer;
+                return renderer;
+            }
+            finally
+            {
+                handle.Free();
+            }
         }
 
         public void FrameUpdate(float frameTime)
@@ -307,17 +320,29 @@ namespace Robust.Client.Audio.Midi
                 var span = new Span<byte>(buf.ToPointer(), length);
                 var stream = _openStreams[(int) sfHandle];
 
-                byte[] buffer;
                 try
                 {
-                    buffer = stream.ReadExact(length);
+                    // Fluidsynth does a LOT of tiny allocations (frankly, way too much).
+                    if (count < 1024)
+                    {
+                        // ReSharper disable once SuggestVarOrType_Elsewhere
+                        Span<byte> buffer = stackalloc byte[(int)count];
+
+                        stream.ReadExact(buffer);
+
+                        buffer.CopyTo(span);
+                    }
+                    else
+                    {
+                        var buffer = stream.ReadExact(length);
+
+                        buffer.CopyTo(span);
+                    }
                 }
                 catch (EndOfStreamException)
                 {
                     return -1;
                 }
-
-                buffer.CopyTo(span);
                 return 0;
             }
 

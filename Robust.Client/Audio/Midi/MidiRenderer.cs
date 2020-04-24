@@ -131,6 +131,9 @@ namespace Robust.Client.Audio.Midi
 
         private readonly ISawmill _midiSawmill;
         private Settings _settings;
+        // Kept around to avoid the loader callbacks getting GC'd
+        // ReSharper disable once NotAccessedField.Local
+        private readonly SoundFontLoader _soundFontLoader;
         private Synth _synth;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
@@ -183,6 +186,7 @@ namespace Robust.Client.Audio.Midi
             Source = _clydeAudio.CreateBufferedAudioSource(Buffers);
             Source.SampleRate = SampleRate;
             _settings = settings;
+            _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
             _synth.AddSoundFontLoader(soundFontLoader);
             Mono = mono;

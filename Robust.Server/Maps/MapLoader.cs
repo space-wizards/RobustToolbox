@@ -802,7 +802,7 @@ namespace Robust.Server.Maps
                         return prototypeVal == null;
                     }
 
-                    return value.Equals(prototypeVal);
+                    return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
                 }
 
                 return false;

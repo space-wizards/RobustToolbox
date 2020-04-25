@@ -694,7 +694,7 @@ namespace Robust.Shared.Serialization
 
         bool IsValueDefault<T>(string field, T value, T providedDefault)
         {
-            if ((value != null || providedDefault == null) && (value == null || value.Equals(providedDefault)))
+            if ((value != null || providedDefault == null) && (value == null || IsSerializedEqual(value, providedDefault)))
             {
                 return true;
             }
@@ -707,6 +707,65 @@ namespace Robust.Shared.Serialization
             return false;
 
         }
+
+        internal static bool IsSerializedEqual(object a, object b)
+        {
+            var type = a?.GetType();
+            if (type != b?.GetType())
+            {
+                return false;
+            }
+
+            if (a == null) // Also implies b is null since it'd have failed the type equality check otherwise.
+            {
+                return true;
+            }
+
+            if (TryGenericListType(type, out _))
+            {
+                var listA = (IList) a;
+                var listB = (IList) b;
+
+                if (listA.Count != listB.Count)
+                {
+                    return false;
+                }
+
+                for (var i = 0; i < listA.Count; i++)
+                {
+                    var elemA = listA[i];
+                    var elemB = listB[i];
+
+                    if (!IsSerializedEqual(elemA, elemB))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (typeof(IExposeData).IsAssignableFrom(type))
+            {
+                // Serialize both, see if output matches.
+                var testA = new YamlMappingNode();
+                var testB = new YamlMappingNode();
+                var serA = NewWriter(testA);
+                var serB = NewWriter(testB);
+
+                var expA = (IExposeData) a;
+                var expB = (IExposeData) b;
+
+                expA.ExposeData(serA);
+                expB.ExposeData(serB);
+
+                // Does deep equality.
+                return testA.Equals(testB);
+            }
+
+            return a.Equals(b);
+        }
+
 
         private static object StringToType(Type type, string str)
         {

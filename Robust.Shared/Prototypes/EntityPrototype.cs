@@ -42,6 +42,13 @@ namespace Robust.Shared.GameObjects
         public string Name { get; private set; }
 
         /// <summary>
+        ///     Optional suffix to display in development menus like the entity spawn panel,
+        ///     to provide additional info without ruining the Name property itself.
+        /// </summary>
+        [ViewVariables]
+        public string EditorSuffix { get; private set; }
+
+        /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
@@ -158,6 +165,11 @@ namespace Robust.Shared.GameObjects
             if (mapping.TryGetNode("description", out node))
             {
                 Description = _localization.GetString(node.AsString());
+            }
+
+            if (mapping.TryGetNode("suffix", out node))
+            {
+                EditorSuffix = _localization.GetString(node.AsString());
             }
 
             // COMPONENTS
@@ -389,6 +401,11 @@ namespace Robust.Shared.GameObjects
             if (target.Description == null)
             {
                 target.Description = source.Description;
+            }
+
+            if (target.EditorSuffix == null)
+            {
+                target.EditorSuffix = source.EditorSuffix;
             }
 
             if (!target._snapOverriden)

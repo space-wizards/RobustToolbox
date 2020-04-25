@@ -293,7 +293,14 @@ namespace Robust.Client.UserInterface.CustomControls
                 Index = index // We track this index purely for debugging.
             };
             button.ActualButton.OnToggled += OnItemButtonToggled;
-            button.EntityLabel.Text = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
+            var entityLabelText = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
+
+            if (!string.IsNullOrWhiteSpace(prototype.EditorSuffix))
+            {
+                entityLabelText += $" [{prototype.EditorSuffix}]";
+            }
+
+            button.EntityLabel.Text = entityLabelText;
 
             if (prototype == SelectedPrototype)
             {
@@ -322,6 +329,12 @@ namespace Robust.Client.UserInterface.CustomControls
         private static bool _doesPrototypeMatchSearch(EntityPrototype prototype, string searchStr)
         {
             if (prototype.ID.ToLowerInvariant().Contains(searchStr))
+            {
+                return true;
+            }
+
+            if (prototype.EditorSuffix != null &&
+                prototype.EditorSuffix.Contains(searchStr, StringComparison.CurrentCultureIgnoreCase))
             {
                 return true;
             }

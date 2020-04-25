@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.UserInterface;
@@ -98,6 +100,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// </summary>
     public sealed class BoundUserInterface
     {
+        private bool _isActive;
+
         public object UiKey { get; }
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
@@ -109,7 +113,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
         public event Action<ServerBoundUserInterfaceMessage> OnReceiveMessage;
-        public event Action<ServerBoundUserInterfaceMessage> OnClosed;
+        public event Action<IPlayerSession> OnClosed;
 
         public BoundUserInterface(object uiKey, ServerUserInterfaceComponent owner)
         {
@@ -165,15 +169,24 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 SendMessage(new UpdateBoundStateMessage(_lastState));
             }
 
-            session.PlayerStatusChanged += (sender, args) =>
+            if (!_isActive)
             {
-                if (args.NewStatus == SessionStatus.Disconnected)
-                {
-                    var msg = new CloseBoundInterfaceMessage();
-                    OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
-                    _subscribedSessions.Remove(session);
-                }
-            };
+                _isActive = true;
+
+                IoCManager.Resolve<IEntitySystemManager>()
+                    .GetEntitySystem<UserInterfaceSystem>()
+                    .ActivateInterface(this);
+            }
+
+            session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
+        }
+
+        private void OnSessionOnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+            {
+                CloseShared(args.Session);
+            }
         }
 
         /// <summary>
@@ -195,8 +208,22 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             var msg = new CloseBoundInterfaceMessage();
             SendMessage(msg, session);
-            OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
+            CloseShared(session);
+        }
+
+        private void CloseShared(IPlayerSession session)
+        {
+            OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
+
+            if (_subscribedSessions.Count == 0)
+            {
+                IoCManager.Resolve<IEntitySystemManager>()
+                    .GetEntitySystem<UserInterfaceSystem>()
+                    .DeactivateInterface(this);
+
+                _isActive = false;
+            }
         }
 
         /// <summary>
@@ -267,14 +294,13 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             switch (wrappedMessage)
             {
-                case CloseBoundInterfaceMessage msg:
-                    var closeMsg = new ServerBoundUserInterfaceMessage(msg, session);
-                    _subscribedSessions.Remove(session);
-                    OnClosed?.Invoke(closeMsg);
+                case CloseBoundInterfaceMessage _:
+                    CloseShared(session);
+
                     break;
 
-                case BoundUserInterfaceMessage msg:
-                    var serverMsg = new ServerBoundUserInterfaceMessage(msg, session);
+                default:
+                    var serverMsg = new ServerBoundUserInterfaceMessage(wrappedMessage, session);
                     OnReceiveMessage?.Invoke(serverMsg);
                     break;
             }

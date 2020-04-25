@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.Player;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
+    [UsedImplicitly]
     internal class UserInterfaceSystem : EntitySystem
     {
         private const float MaxWindowRange = 2;
@@ -14,61 +16,70 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private readonly List<IPlayerSession> _sessionCache = new List<IPlayerSession>();
 
+        // List of all bound user interfaces that have at least one player looking at them.
+        [ViewVariables]
+        private readonly List<BoundUserInterface> _activeInterfaces = new List<BoundUserInterface>();
+
         /// <inheritdoc />
         public override void Initialize()
         {
-            EntityQuery = new TypeEntityQuery(typeof(ServerUserInterfaceComponent));
         }
 
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            foreach (var entity in RelevantEntities)
+            foreach (var userInterface in _activeInterfaces.ToList())
             {
-                var uiComp = entity.GetComponent<ServerUserInterfaceComponent>();
-
-                CheckRange(entity.Transform, uiComp);
+                CheckRange(userInterface);
             }
         }
 
         /// <summary>
-        ///     Verify that the subscribed clients are still in range of the entity.
+        ///     Verify that the subscribed clients are still in range of the interface.
         /// </summary>
-        /// <param name="transformComp">Transform Component of the entity being checked.</param>
-        /// <param name="uiComp">UserInterface Component of entity being checked.</param>
-        private void CheckRange(ITransformComponent transformComp, ServerUserInterfaceComponent uiComp)
+        private void CheckRange(BoundUserInterface ui)
         {
-            foreach (var ui in uiComp.Interfaces)
+            // We have to cache the set of sessions because Unsubscribe modifies the original.
+            _sessionCache.Clear();
+            _sessionCache.AddRange(ui.SubscribedSessions);
+
+            var transform = ui.Owner.Owner.Transform;
+
+            var uiPos = transform.WorldPosition;
+            var uiMap = transform.MapID;
+
+            foreach (var session in _sessionCache)
             {
-                // We have to cache the set of sessions because Unsubscribe modifies the original.
-                _sessionCache.Clear();
-                _sessionCache.AddRange(ui.SubscribedSessions);
+                var attachedEntity = session.AttachedEntity;
 
-                if (_sessionCache.Count == 0)
-                    continue;
-
-                var uiPos = transformComp.WorldPosition;
-                var uiMap = transformComp.MapID;
-
-                foreach (var session in _sessionCache)
+                // The component manages the set of sessions, so this invalid session should be removed soon.
+                if (attachedEntity == null || !attachedEntity.IsValid())
                 {
-                    var attachedEntity = session.AttachedEntity;
+                    continue;
+                }
 
-                    // The component manages the set of sessions, so this invalid session should be removed soon.
-                    if (attachedEntity == null || !attachedEntity.IsValid())
-                        continue;
+                if (uiMap != attachedEntity.Transform.MapID)
+                {
+                    ui.Close(session);
+                    continue;
+                }
 
-                    if (uiMap != attachedEntity.Transform.MapID)
-                    {
-                        ui.Close(session);
-                        continue;
-                    }
-
-                    var distanceSquared = (uiPos - attachedEntity.Transform.WorldPosition).LengthSquared;
-                    if (distanceSquared > MaxWindowRangeSquared)
-                        ui.Close(session);
+                var distanceSquared = (uiPos - attachedEntity.Transform.WorldPosition).LengthSquared;
+                if (distanceSquared > MaxWindowRangeSquared)
+                {
+                    ui.Close(session);
                 }
             }
+        }
+
+        internal void DeactivateInterface(BoundUserInterface userInterface)
+        {
+            _activeInterfaces.Remove(userInterface);
+        }
+
+        internal void ActivateInterface(BoundUserInterface userInterface)
+        {
+            _activeInterfaces.Add(userInterface);
         }
     }
 }

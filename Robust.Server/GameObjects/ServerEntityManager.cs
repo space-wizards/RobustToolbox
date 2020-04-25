@@ -152,7 +152,7 @@ namespace Robust.Server.GameObjects
             return stateEntities.Count == 0 ? default : stateEntities;
         }
 
-        private readonly IDictionary<IPlayerSession, ISet<EntityUid>> _seenMovers
+        private readonly Dictionary<IPlayerSession, ISet<EntityUid>> _seenMovers
             = new Dictionary<IPlayerSession, ISet<EntityUid>>();
 
         private ISet<EntityUid> GetSeenMovers(IPlayerSession player)
@@ -166,12 +166,12 @@ namespace Robust.Server.GameObjects
             return movers;
         }
 
-        private readonly IDictionary<IPlayerSession, IDictionary<EntityUid, GameTick>> _playerLastSeen
-            = new Dictionary<IPlayerSession, IDictionary<EntityUid, GameTick>>();
+        private readonly Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>> _playerLastSeen
+            = new Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>>();
 
         private static readonly Vector2 Vector2NaN = new Vector2(float.NaN, float.NaN);
 
-        private IDictionary<EntityUid, GameTick> GetLastSeen(IPlayerSession player)
+        private Dictionary<EntityUid, GameTick> GetLastSeen(IPlayerSession player)
         {
             if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
             {
@@ -253,27 +253,31 @@ namespace Robust.Server.GameObjects
             _playerLastSeen.Remove(player);
         }
 
-        private ISet<IEntity> IncludeRelatives(IEnumerable<IEntity> children)
+        private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
-            var set = new HashSet<IEntity>();
             foreach (var child in children)
             {
                 var ent = child;
 
                 do
                 {
-                    set.Add(ent);
+                    if (set.Add(ent))
+                    {
+                        AddContainedRecursive(ent, set);
 
-                    AddContainedRecursive(ent, set);
+                        ent = ent.Transform.Parent?.Owner;
+                    }
+                    else
+                    {
+                        // Already processed this entity once.
+                        break;
+                    }
 
-                    ent = ent.Transform.Parent?.Owner;
                 } while (ent != null && !ent.Deleted);
             }
-
-            return set;
         }
 
-        private static void AddContainedRecursive(IEntity ent, ICollection<IEntity> set)
+        private static void AddContainedRecursive(IEntity ent, HashSet<IEntity> set)
         {
             if (!ent.TryGetComponent(out ContainerManagerComponent contMgr))
             {
@@ -299,11 +303,14 @@ namespace Robust.Server.GameObjects
 
             public readonly HashSet<EntityUid> NeededEnts;
 
+            public readonly HashSet<IEntity> Relatives;
+
             public PlayerSeenEntityStatesResources(bool memes = false)
             {
                 IncludedEnts = new HashSet<EntityUid>();
                 EntityStates = new List<EntityState>();
                 NeededEnts = new HashSet<EntityUid>();
+                Relatives = new HashSet<IEntity>();
             }
 
         }
@@ -333,6 +340,7 @@ namespace Robust.Server.GameObjects
             var checkedEnts = _playerSeenEntityStatesResources.IncludedEnts;
             var entityStates = _playerSeenEntityStatesResources.EntityStates;
             var neededEnts = _playerSeenEntityStatesResources.NeededEnts;
+            var relatives = _playerSeenEntityStatesResources.Relatives;
             checkedEnts.Clear();
             entityStates.Clear();
             neededEnts.Clear();
@@ -448,17 +456,17 @@ namespace Robust.Server.GameObjects
             var currentTick = CurrentTick;
 
             // scan pvs box and include children and parents recursively
-            var entities = IncludeRelatives(GetEntitiesInRange(mapId, position, range));
+            IncludeRelatives(GetEntitiesInRange(mapId, position, range, true), relatives);
 
             // Exclude any entities that are currently invisible to the player.
-            ExcludeInvisible(entities, player.VisibilityMask);
+            ExcludeInvisible(relatives, player.VisibilityMask);
 
             // Always send updates for all grid and map entities.
             // If we don't, the client-side game state manager WILL blow up.
             // TODO: Make map manager netcode aware of PVS to avoid the need for this workaround.
-            IncludeMapCriticalEntities(entities);
+            IncludeMapCriticalEntities(relatives);
 
-            foreach (var entity in entities)
+            foreach (var entity in relatives)
             {
                 DebugTools.Assert(entity.Initialized && !entity.Deleted);
 
@@ -885,7 +893,7 @@ namespace Robust.Server.GameObjects
         }
 
 
-        private void IncludeMapCriticalEntities(ISet<IEntity> set)
+        private void IncludeMapCriticalEntities(HashSet<IEntity> set)
         {
             foreach (var mapId in _mapManager.GetAllMapIds())
             {
@@ -904,7 +912,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void ExcludeInvisible(ISet<IEntity> set, int visibilityMask)
+        private void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
         {
             foreach (var entity in set.ToArray())
             {

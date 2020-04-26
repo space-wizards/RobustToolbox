@@ -344,6 +344,7 @@ namespace Robust.Server.GameObjects
             checkedEnts.Clear();
             entityStates.Clear();
             neededEnts.Clear();
+            relatives.Clear();
 
             foreach (var uid in seenMovers.ToList())
             {

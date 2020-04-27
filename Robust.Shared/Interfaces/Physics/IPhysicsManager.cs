@@ -20,9 +20,14 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="collider">Collision rectangle to check</param>
         /// <param name="map">Map to check on</param>
         /// <returns>true if collides, false if not</returns>
-        bool IsColliding(Box2 collider, MapId map);
+        bool TryCollideRect(Box2 collider, MapId map);
 
-        bool TryCollide(IEntity entity, Vector2 offset, bool bump = true);
+        /// <summary>
+        /// Get all entities collding with a certain body.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        List<ICollidableComponent> GetCollidingEntities(IPhysBody body, Vector2 offset);
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
@@ -36,7 +41,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <param name="ignoreNonHardCollidables">If true, the RayCast will ignore any bodies that aren't hard collidables.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false);
+        RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null);
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.
@@ -47,7 +52,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="ignoreNonHardCollidables">If true, the RayCast will ignore any bodies that aren't hard collidables.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool ignoreNonHardCollidables = false);
+        RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null);
 
         event Action<DebugRayData> DebugDrawRay;
 

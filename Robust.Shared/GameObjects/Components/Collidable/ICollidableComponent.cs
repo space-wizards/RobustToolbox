@@ -8,8 +8,10 @@ namespace Robust.Shared.GameObjects.Components
 {
     public interface ICollidableComponent : IComponent, IPhysBody
     {
-        bool TryCollision(Vector2 offset, bool bump = false);
 
+        bool IsColliding(Vector2 offset);
+
+        List<ICollidableComponent> GetCollidingEntities(Vector2 offset);
         bool UpdatePhysicsTree();
 
         void RemovedFromPhysicsTree(MapId mapId);

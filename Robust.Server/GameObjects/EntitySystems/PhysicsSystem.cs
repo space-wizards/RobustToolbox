@@ -31,9 +31,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            // TODO: manifolds
-            var entities = EntityManager.GetEntities(EntityQuery);
-            SimulateWorld(frameTime, entities);
+            SimulateWorld(frameTime, RelevantEntities);
         }
 
         private void SimulateWorld(float frameTime, IEnumerable<IEntity> entities)
@@ -51,7 +49,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     continue;
                 }
 
-                HandleMovement(_mapManager, _tileDefinitionManager, entity, frameTime);
+                ResolveForces(_mapManager, _tileDefinitionManager, entity, frameTime);
             }
 
             foreach (var entity in entities)
@@ -61,147 +59,23 @@ namespace Robust.Server.GameObjects.EntitySystems
                     continue;
                 }
 
-                DoMovement(entity, frameTime);
+                UpdatePosition(entity, frameTime);
             }
         }
 
-        private static void HandleMovement(IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IEntity entity, float frameTime)
+        private void ResolveForces(IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IEntity entity,
+            float frameTime)
         {
-            if (entity.Deleted)
-            {
-                // Ugh let's hope this fixes the crashes.
-                return;
-            }
+            var physics = entity.GetComponent<PhysicsComponent>();
 
-            var velocity = entity.GetComponent<PhysicsComponent>();
-            if (velocity.DidMovementCalculations)
-            {
-                velocity.DidMovementCalculations = false;
-                return;
-            }
-
-            if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)
-            {
-                return;
-            }
-
-            var transform = entity.Transform;
-            if (ContainerHelpers.IsInContainer(transform.Owner))
-            {
-                transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
-                velocity.LinearVelocity = Vector2.Zero;
-                return;
-            }
-
-            var velocityConsumers = velocity.GetVelocityConsumers();
-            var initialMovement = velocity.LinearVelocity;
-            int velocityConsumerCount;
-            float totalMass;
-            Vector2 lowestMovement;
-            var tile =
-                mapManager.GetGrid(entity.Transform.GridID).GetTileRef(entity.Transform.GridPosition).Tile;
-            bool hasGravity = mapManager.GetGrid(entity.Transform.GridID).HasGravity && !tile.IsEmpty;
-            do
-            {
-                velocityConsumerCount = velocityConsumers.Count;
-                totalMass = 0;
-                lowestMovement = initialMovement;
-                var copy = new List<Vector2>(velocityConsumers.Count);
-                float totalFriction = 0;
-                foreach (var consumer in velocityConsumers)
-                {
-                    var movement = lowestMovement;
-                    totalMass += consumer.Mass;
-                    if (hasGravity)
-                    {
-                        totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner);
-                        movement *= velocity.Mass / (totalMass != 0 ? totalMass + (totalMass * totalFriction) : 1);
-                    }
-                    consumer.AngularVelocity = velocity.AngularVelocity;
-                    consumer.LinearVelocity = movement;
-                    copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
-                }
-
-                copy.Sort(LengthComparer);
-                lowestMovement = copy[0];
-                velocityConsumers = velocity.GetVelocityConsumers();
-            } while (velocityConsumers.Count != velocityConsumerCount);
-
-            velocity.ClearVelocityConsumers();
-
-            foreach (var consumer in velocityConsumers)
-            {
-                consumer.LinearVelocity = lowestMovement;
-                consumer.DidMovementCalculations = true;
-            }
-
-            velocity.DidMovementCalculations = false;
+            // TODO: Everything
         }
 
-        private static void DoMovement(IEntity entity, float frameTime)
+        private void UpdatePosition(IEntity entity, float frameTime)
         {
-            // TODO: Terrible hack to fix bullets crashing the server.
-            // Should be handled with deferred physics events instead.
-            if (entity.Deleted)
-            {
-                return;
-            }
+            var physics = entity.GetComponent<PhysicsComponent>();
 
-            var velocity = entity.GetComponent<PhysicsComponent>();
-
-            if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
-                return;
-
-            float angImpulse = 0;
-            if (velocity.AngularVelocity > Epsilon)
-            {
-                angImpulse = velocity.AngularVelocity * frameTime;
-            }
-
-            var transform = entity.Transform;
-            transform.LocalRotation += angImpulse;
-            transform.WorldPosition += velocity.LinearVelocity * frameTime;
-        }
-
-        private static Vector2 CalculateMovement(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, PhysicsComponent velocity, float frameTime, IEntity entity)
-        {
-            if (velocity.Deleted)
-            {
-                // Help crashes.
-                return default;
-            }
-
-            var movement = velocity.LinearVelocity * frameTime;
-            if (movement.LengthSquared <= Epsilon)
-            {
-                return Vector2.Zero;
-            }
-
-            //TODO This is terrible. This needs to calculate the manifold between the two objects.
-            //Check for collision
-            if (entity.TryGetComponent(out CollidableComponent collider))
-            {
-                var collided = collider.TryCollision(movement, true);
-
-                if (collided)
-                {
-                    if (velocity.EdgeSlide)
-                    {
-                        //Slide along the blockage in the non-blocked direction
-                        var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
-                        var yBlocked = collider.TryCollision(new Vector2(0, movement.Y));
-
-                        movement = new Vector2(xBlocked ? 0 : movement.X, yBlocked ? 0 : movement.Y);
-                    }
-                    else
-                    {
-                        //Stop movement entirely at first blockage
-                        movement = new Vector2(0, 0);
-                    }
-                }
-            }
-
-            return movement;
+            // TODO: Everything
         }
 
         private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity)

@@ -31,15 +31,14 @@ namespace Robust.Shared.Physics
         /// <param name="collider">Rectangle to check for collision</param>
         /// <param name="map">Map ID to filter</param>
         /// <returns></returns>
-        public bool IsColliding(Box2 collider, MapId map)
+        public bool TryCollideRect(Box2 collider, MapId map)
         {
             foreach (var body in this[map].Query(collider))
             {
-                if (!body.CollisionEnabled || body.CollisionLayer == 0x0)
+                if (!body.CanCollide || body.CollisionLayer == 0x0)
                     continue;
 
                 if (body.MapID == map &&
-                    body.IsHardCollidable &&
                     body.WorldAABB.Intersects(collider))
                     return true;
             }
@@ -47,126 +46,12 @@ namespace Robust.Shared.Physics
             return false;
         }
 
-        /// <summary>
-        ///     returns true if collider intersects a physBody under management and calls Bump.
-        /// </summary>
-        /// <param name="entity">Rectangle to check for collision</param>
-        /// <param name="offset"></param>
-        /// <param name="bump"></param>
-        /// <returns></returns>
-        public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
-        {
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
-
-            var collidable = (IPhysBody) entity.GetComponent<ICollidableComponent>();
-
-            // This will never collide with anything
-            if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
-                return false;
-
-            var colliderAABB = collidable.WorldAABB;
-            if (offset.LengthSquared > 0)
-            {
-                colliderAABB = colliderAABB.Translated(offset);
-            }
-
-            // Test this physBody against every other one.
-            _results.Clear();
-            DoCollisionTest(collidable, colliderAABB, _results);
-
-            // collided with nothing
-            if (_results.Count == 0)
-                return false;
-
-            //See if our collision will be overridden by a component
-            var collisionmodifiers = entity.GetAllComponents<ICollideSpecial>().ToList();
-            var collidedwith = new List<IEntity>();
-
-            //try all of the AABBs against the target rect.
-            var collided = false;
-            foreach (var otherCollidable in _results)
-            {
-                if (!otherCollidable.IsHardCollidable)
-                {
-                    continue;
-                }
-
-                var othercollisionmodifiers = otherCollidable.Owner.GetAllComponents<ICollideSpecial>();
-
-                //Provides component level overrides for collision behavior based on the entity we are trying to collide with
-                var preventcollision = false;
-                foreach (var mods in collisionmodifiers)
-                {
-                    preventcollision |= mods.PreventCollide(otherCollidable);
-                }
-                foreach (var othermods in othercollisionmodifiers)
-                {
-                    preventcollision |= othermods.PreventCollide(collidable);
-                }
-                if (preventcollision)
-                {
-                    continue;
-                }
-
-                collided = true;
-
-                if (!bump)
-                {
-                    continue;
-                }
-
-                otherCollidable.Bumped(entity);
-                collidedwith.Add(otherCollidable.Owner);
-            }
-
-            collidable.Bump(collidedwith);
-
-            //TODO: This needs multi-grid support.
-            return collided;
-        }
-
-        /// <summary>
-        ///     Tests a physBody against every other registered physBody.
-        /// </summary>
-        /// <param name="physBody">Body being tested.</param>
-        /// <param name="colliderAABB">The AABB of the physBody being tested. This can be IPhysBody.WorldAABB, or a modified version of it.</param>
-        /// <param name="results">An empty list that the function stores all colliding bodies inside of.</param>
-        internal bool DoCollisionTest(IPhysBody physBody, Box2 colliderAABB, List<IPhysBody> results)
-        {
-            // TODO: Terrible hack to fix bullets crashing the server.
-            // Should be handled with deferred physics events instead.
-            if(physBody.Owner.Deleted)
-                return false;
-
-            var any = false;
-
-            foreach ( var body in this[physBody.MapID].Query(colliderAABB))
-            {
-
-                // TODO: Terrible hack to fix bullets crashing the server.
-                // Should be handled with deferred physics events instead.
-                if (body.Owner.Deleted) {
-                    continue;
-                }
-
-                if (CollidesOnMask(physBody, body))
-                {
-                    results.Add(body);
-                }
-
-                any = true;
-            }
-
-            return any;
-        }
-
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)
                 return false;
 
-            if (!a.CollisionEnabled || !b.CollisionEnabled)
+            if (!a.CanCollide || !b.CanCollide)
                 return false;
 
             if ((a.CollisionMask & b.CollisionLayer) == 0x0 &&
@@ -252,7 +137,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool ignoreNonHardCollidables = false)
+        public RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null)
         {
             RayCastResults result = default;
 
@@ -268,17 +153,12 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (!body.CollisionEnabled)
+                if (!body.CanCollide)
                 {
                     return true;
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
-                {
-                    return true;
-                }
-
-                if (ignoreNonHardCollidables && !body.IsHardCollidable)
                 {
                     return true;
                 }
@@ -300,8 +180,8 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool ignoreNonHardCollidables = false)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, ignoreNonHardCollidables);
+        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null)
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt);
 
         public event Action<DebugRayData> DebugDrawRay;
 
@@ -313,7 +193,7 @@ namespace Robust.Shared.Physics
                 {
                     var (a, b) = collision;
 
-                    if (!a.CollisionEnabled || !b.CollisionEnabled)
+                    if (!a.CanCollide || !b.CanCollide)
                     {
                         continue;
                     }

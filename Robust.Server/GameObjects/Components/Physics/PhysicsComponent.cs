@@ -1,11 +1,5 @@
-﻿using System.Collections.Generic;
-using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -16,7 +10,7 @@ namespace Robust.Server.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    public class PhysicsComponent : Component, ICollideSpecial
+    public class PhysicsComponent : Component
     {
         private float _mass;
         private Vector2 _linVelocity;
@@ -108,64 +102,5 @@ namespace Robust.Server.GameObjects
         {
             return new PhysicsComponentState(_mass, _linVelocity);
         }
-
-        public override void HandleMessage(ComponentMessage message, IComponent component)
-        {
-            base.HandleMessage(message, component);
-
-            switch (message)
-            {
-                case BumpedEntMsg msg:
-                    if (Anchored)
-                    {
-                        return;
-                    }
-
-                    if (!msg.Entity.TryGetComponent(out PhysicsComponent physicsComponent))
-                    {
-                        return;
-                    }
-                    physicsComponent.AddVelocityConsumer(this);
-                    break;
-            }
-        }
-
-        private List<PhysicsComponent> VelocityConsumers { get; } = new List<PhysicsComponent>();
-
-        public List<PhysicsComponent> GetVelocityConsumers()
-        {
-            var result = new List<PhysicsComponent> { this };
-            foreach(var velocityConsumer in VelocityConsumers)
-            {
-                result.AddRange(velocityConsumer.GetVelocityConsumers());
-            }
-            return result;
-        }
-
-        private void AddVelocityConsumer(PhysicsComponent physicsComponent)
-        {
-            if (!physicsComponent.VelocityConsumers.Contains(this) && !VelocityConsumers.Contains(physicsComponent))
-            {
-                VelocityConsumers.Add(physicsComponent);
-            }
-        }
-
-        internal void ClearVelocityConsumers()
-        {
-            VelocityConsumers.ForEach(x => x.ClearVelocityConsumers());
-            VelocityConsumers.Clear();
-        }
-
-        public bool PreventCollide(IPhysBody collidedwith)
-        {
-            var velocityConsumers = GetVelocityConsumers();
-            if (velocityConsumers.Count == 1 || !collidedwith.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
-            {
-                return false;
-            }
-            return velocityConsumers.Contains(physicsComponent);
-        }
-
-        public bool DidMovementCalculations { get; set; } = false;
     }
 }

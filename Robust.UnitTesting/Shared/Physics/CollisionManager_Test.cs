@@ -25,7 +25,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -49,7 +49,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(false);
             mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -97,7 +97,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -121,7 +121,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0); // Collision layer is None
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -145,7 +145,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock.Setup(foo => foo.MapID).Returns(new MapId(3));
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock.Setup(foo => foo.CollisionMask).Returns(0x04);
             manager.AddBody(mock.Object);
@@ -168,7 +168,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var mock = new Mock<IPhysBody>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.Owner).Returns(new Entity()); // requires IPhysBody not have null owner
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(1);
             mock.Setup(foo => foo.CollisionMask).Returns(1);
             mock.Setup(foo => foo.IsHardCollidable).Returns(true);
@@ -195,7 +195,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var mock = new Mock<IPhysBody>();
             mock.Setup(foo => foo.WorldAABB).Returns(box);
             mock.Setup(foo => foo.Owner).Returns(new Entity()); // requires IPhysBody not have null owner
-            mock.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock.Setup(foo => foo.CanCollide).Returns(true);
             mock.Setup(foo => foo.CollisionLayer).Returns(1);
             mock.Setup(foo => foo.CollisionMask).Returns(1);
             manager.AddBody(mock.Object);
@@ -223,7 +223,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock0.Setup(foo => foo.WorldAABB).Returns(new Box2(-3, -3, 6, 6));
             mock0.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock0.Setup(foo => foo.MapID).Returns(new MapId(1));
-            mock0.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock0.Setup(foo => foo.CanCollide).Returns(true);
             mock0.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock0.Setup(foo => foo.CollisionMask).Returns(0x04);
             mock0.Setup(foo => foo.Owner).Returns(mockEntity0);
@@ -234,7 +234,7 @@ namespace Robust.UnitTesting.Shared.Physics
             mock1.Setup(foo => foo.WorldAABB).Returns(new Box2(5, -5, 10, 6));
             mock1.Setup(foo => foo.IsHardCollidable).Returns(true);
             mock1.Setup(foo => foo.MapID).Returns(new MapId(1));
-            mock1.Setup(foo => foo.CollisionEnabled).Returns(true);
+            mock1.Setup(foo => foo.CanCollide).Returns(true);
             mock1.Setup(foo => foo.CollisionLayer).Returns(0x4);
             mock1.Setup(foo => foo.CollisionMask).Returns(0x04);
             mock1.Setup(foo => foo.Owner).Returns(mockEntity1);

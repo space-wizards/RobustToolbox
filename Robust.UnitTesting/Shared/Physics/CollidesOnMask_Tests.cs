@@ -15,10 +15,10 @@ namespace Robust.UnitTesting.Shared.Physics
         private void SetupDefault()
         {
             A = new Mock<IPhysBody>();
-            A.Setup(x => x.CollisionEnabled).Returns(true);
+            A.Setup(x => x.CanCollide).Returns(true);
 
             B = new Mock<IPhysBody>();
-            B.Setup(x => x.CollisionEnabled).Returns(true);
+            B.Setup(x => x.CanCollide).Returns(true);
         }
 
         private void Act()

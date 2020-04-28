@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects.Components
         [Dependency] private readonly IPhysicsManager _physicsManager;
 #pragma warning restore 649
 
-        private bool _collisionEnabled;
+        private bool _canCollide;
         private bool _isHardCollidable;
         private BodyStatus _status;
         private BodyType _bodyType;
@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects.Components
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _collisionEnabled, "on", true);
+            serializer.DataField(ref _canCollide, "on", true);
             serializer.DataField(ref _isHardCollidable, "hard", true);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _isScrapingFloor, _physShapes);
+            return new CollidableComponentState(_canCollide, _isHardCollidable, _isScrapingFloor, _physShapes);
         }
 
         /// <inheritdoc />
@@ -62,7 +62,7 @@ namespace Robust.Shared.GameObjects.Components
 
             var newState = (CollidableComponentState)curState;
 
-            _collisionEnabled = newState.CollisionEnabled;
+            _canCollide = newState.CanCollide;
             _isHardCollidable = newState.HardCollidable;
             _isScrapingFloor = newState.ScrapingFloor;
 
@@ -121,20 +121,8 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public bool CanCollide
         {
-            get => _collisionEnabled;
-            set
-            {
-                _collisionEnabled = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, value));
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsHardCollidable
-        {
-            get => _isHardCollidable;
-            set => _isHardCollidable = value;
+            get => _canCollide;
+            set => _canCollide = value;
         }
 
         /// <summary>
@@ -168,10 +156,10 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsScrapingFloor
+        public BodyStatus Status
         {
-            get => _isScrapingFloor;
-            set => _isScrapingFloor = value;
+            get => _status;
+            set => _status = value;
         }
 
         /// <inheritdoc />
@@ -188,7 +176,6 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Startup()
         {
             base.Startup();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, _collisionEnabled));
             _physicsManager.AddBody(this);
         }
 
@@ -196,7 +183,6 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Shutdown()
         {
             _physicsManager.RemoveBody(this);
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, false));
             base.Shutdown();
         }
 
@@ -219,18 +205,15 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
-    }
 
-    public class CollisionEnabledEvent : EntitySystemMessage
-    {
-        public bool Value { get; }
-        public EntityUid Owner { get; }
-
-
-        public CollisionEnabledEvent(EntityUid uid, bool value)
+        public bool IsOnGround()
         {
-            Owner = uid;
-            Value = value;
+            return Status == BodyStatus.OnGround;
+        }
+
+        public bool IsInAir()
+        {
+            return Status == BodyStatus.InAir;
         }
     }
 

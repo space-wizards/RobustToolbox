@@ -43,6 +43,15 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns>A result object describing the hit, if any.</returns>
         RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null);
 
+
+        /// <summary>
+        ///     Calculates the resulting impulse vector on the target collidable from the source collidable
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns>A impulse vector in kilogram meters per second</returns>
+        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source);
+
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.
         /// </summary>

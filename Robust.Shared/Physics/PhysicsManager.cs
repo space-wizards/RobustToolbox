@@ -46,6 +46,34 @@ namespace Robust.Shared.Physics
             return false;
         }
 
+
+        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, float targetSpeed, float sourceSpeed, float targetMass, float sourceMass)
+        {
+            // Find intersection
+            Box2 manifold = target.WorldAABB.Intersect(target.WorldAABB);
+            if (manifold.IsEmpty()) return Vector2.Zero;
+            var direction = Vector2.Zero;
+            if (manifold.Height > manifold.Width)
+            {
+                // X is the axis of seperation
+                direction = new Vector2(1, 0);
+            }
+            else
+            {
+                // Y is the axis of seperation
+                direction = new Vector2(0, 1);
+            }
+
+            const float restitution = 1.0f;
+
+            // Calculate impulse
+            var newTargetSpeed = ((targetSpeed * targetMass) + (sourceSpeed * sourceMass) +
+                                  sourceMass * restitution * (sourceSpeed - targetSpeed)) / (targetMass + sourceMass);
+            var targetImpulse = direction * newTargetSpeed * targetMass;
+
+            return targetImpulse;
+        }
+
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
         {
             if (a == b)

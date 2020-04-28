@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -10,7 +11,7 @@ namespace Robust.Server.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    public class PhysicsComponent : Component
+    public class PhysicsComponent : SharedPhysicsComponent
     {
         private float _mass;
         private Vector2 _linVelocity;
@@ -26,7 +27,7 @@ namespace Robust.Server.GameObjects
         ///     Current mass of the entity in kilograms.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Mass
+        public override float Mass
         {
             get => _mass;
             set
@@ -40,7 +41,7 @@ namespace Robust.Server.GameObjects
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LinearVelocity
+        public override Vector2 LinearVelocity
         {
             get => _linVelocity;
             set
@@ -57,7 +58,7 @@ namespace Robust.Server.GameObjects
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float AngularVelocity
+        public override float AngularVelocity
         {
             get => _angVelocity;
             set
@@ -68,6 +69,16 @@ namespace Robust.Server.GameObjects
                 _angVelocity = value;
                 Dirty();
             }
+        }
+
+        /// <summary>
+        ///     Current momentum of the entity in kilogram meters per second
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public override Vector2 Momentum
+        {
+            get => LinearVelocity * Mass;
+            set => LinearVelocity = value / Mass;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -100,7 +111,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, _linVelocity);
+            return new PhysicsComponentState(_mass, _linVelocity, _angVelocity);
         }
     }
 }

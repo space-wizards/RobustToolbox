@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using Robust.Shared.Interfaces.Physics;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -19,6 +20,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPhysicsManager _physicsManager;
 #pragma warning restore 649
 
         private const float Epsilon = 1.0e-6f;
@@ -49,7 +51,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                     continue;
                 }
 
-                ResolveForces(_mapManager, _tileDefinitionManager, entity, frameTime);
+                ResolveImpulse(entity, frameTime);
             }
 
             foreach (var entity in entities)
@@ -63,12 +65,24 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
         }
 
-        private void ResolveForces(IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IEntity entity,
-            float frameTime)
+        private void ResolveImpulse(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
 
-            // TODO: Everything
+            var impulse = Vector2.One;
+
+            // Start by calculating virtual forces
+            // TODO: Implement
+
+            // Calculate collision forces
+            if (entity.TryGetComponent<CollidableComponent>(out var collider))
+            {
+                var collidables = collider.GetCollidingEntities(Vector2.Zero);
+                foreach (var otherCollider in collidables)
+                {
+                    impulse += _physicsManager.CalculateCollisionImpulse(collider, otherCollider);
+                }
+            }
         }
 
         private void UpdatePosition(IEntity entity, float frameTime)
@@ -80,7 +94,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity)
         {
-            if (entity.TryGetComponent(out CollidableComponent collider) && collider.IsScrapingFloor)
+            if (entity.TryGetComponent(out CollidableComponent collider) && collider.IsOnGround())
             {
                 var location = entity.Transform;
                 var grid = mapManager.GetGrid(location.GridPosition.GridID);

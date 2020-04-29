@@ -121,6 +121,7 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<ISignalHandler, ClientSignalHandler>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
+            IoCManager.Register<IScriptClient, ScriptClient>();
         }
     }
 }

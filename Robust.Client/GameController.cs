@@ -68,6 +68,7 @@ namespace Robust.Client
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly ISignalHandler _signalHandler;
         [Dependency] private readonly IClientConGroupController _conGroupController;
+        [Dependency] private readonly IScriptClient _scriptClient;
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
@@ -174,6 +175,7 @@ namespace Robust.Client
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
             _conGroupController.Initialize();
+            _scriptClient.Initialize();
 
             _client.Initialize();
             _discord.Initialize();

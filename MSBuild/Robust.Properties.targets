@@ -27,8 +27,8 @@
     <Python>python3</Python>
     <Python Condition="'$(ActualOS)' == 'Windows'">py -3</Python>
     <TargetFramework>netcoreapp3.0</TargetFramework>
-    <EnableScripting>True</EnableScripting>
-    <!-- Scripting is disabled on full release builds for security and size reasons. -->
-    <EnableScripting Condition="'$(FullRelease)' == 'True'">False</EnableScripting>
+    <EnableClientScripting>True</EnableClientScripting>
+    <!-- Client scripting is disabled on full release builds for security and size reasons. -->
+    <EnableClientScripting Condition="'$(FullRelease)' == 'True'">False</EnableClientScripting>
   </PropertyGroup>
 </Project>

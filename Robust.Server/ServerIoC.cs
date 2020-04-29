@@ -17,6 +17,7 @@ using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
+using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Server.Timing;
 using Robust.Server.ViewVariables;
@@ -71,6 +72,7 @@ namespace Robust.Server
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
+            IoCManager.Register<IScriptHost, ScriptHost>();
         }
     }
 }

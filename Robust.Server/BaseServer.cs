@@ -32,6 +32,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Localization;
 using Robust.Server.Interfaces.Debugging;
+using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
@@ -61,6 +62,7 @@ namespace Robust.Server
         [Dependency] private IRuntimeLog runtimeLog;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly IWatchdogApi _watchdogApi;
+        [Dependency] private readonly IScriptHost _scriptHost;
 #pragma warning restore 649
 
         private CommandLineArgs _commandLineArgs;
@@ -245,6 +247,7 @@ namespace Robust.Server
             IoCManager.Resolve<IConsoleShell>().Initialize();
             IoCManager.Resolve<IConGroupController>().Initialize();
             _entities.Startup();
+            _scriptHost.Initialize();
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

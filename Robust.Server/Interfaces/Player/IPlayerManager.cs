@@ -49,6 +49,8 @@ namespace Robust.Server.Interfaces.Player
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
+        bool TryGetSessionByChannel(INetChannel channel, out IPlayerSession session);
+
         bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session);
 
         /// <summary>

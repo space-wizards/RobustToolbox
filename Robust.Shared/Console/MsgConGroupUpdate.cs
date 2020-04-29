@@ -28,6 +28,7 @@ namespace Robust.Shared.Console
             ClientConGroup.Name = buffer.ReadString();
             ClientConGroup.CanViewVar = buffer.ReadBoolean();
             ClientConGroup.CanAdminPlace = buffer.ReadBoolean();
+            ClientConGroup.CanScript = buffer.ReadBoolean();
 
             int numCommands = buffer.ReadInt32();
             ClientConGroup.Commands = new List<string>(numCommands);
@@ -43,6 +44,7 @@ namespace Robust.Shared.Console
             buffer.Write(ClientConGroup.Name);
             buffer.Write(ClientConGroup.CanViewVar);
             buffer.Write(ClientConGroup.CanAdminPlace);
+            buffer.Write(ClientConGroup.CanScript);
 
             buffer.Write(ClientConGroup.Commands.Count);
             foreach (var command in ClientConGroup.Commands)

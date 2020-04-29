@@ -88,6 +88,13 @@ namespace Robust.Server.Console
             return _groups.CanAdminPlace(group);
         }
 
+        public bool CanScript(IPlayerSession session)
+        {
+            var group = _sessions.GetSessionGroup(session);
+
+            return _groups.CanScript(group);
+        }
+
         /// <summary>
         /// Clears all session data.
         /// </summary>

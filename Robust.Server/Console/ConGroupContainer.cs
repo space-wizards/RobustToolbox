@@ -149,5 +149,16 @@ namespace Robust.Server.Console
             _logger.Error($"Unknown groupIndex: {groupIndex}");
             return false;
         }
+
+        public bool CanScript(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanScript;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
     }
 }

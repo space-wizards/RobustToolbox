@@ -19,7 +19,6 @@ namespace Robust.Shared.GameObjects.Components
 #pragma warning restore 649
 
         private bool _canCollide;
-        private bool _isHardCollidable;
         private BodyStatus _status;
         private BodyType _bodyType;
         private List<IPhysShape> _physShapes = new List<IPhysShape>();
@@ -42,7 +41,6 @@ namespace Robust.Shared.GameObjects.Components
             base.ExposeData(serializer);
 
             serializer.DataField(ref _canCollide, "on", true);
-            serializer.DataField(ref _isHardCollidable, "hard", true);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
@@ -51,7 +49,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_canCollide, _isHardCollidable, _isScrapingFloor, _physShapes);
+            return new CollidableComponentState(_canCollide, _status, _physShapes);
         }
 
         /// <inheritdoc />
@@ -63,8 +61,7 @@ namespace Robust.Shared.GameObjects.Components
             var newState = (CollidableComponentState)curState;
 
             _canCollide = newState.CanCollide;
-            _isHardCollidable = newState.HardCollidable;
-            _isScrapingFloor = newState.ScrapingFloor;
+            _status = newState.Status;
 
             //TODO: Is this always true?
             if (newState.PhysShapes != null)
@@ -184,6 +181,11 @@ namespace Robust.Shared.GameObjects.Components
         {
             _physicsManager.RemoveBody(this);
             base.Shutdown();
+        }
+
+        public bool IsColliding(Vector2 offset)
+        {
+            throw new NotImplementedException();
         }
 
         public List<ICollidableComponent> GetCollidingEntities(Vector2 offset)

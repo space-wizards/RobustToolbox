@@ -50,7 +50,7 @@ namespace Robust.Shared.Physics
         public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, float targetSpeed, float sourceSpeed, float targetMass, float sourceMass)
         {
             // Find intersection
-            Box2 manifold = target.WorldAABB.Intersect(target.WorldAABB);
+            Box2 manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
             var direction = Vector2.Zero;
             if (manifold.Height > manifold.Width)
@@ -72,6 +72,16 @@ namespace Robust.Shared.Physics
             var targetImpulse = direction * newTargetSpeed * targetMass;
 
             return targetImpulse;
+        }
+
+        public List<ICollidableComponent> GetCollidingEntities(IPhysBody body, Vector2 offset)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsColliding(IPhysBody body, Vector2 offset)
+        {
+            throw new NotImplementedException();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)

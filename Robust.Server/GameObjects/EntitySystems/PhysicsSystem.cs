@@ -80,7 +80,8 @@ namespace Robust.Server.GameObjects.EntitySystems
                 var collidables = collider.GetCollidingEntities(Vector2.Zero);
                 foreach (var otherCollider in collidables)
                 {
-                    impulse += _physicsManager.CalculateCollisionImpulse(collider, otherCollider);
+                    PhysicsComponent sourcePhysics = ((IComponent)otherCollider).Owner.GetComponent<PhysicsComponent>();
+                    impulse += _physicsManager.CalculateCollisionImpulse(collider, otherCollider, physics.LinearVelocity.Length, sourcePhysics.LinearVelocity.Length, physics.Mass, sourcePhysics.Mass);
                 }
             }
         }

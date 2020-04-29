@@ -29,6 +29,14 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         List<ICollidableComponent> GetCollidingEntities(IPhysBody body, Vector2 offset);
 
+        /// <summary>
+        ///     Checks whether a body is colliding
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="offset"></param>
+        /// <returns></returns>
+        bool IsColliding(IPhysBody body, Vector2 offset);
+
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
 
@@ -49,8 +57,12 @@ namespace Robust.Shared.Interfaces.Physics
         /// </summary>
         /// <param name="target"></param>
         /// <param name="source"></param>
+        /// <param name="targetSpeed"></param>
+        /// <param name="targetMass"></param>
+        /// <param name="sourceSpeed"></param>
+        /// <param name="sourceMass"></param>
         /// <returns>A impulse vector in kilogram meters per second</returns>
-        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source);
+        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, float targetSpeed, float sourceSpeed, float targetMass, float sourceMass);
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

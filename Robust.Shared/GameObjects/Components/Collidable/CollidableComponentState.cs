@@ -9,16 +9,14 @@ namespace Robust.Shared.GameObjects.Components
     public class CollidableComponentState : ComponentState
     {
         public readonly bool CanCollide;
-        public readonly bool HardCollidable;
-        public readonly bool ScrapingFloor;
+        public readonly BodyStatus Status;
         public readonly List<IPhysShape> PhysShapes;
 
-        public CollidableComponentState(bool CanCollide, bool hardCollidable, bool scrapingFloor, List<IPhysShape> physShapes)
+        public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes)
             : base(NetIDs.COLLIDABLE)
         {
-            CanCollide = CanCollide;
-            HardCollidable = hardCollidable;
-            ScrapingFloor = scrapingFloor;
+            CanCollide = canCollide;
+            Status = status;
             PhysShapes = physShapes;
         }
     }

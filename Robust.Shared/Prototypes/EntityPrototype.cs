@@ -509,6 +509,13 @@ namespace Robust.Shared.GameObjects
                     return;
             }
 
+            // Has this type already been added?
+            if (Components.Keys.Contains(type))
+            {
+                Log.Logger.Error($"Component of type '{type}' defined twice in prototype {ID}!");
+                return;
+            }
+
             var copy = new YamlMappingNode(mapping.AsEnumerable());
             // TODO: figure out a better way to exclude the type node.
             // Also maybe deep copy this? Right now it's pretty error prone.

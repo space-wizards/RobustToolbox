@@ -93,3 +93,5 @@ __pycache__
 .mypy_cache
 
 MSBuild/Robust.Custom.targets
+
+.idea/

@@ -513,6 +513,7 @@ namespace Robust.Shared.GameObjects
             if (Components.Keys.Contains(type))
             {
                 Log.Logger.Error($"Component of type '{type}' defined twice in prototype {ID}!");
+                return;
             }
 
             var copy = new YamlMappingNode(mapping.AsEnumerable());

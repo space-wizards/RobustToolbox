@@ -39,11 +39,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
         /// </summary>
-        public static EntityUid Parse(string uid)
+        public static EntityUid Parse(ReadOnlySpan<char> uid)
         {
             if (uid.StartsWith("c"))
             {
-                return new EntityUid(int.Parse(uid.Substring(1)) | ClientUid);
+                return new EntityUid(int.Parse(uid[1..]) | ClientUid);
             }
             else
             {
@@ -51,7 +51,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public static bool TryParse(string uid, out EntityUid entityUid)
+        public static bool TryParse(ReadOnlySpan<char> uid, out EntityUid entityUid)
         {
             try
             {

@@ -47,41 +47,56 @@ namespace Robust.Shared.Physics
         }
 
 
-        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, float targetSpeed, float sourceSpeed, float targetMass, float sourceMass)
+        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass)
         {
+            var normal = Vector2.Zero;
             // Find intersection
             Box2 manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
-            var direction = Vector2.Zero;
             if (manifold.Height > manifold.Width)
             {
                 // X is the axis of seperation
-                direction = new Vector2(1, 0);
+                normal = new Vector2(manifold.Width * manifold.Width > 0 ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
-                direction = new Vector2(0, 1);
+                normal = new Vector2(0, manifold.Height * manifold.Height > 0 ? 1 : -1);
             }
-
-            const float restitution = 1.0f;
-
-            // Calculate impulse
-            var newTargetSpeed = ((targetSpeed * targetMass) + (sourceSpeed * sourceMass) +
-                                  sourceMass * restitution * (sourceSpeed - targetSpeed)) / (targetMass + sourceMass);
-            var targetImpulse = direction * newTargetSpeed * targetMass;
-
+            var relativeVelocity = sourceVel - targetVel;
+            var contactVel = Vector2.Dot(relativeVelocity, normal);
+            if (contactVel > 0) return Vector2.Zero;
+            const float restitution = 0.5f;
+            var targetImpulse = normal * (1 + restitution) * contactVel;
+            if (sourceMass == 0.0f)
+            {
+                targetImpulse /= 1 / targetMass;
+            }
+            else
+            {
+                targetImpulse /= 1 / targetMass + 1 / sourceMass;
+            }
             return targetImpulse;
         }
 
-        public List<ICollidableComponent> GetCollidingEntities(IPhysBody body, Vector2 offset)
+        public IEnumerable<ICollidableComponent> GetCollidingEntities(IPhysBody physBody, Vector2 offset)
         {
-            throw new NotImplementedException();
+            foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB))
+            {
+                if (body.Owner.Deleted) {
+                    continue;
+                }
+
+                if (CollidesOnMask(physBody, body))
+                {
+                    yield return body as ICollidableComponent;
+                }
+            }
         }
 
         public bool IsColliding(IPhysBody body, Vector2 offset)
         {
-            throw new NotImplementedException();
+            return GetCollidingEntities(body, offset).Any();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)

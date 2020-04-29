@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -232,7 +233,7 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(testBody);
 
             // Act
-            var results = manager.GetCollidingEntities(testBody, Vector2.Zero);
+            var results = manager.GetCollidingEntities(testBody, Vector2.Zero).ToImmutableList();
 
             // Assert
             Assert.That(results.Count, Is.EqualTo(1));

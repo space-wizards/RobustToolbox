@@ -12,5 +12,6 @@ namespace Robust.Shared.Physics
         public abstract float AngularVelocity { get; set; }
         public abstract float Mass { get; set; }
         public abstract Vector2 Momentum { get; set; }
+        public abstract VirtualForce VirtualForce { get; set; }
     }
 }

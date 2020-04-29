@@ -15,6 +15,7 @@ namespace Robust.Client.GameObjects
         private Vector2 _linVel;
         private float _angVel;
         private float _mass;
+        private VirtualForce _virtualForce;
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
@@ -57,6 +58,15 @@ namespace Robust.Client.GameObjects
         {
             get => LinearVelocity * Mass;
             set => _linVel = value / Mass;
+        }
+
+        /// <summary>
+        ///     Represents a virtual force acting on the physics component.
+        /// </summary>
+        public override VirtualForce VirtualForce
+        {
+            get => _virtualForce;
+            set => _virtualForce = value;
         }
 
         /// <inheritdoc />

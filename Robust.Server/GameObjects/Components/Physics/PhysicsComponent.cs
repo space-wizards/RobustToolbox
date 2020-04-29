@@ -16,6 +16,7 @@ namespace Robust.Server.GameObjects
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
+        private VirtualForce _virtualForce;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -81,6 +82,16 @@ namespace Robust.Server.GameObjects
             set => LinearVelocity = value / Mass;
         }
 
+
+        /// <summary>
+        ///     Represents a virtual force acting on the physics component.
+        /// </summary>
+        public override VirtualForce VirtualForce
+        {
+            get => _virtualForce;
+            set => _virtualForce = value;
+        }
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
         private bool edgeSlide = true;
@@ -105,7 +116,8 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
             serializer.DataField(ref edgeSlide, "edgeslide", true);
-            serializer.DataField(ref _anchored, "Anchored", true);
+            serializer.DataField(ref _anchored, "Anchored", false);
+            serializer.DataField(ref _virtualForce, "Virtual Force", new VirtualForce(Vector2.Zero));
         }
 
         /// <inheritdoc />

@@ -55,6 +55,8 @@ namespace Robust.Shared.Interfaces.Physics
 
         bool Update(IPhysBody collider);
 
+        void RemovedFromMap(IPhysBody body, MapId mapId);
+        void AddedToMap(IPhysBody body, MapId mapId);
     }
 
     public struct DebugRayData

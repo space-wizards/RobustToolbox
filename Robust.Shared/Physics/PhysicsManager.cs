@@ -23,7 +23,7 @@ namespace Robust.Shared.Physics
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
 
-        private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
+        public BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
         /// <summary>
         ///     returns true if collider intersects a physBody under management. Does not trigger Bump.
@@ -337,5 +337,14 @@ namespace Robust.Shared.Physics
         public bool Update(IPhysBody collider)
             => this[collider.MapID].Update(collider);
 
+        public void RemovedFromMap(IPhysBody body, MapId mapId)
+        {
+            this[mapId].Remove(body);
+        }
+
+        public void AddedToMap(IPhysBody body, MapId mapId)
+        {
+            this[mapId].Add(body);
+        }
     }
 }

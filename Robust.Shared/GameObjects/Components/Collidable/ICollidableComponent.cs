@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 
@@ -11,6 +12,8 @@ namespace Robust.Shared.GameObjects.Components
 
         bool UpdatePhysicsTree();
 
+        void RemovedFromPhysicsTree(MapId mapId);
+        void AddedToPhysicsTree(MapId mapId);
     }
 
     public interface ICollideSpecial

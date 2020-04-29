@@ -229,6 +229,16 @@ namespace Robust.Shared.GameObjects.Components
         public bool UpdatePhysicsTree()
             => _physicsManager.Update(this);
 
+        public void RemovedFromPhysicsTree(MapId mapId)
+        {
+            _physicsManager.RemovedFromMap(this, mapId);
+        }
+
+        public void AddedToPhysicsTree(MapId mapId)
+        {
+            _physicsManager.AddedToMap(this, mapId);
+        }
+
         private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
     }
 

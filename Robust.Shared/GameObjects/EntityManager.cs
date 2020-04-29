@@ -550,6 +550,16 @@ namespace Robust.Shared.GameObjects
             return necessary > 0;
         }
 
+        public bool RemoveFromEntityTree(IEntity entity, MapId mapId)
+        {
+            if (_entityTreesPerMap.TryGetValue(mapId, out var tree))
+            {
+                return tree.Remove(entity);
+            }
+
+            return false;
+        }
+
         private void RemoveFromEntityTrees(IEntity entity)
         {
             foreach (var mapId in _mapManager.GetAllMapIds())

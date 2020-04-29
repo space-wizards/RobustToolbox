@@ -430,10 +430,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _parent = EntityUid.Invalid;
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
             Owner.SendMessage(this, compMessage);
+            var oldMapId = MapID;
             MapID = MapId.Nullspace;
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             RebuildMatrices();
+            MapIdChanged(oldMapId);
             Dirty();
         }
 
@@ -469,7 +471,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             _parent = newParentEnt.Uid;
 
+            var oldMapId = MapID;
+
             MapID = newConcrete.MapID;
+            MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
 
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
@@ -487,12 +492,35 @@ namespace Robust.Shared.GameObjects.Components.Transform
             foreach (var child in _children)
             {
                 var concrete = comp.GetComponent<TransformComponent>(child);
+                var old = concrete.MapID;
+
                 concrete.MapID = newMapId;
+                concrete.MapIdChanged(old);
 
                 if (concrete.ChildCount != 0)
                 {
                     concrete.UpdateChildMapIdsRecursive(newMapId, comp);
                 }
+            }
+        }
+
+        private void MapIdChanged(MapId oldId)
+        {
+            ICollidableComponent collider;
+
+            if (oldId != MapId.Nullspace)
+            {
+                _entityManager.RemoveFromEntityTree(Owner, oldId);
+
+                if (Initialized && Owner.TryGetComponent(out collider))
+                {
+                    collider.RemovedFromPhysicsTree(oldId);
+                }
+            }
+
+            if (MapID != MapId.Nullspace && Initialized && Owner.TryGetComponent(out collider))
+            {
+                collider.AddedToPhysicsTree(MapID);
             }
         }
 

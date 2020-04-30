@@ -205,14 +205,21 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private static Image<T> FlipClone<T>(Image<T> source) where T : struct, IPixel<T>
         {
-            var copy = new Image<T>(source.Width, source.Height);
+            var w = source.Width;
+            var h = source.Height;
 
-            var w = copy.Width;
-            var h = copy.Height;
+            var copy = new Image<T>(w, h);
 
             var srcSpan = source.GetPixelSpan();
             var dstSpan = copy.GetPixelSpan();
 
+            FlipCopy(srcSpan, dstSpan, w, h);
+
+            return copy;
+        }
+
+        private static void FlipCopy<T>(ReadOnlySpan<T> srcSpan, Span<T> dstSpan, int w, int h)
+        {
             var dr = h - 1;
             for (var r = 0; r < h; r++, dr--)
             {
@@ -223,8 +230,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 srcRow.CopyTo(dstRow);
             }
-
-            return copy;
         }
 
         private sealed class LoadedTexture

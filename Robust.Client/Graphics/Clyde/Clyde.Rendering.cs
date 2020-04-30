@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Shaders;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
 using StencilOp = OpenTK.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
@@ -685,12 +690,75 @@ namespace Robust.Client.Graphics.Clyde
             _batchMetaData = null;
         }
 
-        // Use a tagged union to store all render commands.
-        // This significantly improves performance vs doing sum types via inheritance.
-        // Also means I don't have to declare a pool for every command type.
+        private unsafe void TakeScreenshot(ScreenshotType type)
+        {
+            if (_queuedScreenshots.Count == 0 || _queuedScreenshots.All(p => p.type != type))
+            {
+                return;
+            }
+
+            var delegates = _queuedScreenshots.Where(p => p.type == type).ToList();
+
+            _queuedScreenshots.RemoveAll(p => p.type == type);
+
+            GL.CreateBuffers(1, out uint pbo);
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+            GL.BufferData(BufferTarget.PixelPackBuffer, ScreenSize.X * ScreenSize.Y * sizeof(Rgb24), IntPtr.Zero,
+                BufferUsageHint.StreamRead);
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
+            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+
+            _transferringScreenshots.Add((pbo, fence, ScreenSize, image => delegates.ForEach(p => p.callback(image))));
+        }
+
+        private unsafe void CheckTransferringScreenshots()
+        {
+            if (_transferringScreenshots.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var screenshot in _transferringScreenshots.ToList())
+            {
+                var (pbo, fence, (width, height), callback) = screenshot;
+
+                int status;
+                GL.GetSync(fence, SyncParameterName.SyncStatus, sizeof(int), null, &status);
+
+                if (status == (int) All.Signaled)
+                {
+                    GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+                    var ptr = GL.MapBuffer(BufferTarget.PixelPackBuffer, BufferAccess.ReadOnly);
+
+                    var packSpan = new ReadOnlySpan<Rgb24>((void*) ptr, width * height);
+
+                    var image = new Image<Rgb24>(width, height);
+                    var imageSpan = image.GetPixelSpan();
+
+                    FlipCopy(packSpan, imageSpan, width, height);
+
+                    GL.UnmapBuffer(BufferTarget.PixelPackBuffer);
+                    GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+                    GL.DeleteBuffer(pbo);
+                    GL.DeleteSync(fence);
+
+                    _transferringScreenshots.Remove(screenshot);
+
+                    // TODO: Don't do unnecessary copy here.
+                    callback(image);
+                }
+            }
+        }
+
         [StructLayout(LayoutKind.Explicit)]
         private struct RenderCommand
         {
+            // Use a tagged union to store all render commands.
+            // This significantly improves performance vs doing sum types via inheritance.
+            // Also means I don't have to declare a pool for every command type.
             [FieldOffset(0)] public RenderCommandType Type;
 
             [FieldOffset(4)] public RenderCommandDrawBatch DrawBatch;

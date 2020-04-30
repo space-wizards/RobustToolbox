@@ -19,6 +19,8 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -65,6 +67,13 @@ namespace Robust.Client.Graphics.Clyde
         private bool _quartResLights = true;
 
         private bool _hasKhrDebug;
+
+        private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
+            = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
+
+        private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
+            _transferringScreenshots
+                = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
 
         public override bool Initialize()
         {
@@ -122,6 +131,11 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public override event Action<WindowResizedEventArgs> OnWindowResized;
+
+        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
+        {
+            _queuedScreenshots.Add((type, callback));
+        }
 
         private void InitOpenGL()
         {

@@ -109,6 +109,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
+        {
+            callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
+        }
+
         public ClydeHandle LoadShader(ParsedShader shader, string name = null)
         {
             return default;

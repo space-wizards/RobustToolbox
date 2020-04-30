@@ -47,6 +47,13 @@ namespace Robust.Client.Interfaces.Graphics
         /// <param name="cursor">The cursor to set to, or <see langword="null"/> to reset to the default cursor.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the cursor object passed has been disposed.</exception>
         void SetCursor(ICursor cursor);
+
+        /// <summary>
+        ///     Make a screenshot of the game, next render frame.
+        /// </summary>
+        /// <param name="type">What kind of screenshot to take</param>
+        /// <param name="callback">The callback to run when the screenshot has been made.</param>
+        void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback);
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

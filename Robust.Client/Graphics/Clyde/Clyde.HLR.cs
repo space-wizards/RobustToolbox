@@ -27,6 +27,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            CheckTransferringScreenshots();
+
             var size = ScreenSize;
             if (size.X == 0 || size.Y == 0 || _isMinimized)
             {
@@ -124,6 +126,7 @@ namespace Robust.Client.Graphics.Clyde
                 _renderHandle.DrawingHandleScreen.DrawTextureRect(_wallBleedIntermediateRenderTarget2.Texture, UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
             }
 
+            TakeScreenshot(ScreenshotType.BeforeUI);
 
             RenderOverlays(OverlaySpace.ScreenSpace);
 
@@ -132,6 +135,8 @@ namespace Robust.Client.Graphics.Clyde
                 _userInterfaceManager.Render(_renderHandle);
                 FlushRenderQueue();
             }
+
+            TakeScreenshot(ScreenshotType.AfterUI);
 
             // And finally, swap those buffers!
             SwapBuffers();

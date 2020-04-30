@@ -15,7 +15,8 @@ namespace Robust.Client.GameObjects
         private Vector2 _linVel;
         private float _angVel;
         private float _mass;
-        private VirtualForce _virtualForce;
+        private VirtualController _controller;
+        private BodyStatus _status;
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
@@ -61,12 +62,30 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Represents a virtual force acting on the physics component.
+        ///     The current status of the object
         /// </summary>
-        public override VirtualForce VirtualForce
+        public override BodyStatus Status
         {
-            get => _virtualForce;
-            set => _virtualForce = value;
+            get => _status;
+            set => _status = value;
+        }
+
+        public bool IsOnGround()
+        {
+            return Status == BodyStatus.OnGround;
+        }
+
+        public bool IsInAir()
+        {
+            return Status == BodyStatus.InAir;
+        }
+
+        /// <summary>
+        ///     Represents a virtual controller acting on the physics component.
+        /// </summary>
+        public override VirtualController Controller
+        {
+            get => _controller;
         }
 
         /// <inheritdoc />

@@ -1,5 +1,8 @@
+using System;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics
 {
@@ -12,6 +15,14 @@ namespace Robust.Shared.Physics
         public abstract float AngularVelocity { get; set; }
         public abstract float Mass { get; set; }
         public abstract Vector2 Momentum { get; set; }
-        public abstract VirtualForce VirtualForce { get; set; }
+        public abstract BodyStatus Status { get; set; }
+        [CanBeNull]
+        public abstract VirtualController Controller { get; }
+    }
+    [Serializable, NetSerializable]
+    public enum BodyStatus
+    {
+        OnGround,
+        InAir
     }
 }

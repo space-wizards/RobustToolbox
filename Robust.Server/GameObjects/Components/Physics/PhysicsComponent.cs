@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects;
+﻿using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
@@ -16,7 +17,8 @@ namespace Robust.Server.GameObjects
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualForce _virtualForce;
+        private VirtualController _controller = null;
+        private BodyStatus _status;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -82,14 +84,22 @@ namespace Robust.Server.GameObjects
             set => LinearVelocity = value / Mass;
         }
 
+        /// <summary>
+        ///     The current status of the object
+        /// </summary>
+        public override BodyStatus Status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
 
         /// <summary>
-        ///     Represents a virtual force acting on the physics component.
+        ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualForce VirtualForce
+        public override VirtualController Controller
         {
-            get => _virtualForce;
-            set => _virtualForce = value;
+            get => _controller;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -107,6 +117,21 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        public bool IsOnGround()
+        {
+            return Status == BodyStatus.OnGround;
+        }
+
+        public bool IsInAir()
+        {
+            return Status == BodyStatus.InAir;
+        }
+
+        public void SetController<T>() where T: VirtualController, new()
+        {
+            _controller = new T {ControlledComponent = this};
+        }
+
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -117,7 +142,8 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
             serializer.DataField(ref edgeSlide, "edgeslide", true);
             serializer.DataField(ref _anchored, "Anchored", false);
-            serializer.DataField(ref _virtualForce, "Virtual Force", new VirtualForce(Vector2.Zero));
+            serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
+            serializer.DataField(ref _controller, "Controller", null);
         }
 
         /// <inheritdoc />

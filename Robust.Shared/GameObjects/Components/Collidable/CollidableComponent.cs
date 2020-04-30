@@ -218,11 +218,4 @@ namespace Robust.Shared.GameObjects.Components
             return Status == BodyStatus.InAir;
         }
     }
-
-    [Serializable, NetSerializable]
-    public enum BodyStatus
-    {
-        OnGround,
-        InAir
-    }
 }

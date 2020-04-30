@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Physics;
 
@@ -70,19 +71,29 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var physics = entity.GetComponent<PhysicsComponent>();
 
-            // Won't be affected by impulses
-            if (physics.Anchored) return;
+            // Run the virtual controller
+            physics.Controller?.UpdateBeforeProcessing();
 
-            // Start by calculating virtual forces
-            var virtualForceImpulse = physics.VirtualForce.GetImpulse(frameTime);
+            // Next, calculate frictional impulse
+            var friction = GetFriction(entity);
 
-            physics.LinearVelocity += virtualForceImpulse / physics.Mass;
+            // No multiplication/division by mass here since that would be redundant
+            var frictionImpulse = physics.LinearVelocity == Vector2.Zero ? Vector2.Zero : physics.LinearVelocity.Normalized * -friction;
+
+            physics.LinearVelocity += frictionImpulse;
 
             var collisionImpulse = Vector2.Zero;
             // Calculate collision forces
             if (entity.TryGetComponent<CollidableComponent>(out var collider))
             {
                 var collidables = collider.GetCollidingEntities(Vector2.Zero);
+                // Run collision behavior
+                var collidecomponents = entity.GetAllComponents<ICollideBehavior>().ToList();
+
+                for (var i = 0; i < collidecomponents.Count; i++)
+                {
+                    collidecomponents[i].CollideWith(collidables.Select(c => (c as IPhysBody).Owner).ToList());
+                }
                 foreach (var otherCollider in collidables)
                 {
                     if (((IComponent) otherCollider).Owner.TryGetComponent<PhysicsComponent>(out var sourcePhysics))
@@ -97,6 +108,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 }
             }
             physics.LinearVelocity += collisionImpulse / physics.Mass;
+            // Won't be affected by impulses
+            if (physics.Anchored) physics.LinearVelocity = Vector2.Zero;
+            physics.Controller?.UpdateAfterProcessing();
         }
 
         private void UpdatePosition(IEntity entity, float frameTime)
@@ -107,14 +121,14 @@ namespace Robust.Server.GameObjects.EntitySystems
             physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
         }
 
-        private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity)
+        private float GetFriction(IEntity entity)
         {
-            if (entity.TryGetComponent(out CollidableComponent collider) && collider.IsOnGround())
+            if (entity.TryGetComponent(out CollidableComponent collider) && entity.TryGetComponent(out PhysicsComponent physics) && physics.IsOnGround())
             {
                 var location = entity.Transform;
-                var grid = mapManager.GetGrid(location.GridPosition.GridID);
+                var grid = _mapManager.GetGrid(location.GridPosition.GridID);
                 var tile = grid.GetTileRef(location.GridPosition);
-                var tileDef = tileDefinitionManager[tile.Tile.TypeId];
+                var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                 return tileDef.Friction;
             }
             return 0;

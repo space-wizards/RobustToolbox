@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -18,8 +17,6 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-        private readonly List<IPhysBody> _results = new List<IPhysBody>();
-
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
 
@@ -49,21 +46,27 @@ namespace Robust.Shared.Physics
 
         public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass)
         {
+            var relativeVelocity = sourceVel - targetVel;
             var normal = Vector2.Zero;
             // Find intersection
-            Box2 manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
             if (manifold.Height > manifold.Width)
             {
                 // X is the axis of seperation
-                normal = new Vector2(manifold.Width * manifold.Width > 0 ? 1 : -1, 0);
+                var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
+                var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
+                normal = new Vector2(manifold.Width * leftDist > rightDist ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
-                normal = new Vector2(0, manifold.Height * manifold.Height > 0 ? 1 : -1);
+                var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
+                var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
+                normal = new Vector2(0, manifold.Height * bottomDist > topDist ? 1 : -1);
             }
-            var relativeVelocity = sourceVel - targetVel;
+
+            if (relativeVelocity == Vector2.Zero) relativeVelocity = -normal;
             var contactVel = Vector2.Dot(relativeVelocity, normal);
             if (contactVel > 0) return Vector2.Zero;
             const float restitution = 0.5f;
@@ -81,6 +84,7 @@ namespace Robust.Shared.Physics
 
         public IEnumerable<ICollidableComponent> GetCollidingEntities(IPhysBody physBody, Vector2 offset)
         {
+            var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
             foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB))
             {
                 if (body.Owner.Deleted) {
@@ -89,6 +93,18 @@ namespace Robust.Shared.Physics
 
                 if (CollidesOnMask(physBody, body))
                 {
+                    var preventCollision = false;
+                    var otherModifiers = body.Owner.GetAllComponents<ICollideSpecial>();
+                    foreach (var modifier in modifiers)
+                    {
+                        preventCollision |= modifier.PreventCollide(body);
+                    }
+                    foreach (var modifier in otherModifiers)
+                    {
+                        preventCollision |= modifier.PreventCollide(physBody);
+                    }
+
+                    if (preventCollision) continue;
                     yield return body as ICollidableComponent;
                 }
             }

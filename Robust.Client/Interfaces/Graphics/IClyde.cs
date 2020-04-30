@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Robust.Client.Graphics;
@@ -54,6 +55,15 @@ namespace Robust.Client.Interfaces.Graphics
         /// <param name="type">What kind of screenshot to take</param>
         /// <param name="callback">The callback to run when the screenshot has been made.</param>
         void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback);
+
+        Task<Image<Rgb24>> ScreenshotAsync(ScreenshotType type)
+        {
+            var tcs = new TaskCompletionSource<Image<Rgb24>>();
+
+            Screenshot(type, image => tcs.SetResult(image));
+
+            return tcs.Task;
+        }
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

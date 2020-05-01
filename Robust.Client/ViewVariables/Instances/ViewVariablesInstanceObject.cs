@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.ViewVariables;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.ViewVariables.Instances
 {
@@ -26,7 +27,7 @@ namespace Robust.Client.ViewVariables.Instances
             Object = obj;
             var type = obj.GetType();
 
-            _wrappingInit(window, obj.ToString(), type.ToString());
+            _wrappingInit(window, obj.ToString(), TypeAbbreviation.Abbreviate(type.ToString()));
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
             {
                 trait.Initialize(this);

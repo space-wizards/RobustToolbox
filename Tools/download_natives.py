@@ -188,9 +188,11 @@ class DepFluidsynth(NativeDependency):
         if targetOS != OS_WINDOWS:
             return
 
+        print("FLUIDSYNTH FOR WINDOWS")
         os_dep_dir = os.path.join(dep_dir, targetOS)
 
         if self.check_version(dep_dir):
+            print("MUST UPDATE")
             os.makedirs(os_dep_dir, exist_ok=True)
             # Download new version
 
@@ -198,12 +200,16 @@ class DepFluidsynth(NativeDependency):
                 url = DepFluidsynth.BASE_URL + filename
                 urllib.request.urlretrieve(url, os.path.join(os_dep_dir, filename))
 
+        print("COPYING")
         for file in os.listdir(os_dep_dir):
             source_file_path = os.path.join(os_dep_dir, file)
             target_file_path = os.path.join(output_dir, file)
 
+            print(file, source_file_path, target_file_path)
+
             if not os.path.exists(target_file_path) or \
                     os.stat(source_file_path).st_mtime > os.stat(target_file_path).st_mtime:
+                print("COPY")
                 shutil.copy2(source_file_path, target_file_path)
 
 
@@ -228,6 +234,9 @@ def main():
 
     if args.platform != "x64":
         return
+
+    print("Copying dependencies")
+    print(args.targetOS, args.outputDir)
 
     # Path to the RobustToolbox repo.
     repo_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))

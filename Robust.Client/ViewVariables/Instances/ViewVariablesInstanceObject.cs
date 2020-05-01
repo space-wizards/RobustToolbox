@@ -27,7 +27,14 @@ namespace Robust.Client.ViewVariables.Instances
             Object = obj;
             var type = obj.GetType();
 
-            _wrappingInit(window, obj.ToString(), TypeAbbreviation.Abbreviate(type.ToString()));
+            var title = obj.ToString();
+            var subtitle = TypeAbbreviation.Abbreviate(type.ToString());
+            if (title == obj.GetType().FullName) {
+                title = TypeAbbreviation.Abbreviate(title);
+                subtitle = ""; // This would just be the type again - not helpful
+            }
+
+            _wrappingInit(window, title, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))
             {
                 trait.Initialize(this);

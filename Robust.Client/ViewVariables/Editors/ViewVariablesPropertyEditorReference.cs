@@ -28,7 +28,7 @@ namespace Robust.Client.ViewVariables.Editors
 
             var button = new Button
             {
-                Text = $"Reference: {toString}",
+                Text = $"Ref: {toString}",
                 ClipText = true,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand
             };

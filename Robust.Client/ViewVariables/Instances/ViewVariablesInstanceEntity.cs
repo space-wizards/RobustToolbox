@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Instances
                     headBox.AddChild(new Label {Text = stringified, ClipText = true});
                     headBox.AddChild(new Label
                     {
-                        Text = type.FullName,
+                        Text = TypeAbbreviation.Abbreviate(type.FullName),
                     //    FontOverride = smallFont,
                         FontColorOverride = Color.DarkGray,
                         ClipText = true
@@ -86,7 +86,7 @@ namespace Robust.Client.ViewVariables.Instances
                 }
                 else
                 {
-                    top = new Label {Text = stringified};
+                    top = new Label {Text = TypeAbbreviation.Abbreviate(stringified)};
                 }
 
                 if (_entity.TryGetComponent(out ISpriteComponent sprite))

@@ -101,7 +101,7 @@ namespace Robust.Client.ViewVariables
                     Editable = access == VVAccess.ReadWrite,
                     Name = memberInfo.Name,
                     Type = memberType.AssemblyQualifiedName,
-                    TypePretty = memberType.ToString(),
+                    TypePretty = TypeAbbreviation.Abbreviate(memberType.ToString()),
                     Value = value
                 };
 

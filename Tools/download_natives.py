@@ -166,7 +166,7 @@ class DepOpenAL(SimpleDependency):
 
 class DepFluidsynth(NativeDependency):
     BASE_URL = "https://github.com/space-wizards/build-dependencies/blob/ccf2cf448883dd9b2d999ff9fb5c4533229231bd" \
-               "/natives/fluidsynth/2.1.0/ "
+               "/natives/fluidsynth/2.1.0/"
 
     FILES = [
         "fluidsynth.dll",

@@ -94,14 +94,9 @@ namespace Robust.Server.ViewVariables
                 // TODO: More flexibility in which types can be sent here.
                 if (valType != typeof(string))
                 {
-                    var stringified = value.ToString();
-                    if (stringified == value.GetType().FullName)
-                    {
-                        stringified = TypeAbbreviation.Abbreviate(stringified);
-                    }
                     return new ViewVariablesBlobMembers.ReferenceToken
                     {
-                        Stringified = stringified
+                        Stringified = PrettyPrint.PrintUserFacing(value)
                     };
                 }
             }

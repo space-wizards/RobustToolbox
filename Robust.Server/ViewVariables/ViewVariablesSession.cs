@@ -60,7 +60,7 @@ namespace Robust.Server.ViewVariables
                 return new ViewVariablesBlobMetadata
                 {
                     ObjectType = ObjectType.AssemblyQualifiedName,
-                    ObjectTypePretty = TypeAbbreviation.Abbreviate(ObjectType.ToString()),
+                    ObjectTypePretty = TypeAbbreviation.Abbreviate(ObjectType),
                     Stringified = Object.ToString(),
                     Traits = new List<object>(Host.TraitIdsFor(ObjectType))
                 };

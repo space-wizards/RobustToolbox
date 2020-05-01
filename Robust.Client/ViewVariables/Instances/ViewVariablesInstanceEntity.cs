@@ -68,8 +68,8 @@ namespace Robust.Client.ViewVariables.Instances
             // Handle top bar displaying type and ToString().
             {
                 Control top;
-                var stringified = obj.ToString();
-                if (type.FullName != stringified)
+                var stringified = PrettyPrint.PrintUserFacingWithType(obj, out var typeStringified);
+                if (typeStringified != "")
                 {
                     //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
                     // Custom ToString() implementation.
@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Instances
                     headBox.AddChild(new Label {Text = stringified, ClipText = true});
                     headBox.AddChild(new Label
                     {
-                        Text = TypeAbbreviation.Abbreviate(type.FullName),
+                        Text = typeStringified,
                     //    FontOverride = smallFont,
                         FontColorOverride = Color.DarkGray,
                         ClipText = true
@@ -86,7 +86,7 @@ namespace Robust.Client.ViewVariables.Instances
                 }
                 else
                 {
-                    top = new Label {Text = TypeAbbreviation.Abbreviate(stringified)};
+                    top = new Label {Text = stringified};
                 }
 
                 if (_entity.TryGetComponent(out ISpriteComponent sprite))
@@ -124,7 +124,7 @@ namespace Robust.Client.ViewVariables.Instances
             var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
             foreach (var component in componentList)
             {
-                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType().ToString()), TextAlign = Label.AlignMode.Left};
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
                 button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
                 clientComponents.AddChild(button);
             }

@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects.Components
             return _physicsManager.IsColliding(this, offset);
         }
 
-        public IEnumerable<ICollidableComponent> GetCollidingEntities(Vector2 offset)
+        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset)
         {
             return _physicsManager.GetCollidingEntities(this, offset);
         }

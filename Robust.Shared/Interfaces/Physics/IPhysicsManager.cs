@@ -27,7 +27,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// </summary>
         /// <param name="body"></param>
         /// <returns></returns>
-        IEnumerable<ICollidableComponent> GetCollidingEntities(IPhysBody body, Vector2 offset);
+        IEnumerable<IEntity> GetCollidingEntities(IPhysBody body, Vector2 offset);
 
         /// <summary>
         ///     Checks whether a body is colliding

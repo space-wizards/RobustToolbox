@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics
             return targetImpulse;
         }
 
-        public IEnumerable<ICollidableComponent> GetCollidingEntities(IPhysBody physBody, Vector2 offset)
+        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset)
         {
             var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
             foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB))
@@ -105,7 +105,7 @@ namespace Robust.Shared.Physics
                     }
 
                     if (preventCollision) continue;
-                    yield return body as ICollidableComponent;
+                    yield return body.Owner;
                 }
             }
         }

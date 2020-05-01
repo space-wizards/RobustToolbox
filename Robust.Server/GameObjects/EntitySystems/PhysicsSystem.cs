@@ -27,6 +27,8 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private const float Epsilon = 1.0e-6f;
 
+        private Dictionary<IEntity, List<IEntity>> _collisionCache = new Dictionary<IEntity, List<IEntity>>();
+
         public PhysicsSystem()
         {
             EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
@@ -67,12 +69,32 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
         }
 
+        private void ProcessCollisions()
+        {
+            _collisionCache.Clear();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var entities = entityManager.GetEntities(new TypeEntityQuery<CollidableComponent>());
+            foreach (var collider in entities.Select(entity => entity.GetComponent<CollidableComponent>()))
+            {
+                _collisionCache.Add(collider.Owner, collider.GetCollidingEntities(Vector2.Zero).ToList());
+                var collideComponents = collider.Owner.GetAllComponents<ICollideBehavior>().ToList();
+
+                for (var i = 0; i < collideComponents.Count; i++)
+                {
+                    collideComponents[i].CollideWith(_collisionCache[collider.Owner]);
+                }
+            }
+        }
+
         private void ResolveImpulse(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
 
             // Run the virtual controller
             physics.Controller?.UpdateBeforeProcessing();
+
+            // Calculate collisions and store them in the cache
+            ProcessCollisions();
 
             // Next, calculate frictional impulse
             var friction = GetFriction(entity);
@@ -84,17 +106,10 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             var collisionImpulse = Vector2.Zero;
             // Calculate collision forces
-            if (entity.TryGetComponent<CollidableComponent>(out var collider))
+            if (entity.TryGetComponent<CollidableComponent>(out var collider) && _collisionCache.TryGetValue(entity, out var entities))
             {
-                var collidables = collider.GetCollidingEntities(Vector2.Zero);
                 // Run collision behavior
-                var collidecomponents = entity.GetAllComponents<ICollideBehavior>().ToList();
-
-                for (var i = 0; i < collidecomponents.Count; i++)
-                {
-                    collidecomponents[i].CollideWith(collidables.Select(c => (c as IPhysBody).Owner).ToList());
-                }
-                foreach (var otherCollider in collidables)
+                foreach (var otherCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                 {
                     if (((IComponent) otherCollider).Owner.TryGetComponent<PhysicsComponent>(out var sourcePhysics))
                     {

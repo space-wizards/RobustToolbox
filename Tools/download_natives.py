@@ -11,6 +11,10 @@ OS_WINDOWS = "Windows"
 OS_LINUX = "Linux"
 OS_MACOS = "MacOS"
 
+# BIG NOTE:
+# If you add natives here, make SURE to edit package_release_build.py in content,
+# so that the native gets copied there too.
+
 
 class NativeDependency:
     def __init__(self):

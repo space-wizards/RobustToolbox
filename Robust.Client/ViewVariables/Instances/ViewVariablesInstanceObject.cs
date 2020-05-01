@@ -27,12 +27,7 @@ namespace Robust.Client.ViewVariables.Instances
             Object = obj;
             var type = obj.GetType();
 
-            var title = obj.ToString();
-            var subtitle = TypeAbbreviation.Abbreviate(type.ToString());
-            if (title == obj.GetType().FullName) {
-                title = TypeAbbreviation.Abbreviate(title);
-                subtitle = ""; // This would just be the type again - not helpful
-            }
+            var title = PrettyPrint.PrintUserFacingWithType(obj, out var subtitle);
 
             _wrappingInit(window, title, subtitle);
             foreach (var trait in TraitsFor(ViewVariablesManager.TraitIdsFor(type)))

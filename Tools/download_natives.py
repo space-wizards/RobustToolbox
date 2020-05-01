@@ -201,7 +201,7 @@ class DepFluidsynth(NativeDependency):
             # Download new version
 
             for filename in DepFluidsynth.FILES:
-                url = DepFluidsynth.BASE_URL + filename
+                url = DepFluidsynth.BASE_URL + filename + "?raw=true"
                 urllib.request.urlretrieve(url, os.path.join(os_dep_dir, filename))
 
         print("COPYING")

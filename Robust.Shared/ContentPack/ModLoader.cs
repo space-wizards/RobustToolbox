@@ -24,6 +24,7 @@ namespace Robust.Shared.ContentPack
         Error = 0,
         Init = 1,
         PostInit = 2,
+        PreInit = 3,
     }
 
     /// <summary>
@@ -174,6 +175,9 @@ namespace Robust.Shared.ContentPack
                 {
                     switch (level)
                     {
+                        case ModRunLevel.PreInit:
+                            entry.PreInit();
+                            break;
                         case ModRunLevel.Init:
                             entry.Init();
                             break;

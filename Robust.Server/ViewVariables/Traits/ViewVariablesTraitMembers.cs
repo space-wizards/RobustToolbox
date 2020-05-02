@@ -46,7 +46,7 @@ namespace Robust.Server.ViewVariables.Traits
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = property.Name,
                     Type = property.PropertyType.AssemblyQualifiedName,
-                    TypePretty = property.PropertyType.ToString(),
+                    TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
                     Value = property.GetValue(Session.Object),
                     PropertyIndex = _members.Count
                 });
@@ -66,7 +66,7 @@ namespace Robust.Server.ViewVariables.Traits
                     Editable = attr.Access == VVAccess.ReadWrite,
                     Name = field.Name,
                     Type = field.FieldType.AssemblyQualifiedName,
-                    TypePretty = field.FieldType.ToString(),
+                    TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
                     Value = field.GetValue(Session.Object),
                     PropertyIndex = _members.Count
                 });

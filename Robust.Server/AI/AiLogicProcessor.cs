@@ -23,6 +23,11 @@ namespace Robust.Server.AI
         public virtual void Setup() { }
 
         /// <summary>
+        /// One-Time shutdown when processor is done
+        /// </summary>
+        public virtual void Shutdown() {}
+
+        /// <summary>
         ///     Gives life to the AI.
         /// </summary>
         /// <param name="frameTime">Time since last update in seconds.</param>

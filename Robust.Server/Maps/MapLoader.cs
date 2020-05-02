@@ -314,15 +314,17 @@ namespace Robust.Server.Maps
             {
                 var fail = false;
                 var entities = RootNode.GetNode<YamlSequenceNode>("entities");
+                var reportedError = new HashSet<string>();
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
                 {
                     if (entityDef.TryGetNode("type", out var typeNode))
                     {
                         var type = typeNode.AsString();
-                        if (!_prototypeManager.HasIndex<EntityPrototype>(type))
+                        if (!_prototypeManager.HasIndex<EntityPrototype>(type) && !reportedError.Contains(type))
                         {
                             Logger.Error("Missing prototype for map: {0}", type);
                             fail = true;
+                            reportedError.Add(type);
                         }
                     }
                 }

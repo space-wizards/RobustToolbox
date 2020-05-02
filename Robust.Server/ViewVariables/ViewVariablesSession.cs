@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Network;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
@@ -59,7 +60,7 @@ namespace Robust.Server.ViewVariables
                 return new ViewVariablesBlobMetadata
                 {
                     ObjectType = ObjectType.AssemblyQualifiedName,
-                    ObjectTypePretty = ObjectType.ToString(),
+                    ObjectTypePretty = TypeAbbreviation.Abbreviate(ObjectType),
                     Stringified = Object.ToString(),
                     Traits = new List<object>(Host.TraitIdsFor(ObjectType))
                 };

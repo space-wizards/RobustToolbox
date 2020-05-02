@@ -19,16 +19,10 @@ namespace Robust.Client.ViewVariables.Editors
             // NOTE: value is NOT always the actual object.
             // Only thing we can really rely on is that ToString works out correctly.
             // This is because of reference tokens, but due to simplicity the object ref is still passed.
-
-            var toString = value.ToString();
-            if (value.GetType().FullName == toString)
-            {
-                toString = TypeAbbreviation.Abbreviate(toString);
-            }
-
+            var toString = PrettyPrint.PrintUserFacing(value);
             var button = new Button
             {
-                Text = $"Reference: {toString}",
+                Text = $"Ref: {toString}",
                 ClipText = true,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand
             };

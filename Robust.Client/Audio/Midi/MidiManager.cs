@@ -6,8 +6,10 @@ using System.Threading;
 using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -101,13 +103,18 @@ namespace Robust.Client.Audio.Midi
         private bool FluidsynthInitialized;
         private bool _failedInitialize;
 
+        private NFluidsynth.Logger.LoggerDelegate _loggerDelegate;
+        private ISawmill _sawmill;
+
         private void InitializeFluidsynth()
         {
             if (FluidsynthInitialized || _failedInitialize) return;
 
             try
             {
-                NFluidsynth.Logger.SetLoggerMethod(null); // Will cause a safe DllNotFoundException if not available.
+                _loggerDelegate = LoggerDelegate;
+                _sawmill = Logger.GetSawmill("midi.fluidsynth");
+                NFluidsynth.Logger.SetLoggerMethod(_loggerDelegate); // Will cause a safe DllNotFoundException if not available.
 
                 _settings = new Settings();
                 _settings["synth.sample-rate"].DoubleValue = 48000;
@@ -134,6 +141,19 @@ namespace Robust.Client.Audio.Midi
             _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
 
             FluidsynthInitialized = true;
+        }
+
+        private void LoggerDelegate(NFluidsynth.Logger.LogLevel level, string message, IntPtr data)
+        {
+            var rLevel = level switch {
+                NFluidsynth.Logger.LogLevel.Panic => LogLevel.Error,
+                NFluidsynth.Logger.LogLevel.Error => LogLevel.Error,
+                NFluidsynth.Logger.LogLevel.Warning => LogLevel.Warning,
+                NFluidsynth.Logger.LogLevel.Information => LogLevel.Info,
+                NFluidsynth.Logger.LogLevel.Debug => LogLevel.Debug,
+                _ => LogLevel.Debug
+            };
+            _sawmill.Log(rLevel, message);
         }
 
         public bool IsMidiFile(string filename)
@@ -279,6 +299,11 @@ namespace Robust.Client.Audio.Midi
             foreach (var renderer in _renderers)
             {
                 renderer?.Dispose();
+            }
+
+            if (FluidsynthInitialized && !_failedInitialize)
+            {
+                NFluidsynth.Logger.SetLoggerMethod(null);
             }
         }
 

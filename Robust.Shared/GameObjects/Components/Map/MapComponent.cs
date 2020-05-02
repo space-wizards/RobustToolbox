@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
@@ -55,6 +56,8 @@ namespace Robust.Shared.GameObjects.Components.Map
                 return;
 
             _mapIndex = state.MapId;
+
+            ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
         }
 
         /// <inheritdoc />

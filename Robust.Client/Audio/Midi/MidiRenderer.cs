@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Asynchronous;
@@ -8,7 +9,6 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
@@ -309,10 +309,11 @@ namespace Robust.Client.Audio.Midi
 
                     if (Mono) // Turn audio to mono
                     {
+                        var data = MemoryMarshal.Cast<ushort, short>(audio);
                         for (var j = 0; j < length; j++)
                         {
                             var k = j + length;
-                            audio[j] += audio[k];
+                            data[j] = (short) ((data[k] + data[j]) / 2);
                         }
 
                     }

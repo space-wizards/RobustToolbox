@@ -200,10 +200,6 @@ namespace Robust.Server
             _resources.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
-            // Default to en-US.
-            // Perhaps in the future we could make a command line arg or something to change this default.
-            _localizationManager.LoadCulture(new CultureInfo("en-US"));
-
             //identical code in game controller for client
             if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
@@ -216,6 +212,8 @@ namespace Robust.Server
                 Logger.FatalS("eng", "Could not load any Server DLL.");
                 return true;
             }
+
+            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
             // HAS to happen after content gets loaded.
             // Else the content types won't be included.

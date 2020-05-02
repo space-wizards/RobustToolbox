@@ -37,7 +37,7 @@ namespace Robust.Shared.Utility
     /// KeyValuePair or a custom class and provide corresponding Comparer.
     /// </summary>
     /// <typeparam name="T">Any comparable type, either through a specified Comparer or implementing IComparable&lt;<typeparamref name="T"/>&gt;</typeparam>
-    internal sealed class PriorityQueue<T> : ICollection<T>
+    public sealed class PriorityQueue<T> : ICollection<T>
     {
         private readonly IComparer<T> _comparer;
         private T[] _heap;

@@ -19,9 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Client", "Robust.Cli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Shared.Maths", "Robust.Shared.Maths\Robust.Shared.Maths.csproj", "{93F23A82-00C5-4572-964E-E7C9457726D4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenToolkit.GraphicsLibraryFramework", "OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj", "{52710F44-4240-4140-9B33-F36EBD9D3FC2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenToolkit.GraphicsLibraryFramework", "OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj", "{52710F44-4240-4140-9B33-F36EBD9D3FC2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Shared.Scripting", "Robust.Shared.Scripting\Robust.Shared.Scripting.csproj", "{5AFDBB5C-CF01-4542-95F5-9ED195075313}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Shared.Scripting", "Robust.Shared.Scripting\Robust.Shared.Scripting.csproj", "{5AFDBB5C-CF01-4542-95F5-9ED195075313}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Analyzer", "Robust.Analyzer\Robust.Analyzer.csproj", "{0F0768BE-7954-4769-89C7-F0A37F75EAEC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzer.Test", "Robust.Analyzer\Robust.Analyzer.Test\Robust.Analyzer.Test.csproj", "{70A652C0-2FD6-4325-AC8A-8D6D911A4AD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,14 +61,22 @@ Global
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Debug|x64.Build.0 = Debug|x64
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Release|x64.ActiveCfg = Release|x64
 		{93F23A82-00C5-4572-964E-E7C9457726D4}.Release|x64.Build.0 = Release|x64
-		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.ActiveCfg = Release|x64
-		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.Build.0 = Release|x64
 		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x64.ActiveCfg = Debug|x64
 		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Debug|x64.Build.0 = Debug|x64
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.ActiveCfg = Release|x64
+		{52710F44-4240-4140-9B33-F36EBD9D3FC2}.Release|x64.Build.0 = Release|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Debug|x64.ActiveCfg = Debug|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Debug|x64.Build.0 = Debug|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Release|x64.ActiveCfg = Release|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Release|x64.Build.0 = Release|x64
+		{0F0768BE-7954-4769-89C7-F0A37F75EAEC}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0F0768BE-7954-4769-89C7-F0A37F75EAEC}.Debug|x64.Build.0 = Debug|Any CPU
+		{0F0768BE-7954-4769-89C7-F0A37F75EAEC}.Release|x64.ActiveCfg = Release|Any CPU
+		{0F0768BE-7954-4769-89C7-F0A37F75EAEC}.Release|x64.Build.0 = Release|Any CPU
+		{70A652C0-2FD6-4325-AC8A-8D6D911A4AD7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{70A652C0-2FD6-4325-AC8A-8D6D911A4AD7}.Debug|x64.Build.0 = Debug|Any CPU
+		{70A652C0-2FD6-4325-AC8A-8D6D911A4AD7}.Release|x64.ActiveCfg = Release|Any CPU
+		{70A652C0-2FD6-4325-AC8A-8D6D911A4AD7}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,6 +15,10 @@ namespace Robust.Shared.ContentPack
             TestingCallbacks = testingCallbacks;
         }
 
+        public virtual void PreInit()
+        {
+        }
+
         public virtual void Init()
         {
         }

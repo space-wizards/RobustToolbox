@@ -128,10 +128,6 @@ namespace Robust.Client
             _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
-            // Default to en-US.
-            // Perhaps in the future we could make a command line arg or something to change this default.
-            _localizationManager.LoadCulture(new CultureInfo("en-US"));
-
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())
             {
@@ -160,6 +156,7 @@ namespace Robust.Client
             }
 
             // Call Init in game assemblies.
+            _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
             _serializer.Initialize();

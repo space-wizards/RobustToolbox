@@ -2,6 +2,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -29,11 +30,11 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Entity Management
 
-        IEntity CreateEntityUninitialized(string prototypeName);
+        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName);
 
-        IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
+        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName, GridCoordinates coordinates);
 
-        IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);
+        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName, MapCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -41,7 +42,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity(string protoName, GridCoordinates coordinates);
+        IEntity SpawnEntity([PrototypeName] string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -49,7 +50,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity SpawnEntity(string protoName, MapCoordinates coordinates);
+        IEntity SpawnEntity([PrototypeName] string protoName, MapCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -60,7 +61,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates);
+        IEntity SpawnEntityNoMapInit([PrototypeName] string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id

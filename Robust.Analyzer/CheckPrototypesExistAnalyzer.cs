@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
@@ -14,6 +15,9 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Analyzer
 {
+    /// <summary>
+    /// Analyzer for checking string literals correspond to a known prototype name.
+    /// </summary>
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class CheckPrototypesExistAnalyzer : DiagnosticAnalyzer
     {
@@ -41,26 +45,91 @@ namespace Robust.Analyzer
 
             context.RegisterCompilationStartAction(compilationContext =>
             {
-                // Gets the representation of IEntityManager at runtime
-                var entityManagerInterfaces = compilationContext.Compilation.References
+                var allAssemblySymbols = compilationContext.Compilation.References
                     .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
-                    .OfType<IAssemblySymbol>()
-                    .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IEntityManager"))
+                    .OfType<IAssemblySymbol>();
+
+                var prototypeNameAttributes = allAssemblySymbols
+                    .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName("Robust.Shared.Prototypes.PrototypeNameAttribute"))
                     .Where(t => t != null);
-                INamedTypeSymbol entityManagerInterface = entityManagerInterfaces.FirstOrDefault();
-                if (entityManagerInterface == null)
+                INamedTypeSymbol prototypeNameAttribute = prototypeNameAttributes.FirstOrDefault();
+                if (prototypeNameAttribute == null)
                 {
-                    throw new Exception("Could not load the IEntityManager interface.");
+                    throw new Exception("Could not load the PrototypeName attribute.");
+                }
+
+                // Get the methods for which at least one argument has a [PrototypeName] attribute
+                // then remember them - this speeds up later code
+                var usageFinder = new PrototypeNameUsageFinderVisitor(prototypeNameAttribute);
+                var assemblySymbols = compilationContext.Compilation.References
+                    .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
+                    .OfType<IAssemblySymbol>();
+                foreach (var assemblySymbol in assemblySymbols)
+                {
+                    usageFinder.Visit(assemblySymbol);
                 }
 
                 var prototypeManager = LoadPrototypes(compilationContext);
 
                 // We pass the prototype manager in, rather than loading it from AnalyzerIoC,
                 // because these actions might run in different threads
-                compilationContext.RegisterOperationAction(operationContext => AnalyzeSpawnEntity(operationContext, entityManagerInterface, prototypeManager), new OperationKind[] { OperationKind.Invocation });
+                compilationContext.RegisterOperationAction(operationContext => AnalyzePrototypeNameArguments(operationContext, prototypeNameAttribute, usageFinder.RelevantMethods, prototypeManager), new OperationKind[] { OperationKind.Invocation });
             });
         }
 
+        /// <summary>
+        /// Symbol graph visitor that pre-loads all the annotated method symbols
+        /// </summary>
+        internal class PrototypeNameUsageFinderVisitor : SymbolVisitor
+        {
+
+            private readonly INamedTypeSymbol _prototypeNameAttribute;
+            private List<IMethodSymbol> _relevantMethods = new List<IMethodSymbol>();
+
+            public List<IMethodSymbol> RelevantMethods => _relevantMethods;
+
+            public PrototypeNameUsageFinderVisitor(INamedTypeSymbol prototypeNameAttribute)
+            {
+                _prototypeNameAttribute = prototypeNameAttribute;
+            }
+
+            public override void VisitAssembly(IAssemblySymbol symbol)
+            {
+                foreach (var memberSymbol in symbol.GlobalNamespace.GetMembers())
+                {
+                    memberSymbol.Accept(this);
+                }
+            }
+
+            public override void VisitNamespace(INamespaceSymbol symbol)
+            {
+                foreach (var memberSymbol in symbol.GetMembers())
+                {
+                    memberSymbol.Accept(this);
+                }
+            }
+
+            public override void VisitNamedType(INamedTypeSymbol symbol)
+            {
+                foreach (var memberSymbol in symbol.GetMembers())
+                {
+                    memberSymbol.Accept(this);
+                }
+            }
+
+            public override void VisitMethod(IMethodSymbol symbol)
+            {
+                if (symbol.Parameters.Any(parameterSymbol => parameterSymbol.GetAttributes().Any(attributeData => attributeData.AttributeClass.Equals(_prototypeNameAttribute))))
+                {
+                    _relevantMethods.Add(symbol);
+                }
+
+                base.VisitMethod(symbol);
+            }
+        }
+
+        // This warning is spurious - the context does have actions added above
+#pragma warning disable RS1012
         private static IPrototypeManager LoadPrototypes(CompilationStartAnalysisContext compilationContext)
         {
             // Load the prototypes fed in to AdditionalFiles at compile-time
@@ -85,6 +154,7 @@ namespace Robust.Analyzer
 
             return prototypeManager;
         }
+# pragma warning enable RS1012
 
         private static bool IsPrototype(string prototypeName, IPrototypeManager prototypeManager)
         {
@@ -98,49 +168,53 @@ namespace Robust.Analyzer
             }
         }
 
-        private static void AnalyzeSpawnEntity(OperationAnalysisContext context, INamedTypeSymbol entityManagerInterface, IPrototypeManager prototypeManager)
+        /// <summary>
+        /// Check any method arguments which are [PrototypeName]s to see if they exist
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="prototypeNameAttribute">The symbol of the [PrototypeName] attribute.</param>
+        /// <param name="methodsToCheck">A collection of methods which are known to have a [PrototypeName] argument.</param>
+        /// <param name="prototypeManager"></param>
+        private static void AnalyzePrototypeNameArguments(
+            OperationAnalysisContext context,
+            INamedTypeSymbol prototypeNameAttribute,
+            IEnumerable<IMethodSymbol> methodsToCheck,
+            IPrototypeManager prototypeManager)
         {
             // Safe cast, we only target method calls
             var invocation = (IInvocationOperation)context.Operation;
 
-            // Ignore everything that isn't this method call
-            if (invocation.TargetMethod.Name != "SpawnEntity")
+            // Quick filter in advance - because we pre-loaded all the method symbols
+            // with some [PrototypeName] attribute on an argument, we know all the rest
+            // are uninteresting
+            if (!methodsToCheck.Any(methodSymbol => methodSymbol.Equals(invocation.TargetMethod)))
             {
                 return;
             }
 
-            // Try and figure out if it's being called on an entity manager
-            if (!(invocation.TargetMethod.ReceiverType is INamedTypeSymbol receiverType))
+            foreach (var (argument, index) in invocation.Arguments.Select((arg, i) => (arg, i)))
             {
-                return;
+                if (!invocation.TargetMethod.Parameters[index].GetAttributes().Any(attributeData => attributeData.AttributeClass.Equals(prototypeNameAttribute)))
+                {
+                    continue;
+                }
+
+                var argLiteral = argument.Value.ConstantValue;
+                if (!argLiteral.HasValue || !(argLiteral.Value is string prototypeName))
+                {
+                    return;
+                }
+
+                // Now we finally have a string which should refer to a prototype - so
+                // check it is one
+                if (!IsPrototype(prototypeName, prototypeManager))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), prototypeName));
+                }
             }
 
-            // The call could be on an `IEntityManager`, or something implementing that
-            // interface
-            if (!(receiverType.Equals(entityManagerInterface) || !receiverType.AllInterfaces.Contains(entityManagerInterface)))
-            {
-                return;
-            }
-
-            // Fish out the first argument - if it doesn't exist, ignore the call
-            var firstArgument = invocation.Arguments.FirstOrDefault();
-            if (firstArgument == null)
-            {
-                return;
-            }
-
-            var argLiteral = firstArgument.Value.ConstantValue;
-            if (!argLiteral.HasValue || !(argLiteral.Value is string prototypeName))
-            {
-                return;
-            }
-
-            // Now we finally have a string which should refer to a prototype - so
-            // check it is one
-            if (!IsPrototype(prototypeName, prototypeManager))
-            {
-                context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), prototypeName));
-            }
+            
         }
+
     }
 }

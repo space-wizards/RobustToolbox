@@ -1,4 +1,4 @@
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TestHelper
+namespace Robust.Analyzer.Test
 {
     /// <summary>
     /// Superclass of all Unit Tests for DiagnosticAnalyzers
@@ -41,18 +41,7 @@ namespace TestHelper
         /// <param name="expected"> DiagnosticResults that should appear after the analyzer is run on the source</param>
         protected void VerifyCSharpDiagnostic(string source, params DiagnosticResult[] expected)
         {
-            VerifyDiagnostics(new[] { source }, LanguageNames.CSharp, GetCSharpDiagnosticAnalyzer(), expected);
-        }
-
-        /// <summary>
-        /// Called to test a VB DiagnosticAnalyzer when applied on the single inputted string as a source
-        /// Note: input a DiagnosticResult for each Diagnostic expected
-        /// </summary>
-        /// <param name="source">A class in the form of a string to run the analyzer on</param>
-        /// <param name="expected">DiagnosticResults that should appear after the analyzer is run on the source</param>
-        protected void VerifyBasicDiagnostic(string source, params DiagnosticResult[] expected)
-        {
-            VerifyDiagnostics(new[] { source }, LanguageNames.VisualBasic, GetBasicDiagnosticAnalyzer(), expected);
+            VerifyDiagnostics(new[] { source }, LanguageNames.CSharp, new (string,string)[] {}, GetCSharpDiagnosticAnalyzer(), expected);
         }
 
         /// <summary>
@@ -63,18 +52,19 @@ namespace TestHelper
         /// <param name="expected">DiagnosticResults that should appear after the analyzer is run on the sources</param>
         protected void VerifyCSharpDiagnostic(string[] sources, params DiagnosticResult[] expected)
         {
-            VerifyDiagnostics(sources, LanguageNames.CSharp, GetCSharpDiagnosticAnalyzer(), expected);
+            VerifyDiagnostics(sources, LanguageNames.CSharp, new (string, string)[] {}, GetCSharpDiagnosticAnalyzer(), expected);
         }
 
         /// <summary>
-        /// Called to test a VB DiagnosticAnalyzer when applied on the inputted strings as a source
+        /// Called to test a C# DiagnosticAnalyzer when applied on the inputted strings as a source
         /// Note: input a DiagnosticResult for each Diagnostic expected
         /// </summary>
         /// <param name="sources">An array of strings to create source documents from to run the analyzers on</param>
+        /// <param name="additionalFiles">An array of additional file names and file contents to include in the project</param>
         /// <param name="expected">DiagnosticResults that should appear after the analyzer is run on the sources</param>
-        protected void VerifyBasicDiagnostic(string[] sources, params DiagnosticResult[] expected)
+        protected void VerifyCSharpDiagnostic(string[] sources, (string, string)[] additionalFiles, params DiagnosticResult[] expected)
         {
-            VerifyDiagnostics(sources, LanguageNames.VisualBasic, GetBasicDiagnosticAnalyzer(), expected);
+            VerifyDiagnostics(sources, LanguageNames.CSharp, additionalFiles, GetCSharpDiagnosticAnalyzer(), expected);
         }
 
         /// <summary>
@@ -83,11 +73,12 @@ namespace TestHelper
         /// </summary>
         /// <param name="sources">An array of strings to create source documents from to run the analyzers on</param>
         /// <param name="language">The language of the classes represented by the source strings</param>
+        /// <param name="additionalFiles">An array of additional file names and file contents to include in the project</param>
         /// <param name="analyzer">The analyzer to be run on the source code</param>
         /// <param name="expected">DiagnosticResults that should appear after the analyzer is run on the sources</param>
-        private void VerifyDiagnostics(string[] sources, string language, DiagnosticAnalyzer analyzer, params DiagnosticResult[] expected)
+        private void VerifyDiagnostics(string[] sources, string language, (string, string)[] additionalFiles, DiagnosticAnalyzer analyzer, params DiagnosticResult[] expected)
         {
-            var diagnostics = GetSortedDiagnostics(sources, language, analyzer);
+            var diagnostics = GetSortedDiagnostics(sources, language, additionalFiles, analyzer);
             VerifyDiagnosticResults(diagnostics, analyzer, expected);
         }
 

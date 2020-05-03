@@ -2,15 +2,15 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Prototypes;
-using Robust.Shared.Utility;
 
 namespace Robust.Analyzer
 {
@@ -30,10 +30,10 @@ namespace Robust.Analyzer
         private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
-        
+
         public override void Initialize(AnalysisContext context)
         {
-            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze|GeneratedCodeAnalysisFlags.ReportDiagnostics);
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
 
             // So long as the compilation start action runs exactly once, then this is safe
             // TODO: should double-check that, the API docs don't seem to guarantee it
@@ -41,6 +41,7 @@ namespace Robust.Analyzer
 
             context.RegisterCompilationStartAction(compilationContext =>
             {
+                // Gets the representation of IEntityManager at runtime
                 var entityManagerInterfaces = compilationContext.Compilation.References
                     .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
                     .OfType<IAssemblySymbol>()
@@ -52,21 +53,37 @@ namespace Robust.Analyzer
                     throw new Exception("Could not load the IEntityManager interface.");
                 }
 
-                // Load the prototypes fed in to AdditionalFiles at compile-time
-                // TODO: think about if this is the best design choice
-                var prototypeManager = new PrototypeManager();
-                foreach (var file in compilationContext.Options.AdditionalFiles)
-                {
-                    if (Path.GetExtension(file.Path) != ".yaml")
-                    {
-                        continue;
-                    }
-                    prototypeManager.LoadFromStream(new StringReader(file.GetText(compilationContext.CancellationToken).ToString()));
-                }
-                prototypeManager.Resync();
+                var prototypeManager = LoadPrototypes(compilationContext);
 
+                // We pass the prototype manager in, rather than loading it from AnalyzerIoC,
+                // because these actions might run in different threads
                 compilationContext.RegisterOperationAction(operationContext => AnalyzeSpawnEntity(operationContext, entityManagerInterface, prototypeManager), new OperationKind[] { OperationKind.Invocation });
             });
+        }
+
+        private static IPrototypeManager LoadPrototypes(CompilationStartAnalysisContext compilationContext)
+        {
+            // Load the prototypes fed in to AdditionalFiles at compile-time
+            // TODO: think about if this is the best design choice
+            AnalyzerIoC.RegisterIoC();
+
+            var reflectionManager = AnalyzerIoC.Resolve<IReflectionManager>();
+
+            reflectionManager.LoadAssemblies(new Assembly[] { typeof(IPrototypeManager).Assembly });
+
+            var prototypeManager = AnalyzerIoC.Resolve<IPrototypeManager>();
+
+            foreach (var file in compilationContext.Options.AdditionalFiles)
+            {
+                if (Path.GetExtension(file.Path) != ".yaml")
+                {
+                    continue;
+                }
+                prototypeManager.LoadFromStream(new StringReader(file.GetText(compilationContext.CancellationToken).ToString()));
+            }
+            prototypeManager.Resync();
+
+            return prototypeManager;
         }
 
         private static bool IsPrototype(string prototypeName, IPrototypeManager prototypeManager)
@@ -85,7 +102,6 @@ namespace Robust.Analyzer
         {
             // Safe cast, we only target method calls
             var invocation = (IInvocationOperation)context.Operation;
-            SemanticModel model = invocation.SemanticModel;
 
             // Ignore everything that isn't this method call
             if (invocation.TargetMethod.Name != "SpawnEntity")
@@ -99,7 +115,9 @@ namespace Robust.Analyzer
                 return;
             }
 
-            if (!receiverType.AllInterfaces.Contains(entityManagerInterface))
+            // The call could be on an `IEntityManager`, or something implementing that
+            // interface
+            if (!(receiverType.Equals(entityManagerInterface) || !receiverType.AllInterfaces.Contains(entityManagerInterface)))
             {
                 return;
             }
@@ -111,7 +129,7 @@ namespace Robust.Analyzer
                 return;
             }
 
-            var argLiteral = firstArgument.ConstantValue;
+            var argLiteral = firstArgument.Value.ConstantValue;
             if (!argLiteral.HasValue || !(argLiteral.Value is string prototypeName))
             {
                 return;

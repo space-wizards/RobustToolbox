@@ -6,11 +6,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime;
 
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
+using System.IO;
+using Robust.Analyzer.Test;
 
-namespace TestHelper
+namespace Robust.Analyzer.Test
 {
     /// <summary>
     /// Class for turning strings into documents and getting the diagnostics on them
@@ -24,7 +27,6 @@ namespace TestHelper
         private static readonly MetadataReference CodeAnalysisReference = MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location);
 
         private static readonly MetadataReference RobustToolboxReference = MetadataReference.CreateFromFile(typeof(IEntityManager).Assembly.Location);
-        private static readonly MetadataReference Useless = MetadataReference.CreateFromFile(typeof(GridCoordinates).Assembly.Location);
 
         internal static string DefaultFilePathPrefix = "Test";
         internal static string CSharpDefaultFileExt = "cs";
@@ -40,9 +42,9 @@ namespace TestHelper
         /// <param name="language">The language the source classes are in</param>
         /// <param name="analyzer">The analyzer to be run on the sources</param>
         /// <returns>An IEnumerable of Diagnostics that surfaced in the source code, sorted by Location</returns>
-        private static Diagnostic[] GetSortedDiagnostics(string[] sources, string language, DiagnosticAnalyzer analyzer)
+        private static Diagnostic[] GetSortedDiagnostics(string[] sources, string language, (string, string)[] additionalFiles, DiagnosticAnalyzer analyzer)
         {
-            return GetSortedDiagnosticsFromDocuments(analyzer, GetDocuments(sources, language));
+            return GetSortedDiagnosticsFromDocuments(analyzer, GetDocuments(sources, language), additionalFiles);
         }
 
         /// <summary>
@@ -52,7 +54,7 @@ namespace TestHelper
         /// <param name="analyzer">The analyzer to run on the documents</param>
         /// <param name="documents">The Documents that the analyzer will be run on</param>
         /// <returns>An IEnumerable of Diagnostics that surfaced in the source code, sorted by Location</returns>
-        protected static Diagnostic[] GetSortedDiagnosticsFromDocuments(DiagnosticAnalyzer analyzer, Document[] documents)
+        protected static Diagnostic[] GetSortedDiagnosticsFromDocuments(DiagnosticAnalyzer analyzer, Document[] documents, (string, string)[] additionalFiles)
         {
             var projects = new HashSet<Project>();
             foreach (var document in documents)
@@ -63,7 +65,17 @@ namespace TestHelper
             var diagnostics = new List<Diagnostic>();
             foreach (var project in projects)
             {
-                var compilationWithAnalyzers = project.GetCompilationAsync().Result.WithAnalyzers(ImmutableArray.Create(analyzer));
+                var additionalFileInfo = additionalFiles.Select<(string, string), AdditionalText>(file => new AdditionalString(file.Item1, file.Item2))
+                    .ToImmutableArray();
+                var compilationOptions = new CompilationWithAnalyzersOptions(
+                    new AnalyzerOptions(additionalFileInfo),
+                    (exception, _diagnostic, _analyzer) => throw exception,
+                    concurrentAnalysis: true,
+                    logAnalyzerExecutionTime: false);
+
+                var compilationWithAnalyzers = project.GetCompilationAsync().Result.WithAnalyzers(
+                    ImmutableArray.Create(analyzer),
+                    compilationOptions);
                 var diags = compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result;
                 foreach (var diag in diags)
                 {
@@ -152,15 +164,24 @@ namespace TestHelper
 
             var projectId = ProjectId.CreateNewId(debugName: TestProjectName);
 
+            // .NET Core technicalities mean that we load the runtime at, well,
+            // runtime - because the compile-time library is a different file. See
+            //   - https://davidwalschots.com/fixing-roslyn-compilation-errors-in-unit-tests-of-a-code-analyzer/
+            //   - https://github.com/dotnet/roslyn/issues/16211
+            // for more details.
+            var runtimeDirectory = System.Runtime.InteropServices.RuntimeEnvironment
+                .GetRuntimeDirectory();
+            var RuntimeLibReference = MetadataReference.CreateFromFile(Path.Combine(runtimeDirectory, "System.Runtime.dll"));
+
             var solution = new AdhocWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
                 .AddMetadataReference(projectId, CorlibReference)
+                .AddMetadataReference(projectId, RuntimeLibReference)
                 .AddMetadataReference(projectId, SystemCoreReference)
                 .AddMetadataReference(projectId, CSharpSymbolsReference)
                 .AddMetadataReference(projectId, CodeAnalysisReference)
-                .AddMetadataReference(projectId, RobustToolboxReference)
-                .AddMetadataReference(projectId, Useless);
+                .AddMetadataReference(projectId, RobustToolboxReference);
 
             int count = 0;
             foreach (var source in sources)

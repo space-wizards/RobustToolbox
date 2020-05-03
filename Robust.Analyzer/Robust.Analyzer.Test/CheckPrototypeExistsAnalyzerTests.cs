@@ -2,8 +2,6 @@
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using TestHelper;
 
 using Robust.Analyzer;
 
@@ -12,14 +10,37 @@ namespace Robust.Analyzer.Test
     [TestClass]
     public class UnitTest : DiagnosticVerifier
     {
+        private static readonly string _prototypesYaml = @"
+- type: entity
+  id: some_entity";
+
+        private static readonly (string, string)[] _additionalAnalyzerFiles = new[] { ("prototypes.yaml", _prototypesYaml) };
 
         //No diagnostics expected to show up
         [TestMethod]
-        public void TestEmpty()
+        public void TestPresentPrototype()
         {
-            var test = @"";
+            var test = @"
+using System;
 
-            VerifyCSharpDiagnostic(test);
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
+
+namespace SomeGameCode
+{
+    class SomeGameCodeClass
+    {
+        public static void Main() {}
+
+        public static void DoSomeGameStuff()
+        {
+            IEntityManager entityManager = null;
+            _ = entityManager.SpawnEntity(""some_entity"", MapCoordinates.Nullspace);
+        }
+    }
+}";
+
+            VerifyCSharpDiagnostic(new[] { test }, _additionalAnalyzerFiles);
         }
 
         //Diagnostic should trigger
@@ -27,35 +48,36 @@ namespace Robust.Analyzer.Test
         public void TestMissingPrototype()
         {
             var test = @"
-    using System;
+using System;
 
-    using Robust.Shared.Interfaces.GameObjects;
-    using Robust.Shared.Map;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
 
-    namespace SomeGameCode
+namespace SomeGameCode
+{
+    class SomeGameCodeClass
     {
-        class SomeGameCodeClass
-        {
+        public static void Main() {}
 
-            public static void DoSomeGameStuff()
-            {
-                IEntityManager entityManager = null;
-                _ = entityManager.SpawnEntity(""some_entity"", MapCoordinates.Nullspace);
-            }
+        public static void DoSomeGameStuff()
+        {
+            IEntityManager entityManager = null;
+            _ = entityManager.SpawnEntity(""some_other_entity"", MapCoordinates.Nullspace);
         }
-    }";
+    }
+}";
             var expected = new DiagnosticResult
             {
                 Id = "RTE001",
-                Message = "Could not find entity prototype with name '\"some_entity\"'.",
+                Message = "Could not find entity prototype with name 'some_other_entity'.",
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 14, 17)
+                            new DiagnosticResultLocation("Test0.cs", 16, 17)
                         }
             };
 
-            VerifyCSharpDiagnostic(test, expected);
+            VerifyCSharpDiagnostic(new[] { test }, _additionalAnalyzerFiles, expected);
         }
 
 

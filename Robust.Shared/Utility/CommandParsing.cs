@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Utility
 {
-    internal static class CommandParsing
+    public static class CommandParsing
     {
         /// <summary>
         /// Parses a full console command into a list of arguments.
@@ -14,52 +14,59 @@ namespace Robust.Shared.Utility
         /// <param name="args">List of arguments to write into.</param>
         public static void ParseArguments(ReadOnlySpan<char> text, List<string> args)
         {
-            var curStart = -1;
+            var buf = "";
             var inQuotes = false;
 
             for (var i = 0; i < text.Length; i++)
             {
-                if (inQuotes)
+                var chr = text[i];
+                if (chr == '\\')
                 {
-                    if (text[i] == '"')
+                    i += 1;
+                    if (i == text.Length)
                     {
-                        inQuotes = false;
-                        args.Add(text[curStart..i].ToString());
-                        curStart = -1;
+                        buf += "\\";
+                        break;
                     }
 
+                    buf += text[i];
                     continue;
                 }
 
-                if (text[i] == '"')
+                if (chr == '"')
                 {
-                    inQuotes = true;
-                    curStart = i + 1;
-                    continue;
-                }
-
-                if (text[i] == ' ')
-                {
-                    if (curStart != -1)
+                    if (inQuotes)
                     {
-                        args.Add(text[curStart..i].ToString());
+                        args.Add(buf);
+                        buf = "";
                     }
 
-                    curStart = -1;
-
+                    inQuotes = !inQuotes;
                     continue;
                 }
 
-                if (curStart == -1)
+                if (chr == ' ' && !inQuotes)
                 {
-                    curStart = i;
+                    if (buf != "")
+                    {
+                        args.Add(buf);
+                        buf = "";
+                    }
+                    continue;
                 }
+
+                buf += chr;
             }
 
-            if (curStart != -1)
+            if (buf != "")
             {
-                args.Add(text[curStart..].ToString());
+                args.Add(buf);
             }
+        }
+
+        public static string Escape(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
     }
 }

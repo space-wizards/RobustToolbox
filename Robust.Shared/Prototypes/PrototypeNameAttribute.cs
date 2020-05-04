@@ -10,6 +10,6 @@ namespace Robust.Shared.Prototypes
     [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class PrototypeNameAttribute : Attribute
     {
-        public PrototypeNameAttribute() { }
+        public PrototypeNameAttribute(string _prototypeType) { }
     }
 }

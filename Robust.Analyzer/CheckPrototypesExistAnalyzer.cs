@@ -156,11 +156,11 @@ namespace Robust.Analyzer
         }
 # pragma warning enable RS1012
 
-        private static bool IsPrototype(string prototypeName, IPrototypeManager prototypeManager)
+        private static bool IsPrototype(string prototypeName, string prototypeType, IPrototypeManager prototypeManager)
         {
             try
             {
-                return prototypeManager.HasIndex<EntityPrototype>(prototypeName);
+                return prototypeManager.HasIndex(prototypeType, prototypeName);
             }
             catch (UnknownPrototypeException e)
             {
@@ -194,9 +194,17 @@ namespace Robust.Analyzer
 
             foreach (var (argument, index) in invocation.Arguments.Select((arg, i) => (arg, i)))
             {
-                if (!invocation.TargetMethod.Parameters[index].GetAttributes().Any(attributeData => attributeData.AttributeClass.Equals(prototypeNameAttribute)))
+                var prototypeNameAttributeData = invocation.TargetMethod.Parameters[index].GetAttributes().FirstOrDefault(attributeData => attributeData.AttributeClass.Equals(prototypeNameAttribute));
+                if (prototypeNameAttributeData == null)
                 {
                     continue;
+                }
+
+                var firstAttributeArg = prototypeNameAttributeData.ConstructorArguments.FirstOrDefault();
+                // First argument is the prototype type
+                if (firstAttributeArg.IsNull || !(firstAttributeArg.Value is string prototypeType))
+                {
+                    throw new Exception("Invalid use of 'PrototypeName' attribute - expected the first argument to be a string literal.");
                 }
 
                 var argLiteral = argument.Value.ConstantValue;
@@ -207,7 +215,7 @@ namespace Robust.Analyzer
 
                 // Now we finally have a string which should refer to a prototype - so
                 // check it is one
-                if (!IsPrototype(prototypeName, prototypeManager))
+                if (!IsPrototype(prototypeName, prototypeType, prototypeManager))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), prototypeName));
                 }

@@ -30,11 +30,11 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         #region Entity Management
 
-        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName);
+        IEntity CreateEntityUninitialized([PrototypeName("entity")] string prototypeName);
 
-        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName, GridCoordinates coordinates);
+        IEntity CreateEntityUninitialized([PrototypeName("entity")] string prototypeName, GridCoordinates coordinates);
 
-        IEntity CreateEntityUninitialized([PrototypeName] string prototypeName, MapCoordinates coordinates);
+        IEntity CreateEntityUninitialized([PrototypeName("entity")] string prototypeName, MapCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -42,7 +42,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity([PrototypeName] string protoName, GridCoordinates coordinates);
+        IEntity SpawnEntity([PrototypeName("entity")] string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -50,7 +50,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        IEntity SpawnEntity([PrototypeName] string protoName, MapCoordinates coordinates);
+        IEntity SpawnEntity([PrototypeName("entity")] string protoName, MapCoordinates coordinates);
 
         /// <summary>
         /// Spawns an initialized entity at the default location, using the given prototype.
@@ -61,7 +61,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit([PrototypeName] string protoName, GridCoordinates coordinates);
+        IEntity SpawnEntityNoMapInit([PrototypeName("entity")] string protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id

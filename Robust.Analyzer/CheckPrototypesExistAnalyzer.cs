@@ -210,7 +210,7 @@ namespace Robust.Analyzer
                 var argLiteral = argument.Value.ConstantValue;
                 if (!argLiteral.HasValue || !(argLiteral.Value is string prototypeName))
                 {
-                    return;
+                    continue;
                 }
 
                 // Now we finally have a string which should refer to a prototype - so

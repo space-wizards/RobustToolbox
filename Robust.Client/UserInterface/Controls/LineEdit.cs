@@ -460,7 +460,11 @@ namespace Robust.Client.UserInterface.Controls
                     if (Editable)
                     {
                         var clipboard = IoCManager.Resolve<IClipboardManager>();
-                        InsertAtCursor(clipboard.GetText());
+                        var text = clipboard.GetText();
+                        if (text != null)
+                        {
+                            InsertAtCursor(text);
+                        }
                     }
 
                     args.Handle();

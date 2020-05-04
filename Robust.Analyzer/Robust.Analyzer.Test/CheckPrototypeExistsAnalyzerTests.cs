@@ -14,7 +14,11 @@ namespace Robust.Analyzer.Test
 - type: entity
   id: some_entity";
 
-        private static readonly (string, string)[] _additionalAnalyzerFiles = new[] { ("prototypes.yaml", _prototypesYaml) };
+        private static readonly string _foobarPrototypesYaml = @"
+- type: entity
+  id: some_entity
+- type: foobar
+  id: some_foobar";
 
         //No diagnostics expected to show up
         [TestMethod]
@@ -40,7 +44,7 @@ namespace SomeGameCode
     }
 }";
 
-            VerifyCSharpDiagnostic(new[] { test }, _additionalAnalyzerFiles);
+            VerifyCSharpDiagnostic(new[] { test }, new[] { ("prototypes.yaml", _prototypesYaml) });
         }
 
         //Diagnostic should trigger
@@ -77,9 +81,45 @@ namespace SomeGameCode
                         }
             };
 
-            VerifyCSharpDiagnostic(new[] { test }, _additionalAnalyzerFiles, expected);
+            VerifyCSharpDiagnostic(new[] { test }, new[] { ("prototypes.yaml", _prototypesYaml) }, expected);
         }
 
+        [TestMethod]
+        public void TestMissingPrototypeWithOtherId()
+        {
+            var test = @"
+using System;
+
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Map;
+
+namespace SomeGameCode
+{
+    class SomeGameCodeClass
+    {
+        public static void Main() {}
+
+        public static void DoSomeGameStuff()
+        {
+            IEntityManager entityManager = null;
+            _ = entityManager.SpawnEntity(""some_entity"", MapCoordinates.Nullspace);
+            _ = entityManager.SpawnEntity(""some_foobar"", MapCoordinates.Nullspace);
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "RTE001",
+                Message = "Could not find entity prototype with name 'some_foobar'.",
+                Severity = DiagnosticSeverity.Error,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 17, 17)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(new[] { test }, new[] { ("prototypes.yaml", _foobarPrototypesYaml) }, expected);
+        }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {

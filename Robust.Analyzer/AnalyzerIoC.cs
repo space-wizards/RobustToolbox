@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Analyzer
@@ -16,7 +17,8 @@ namespace Robust.Analyzer
         /// <summary>
         /// Registers some interfaces under <see cref="IoCManager"/>, to try to get to a working <see cref="IPrototypeManager"/>.
         /// </summary>
-        public static void RegisterIoC()
+        /// <param name="reflectionTypePrefixes">The set of type prefixes the <see cref="IReflectionManager"/> implementation should use.</param>
+        public static void RegisterIoC(string[] reflectionTypePrefixes)
         {
             IoCManager.InitThread();
             IoCManager.Clear();
@@ -26,8 +28,8 @@ namespace Robust.Analyzer
             IoCManager.Register<IComponentFactory, ComponentFactory>();
             IoCManager.Register<IEntityManager, AnalyzerEntityManager>();
             IoCManager.Register<IPrototypeManager, PrototypeManager>();
-            IoCManager.Register<IReflectionManager, AnalyzerReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
+            IoCManager.RegisterInstance<IReflectionManager>(new AnalyzerReflectionManager(reflectionTypePrefixes));
 
             IoCManager.BuildGraph();
         }

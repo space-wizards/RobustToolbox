@@ -8,6 +8,13 @@ namespace Robust.Analyzer
 {
     internal class AnalyzerReflectionManager : ReflectionManager
     {
-        protected override IEnumerable<string> TypePrefixes => new string[] { "Robust.Shared." };
+        private readonly string[] _typePrefixes;
+
+        protected override IEnumerable<string> TypePrefixes => _typePrefixes;
+
+        public AnalyzerReflectionManager(string[] typePrefixes)
+        {
+            _typePrefixes = typePrefixes;
+        }
     }
 }

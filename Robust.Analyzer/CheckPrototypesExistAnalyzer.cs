@@ -45,11 +45,21 @@ namespace Robust.Analyzer
 
             context.RegisterCompilationStartAction(compilationContext =>
             {
-                var allAssemblySymbols = compilationContext.Compilation.References
+                // IMPORTANT: There are two levels of reflection going on here - one for
+                // the compilation in progress, and another for *this code* as it runs
+                // in *this assembly*.
+                //
+                // There are several things that need to happen at the level of the compilation
+                //   - we need to find the compilation-level version of the [PrototypeName(...)]
+                //     attribute, to check for its usage in methods in referenced assemblies
+                //   - we need to load all the assemblies referenced at the compilation level into
+                //     the prototype and reflection managers, to let them find all the prototype
+                //     symbols necessary.
+                var assemblySymbols = compilationContext.Compilation.References
                     .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
                     .OfType<IAssemblySymbol>();
 
-                var prototypeNameAttributes = allAssemblySymbols
+                var prototypeNameAttributes = assemblySymbols
                     .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName("Robust.Shared.Prototypes.PrototypeNameAttribute"))
                     .Where(t => t != null);
                 INamedTypeSymbol prototypeNameAttribute = prototypeNameAttributes.FirstOrDefault();
@@ -61,9 +71,6 @@ namespace Robust.Analyzer
                 // Get the methods for which at least one argument has a [PrototypeName] attribute
                 // then remember them - this speeds up later code
                 var usageFinder = new PrototypeNameUsageFinderVisitor(prototypeNameAttribute);
-                var assemblySymbols = compilationContext.Compilation.References
-                    .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
-                    .OfType<IAssemblySymbol>();
                 foreach (var assemblySymbol in assemblySymbols)
                 {
                     usageFinder.Visit(assemblySymbol);
@@ -132,16 +139,25 @@ namespace Robust.Analyzer
 #pragma warning disable RS1012
         private static IPrototypeManager LoadPrototypes(CompilationStartAnalysisContext compilationContext)
         {
-            // Load the prototypes fed in to AdditionalFiles at compile-time
-            // TODO: think about if this is the best design choice
-            AnalyzerIoC.RegisterIoC();
+            // TODO: Get this array from the analyzer config
+            AnalyzerIoC.RegisterIoC(new[] { "Robust.Shared.", "Robust.Client." });
 
             var reflectionManager = AnalyzerIoC.Resolve<IReflectionManager>();
 
-            reflectionManager.LoadAssemblies(new Assembly[] { typeof(IPrototypeManager).Assembly });
+            // Load the assemblies being used for the compilation into the reflection manager
+            // so that the analyzer can see what the project being compiled sees.
+            var assemblies = compilationContext.Compilation.References
+                    .Select(compilationContext.Compilation.GetAssemblyOrModuleSymbol)
+                    .OfType<IAssemblySymbol>()
+                    .Select(assemblySymbol => Assembly.Load(assemblySymbol.Identity.ToString()));
+
+            reflectionManager.LoadAssemblies(assemblies);
 
             var prototypeManager = AnalyzerIoC.Resolve<IPrototypeManager>();
 
+            // TODO: Not hardcode this
+            prototypeManager.RegisterIgnore("foobar");
+            // TODO: Check these from the analyzer config
             foreach (var file in compilationContext.Options.AdditionalFiles)
             {
                 if (Path.GetExtension(file.Path) != ".yaml")
@@ -154,7 +170,7 @@ namespace Robust.Analyzer
 
             return prototypeManager;
         }
-# pragma warning enable RS1012
+# pragma warning restore RS1012
 
         private static bool IsPrototype(string prototypeName, string prototypeType, IPrototypeManager prototypeManager)
         {

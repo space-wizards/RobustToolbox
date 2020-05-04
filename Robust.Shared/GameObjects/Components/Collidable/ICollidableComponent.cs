@@ -25,6 +25,12 @@ namespace Robust.Shared.GameObjects.Components
 
     public interface ICollideBehavior
     {
-        void CollideWith(List<IEntity> collidedwith);
+        void CollideWith(IEntity collidedWith);
+
+        /// <summary>
+        ///     Called after all collisions have been processed, as well as how many collisions occured
+        /// </summary>
+        /// <param name="collisionCount"></param>
+        void PostCollide(int collisionCount) { }
     }
 }

@@ -82,10 +82,10 @@ namespace Robust.Shared.Physics
             return targetImpulse;
         }
 
-        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset)
+        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
             var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
-            foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB))
+            foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB, approximate))
             {
                 if (body.Owner.Deleted) {
                     continue;

@@ -27,7 +27,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private const float Epsilon = 1.0e-6f;
 
-        private Dictionary<IEntity, List<IEntity>> _collisionCache = new Dictionary<IEntity, List<IEntity>>();
+        private Dictionary<EntityUid, List<IEntity>> _collisionCache = new Dictionary<EntityUid, List<IEntity>>();
 
         public PhysicsSystem()
         {
@@ -42,6 +42,9 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private void SimulateWorld(float frameTime, IEnumerable<IEntity> entities)
         {
+            // Calculate collisions and store them in the cache
+            ProcessCollisions();
+
             // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
             {
@@ -69,20 +72,50 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
         }
 
+        // Runs collision behavior and updates cache
         private void ProcessCollisions()
         {
-            _collisionCache.Clear();
+            var collisionsWith = new Dictionary<ICollideBehavior, int>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var entities = entityManager.GetEntities(new TypeEntityQuery<CollidableComponent>());
+            var entities = entityManager.GetEntities(new PredicateEntityQuery(entity => entity.HasComponent<CollidableComponent>() && entity.HasComponent<PhysicsComponent>()));
             foreach (var collider in entities.Select(entity => entity.GetComponent<CollidableComponent>()))
             {
-                _collisionCache.Add(collider.Owner, collider.GetCollidingEntities(Vector2.Zero).ToList());
+                _collisionCache[collider.Owner.Uid] = collider.GetCollidingEntities(Vector2.Zero).ToList();
+                if (_collisionCache[collider.Owner.Uid].Count == 0) continue;
                 var collideComponents = collider.Owner.GetAllComponents<ICollideBehavior>().ToList();
+                var collidedEntities = _collisionCache[collider.Owner.Uid];
 
-                for (var i = 0; i < collideComponents.Count; i++)
+                foreach (var collideBehavior in collideComponents)
                 {
-                    collideComponents[i].CollideWith(_collisionCache[collider.Owner]);
+                    foreach (var entity in collidedEntities)
+                    {
+                        collideBehavior.CollideWith(entity);
+                    }
+                    collideBehavior.PostCollide(collidedEntities.Count);
                 }
+
+                foreach (var entity in collidedEntities)
+                {
+                    // If they don't have physics but have custom collision behavior, process that
+                    if (entity.HasComponent<PhysicsComponent>()) continue;
+                    var otherCollideComponents = entity.GetAllComponents<ICollideBehavior>();
+                    foreach (var otherCollideBehavior in otherCollideComponents)
+                    {
+                        otherCollideBehavior.CollideWith(collider.Owner);
+                        if (!collisionsWith.ContainsKey(otherCollideBehavior))
+                        {
+                            collisionsWith.Add(otherCollideBehavior, 1);
+                        }
+                        else
+                        {
+                            collisionsWith[otherCollideBehavior] += 1;
+                        }
+                    }
+                }
+            }
+            foreach (var collisionCountPair in collisionsWith)
+            {
+                collisionCountPair.Key.PostCollide(collisionCountPair.Value);
             }
         }
 
@@ -92,9 +125,6 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             // Run the virtual controller
             physics.Controller?.UpdateBeforeProcessing();
-
-            // Calculate collisions and store them in the cache
-            ProcessCollisions();
 
             // Next, calculate frictional impulse
             var friction = GetFriction(entity);
@@ -106,9 +136,8 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             var collisionImpulse = Vector2.Zero;
             // Calculate collision forces
-            if (entity.TryGetComponent<CollidableComponent>(out var collider) && _collisionCache.TryGetValue(entity, out var entities))
+            if (entity.TryGetComponent<CollidableComponent>(out var collider) && _collisionCache.TryGetValue(entity.Uid, out var entities))
             {
-                // Run collision behavior
                 foreach (var otherCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                 {
                     if (((IComponent) otherCollider).Owner.TryGetComponent<PhysicsComponent>(out var sourcePhysics))

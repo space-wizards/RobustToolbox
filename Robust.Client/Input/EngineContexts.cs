@@ -30,11 +30,25 @@ namespace Robust.Client.Input
 
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorWordLeft);
+            common.AddFunction(EngineKeyFunctions.TextCursorWordRight);
             common.AddFunction(EngineKeyFunctions.TextCursorBegin);
             common.AddFunction(EngineKeyFunctions.TextCursorEnd);
+
+            common.AddFunction(EngineKeyFunctions.TextCursorSelect);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectLeft);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectWordLeft);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectWordRight);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectBegin);
+            common.AddFunction(EngineKeyFunctions.TextCursorSelectEnd);
+
             common.AddFunction(EngineKeyFunctions.TextBackspace);
             common.AddFunction(EngineKeyFunctions.TextSubmit);
+            common.AddFunction(EngineKeyFunctions.TextCopy);
+            common.AddFunction(EngineKeyFunctions.TextCut);
             common.AddFunction(EngineKeyFunctions.TextPaste);
+            common.AddFunction(EngineKeyFunctions.TextSelectAll);
             common.AddFunction(EngineKeyFunctions.TextHistoryPrev);
             common.AddFunction(EngineKeyFunctions.TextHistoryNext);
             common.AddFunction(EngineKeyFunctions.TextReleaseFocus);

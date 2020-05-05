@@ -141,7 +141,7 @@ namespace Robust.Client.Audio.Midi
         private int _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
-        private const int Buffers = SampleRate/1000;
+        private const int Buffers = SampleRate/12000;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
@@ -284,7 +284,7 @@ namespace Robust.Client.Audio.Midi
         public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
         public event Action OnMidiPlayerFinished;
 
-        internal void Render(int length = SampleRate/1000)
+        internal void Render(int length = SampleRate/128)
         {
             if (Disposed) return;
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
@@ -294,31 +294,31 @@ namespace Robust.Client.Audio.Midi
 
             unsafe
             {
+
                 Span<uint> buffers = stackalloc uint[buffersProcessed];
-                Span<ushort> audio = stackalloc ushort[bufferLength];
+                Span<ushort> audio = stackalloc ushort[bufferLength*buffers.Length];
 
                 Source.GetBuffersProcessed(buffers);
+
+                lock(_playerStateLock)
+                    _synth?.WriteSample16(length*buffers.Length, audio, 0, Mono ? 1 : 2,
+                        audio, Mono ? length*buffers.Length : 1, Mono ? 1 : 2);
+
+                if (Mono) // Turn audio to mono
+                {
+                    var data = MemoryMarshal.Cast<ushort, short>(audio);
+                    for (var j = 0; j < length*buffers.Length; j++)
+                    {
+                        var k = j + length*buffers.Length;
+                        data[j] = (short) ((data[k] + data[j]) / 2);
+                    }
+
+                }
 
                 for (var i = 0; i < buffers.Length; i++)
                 {
                     var buffer = buffers[i];
-
-                    lock(_playerStateLock)
-                        _synth?.WriteSample16(length, audio, 0, Mono ? 1 : 2,
-                            audio, Mono ? length : 1, Mono ? 1 : 2);
-
-                    if (Mono) // Turn audio to mono
-                    {
-                        var data = MemoryMarshal.Cast<ushort, short>(audio);
-                        for (var j = 0; j < length; j++)
-                        {
-                            var k = j + length;
-                            data[j] = (short) ((data[k] + data[j]) / 2);
-                        }
-
-                    }
-
-                    Source.WriteBuffer(buffer, audio);
+                    Source.WriteBuffer(buffer, audio.Slice(i*length, bufferLength));
                 }
 
                 Source.QueueBuffers(buffers);

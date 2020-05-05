@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics.X86;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Asynchronous;
@@ -9,6 +10,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
@@ -130,7 +132,9 @@ namespace Robust.Client.Audio.Midi
         private const double BytesToMegabytes = 0.000001d;
 
         private readonly ISawmill _midiSawmill;
+
         private Settings _settings;
+
         // Kept around to avoid the loader callbacks getting GC'd
         // ReSharper disable once NotAccessedField.Local
         private readonly SoundFontLoader _soundFontLoader;
@@ -141,7 +145,7 @@ namespace Robust.Client.Audio.Midi
         private int _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
-        private const int Buffers = SampleRate/12000;
+        private const int Buffers = SampleRate / 12000;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
@@ -152,7 +156,7 @@ namespace Robust.Client.Audio.Midi
             get => _midiprogram;
             set
             {
-                lock(_playerStateLock)
+                lock (_playerStateLock)
                     for (var i = 0; i < 16; i++)
                         _synth.ProgramChange(i, value);
 
@@ -168,7 +172,7 @@ namespace Robust.Client.Audio.Midi
             get => _loopMidi;
             set
             {
-                lock(_playerStateLock)
+                lock (_playerStateLock)
                     _player?.SetLoop(value ? -1 : 1);
                 _loopMidi = value;
             }
@@ -218,14 +222,14 @@ namespace Robust.Client.Audio.Midi
             if (buffer.Length > MidiSizeLimit)
             {
                 _midiSawmill.Error("Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
-                    buffer.Length*BytesToMegabytes, MidiSizeLimit*BytesToMegabytes);
+                    buffer.Length * BytesToMegabytes, MidiSizeLimit * BytesToMegabytes);
                 CloseMidi();
                 return false;
             }
 
             lock (_playerStateLock)
             {
-                if(_player == null)
+                if (_player == null)
                     _player = new NFluidsynth.Player(_synth);
                 _player.Stop();
                 _player.AddMem(buffer);
@@ -267,7 +271,7 @@ namespace Robust.Client.Audio.Midi
         {
             foreach (var note in _notesPlaying.ToArray())
             {
-                SendMidiEvent(new Shared.Audio.Midi.MidiEvent(){Type = 128, Key = note});
+                SendMidiEvent(new Shared.Audio.Midi.MidiEvent() {Type = 128, Key = note});
             }
         }
 
@@ -284,9 +288,13 @@ namespace Robust.Client.Audio.Midi
         public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
         public event Action OnMidiPlayerFinished;
 
-        internal void Render(int length = SampleRate/128)
+        internal void Render(int length = SampleRate / 125)
         {
             if (Disposed) return;
+
+            // SSE2 needs this.
+            DebugTools.Assert(length % 8 == 0, "Sample length must be multiple of 8");
+
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
             if (buffersProcessed == 0) return;
 
@@ -294,31 +302,50 @@ namespace Robust.Client.Audio.Midi
 
             unsafe
             {
-
                 Span<uint> buffers = stackalloc uint[buffersProcessed];
-                Span<ushort> audio = stackalloc ushort[bufferLength*buffers.Length];
+                Span<ushort> audio = stackalloc ushort[bufferLength * buffers.Length];
 
                 Source.GetBuffersProcessed(buffers);
 
-                lock(_playerStateLock)
-                    _synth?.WriteSample16(length*buffers.Length, audio, 0, Mono ? 1 : 2,
-                        audio, Mono ? length*buffers.Length : 1, Mono ? 1 : 2);
+                lock (_playerStateLock)
+                    _synth?.WriteSample16(length * buffers.Length, audio, 0, Mono ? 1 : 2,
+                        audio, Mono ? length * buffers.Length : 1, Mono ? 1 : 2);
 
                 if (Mono) // Turn audio to mono
                 {
-                    var data = MemoryMarshal.Cast<ushort, short>(audio);
-                    for (var j = 0; j < length*buffers.Length; j++)
-                    {
-                        var k = j + length*buffers.Length;
-                        data[j] = (short) ((data[k] + data[j]) / 2);
-                    }
+                    var l = length * buffers.Length;
 
+                    if (Sse2.IsSupported)
+                    {
+                        fixed (ushort* uPtr = audio)
+                        {
+                            var ptr = (short*) uPtr;
+                            for (var j = 0; j < l; j += 8)
+                            {
+                                var k = j + l;
+
+                                var jV = Sse2.ShiftRightArithmetic(Sse2.LoadVector128(ptr + j), 1);
+                                var kV = Sse2.ShiftRightArithmetic(Sse2.LoadVector128(ptr + k), 1);
+
+                                Sse2.Store(j + ptr, Sse2.Add(jV, kV));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var data = MemoryMarshal.Cast<ushort, short>(audio);
+                        for (var j = 0; j < l; j++)
+                        {
+                            var k = j + l;
+                            data[j] = (short) ((data[k] + data[j]) / 2);
+                        }
+                    }
                 }
 
                 for (var i = 0; i < buffers.Length; i++)
                 {
                     var buffer = buffers[i];
-                    Source.WriteBuffer(buffer, audio.Slice(i*length, bufferLength));
+                    Source.WriteBuffer(buffer, audio.Slice(i * length, bufferLength));
                 }
 
                 Source.QueueBuffers(buffers);
@@ -333,8 +360,7 @@ namespace Robust.Client.Audio.Midi
                 }
             }
 
-            if(!Source.IsPlaying) Source.StartPlaying();
-
+            if (!Source.IsPlaying) Source.StartPlaying();
         }
 
         private int MidiPlayerEventHandler(MidiEvent midiEvent)
@@ -369,7 +395,7 @@ namespace Robust.Client.Audio.Midi
                         if (_notesPlaying.Count >= NoteLimit)
                             return;
 
-                        lock(_playerStateLock)
+                        lock (_playerStateLock)
                             _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
                         if (!_notesPlaying.Contains(midiEvent.Key))
                             _notesPlaying.Add(midiEvent.Key);
@@ -378,7 +404,7 @@ namespace Robust.Client.Audio.Midi
                     {
                         if (_notesPlaying.Contains(midiEvent.Key))
                         {
-                            lock(_playerStateLock)
+                            lock (_playerStateLock)
                                 _synth.NoteOff(ch, midiEvent.Key);
                             _notesPlaying.Remove(midiEvent.Key);
                         }

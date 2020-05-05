@@ -232,7 +232,7 @@ namespace Robust.Shared.GameObjects.Components
             if (!_collisionEnabled || CollisionMask == 0x0)
                 return new IEntity[] { };
 
-            return null;
+            return _physicsManager.GetCollidingEntities(Owner, offset, bump);
         }
 
         public bool UpdatePhysicsTree()

@@ -124,7 +124,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
         // serializes a node tree into text
-        private static string NodeToYamlText(YamlNode root)
+        internal static string NodeToYamlText(YamlNode root)
         {
             var document = new YamlDocument(root);
 
@@ -142,7 +142,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         // deserializes yaml text, loads the first document, and returns the first entity
-        private static YamlMappingNode YamlTextToNode(string text)
+        internal static YamlMappingNode YamlTextToNode(string text)
         {
             using (var stream = new MemoryStream())
             {

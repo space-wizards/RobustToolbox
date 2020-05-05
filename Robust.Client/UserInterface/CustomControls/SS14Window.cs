@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Input;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -153,7 +154,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.KeyBindDown(args);
 
-            if (!args.CanFocus)
+            if (args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }
@@ -173,7 +174,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.KeyBindUp(args);
 
-            if (!args.CanFocus)
+            if (args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }

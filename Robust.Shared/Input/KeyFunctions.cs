@@ -22,6 +22,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction CameraRotateLeft = "CameraRotateLeft";
 
         public static readonly BoundKeyFunction Use = "Use";
+        public static readonly BoundKeyFunction UIClick = "UIClick";
 
         public static readonly BoundKeyFunction ShowDebugConsole = "ShowDebugConsole";
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";

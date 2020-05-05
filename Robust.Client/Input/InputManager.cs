@@ -138,8 +138,7 @@ namespace Robust.Client.Input
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        if (DownBind(binding))
-                            break;
+                        DownBind(binding);
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {

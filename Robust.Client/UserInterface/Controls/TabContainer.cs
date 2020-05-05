@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Input;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -242,7 +243,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (!TabsVisible || !args.CanFocus)
+            if (!TabsVisible || args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }

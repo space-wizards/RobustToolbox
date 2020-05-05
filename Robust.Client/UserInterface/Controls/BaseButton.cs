@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Input;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -106,7 +107,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        ///     Whether a button enables Keybinds without GUIBoundKeyEventArgs.CanFocus to trigger the button.
+        ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
         public bool EnableAllKeybinds
         {
@@ -198,7 +199,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
+            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }
@@ -241,7 +242,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
+            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }

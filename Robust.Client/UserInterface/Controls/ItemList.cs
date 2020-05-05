@@ -423,7 +423,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (SelectMode == ItemListSelectMode.None || !args.CanFocus)
+            if (SelectMode == ItemListSelectMode.None || args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }

@@ -65,11 +65,16 @@ namespace Robust.Shared.Physics
                 var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
                 normal = new Vector2(0, manifold.Height * bottomDist > topDist ? 1 : -1);
             }
-
-            if (relativeVelocity == Vector2.Zero) relativeVelocity = -normal;
             var contactVel = Vector2.Dot(relativeVelocity, normal);
-            if (contactVel > 0) return Vector2.Zero;
-            const float restitution = 0.5f;
+            if (contactVel == 0)
+            {
+                contactVel = -10.0f;
+            }
+            if (contactVel > 0)
+            {
+                return Vector2.Zero;
+            }
+            const float restitution = 0.0f;
             var targetImpulse = normal * (1 + restitution) * contactVel;
             if (sourceMass == 0.0f)
             {

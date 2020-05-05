@@ -161,8 +161,37 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var physics = entity.GetComponent<PhysicsComponent>();
 
-            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime;
+            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / 2.0f;
+            FixClipping(physics);
+            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / 2.0f;
             physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
+
+        }
+
+        private void FixClipping(PhysicsComponent physics)
+        {
+            if (physics.Owner.TryGetComponent<CollidableComponent>(out var collider))
+            {
+                for (var i = 0; i < 3; i++)
+                {
+                    var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
+                    if (!entities.Any()) break;
+                    foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
+                    {
+                        if (((IComponent) clippingCollider).Owner.TryGetComponent<PhysicsComponent>(
+                            out var sourcePhysics))
+                        {
+                            physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, clippingCollider,
+                                physics.LinearVelocity, sourcePhysics.LinearVelocity, physics.Mass, sourcePhysics.Mass);
+                        }
+                        else
+                        {
+                            physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, clippingCollider,
+                                physics.LinearVelocity, Vector2.Zero, physics.Mass, 0.0f);
+                        }
+                    }
+                }
+            }
         }
 
         private float GetFriction(IEntity entity)

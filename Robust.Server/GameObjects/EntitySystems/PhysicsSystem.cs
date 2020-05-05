@@ -161,36 +161,32 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var physics = entity.GetComponent<PhysicsComponent>();
 
-            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / 2.0f;
-            FixClipping(physics);
-            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / 2.0f;
-            physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
+            const int solveIterations = 3;
 
+            for (var _ = 0; _ < solveIterations; _++)
+            {
+                physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
+                physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
+                FixClipping(physics);
+            }
         }
 
         private void FixClipping(PhysicsComponent physics)
         {
             if (physics.Owner.TryGetComponent<CollidableComponent>(out var collider))
             {
-                for (var i = 0; i < 3; i++)
-                {
-                    var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
-                    if (!entities.Any()) break;
+                var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
+                if (!entities.Any()) return;
                     foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                     {
-                        if (((IComponent) clippingCollider).Owner.TryGetComponent<PhysicsComponent>(
-                            out var sourcePhysics))
+                        var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
+                        var iterations = 10;
+                        while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations >= 0)
                         {
-                            physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, clippingCollider,
-                                physics.LinearVelocity, sourcePhysics.LinearVelocity, physics.Mass, sourcePhysics.Mass);
-                        }
-                        else
-                        {
-                            physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, clippingCollider,
-                                physics.LinearVelocity, Vector2.Zero, physics.Mass, 0.0f);
+                            iterations--;
+                            collider.Owner.Transform.WorldPosition += normal * 0.01f;
                         }
                     }
-                }
             }
         }
 

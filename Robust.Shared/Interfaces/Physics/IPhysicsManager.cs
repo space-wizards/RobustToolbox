@@ -53,6 +53,15 @@ namespace Robust.Shared.Interfaces.Physics
 
 
         /// <summary>
+        ///     Calculates the normal vector for two colliding bodies
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source);
+
+
+        /// <summary>
         ///     Calculates the resulting impulse vector on the target collidable from the source collidable
         /// </summary>
         /// <param name="target"></param>

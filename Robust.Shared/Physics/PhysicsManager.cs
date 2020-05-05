@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -43,12 +44,8 @@ namespace Robust.Shared.Physics
             return false;
         }
 
-
-        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass)
+        public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
         {
-            var relativeVelocity = sourceVel - targetVel;
-            var normal = Vector2.Zero;
-            // Find intersection
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
             if (manifold.Height > manifold.Width)
@@ -56,15 +53,22 @@ namespace Robust.Shared.Physics
                 // X is the axis of seperation
                 var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
                 var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
-                normal = new Vector2(manifold.Width * leftDist > rightDist ? 1 : -1, 0);
+                return new Vector2(manifold.Width * leftDist > rightDist ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
                 var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
                 var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
-                normal = new Vector2(0, manifold.Height * bottomDist > topDist ? 1 : -1);
+                return new Vector2(0, manifold.Height * bottomDist > topDist ? 1 : -1);
             }
+        }
+
+
+        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass)
+        {
+            var relativeVelocity = sourceVel - targetVel;
+            var normal = CalculateNormal(target, source);
             var contactVel = Vector2.Dot(relativeVelocity, normal);
             if (contactVel == 0)
             {

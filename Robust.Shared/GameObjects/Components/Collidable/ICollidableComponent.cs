@@ -9,6 +9,13 @@ namespace Robust.Shared.GameObjects.Components
     public interface ICollidableComponent : IComponent, IPhysBody
     {
         bool TryCollision(Vector2 offset, bool bump = false);
+        /// <summary>
+        /// Get the entities which are colliding with this component.
+        /// </summary>
+        /// <param name="offset"></param>
+        /// <param name="bump">Should the colliding entities bump into each other.</param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool bump = false);
 
         bool UpdatePhysicsTree();
 

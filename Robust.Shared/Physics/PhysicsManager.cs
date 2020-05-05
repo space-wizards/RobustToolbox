@@ -48,13 +48,25 @@ namespace Robust.Shared.Physics
         }
 
         /// <summary>
-        ///     returns true if collider intersects a physBody under management and calls Bump.
+        /// Check if an entity collides with anything.
         /// </summary>
         /// <param name="entity">Rectangle to check for collision</param>
         /// <param name="offset"></param>
-        /// <param name="bump"></param>
-        /// <returns></returns>
+        /// <param name="bump">Should <see cref="IPhysBody.Bump(List{IEntity})"/> and <see cref="IPhysBody.Bumped(IEntity)"/> be called on the respective entities.</param>
+        /// <returns><c>true</c> if the collider intersects with another <see cref="IPhysBody"/></returns>
         public bool TryCollide(IEntity entity, Vector2 offset, bool bump = true)
+        {
+            return GetCollidingEntities(entity, offset, bump).Any();
+        }
+
+        /// <summary>
+        /// Return the entities which an entity is colliding with.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="offset"></param>
+        /// <param name="bump">Should <see cref="IPhysBody.Bump(List{IEntity})"/> and <see cref="IPhysBody.Bumped(IEntity)"/> be called on the respective entities.</param>
+        /// <returns>The collection of entities <paramref name="entity"/> is colliding with.</returns>
+        public IEnumerable<IEntity> GetCollidingEntities(IEntity entity, Vector2 offset, bool bump = true)
         {
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
@@ -63,7 +75,7 @@ namespace Robust.Shared.Physics
 
             // This will never collide with anything
             if (!collidable.CollisionEnabled || collidable.CollisionLayer == 0x0)
-                return false;
+                return new IEntity[] { };
 
             var colliderAABB = collidable.WorldAABB;
             if (offset.LengthSquared > 0)
@@ -77,14 +89,13 @@ namespace Robust.Shared.Physics
 
             // collided with nothing
             if (_results.Count == 0)
-                return false;
+                return new IEntity[] { };
 
             //See if our collision will be overridden by a component
             var collisionmodifiers = entity.GetAllComponents<ICollideSpecial>().ToList();
             var collidedwith = new List<IEntity>();
 
             //try all of the AABBs against the target rect.
-            var collided = false;
             foreach (var otherCollidable in _results)
             {
                 if (!otherCollidable.IsHardCollidable)
@@ -109,21 +120,21 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
-                collided = true;
-
-                if (!bump)
-                {
-                    continue;
-                }
-
-                otherCollidable.Bumped(entity);
                 collidedwith.Add(otherCollidable.Owner);
+
+                if (bump)
+                {
+                    otherCollidable.Bumped(entity);
+                }
             }
 
-            collidable.Bump(collidedwith);
+            if (bump)
+            {
+                collidable.Bump(collidedwith);
+            }
 
             //TODO: This needs multi-grid support.
-            return collided;
+            return collidedwith;
         }
 
         /// <summary>

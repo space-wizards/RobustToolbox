@@ -226,6 +226,15 @@ namespace Robust.Shared.GameObjects.Components
             return _physicsManager.TryCollide(Owner, offset, bump);
         }
 
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool bump = false)
+        {
+            if (!_collisionEnabled || CollisionMask == 0x0)
+                return new IEntity[] { };
+
+            return null;
+        }
+
         public bool UpdatePhysicsTree()
             => _physicsManager.Update(this);
 

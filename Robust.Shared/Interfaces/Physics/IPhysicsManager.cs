@@ -24,6 +24,8 @@ namespace Robust.Shared.Interfaces.Physics
 
         bool TryCollide(IEntity entity, Vector2 offset, bool bump = true);
 
+        IEnumerable<IEntity> GetCollidingEntities(IEntity entity, Vector2 offset, bool bump = true);
+
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
 

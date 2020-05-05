@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
-using Robust.Client.Input;
-using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -20,17 +18,27 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class LineEdit : Control
     {
+        private const float BlinkTime = 0.5f;
+        private const float MouseScrollDelay = 0.001f;
+
         public const string StylePropertyStyleBox = "stylebox";
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
+        private int _cursorPosition;
+        private int _selectionStart;
         [NotNull] private string _text = "";
         private bool _editable = true;
         [CanBeNull] private string _placeHolder;
-        private int _cursorPosition;
+
+        private int _drawOffset;
+
         private float _cursorBlinkTimer;
         private bool _cursorCurrentlyLit;
-        private const float BlinkTime = 0.5f;
+        private readonly LineEditRenderBox _renderBox;
+
+        private bool _mouseSelectingText;
+        private float _lastMousePosition;
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
@@ -42,8 +50,10 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public Func<string, bool> IsValid { get; set; }
 
-        public AlignMode TextAlign { get; set; }
-
+        /// <summary>
+        ///     The actual text currently stored in the LineEdit.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public string Text
         {
             get => _text;
@@ -58,11 +68,29 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return;
                 }
+
                 _cursorPosition = 0;
+                _selectionStart = 0;
                 _updatePseudoClass();
             }
         }
 
+        /// <summary>
+        ///     The text
+        /// </summary>
+        public ReadOnlySpan<char> SelectedText
+        {
+            get
+            {
+                var lower = SelectionLower;
+
+                return _text.AsSpan(lower, SelectionLength);
+            }
+        }
+
+        public int SelectionLength => Math.Abs(_selectionStart - _cursorPosition);
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Editable
         {
             get => _editable;
@@ -82,6 +110,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public string PlaceHolder
         {
             get => _placeHolder;
@@ -92,21 +121,24 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public int CursorPos
+        public int CursorPosition
         {
+            get => _cursorPosition;
             set
             {
-                if (value < 0)
-                {
-                    value = 0;
-                }
-                else if (value > _text.Length)
-                {
-                    value = _text.Length;
-                }
-                _cursorPosition = value;
+                _cursorPosition = value.Clamp(0, _text.Length);
+                _selectionStart = _cursorPosition;
             }
         }
+
+        public int SelectionStart
+        {
+            get => _selectionStart;
+            set => _selectionStart = value.Clamp(0, _text.Length);
+        }
+
+        public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
+        public int SelectionUpper => Math.Max(_selectionStart, _cursorPosition);
 
         public bool IgnoreNext { get; set; }
 
@@ -126,19 +158,13 @@ namespace Robust.Client.UserInterface.Controls
             KeyboardFocusOnClick = true;
 
             DefaultCursorShape = CursorShape.IBeam;
+
+            AddChild(_renderBox = new LineEditRenderBox(this));
         }
 
         public void Clear()
         {
             Text = "";
-        }
-
-        public void Select(int from = 0, int to = -1)
-        {
-        }
-
-        public void SelectAll()
-        {
         }
 
         public void InsertAtCursor(string text)
@@ -155,20 +181,24 @@ namespace Robust.Client.UserInterface.Controls
                 chars.Add(chr);
             }
 
-            if (chars.Count == 0)
+            text = new string(chars.ToArray());
+
+            var lower = SelectionLower;
+            var newContents = Text[..lower] + text + Text[SelectionUpper..];
+
+            if (!SetText(newContents))
             {
                 return;
             }
 
-            if (!SetText(_text.Insert(_cursorPosition, new string(chars.ToArray()))))
-            {
-                return;
-            }
-            _cursorPosition += chars.Count;
+            _selectionStart = _cursorPosition = lower + chars.Count;
             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _updatePseudoClass();
         }
 
+        /// <remarks>
+        /// Does not fix cursor positions, those will have to be adjusted manually.
+        /// </remarks>>
         protected bool SetText(string newText)
         {
             if (IsValid != null && !IsValid(newText))
@@ -178,68 +208,6 @@ namespace Robust.Client.UserInterface.Controls
 
             _text = newText;
             return true;
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            var styleBox = _getStyleBox();
-            var drawBox = PixelSizeBox;
-            var contentBox = styleBox.GetContentBox(drawBox);
-            styleBox.Draw(handle, drawBox);
-            var font = _getFont();
-            var renderedTextColor = _getFontColor();
-
-            var offsetY = (int) (contentBox.Height - font.GetHeight(UIScale)) / 2;
-            var baseLine = new Vector2i(0, offsetY + font.GetAscent(UIScale)) + contentBox.TopLeft;
-
-            string renderedText;
-
-            if (IsPlaceHolderVisible)
-            {
-                renderedText = _placeHolder;
-            }
-            else
-            {
-                renderedText = _text;
-            }
-
-            float? actualCursorPosition = null;
-
-            if (_cursorPosition == 0)
-            {
-                actualCursorPosition = contentBox.Left;
-            }
-
-            var count = 0;
-            foreach (var chr in renderedText)
-            {
-                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
-                {
-                    count += 1;
-                    continue;
-                }
-
-                // Glyph would be outside the bounding box, abort.
-                if (baseLine.X + metrics.Width + metrics.BearingX > contentBox.Right)
-                {
-                    break;
-                }
-
-                font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
-                baseLine += new Vector2(metrics.Advance, 0);
-                count += 1;
-                if (count == _cursorPosition)
-                {
-                    actualCursorPosition = baseLine.X;
-                }
-            }
-
-            if (_cursorCurrentlyLit && actualCursorPosition.HasValue && HasKeyboardFocus())
-            {
-                handle.DrawRect(
-                    new UIBox2(actualCursorPosition.Value, contentBox.Top, actualCursorPosition.Value + 1,
-                        contentBox.Bottom), Color.White);
-            }
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -252,6 +220,26 @@ namespace Robust.Client.UserInterface.Controls
                 _cursorBlinkTimer += BlinkTime;
                 _cursorCurrentlyLit = !_cursorCurrentlyLit;
             }
+
+            if (_mouseSelectingText)
+            {
+                var style = _getStyleBox();
+                var contentBox = style.GetContentBox(PixelSizeBox);
+
+                if (_lastMousePosition < contentBox.Left)
+                {
+                    _drawOffset = Math.Max(0, _drawOffset - (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay));
+                }
+                else if (_lastMousePosition > contentBox.Right)
+                {
+                    // Will get clamped inside rendering code.
+                    _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
+                }
+
+                var index = GetIndexAtPos(_lastMousePosition.Clamp(contentBox.Left, contentBox.Right));
+
+                _cursorPosition = index;
+            }
         }
 
         protected override Vector2 CalculateMinimumSize()
@@ -259,6 +247,13 @@ namespace Robust.Client.UserInterface.Controls
             var font = _getFont();
             var style = _getStyleBox();
             return new Vector2(0, font.GetHeight(UIScale) / UIScale) + style.MinimumSize / UIScale;
+        }
+
+        protected override void LayoutUpdateOverride()
+        {
+            var style = _getStyleBox();
+
+            FitChildInPixelBox(_renderBox, (UIBox2i) style.GetContentBox(PixelSizeBox));
         }
 
         protected internal override void TextEntered(GUITextEventArgs args)
@@ -276,11 +271,13 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            if (!SetText(_text.Insert(_cursorPosition, ((char)args.CodePoint).ToString())))
+            if (!SetText(_text.Insert(_cursorPosition, ((char) args.CodePoint).ToString())))
             {
                 return;
             }
+
             _cursorPosition += 1;
+            _selectionStart = _cursorPosition;
             OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
             _updatePseudoClass();
         }
@@ -291,84 +288,218 @@ namespace Robust.Client.UserInterface.Controls
 
             if (!args.CanFocus)
             {
-                if (!this.HasKeyboardFocus())
+                if (!HasKeyboardFocus())
                 {
                     return;
                 }
+
                 if (args.Function == EngineKeyFunctions.TextBackspace)
                 {
-                    if (_cursorPosition == 0 || !Editable)
+                    if (Editable)
                     {
-                        return;
+                        var changed = false;
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition != 0)
+                        {
+                            _text = _text.Remove(_cursorPosition - 1, 1);
+                            _cursorPosition -= 1;
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                        }
                     }
 
-                    _text = _text.Remove(_cursorPosition - 1, 1);
-                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
-                    _cursorPosition -= 1;
-                    _updatePseudoClass();
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextDelete)
+                {
+                    if (Editable)
+                    {
+                        var changed = false;
+                        if (_selectionStart != _cursorPosition)
+                        {
+                            _text = _text.Remove(SelectionLower, SelectionLength);
+                            _cursorPosition = SelectionLower;
+                            changed = true;
+                        }
+                        else if (_cursorPosition < _text.Length)
+                        {
+                            _text = _text.Remove(_cursorPosition, 1);
+                            changed = true;
+                        }
+
+                        if (changed)
+                        {
+                            _selectionStart = _cursorPosition;
+                            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
+                            _updatePseudoClass();
+                        }
+                    }
+
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorLeft)
                 {
-                    if (_cursorPosition == 0)
+                    if (_selectionStart != _cursorPosition)
                     {
-                        return;
+                        _cursorPosition = _selectionStart = SelectionLower;
+                    }
+                    else
+                    {
+                        if (_cursorPosition != 0)
+                        {
+                            _cursorPosition -= 1;
+                        }
+
+                        _selectionStart = _cursorPosition;
                     }
 
-                    _cursorPosition -= 1;
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorRight)
                 {
-                    if (_cursorPosition == _text.Length)
+                    if (_selectionStart != _cursorPosition)
                     {
-                        return;
+                        _cursorPosition = _selectionStart = SelectionUpper;
+                    }
+                    else
+                    {
+                        if (_cursorPosition != _text.Length)
+                        {
+                            _cursorPosition += 1;
+                        }
+
+                        _selectionStart = _cursorPosition;
                     }
 
-                    _cursorPosition += 1;
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorWordLeft)
+                {
+                    _selectionStart = _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorWordRight)
+                {
+                    _selectionStart = _cursorPosition = NextWordPosition(_text, _cursorPosition);
+
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorBegin)
                 {
-                    _cursorPosition = 0;
+                    _selectionStart = _cursorPosition = 0;
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextCursorEnd)
+                {
+                    _selectionStart = _cursorPosition = _text.Length;
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectLeft)
+                {
+                    if (_cursorPosition != 0)
+                    {
+                        _cursorPosition -= 1;
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectRight)
+                {
+                    if (_cursorPosition != _text.Length)
+                    {
+                        _cursorPosition += 1;
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectWordLeft)
+                {
+                    _cursorPosition = PrevWordPosition(_text, _cursorPosition);
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectWordRight)
+                {
+                    _cursorPosition = NextWordPosition(_text, _cursorPosition);
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectBegin)
+                {
+                    _cursorPosition = 0;
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCursorSelectEnd)
                 {
                     _cursorPosition = _text.Length;
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextSubmit)
                 {
-                    if (!Editable)
+                    if (Editable)
                     {
-                        return;
+                        OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
                     }
 
-                    OnTextEntered?.Invoke(new LineEditEventArgs(this, _text));
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextPaste)
                 {
-                    if (!Editable)
+                    if (Editable)
                     {
-                        return;
+                        var clipboard = IoCManager.Resolve<IClipboardManager>();
+                        var text = clipboard.GetText();
+                        if (text != null)
+                        {
+                            InsertAtCursor(text);
+                        }
                     }
 
-                    var clipboard = IoCManager.Resolve<IClipboardManager>();
-                    InsertAtCursor(clipboard.GetText());
                     args.Handle();
                 }
-                else if (args.Function == EngineKeyFunctions.TextDelete)
+                else if (args.Function == EngineKeyFunctions.TextCut)
                 {
-                    if (_cursorPosition >= _text.Length || !Editable)
+                    if (Editable || SelectionLower != SelectionUpper)
                     {
-                        return;
+                        var clipboard = IoCManager.Resolve<IClipboardManager>();
+                        var text = SelectedText;
+                        if (!text.IsEmpty)
+                        {
+                            clipboard.SetText(SelectedText.ToString());
+                        }
+
+                        InsertAtCursor("");
                     }
 
-                    _text = _text.Remove(_cursorPosition, 1);
-                    OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
-                    _updatePseudoClass();
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextCopy)
+                {
+                    var clipboard = IoCManager.Resolve<IClipboardManager>();
+                    var text = SelectedText;
+                    if (!text.IsEmpty)
+                    {
+                        clipboard.SetText(text.ToString());
+                    }
+
+                    args.Handle();
+                }
+                else if (args.Function == EngineKeyFunctions.TextSelectAll)
+                {
+                    _cursorPosition = _text.Length;
+                    _selectionStart = 0;
                     args.Handle();
                 }
                 else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
@@ -380,54 +511,88 @@ namespace Robust.Client.UserInterface.Controls
             }
             else
             {
+                _mouseSelectingText = true;
+                _lastMousePosition = args.RelativePosition.X;
+
                 // Find closest cursor position under mouse.
-                var style = _getStyleBox();
-                var contentBox = style.GetContentBox(PixelSizeBox);
-
-                var clickPosX = args.RelativePosition.X * UIScale;
-
-                var font = _getFont();
-                var index = 0;
-                var chrPosX = contentBox.Left;
-                var lastChrPostX = contentBox.Left;
-                foreach (var chr in _text)
-                {
-                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
-                    {
-                        index += 1;
-                        continue;
-                    }
-
-                    if (chrPosX > clickPosX)
-                    {
-                        break;
-                    }
-
-                    lastChrPostX = chrPosX;
-                    chrPosX += metrics.Advance;
-                    index += 1;
-
-                    if (chrPosX > contentBox.Right)
-                    {
-                        break;
-                    }
-                }
-
-                // Distance between the right side of the glyph overlapping the mouse and the mouse.
-                var distanceRight = chrPosX - clickPosX;
-                // Same but left side.
-                var distanceLeft = clickPosX - lastChrPostX;
-                // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
-                if (index > 0 && distanceRight > distanceLeft)
-                {
-                    index -= 1;
-                }
+                var index = GetIndexAtPos(args.RelativePosition.X);
 
                 _cursorPosition = index;
+
+                if (args.Function != EngineKeyFunctions.TextCursorSelect)
+                {
+                    _selectionStart = index;
+                }
+
                 args.Handle();
             }
+
             // Reset this so the cursor is always visible immediately after a keybind is pressed.
             _resetCursorBlink();
+        }
+
+        protected internal override void KeyBindUp(GUIBoundKeyEventArgs args)
+        {
+            base.KeyBindUp(args);
+
+            if (args.CanFocus)
+            {
+                _mouseSelectingText = false;
+            }
+        }
+
+        protected internal override void MouseMove(GUIMouseMoveEventArgs args)
+        {
+            base.MouseMove(args);
+
+            _lastMousePosition = args.RelativePosition.X;
+        }
+
+        private int GetIndexAtPos(float horizontalPos)
+        {
+            var style = _getStyleBox();
+            var contentBox = style.GetContentBox(PixelSizeBox);
+
+            var clickPosX = horizontalPos * UIScale;
+
+            var font = _getFont();
+            var index = 0;
+            var chrPosX = contentBox.Left - _drawOffset;
+            var lastChrPostX = contentBox.Left - _drawOffset;
+            foreach (var chr in _text)
+            {
+                if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                {
+                    index += 1;
+                    continue;
+                }
+
+                if (chrPosX > clickPosX)
+                {
+                    break;
+                }
+
+                lastChrPostX = chrPosX;
+                chrPosX += metrics.Advance;
+                index += 1;
+
+                if (chrPosX > contentBox.Right)
+                {
+                    break;
+                }
+            }
+
+            // Distance between the right side of the glyph overlapping the mouse and the mouse.
+            var distanceRight = chrPosX - clickPosX;
+            // Same but left side.
+            var distanceLeft = clickPosX - lastChrPostX;
+            // If the mouse is closer to the left of the glyph we lower the index one, so we select before that glyph.
+            if (index > 0 && distanceRight > distanceLeft)
+            {
+                index -= 1;
+            }
+
+            return index;
         }
 
         protected internal override void FocusEntered()
@@ -476,11 +641,80 @@ namespace Robust.Client.UserInterface.Controls
             SetOnlyStylePseudoClass(IsPlaceHolderVisible ? StylePseudoClassPlaceholder : null);
         }
 
-        public enum AlignMode
+        protected internal override void Draw(DrawingHandleScreen handle)
         {
-            Left = 0,
-            Center = 1,
-            Right = 2
+            base.Draw(handle);
+
+            _getStyleBox().Draw(handle, PixelSizeBox);
+        }
+
+        // Approach for NextWordPosition and PrevWordPosition taken from Avalonia.
+        private int NextWordPosition(string str, int cursor)
+        {
+            if (cursor >= str.Length)
+            {
+                return str.Length;
+            }
+
+            var charClass = GetCharClass(str[cursor]);
+
+            var i = cursor;
+            for (; i < str.Length && GetCharClass(str[i]) == charClass; i++)
+            {
+            }
+
+            for (; i < str.Length && GetCharClass(str[i]) == CharClass.Whitespace; i++)
+            {
+            }
+
+            return i;
+        }
+
+        private int PrevWordPosition(string str, int cursor)
+        {
+            if (cursor == 0)
+            {
+                return 0;
+            }
+
+            var charClass = GetCharClass(str[cursor - 1]);
+
+            var i = cursor;
+            for (; i > 0 && GetCharClass(str[i - 1]) == charClass; i--)
+            {
+            }
+
+            if (charClass == CharClass.Whitespace)
+            {
+                charClass = GetCharClass(str[i - 1]);
+                for (; i > 0 && GetCharClass(str[i - 1]) == charClass; i--)
+                {
+                }
+            }
+
+            return i;
+        }
+
+        private CharClass GetCharClass(char chr)
+        {
+            if (char.IsWhiteSpace(chr))
+            {
+                return CharClass.Whitespace;
+            }
+
+            if (char.IsLetterOrDigit(chr))
+            {
+                return CharClass.AlphaNumeric;
+            }
+
+            return CharClass.Other;
+        }
+
+        private enum CharClass
+        {
+            Other,
+            AlphaNumeric,
+            Whitespace
         }
 
         public class LineEditEventArgs : EventArgs
@@ -492,6 +726,129 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Control = control;
                 Text = text;
+            }
+        }
+
+        /// <summary>
+        ///     Use a separate control to do the rendering to make use of RectClipContent,
+        ///     so that we can clip characters in half.
+        /// </summary>
+        private sealed class LineEditRenderBox : Control
+        {
+            private readonly LineEdit _master;
+
+            public LineEditRenderBox(LineEdit master)
+            {
+                _master = master;
+
+                RectClipContent = true;
+            }
+
+            protected internal override void Draw(DrawingHandleScreen handle)
+            {
+                base.Draw(handle);
+
+                var contentBox = PixelSizeBox;
+                var font = _master._getFont();
+                var renderedTextColor = _master._getFontColor();
+
+                var offsetY = (contentBox.Height - font.GetHeight(UIScale)) / 2;
+
+                var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder : _master._text;
+                DebugTools.AssertNotNull(renderedText);
+
+                ref var drawOffset = ref _master._drawOffset;
+
+                // Go through the entire text once to find length/positional data of cursor.
+                var count = 0;
+                var posX = 0;
+                var actualCursorPosition = 0;
+                var actualSelectionStartPosition = 0;
+                foreach (var chr in renderedText)
+                {
+                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    {
+                        count += 1;
+                        continue;
+                    }
+
+                    posX += metrics.Advance;
+                    count += 1;
+
+                    if (count == _master._cursorPosition)
+                    {
+                        actualCursorPosition = posX;
+                    }
+
+                    if (count == _master._selectionStart)
+                    {
+                        actualSelectionStartPosition = posX;
+                    }
+                }
+
+                var totalLength = posX;
+
+                // Shift drawOffset around to fill as much as possible.
+                var end = totalLength - drawOffset;
+                if (end + 1 < contentBox.Width)
+                {
+                    drawOffset = Math.Max(0, drawOffset - (contentBox.Width - end));
+                }
+
+                // Shift drawOffset around so that cursor is always visible.
+                if (actualCursorPosition < drawOffset)
+                {
+                    drawOffset -= drawOffset - actualCursorPosition;
+                }
+                else if (actualCursorPosition >= contentBox.Width + drawOffset)
+                {
+                    drawOffset += actualCursorPosition - (contentBox.Width + drawOffset - 1);
+                }
+
+                // Apply drawOffset to positional data.
+                actualCursorPosition -= drawOffset;
+                actualSelectionStartPosition -= drawOffset;
+
+                // Actually render.
+                var baseLine = (-drawOffset, offsetY + font.GetAscent(UIScale)) +
+                               contentBox.TopLeft;
+
+                foreach (var chr in renderedText)
+                {
+                    if (!font.TryGetCharMetrics(chr, UIScale, out var metrics))
+                    {
+                        continue;
+                    }
+
+                    // Glyph would be completely outside the bounding box and invisible, abort.
+                    if (baseLine.X > contentBox.Right)
+                    {
+                        break;
+                    }
+
+                    font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    baseLine += (metrics.Advance, 0);
+                }
+
+                // Draw cursor/selection.
+                if (_master.HasKeyboardFocus())
+                {
+                    var selectionLower = Math.Min(actualSelectionStartPosition, actualCursorPosition);
+                    var selectionUpper = Math.Max(actualSelectionStartPosition, actualCursorPosition);
+
+                    if (selectionLower != selectionUpper)
+                    {
+                        handle.DrawRect(new UIBox2(selectionLower, contentBox.Top, selectionUpper, contentBox.Bottom),
+                            Color.CornflowerBlue.WithAlpha(0.25f));
+                    }
+
+                    if (_master._cursorCurrentlyLit)
+                    {
+                        handle.DrawRect(
+                            new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
+                                contentBox.Bottom), Color.White);
+                    }
+                }
             }
         }
 

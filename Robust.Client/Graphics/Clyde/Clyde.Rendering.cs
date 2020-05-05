@@ -52,6 +52,7 @@ namespace Robust.Client.Graphics.Clyde
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
+        private LoadedTexture _batchLoadedTexture;
         private ClydeHandle _queuedShader;
 
         private ProjViewMatrices _currentMatrices;
@@ -455,12 +456,10 @@ namespace Robust.Client.Graphics.Clyde
         {
             EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TrianglesFan, _queuedShader);
 
-            var loadedTexture = _loadedTextures[texture];
-
             Box2 sr;
             if (subRegion.HasValue)
             {
-                var (w, h) = loadedTexture.Size;
+                var (w, h) = _batchLoadedTexture.Size;
                 var csr = subRegion.Value;
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {
@@ -620,6 +619,15 @@ namespace Robust.Client.Graphics.Clyde
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
                 indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+
+            if (textureId != default)
+            {
+                _batchLoadedTexture = _loadedTextures[textureId];
+            }
+            else
+            {
+                _batchLoadedTexture = null;
+            }
         }
 
         private void FinishBatch()

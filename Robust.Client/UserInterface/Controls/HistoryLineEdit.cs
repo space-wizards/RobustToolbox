@@ -68,7 +68,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 HistoryIndex--;
                 Text = History[HistoryIndex];
-                CursorPos = Text.Length;
+                CursorPosition = Text.Length;
 
                 args.Handle();
             }
@@ -90,7 +90,7 @@ namespace Robust.Client.UserInterface.Controls
                     Text = History[HistoryIndex];
                 }
 
-                CursorPos = Text.Length;
+                CursorPosition = Text.Length;
 
                 args.Handle();
             }

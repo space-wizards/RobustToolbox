@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -134,7 +135,6 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             physics.LinearVelocity += frictionImpulse;
 
-            var collisionImpulse = Vector2.Zero;
             // Calculate collision forces
             if (entity.TryGetComponent<CollidableComponent>(out var collider) && _collisionCache.TryGetValue(entity.Uid, out var entities))
             {
@@ -142,16 +142,15 @@ namespace Robust.Server.GameObjects.EntitySystems
                 {
                     if (((IComponent) otherCollider).Owner.TryGetComponent<PhysicsComponent>(out var sourcePhysics))
                     {
-                        collisionImpulse += _physicsManager.CalculateCollisionImpulse(collider, otherCollider, physics.LinearVelocity, sourcePhysics.LinearVelocity, physics.Mass, sourcePhysics.Mass);
+                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider, physics.LinearVelocity, sourcePhysics.LinearVelocity, physics.Mass, sourcePhysics.Mass);
                     }
                     else
                     {
-                        collisionImpulse += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
+                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
                             physics.LinearVelocity, Vector2.Zero, physics.Mass, 0.0f);
                     }
                 }
             }
-            physics.LinearVelocity += collisionImpulse / physics.Mass;
             // Won't be affected by impulses
             if (physics.Anchored) physics.LinearVelocity = Vector2.Zero;
             physics.Controller?.UpdateAfterProcessing();
@@ -160,15 +159,17 @@ namespace Robust.Server.GameObjects.EntitySystems
         private void UpdatePosition(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
+            //physics.LinearVelocity = new Vector2(physics.LinearVelocity.X < Epsilon ? 0.0f : physics.LinearVelocity.X, physics.LinearVelocity.Y < Epsilon ? 0.0f : physics.LinearVelocity.Y);
+            if (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
-            const int solveIterations = 3;
+            const float solveIterations = 2.0f;
 
-            for (var _ = 0; _ < solveIterations; _++)
+            for (var _ = 0.0f; _ < solveIterations; _++)
             {
-                physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
                 physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
-                FixClipping(physics);
+                physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
             }
+            FixClipping(physics);
         }
 
         private void FixClipping(PhysicsComponent physics)
@@ -177,14 +178,15 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
                 if (!entities.Any()) return;
+                physics.LinearVelocity = Vector2.Zero;
                     foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                     {
                         var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
-                        var iterations = 10;
-                        while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations >= 0)
+                        var iterations = 5;
+                        while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations > 0)
                         {
                             iterations--;
-                            collider.Owner.Transform.WorldPosition += normal * 0.01f;
+                            collider.Owner.Transform.WorldPosition += normal * 0.005f;
                         }
                     }
             }

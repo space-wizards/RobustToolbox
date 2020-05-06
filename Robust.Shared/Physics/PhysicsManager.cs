@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics
             var contactVel = Vector2.Dot(relativeVelocity, normal);
             if (contactVel == 0)
             {
-                contactVel = -10.0f;
+                return normal * 10.0f;
             }
             if (contactVel > 0)
             {

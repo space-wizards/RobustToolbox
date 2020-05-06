@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
-            Assert.That(result, Is.EqualTo(SerializedFiveFlag));
+            Assert.That(result, Is.EqualTo(SerializedOneFourFlag));
         }
 
         [Test]
@@ -108,7 +108,8 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         private const string SerializedOneFlag = "generic_flags:\n- One\n...\n";
-        private const string SerializedFiveFlag = "generic_flags:\n- One\n- Four\n...\n";
+        private const string SerializedOneFourFlag = "generic_flags:\n- One\n- Four\n...\n";
+        private const string SerializedFiveFlag = "generic_flags:\n- Five\n...\n";
         private const string SerializedZeroNum = "generic_flags: 0\n...\n";
 
         [Test]
@@ -142,7 +143,24 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(data, Is.EqualTo(0));
         }
 
+        [Test]
+        public void SerializeNonZeroWithZeroFlagDoesntShowZeroTest()
+        {
+            // Arrange
+            var data = (int)FlagsWithZero.Two;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "generic_flags_with_zero", 0);
+
+            // Assert
+            var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedTwoWithZeroFlag));
+        }
+
         private const string SerializedZeroFlag = "generic_flags_with_zero:\n- None\n...\n";
+        private const string SerializedTwoWithZeroFlag = "generic_flags_with_zero:\n- Two\n...\n";
 
         [Flags]
         [FlagsFor("generic_flags")]

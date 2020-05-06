@@ -51,19 +51,23 @@ namespace Robust.Shared.Serialization
             };
 
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+            _flagNameSerializers = new Dictionary<string, YamlFlagSerializer>();
 
-            try
+            foreach (var bitflagType in reflectionManager.FindTypesWithAttribute<FlagsForAttribute>())
             {
-                _flagNameSerializers = reflectionManager.FindTypesWithAttribute<FlagsForAttribute>()
-                  .ToDictionary(
-                      type => type.GetCustomAttribute<FlagsForAttribute>().FieldName,
-                      type => new YamlFlagSerializer(type));
-            }
-            // Caused by duplicate keys in the dictionary i.e. two [FlagsFor(...)] attributes for the
-            // same field name
-            catch (ArgumentException e)
-            {
-                throw new NotSupportedException("Multiple bitflag enums declared for a field name.", e);
+                var bitflagSerializer = new YamlFlagSerializer(bitflagType);
+                foreach (var flagsforAttribute in bitflagType.GetCustomAttributes<FlagsForAttribute>())
+                {
+                    if (_flagNameSerializers.ContainsKey(flagsforAttribute.FieldName))
+                    {
+                        throw new NotSupportedException(
+                            String.Format(
+                                "Multiple bitflag enums declared for the field name {0}.",
+                                flagsforAttribute.FieldName));
+                    }
+
+                    _flagNameSerializers[flagsforAttribute.FieldName] = bitflagSerializer;
+                }
             }
         }
 

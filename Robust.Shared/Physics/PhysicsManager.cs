@@ -70,11 +70,7 @@ namespace Robust.Shared.Physics
             var relativeVelocity = sourceVel - targetVel;
             var normal = CalculateNormal(target, source);
             var contactVel = Vector2.Dot(relativeVelocity, normal);
-            if (contactVel == 0)
-            {
-                return normal * 10.0f;
-            }
-            if (contactVel > 0)
+            if (contactVel >= 0)
             {
                 return Vector2.Zero;
             }

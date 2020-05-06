@@ -130,6 +130,12 @@ namespace Robust.Server.GameObjects.EntitySystems
             // Next, calculate frictional impulse
             var friction = GetFriction(entity);
 
+            // Clamp friction because friction can't make you accelerate backwards
+            if (friction > physics.LinearVelocity.Length)
+            {
+                friction = physics.LinearVelocity.Length;
+            }
+
             // No multiplication/division by mass here since that would be redundant
             var frictionImpulse = physics.LinearVelocity == Vector2.Zero ? Vector2.Zero : physics.LinearVelocity.Normalized * -friction;
 
@@ -159,17 +165,29 @@ namespace Robust.Server.GameObjects.EntitySystems
         private void UpdatePosition(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
-            //physics.LinearVelocity = new Vector2(physics.LinearVelocity.X < Epsilon ? 0.0f : physics.LinearVelocity.X, physics.LinearVelocity.Y < Epsilon ? 0.0f : physics.LinearVelocity.Y);
+            physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
-            const float solveIterations = 2.0f;
+            const float solveIterations = 4.0f;
 
             for (var _ = 0.0f; _ < solveIterations; _++)
             {
                 physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
+                if (entity.TryGetComponent<CollidableComponent>(out var collider) &&
+                    WillResultInNewIntersections(collider, physics.LinearVelocity * frameTime / solveIterations))
+                {
+                    break;
+                }
                 physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
             }
             FixClipping(physics);
+        }
+
+        private bool WillResultInNewIntersections(CollidableComponent collider, Vector2 delta)
+        {
+            var currentCollisions = collider.GetCollidingEntities(Vector2.Zero);
+            var newCollisions = collider.GetCollidingEntities(delta);
+            return newCollisions.Except(currentCollisions).Any();
         }
 
         private void FixClipping(PhysicsComponent physics)
@@ -178,7 +196,6 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
                 if (!entities.Any()) return;
-                physics.LinearVelocity = Vector2.Zero;
                     foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                     {
                         var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);

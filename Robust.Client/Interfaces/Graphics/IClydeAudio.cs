@@ -10,6 +10,6 @@ namespace Robust.Client.Interfaces.Graphics
         AudioStream LoadAudioWav(Stream stream, string name = null);
 
         IClydeAudioSource CreateAudioSource(AudioStream stream);
-        IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers);
+        IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
     }
 }

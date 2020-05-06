@@ -146,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
             return DummyAudioSource.Instance;
         }
 
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers)
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
         {
             return DummyBufferedAudioSource.Instance;
         }
@@ -228,6 +228,11 @@ namespace Robust.Client.Graphics.Clyde
             public int SampleRate { get; set; } = 0;
 
             public void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
+            {
+                // Nada.
+            }
+
+            public void WriteBuffer(uint handle, ReadOnlySpan<float> data)
             {
                 // Nada.
             }

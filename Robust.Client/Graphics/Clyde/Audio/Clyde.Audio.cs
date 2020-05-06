@@ -176,7 +176,7 @@ namespace Robust.Client.Graphics.Clyde
             return audioSource;
         }
 
-        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers)
+        public IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false)
         {
             var source = (uint) AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
@@ -186,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < bufferHandles.Length; i++)
                 unsignedBufferHandles[i] = (uint) bufferHandles[i];
 
-            var audioSource = new BufferedAudioSource(this, source, unsignedBufferHandles);
+            var audioSource = new BufferedAudioSource(this, source, unsignedBufferHandles, floatAudio);
             _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
             return audioSource;
         }
@@ -501,10 +501,11 @@ namespace Robust.Client.Graphics.Clyde
             private Dictionary<uint, uint> BufferMap = new Dictionary<uint, uint>();
             private readonly Clyde _master;
             private bool _mono = true;
+            private bool _float = false;
 
             public int SampleRate { get; set; } = 44100;
 
-            public BufferedAudioSource(Clyde master, uint sourceHandle, uint[] bufferHandles)
+            public BufferedAudioSource(Clyde master, uint sourceHandle, uint[] bufferHandles, bool floatAudio = false)
             {
                 _master = master;
                 SourceHandle = sourceHandle;
@@ -514,6 +515,8 @@ namespace Robust.Client.Graphics.Clyde
                     var bufferHandle = BufferHandles[i];
                     BufferMap[bufferHandle] = i;
                 }
+
+                _float = floatAudio;
             }
 
             public void StartPlaying()
@@ -679,6 +682,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
 
+                if(_float)
+                    throw new InvalidOperationException("Can't write ushort numbers to buffers when buffer type is float!");
+
                 if (handle >= BufferHandles.Length)
                     throw new ArgumentOutOfRangeException(nameof(handle),
                         $"Got {handle}. Expected less than {BufferHandles.Length}");
@@ -687,6 +693,24 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     AL.BufferData(BufferHandles[handle], _mono ? ALFormat.Mono16 : ALFormat.Stereo16, (IntPtr) ptr,
                         _mono ? data.Length / 2 * sizeof(ushort) : data.Length * sizeof(ushort), SampleRate);
+                }
+            }
+
+            public unsafe void WriteBuffer(uint handle, ReadOnlySpan<float> data)
+            {
+                _checkDisposed();
+
+                if(!_float)
+                    throw new InvalidOperationException("Can't write float numbers to buffers when buffer type is ushort!");
+
+                if (handle >= BufferHandles.Length)
+                    throw new ArgumentOutOfRangeException(nameof(handle),
+                        $"Got {handle}. Expected less than {BufferHandles.Length}");
+
+                fixed (float* ptr = data)
+                {
+                    AL.BufferData(BufferHandles[handle], _mono ? ALFormat.MonoFloat32Ext : ALFormat.StereoFloat32Ext, (IntPtr) ptr,
+                        _mono ? data.Length / 2 * sizeof(float) : data.Length * sizeof(float), SampleRate);
                 }
             }
 
@@ -715,13 +739,29 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 var length = (SampleRate / BufferHandles.Length) * (_mono ? 1 : 2);
 
-                var empty = new ushort[length];
-                var span = (Span<ushort>) empty;
                 Span<uint> handles = stackalloc uint[BufferHandles.Length];
-                for (var i = 0; i < BufferHandles.Length; i++)
+
+                if (_float)
                 {
-                    WriteBuffer(BufferMap[BufferHandles[i]], span);
-                    handles[i] = BufferMap[BufferHandles[i]];
+                    var empty = new float[length];
+                    var span = (Span<float>) empty;
+
+                    for (var i = 0; i < BufferHandles.Length; i++)
+                    {
+                        WriteBuffer(BufferMap[BufferHandles[i]], span);
+                        handles[i] = BufferMap[BufferHandles[i]];
+                    }
+                }
+                else
+                {
+                    var empty = new ushort[length];
+                    var span = (Span<ushort>) empty;
+
+                    for (var i = 0; i < BufferHandles.Length; i++)
+                    {
+                        WriteBuffer(BufferMap[BufferHandles[i]], span);
+                        handles[i] = BufferMap[BufferHandles[i]];
+                    }
                 }
 
                 QueueBuffers(handles);

@@ -8,6 +8,7 @@ namespace Robust.Client.Interfaces.Graphics
         int GetNumberOfBuffersProcessed();
         void GetBuffersProcessed(Span<uint> handles);
         void WriteBuffer(uint handle, ReadOnlySpan<ushort> data);
+        void WriteBuffer(uint handle, ReadOnlySpan<float> data);
         void QueueBuffers(ReadOnlySpan<uint> handles);
         void EmptyBuffers();
     }

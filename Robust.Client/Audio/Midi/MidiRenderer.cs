@@ -145,7 +145,7 @@ namespace Robust.Client.Audio.Midi
         private int _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 48000;
-        private const int Buffers = SampleRate / 12000;
+        private const int Buffers = SampleRate / 4800;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
@@ -187,7 +187,7 @@ namespace Robust.Client.Audio.Midi
         {
             IoCManager.InjectDependencies(this);
             _midiSawmill = _logger.GetSawmill("midi");
-            Source = _clydeAudio.CreateBufferedAudioSource(Buffers);
+            Source = _clydeAudio.CreateBufferedAudioSource(Buffers, true);
             Source.SampleRate = SampleRate;
             _settings = settings;
             _soundFontLoader = soundFontLoader;
@@ -288,12 +288,12 @@ namespace Robust.Client.Audio.Midi
         public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
         public event Action OnMidiPlayerFinished;
 
-        internal void Render(int length = SampleRate / 125)
+        internal void Render(int length = SampleRate / 250)
         {
             if (Disposed) return;
 
-            // SSE2 needs this.
-            DebugTools.Assert(length % 8 == 0, "Sample length must be multiple of 8");
+            // SSE needs this.
+            DebugTools.Assert(length % 4 == 0, "Sample length must be multiple of 4");
 
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
             if (buffersProcessed == 0) return;
@@ -303,41 +303,39 @@ namespace Robust.Client.Audio.Midi
             unsafe
             {
                 Span<uint> buffers = stackalloc uint[buffersProcessed];
-                Span<ushort> audio = stackalloc ushort[bufferLength * buffers.Length];
+                Span<float> audio = stackalloc float[bufferLength * buffers.Length];
 
                 Source.GetBuffersProcessed(buffers);
 
                 lock (_playerStateLock)
-                    _synth?.WriteSample16(length * buffers.Length, audio, 0, Mono ? 1 : 2,
+                    _synth?.WriteSampleFloat(length * buffers.Length, audio, 0, Mono ? 1 : 2,
                         audio, Mono ? length * buffers.Length : 1, Mono ? 1 : 2);
 
                 if (Mono) // Turn audio to mono
                 {
                     var l = length * buffers.Length;
 
-                    if (Sse2.IsSupported)
+                    if (Sse.IsSupported)
                     {
-                        fixed (ushort* uPtr = audio)
+                        fixed (float* ptr = audio)
                         {
-                            var ptr = (short*) uPtr;
-                            for (var j = 0; j < l; j += 8)
+                            for (var j = 0; j < l; j += 4)
                             {
                                 var k = j + l;
 
-                                var jV = Sse2.ShiftRightArithmetic(Sse2.LoadVector128(ptr + j), 1);
-                                var kV = Sse2.ShiftRightArithmetic(Sse2.LoadVector128(ptr + k), 1);
+                                var jV = Sse.LoadVector128(ptr + j);
+                                var kV = Sse.LoadVector128(ptr + k);
 
-                                Sse2.Store(j + ptr, Sse2.Add(jV, kV));
+                                Sse.Store(j + ptr, Sse.Add(jV, kV));
                             }
                         }
                     }
                     else
                     {
-                        var data = MemoryMarshal.Cast<ushort, short>(audio);
                         for (var j = 0; j < l; j++)
                         {
                             var k = j + l;
-                            data[j] = (short) ((data[k] + data[j]) / 2);
+                            audio[j] = ((audio[k] + audio[j]));
                         }
                     }
                 }

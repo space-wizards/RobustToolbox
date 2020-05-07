@@ -155,8 +155,6 @@ namespace Robust.Analyzer
 
             var prototypeManager = AnalyzerIoC.Resolve<IPrototypeManager>();
 
-            // TODO: Not hardcode this
-            prototypeManager.RegisterIgnore("foobar");
             // TODO: Check these from the analyzer config
             foreach (var file in compilationContext.Options.AdditionalFiles)
             {
@@ -180,7 +178,11 @@ namespace Robust.Analyzer
             }
             catch (UnknownPrototypeException e)
             {
-                throw new Exception(String.Format("Exception prevented querying of entity prototypes for existence of \"{0}\".", prototypeName), e);
+                throw new Exception(
+                    String.Format(
+                        "Exception prevented querying of \"{0}\" prototypes for existence of \"{1}\".",
+                        prototypeType, prototypeName),
+                    e);
             }
         }
 
@@ -233,7 +235,7 @@ namespace Robust.Analyzer
                 // check it is one
                 if (!IsPrototype(prototypeName, prototypeType, prototypeManager))
                 {
-                    context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), prototypeName));
+                    context.ReportDiagnostic(Diagnostic.Create(Rule, invocation.Syntax.GetLocation(), prototypeType, prototypeName));
                 }
             }
 

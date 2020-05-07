@@ -2,11 +2,21 @@
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using YamlDotNet.RepresentationModel;
 
 using Robust.Analyzer;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Analyzer.Test
 {
+    [Prototype("foobar")]
+    public class FooBar : IPrototype, IIndexedPrototype
+    {
+        public void LoadFrom(YamlMappingNode _mapping) {}
+
+        public string ID => "some_foobar";
+    }
+
     [TestClass]
     public class UnitTest : DiagnosticVerifier
     {
@@ -73,7 +83,7 @@ namespace SomeGameCode
             var expected = new DiagnosticResult
             {
                 Id = "RTE001",
-                Message = "Could not find entity prototype with name 'some_other_entity'.",
+                Message = "Could not find 'entity' prototype with name 'some_other_entity'.",
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -110,7 +120,7 @@ namespace SomeGameCode
             var expected = new DiagnosticResult
             {
                 Id = "RTE001",
-                Message = "Could not find entity prototype with name 'some_foobar'.",
+                Message = "Could not find 'entity' prototype with name 'some_foobar'.",
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {

@@ -5,12 +5,13 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
-using System.IO;
 using Robust.Analyzer.Test;
 
 namespace Robust.Analyzer.Test
@@ -173,6 +174,8 @@ namespace Robust.Analyzer.Test
                 .GetRuntimeDirectory();
             var RuntimeLibReference = MetadataReference.CreateFromFile(Path.Combine(runtimeDirectory, "System.Runtime.dll"));
 
+            var TestReference = MetadataReference.CreateFromFile(Assembly.GetExecutingAssembly().Location);
+
             var solution = new AdhocWorkspace()
                 .CurrentSolution
                 .AddProject(projectId, TestProjectName, TestProjectName, language)
@@ -181,7 +184,8 @@ namespace Robust.Analyzer.Test
                 .AddMetadataReference(projectId, SystemCoreReference)
                 .AddMetadataReference(projectId, CSharpSymbolsReference)
                 .AddMetadataReference(projectId, CodeAnalysisReference)
-                .AddMetadataReference(projectId, RobustToolboxReference);
+                .AddMetadataReference(projectId, RobustToolboxReference)
+                .AddMetadataReference(projectId, TestReference);
 
             int count = 0;
             foreach (var source in sources)

@@ -61,29 +61,6 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public void IsCollidingNotHard()
-        {
-            // Arrange
-            var box = new Box2(5, -5, 10, 6);
-            var testBox = new Box2(-3, -3, 5, 6);
-            var manager = new PhysicsManager();
-
-            var mock = new Mock<IPhysBody>();
-            mock.Setup(foo => foo.WorldAABB).Returns(box);
-            mock.Setup(foo => foo.MapID).Returns(new MapId(0));
-            mock.Setup(foo => foo.CanCollide).Returns(true);
-            mock.Setup(foo => foo.CollisionLayer).Returns(0x4);
-            mock.Setup(foo => foo.CollisionMask).Returns(0x04);
-            manager.AddBody(mock.Object);
-
-            // Act
-            var result = manager.TryCollideRect(testBox, new MapId(0));
-
-            // Assert
-            Assert.That(result, Is.False);
-        }
-
-        [Test]
         public void IsCollidingTrue()
         {
             // Arrange
@@ -237,7 +214,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             // Assert
             Assert.That(results.Count, Is.EqualTo(1));
-            Assert.That(results[0], Is.EqualTo(staticBody));
+            Assert.That(results[0], Is.EqualTo(mockEntity0));
         }
     }
 }

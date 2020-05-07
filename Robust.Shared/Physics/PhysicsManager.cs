@@ -65,7 +65,7 @@ namespace Robust.Shared.Physics
         }
 
 
-        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass)
+        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass)
         {
             var relativeVelocity = sourceVel - targetVel;
             var normal = CalculateNormal(target, source);
@@ -75,15 +75,7 @@ namespace Robust.Shared.Physics
                 return Vector2.Zero;
             }
             const float restitution = 0.0f;
-            var targetImpulse = normal * (1 + restitution) * contactVel;
-            if (sourceMass == 0.0f)
-            {
-                targetImpulse /= 1 / targetMass;
-            }
-            else
-            {
-                targetImpulse /= 1 / targetMass + 1 / sourceMass;
-            }
+            var targetImpulse = normal * (1 + restitution) * contactVel * targetMass;
             return targetImpulse;
         }
 

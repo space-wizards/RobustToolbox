@@ -146,15 +146,17 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 foreach (var otherCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                 {
-                    if (((IComponent) otherCollider).Owner.TryGetComponent<PhysicsComponent>(out var sourcePhysics))
+                    if (otherCollider.Owner.TryGetComponent<PhysicsComponent>(out var otherPhysics))
                     {
-                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider, physics.LinearVelocity, sourcePhysics.LinearVelocity, physics.Mass, sourcePhysics.Mass);
+                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
+                            physics.LinearVelocity, otherPhysics.LinearVelocity, physics.Mass);
                     }
                     else
                     {
                         physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
-                            physics.LinearVelocity, Vector2.Zero, physics.Mass, 0.0f);
+                            physics.LinearVelocity, Vector2.Zero, physics.Mass);
                     }
+
                 }
             }
             // Won't be affected by impulses
@@ -173,21 +175,9 @@ namespace Robust.Server.GameObjects.EntitySystems
             for (var _ = 0.0f; _ < solveIterations; _++)
             {
                 physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
-                if (entity.TryGetComponent<CollidableComponent>(out var collider) &&
-                    WillResultInNewIntersections(collider, physics.LinearVelocity * frameTime / solveIterations))
-                {
-                    break;
-                }
                 physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
             }
             FixClipping(physics);
-        }
-
-        private bool WillResultInNewIntersections(CollidableComponent collider, Vector2 delta)
-        {
-            var currentCollisions = collider.GetCollidingEntities(Vector2.Zero);
-            var newCollisions = collider.GetCollidingEntities(delta);
-            return newCollisions.Except(currentCollisions).Any();
         }
 
         private void FixClipping(PhysicsComponent physics)
@@ -196,16 +186,16 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
                 if (!entities.Any()) return;
-                    foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
+                foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
+                {
+                    var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
+                    var iterations = 10;
+                    while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations > 0)
                     {
-                        var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
-                        var iterations = 5;
-                        while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations > 0)
-                        {
-                            iterations--;
-                            collider.Owner.Transform.WorldPosition += normal * 0.005f;
-                        }
+                        iterations--;
+                        collider.Owner.Transform.WorldPosition += normal * 0.005f;
                     }
+                }
             }
         }
 

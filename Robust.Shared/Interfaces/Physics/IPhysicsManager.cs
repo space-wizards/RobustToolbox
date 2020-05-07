@@ -71,7 +71,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="sourceVel"></param>
         /// <param name="sourceMass"></param>
         /// <returns>A impulse vector in kilogram meters per second</returns>
-        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass, float sourceMass);
+        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass);
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

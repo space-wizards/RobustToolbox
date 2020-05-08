@@ -264,7 +264,7 @@ namespace Robust.Client.UserInterface
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
 
-            if (args.CanFocus)
+            if (args.CanFocus || guiArgs.Handled)
             {
                 args.Handle();
             }

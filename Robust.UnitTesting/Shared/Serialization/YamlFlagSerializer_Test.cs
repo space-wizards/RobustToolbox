@@ -14,6 +14,9 @@ namespace Robust.UnitTesting.Shared.Serialization
     [TestOf(typeof(YamlFlagSerializer))]
     class YamlFlagSerializer_Test
     {
+        public sealed class GenericFlagTag {}
+        public sealed class GenericFlagWithZeroTag {}
+
         [Test]
         public void SerializeOneFlagTest()
         {
@@ -23,7 +26,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>());
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
@@ -39,7 +42,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>());
 
             // Assert
             Assert.That(data, Is.EqualTo((int)GenericFlags.One));
@@ -54,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>());
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
@@ -70,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>());
 
             // Assert
             Assert.That(data, Is.EqualTo((int)GenericFlags.Five));
@@ -85,7 +88,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0, alwaysWrite: true);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>(), alwaysWrite: true);
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
@@ -101,7 +104,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
-            serializer.DataField(ref data, "generic_flags", 0);
+            serializer.DataField(ref data, "generic_flags", 0, WithFormat.Flags<GenericFlagTag>());
 
             // Assert
             Assert.That(data, Is.EqualTo(0));
@@ -121,7 +124,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
-            serializer.DataField(ref data, "generic_flags_with_zero", 0, alwaysWrite: true);
+            serializer.DataField(ref data, "generic_flags_with_zero", 0, WithFormat.Flags<GenericFlagWithZeroTag>(), alwaysWrite: true);
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
@@ -137,7 +140,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
             // Act
-            serializer.DataField(ref data, "generic_flags_with_zero", 0);
+            serializer.DataField(ref data, "generic_flags_with_zero", 0, WithFormat.Flags<GenericFlagWithZeroTag>());
 
             // Assert
             Assert.That(data, Is.EqualTo(0));
@@ -152,7 +155,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var serializer = YamlObjectSerializer.NewWriter(mapping);
 
             // Act
-            serializer.DataField(ref data, "generic_flags_with_zero", 0);
+            serializer.DataField(ref data, "generic_flags_with_zero", 0, WithFormat.Flags<GenericFlagWithZeroTag>());
 
             // Assert
             var result = YamlObjectSerializer_Test.NodeToYamlText(mapping);
@@ -163,7 +166,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         private const string SerializedTwoWithZeroFlag = "generic_flags_with_zero:\n- Two\n...\n";
 
         [Flags]
-        [FlagsFor("generic_flags")]
+        [FlagsFor(typeof(GenericFlagTag))]
         private enum GenericFlags
         {
             One = 1,
@@ -173,7 +176,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Flags]
-        [FlagsFor("generic_flags_with_zero")]
+        [FlagsFor(typeof(GenericFlagWithZeroTag))]
         private enum FlagsWithZero
         {
             None = 0,

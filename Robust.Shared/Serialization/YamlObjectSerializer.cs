@@ -26,7 +26,6 @@ namespace Robust.Shared.Serialization
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
         public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
         private static readonly StructSerializer _structSerializer;
-        private static readonly Dictionary<string, YamlFlagSerializer> _flagNameSerializers;
 
         private YamlMappingNode WriteMap;
         private List<YamlMappingNode> ReadMaps;
@@ -49,26 +48,6 @@ namespace Robust.Shared.Serialization
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
             };
-
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
-            _flagNameSerializers = new Dictionary<string, YamlFlagSerializer>();
-
-            foreach (var bitflagType in reflectionManager.FindTypesWithAttribute<FlagsForAttribute>())
-            {
-                var bitflagSerializer = new YamlFlagSerializer(bitflagType);
-                foreach (var flagsforAttribute in bitflagType.GetCustomAttributes<FlagsForAttribute>())
-                {
-                    if (_flagNameSerializers.ContainsKey(flagsforAttribute.FieldName))
-                    {
-                        throw new NotSupportedException(
-                            String.Format(
-                                "Multiple bitflag enums declared for the field name {0}.",
-                                flagsforAttribute.FieldName));
-                    }
-
-                    _flagNameSerializers[flagsforAttribute.FieldName] = bitflagSerializer;
-                }
-            }
         }
 
         // Use NewReader or NewWriter instead.
@@ -133,7 +112,7 @@ namespace Robust.Shared.Serialization
         // TODO: Theoretical optimization.
         // Might be a good idea to make DataField<T> use caching for value types without references too.
         /// <inheritdoc />
-        public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
@@ -141,7 +120,8 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), name, node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         return;
                     }
                 }
@@ -154,8 +134,9 @@ namespace Robust.Shared.Serialization
                 if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
                     return;
 
+                var customFormatter = format.GetYamlSerializer();
                 var key = name;
-                var val = value == null ? TypeToNode(defaultValue, name) : TypeToNode(value, name);
+                var val = value == null ? customFormatter.TypeToNode(defaultValue, this) : customFormatter.TypeToNode(value, this);
 
                 // write the concrete type tag
                 if (typeof(T).IsAbstract || typeof(T).IsInterface)
@@ -221,7 +202,7 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), name, node);
+                        value = (T)NodeToType(typeof(T), node);
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -251,7 +232,7 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), name, node));
+                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), node));
                         return;
                     }
                 }
@@ -273,7 +254,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var key = name;
-                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue), name) : TypeToNode(WriteConvertFunc(value), name);
+                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
 
                 // write the concrete type tag
                 if (typeof(TTarget).IsAbstract || typeof(TTarget).IsInterface)
@@ -307,7 +288,7 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), name, node));
+                        value = ReadConvertFunc((TSource)NodeToType(typeof(TSource), node));
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -333,7 +314,7 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    return (T)NodeToType(typeof(T), name, node);
+                    return (T)NodeToType(typeof(T), node);
 
                 }
             }
@@ -357,7 +338,7 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    val = (T)NodeToType(typeof(T), name, node);
+                    val = (T)NodeToType(typeof(T), node);
                     _context?.SetCachedField(name, val);
                     return val;
                 }
@@ -378,7 +359,7 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), name, node);
+                    value = (T)NodeToType(typeof(T), node);
                     return true;
                 }
             }
@@ -403,7 +384,7 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), name, node);
+                    value = (T)NodeToType(typeof(T), node);
                     _context?.SetCachedField(name, value);
                     return true;
                 }
@@ -421,7 +402,7 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    func((T)NodeToType(typeof(T), name, node));
+                    func((T)NodeToType(typeof(T), node));
                     return;
                 }
             }
@@ -441,7 +422,7 @@ namespace Robust.Shared.Serialization
                 return;
 
             var key = name;
-            var val = value == null ? TypeToNode(defaultValue, name) : TypeToNode(value, name);
+            var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
 
             // write the concrete type tag
             if (typeof(T).IsAbstract || typeof(T).IsInterface)
@@ -482,7 +463,7 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        public object NodeToType(Type type, string nodeName, YamlNode node)
+        public object NodeToType(Type type, YamlNode node)
         {
             // special snowflake string
             if (type == typeof(String))
@@ -491,10 +472,6 @@ namespace Robust.Shared.Serialization
             // val primitives
             if (type.IsPrimitive || type == typeof(decimal))
             {
-                if (nodeName != null && _flagNameSerializers.TryGetValue(nodeName, out var flagSerializer))
-                {
-                    return flagSerializer.NodeToFlags(node, this);
-                }
                 return StringToType(type, node.ToString());
             }
 
@@ -510,7 +487,7 @@ namespace Robust.Shared.Serialization
 
                 foreach (var entryNode in listNode)
                 {
-                    var value = NodeToType(listType, null, entryNode);
+                    var value = NodeToType(listType, entryNode);
                     newList.Add(value);
                 }
 
@@ -525,8 +502,8 @@ namespace Robust.Shared.Serialization
 
                 foreach (var kvEntry in dictNode.Children)
                 {
-                    var keyValue = NodeToType(keyType, null, kvEntry.Key);
-                    var valValue = NodeToType(valType, (string)kvEntry.Key,  kvEntry.Value);
+                    var keyValue = NodeToType(keyType, kvEntry.Key);
+                    var valValue = NodeToType(valType, kvEntry.Value);
 
                     newDict.Add(keyValue, valValue);
                 }
@@ -616,7 +593,7 @@ namespace Robust.Shared.Serialization
             throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
         }
 
-        public YamlNode TypeToNode(object obj, string nodeName)
+        public YamlNode TypeToNode(object obj)
         {
             // special snowflake string
             if (obj is string s)
@@ -627,10 +604,6 @@ namespace Robust.Shared.Serialization
             // val primitives and val enums
             if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
             {
-                if (nodeName != null && _flagNameSerializers.TryGetValue(nodeName, out var flagSerializer))
-                {
-                    return flagSerializer.FlagsToNode((int)obj, this);
-                }
                 // All primitives and enums implement IConvertible.
                 // Need it for the culture overload.
                 var convertible = (IConvertible) obj;
@@ -644,7 +617,7 @@ namespace Robust.Shared.Serialization
 
                 foreach (var entry in (IEnumerable)obj)
                 {
-                    var entryNode = TypeToNode(entry, null);
+                    var entryNode = TypeToNode(entry);
 
                     // write the concrete type tag
                     if (listType.IsAbstract || listType.IsInterface)
@@ -666,8 +639,8 @@ namespace Robust.Shared.Serialization
 
                 foreach (DictionaryEntry entry in (IDictionary)obj)
                 {
-                    var keyNode = TypeToNode(entry.Key, null);
-                    var valNode = TypeToNode(entry.Value, (string)keyNode);
+                    var keyNode = TypeToNode(entry.Key);
+                    var valNode = TypeToNode(entry.Value);
 
                     // write the concrete type tag
                     if (valType.IsAbstract || valType.IsInterface)
@@ -922,7 +895,7 @@ namespace Robust.Shared.Serialization
 
                     if (mapNode.Children.TryGetValue(scalarNode, out var fNode))
                     {
-                        var fVal = serializer.NodeToType(fType, fName, fNode);
+                        var fVal = serializer.NodeToType(fType, fNode);
                         field.SetValue(instance, fVal);
                     }
                 }
@@ -944,7 +917,7 @@ namespace Robust.Shared.Serialization
                     var fVal = field.GetValue(obj);
 
                     // Potential recursive infinite loop?
-                    var fTypeNode = serializer.TypeToNode(fVal, field.Name);
+                    var fTypeNode = serializer.TypeToNode(fVal);
                     node.Add(field.Name, fTypeNode);
                 }
 

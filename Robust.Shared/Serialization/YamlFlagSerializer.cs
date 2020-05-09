@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
+
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization
 {
@@ -13,7 +18,7 @@ namespace Robust.Shared.Serialization
     /// names, to give a readable YAML representation. It also supports plain integer
     /// values in the YAML for reading.
     /// </summary>
-    internal class YamlFlagSerializer
+    internal class YamlFlagSerializer : YamlCustomFormatSerializer<int>
     {
         private readonly Type _flagType;
 
@@ -28,43 +33,24 @@ namespace Robust.Shared.Serialization
         /// Thrown if the bitflag type is not a <c>enum</c>, or does not have the
         /// <see cref="System.Flags"/> attribute.
         /// </exception>
-        public YamlFlagSerializer(Type type)
+        public YamlFlagSerializer(Type type, WithFormat<int> formatter) : base(formatter)
         {
-            if (!type.IsEnum)
-            {
-                throw new FlagSerializerException($"Could not create FlagSerializer for non-enum type {type}.");
-            }
-
-            if (!type.GetCustomAttributes(typeof(FlagsAttribute), false).Any())
-            {
-                throw new FlagSerializerException($"Could not create FlagSerializer for non-bitflag enum {type}.");
-            }
-
             _flagType = type;
         }
 
         /// <summary>
         /// Turn a YAML node into an integer value with the correct flags set.
         /// </summary>
-        public int NodeToFlags(YamlNode node, YamlObjectSerializer objectSerializer)
+        public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer objectSerializer)
         {
             // Fallback to just a number, if it's not in flag format yet
             // This is a hack, but it's only for legacy representations, so it's not so bad
             if (node is YamlScalarNode)
             {
-                return (int)objectSerializer.NodeToType(typeof(int), null, node);
+                return (int)objectSerializer.NodeToType(typeof(int), node);
             }
 
-
-            var flagNames = (List<string>)objectSerializer.NodeToType(typeof(List<string>), null, node);
-            var flags = 0;
-
-            foreach (var flagName in flagNames)
-            {
-                flags |= (int)Enum.Parse(_flagType, flagName);
-            }
-
-            return flags;
+            return base.NodeToType(type, node, objectSerializer);
         }
 
         /// <summary>
@@ -79,9 +65,9 @@ namespace Robust.Shared.Serialization
         /// Thrown if the serializer encounters a bit set in a position for which it
         /// cannot find a corresponding constructor.
         /// </exception>
-        public YamlNode FlagsToNode(int flags, YamlObjectSerializer objectSerializer)
+        public override YamlNode TypeToNode(object obj, YamlObjectSerializer objectSerializer)
         {
-            var flagNames = new List<string>();
+            var flags = (int)obj;
 
             if (flags == 0)
             {
@@ -90,36 +76,14 @@ namespace Robust.Shared.Serialization
                 // If there's no name for 0, just write 0
                 if (zeroName == null)
                 {
-                    return objectSerializer.TypeToNode(0, null);
+                    return objectSerializer.TypeToNode(0);
+                } else {
+                    return objectSerializer.TypeToNode(new List<string> { zeroName });
                 }
 
-                flagNames.Add(zeroName);
             } else {
-                // Assumption: a bitflag enum has a constructor for every bit value such that
-                // that bit is set in some other constructor i.e. if a 1 appears somewhere in
-                // the bits of one of the enum constructors, there is an enum constructor which
-                // is 1 just in that position.
-                //
-                // Otherwise, this code may throw an exception
-                var maxFlagValue = ((int[])Enum.GetValues(_flagType)).Max();
-
-                for(var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex = bitIndex << 1)
-                {
-                    if ((bitIndex & flags) == bitIndex)
-                    {
-                        var flagName = Enum.GetName(_flagType, bitIndex);
-
-                        if (flagName == null)
-                        {
-                            throw new FlagSerializerException($"No bitflag corresponding to bit {bitIndex} in {_flagType}, but it was set anyways.");
-                        }
-
-                        flagNames.Add(flagName);
-                    }
-                }
+                return base.TypeToNode(flags, objectSerializer);
             }
-
-            return objectSerializer.TypeToNode(flagNames, null);
         }
     }
 
@@ -144,15 +108,133 @@ namespace Robust.Shared.Serialization
     /// </summary>
     public class FlagsForAttribute : Attribute
     {
-        private readonly string _fieldName;
-        /// <summary>
-        /// The field for which the target <c>enum</c> is a representation.
-        /// </summary>
-        public string FieldName => _fieldName;
+        private readonly Type _tag;
+        public Type Tag => _tag;
 
-        public FlagsForAttribute(string fieldName)
+        // NB: This is not generic because C# does not allow generic attributes
+
+        /// <summary>
+        /// An attribute with tag type <paramref name="tag"/>
+        /// </summary>
+        /// <param name="tag">
+        /// An arbitrary tag type used for coordinating between the data field and the
+        /// representation. Not actually used for serialization/deserialization.
+        /// </param>
+        public FlagsForAttribute(Type tag)
         {
-            _fieldName = fieldName;
+            _tag = tag;
+        }
+    }
+
+    /// <summary>
+    /// <c>int</c> representation in terms of flags, decided by the tag type <typeparamref name="T"/>.
+    /// </summary>
+    /// <typeparam name="T">
+    /// The tag type to look up the bitflag representation with. The representation enum
+    /// should have a corresponding <see cref="FlagsForAttribute"/>.
+    /// </typeparam>
+    public class WithFlagRepresentation<T> : WithFormat<int>
+    {
+        private static object _staticFieldLock = new object();
+
+        private static Type _flagType;
+        public static Type FlagType => _flagType;
+
+        private static YamlFlagSerializer _serializer;
+
+        public WithFlagRepresentation()
+        {
+            lock (_staticFieldLock)
+            {
+                if (_serializer == null)
+                {
+                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+                    _flagType = null;
+
+                    foreach (Type bitflagType in reflectionManager.FindTypesWithAttribute<FlagsForAttribute>())
+                    {
+                        foreach (var flagsforAttribute in bitflagType.GetCustomAttributes<FlagsForAttribute>(true))
+                        {
+                            if (typeof(T) == flagsforAttribute.Tag)
+                            {
+                                if (_flagType != null)
+                                {
+                                    throw new NotSupportedException(
+                                        String.Format(
+                                            "Multiple bitflag enums declared for the tag {0}.",
+                                            flagsforAttribute.Tag));
+                                }
+
+                                if (!bitflagType.IsEnum)
+                                {
+                                    throw new FlagSerializerException($"Could not create FlagSerializer for non-enum bitflagType {bitflagType}.");
+                                }
+
+                                if (!bitflagType.GetCustomAttributes<FlagsAttribute>(false).Any())
+                                {
+                                    throw new FlagSerializerException($"Could not create FlagSerializer for non-bitflag enum {bitflagType}.");
+                                }
+
+
+                                _flagType = bitflagType;
+                            }
+                        }
+                    }
+
+                    _serializer = new YamlFlagSerializer(_flagType, this);
+                }
+            }
+        }
+
+        public override YamlObjectSerializer.TypeSerializer GetYamlSerializer()
+        {
+            return _serializer;
+        }
+
+        public override Type Format => typeof(List<string>);
+
+        public override int FromCustomFormat(object obj)
+        {
+            var flagNames = (List<string>)obj;
+            var flags = 0;
+
+            foreach (var flagName in flagNames)
+            {
+                flags |= (int)Enum.Parse(_flagType, flagName);
+            }
+
+            return flags;
+        }
+
+        public override object ToCustomFormat(int flags)
+        {
+            var flagNames = new List<string>();
+
+            // Assumption: a bitflag enum has a constructor for every bit value such that
+            // that bit is set in some other constructor i.e. if a 1 appears somewhere in
+            // the bits of one of the enum constructors, there is an enum constructor which
+            // is 1 just in that position.
+            //
+            // Otherwise, this code may throw an exception
+            var maxFlagValue = ((int[])Enum.GetValues(_flagType)).Max();
+
+            for(var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex = bitIndex << 1)
+            {
+                if ((bitIndex & flags) == bitIndex)
+                {
+                    var flagName = Enum.GetName(_flagType, bitIndex);
+
+                    if (flagName == null)
+                    {
+                        throw new FlagSerializerException($"No bitflag corresponding to bit {bitIndex} in {_flagType}, but it was set anyways.");
+                    }
+
+                    flagNames.Add(flagName);
+                }
+            }
+
+            return flagNames;
         }
     }
 }

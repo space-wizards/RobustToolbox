@@ -152,6 +152,9 @@ namespace Robust.Server.GameObjects
             return new PhysicsComponentState(_mass, _linVelocity, _angVelocity);
         }
 
-        public bool Resolved = false;
+        public void RemoveController()
+        {
+            _controller = null;
+        }
     }
 }

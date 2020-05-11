@@ -171,7 +171,6 @@ namespace Robust.Server.GameObjects.EntitySystems
         private void UpdatePosition(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
-            physics.Resolved = false;
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 

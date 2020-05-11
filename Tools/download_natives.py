@@ -159,13 +159,13 @@ class DepOpenAL(SimpleDependency):
     def __init__(self):
         super().__init__()
 
-        self.version = "2.1.10"
+        self.version = "1.20.1"
         self.name = "openal"
 
         self.windows_target_filename = "openal32.dll"
 
-        self.windows_download_url = "https://github.com/opentk/opentk-dependencies/blob/" \
-                                    "9eb4991b871d2d2c0745d2c8c8c0fa6404f56438/x64/openal32.dll?raw=true"
+        self.windows_download_url = "https://github.com/space-wizards/build-dependencies/blob/master/natives/openal/" \
+                                    "1.20.1/openal32.dll?raw=true"
 
 
 class DepFluidsynth(NativeDependency):

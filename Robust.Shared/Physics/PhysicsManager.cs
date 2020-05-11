@@ -64,19 +64,25 @@ namespace Robust.Shared.Physics
             }
         }
 
-
-        public Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass)
+        // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
+        public void SolveCollisionImpulse(ICollidableComponent aC, ICollidableComponent bC,
+            [CanBeNull] SharedPhysicsComponent aP, [CanBeNull] SharedPhysicsComponent bP)
         {
-            var relativeVelocity = sourceVel - targetVel;
-            var normal = CalculateNormal(target, source);
-            var contactVel = Vector2.Dot(relativeVelocity, normal);
-            if (contactVel >= 0)
+            if (aP == null && bP == null) return;
+            var restitution = 0.01f;
+            var normal = CalculateNormal(aC, bC);
+            var rV = aP != null? bP != null ?  bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity : bP.LinearVelocity;
+
+            var vAlongNormal = Vector2.Dot(rV, normal);
+            if (vAlongNormal > 0)
             {
-                return Vector2.Zero;
+                return;
             }
-            const float restitution = 0.0f;
-            var targetImpulse = normal * (1 + restitution) * contactVel * targetMass;
-            return targetImpulse;
+
+            var impulse = -(1.0f + restitution) * vAlongNormal;
+            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 0.0f) + (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 0.0f);
+            if (aP != null) aP.Momentum -= normal * impulse;
+            if (bP != null) bP.Momentum += normal * impulse;
         }
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
@@ -255,27 +261,14 @@ namespace Robust.Shared.Physics
         {
             foreach (var mapId in _mapManager.GetAllMapIds())
             {
-                foreach (var collision in this[mapId].GetCollisions(true))
+                foreach (var collision in this[mapId].GetCollisions())
                 {
                     var (a, b) = collision;
 
-                    if (!a.CanCollide || !b.CanCollide)
+                    if (CollidesOnMask(a, b))
                     {
-                        continue;
+                        yield return collision;
                     }
-
-                    if (((a.CollisionLayer & b.CollisionMask) == 0x0)
-                        ||(b.CollisionLayer & a.CollisionMask) == 0x0)
-                    {
-                        continue;
-                    }
-
-                    if (!a.WorldAABB.Intersects(b.WorldAABB))
-                    {
-                        continue;
-                    }
-
-                    yield return collision;
                 }
             }
         }

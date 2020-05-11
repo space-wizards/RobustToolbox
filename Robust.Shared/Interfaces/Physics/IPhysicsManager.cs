@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
@@ -62,16 +63,16 @@ namespace Robust.Shared.Interfaces.Physics
 
 
         /// <summary>
-        ///     Calculates the resulting impulse vector on the target collidable from the source collidable
+        ///     Applies impulses to two colliding bodies, returning the accumulated impulse for both.
         /// </summary>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <param name="targetVel"></param>
-        /// <param name="targetMass"></param>
-        /// <param name="sourceVel"></param>
-        /// <param name="sourceMass"></param>
+        /// <param name="aC"></param>
+        /// <param name="bC"></param>
+        /// <param name="aP"></param>
+        /// <param name="bP"></param>
+        /// <param name="contactCount"></param>
         /// <returns>A impulse vector in kilogram meters per second</returns>
-        Vector2 CalculateCollisionImpulse(ICollidableComponent target, ICollidableComponent source, Vector2 targetVel, Vector2 sourceVel, float targetMass);
+        public void SolveCollisionImpulse(ICollidableComponent aC, ICollidableComponent bC,
+            [CanBeNull] SharedPhysicsComponent aP, [CanBeNull] SharedPhysicsComponent bP);
 
         /// <summary>
         ///     Casts a ray in the world and returns the first thing it hit.

@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Log;
 using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects.EntitySystems
@@ -28,7 +29,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private const float Epsilon = 1.0e-6f;
 
-        private Dictionary<EntityUid, List<IEntity>> _collisionCache = new Dictionary<EntityUid, List<IEntity>>();
+        private Dictionary<EntityUid, Vector2> _impulseCache = new Dictionary<EntityUid, Vector2>();
 
         public PhysicsSystem()
         {
@@ -38,13 +39,11 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            SimulateWorld(frameTime, RelevantEntities);
+            SimulateWorld(frameTime, RelevantEntities.ToList());
         }
 
-        private void SimulateWorld(float frameTime, IEnumerable<IEntity> entities)
+        private void SimulateWorld(float frameTime, List<IEntity> entities)
         {
-            // Calculate collisions and store them in the cache
-            ProcessCollisions();
 
             // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
@@ -62,6 +61,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 ResolveImpulse(entity, frameTime);
             }
 
+            // Calculate collisions and store them in the cache
+            ProcessCollisions();
+
             foreach (var entity in entities)
             {
                 if (entity.Deleted)
@@ -76,47 +78,71 @@ namespace Robust.Server.GameObjects.EntitySystems
         // Runs collision behavior and updates cache
         private void ProcessCollisions()
         {
+            _impulseCache.Clear();
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var entities = entityManager.GetEntities(new PredicateEntityQuery(entity => entity.HasComponent<CollidableComponent>() && entity.HasComponent<PhysicsComponent>()));
-            foreach (var collider in entities.Select(entity => entity.GetComponent<CollidableComponent>()))
+            foreach (var entity in RelevantEntities)
             {
-                _collisionCache[collider.Owner.Uid] = collider.GetCollidingEntities(Vector2.Zero).ToList();
-                if (_collisionCache[collider.Owner.Uid].Count == 0) continue;
-                var collideComponents = collider.Owner.GetAllComponents<ICollideBehavior>().ToList();
-                var collidedEntities = _collisionCache[collider.Owner.Uid];
-
-                foreach (var collideBehavior in collideComponents)
+                if (entity.TryGetComponent<CollidableComponent>(out var a))
                 {
-                    foreach (var entity in collidedEntities)
+                    foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
                     {
-                        collideBehavior.CollideWith(entity);
-                    }
-                    collideBehavior.PostCollide(collidedEntities.Count);
-                }
-
-                foreach (var entity in collidedEntities)
-                {
-                    // If they don't have physics but have custom collision behavior, process that
-                    if (entity.HasComponent<PhysicsComponent>()) continue;
-                    var otherCollideComponents = entity.GetAllComponents<ICollideBehavior>();
-                    foreach (var otherCollideBehavior in otherCollideComponents)
-                    {
-                        otherCollideBehavior.CollideWith(collider.Owner);
-                        if (!collisionsWith.ContainsKey(otherCollideBehavior))
-                        {
-                            collisionsWith.Add(otherCollideBehavior, 1);
-                        }
-                        else
-                        {
-                            collisionsWith[otherCollideBehavior] += 1;
-                        }
+                        ProcessCollision(a, b, collisionsWith);
                     }
                 }
             }
             foreach (var collisionCountPair in collisionsWith)
             {
                 collisionCountPair.Key.PostCollide(collisionCountPair.Value);
+            }
+        }
+
+        private void ProcessCollision(IPhysBody a, IPhysBody b, Dictionary<ICollideBehavior, int> collisionsWith)
+        {
+            var collideComponents = a.Owner.GetAllComponents<ICollideBehavior>().ToList();
+
+            foreach (var collideBehavior in collideComponents)
+            {
+                collideBehavior.CollideWith(b.Owner);
+                if (!collisionsWith.ContainsKey(collideBehavior))
+                {
+                    collisionsWith.Add(collideBehavior, 1);
+                }
+                else
+                {
+                    collisionsWith[collideBehavior] += 1;
+                }
+            }
+
+            var otherCollideComponents = b.Owner.GetAllComponents<ICollideBehavior>();
+
+            foreach (var otherCollideBehavior in otherCollideComponents)
+            {
+                otherCollideBehavior.CollideWith(a.Owner);
+                if (!collisionsWith.ContainsKey(otherCollideBehavior))
+                {
+                    collisionsWith.Add(otherCollideBehavior, 1);
+                }
+                else
+                {
+                    collisionsWith[otherCollideBehavior] += 1;
+                }
+            }
+
+
+            if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+            {
+                if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                {
+                    _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, aPhysics, bPhysics);
+                }
+                else
+                {
+                    _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, aPhysics, null);
+                }
+            }
+            else if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+            {
+                _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, null, bPhysics);
             }
         }
 
@@ -140,33 +166,12 @@ namespace Robust.Server.GameObjects.EntitySystems
             var frictionImpulse = physics.LinearVelocity == Vector2.Zero ? Vector2.Zero : physics.LinearVelocity.Normalized * -friction;
 
             physics.LinearVelocity += frictionImpulse;
-
-            // Calculate collision forces
-            if (entity.TryGetComponent<CollidableComponent>(out var collider) && _collisionCache.TryGetValue(entity.Uid, out var entities))
-            {
-                foreach (var otherCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
-                {
-                    if (otherCollider.Owner.TryGetComponent<PhysicsComponent>(out var otherPhysics))
-                    {
-                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
-                            physics.LinearVelocity, otherPhysics.LinearVelocity, physics.Mass);
-                    }
-                    else
-                    {
-                        physics.Momentum += _physicsManager.CalculateCollisionImpulse(collider, otherCollider,
-                            physics.LinearVelocity, Vector2.Zero, physics.Mass);
-                    }
-
-                }
-            }
-            // Won't be affected by impulses
-            if (physics.Anchored) physics.LinearVelocity = Vector2.Zero;
-            physics.Controller?.UpdateAfterProcessing();
         }
 
         private void UpdatePosition(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
+            physics.Resolved = false;
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
@@ -177,7 +182,6 @@ namespace Robust.Server.GameObjects.EntitySystems
                 physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
                 physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
             }
-            FixClipping(physics);
         }
 
         private void FixClipping(PhysicsComponent physics)
@@ -189,7 +193,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
                 {
                     var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
-                    var iterations = 10;
+                    var iterations = 2;
                     while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations > 0)
                     {
                         iterations--;

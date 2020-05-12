@@ -142,7 +142,7 @@ namespace Robust.Server.GameStates
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
                 var state = new GameState(lastAck, _gameTiming.CurTick,
-                    Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData);
+                    Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
                 if (lastAck < oldestAck)
                 {
                     oldestAck = lastAck;

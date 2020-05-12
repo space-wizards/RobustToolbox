@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameStates
@@ -10,13 +9,13 @@ namespace Robust.Shared.GameStates
     public class GameStateMapData
     {
         // Dict of the new maps along with which grids are their defaults.
-        public readonly Dictionary<MapId, GridId> CreatedMaps;
-        public readonly Dictionary<GridId, GridCreationDatum> CreatedGrids;
-        public readonly Dictionary<GridId, GridDatum> GridData;
-        public readonly List<GridId> DeletedGrids;
-        public readonly List<MapId> DeletedMaps;
+        public readonly KeyValuePair<MapId, GridId>[] CreatedMaps;
+        public readonly KeyValuePair<GridId, GridCreationDatum>[] CreatedGrids;
+        public readonly KeyValuePair<GridId, GridDatum>[] GridData;
+        public readonly GridId[] DeletedGrids;
+        public readonly MapId[] DeletedMaps;
 
-        public GameStateMapData(Dictionary<GridId, GridDatum> gridData, List<GridId> deletedGrids, List<MapId> deletedMaps, Dictionary<MapId, GridId> createdMaps, Dictionary<GridId, GridCreationDatum> createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[] gridData, GridId[] deletedGrids, MapId[] deletedMaps, KeyValuePair<MapId, GridId>[] createdMaps, KeyValuePair<GridId, GridCreationDatum>[] createdGrids)
         {
             GridData = gridData;
             DeletedGrids = deletedGrids;
@@ -44,9 +43,9 @@ namespace Robust.Shared.GameStates
         public struct GridDatum
         {
             public readonly MapCoordinates Coordinates;
-            public readonly List<ChunkDatum> ChunkData;
+            public readonly ChunkDatum[] ChunkData;
 
-            public GridDatum(List<ChunkDatum> chunkData, MapCoordinates coordinates)
+            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates)
             {
                 ChunkData = chunkData;
                 Coordinates = coordinates;

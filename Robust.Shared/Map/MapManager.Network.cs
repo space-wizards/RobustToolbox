@@ -53,7 +53,7 @@ namespace Robust.Shared.Map
                 }
 
                 var gridDatum =
-                    new GameStateMapData.GridDatum(chunkData, new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
+                    new GameStateMapData.GridDatum(chunkData.ToArray(), new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
 
                 gridDatums.Add(grid.Index, gridDatum);
             }
@@ -77,7 +77,7 @@ namespace Robust.Shared.Map
             if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
                 return default;
 
-            return new GameStateMapData(gridDatums, gridDeletionsData, mapDeletionsData, mapCreations, gridCreations);
+            return new GameStateMapData(gridDatums?.ToArray(), gridDeletionsData?.ToArray(), mapDeletionsData?.ToArray(), mapCreations?.ToArray(), gridCreations?.ToArray());
         }
 
         public void CullDeletionHistory(GameTick uptoTick)
@@ -94,10 +94,16 @@ namespace Robust.Shared.Map
             if(data == null)
                 return;
 
+            var createdGrids = data.CreatedGrids != null
+                ? new Dictionary<GridId, GameStateMapData.GridCreationDatum>(data.CreatedGrids)
+                : null;
+
             // First we need to figure out all the NEW MAPS.
             // And make their default grids too.
             if(data.CreatedMaps != null)
             {
+                DebugTools.AssertNotNull(createdGrids);
+
                 foreach (var (mapId, gridId) in data.CreatedMaps)
                 {
                     if (_maps.Contains(mapId))
@@ -105,7 +111,7 @@ namespace Robust.Shared.Map
                         continue;
                     }
 
-                    var gridCreation = data.CreatedGrids[gridId];
+                    var gridCreation = createdGrids[gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
                     CreateMap(mapId, gridId);
@@ -115,6 +121,12 @@ namespace Robust.Shared.Map
             // Then make all the other grids.
             if(data.CreatedGrids != null)
             {
+                var gridData = data.GridData != null
+                    ? new Dictionary<GridId, GameStateMapData.GridDatum>(data.GridData)
+                    : null;
+
+                DebugTools.AssertNotNull(createdGrids);
+
                 foreach (var (gridId, creationDatum) in data.CreatedGrids)
                 {
                     if (creationDatum.IsTheDefault || _grids.ContainsKey(gridId))
@@ -122,7 +134,7 @@ namespace Robust.Shared.Map
                         continue;
                     }
 
-                    CreateGrid(data.GridData[gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
+                    CreateGrid(gridData[gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
                         creationDatum.SnapSize);
                 }
             }

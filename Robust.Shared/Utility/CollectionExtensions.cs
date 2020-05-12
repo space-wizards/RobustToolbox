@@ -117,5 +117,20 @@ namespace Robust.Shared.Utility
 
             return value;
         }
+
+        // More efficient than LINQ.
+        public static KeyValuePair<TKey, TValue>[] ToArray<TKey, TValue>(this Dictionary<TKey, TValue> dict)
+        {
+            var array = new KeyValuePair<TKey, TValue>[dict.Count];
+
+            var i = 0;
+            foreach (var kvPair in dict)
+            {
+                array[i] = kvPair;
+                i += 1;
+            }
+
+            return array;
+        }
     }
 }

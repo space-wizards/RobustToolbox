@@ -34,6 +34,7 @@ namespace Robust.UnitTesting
 
             // This isn't used for anything except a log message somewhere, so we kinda ignore it.
             public int Port => default;
+            public IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; } = new Dictionary<Type, long>();
 
             private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -53,6 +54,10 @@ namespace Robust.UnitTesting
                 {
                     SingleReader = true
                 });
+            }
+
+            public void ResetBandwidthMetrics()
+            {
             }
 
             public void Initialize(bool isServer)

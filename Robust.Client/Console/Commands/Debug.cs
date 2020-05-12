@@ -113,7 +113,7 @@ namespace Robust.Client.Console.Commands
         public string Command => "monitor";
 
         public string Help =>
-            "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time, frames, mem, clyde, input";
+            "Usage: monitor <name>\nPossible monitors are: fps, net, bandwidth, coord, time, frames, mem, clyde, input";
 
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
@@ -134,6 +134,9 @@ namespace Robust.Client.Console.Commands
                     break;
                 case "net":
                     monitor.ShowNet ^= true;
+                    break;
+                case "bandwidth":
+                    monitor.ShowNetBandwidth ^= true;
                     break;
                 case "coord":
                     monitor.ShowCoords ^= true;

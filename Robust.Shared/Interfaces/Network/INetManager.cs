@@ -49,6 +49,10 @@ namespace Robust.Shared.Interfaces.Network
         /// </summary>
         int Port { get; }
 
+        IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; }
+
+        void ResetBandwidthMetrics();
+
         /// <summary>
         ///     Initializes the server, and starts listening for connections.
         /// </summary>

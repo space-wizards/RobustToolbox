@@ -18,6 +18,7 @@ namespace Robust.Client.UserInterface.CustomControls
         public bool ShowFPS { get => _fpsCounter.Visible; set => _fpsCounter.Visible = value; }
         public bool ShowCoords { get => _debugCoordsPanel.Visible; set => _debugCoordsPanel.Visible = value; }
         public bool ShowNet { get => _debugNetPanel.Visible; set => _debugNetPanel.Visible = value; }
+        public bool ShowNetBandwidth { get => _debugNetBandwidthPanel.Visible; set => _debugNetBandwidthPanel.Visible = value; }
         public bool ShowTime { get => _timeDebug.Visible; set => _timeDebug.Visible = value; }
         public bool ShowFrameGraph { get => _frameGraph.Visible; set => _frameGraph.Visible = value; }
         public bool ShowMemory { get => _debugMemoryPanel.Visible; set => _debugMemoryPanel.Visible = value; }
@@ -32,6 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly DebugMemoryPanel _debugMemoryPanel;
         private readonly DebugClydePanel _debugClydePanel;
         private readonly DebugInputPanel _debugInputPanel;
+        private readonly DebugNetBandwidthPanel _debugNetBandwidthPanel;
 
         //TODO: Think about a factory for this
         public DebugMonitors(IGameTiming gameTiming, IPlayerManager playerManager, IEyeManager eyeManager, IInputManager inputManager, IStateManager stateManager, IClyde displayManager, IClientNetManager netManager, IMapManager mapManager)
@@ -55,6 +57,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _debugNetPanel = new DebugNetPanel(netManager, gameTiming1);
             AddChild(_debugNetPanel);
+
+            _debugNetBandwidthPanel = new DebugNetBandwidthPanel(netManager, gameTiming1);
+            AddChild(_debugNetBandwidthPanel);
 
             _timeDebug = new DebugTimePanel(gameTiming1, IoCManager.Resolve<IClientGameStateManager>());
             AddChild(_timeDebug);

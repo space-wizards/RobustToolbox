@@ -388,8 +388,8 @@ namespace Robust.Server.GameObjects
                         if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                         {
                             // mover changed and can't be seen
-                            var idx = state.ComponentStates
-                                .FindIndex(x => x is TransformComponent.TransformComponentState);
+                            var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
+
                             if (idx != -1)
                             {
                                 // mover changed positional data and can't be seen
@@ -425,11 +425,11 @@ namespace Robust.Server.GameObjects
                         // mover can't be seen
                         var oldState = (TransformComponent.TransformComponentState) entity.Transform.GetComponentState();
                         entityStates.Add(new EntityState(uid,
-                            new List<ComponentChanged>
+                            new ComponentChanged[]
                             {
                                 new ComponentChanged(false, NetIDs.TRANSFORM, "Transform")
                             },
-                            new List<ComponentState>
+                            new ComponentState[]
                             {
                                 new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID)
                             }));
@@ -572,8 +572,7 @@ namespace Robust.Server.GameObjects
                 seenMovers.Remove(uid);
                 ClearLastSeenTick(player,uid);
 
-                var idx = state.ComponentStates
-                    .FindIndex(x => x is TransformComponent.TransformComponentState);
+                var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
 
                 if (idx == -1)
                 {
@@ -624,8 +623,7 @@ namespace Robust.Server.GameObjects
                     checkedEnts.Add(uid);
                     entityStates.Add(state);
 
-                    var idx = state.ComponentStates
-                        .FindIndex(x => x is TransformComponent.TransformComponentState);
+                    var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
 
                     if (idx == -1)
                     {
@@ -890,7 +888,7 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            return new EntityState(entityUid, changed, compStates);
+            return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
         }
 
 

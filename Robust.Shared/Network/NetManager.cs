@@ -51,6 +51,8 @@ namespace Robust.Shared.Network
         // Used for processing outgoing net messages.
         private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions = new Dictionary<Type, Func<NetMessage>>();
 
+        private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
+
 #pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _config;
 #pragma warning restore 649
@@ -75,6 +77,8 @@ namespace Robust.Shared.Network
 
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
+
+        public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
 
         /// <inheritdoc />
         public bool IsServer { get; private set; }
@@ -155,6 +159,11 @@ namespace Robust.Shared.Network
         }
 
         private bool _initialized;
+
+        public void ResetBandwidthMetrics()
+        {
+            _bandwidthUsage.Clear();
+        }
 
         /// <inheritdoc />
         public void Initialize(bool isServer)
@@ -647,6 +656,17 @@ namespace Robust.Shared.Network
             var channel = GetChannel(msg.SenderConnection);
             var instance = func(channel);
             instance.MsgChannel = channel;
+
+            #if DEBUG
+
+            if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
+            {
+                bandwidth = 0;
+            }
+
+            _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
+
+            #endif
 
             try
             {

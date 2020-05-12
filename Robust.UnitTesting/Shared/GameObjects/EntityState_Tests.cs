@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             byte[] array;
             using(var stream = new MemoryStream())
             {
-                var payload = new EntityState(new EntityUid(512), new List<ComponentChanged>(), new List<ComponentState>());
+                var payload = new EntityState(new EntityUid(512), Array.Empty<ComponentChanged>(), Array.Empty<ComponentState>());
 
                 serializer.Serialize(stream, payload);
                 array = stream.ToArray();

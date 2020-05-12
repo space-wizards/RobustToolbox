@@ -41,15 +41,15 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
-        public List<EntityUid> ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
-            List<EntityState> nextEntStates)
+        public List<EntityUid> ApplyEntityStates(EntityState[] curEntStates, IEnumerable<EntityUid> deletions,
+            EntityState[] nextEntStates)
         {
             var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
             var toInitialize = new List<Entity>();
             var created = new List<EntityUid>();
             deletions ??= new EntityUid[0];
 
-            if (curEntStates != null && curEntStates.Count != 0)
+            if (curEntStates != null && curEntStates.Length != 0)
             {
                 foreach (var es in curEntStates)
                 {
@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (nextEntStates != null && nextEntStates.Count != 0)
+            if (nextEntStates != null && nextEntStates.Length != 0)
             {
                 foreach (var es in nextEntStates)
                 {

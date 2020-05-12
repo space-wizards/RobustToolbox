@@ -172,7 +172,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var physics = entity.GetComponent<PhysicsComponent>();
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
-            if (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
+            if (physics.Anchored || (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon)) return;
 
             const float solveIterations = 4.0f;
 

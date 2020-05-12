@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
@@ -209,18 +210,21 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null)
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
+            float maxLength = 50F,
+            Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true)
         {
-            RayCastResults result = default;
+            List<RayCastResults> results = new List<RayCastResults>();
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) => {
+            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            {
 
                 if (distFromOrigin > maxLength)
                 {
                     return true;
                 }
 
-                if (predicate.Invoke(body.Owner))
+                if (predicate != null && predicate.Invoke(body.Owner))
                 {
                     return true;
                 }
@@ -235,25 +239,21 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                // ReSharper disable once CompareOfFloatsByEqualityOperator
-                if (result.Distance != 0f && distFromOrigin > result.Distance)
-                {
-                    return true;
-                }
-
-                result = new RayCastResults(distFromOrigin, point, body.Owner);
-
-                return true;
+                var result = new RayCastResults(distFromOrigin, point, body.Owner);
+                results.Add(result);
+                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
+                return !returnOnFirstHit;
             }, ray.Position, ray.Direction);
-
-            DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
-
-            return result;
+            if (results.Count == 0)
+            {
+                DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
+            }
+            return results;
         }
 
         /// <inheritdoc />
-        public RayCastResults IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt);
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = false)
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         public event Action<DebugRayData> DebugDrawRay;
 

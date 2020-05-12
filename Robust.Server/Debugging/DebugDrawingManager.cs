@@ -25,10 +25,10 @@ namespace Robust.Server.Debugging
         {
             var msg = _net.CreateNetMessage<MsgRay>();
             msg.RayOrigin = data.Ray.Position;
-            if (data.Results.DidHitObject)
+            if (data.Results != null)
             {
                 msg.DidHit = true;
-                msg.RayHit = data.Results.HitPos;
+                msg.RayHit = data.Results.Value.HitPos;
             }
             else
             {

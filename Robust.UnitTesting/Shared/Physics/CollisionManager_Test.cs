@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -146,10 +147,13 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(new MapId(0), ray);
+            var results = manager.IntersectRay(new MapId(0), ray).ToList();
+
+            Assert.That(results.Count, Is.EqualTo(1));
+
+            var result = results.First();
 
             // Assert
-            Assert.That(result.DidHitObject, Is.True);
             Assert.That(result.Distance, Is.EqualTo(5));
             Assert.That(result.HitPos.X, Is.EqualTo(5));
             Assert.That(result.HitPos.Y, Is.EqualTo(1));
@@ -172,12 +176,51 @@ namespace Robust.UnitTesting.Shared.Physics
             manager.AddBody(mock.Object);
 
             // Act
-            var result = manager.IntersectRay(new MapId(0), ray);
+            var results = manager.IntersectRay(new MapId(0), ray);
 
             // Assert
-            Assert.That(result.DidHitObject, Is.False);
-            Assert.That(result.Distance, Is.EqualTo(0.0f));
-            Assert.That(result.HitPos, Is.EqualTo(Vector2.Zero));
+            Assert.That(results.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
+        public void MultiHitRayCast()
+        {
+            // Arrange
+            var b1 = new Box2(5, -5, 10, 6);
+            var b2 = new Box2(6, -10, 7, 10);
+            var ray = new CollisionRay(Vector2.UnitY, Vector2.UnitX, 1);
+            var manager = new PhysicsManager();
+
+            var e1 = new Entity();
+            var e2 = new Entity();
+
+            var m1 = new Mock<IPhysBody>();
+            m1.Setup(foo => foo.WorldAABB).Returns(b1);
+            m1.Setup(foo => foo.Owner).Returns(e1); // requires IPhysBody not have null owner
+            m1.Setup(foo => foo.CanCollide).Returns(true);
+            m1.Setup(foo => foo.CollisionLayer).Returns(1);
+            m1.Setup(foo => foo.CollisionMask).Returns(1);
+            manager.AddBody(m1.Object);
+
+            var m2 = new Mock<IPhysBody>();
+            m2.Setup(foo => foo.WorldAABB).Returns(b2);
+            m2.Setup(foo => foo.Owner).Returns(e2); // requires IPhysBody not have null owner
+            m2.Setup(foo => foo.CanCollide).Returns(true);
+            m2.Setup(foo => foo.CollisionLayer).Returns(1);
+            m2.Setup(foo => foo.CollisionMask).Returns(1);
+            manager.AddBody(m2.Object);
+
+            var results = manager.IntersectRay(new MapId(0), ray, returnOnFirstHit: false).ToList();
+
+            Assert.That(results.Count, Is.EqualTo(2));
+            Assert.That(results[0].HitEntity, Is.EqualTo(e1));
+            Assert.That(results[1].HitEntity, Is.EqualTo(e2));
+            Assert.That(results[0].Distance, Is.EqualTo(5));
+            Assert.That(results[0].HitPos.X, Is.EqualTo(5));
+            Assert.That(results[0].HitPos.Y, Is.EqualTo(1));
+            Assert.That(results[0].Distance, Is.EqualTo(6));
+            Assert.That(results[0].HitPos.X, Is.EqualTo(6));
+            Assert.That(results[0].HitPos.Y, Is.EqualTo(1));
         }
 
         [Test]

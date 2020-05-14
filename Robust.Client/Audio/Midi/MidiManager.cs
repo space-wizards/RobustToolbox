@@ -117,7 +117,7 @@ namespace Robust.Client.Audio.Midi
                 NFluidsynth.Logger.SetLoggerMethod(_loggerDelegate); // Will cause a safe DllNotFoundException if not available.
 
                 _settings = new Settings();
-                _settings["synth.sample-rate"].DoubleValue = 48000;
+                _settings["synth.sample-rate"].DoubleValue = 44100;
                 _settings["player.timing-source"].StringValue = "sample";
                 _settings["synth.lock-memory"].IntValue = 0;
                 _settings["synth.threadsafe-api"].IntValue = 1;

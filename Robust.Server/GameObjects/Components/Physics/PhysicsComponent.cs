@@ -1,5 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
@@ -102,6 +104,13 @@ namespace Robust.Server.GameObjects
             get => _controller;
         }
 
+        /// <summary>
+        ///     Whether this component is on the ground
+        /// </summary>
+        public override bool OnGround => Status == BodyStatus.OnGround &&
+                                         IoCManager.Resolve<IPhysicsManager>()
+                                             .IsWeightless(Owner.Transform.GridPosition);
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
         private bool edgeSlide = true;
@@ -115,16 +124,6 @@ namespace Robust.Server.GameObjects
             {
                 _anchored = value;
             }
-        }
-
-        public bool IsOnGround()
-        {
-            return Status == BodyStatus.OnGround;
-        }
-
-        public bool IsInAir()
-        {
-            return Status == BodyStatus.InAir;
         }
 
         public void SetController<T>() where T: VirtualController, new()

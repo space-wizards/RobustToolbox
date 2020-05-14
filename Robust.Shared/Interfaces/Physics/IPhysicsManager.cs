@@ -23,6 +23,14 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns>true if collides, false if not</returns>
         bool TryCollideRect(Box2 collider, MapId map);
 
+
+        /// <summary>
+        ///     Checks whether a certain grid position is weightless or not
+        /// </summary>
+        /// <param name="gridPosition"></param>
+        /// <returns></returns>
+        bool IsWeightless(GridCoordinates gridPosition);
+
         /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>

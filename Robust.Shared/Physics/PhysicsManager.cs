@@ -19,6 +19,10 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
+#pragma warning disable 649
+        [Dependency] private readonly IMapManager _mapManager;
+#pragma warning restore 649
+
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
 
@@ -43,6 +47,12 @@ namespace Robust.Shared.Physics
             }
 
             return false;
+        }
+
+        public bool IsWeightless(GridCoordinates gridPosition)
+        {
+            var tile = _mapManager.GetGrid(gridPosition.GridID).GetTileRef(gridPosition).Tile;
+            return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
         }
 
         public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
@@ -145,10 +155,6 @@ namespace Robust.Shared.Physics
                 Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
             }
         }
-
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
 
         /// <summary>
         ///     Removes a physBody from the manager

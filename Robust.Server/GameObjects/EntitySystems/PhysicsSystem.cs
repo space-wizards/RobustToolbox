@@ -204,7 +204,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private float GetFriction(IEntity entity)
         {
-            if (entity.TryGetComponent(out CollidableComponent collider) && entity.TryGetComponent(out PhysicsComponent physics) && physics.IsOnGround())
+            if (entity.TryGetComponent(out CollidableComponent collider) && entity.TryGetComponent(out PhysicsComponent physics) && physics.OnGround)
             {
                 var location = entity.Transform;
                 var grid = _mapManager.GetGrid(location.GridPosition.GridID);

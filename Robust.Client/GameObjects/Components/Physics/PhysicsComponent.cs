@@ -1,4 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.ViewVariables;
@@ -70,15 +72,12 @@ namespace Robust.Client.GameObjects
             set => _status = value;
         }
 
-        public bool IsOnGround()
-        {
-            return Status == BodyStatus.OnGround;
-        }
-
-        public bool IsInAir()
-        {
-            return Status == BodyStatus.InAir;
-        }
+        /// <summary>
+        ///     Whether this component is on the ground
+        /// </summary>
+        public override bool OnGround => Status == BodyStatus.OnGround &&
+                                         IoCManager.Resolve<IPhysicsManager>()
+                                             .IsWeightless(Owner.Transform.GridPosition);
 
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.

@@ -16,6 +16,9 @@ namespace Robust.Shared.Physics
         public abstract float Mass { get; set; }
         public abstract Vector2 Momentum { get; set; }
         public abstract BodyStatus Status { get; set; }
+
+        public abstract bool OnGround { get; }
+
         [CanBeNull]
         public abstract VirtualController Controller { get; }
     }

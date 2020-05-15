@@ -33,7 +33,7 @@ namespace Robust.Shared.Serialization
     }
 
     /// <summary>
-    /// Conveniece class for static access to custom formatters.
+    /// Convenience class for static access to custom formatters.
     /// </summary>
     public static class WithFormat
     {

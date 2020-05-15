@@ -160,15 +160,17 @@ namespace Robust.Shared.Serialization
                             {
                                 if (_flagType != null)
                                 {
-                                    throw new NotSupportedException(
-                                        String.Format(
-                                            "Multiple bitflag enums declared for the tag {0}.",
-                                            flagsforAttribute.Tag));
+                                    throw new NotSupportedException($"Multiple bitflag enums declared for the tag {flagsforAttribute.Tag}.");
                                 }
 
                                 if (!bitflagType.IsEnum)
                                 {
-                                    throw new FlagSerializerException($"Could not create FlagSerializer for non-enum bitflagType {bitflagType}.");
+                                    throw new FlagSerializerException($"Could not create FlagSerializer for non-enum {bitflagType}.");
+                                }
+
+                                if (Enum.GetUnderlyingType(bitflagType) != typeof(int))
+                                {
+                                    throw new FlagSerializerException($"Could not create FlagSerializer for non-int enum {bitflagType}.");
                                 }
 
                                 if (!bitflagType.GetCustomAttributes<FlagsAttribute>(false).Any())

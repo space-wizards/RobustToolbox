@@ -49,7 +49,10 @@ namespace Robust.Shared.Localization.Macros
 
         public override object GetFormat(Type formatType)
         {
-            return Formatter;
+            if (formatType == typeof(ICustomFormatter))
+                return Formatter;
+            else
+                return base.GetFormat(formatType);
         }
 
         /// <summary>

@@ -110,5 +110,14 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
         {
             Assert.AreEqual("Bob uses his toolbox", string.Format(sut, "{0} uses {0:their} toolbox", male));
         }
+
+        [Test]
+        public void TestClone()
+        {
+            MacroCultureInfoWrapper sutClone = sut.Clone() as MacroCultureInfoWrapper;
+            Assert.IsNotNull(sutClone);
+
+            Assert.AreEqual("Bob uses his toolbox", string.Format(sut, "{0} uses {0:their} toolbox", male));
+        }
     }
 }

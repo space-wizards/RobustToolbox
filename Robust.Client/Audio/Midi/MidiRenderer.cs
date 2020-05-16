@@ -144,8 +144,8 @@ namespace Robust.Client.Audio.Midi
         private readonly List<int> _notesPlaying = new List<int>();
         private int _midiprogram = 1;
         private bool _loopMidi = false;
-        private const int SampleRate = 48000;
-        private const int Buffers = SampleRate / 4800;
+        private const int SampleRate = 44100;
+        private const int Buffers = SampleRate / 4000;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;

@@ -254,6 +254,8 @@ namespace Robust.Shared.Physics
             {
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
             }
+
+            results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
         }
 

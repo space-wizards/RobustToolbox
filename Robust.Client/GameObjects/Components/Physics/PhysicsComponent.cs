@@ -76,7 +76,7 @@ namespace Robust.Client.GameObjects
         ///     Whether this component is on the ground
         /// </summary>
         public override bool OnGround => Status == BodyStatus.OnGround &&
-                                         IoCManager.Resolve<IPhysicsManager>()
+                                         !IoCManager.Resolve<IPhysicsManager>()
                                              .IsWeightless(Owner.Transform.GridPosition);
 
         /// <summary>

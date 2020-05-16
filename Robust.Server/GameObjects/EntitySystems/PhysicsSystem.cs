@@ -82,6 +82,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
             foreach (var entity in RelevantEntities)
             {
+                if (entity.Deleted) continue;
                 if (entity.TryGetComponent<CollidableComponent>(out var a))
                 {
                     foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))

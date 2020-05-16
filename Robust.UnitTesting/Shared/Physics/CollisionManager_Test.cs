@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Moq;
@@ -196,7 +197,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var m1 = new Mock<IPhysBody>();
             m1.Setup(foo => foo.WorldAABB).Returns(b1);
-            m1.Setup(foo => foo.Owner).Returns(e1); // requires IPhysBody not have null owner
+            m1.Setup(foo => foo.Owner).Returns(e1);
             m1.Setup(foo => foo.CanCollide).Returns(true);
             m1.Setup(foo => foo.CollisionLayer).Returns(1);
             m1.Setup(foo => foo.CollisionMask).Returns(1);
@@ -204,7 +205,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var m2 = new Mock<IPhysBody>();
             m2.Setup(foo => foo.WorldAABB).Returns(b2);
-            m2.Setup(foo => foo.Owner).Returns(e2); // requires IPhysBody not have null owner
+            m2.Setup(foo => foo.Owner).Returns(e2);
             m2.Setup(foo => foo.CanCollide).Returns(true);
             m2.Setup(foo => foo.CollisionLayer).Returns(1);
             m2.Setup(foo => foo.CollisionMask).Returns(1);
@@ -213,14 +214,14 @@ namespace Robust.UnitTesting.Shared.Physics
             var results = manager.IntersectRay(new MapId(0), ray, returnOnFirstHit: false).ToList();
 
             Assert.That(results.Count, Is.EqualTo(2));
-            Assert.That(results[0].HitEntity, Is.EqualTo(e1));
-            Assert.That(results[1].HitEntity, Is.EqualTo(e2));
+            Assert.That(results[0].HitEntity.Uid, Is.EqualTo(e1.Uid));
+            Assert.That(results[1].HitEntity.Uid, Is.EqualTo(e2.Uid));
             Assert.That(results[0].Distance, Is.EqualTo(5));
             Assert.That(results[0].HitPos.X, Is.EqualTo(5));
             Assert.That(results[0].HitPos.Y, Is.EqualTo(1));
-            Assert.That(results[0].Distance, Is.EqualTo(6));
-            Assert.That(results[0].HitPos.X, Is.EqualTo(6));
-            Assert.That(results[0].HitPos.Y, Is.EqualTo(1));
+            Assert.That(results[1].Distance, Is.EqualTo(6));
+            Assert.That(results[1].HitPos.X, Is.EqualTo(6));
+            Assert.That(results[1].HitPos.Y, Is.EqualTo(1));
         }
 
         [Test]

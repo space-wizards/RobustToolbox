@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
@@ -225,6 +223,8 @@ namespace Robust.Shared.Physics
             this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
 
+                if (returnOnFirstHit && results.Count > 0) return true;
+
                 if (distFromOrigin > maxLength)
                 {
                     return true;
@@ -248,7 +248,7 @@ namespace Robust.Shared.Physics
                 var result = new RayCastResults(distFromOrigin, point, body.Owner);
                 results.Add(result);
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
-                return !returnOnFirstHit;
+                return true;
             }, ray.Position, ray.Direction);
             if (results.Count == 0)
             {
@@ -258,7 +258,7 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = false)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         public event Action<DebugRayData> DebugDrawRay;

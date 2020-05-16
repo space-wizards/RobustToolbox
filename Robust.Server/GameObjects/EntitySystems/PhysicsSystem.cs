@@ -42,7 +42,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             SimulateWorld(frameTime, RelevantEntities.ToList());
         }
 
-        private void SimulateWorld(float frameTime, List<IEntity> entities)
+        private void SimulateWorld(float frameTime, ICollection<IEntity> entities)
         {
 
             // simulation can introduce deleted entities into the query results
@@ -157,10 +157,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             var friction = GetFriction(entity);
 
             // Clamp friction because friction can't make you accelerate backwards
-            if (friction > physics.LinearVelocity.Length)
-            {
-                friction = physics.LinearVelocity.Length;
-            }
+            friction = Math.Min(friction, physics.LinearVelocity.Length);
 
             // No multiplication/division by mass here since that would be redundant
             var frictionImpulse = physics.LinearVelocity == Vector2.Zero ? Vector2.Zero : physics.LinearVelocity.Normalized * -friction;

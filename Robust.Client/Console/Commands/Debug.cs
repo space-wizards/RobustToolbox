@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -477,7 +477,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var window = new SS14Window();
+            var window = new SS14Window { CustomMinimumSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();

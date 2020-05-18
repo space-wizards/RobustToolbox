@@ -13,6 +13,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using static Robust.Shared.Utility.EntitySystemHelpers;
 
 namespace Robust.Server.GameObjects.Components.UserInterface
 {
@@ -173,8 +174,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             {
                 _isActive = true;
 
-                IoCManager.Resolve<IEntitySystemManager>()
-                    .GetEntitySystem<UserInterfaceSystem>()
+                EntitySystem<UserInterfaceSystem>()
                     .ActivateInterface(this);
             }
 
@@ -218,8 +218,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             if (_subscribedSessions.Count == 0)
             {
-                IoCManager.Resolve<IEntitySystemManager>()
-                    .GetEntitySystem<UserInterfaceSystem>()
+                EntitySystem<UserInterfaceSystem>()
                     .DeactivateInterface(this);
 
                 _isActive = false;

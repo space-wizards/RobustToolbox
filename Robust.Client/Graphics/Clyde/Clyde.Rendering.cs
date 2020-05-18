@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
@@ -217,7 +218,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
             // Model matrix becomes identity since it's built into the batch mesh.
-            program.SetUniformMaybe(UniIModelMatrix, Matrix3.Identity);
+            program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 
@@ -243,9 +244,12 @@ namespace Robust.Client.Graphics.Clyde
         {
             return type switch
             {
-                BatchPrimitiveType.Triangles => PrimitiveType.Triangles,
-                BatchPrimitiveType.TrianglesFan => PrimitiveType.TriangleFan,
-                BatchPrimitiveType.Line => PrimitiveType.Lines,
+                BatchPrimitiveType.TriangleList => PrimitiveType.Triangles,
+                BatchPrimitiveType.TriangleFan => PrimitiveType.TriangleFan,
+                BatchPrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
+                BatchPrimitiveType.LineList => PrimitiveType.Lines,
+                BatchPrimitiveType.LineStrip => PrimitiveType.LineStrip,
+                BatchPrimitiveType.PointList => PrimitiveType.Points,
                 _ => PrimitiveType.Triangles
             };
         }
@@ -454,7 +458,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
             Angle angle)
         {
-            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TrianglesFan, _queuedShader);
+            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
 
             Box2 sr;
             if (subRegion.HasValue)
@@ -520,9 +524,89 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastClydeDrawCalls += 1;
         }
 
+        private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
+            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices, in Color color)
+        {
+            FinishBatch();
+            _batchMetaData = null;
+
+            vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
+
+            // We are weaving this into the batch buffers for performance (and simplicity).
+            // This means all indices have to be offset.
+            for (var i = 0; i < indices.Length; i++)
+            {
+                var o = BatchIndexIndex + i;
+                var index = indices[i];
+                if (index != ushort.MaxValue) // Don't offset primitive restart.
+                {
+                    index = (ushort) (index + BatchVertexIndex);
+                }
+
+                BatchIndexData[o] = index;
+            }
+
+            BatchVertexIndex += vertices.Length;
+
+            ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
+
+            command.DrawBatch.Indexed = true;
+            command.DrawBatch.StartIndex = BatchIndexIndex;
+            command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
+            command.DrawBatch.Modulate = color;
+            command.DrawBatch.TextureId = textureId;
+            command.DrawBatch.ShaderInstance = _queuedShader;
+
+            command.DrawBatch.Count = indices.Length;
+            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+
+            _debugStats.LastBatches += 1;
+            _debugStats.LastClydeDrawCalls += 1;
+            BatchIndexIndex += indices.Length;
+        }
+
+        private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
+            in ReadOnlySpan<Vertex2D> vertices, in Color color)
+        {
+            FinishBatch();
+            _batchMetaData = null;
+
+            vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
+
+            ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
+
+            command.DrawBatch.Indexed = false;
+            command.DrawBatch.StartIndex = BatchVertexIndex;
+            command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
+            command.DrawBatch.Modulate = color;
+            command.DrawBatch.TextureId = textureId;
+            command.DrawBatch.ShaderInstance = _queuedShader;
+
+            command.DrawBatch.Count = vertices.Length;
+            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+
+            _debugStats.LastBatches += 1;
+            _debugStats.LastClydeDrawCalls += 1;
+            BatchVertexIndex += vertices.Length;
+        }
+
+        private BatchPrimitiveType MapDrawToBatchPrimitiveType(DrawPrimitiveTopology topology)
+        {
+            return topology switch
+            {
+                DrawPrimitiveTopology.TriangleList => BatchPrimitiveType.TriangleList,
+                DrawPrimitiveTopology.TriangleFan => BatchPrimitiveType.TriangleFan,
+                DrawPrimitiveTopology.TriangleStrip => BatchPrimitiveType.TriangleStrip,
+                DrawPrimitiveTopology.LineList => BatchPrimitiveType.LineList,
+                DrawPrimitiveTopology.LineStrip => BatchPrimitiveType.LineStrip,
+                DrawPrimitiveTopology.PointList => BatchPrimitiveType.PointList,
+                _ => BatchPrimitiveType.TriangleList
+            };
+        }
+
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
-            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.Line, _queuedShader);
+            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentModelMatrix.Transform(a);
             b = _currentModelMatrix.Transform(b);
@@ -652,6 +736,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
+            command.DrawBatch.ModelMatrix = Matrix3.Identity;
 
             _debugStats.LastBatches += 1;
         }
@@ -788,6 +873,9 @@ namespace Robust.Client.Graphics.Clyde
             public int Count;
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
+
+            // TODO: this makes the render commands so much more large please remove.
+            public Matrix3 ModelMatrix;
         }
 
         private struct RenderCommandViewMatrix
@@ -878,11 +966,14 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private enum BatchPrimitiveType
+        private enum BatchPrimitiveType : byte
         {
-            Triangles,
-            TrianglesFan,
-            Line
+            TriangleList,
+            TriangleFan,
+            TriangleStrip,
+            LineList,
+            LineStrip,
+            PointList,
         }
 
         private sealed class SpriteDrawingOrderComparer : IComparer<int>

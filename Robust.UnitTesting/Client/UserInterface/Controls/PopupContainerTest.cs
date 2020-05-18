@@ -48,5 +48,28 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
             Assert.That(popup.Position, Is.EqualTo(new Vector2(0, 0)));
             Assert.That(popup.Size, Is.EqualTo(new Vector2(150, 150)));
         }
+
+        [Test]
+        public void TestAltPos()
+        {
+            var wrap = new LayoutContainer();
+            var container = new PopupContainer {CustomMinimumSize = (100, 100)};
+            wrap.AddChild(container);
+
+            // Need this wrapper so that container has the correct size.
+            wrap.ForceRunLayoutUpdate();
+
+            var popup = new Control {CustomMinimumSize = (50, 50)};
+
+            container.AddChild(popup);
+
+            PopupContainer.SetPopupOrigin(popup, (75, 75));
+            PopupContainer.SetAltOrigin(popup, (65, 25));
+
+            container.ForceRunLayoutUpdate();
+
+            Assert.That(popup.Position, Is.EqualTo(new Vector2(15, 25)));
+            Assert.That(popup.Size, Is.EqualTo(new Vector2(50, 50)));
+        }
     }
 }

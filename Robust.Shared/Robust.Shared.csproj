@@ -29,11 +29,6 @@
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Robust.Shared.dll.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">
       <LogicalName>Robust.Shared.Utility.TypeAbbreviations.yaml</LogicalName>
     </EmbeddedResource>

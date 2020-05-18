@@ -71,6 +71,8 @@ namespace Robust.Server.ServerStatus
 
             if (authVal != _watchdogToken)
             {
+                // Holy shit nobody read these logs please.
+                Logger.InfoS("watchdogApi", @"Failed auth: ""{0}"" vs ""{1}""", authVal, _watchdogToken);
                 response.StatusCode = (int) HttpStatusCode.Unauthorized;
                 return true;
             }

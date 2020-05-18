@@ -20,7 +20,7 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using static Robust.Shared.Utility.EntitySystemHelpers;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
 {
@@ -180,7 +180,7 @@ namespace Robust.Client.GameStates
             MergeImplicitData(createdEntities);
 
             var inputMan = IoCManager.Resolve<IInputManager>();
-            var input = EntitySystem<InputSystem>();
+            var input = EntitySystemHelpers.EntitySystem<InputSystem>();
 
             if (_lastProcessedSeq < curState.LastProcessedInput)
             {

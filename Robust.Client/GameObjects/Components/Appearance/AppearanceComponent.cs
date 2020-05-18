@@ -9,7 +9,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using static Robust.Shared.Utility.EntitySystemHelpers;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -96,7 +96,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntitySystem<AppearanceSystem>()
+            EntitySystemHelpers.EntitySystem<AppearanceSystem>()
                 .EnqueueAppearanceUpdate(this);
             _appearanceDirty = true;
         }

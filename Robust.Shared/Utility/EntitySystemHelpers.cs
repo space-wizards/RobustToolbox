@@ -4,7 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Utility
 {
-    public class EntitySystemHelpers
+    public static class EntitySystemHelpers
     {
 
         /// <summary>

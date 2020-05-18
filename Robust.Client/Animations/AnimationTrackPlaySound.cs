@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
-using static Robust.Shared.Utility.EntitySystemHelpers;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations
 {
@@ -36,7 +36,7 @@ namespace Robust.Client.Animations
 
                 var keyFrame = KeyFrames[keyFrameIndex];
 
-                EntitySystem<AudioSystem>()
+                EntitySystemHelpers.EntitySystem<AudioSystem>()
                     .Play(keyFrame.Resource, entity);
             }
 

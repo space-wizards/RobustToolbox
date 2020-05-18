@@ -265,7 +265,7 @@ namespace Robust.Client.GameObjects
         public int AddLayer(RSI.StateId stateId, int? newIndex = null)
         {
             var layer = new Layer {State = stateId};
-            if (BaseRSI.TryGetState(stateId, out var state))
+            if (BaseRSI != null && BaseRSI.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
             }
@@ -572,27 +572,26 @@ namespace Robust.Client.GameObjects
             }
 
             theLayer.State = stateId;
+            RSI.State state;
             var rsi = theLayer.RSI ?? BaseRSI;
             if (rsi == null)
             {
+                state = GetFallbackState();
                 Logger.ErrorS(LogCategory, "No RSI to pull new state from! Trace:\n{0}", Environment.StackTrace);
-                theLayer.Texture = null;
             }
             else
             {
-                if (rsi.TryGetState(stateId, out var state))
+                if (!rsi.TryGetState(stateId, out state))
                 {
-                    theLayer.AnimationFrame = 0;
-                    theLayer.AnimationTime = 0;
-                    theLayer.AnimationTimeLeft = state.GetDelay(0);
-                }
-                else
-                {
+                    state = GetFallbackState();
                     Logger.ErrorS(LogCategory, "State '{0}' does not exist in RSI. Trace:\n{1}", stateId,
                         Environment.StackTrace);
-                    theLayer.Texture = null;
                 }
             }
+
+            theLayer.AnimationFrame = 0;
+            theLayer.AnimationTime = 0;
+            theLayer.AnimationTimeLeft = state.GetDelay(0);
 
             UpdateIsInert();
         }
@@ -1055,32 +1054,32 @@ namespace Robust.Client.GameObjects
                 {
                     // Pull texture from RSI state instead.
                     var rsi = layer.RSI ?? BaseRSI;
-                    if (rsi != null)
+                    if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                     {
-                        var state = rsi[layer.State];
+                        state = GetFallbackState();
+                    }
 
-                        RSI.State.Direction layerSpecificDir;
-                        if (state.Directions == RSI.State.DirectionType.Dir1)
+                    RSI.State.Direction layerSpecificDir;
+                    if (state.Directions == RSI.State.DirectionType.Dir1)
+                    {
+                        layerSpecificDir = RSI.State.Direction.South;
+                    }
+                    else
+                    {
+                        RSI.State.Direction dir;
+                        if (overrideDirection != null)
                         {
-                            layerSpecificDir = RSI.State.Direction.South;
+                            dir = overrideDirection.Value.Convert(state.Directions);
                         }
                         else
                         {
-                            RSI.State.Direction dir;
-                            if (overrideDirection != null)
-                            {
-                                dir = overrideDirection.Value.Convert(state.Directions);
-                            }
-                            else
-                            {
-                                dir = GetDir(state.Directions, worldRotation);
-                            }
-
-                            layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
+                            dir = GetDir(state.Directions, worldRotation);
                         }
 
-                        texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+                        layerSpecificDir = OffsetRsiDir(dir, layer.DirOffset);
                     }
+
+                    texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
                 }
 
                 texture ??= resourceCache.GetFallback<TextureResource>();
@@ -1307,12 +1306,10 @@ namespace Robust.Client.GameObjects
                 }
 
                 var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null)
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    continue;
+                    state = GetFallbackState();
                 }
-
-                var state = rsi[layer.State];
 
                 if (!state.IsAnimated)
                 {
@@ -1437,12 +1434,10 @@ namespace Robust.Client.GameObjects
                 }
 
                 var rsi = layer.RSI ?? BaseRSI;
-                if (rsi == null)
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
                 {
-                    continue;
+                    state = GetFallbackState();
                 }
-
-                var state = rsi[layer.State];
 
                 if (state.IsAnimated)
                 {
@@ -1450,6 +1445,12 @@ namespace Robust.Client.GameObjects
                     break;
                 }
             }
+        }
+
+        private RSI.State GetFallbackState()
+        {
+            var rsi = resourceCache.GetResource<RSIResource>("/Textures/error.rsi").RSI;
+            return rsi["error"];
         }
 
         private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)

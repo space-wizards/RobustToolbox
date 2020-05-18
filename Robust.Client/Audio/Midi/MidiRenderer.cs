@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
+using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
@@ -145,7 +146,7 @@ namespace Robust.Client.Audio.Midi
         private int _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
-        private const int Buffers = SampleRate / 4000;
+        private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
@@ -296,6 +297,7 @@ namespace Robust.Client.Audio.Midi
             DebugTools.Assert(length % 4 == 0, "Sample length must be multiple of 4");
 
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
+            if(buffersProcessed == Buffers) _midiSawmill.Warning("MIDI buffer overflow!");
             if (buffersProcessed == 0) return;
 
             var bufferLength = length * 2;

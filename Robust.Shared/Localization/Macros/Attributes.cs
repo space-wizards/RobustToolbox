@@ -4,8 +4,7 @@ using Robust.Shared.Interfaces.GameObjects;
 namespace Robust.Shared.Localization.Macros
 {
     /// <summary>
-    /// "Possible" gender for grammatical usage only.
-    /// Arranged in alphabetical order so as not to offend anyone.
+    /// Genders for grammatical usage only.
     /// </summary>
     public enum Gender
     {

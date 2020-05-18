@@ -6,6 +6,7 @@ using System.Linq;
 using NGettext;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization.Macros;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -118,10 +119,11 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
-            var catalog = new Catalog(culture);
+            var catalog = new CustomFormatCatalog(culture);
             _catalogs.Add(culture, catalog);
 
             _loadData(culture, catalog);
+            _loadMacros(culture, catalog);
             if (DefaultCulture == null)
             {
                 DefaultCulture = culture;
@@ -179,6 +181,20 @@ namespace Robust.Shared.Localization
             }
 
             catalog.Translations.Add(id, strings);
+        }
+
+        private static void _loadMacros(CultureInfo culture, CustomFormatCatalog catalog)
+        {
+            // TODO: Do not hardcode
+            var macros = new Dictionary<string, ITextMacro>
+            {
+                { "they", new They() },
+                { "their", new Their() },
+                { "theirs", new Theirs() },
+                { "them", new Them() },
+                { "themself", new Themself() },
+            };
+            catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }
 }

@@ -5,10 +5,10 @@ using Robust.Shared.Localization.Macros;
 
 namespace Robust.UnitTesting.Shared.Localization.Macros
 {
-    [TestFixture, Parallelizable, TestOf(typeof(MacroCultureInfoWrapper))]
-    internal class MacroCultureInfoWrapper_tests
+    [TestFixture, Parallelizable, TestOf(typeof(MacroFormatProvider))]
+    internal class MacroFormatProvider_tests
     {
-        private MacroCultureInfoWrapper sut;
+        private MacroFormatProvider sut;
 
         private class GenderedPerson : IGenderable
         {
@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
                 { "them", new Them() },
                 { "themself", new Themself() },
             };
-            sut = new MacroCultureInfoWrapper(new MacroFormatter(macros), CultureInfo.CurrentCulture.IetfLanguageTag);
+            sut = new MacroFormatProvider(new MacroFormatter(macros), CultureInfo.CurrentCulture);
         }
 
         [Test]
@@ -108,15 +108,6 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
         [Test]
         public void TestUseToString()
         {
-            Assert.AreEqual("Bob uses his toolbox", string.Format(sut, "{0} uses {0:their} toolbox", male));
-        }
-
-        [Test]
-        public void TestClone()
-        {
-            MacroCultureInfoWrapper sutClone = sut.Clone() as MacroCultureInfoWrapper;
-            Assert.IsNotNull(sutClone);
-
             Assert.AreEqual("Bob uses his toolbox", string.Format(sut, "{0} uses {0:their} toolbox", male));
         }
     }

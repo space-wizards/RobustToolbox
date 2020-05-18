@@ -16,6 +16,7 @@ namespace Robust.Shared.Localization
     {
 #pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly ITextMacroFactory _textMacroFactory;
 #pragma warning restore 649
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
@@ -183,17 +184,9 @@ namespace Robust.Shared.Localization
             catalog.Translations.Add(id, strings);
         }
 
-        private static void _loadMacros(CultureInfo culture, CustomFormatCatalog catalog)
+        private void _loadMacros(CultureInfo culture, CustomFormatCatalog catalog)
         {
-            // TODO: Do not hardcode
-            var macros = new Dictionary<string, ITextMacro>
-            {
-                { "they", new They() },
-                { "their", new Their() },
-                { "theirs", new Theirs() },
-                { "them", new Them() },
-                { "themself", new Themself() },
-            };
+            var macros = _textMacroFactory.GetMacrosForLanguage(culture.IetfLanguageTag);
             catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }

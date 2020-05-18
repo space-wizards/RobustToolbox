@@ -1,5 +1,6 @@
 ﻿namespace Robust.Shared.Localization.Macros
 {
+    [RegisterTextMacro("they", "en")]
     public class They : ITextMacro
     {
         public string Format(object argument)
@@ -14,6 +15,7 @@
         }
     }
 
+    [RegisterTextMacro("their", "en")]
     public class Their : ITextMacro
     {
         public string Format(object argument)
@@ -28,6 +30,7 @@
         }
     }
 
+    [RegisterTextMacro("theirs", "en")]
     public class Theirs : ITextMacro
     {
         public string Format(object argument)
@@ -42,6 +45,7 @@
         }
     }
 
+    [RegisterTextMacro("them", "en")]
     public class Them : ITextMacro
     {
         public string Format(object argument)
@@ -56,6 +60,7 @@
         }
     }
 
+    [RegisterTextMacro("themself", "en")]
     public class Themself : ITextMacro
     {
         public string Format(object argument)

@@ -5,9 +5,9 @@ namespace Robust.Shared.Localization.Macros
 {
     public class MacroFormatter : ICustomFormatter
     {
-        private readonly Dictionary<string, ITextMacro> Macros;
+        private readonly IDictionary<string, ITextMacro> Macros;
 
-        public MacroFormatter(Dictionary<string, ITextMacro> macros)
+        public MacroFormatter(IDictionary<string, ITextMacro> macros)
         {
             Macros = macros;
         }

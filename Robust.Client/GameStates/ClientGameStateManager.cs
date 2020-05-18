@@ -180,7 +180,7 @@ namespace Robust.Client.GameStates
             MergeImplicitData(createdEntities);
 
             var inputMan = IoCManager.Resolve<IInputManager>();
-            var input = EntitySystemHelpers.EntitySystem<InputSystem>();
+            var input = EntitySystems.Get<InputSystem>();
 
             if (_lastProcessedSeq < curState.LastProcessedInput)
             {

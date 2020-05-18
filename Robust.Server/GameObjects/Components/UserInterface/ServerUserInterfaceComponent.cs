@@ -174,7 +174,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             {
                 _isActive = true;
 
-                EntitySystemHelpers.EntitySystem<UserInterfaceSystem>()
+                Shared.Utility.EntitySystems.Get<UserInterfaceSystem>()
                     .ActivateInterface(this);
             }
 
@@ -218,7 +218,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             if (_subscribedSessions.Count == 0)
             {
-                EntitySystemHelpers.EntitySystem<UserInterfaceSystem>()
+                Shared.Utility.EntitySystems.Get<UserInterfaceSystem>()
                     .DeactivateInterface(this);
 
                 _isActive = false;

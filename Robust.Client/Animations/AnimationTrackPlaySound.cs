@@ -36,7 +36,7 @@ namespace Robust.Client.Animations
 
                 var keyFrame = KeyFrames[keyFrameIndex];
 
-                EntitySystemHelpers.EntitySystem<AudioSystem>()
+                EntitySystems.Get<AudioSystem>()
                     .Play(keyFrame.Resource, entity);
             }
 

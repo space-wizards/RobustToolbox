@@ -4,7 +4,10 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Utility
 {
-    public static class EntitySystemHelpers
+    /// <summary>
+    /// Provides convenient static access to entity systems
+    /// </summary>
+    public static class EntitySystems
     {
 
         /// <summary>
@@ -12,7 +15,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <typeparam name="T">entity system to get</typeparam>
         /// <returns></returns>
-        public static T EntitySystem<T>() where T : IEntitySystem
+        public static T Get<T>() where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<T>();
         }
@@ -23,7 +26,7 @@ namespace Robust.Shared.Utility
         /// <typeparam name="T">Type of entity system to find.</typeparam>
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
-        public static bool TryGetEntitySystem<T>(out T entitySystem) where T : IEntitySystem
+        public static bool TryGet<T>(out T entitySystem) where T : IEntitySystem
         {
             return IoCManager.Resolve<IEntitySystemManager>().TryGetEntitySystem<T>(out entitySystem);
         }

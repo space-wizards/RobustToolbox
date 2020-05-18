@@ -96,7 +96,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            EntitySystemHelpers.EntitySystem<AppearanceSystem>()
+            Shared.Utility.EntitySystems.Get<AppearanceSystem>()
                 .EnqueueAppearanceUpdate(this);
             _appearanceDirty = true;
         }

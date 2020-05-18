@@ -131,9 +131,16 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         ///     The state object that will be sent to all current and future client.
         ///     This can be null.
         /// </param>
-        public void SetState(BoundUserInterfaceState state)
+        /// <param name="session">
+        ///     The player session to send this new state to.
+        ///     Set to null for sending it to every subscribed player session.
+        /// </param>
+        public void SetState(BoundUserInterfaceState state, IPlayerSession session = null)
         {
-            SendMessage(new UpdateBoundStateMessage(state));
+            if(session == null)
+                SendMessage(new UpdateBoundStateMessage(state));
+            else
+                SendMessage(new UpdateBoundStateMessage(state), session);
             _lastState = state;
         }
 

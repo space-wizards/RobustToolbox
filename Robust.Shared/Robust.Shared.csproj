@@ -33,5 +33,8 @@
       <LogicalName>Robust.Shared.Utility.TypeAbbreviations.yaml</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Utility\EntitySystems.cs" />
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

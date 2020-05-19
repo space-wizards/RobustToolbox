@@ -12,6 +12,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
@@ -180,7 +181,7 @@ namespace Robust.Client.GameStates
             MergeImplicitData(createdEntities);
 
             var inputMan = IoCManager.Resolve<IInputManager>();
-            var input = EntitySystems.Get<InputSystem>();
+            var input = EntitySystem.Get<InputSystem>();
 
             if (_lastProcessedSeq < curState.LastProcessedInput)
             {

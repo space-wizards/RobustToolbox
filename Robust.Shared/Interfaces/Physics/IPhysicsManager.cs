@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -71,16 +73,11 @@ namespace Robust.Shared.Interfaces.Physics
 
 
         /// <summary>
-        ///     Applies impulses to two colliding bodies, returning the accumulated impulse for both.
+        ///     Calculates impulses for a given collision group.
         /// </summary>
-        /// <param name="aC"></param>
-        /// <param name="bC"></param>
-        /// <param name="aP"></param>
-        /// <param name="bP"></param>
-        /// <param name="contactCount"></param>
-        /// <returns>A impulse vector in kilogram meters per second</returns>
-        public void SolveCollisionImpulse(ICollidableComponent aC, ICollidableComponent bC,
-            [CanBeNull] SharedPhysicsComponent aP, [CanBeNull] SharedPhysicsComponent bP);
+        /// <param name="group"></param>
+        /// <returns>A list of impulse vectors to apply to each object</returns>
+        public ICollection<Vector2> SolveGroup(AxisCollisionGroup group);
 
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
@@ -120,5 +117,102 @@ namespace Robust.Shared.Interfaces.Physics
         [CanBeNull]
         public RayCastResults? Results { get; }
         public float MaxLength { get; }
+    }
+
+    /// <summary>
+    ///     Stores information about a group of collisions acting along the same axis, all of which are connected in some way
+    /// </summary>
+    public struct AxisCollisionGroup
+    {
+        private Vector2 _normal;
+        public List<Manifold> Collisions;
+
+        public AxisCollisionGroup(Manifold initalManifold)
+        {
+            _normal = initalManifold.Normal;
+            Collisions = new List<Manifold> { initalManifold };
+        }
+
+        public bool TryAddCollision(Manifold manifold)
+        {
+            if (Vector2.Dot(_normal, manifold.Normal) == 0.0f) return false;
+            foreach (var m in Collisions)
+            {
+                if (m.A == manifold.A || m.B == manifold.B)
+                {
+                    Add(manifold);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public IEnumerable<Manifold> GetUnresolved()
+        {
+            var unresolvedExist = false;
+            do
+            {
+                unresolvedExist = false;
+                foreach (var collision in Collisions)
+                {
+                    if (Vector2.Dot(collision.RelativeVelocity, collision.Normal) < 0)
+                    {
+                        unresolvedExist = true;
+                        yield return collision;
+                    }
+                }
+            } while (unresolvedExist);
+        }
+
+        private void Add(Manifold manifold)
+        {
+            Collisions.Add(manifold);
+            Collisions.Sort((a, b) => -a.RelativeVelocity.Length.CompareTo(b.RelativeVelocity.Length));
+        }
+    }
+
+    public struct Manifold
+    {
+        public Vector2 RelativeVelocity
+        {
+            get
+            {
+                if (APhysics != null)
+                {
+                    if (BPhysics != null)
+                    {
+                        return BPhysics.LinearVelocity - APhysics.LinearVelocity;
+                    }
+                    else
+                    {
+                        return -APhysics.LinearVelocity;
+                    }
+                }
+
+                if (BPhysics != null)
+                {
+                    return BPhysics.LinearVelocity;
+                }
+                else
+                {
+                    return Vector2.Zero;
+                }
+            }
+        }
+        public readonly Vector2 Normal;
+        public readonly ICollidableComponent A;
+        public readonly ICollidableComponent B;
+        [CanBeNull] public SharedPhysicsComponent APhysics;
+        [CanBeNull] public SharedPhysicsComponent BPhysics;
+
+        public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics)
+        {
+            this.A = A;
+            this.B = B;
+            Normal = IoCManager.Resolve<IPhysicsManager>().CalculateNormal(A, B);
+            APhysics = aPhysics;
+            BPhysics = bPhysics;
+        }
     }
 }

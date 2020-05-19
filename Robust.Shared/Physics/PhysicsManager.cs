@@ -74,25 +74,53 @@ namespace Robust.Shared.Physics
         }
 
         // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
-        public void SolveCollisionImpulse(ICollidableComponent aC, ICollidableComponent bC,
-            [CanBeNull] SharedPhysicsComponent aP, [CanBeNull] SharedPhysicsComponent bP)
+        public Vector2 SolveCollisionImpulse(Manifold manifold)
         {
-            if (aP == null && bP == null) return;
+            var aP = manifold.APhysics;
+            var bP = manifold.BPhysics;
+            if (aP == null && bP == null) return Vector2.Zero;
             var restitution = 0.01f;
-            var normal = CalculateNormal(aC, bC);
+            var normal = CalculateNormal(manifold.A, manifold.B);
             var rV = aP != null? bP != null ?  bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity : bP.LinearVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)
             {
-                return;
+                return Vector2.Zero;
             }
 
             var impulse = -(1.0f + restitution) * vAlongNormal;
             impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 0.0f) + (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 0.0f);
-            if (aP != null) aP.Momentum -= normal * impulse;
-            if (bP != null) bP.Momentum += normal * impulse;
+            return manifold.Normal * impulse;
         }
+
+        public ICollection<Vector2> SolveGroup(AxisCollisionGroup group)
+        {
+            Func<Manifold, bool> constraint = x => Vector2.Dot(x.RelativeVelocity, x.Normal) >= 0;
+
+            Func<AxisCollisionGroup, IEnumerable<Manifold>> collisionsToSolve = g => g.Collisions.Where(x => !constraint(x));
+
+            foreach (var collision in collisionsToSolve(group))
+            {
+                // TODO: Implement
+            }
+
+            return new List<Vector2>();
+        }
+
+
+        /// <summary>
+        ///     Calculates how much a certain impulse applied to 'a' will affect the impulse of 'b'
+        /// </summary>
+        /// <param name="aPhysics"></param>
+        /// <param name="bPhysics"></param>
+        /// <param name="impulse"></param>
+        /// <returns></returns>
+        //private Vector2 CalculateCollisionInfluence(SharedPhysicsComponent aPhysics, SharedPhysicsComponent bPhysics,
+        //    Vector2 impulse)
+        //{
+
+        //}
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {

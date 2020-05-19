@@ -79,7 +79,10 @@ namespace Robust.Server.GameObjects.EntitySystems
         private void ProcessCollisions()
         {
             _impulseCache.Clear();
-            var collisionsWith = new Dictionary<ICollideBehavior, int>();
+            //var collisionsWith = new Dictionary<ICollideBehavior, int>();
+            var collisionGroups = new List<AxisCollisionGroup>();
+            var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
+            var combinations = new List<(EntityUid, EntityUid)>();
             foreach (var entity in RelevantEntities)
             {
                 if (entity.Deleted) continue;
@@ -87,64 +90,50 @@ namespace Robust.Server.GameObjects.EntitySystems
                 {
                     foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
                     {
-                        ProcessCollision(a, b, collisionsWith);
+                        if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
+                            combinations.Contains((b.Owner.Uid, a.Owner.Uid))) continue;
+                        combinations.Add((a.Owner.Uid, b.Owner.Uid));
+                        if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+                        {
+                            physicsComponents[a] = aPhysics;
+                        }
+                        if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                        {
+                            physicsComponents[b] = bPhysics;
+                        }
+
+                        var manifold = new Manifold(a, b, physicsComponents.ContainsKey(a) ? physicsComponents[a] : null, physicsComponents.ContainsKey(b) ? physicsComponents[b] : null);
+                        if (manifold.Normal == Vector2.Zero) continue;
+                        var inCollisionGroup = false;
+
+                        for (var i = 0; i < collisionGroups.Count; i++)
+                        {
+                            if (collisionGroups[i].TryAddCollision(manifold))
+                            {
+                                inCollisionGroup = true;
+                                break;
+                            }
+                        }
+
+                        if (!inCollisionGroup)
+                        {
+                            collisionGroups.Add(new AxisCollisionGroup(manifold));
+                        }
                     }
                 }
             }
+
+            foreach (var group in collisionGroups)
+            {
+                _physicsManager.SolveGroup(group);
+            }
+
+            /*
             foreach (var collisionCountPair in collisionsWith)
             {
                 collisionCountPair.Key.PostCollide(collisionCountPair.Value);
             }
-        }
-
-        private void ProcessCollision(IPhysBody a, IPhysBody b, Dictionary<ICollideBehavior, int> collisionsWith)
-        {
-            var collideComponents = a.Owner.GetAllComponents<ICollideBehavior>().ToList();
-
-            foreach (var collideBehavior in collideComponents)
-            {
-                collideBehavior.CollideWith(b.Owner);
-                if (!collisionsWith.ContainsKey(collideBehavior))
-                {
-                    collisionsWith.Add(collideBehavior, 1);
-                }
-                else
-                {
-                    collisionsWith[collideBehavior] += 1;
-                }
-            }
-
-            var otherCollideComponents = b.Owner.GetAllComponents<ICollideBehavior>();
-
-            foreach (var otherCollideBehavior in otherCollideComponents)
-            {
-                otherCollideBehavior.CollideWith(a.Owner);
-                if (!collisionsWith.ContainsKey(otherCollideBehavior))
-                {
-                    collisionsWith.Add(otherCollideBehavior, 1);
-                }
-                else
-                {
-                    collisionsWith[otherCollideBehavior] += 1;
-                }
-            }
-
-
-            if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
-            {
-                if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                {
-                    _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, aPhysics, bPhysics);
-                }
-                else
-                {
-                    _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, aPhysics, null);
-                }
-            }
-            else if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-            {
-                _physicsManager.SolveCollisionImpulse((ICollidableComponent) a, (ICollidableComponent) b, null, bPhysics);
-            }
+            */
         }
 
         private void ResolveImpulse(IEntity entity, float frameTime)

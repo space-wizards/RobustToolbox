@@ -7,6 +7,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
@@ -30,6 +31,7 @@ namespace Robust.Client.Input
 #pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceMan;
         [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal;
 #pragma warning restore 649
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
@@ -122,6 +124,9 @@ namespace Robust.Client.Input
 
             PackedKeyCombo matchedCombo = default;
 
+            var bindsDown = new List<KeyBinding>();
+            var hasCanFocus = false;
+
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
             {
@@ -138,13 +143,28 @@ namespace Robust.Client.Input
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        DownBind(binding);
+                        bindsDown.Add(binding);
+                        hasCanFocus |= binding.CanFocus;
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
                         // kill any lower level matches
                         UpBind(binding);
                     }
+                }
+            }
+
+            var uiOnly = false;
+            if (hasCanFocus)
+            {
+                uiOnly = _userInterfaceManagerInternal.HandleCanFocusDown(MouseScreenPosition);
+            }
+
+            foreach (var binding in bindsDown)
+            {
+                if (DownBind(binding, uiOnly))
+                {
+                    break;
                 }
             }
         }
@@ -173,7 +193,7 @@ namespace Robust.Client.Input
             _keysPressed[(int) args.Key] = false;
         }
 
-        private bool DownBind(KeyBinding binding)
+        private bool DownBind(KeyBinding binding, bool uiOnly)
         {
             if (binding.State == BoundKeyState.Down)
             {
@@ -183,12 +203,12 @@ namespace Robust.Client.Input
                 }
                 else if (binding.CanRepeat)
                 {
-                    return SetBindState(binding, BoundKeyState.Down);
+                    return SetBindState(binding, BoundKeyState.Down, uiOnly);
                 }
             }
             else
             {
-                return SetBindState(binding, BoundKeyState.Down);
+                return SetBindState(binding, BoundKeyState.Down, uiOnly);
             }
 
             return false;
@@ -204,7 +224,7 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private bool SetBindState(KeyBinding binding, BoundKeyState state)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly=false)
         {
             binding.State = state;
 
@@ -212,7 +232,7 @@ namespace Robust.Client.Input
                 new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (state == BoundKeyState.Up || !eventArgs.Handled)
+            if (state == BoundKeyState.Up || !eventArgs.Handled && !uiOnly)
             {
                 var cmd = GetInputCommand(binding.Function);
                 // TODO: Allow input commands to still get forwarded to server if necessary.
@@ -233,7 +253,7 @@ namespace Robust.Client.Input
                 }
             }
 
-            return (eventArgs.Handled);
+            return eventArgs.Handled;
         }
 
         private bool PackedMatchesPressedState(PackedKeyCombo packed)

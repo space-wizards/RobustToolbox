@@ -1,4 +1,6 @@
 using System;
+using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Audio.Midi
@@ -25,6 +27,8 @@ namespace Robust.Shared.Audio.Midi
         public byte Program { get; set; }
 
         public short Pitch { get; set; }
+
+        public TimeSpan Timestamp { get; set; }
 
         public static explicit operator MidiEvent(NFluidsynth.MidiEvent midiEvent)
         {

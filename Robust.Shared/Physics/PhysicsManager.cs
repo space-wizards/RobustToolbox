@@ -62,15 +62,22 @@ namespace Robust.Shared.Physics
                 // X is the axis of seperation
                 var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
                 var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
-                return new Vector2(manifold.Width * leftDist > rightDist ? 1 : -1, 0);
+                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
                 var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
                 var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
-                return new Vector2(0, manifold.Height * bottomDist > topDist ? 1 : -1);
+                return new Vector2(0, bottomDist > topDist ? 1 : -1);
             }
+        }
+
+        public float CalculatePenetration(ICollidableComponent target, ICollidableComponent source)
+        {
+            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            if (manifold.IsEmpty()) return 0.0f;
+            return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
         }
 
         // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
@@ -81,7 +88,9 @@ namespace Robust.Shared.Physics
             if (aP == null && bP == null) return Vector2.Zero;
             var restitution = 0.01f;
             var normal = CalculateNormal(manifold.A, manifold.B);
-            var rV = aP != null? bP != null ?  bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity : bP.LinearVelocity;
+            var rV = aP != null
+                ? bP != null ? bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity
+                : bP.LinearVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)
@@ -90,37 +99,10 @@ namespace Robust.Shared.Physics
             }
 
             var impulse = -(1.0f + restitution) * vAlongNormal;
-            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 0.0f) + (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 0.0f);
+            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 0.0f) +
+                       (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 0.0f);
             return manifold.Normal * impulse;
         }
-
-        public ICollection<Vector2> SolveGroup(AxisCollisionGroup group)
-        {
-            Func<Manifold, bool> constraint = x => Vector2.Dot(x.RelativeVelocity, x.Normal) >= 0;
-
-            Func<AxisCollisionGroup, IEnumerable<Manifold>> collisionsToSolve = g => g.Collisions.Where(x => !constraint(x));
-
-            foreach (var collision in collisionsToSolve(group))
-            {
-                // TODO: Implement
-            }
-
-            return new List<Vector2>();
-        }
-
-
-        /// <summary>
-        ///     Calculates how much a certain impulse applied to 'a' will affect the impulse of 'b'
-        /// </summary>
-        /// <param name="aPhysics"></param>
-        /// <param name="bPhysics"></param>
-        /// <param name="impulse"></param>
-        /// <returns></returns>
-        //private Vector2 CalculateCollisionInfluence(SharedPhysicsComponent aPhysics, SharedPhysicsComponent bPhysics,
-        //    Vector2 impulse)
-        //{
-
-        //}
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {

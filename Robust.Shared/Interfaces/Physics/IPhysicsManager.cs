@@ -71,13 +71,9 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source);
 
+        float CalculatePenetration(ICollidableComponent target, ICollidableComponent source);
 
-        /// <summary>
-        ///     Calculates impulses for a given collision group.
-        /// </summary>
-        /// <param name="group"></param>
-        /// <returns>A list of impulse vectors to apply to each object</returns>
-        public ICollection<Vector2> SolveGroup(AxisCollisionGroup group);
+        Vector2 SolveCollisionImpulse(Manifold manifold);
 
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
@@ -119,59 +115,6 @@ namespace Robust.Shared.Interfaces.Physics
         public float MaxLength { get; }
     }
 
-    /// <summary>
-    ///     Stores information about a group of collisions acting along the same axis, all of which are connected in some way
-    /// </summary>
-    public struct AxisCollisionGroup
-    {
-        private Vector2 _normal;
-        public List<Manifold> Collisions;
-
-        public AxisCollisionGroup(Manifold initalManifold)
-        {
-            _normal = initalManifold.Normal;
-            Collisions = new List<Manifold> { initalManifold };
-        }
-
-        public bool TryAddCollision(Manifold manifold)
-        {
-            if (Vector2.Dot(_normal, manifold.Normal) == 0.0f) return false;
-            foreach (var m in Collisions)
-            {
-                if (m.A == manifold.A || m.B == manifold.B)
-                {
-                    Add(manifold);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public IEnumerable<Manifold> GetUnresolved()
-        {
-            var unresolvedExist = false;
-            do
-            {
-                unresolvedExist = false;
-                foreach (var collision in Collisions)
-                {
-                    if (Vector2.Dot(collision.RelativeVelocity, collision.Normal) < 0)
-                    {
-                        unresolvedExist = true;
-                        yield return collision;
-                    }
-                }
-            } while (unresolvedExist);
-        }
-
-        private void Add(Manifold manifold)
-        {
-            Collisions.Add(manifold);
-            Collisions.Sort((a, b) => -a.RelativeVelocity.Length.CompareTo(b.RelativeVelocity.Length));
-        }
-    }
-
     public struct Manifold
     {
         public Vector2 RelativeVelocity
@@ -206,11 +149,17 @@ namespace Robust.Shared.Interfaces.Physics
         [CanBeNull] public SharedPhysicsComponent APhysics;
         [CanBeNull] public SharedPhysicsComponent BPhysics;
 
+        public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
+        public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
+
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
+
         public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics)
         {
+            var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;
             this.B = B;
-            Normal = IoCManager.Resolve<IPhysicsManager>().CalculateNormal(A, B);
+            Normal = physicsManager.CalculateNormal(A, B);
             APhysics = aPhysics;
             BPhysics = bPhysics;
         }

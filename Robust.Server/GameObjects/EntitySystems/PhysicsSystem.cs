@@ -12,8 +12,10 @@ using Robust.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Log;
 using Robust.Shared.Physics;
+using Robust.Shared.Random;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -25,11 +27,12 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
         [Dependency] private readonly IPhysicsManager _physicsManager;
+        [Dependency] private readonly IRobustRandom _random;
 #pragma warning restore 649
 
         private const float Epsilon = 1.0e-6f;
 
-        private Dictionary<EntityUid, Vector2> _impulseCache = new Dictionary<EntityUid, Vector2>();
+        private List<Manifold> _collisionCache = new List<Manifold>();
 
         public PhysicsSystem()
         {
@@ -39,20 +42,14 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            SimulateWorld(frameTime, RelevantEntities.ToList());
+            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted).ToList());
         }
 
         private void SimulateWorld(float frameTime, ICollection<IEntity> entities)
         {
-
             // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
             {
-                if (entity.Deleted)
-                {
-                    continue;
-                }
-
                 if (_pauseManager.IsEntityPaused(entity))
                 {
                     continue;
@@ -64,26 +61,27 @@ namespace Robust.Server.GameObjects.EntitySystems
             // Calculate collisions and store them in the cache
             ProcessCollisions();
 
-            foreach (var entity in entities)
-            {
-                if (entity.Deleted)
-                {
-                    continue;
-                }
+            const float solveIterations = 4.0f;
 
-                UpdatePosition(entity, frameTime);
+            for (var i = 0; i < solveIterations; i++)
+            {
+                foreach (var entity in entities)
+                {
+                    UpdatePosition(entity, frameTime / solveIterations);
+                }
+                FixClipping(_collisionCache);
             }
         }
 
         // Runs collision behavior and updates cache
         private void ProcessCollisions()
         {
-            _impulseCache.Clear();
+            _collisionCache.Clear();
             //var collisionsWith = new Dictionary<ICollideBehavior, int>();
-            var collisionGroups = new List<AxisCollisionGroup>();
             var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
             var combinations = new List<(EntityUid, EntityUid)>();
-            foreach (var entity in RelevantEntities)
+            var entities = RelevantEntities.ToList();
+            foreach (var entity in entities)
             {
                 if (entity.Deleted) continue;
                 if (entity.TryGetComponent<CollidableComponent>(out var a))
@@ -96,44 +94,67 @@ namespace Robust.Server.GameObjects.EntitySystems
                         if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
                         {
                             physicsComponents[a] = aPhysics;
-                        }
-                        if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                        {
-                            physicsComponents[b] = bPhysics;
-                        }
-
-                        var manifold = new Manifold(a, b, physicsComponents.ContainsKey(a) ? physicsComponents[a] : null, physicsComponents.ContainsKey(b) ? physicsComponents[b] : null);
-                        if (manifold.Normal == Vector2.Zero) continue;
-                        var inCollisionGroup = false;
-
-                        for (var i = 0; i < collisionGroups.Count; i++)
-                        {
-                            if (collisionGroups[i].TryAddCollision(manifold))
+                            if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
                             {
-                                inCollisionGroup = true;
-                                break;
+                                physicsComponents[b] = bPhysics;
+                                _collisionCache.Add(new Manifold(a, b, aPhysics, bPhysics));
+                            }
+                            else
+                            {
+                                _collisionCache.Add(new Manifold(a, b, aPhysics, null));
                             }
                         }
-
-                        if (!inCollisionGroup)
+                        else if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
                         {
-                            collisionGroups.Add(new AxisCollisionGroup(manifold));
+                            _collisionCache.Add(new Manifold(a, b, null, bPhysics));
                         }
                     }
                 }
             }
 
-            foreach (var group in collisionGroups)
+            var counter = 0;
+
+            while(GetNextCollision(_collisionCache, counter, out var collision))
             {
-                _physicsManager.SolveGroup(group);
+                counter++;
+                var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                if (physicsComponents.ContainsKey(collision.A))
+                {
+                    physicsComponents[collision.A].Momentum -= impulse;
+                }
+
+                if (physicsComponents.ContainsKey(collision.B))
+                {
+                    physicsComponents[collision.B].Momentum += impulse;
+                }
+            }
+        }
+
+        private bool GetNextCollision(List<Manifold> collisions, int counter, out Manifold collision)
+        {
+            // The +1000 is completely arbitrary
+            if (counter > collisions.Count + 1000)
+            {
+                collision = collisions[0];
+                return false;
+            }
+            var indexes = new List<int>();
+            for (int i = 0; i < collisions.Count; i++)
+            {
+                indexes.Add(i);
+            }
+            _random.Shuffle(indexes);
+            foreach (var index in indexes)
+            {
+                if (collisions[index].Unresolved)
+                {
+                    collision = collisions[index];
+                    return true;
+                }
             }
 
-            /*
-            foreach (var collisionCountPair in collisionsWith)
-            {
-                collisionCountPair.Key.PostCollide(collisionCountPair.Value);
-            }
-            */
+            collision = collisions[0];
+            return false;
         }
 
         private void ResolveImpulse(IEntity entity, float frameTime)
@@ -161,30 +182,25 @@ namespace Robust.Server.GameObjects.EntitySystems
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.Anchored || (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon)) return;
 
-            const float solveIterations = 4.0f;
-
-            for (var _ = 0.0f; _ < solveIterations; _++)
-            {
-                physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime / solveIterations;
-                physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime / solveIterations;
-            }
+            physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime;
         }
 
-        private void FixClipping(PhysicsComponent physics)
+        // Based off of Randy Gaul's ImpulseEngine code
+        private void FixClipping(List<Manifold> collisions)
         {
-            if (physics.Owner.TryGetComponent<CollidableComponent>(out var collider))
+            const float allowance = 0.05f;
+            const float percent = 0.4f;
+            foreach (var collision in collisions)
             {
-                var entities = collider.GetCollidingEntities(Vector2.Zero).ToList();
-                if (!entities.Any()) return;
-                foreach (var clippingCollider in entities.Select(e => e.GetComponent<CollidableComponent>()))
+                var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
+                if (penetration > allowance)
                 {
-                    var normal = -_physicsManager.CalculateNormal(collider, clippingCollider);
-                    var iterations = 2;
-                    while (PhysicsManager.CollidesOnMask(collider, clippingCollider) && iterations > 0)
-                    {
-                        iterations--;
-                        collider.Owner.Transform.WorldPosition += normal * 0.005f;
-                    }
+                    var correction = collision.Normal * Math.Abs(penetration) * percent;
+                    if (collision.APhysics != null)
+                        collision.APhysics.Owner.Transform.WorldPosition -= correction;
+                    if (collision.BPhysics != null)
+                        collision.BPhysics.Owner.Transform.WorldPosition += correction;
                 }
             }
         }

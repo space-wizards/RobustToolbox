@@ -33,12 +33,12 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     This is a collection of notes currently being played.
         /// </summary>
-        IReadOnlyCollection<int> NotesPlaying { get; }
+        IReadOnlyCollection<ValueTuple<byte, byte>> NotesPlaying { get; }
 
         /// <summary>
         ///     The midi program (instrument) the renderer is using.
         /// </summary>
-        int MidiProgram { get; set; }
+        byte MidiProgram { get; set; }
 
         /// <summary>
         ///     The current status of the renderer.
@@ -52,6 +52,11 @@ namespace Robust.Client.Audio.Midi
         ///     Whether the sound will play in stereo or mono.
         /// </summary>
         bool Mono { get; set; }
+
+        /// <summary>
+        ///     Whether to drop messages on the percussion channel.
+        /// </summary>
+        public bool DisablePercussionChannel { get; set; }
 
         /// <summary>
         ///     Start listening for midi input.
@@ -142,17 +147,17 @@ namespace Robust.Client.Audio.Midi
         private Synth _synth;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
-        private readonly List<int> _notesPlaying = new List<int>();
-        private int _midiprogram = 1;
+        private readonly List<ValueTuple<byte, byte>> _notesPlaying = new List<ValueTuple<byte, byte>>();
+        private byte _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new object();
         public IClydeBufferedAudioSource Source { get; set; }
-        public IReadOnlyCollection<int> NotesPlaying => _notesPlaying;
+        public IReadOnlyCollection<ValueTuple<byte, byte>> NotesPlaying => _notesPlaying;
         public bool Disposed { get; private set; } = false;
 
-        public int MidiProgram
+        public byte MidiProgram
         {
             get => _midiprogram;
             set
@@ -164,6 +169,8 @@ namespace Robust.Client.Audio.Midi
                 _midiprogram = value;
             }
         }
+
+        public bool DisablePercussionChannel { get; set; } = true;
 
         public bool Mono { get; set; }
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
@@ -201,6 +208,9 @@ namespace Robust.Client.Audio.Midi
 
         public bool OpenInput()
         {
+            if (Disposed)
+                return false;
+
             if (Status != MidiRendererStatus.File) CloseMidi();
             Status = MidiRendererStatus.Input;
             StopAllNotes();
@@ -216,6 +226,9 @@ namespace Robust.Client.Audio.Midi
 
         public bool OpenMidi(ReadOnlySpan<byte> buffer)
         {
+            if (Disposed)
+                return false;
+
             if (Status == MidiRendererStatus.Input) CloseInput();
             Status = MidiRendererStatus.File;
             StopAllNotes();
@@ -270,10 +283,11 @@ namespace Robust.Client.Audio.Midi
 
         public void StopAllNotes()
         {
-            foreach (var note in _notesPlaying.ToArray())
-            {
-                SendMidiEvent(new Shared.Audio.Midi.MidiEvent() {Type = 128, Key = note});
-            }
+            lock(_notesPlaying)
+                foreach (var (channel, key) in _notesPlaying.ToArray())
+                {
+                    SendMidiEvent(new Shared.Audio.Midi.MidiEvent() {Type = 128, Key = key, Channel = channel});
+                }
         }
 
         public void LoadSoundfont(string filename, bool resetPresets = false)
@@ -353,7 +367,7 @@ namespace Robust.Client.Audio.Midi
 
             lock (_playerStateLock)
             {
-                if (Status == MidiRendererStatus.File && _player.Status == FluidPlayerStatus.Done)
+                if (Status == MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Done)
                 {
                     _taskManager.RunOnMainThread(() => OnMidiPlayerFinished?.Invoke());
                     CloseMidi();
@@ -365,20 +379,27 @@ namespace Robust.Client.Audio.Midi
 
         private int MidiPlayerEventHandler(MidiEvent midiEvent)
         {
-            if (Status != MidiRendererStatus.File) return 0;
+            if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing) return 0;
             SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
 
         private int MidiDriverEventHandler(MidiEvent midiEvent)
         {
-            if (Status != MidiRendererStatus.Input) return 0;
+            if (Disposed || Status != MidiRendererStatus.Input) return 0;
             SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
             return 0;
         }
 
         public void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent)
         {
+            if (Disposed) return;
+
+            _midiSawmill.Info($"MIDI EVENT: T:{midiEvent.Type} K:{midiEvent.Key} V:{midiEvent.Velocity} C:{midiEvent.Channel} VA:{midiEvent.Value} P:{midiEvent.Pitch} CO:{midiEvent.Control}");
+
+            if (DisablePercussionChannel && midiEvent.Channel == 9)
+                return;
+
             // We play every note on channel 0 to prevent a bug where some notes didn't get turned off correctly.
             const int ch = 0;
 
@@ -396,18 +417,26 @@ namespace Robust.Client.Audio.Midi
                             return;
 
                         lock (_playerStateLock)
-                            _synth.NoteOn(ch, midiEvent.Key, midiEvent.Velocity);
-                        if (!_notesPlaying.Contains(midiEvent.Key))
-                            _notesPlaying.Add(midiEvent.Key);
+                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
+                        if (!_notesPlaying.Contains((midiEvent.Channel, midiEvent.Key)))
+                            _notesPlaying.Add((midiEvent.Channel, midiEvent.Key));
                     }
-                    else
+                    else if (midiEvent.Type == 128 || (midiEvent.Type == 144 && midiEvent.Velocity == 0))
                     {
-                        if (_notesPlaying.Contains(midiEvent.Key))
+                        if (_notesPlaying.Contains((midiEvent.Channel, midiEvent.Key)))
                         {
                             lock (_playerStateLock)
-                                _synth.NoteOff(ch, midiEvent.Key);
-                            _notesPlaying.Remove(midiEvent.Key);
+                                _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
+                            _notesPlaying.Remove((midiEvent.Channel, midiEvent.Key));
                         }
+                    } else if (midiEvent.Type == 224)
+                    {
+                        lock (_playerStateLock)
+                            _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
+                    } else if (midiEvent.Type == 176)
+                    {
+                        lock(_playerStateLock)
+                            _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
                     }
                 }
             }

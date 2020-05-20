@@ -121,7 +121,7 @@ namespace Robust.Client.Audio.Midi
                 _settings["player.timing-source"].StringValue = "sample";
                 _settings["synth.lock-memory"].IntValue = 0;
                 _settings["synth.threadsafe-api"].IntValue = 1;
-                _settings["synth.gain"].DoubleValue = 0.5d;
+                _settings["synth.gain"].DoubleValue = 1.0d;
                 _settings["audio.driver"].StringValue = "file";
                 _settings["midi.autoconnect"].IntValue = 1;
                 _settings["player.reset-synth"].IntValue = 0;

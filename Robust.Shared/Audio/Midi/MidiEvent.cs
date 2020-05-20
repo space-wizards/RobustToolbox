@@ -8,36 +8,36 @@ namespace Robust.Shared.Audio.Midi
     ///     It's 'compatible' with NFluidsynth's own MidiEvent class.
     /// </summary>
     [Serializable, NetSerializable]
-    public class MidiEvent
+    public struct MidiEvent
     {
-        public int Type { get; set; }
+        public byte Type { get; set; }
 
-        public int Channel { get; set; }
+        public byte Channel { get; set; }
 
-        public int Key { get; set; }
+        public byte Key { get; set; }
 
-        public int Velocity { get; set; }
+        public byte Velocity { get; set; }
 
-        public int Control { get; set; }
+        public byte Control { get; set; }
 
-        public int Value { get; set; }
+        public byte Value { get; set; }
 
-        public int Program { get; set; }
+        public byte Program { get; set; }
 
-        public int Pitch { get; set; }
+        public short Pitch { get; set; }
 
         public static explicit operator MidiEvent(NFluidsynth.MidiEvent midiEvent)
         {
             return new MidiEvent()
             {
-                Type = midiEvent.Type,
-                Channel = midiEvent.Channel,
-                Control = midiEvent.Control,
-                Key = midiEvent.Key,
-                Pitch = midiEvent.Pitch,
-                Program = midiEvent.Program,
-                Value = midiEvent.Value,
-                Velocity = midiEvent.Velocity,
+                Type = (byte)midiEvent.Type,
+                Channel = (byte)midiEvent.Channel,
+                Control = (byte) midiEvent.Control,
+                Key = (byte) midiEvent.Key,
+                Pitch = (short) midiEvent.Pitch,
+                Program = (byte) midiEvent.Program,
+                Value = (byte) midiEvent.Value,
+                Velocity = (byte)midiEvent.Velocity,
             };
         }
 

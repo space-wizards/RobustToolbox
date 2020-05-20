@@ -223,14 +223,17 @@ namespace Robust.Client.UserInterface
             var control = MouseGetControl(pointerPosition);
 
             // If we have a modal open and the mouse down was outside it, close said modal.
-            if (_modalStack.Count != 0)
+            while (_modalStack.Count != 0)
             {
                 var top = _modalStack[^1];
                 var offset = pointerPosition - top.GlobalPixelPosition;
                 if (!top.HasPoint(offset / UIScale))
                 {
                     RemoveModal(top);
-                    return true; // TODO: Does this make sense?
+                }
+                else
+                {
+                    break;
                 }
             }
 
@@ -253,6 +256,18 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindDown(BoundKeyEventArgs args)
         {
+            if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
+            {
+                while (_modalStack.Count > 0)
+                {
+                    var top = _modalStack[^1];
+                    RemoveModal(top);
+                }
+
+                args.Handle();
+                return;
+            }
+
             var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)

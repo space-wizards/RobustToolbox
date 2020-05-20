@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Appearance;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -95,7 +97,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<AppearanceSystem>()
+            EntitySystem.Get<AppearanceSystem>()
                 .EnqueueAppearanceUpdate(this);
             _appearanceDirty = true;
         }

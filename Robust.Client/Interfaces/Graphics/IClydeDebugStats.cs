@@ -24,5 +24,7 @@ namespace Robust.Client.Interfaces.Graphics
         ///     The amount of batches made.
         /// </summary>
         int LastBatches { get; }
+
+        (int vertices, int indices) LargestBatchSize { get; }
     }
 }

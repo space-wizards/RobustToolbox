@@ -32,11 +32,6 @@ namespace Robust.Client.Audio.Midi
         bool LoopMidi { get; set; }
 
         /// <summary>
-        ///     This is a collection of notes currently being played.
-        /// </summary>
-        IReadOnlyCollection<ValueTuple<byte, byte>> NotesPlaying { get; }
-
-        /// <summary>
         ///     The midi program (instrument) the renderer is using.
         /// </summary>
         byte MidiProgram { get; set; }
@@ -162,8 +157,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private ITaskManager _taskManager;
         [Dependency] private ILogManager _logger;
 #pragma warning restore 649
-
-        private const int NoteLimit = 15;
+        
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
@@ -178,7 +172,6 @@ namespace Robust.Client.Audio.Midi
         private Sequencer _sequencer;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
-        private readonly List<ValueTuple<byte, byte>> _notesPlaying = new List<ValueTuple<byte, byte>>();
         private byte _midiprogram = 1;
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
@@ -186,7 +179,6 @@ namespace Robust.Client.Audio.Midi
         private readonly object _playerStateLock = new object();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
-        public IReadOnlyCollection<ValueTuple<byte, byte>> NotesPlaying => _notesPlaying;
         public bool Disposed { get; private set; } = false;
 
         public byte MidiProgram
@@ -453,40 +445,15 @@ namespace Robust.Client.Audio.Midi
 
             try
             {
-                lock (_notesPlaying)
-                {
-                    // 144 = NoteOn, 128 = NoteOff.
-                    // NoteOn with 0 velocity is the same as NoteOff.
-                    // Any other midi event is also treated as a NoteOff.
+                lock(_playerStateLock)
                     if (midiEvent.Type == 144 && midiEvent.Velocity != 0)
-                    {
-                        // If we're at the limit of notes being played at once, we drop this one.
-                        if (_notesPlaying.Count >= NoteLimit)
-                            return;
-
-                        lock (_playerStateLock)
-                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
-                        if (!_notesPlaying.Contains((midiEvent.Channel, midiEvent.Key)))
-                            _notesPlaying.Add((midiEvent.Channel, midiEvent.Key));
-                    }
+                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
                     else if (midiEvent.Type == 128 || (midiEvent.Type == 144 && midiEvent.Velocity == 0))
-                    {
-                        if (_notesPlaying.Contains((midiEvent.Channel, midiEvent.Key)))
-                        {
-                            lock (_playerStateLock)
-                                _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                            _notesPlaying.Remove((midiEvent.Channel, midiEvent.Key));
-                        }
-                    } else if (midiEvent.Type == 224)
-                    {
-                        lock (_playerStateLock)
-                            _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
-                    } else if (midiEvent.Type == 176)
-                    {
-                        lock(_playerStateLock)
-                            _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
-                    }
-                }
+                        _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
+                    else if (midiEvent.Type == 224)
+                        _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
+                    else if (midiEvent.Type == 176)
+                        _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
             }
             catch (FluidSynthInteropException e)
             {

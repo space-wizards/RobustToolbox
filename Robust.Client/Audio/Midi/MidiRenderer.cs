@@ -10,6 +10,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Timers;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = NFluidsynth.MidiEvent;
@@ -56,7 +57,27 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Whether to drop messages on the percussion channel.
         /// </summary>
-        public bool DisablePercussionChannel { get; set; }
+        bool DisablePercussionChannel { get; set; }
+
+        /// <summary>
+        ///     Gets the total number of ticks possible for the MIDI player.
+        /// </summary>
+        int PlayerTotalTick { get; }
+
+        /// <summary>
+        ///     Gets the current tick of the MIDI player.
+        /// </summary>
+        int PlayerTick { get; }
+
+        /// <summary>
+        ///     Gets the current tick of the sequencer.
+        /// </summary>
+        uint SequencerTick { get; set; }
+
+        /// <summary>
+        ///     Gets or sets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
+        /// </summary>
+        double SequencerTimeScale { get; set; }
 
         /// <summary>
         ///     Start listening for midi input.
@@ -123,6 +144,15 @@ namespace Robust.Client.Audio.Midi
         /// </summary>
         /// <param name="midiEvent">The midi event to be played</param>
         void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent);
+
+        /// <summary>
+        ///     Schedule a MIDI event to be played at a later time.
+        /// </summary>
+        /// <remarks>Does NOT raise a <see cref="OnMidiEvent"/> as the event is sent directly to the <see cref="Synth"/> using a <see cref="Sequencer"/>.</remarks>
+        /// <param name="midiEvent">the midi event in question</param>
+        /// <param name="time"></param>
+        /// <param name="absolute"></param>
+        void ScheduleMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent, uint time, bool absolute);
     }
 
     public class MidiRenderer : IMidiRenderer
@@ -145,6 +175,7 @@ namespace Robust.Client.Audio.Midi
         // ReSharper disable once NotAccessedField.Local
         private readonly SoundFontLoader _soundFontLoader;
         private Synth _synth;
+        private Sequencer _sequencer;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
         private readonly List<ValueTuple<byte, byte>> _notesPlaying = new List<ValueTuple<byte, byte>>();
@@ -153,6 +184,7 @@ namespace Robust.Client.Audio.Midi
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new object();
+        private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         public IReadOnlyCollection<ValueTuple<byte, byte>> NotesPlaying => _notesPlaying;
         public bool Disposed { get; private set; } = false;
@@ -171,6 +203,21 @@ namespace Robust.Client.Audio.Midi
         }
 
         public bool DisablePercussionChannel { get; set; } = true;
+
+        public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
+        public int PlayerTick => _player?.CurrentTick ?? 0;
+
+        public uint SequencerTick
+        {
+            get => _sequencer?.Tick ?? 0;
+            set => _sequencer.Process(value);
+        }
+
+        public double SequencerTimeScale
+        {
+            get => _sequencer.TimeScale;
+            set => _sequencer.TimeScale = value;
+        }
 
         public bool Mono { get; set; }
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
@@ -200,6 +247,9 @@ namespace Robust.Client.Audio.Midi
             _settings = settings;
             _soundFontLoader = soundFontLoader;
             _synth = new Synth(_settings);
+            _sequencer = new Sequencer(false);
+            _synthRegister = _sequencer.RegisterFluidsynth(_synth);
+
             _synth.AddSoundFontLoader(soundFontLoader);
             Mono = mono;
             Source.EmptyBuffers();
@@ -283,11 +333,10 @@ namespace Robust.Client.Audio.Midi
 
         public void StopAllNotes()
         {
-            lock(_notesPlaying)
-                foreach (var (channel, key) in _notesPlaying.ToArray())
-                {
-                    SendMidiEvent(new Shared.Audio.Midi.MidiEvent() {Type = 128, Key = key, Channel = channel});
-                }
+            for (var i = 0; i < 16; i++)
+            {
+                _synth.AllNotesOff(i);
+            }
         }
 
         public void LoadSoundfont(string filename, bool resetPresets = false)
@@ -380,22 +429,26 @@ namespace Robust.Client.Audio.Midi
         private int MidiPlayerEventHandler(MidiEvent midiEvent)
         {
             if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing) return 0;
-            SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
+            var timestamp = SequencerTick;
+            var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
+            midiEv.Timestamp = timestamp;
+            SendMidiEvent(midiEv);
             return 0;
         }
 
         private int MidiDriverEventHandler(MidiEvent midiEvent)
         {
             if (Disposed || Status != MidiRendererStatus.Input) return 0;
-            SendMidiEvent((Shared.Audio.Midi.MidiEvent) midiEvent);
+            var timestamp = SequencerTick;
+            var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
+            midiEv.Timestamp = timestamp;
+            SendMidiEvent(midiEv);
             return 0;
         }
 
         public void SendMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent)
         {
             if (Disposed) return;
-
-            _midiSawmill.Info($"MIDI EVENT: T:{midiEvent.Type} K:{midiEvent.Key} V:{midiEvent.Velocity} C:{midiEvent.Channel} VA:{midiEvent.Value} P:{midiEvent.Pitch} CO:{midiEvent.Control}");
 
             if (DisablePercussionChannel && midiEvent.Channel == 9)
                 return;
@@ -448,6 +501,15 @@ namespace Robust.Client.Audio.Midi
             _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));
         }
 
+        public void ScheduleMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent, uint time, bool absolute = false)
+        {
+            if (Disposed) return;
+
+            var seqEv = (SequencerEvent) midiEvent;
+            seqEv.Dest = _synthRegister;
+            _sequencer.SendAt(seqEv, time, absolute);
+        }
+
         public void Dispose()
         {
             Disposed = true;
@@ -466,12 +528,14 @@ namespace Robust.Client.Audio.Midi
             _synth?.Dispose();
             _player?.Dispose();
             _driver?.Dispose();
+            _sequencer?.Dispose();
 
             _settings = null;
             Source = null;
             _synth = null;
             _player = null;
             _driver = null;
+            _sequencer = null;
         }
     }
 }

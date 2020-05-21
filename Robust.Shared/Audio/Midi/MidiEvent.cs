@@ -1,4 +1,5 @@
 using System;
+using NFluidsynth;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
@@ -26,22 +27,22 @@ namespace Robust.Shared.Audio.Midi
 
         public byte Program { get; set; }
 
-        public short Pitch { get; set; }
+        public byte Pitch { get; set; }
 
-        public TimeSpan Timestamp { get; set; }
+        public uint Timestamp { get; set; }
 
         public static explicit operator MidiEvent(NFluidsynth.MidiEvent midiEvent)
         {
             return new MidiEvent()
             {
-                Type = (byte)midiEvent.Type,
-                Channel = (byte)midiEvent.Channel,
+                Type = (byte) midiEvent.Type,
+                Channel = (byte) midiEvent.Channel,
                 Control = (byte) midiEvent.Control,
                 Key = (byte) midiEvent.Key,
-                Pitch = (short) midiEvent.Pitch,
+                Pitch = (byte) midiEvent.Pitch,
                 Program = (byte) midiEvent.Program,
                 Value = (byte) midiEvent.Value,
-                Velocity = (byte)midiEvent.Velocity,
+                Velocity = (byte) midiEvent.Velocity,
             };
         }
 
@@ -59,5 +60,41 @@ namespace Robust.Shared.Audio.Midi
                 Velocity = midiEvent.Velocity,
             };
         }
+
+        public static implicit operator NFluidsynth.SequencerEvent(MidiEvent midiEvent)
+        {
+            var @event = new NFluidsynth.SequencerEvent();
+
+            switch (midiEvent.Type)
+            {
+                // NoteOff
+                case 128:
+                    @event.NoteOff(midiEvent.Channel, midiEvent.Key);
+                    break;
+
+                // NoteOn
+                case 144:
+                    if(midiEvent.Velocity != 0)
+                        @event.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
+                    else
+                        @event.NoteOff(midiEvent.Channel, midiEvent.Key);
+                    break;
+
+                // CC
+                case 176:
+                    @event.ControlChange(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                    break;
+
+                // Pitch Bend
+                case 224:
+                    @event.PitchBend(midiEvent.Channel, midiEvent.Pitch);
+                    break;
+            }
+
+            return @event;
+        }
+
+
     }
 }
+

@@ -80,6 +80,8 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
             SearchBar.Clear();
+            BuildTileList("");
+            ClearButton.Disabled = true;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)

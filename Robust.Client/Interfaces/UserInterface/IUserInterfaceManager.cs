@@ -90,6 +90,9 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void FrameUpdate(FrameEventArgs args);
 
+        /// <returns>True if a UI control was hit and the key event should not pass through past UI.</returns>
+        bool HandleCanFocusDown(Vector2 pointerPosition);
+
         void KeyBindDown(BoundKeyEventArgs args);
 
         void KeyBindUp(BoundKeyEventArgs args);

@@ -277,6 +277,9 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindVertexArray(BatchVAO.Handle);
 
+            _debugStats.LargestBatchVertices = Math.Max(BatchVertexIndex, _debugStats.LargestBatchVertices);
+            _debugStats.LargestBatchIndices = Math.Max(BatchIndexIndex, _debugStats.LargestBatchIndices);
+
             if (BatchVertexIndex != 0)
             {
                 BatchVBO.Reallocate(new Span<Vertex2D>(BatchVertexData, 0, BatchVertexIndex));

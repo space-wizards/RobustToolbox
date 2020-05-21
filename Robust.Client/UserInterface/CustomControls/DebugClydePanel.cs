@@ -43,7 +43,7 @@ namespace Robust.Client.UserInterface.CustomControls
 Vendor: {info.Vendor}
 Version: {info.VersionString}
 Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
-Batches: {stats.LastBatches}";
+Batches: {stats.LastBatches} Max size: {stats.LargestBatchSize}";
         }
     }
 }

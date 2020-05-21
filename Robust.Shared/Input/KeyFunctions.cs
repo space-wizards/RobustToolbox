@@ -24,6 +24,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction Use = "Use";
         public static readonly BoundKeyFunction UIClick = "UIClick";
 
+        public static readonly BoundKeyFunction CloseModals = "CloseModals";
         public static readonly BoundKeyFunction ShowDebugConsole = "ShowDebugConsole";
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";
         public static readonly BoundKeyFunction HideUI = "HideUI";

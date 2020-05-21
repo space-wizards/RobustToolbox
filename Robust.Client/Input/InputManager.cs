@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,6 +8,7 @@ using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
@@ -30,6 +32,7 @@ namespace Robust.Client.Input
 #pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceMan;
         [Dependency] private readonly IReflectionManager _reflectionManager;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal;
 #pragma warning restore 649
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
@@ -122,6 +125,9 @@ namespace Robust.Client.Input
 
             PackedKeyCombo matchedCombo = default;
 
+            var bindsDown = new List<KeyBinding>();
+            var hasCanFocus = false;
+
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
             {
@@ -138,13 +144,28 @@ namespace Robust.Client.Input
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        DownBind(binding);
+                        bindsDown.Add(binding);
+                        hasCanFocus |= binding.CanFocus;
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
                         // kill any lower level matches
                         UpBind(binding);
                     }
+                }
+            }
+
+            var uiOnly = false;
+            if (hasCanFocus)
+            {
+                uiOnly = _userInterfaceManagerInternal.HandleCanFocusDown(MouseScreenPosition);
+            }
+
+            foreach (var binding in bindsDown)
+            {
+                if (DownBind(binding, uiOnly, args.IsRepeat))
+                {
+                    break;
                 }
             }
         }
@@ -173,22 +194,28 @@ namespace Robust.Client.Input
             _keysPressed[(int) args.Key] = false;
         }
 
-        private bool DownBind(KeyBinding binding)
+        private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
         {
             if (binding.State == BoundKeyState.Down)
             {
+                if (isRepeat)
+                {
+                    if (binding.CanRepeat)
+                    {
+                        return SetBindState(binding, BoundKeyState.Down, uiOnly);
+                    }
+
+                    return true;
+                }
+
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
                     return SetBindState(binding, BoundKeyState.Up);
                 }
-                else if (binding.CanRepeat)
-                {
-                    return SetBindState(binding, BoundKeyState.Down);
-                }
             }
             else
             {
-                return SetBindState(binding, BoundKeyState.Down);
+                return SetBindState(binding, BoundKeyState.Down, uiOnly);
             }
 
             return false;
@@ -204,7 +231,7 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private bool SetBindState(KeyBinding binding, BoundKeyState state)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly=false)
         {
             binding.State = state;
 
@@ -212,7 +239,7 @@ namespace Robust.Client.Input
                 new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (state == BoundKeyState.Up || !eventArgs.Handled)
+            if (state == BoundKeyState.Up || !eventArgs.Handled && !uiOnly)
             {
                 var cmd = GetInputCommand(binding.Function);
                 // TODO: Allow input commands to still get forwarded to server if necessary.
@@ -233,7 +260,7 @@ namespace Robust.Client.Input
                 }
             }
 
-            return (eventArgs.Handled);
+            return eventArgs.Handled;
         }
 
         private bool PackedMatchesPressedState(PackedKeyCombo packed)
@@ -328,9 +355,16 @@ namespace Robust.Client.Input
                     mod3 = mod3Name.AsEnum<Key>();
                 }
 
+                var priority = 0;
+                if (keyMapping.TryGetNode("priority", out var priorityValue))
+                {
+                    priority = priorityValue.AsInt();
+                }
+
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(this, function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
+                var binding = new KeyBinding(this, function, type, key, canFocus, canRepeat, priority, mod1, mod2,
+                    mod3);
                 RegisterBinding(binding);
             }
         }
@@ -340,18 +374,22 @@ namespace Robust.Client.Input
             Key baseKey, Key? mod1, Key? mod2, Key? mod3)
         {
             var binding = new KeyBinding(this, function, bindingType, baseKey, false, false,
-                mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+                0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
 
             RegisterBinding(binding);
         }
 
         private void RegisterBinding(KeyBinding binding)
         {
-            _bindings.Add(binding);
+            // we sort larger combos first so they take priority over smaller (single key) combos,
+            // so they get processed first in KeyDown and such.
+            var pos = _bindings.BinarySearch(binding, KeyBinding.ProcessPriorityComparer);
+            if (pos < 0)
+            {
+                pos = ~pos;
+            }
 
-            // reversed a,b for descending order
-            // we sort larger combos first so they take priority over smaller (single key) combos
-            _bindings.Sort((a, b) => b.PackedKeyCombo.Packed.CompareTo(a.PackedKeyCombo.Packed));
+            _bindings.Insert(pos, binding);
         }
 
         /// <inheritdoc />
@@ -389,6 +427,7 @@ namespace Robust.Client.Input
             _commands[function] = cmdHandler;
         }
 
+        [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]
         private class KeyBinding : IKeyBinding
         {
             private readonly InputManager _inputManager;
@@ -408,10 +447,12 @@ namespace Robust.Client.Input
             /// </summary>
             public bool CanRepeat { get; internal set; }
 
+            public int Priority { get; internal set; }
+
             public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
                 Key baseKey,
-                bool canFocus, bool canRepeat, Key mod1 = Key.Unknown,
+                bool canFocus, bool canRepeat, int priority, Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
             {
@@ -419,6 +460,7 @@ namespace Robust.Client.Input
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
+                Priority = priority;
                 _inputManager = inputManager;
 
                 PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);
@@ -449,6 +491,21 @@ namespace Robust.Client.Input
 
                 return sb.ToString();
             }
+
+            private sealed class ProcessPriorityRelationalComparer : IComparer<KeyBinding>
+            {
+                public int Compare(KeyBinding x, KeyBinding y)
+                {
+                    if (ReferenceEquals(x, y)) return 0;
+                    if (ReferenceEquals(null, y)) return 1;
+                    if (ReferenceEquals(null, x)) return -1;
+                    var cmp = y.PackedKeyCombo.Packed.CompareTo(x.PackedKeyCombo.Packed);
+                    // Higher priority is first in the list so gets to go first.
+                    return cmp != 0 ? cmp : y.Priority.CompareTo(x.Priority);
+                }
+            }
+
+            public static IComparer<KeyBinding> ProcessPriorityComparer { get; } = new ProcessPriorityRelationalComparer();
         }
 
         [StructLayout(LayoutKind.Explicit)]

@@ -17,6 +17,7 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.Use);
             common.AddFunction(EngineKeyFunctions.UIClick);
 
+            common.AddFunction(EngineKeyFunctions.CloseModals);
             common.AddFunction(EngineKeyFunctions.EscapeMenu);
             common.AddFunction(EngineKeyFunctions.HideUI);
             common.AddFunction(EngineKeyFunctions.ShowDebugConsole);

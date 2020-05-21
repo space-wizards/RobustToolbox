@@ -18,6 +18,7 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -217,41 +218,57 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        public bool HandleCanFocusDown(Vector2 pointerPosition)
+        {
+            var control = MouseGetControl(pointerPosition);
+
+            // If we have a modal open and the mouse down was outside it, close said modal.
+            while (_modalStack.Count != 0)
+            {
+                var top = _modalStack[^1];
+                var offset = pointerPosition - top.GlobalPixelPosition;
+                if (!top.HasPoint(offset / UIScale))
+                {
+                    RemoveModal(top);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            ReleaseKeyboardFocus();
+
+            if (control == null)
+            {
+                return false;
+            }
+
+            _controlFocused = control;
+
+            if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
+            {
+                _controlFocused.GrabKeyboardFocus();
+            }
+
+            return true;
+        }
+
         public void KeyBindDown(BoundKeyEventArgs args)
         {
-            var control = MouseGetControl(args.PointerLocation.Position);
-            if (args.CanFocus)
+            if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
             {
-                // If we have a modal open and the mouse down was outside it, close said modal.
-                if (_modalStack.Count != 0)
+                while (_modalStack.Count > 0)
                 {
-                    var top = _modalStack[_modalStack.Count - 1];
-                    var offset = args.PointerLocation.Position - top.GlobalPixelPosition;
-                    if (!top.HasPoint(offset / UIScale))
-                    {
-                        RemoveModal(top);
-                        return;
-                    }
+                    var top = _modalStack[^1];
+                    RemoveModal(top);
                 }
 
-                ReleaseKeyboardFocus();
-
-                if (control == null)
-                {
-                    return;
-                }
-
-                _controlFocused = control;
-
-                if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
-                {
-                    _controlFocused.GrabKeyboardFocus();
-                }
+                args.Handle();
+                return;
             }
-            else if (KeyboardFocused != null)
-            {
-                control = KeyboardFocused;
-            }
+
+            var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {
@@ -264,7 +281,7 @@ namespace Robust.Client.UserInterface
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
 
-            if (args.CanFocus || guiArgs.Handled)
+            if (guiArgs.Handled)
             {
                 args.Handle();
             }

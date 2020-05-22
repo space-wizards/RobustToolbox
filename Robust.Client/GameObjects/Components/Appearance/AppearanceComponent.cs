@@ -127,6 +127,8 @@ namespace Robust.Client.GameObjects
             {
                 visual.InitializeEntity(Owner);
             }
+
+            MarkDirty();
         }
 
         class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer

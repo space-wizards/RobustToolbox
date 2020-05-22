@@ -177,7 +177,7 @@ namespace Robust.Server.Scripting
                 }
                 else
                 {
-                    instance.State = await newScript.RunAsync(instance.Globals);
+                    instance.State = await newScript.RunAsync(instance.Globals, _ => true);
                 }
             }
             catch (CompilationErrorException e)

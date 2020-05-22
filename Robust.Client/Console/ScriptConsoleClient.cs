@@ -119,7 +119,7 @@ namespace Robust.Client.Console
                 }
                 else
                 {
-                    _state = await newScript.RunAsync(_globals);
+                    _state = await newScript.RunAsync(_globals, _ => true);
                 }
             }
             catch (CompilationErrorException e)

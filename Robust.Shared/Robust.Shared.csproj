@@ -17,7 +17,7 @@
     <PackageReference Include="NetSerializer" Version="4.1.1" />
     <PackageReference Include="Nett" Version="0.13.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="nfluidsynth" Version="0.2.5" />
+    <PackageReference Include="nfluidsynth" Version="0.3.0" />
     <PackageReference Include="NGettext" Version="0.6.5" />
     <PackageReference Include="Pidgin" Version="2.2.0" />
     <PackageReference Include="SharpZipLib" Version="1.2.0" />

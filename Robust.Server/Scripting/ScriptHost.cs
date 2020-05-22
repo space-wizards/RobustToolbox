@@ -154,7 +154,7 @@ namespace Robust.Server.Scripting
             else
             {
                 var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
-                newScript = CSharpScript.Create(code, options, typeof(IScriptGlobals));
+                newScript = CSharpScript.Create(code, options, typeof(ScriptGlobals));
             }
 
             // Compile ahead of time so that we can do syntax highlighting correctly for the echo.
@@ -231,29 +231,21 @@ namespace Robust.Server.Scripting
 
             public ScriptInstance()
             {
-                Globals = new ScriptGlobals(this);
+                Globals = new ScriptGlobalsImpl(this);
             }
         }
 
-        private sealed class ScriptGlobals : IScriptGlobals
+        private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
             private readonly ScriptInstance _scriptInstance;
 
-            public ScriptGlobals(ScriptInstance scriptInstance)
+            public ScriptGlobalsImpl(ScriptInstance scriptInstance)
             {
                 _scriptInstance = scriptInstance;
                 IoCManager.InjectDependencies(this);
             }
 
-            [field: Dependency] public IEntityManager ent { get; } = default!;
-            [field: Dependency] public IComponentManager comp { get; } = default!;
-
-            public T res<T>()
-            {
-                return IoCManager.Resolve<T>();
-            }
-
-            public void write(object toString)
+            public override void write(object toString)
             {
                 if (_scriptInstance.RunningScript)
                 {
@@ -261,7 +253,7 @@ namespace Robust.Server.Scripting
                 }
             }
 
-            public void show(object obj)
+            public override void show(object obj)
             {
                 write(CSharpObjectFormatter.Instance.FormatObject(obj));
             }
@@ -270,13 +262,7 @@ namespace Robust.Server.Scripting
 
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     [PublicAPI]
-    public interface IScriptGlobals
+    public abstract class ScriptGlobals : ScriptGlobalsShared
     {
-        public IEntityManager ent { get; }
-        public IComponentManager comp { get; }
-
-        public T res<T>();
-        public void write(object toString);
-        public void show(object obj);
     }
 }

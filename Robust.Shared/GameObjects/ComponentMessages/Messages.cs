@@ -7,16 +7,6 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
-    [Serializable, NetSerializable]
-    public class BumpedEntMsg : ComponentMessage
-    {
-        public IEntity Entity { get; }
-
-        public BumpedEntMsg(IEntity entity)
-        {
-            Entity = entity;
-        }
-    }
 
     public class RelayMovementEntityMessage : ComponentMessage
     {

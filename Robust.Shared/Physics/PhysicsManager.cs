@@ -27,7 +27,7 @@ namespace Robust.Shared.Physics
         private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
         /// <summary>
-        ///     returns true if collider intersects a physBody under management. Does not trigger Bump.
+        ///     returns true if collider intersects a physBody under management.
         /// </summary>
         /// <param name="collider">Rectangle to check for collision</param>
         /// <param name="map">Map ID to filter</param>

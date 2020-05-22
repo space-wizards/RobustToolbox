@@ -32,7 +32,9 @@ namespace Robust.Shared.Scripting
             "Robust.Shared.IoC",
             "Robust.Shared.Maths",
             "Robust.Shared.GameObjects",
-            "Robust.Shared.Interfaces.GameObjects"
+            "Robust.Shared.Interfaces.GameObjects",
+            "Robust.Shared.Map",
+            "Robust.Shared.Prototypes"
         };
 
         static ScriptInstanceShared()

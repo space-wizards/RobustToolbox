@@ -60,6 +60,10 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void Clear();
         /// <summary>
+        ///     Reload all prototype types.
+        /// </summary>
+        void ReloadPrototypeTypes();
+        /// <summary>
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
         void Resync();
@@ -269,7 +273,7 @@ namespace Robust.Shared.Prototypes
             ReloadPrototypeTypes();
         }
 
-        private void ReloadPrototypeTypes()
+        public void ReloadPrototypeTypes()
         {
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())

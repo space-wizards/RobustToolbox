@@ -10,6 +10,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 
@@ -85,7 +86,6 @@ namespace Robust.Server.GameObjects.EntitySystems
                 foreach (var entity in entities)
                 {
                     UpdatePosition(entity, frameTime / solveIterations);
-                    //ProcessFriction(entity, frameTime);
                 }
                 FixClipping(_collisionCache);
             }
@@ -238,6 +238,13 @@ namespace Robust.Server.GameObjects.EntitySystems
             var physics = entity.GetComponent<PhysicsComponent>();
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.Anchored || physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
+
+            if (ContainerHelpers.IsInContainer(entity) && physics.LinearVelocity != Vector2.Zero)
+            {
+                entity.Transform.Parent.Owner.SendMessage(entity.Transform, new RelayMovementEntityMessage(entity));
+                // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
+                physics.LinearVelocity = Vector2.Zero;
+            }
 
             physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
             physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime;

@@ -30,6 +30,25 @@ namespace Robust.Shared.Random
             return list[index];
         }
 
+        /// <summary>Picks a random element from a collection.</summary>
+        /// <remarks>
+        ///     This is O(n).
+        /// </remarks>
+        public static T Pick<T>(this IRobustRandom random, IReadOnlyCollection<T> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new InvalidOperationException("This should be unreachable!");
+        }
+
         public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
         {
             var index = random.Next(list.Count);

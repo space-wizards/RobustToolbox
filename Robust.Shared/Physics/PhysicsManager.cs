@@ -99,8 +99,11 @@ namespace Robust.Shared.Physics
             }
 
             var impulse = -(1.0f + restitution) * vAlongNormal;
-            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 0.0f) +
-                       (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 0.0f);
+            // So why the 100.0f instead of 0.0f? Well, because the other object needs to have SOME mass value,
+            // or otherwise the physics object can actually sink in slightly to the physics-less object.
+            // (the 100.0f is equivalent to a mass of 0.01kg)
+            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 100.0f) +
+                       (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 100.0f);
             return manifold.Normal * impulse;
         }
 

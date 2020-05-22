@@ -471,8 +471,7 @@ namespace Robust.Shared.Map
                     gridComp.GridIndex = grid.Index;
 
                     var collideComp = newEnt.AddComponent<CollidableComponent>();
-                    collideComp.CollisionEnabled = true;
-                    collideComp.IsHardCollidable = true;
+                    collideComp.CanCollide = true;
                     collideComp.PhysicsShapes.Add(new PhysShapeGrid(grid));
 
                     newEnt.Transform.AttachParent(_entityManager.GetEntity(_mapEntities[currentMapID]));

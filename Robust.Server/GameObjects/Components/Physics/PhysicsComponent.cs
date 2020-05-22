@@ -1,11 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -16,11 +14,13 @@ namespace Robust.Server.GameObjects
     ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
     ///     the BoundingBoxComponent behavior of making the entity static.
     /// </summary>
-    public class PhysicsComponent : Component, ICollideSpecial
+    public class PhysicsComponent : SharedPhysicsComponent
     {
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
+        private VirtualController _controller = null;
+        private BodyStatus _status;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -32,7 +32,7 @@ namespace Robust.Server.GameObjects
         ///     Current mass of the entity in kilograms.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float Mass
+        public override float Mass
         {
             get => _mass;
             set
@@ -46,7 +46,7 @@ namespace Robust.Server.GameObjects
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LinearVelocity
+        public override Vector2 LinearVelocity
         {
             get => _linVelocity;
             set
@@ -63,7 +63,7 @@ namespace Robust.Server.GameObjects
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public float AngularVelocity
+        public override float AngularVelocity
         {
             get => _angVelocity;
             set
@@ -75,6 +75,41 @@ namespace Robust.Server.GameObjects
                 Dirty();
             }
         }
+
+        /// <summary>
+        ///     Current momentum of the entity in kilogram meters per second
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public override Vector2 Momentum
+        {
+            get => LinearVelocity * Mass;
+            set => LinearVelocity = value / Mass;
+        }
+
+        /// <summary>
+        ///     The current status of the object
+        /// </summary>
+        public override BodyStatus Status
+        {
+            get => _status;
+            set => _status = value;
+        }
+
+
+        /// <summary>
+        ///     Represents a virtual controller acting on the physics component.
+        /// </summary>
+        public override VirtualController Controller
+        {
+            get => _controller;
+        }
+
+        /// <summary>
+        ///     Whether this component is on the ground
+        /// </summary>
+        public override bool OnGround => Status == BodyStatus.OnGround &&
+                                         !IoCManager.Resolve<IPhysicsManager>()
+                                             .IsWeightless(Owner.Transform.GridPosition);
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
@@ -91,6 +126,11 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        public void SetController<T>() where T: VirtualController, new()
+        {
+            _controller = new T {ControlledComponent = this};
+        }
+
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
@@ -100,72 +140,20 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
             serializer.DataField(ref edgeSlide, "edgeslide", true);
-            serializer.DataField(ref _anchored, "Anchored", true);
+            serializer.DataField(ref _anchored, "Anchored", false);
+            serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
+            serializer.DataField(ref _controller, "Controller", null);
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, _linVelocity);
+            return new PhysicsComponentState(_mass, _linVelocity, _angVelocity);
         }
 
-        public override void HandleMessage(ComponentMessage message, IComponent component)
+        public void RemoveController()
         {
-            base.HandleMessage(message, component);
-
-            switch (message)
-            {
-                case BumpedEntMsg msg:
-                    if (Anchored)
-                    {
-                        return;
-                    }
-
-                    if (!msg.Entity.TryGetComponent(out PhysicsComponent physicsComponent))
-                    {
-                        return;
-                    }
-                    physicsComponent.AddVelocityConsumer(this);
-                    break;
-            }
+            _controller = null;
         }
-
-        private List<PhysicsComponent> VelocityConsumers { get; } = new List<PhysicsComponent>();
-
-        public List<PhysicsComponent> GetVelocityConsumers()
-        {
-            var result = new List<PhysicsComponent> { this };
-            foreach(var velocityConsumer in VelocityConsumers)
-            {
-                result.AddRange(velocityConsumer.GetVelocityConsumers());
-            }
-            return result;
-        }
-
-        private void AddVelocityConsumer(PhysicsComponent physicsComponent)
-        {
-            if (!physicsComponent.VelocityConsumers.Contains(this) && !VelocityConsumers.Contains(physicsComponent))
-            {
-                VelocityConsumers.Add(physicsComponent);
-            }
-        }
-
-        internal void ClearVelocityConsumers()
-        {
-            VelocityConsumers.ForEach(x => x.ClearVelocityConsumers());
-            VelocityConsumers.Clear();
-        }
-
-        public bool PreventCollide(IPhysBody collidedwith)
-        {
-            var velocityConsumers = GetVelocityConsumers();
-            if (velocityConsumers.Count == 1 || !collidedwith.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
-            {
-                return false;
-            }
-            return velocityConsumers.Contains(physicsComponent);
-        }
-
-        public bool DidMovementCalculations { get; set; } = false;
     }
 }

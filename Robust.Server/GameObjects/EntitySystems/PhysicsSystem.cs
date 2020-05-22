@@ -1,6 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
@@ -9,6 +9,10 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using System.Linq;
+using Robust.Shared.Containers;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Random;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -19,9 +23,13 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
         [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPhysicsManager _physicsManager;
+        [Dependency] private readonly IRobustRandom _random;
 #pragma warning restore 649
 
         private const float Epsilon = 1.0e-6f;
+
+        private List<Manifold> _collisionCache = new List<Manifold>();
 
         public PhysicsSystem()
         {
@@ -31,193 +39,247 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            // TODO: manifolds
-            var entities = EntityManager.GetEntities(EntityQuery);
-            SimulateWorld(frameTime, entities);
+            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e)).ToList());
         }
 
-        private void SimulateWorld(float frameTime, IEnumerable<IEntity> entities)
+        private void SimulateWorld(float frameTime, ICollection<IEntity> entities)
         {
-            // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
             {
-                if (entity.Deleted)
-                {
-                    continue;
-                }
+                var physics = entity.GetComponent<PhysicsComponent>();
 
-                if (_pauseManager.IsEntityPaused(entity))
-                {
-                    continue;
-                }
+                physics.Controller?.UpdateBeforeProcessing();
+            }
 
-                HandleMovement(_mapManager, _tileDefinitionManager, entity, frameTime);
+            // Calculate collisions and store them in the cache
+            ProcessCollisions();
+
+            // Remove all entities that were deleted during collision handling
+            foreach (var entity in entities.Where(e => e.Deleted).ToList())
+            {
+                entities.Remove(entity);
+            }
+
+            // Process frictional forces
+            foreach (var entity in entities)
+            {
+                ProcessFriction(entity, frameTime);
             }
 
             foreach (var entity in entities)
             {
-                if (entity.Deleted)
-                {
-                    continue;
-                }
+                var physics = entity.GetComponent<PhysicsComponent>();
 
-                DoMovement(entity, frameTime);
+                physics.Controller?.UpdateAfterProcessing();
+            }
+
+            // Remove all entities that were deleted due to the controller
+            foreach (var entity in entities.Where(e => e.Deleted).ToList())
+            {
+                entities.Remove(entity);
+            }
+
+            const float solveIterations = 3.0f;
+
+            for (var i = 0; i < solveIterations; i++)
+            {
+                foreach (var entity in entities)
+                {
+                    UpdatePosition(entity, frameTime / solveIterations);
+                }
+                FixClipping(_collisionCache);
             }
         }
 
-        private static void HandleMovement(IMapManager mapManager, ITileDefinitionManager tileDefinitionManager, IEntity entity, float frameTime)
+        // Runs collision behavior and updates cache
+        private void ProcessCollisions()
         {
-            if (entity.Deleted)
+            _collisionCache.Clear();
+            var collisionsWith = new Dictionary<ICollideBehavior, int>();
+            var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
+            var combinations = new List<(EntityUid, EntityUid)>();
+            var entities = RelevantEntities.ToList();
+            foreach (var entity in entities)
             {
-                // Ugh let's hope this fixes the crashes.
-                return;
-            }
-
-            var velocity = entity.GetComponent<PhysicsComponent>();
-            if (velocity.DidMovementCalculations)
-            {
-                velocity.DidMovementCalculations = false;
-                return;
-            }
-
-            if (velocity.AngularVelocity == 0 && velocity.LinearVelocity == Vector2.Zero)
-            {
-                return;
-            }
-
-            var transform = entity.Transform;
-            if (ContainerHelpers.IsInContainer(transform.Owner))
-            {
-                transform.Parent.Owner.SendMessage(transform, new RelayMovementEntityMessage(entity));
-                velocity.LinearVelocity = Vector2.Zero;
-                return;
-            }
-
-            var velocityConsumers = velocity.GetVelocityConsumers();
-            var initialMovement = velocity.LinearVelocity;
-            int velocityConsumerCount;
-            float totalMass;
-            Vector2 lowestMovement;
-            var tile =
-                mapManager.GetGrid(entity.Transform.GridID).GetTileRef(entity.Transform.GridPosition).Tile;
-            bool hasGravity = mapManager.GetGrid(entity.Transform.GridID).HasGravity && !tile.IsEmpty;
-            do
-            {
-                velocityConsumerCount = velocityConsumers.Count;
-                totalMass = 0;
-                lowestMovement = initialMovement;
-                var copy = new List<Vector2>(velocityConsumers.Count);
-                float totalFriction = 0;
-                foreach (var consumer in velocityConsumers)
+                if (entity.Deleted) continue;
+                if (entity.TryGetComponent<CollidableComponent>(out var a))
                 {
-                    var movement = lowestMovement;
-                    totalMass += consumer.Mass;
-                    if (hasGravity)
+                    foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
                     {
-                        totalFriction += GetFriction(tileDefinitionManager, mapManager, consumer.Owner);
-                        movement *= velocity.Mass / (totalMass != 0 ? totalMass + (totalMass * totalFriction) : 1);
+                        if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
+                            combinations.Contains((b.Owner.Uid, a.Owner.Uid))) continue;
+                        combinations.Add((a.Owner.Uid, b.Owner.Uid));
+                        if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+                        {
+                            physicsComponents[a] = aPhysics;
+                            if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                            {
+                                physicsComponents[b] = bPhysics;
+                                _collisionCache.Add(new Manifold(a, b, aPhysics, bPhysics));
+                            }
+                            else
+                            {
+                                _collisionCache.Add(new Manifold(a, b, aPhysics, null));
+                            }
+                        }
+                        else if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                        {
+                            _collisionCache.Add(new Manifold(a, b, null, bPhysics));
+                        }
                     }
-                    consumer.AngularVelocity = velocity.AngularVelocity;
-                    consumer.LinearVelocity = movement;
-                    copy.Add(CalculateMovement(tileDefinitionManager, mapManager, consumer, frameTime, consumer.Owner) / frameTime);
+                }
+            }
+
+            var counter = 0;
+
+            while(GetNextCollision(_collisionCache, counter, out var collision))
+            {
+                counter++;
+                var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                if (physicsComponents.ContainsKey(collision.A))
+                {
+                    physicsComponents[collision.A].Momentum -= impulse;
                 }
 
-                copy.Sort(LengthComparer);
-                lowestMovement = copy[0];
-                velocityConsumers = velocity.GetVelocityConsumers();
-            } while (velocityConsumers.Count != velocityConsumerCount);
-
-            velocity.ClearVelocityConsumers();
-
-            foreach (var consumer in velocityConsumers)
-            {
-                consumer.LinearVelocity = lowestMovement;
-                consumer.DidMovementCalculations = true;
-            }
-
-            velocity.DidMovementCalculations = false;
-        }
-
-        private static void DoMovement(IEntity entity, float frameTime)
-        {
-            // TODO: Terrible hack to fix bullets crashing the server.
-            // Should be handled with deferred physics events instead.
-            if (entity.Deleted)
-            {
-                return;
-            }
-
-            var velocity = entity.GetComponent<PhysicsComponent>();
-
-            if (velocity.LinearVelocity.LengthSquared < Epsilon && velocity.AngularVelocity < Epsilon)
-                return;
-
-            float angImpulse = 0;
-            if (velocity.AngularVelocity > Epsilon)
-            {
-                angImpulse = velocity.AngularVelocity * frameTime;
-            }
-
-            var transform = entity.Transform;
-            transform.LocalRotation += angImpulse;
-            transform.WorldPosition += velocity.LinearVelocity * frameTime;
-        }
-
-        private static Vector2 CalculateMovement(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, PhysicsComponent velocity, float frameTime, IEntity entity)
-        {
-            if (velocity.Deleted)
-            {
-                // Help crashes.
-                return default;
-            }
-
-            var movement = velocity.LinearVelocity * frameTime;
-            if (movement.LengthSquared <= Epsilon)
-            {
-                return Vector2.Zero;
-            }
-
-            //TODO This is terrible. This needs to calculate the manifold between the two objects.
-            //Check for collision
-            if (entity.TryGetComponent(out CollidableComponent collider))
-            {
-                var collided = collider.TryCollision(movement, true);
-
-                if (collided)
+                if (physicsComponents.ContainsKey(collision.B))
                 {
-                    if (velocity.EdgeSlide)
-                    {
-                        //Slide along the blockage in the non-blocked direction
-                        var xBlocked = collider.TryCollision(new Vector2(movement.X, 0));
-                        var yBlocked = collider.TryCollision(new Vector2(0, movement.Y));
+                    physicsComponents[collision.B].Momentum += impulse;
+                }
 
-                        movement = new Vector2(xBlocked ? 0 : movement.X, yBlocked ? 0 : movement.Y);
+                // Apply onCollide behavior
+                var aBehaviors = (collision.A as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                foreach (var behavior in aBehaviors)
+                {
+                    var entity = (collision.B as CollidableComponent).Owner;
+                    if (entity.Deleted) continue;
+                    behavior.CollideWith(entity);
+                    if (collisionsWith.ContainsKey(behavior))
+                    {
+                        collisionsWith[behavior] += 1;
                     }
                     else
                     {
-                        //Stop movement entirely at first blockage
-                        movement = new Vector2(0, 0);
+                        collisionsWith[behavior] = 1;
+                    }
+                }
+                var bBehaviors = (collision.B as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                foreach (var behavior in bBehaviors)
+                {
+                    var entity = (collision.A as CollidableComponent).Owner;
+                    if (entity.Deleted) continue;
+                    behavior.CollideWith(entity);
+                    if (collisionsWith.ContainsKey(behavior))
+                    {
+                        collisionsWith[behavior] += 1;
+                    }
+                    else
+                    {
+                        collisionsWith[behavior] = 1;
                     }
                 }
             }
 
-            return movement;
+            foreach (var behavior in collisionsWith.Keys)
+            {
+                behavior.PostCollide(collisionsWith[behavior]);
+            }
         }
 
-        private static float GetFriction(ITileDefinitionManager tileDefinitionManager, IMapManager mapManager, IEntity entity)
+        private bool GetNextCollision(List<Manifold> collisions, int counter, out Manifold collision)
         {
-            if (entity.TryGetComponent(out CollidableComponent collider) && collider.IsScrapingFloor)
+            // The *4 is completely arbitrary
+            if (counter > collisions.Count * 4)
+            {
+                collision = collisions[0];
+                return false;
+            }
+            var indexes = new List<int>();
+            for (int i = 0; i < collisions.Count; i++)
+            {
+                indexes.Add(i);
+            }
+            _random.Shuffle(indexes);
+            foreach (var index in indexes)
+            {
+                if (collisions[index].Unresolved)
+                {
+                    collision = collisions[index];
+                    return true;
+                }
+            }
+
+            collision = collisions[0];
+            return false;
+        }
+
+        private void ProcessFriction(IEntity entity, float frameTime)
+        {
+            // A constant that scales frictional force to work with the rest of the engine
+            const float frictionScalingConstant = 60.0f;
+
+            var physics = entity.GetComponent<PhysicsComponent>();
+
+            if (physics.LinearVelocity == Vector2.Zero) return;
+
+            // Calculate frictional force
+            var friction = GetFriction(entity) * frameTime * frictionScalingConstant;
+
+            // Clamp friction because friction can't make you accelerate backwards
+            friction = Math.Min(friction, physics.LinearVelocity.Length);
+
+            // No multiplication/division by mass here since that would be redundant.
+            var frictionVelocityChange = physics.LinearVelocity.Normalized * -friction;
+
+            physics.LinearVelocity += frictionVelocityChange;
+        }
+
+        private void UpdatePosition(IEntity entity, float frameTime)
+        {
+            var physics = entity.GetComponent<PhysicsComponent>();
+            physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
+            if (physics.Anchored || physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
+
+            if (ContainerHelpers.IsInContainer(entity) && physics.LinearVelocity != Vector2.Zero)
+            {
+                entity.Transform.Parent.Owner.SendMessage(entity.Transform, new RelayMovementEntityMessage(entity));
+                // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
+                physics.LinearVelocity = Vector2.Zero;
+            }
+
+            physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime;
+        }
+
+        // Based off of Randy Gaul's ImpulseEngine code
+        private void FixClipping(List<Manifold> collisions)
+        {
+            const float allowance = 0.05f;
+            const float percent = 0.4f;
+            foreach (var collision in collisions)
+            {
+                var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
+                if (penetration > allowance)
+                {
+                    var correction = collision.Normal * Math.Abs(penetration) * percent;
+                    if (collision.APhysics != null && !(collision.APhysics as PhysicsComponent).Anchored && !collision.APhysics.Deleted)
+                        collision.APhysics.Owner.Transform.WorldPosition -= correction;
+                    if (collision.BPhysics != null && !(collision.BPhysics as PhysicsComponent).Anchored && !collision.BPhysics.Deleted)
+                        collision.BPhysics.Owner.Transform.WorldPosition += correction;
+                }
+            }
+        }
+
+        private float GetFriction(IEntity entity)
+        {
+            if (entity.HasComponent<CollidableComponent>() && entity.TryGetComponent(out PhysicsComponent physics) && physics.OnGround)
             {
                 var location = entity.Transform;
-                var grid = mapManager.GetGrid(location.GridPosition.GridID);
+                var grid = _mapManager.GetGrid(location.GridPosition.GridID);
                 var tile = grid.GetTileRef(location.GridPosition);
-                var tileDef = tileDefinitionManager[tile.Tile.TypeId];
+                var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                 return tileDef.Friction;
             }
-            return 0;
+            return 0.0f;
         }
-
-        private static readonly IComparer<Vector2> LengthComparer =
-            Comparer<Vector2>.Create((a, b) => a.LengthSquared.CompareTo(b.LengthSquared));
     }
 }

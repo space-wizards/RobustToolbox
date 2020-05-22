@@ -262,8 +262,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var newPos = Parent.InvWorldMatrix.Transform(value);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
-                if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
-                    return;
+                //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
+                //    return;
 
                 if (_localPosition == newPos)
                     return;

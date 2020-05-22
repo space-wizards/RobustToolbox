@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
@@ -17,9 +18,8 @@ namespace Robust.Shared.GameObjects.Components
         [Dependency] private readonly IPhysicsManager _physicsManager;
 #pragma warning restore 649
 
-        private bool _collisionEnabled;
-        private bool _isHardCollidable;
-        private bool _isScrapingFloor;
+        private bool _canCollide;
+        private BodyStatus _status;
         private BodyType _bodyType;
         private List<IPhysShape> _physShapes = new List<IPhysShape>();
 
@@ -40,9 +40,8 @@ namespace Robust.Shared.GameObjects.Components
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _collisionEnabled, "on", true);
-            serializer.DataField(ref _isHardCollidable, "hard", true);
-            serializer.DataField(ref _isScrapingFloor, "IsScrapingFloor", false);
+            serializer.DataField(ref _canCollide, "on", true);
+            serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
         }
@@ -50,7 +49,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_collisionEnabled, _isHardCollidable, _isScrapingFloor, _physShapes);
+            return new CollidableComponentState(_canCollide, _status, _physShapes);
         }
 
         /// <inheritdoc />
@@ -61,9 +60,8 @@ namespace Robust.Shared.GameObjects.Components
 
             var newState = (CollidableComponentState)curState;
 
-            _collisionEnabled = newState.CollisionEnabled;
-            _isHardCollidable = newState.HardCollidable;
-            _isScrapingFloor = newState.ScrapingFloor;
+            _canCollide = newState.CanCollide;
+            _status = newState.Status;
 
             //TODO: Is this always true?
             if (newState.PhysShapes != null)
@@ -118,22 +116,10 @@ namespace Robust.Shared.GameObjects.Components
         ///     Enables or disabled collision processing of this component.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool CollisionEnabled
+        public bool CanCollide
         {
-            get => _collisionEnabled;
-            set
-            {
-                _collisionEnabled = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, value));
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsHardCollidable
-        {
-            get => _isHardCollidable;
-            set => _isHardCollidable = value;
+            get => _canCollide;
+            set => _canCollide = value;
         }
 
         /// <summary>
@@ -167,28 +153,10 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool IsScrapingFloor
+        public BodyStatus Status
         {
-            get => _isScrapingFloor;
-            set => _isScrapingFloor = value;
-        }
-
-        /// <inheritdoc />
-        void IPhysBody.Bumped(IEntity bumpedby)
-        {
-            SendMessage(new BumpedEntMsg(bumpedby));
-            UpdateEntityTree();
-        }
-
-        /// <inheritdoc />
-        void IPhysBody.Bump(List<IEntity> bumpedinto)
-        {
-            var collidecomponents = Owner.GetAllComponents<ICollideBehavior>().ToList();
-
-            for (var i = 0; i < collidecomponents.Count; i++)
-            {
-                collidecomponents[i].CollideWith(bumpedinto);
-            }
+            get => _status;
+            set => _status = value;
         }
 
         /// <inheritdoc />
@@ -205,7 +173,6 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Startup()
         {
             base.Startup();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, _collisionEnabled));
             _physicsManager.AddBody(this);
         }
 
@@ -213,17 +180,17 @@ namespace Robust.Shared.GameObjects.Components
         protected override void Shutdown()
         {
             _physicsManager.RemoveBody(this);
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionEnabledEvent(Owner.Uid, false));
             base.Shutdown();
         }
 
-        /// <inheritdoc />
-        public bool TryCollision(Vector2 offset, bool bump = false)
+        public bool IsColliding(Vector2 offset)
         {
-            if (!_collisionEnabled || CollisionMask == 0x0)
-                return false;
+            return _physicsManager.IsColliding(this, offset);
+        }
 
-            return _physicsManager.TryCollide(Owner, offset, bump);
+        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset)
+        {
+            return _physicsManager.GetCollidingEntities(this, offset);
         }
 
         public bool UpdatePhysicsTree()
@@ -240,18 +207,15 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
-    }
 
-    public class CollisionEnabledEvent : EntitySystemMessage
-    {
-        public bool Value { get; }
-        public EntityUid Owner { get; }
-
-
-        public CollisionEnabledEvent(EntityUid uid, bool value)
+        public bool IsOnGround()
         {
-            Owner = uid;
-            Value = value;
+            return Status == BodyStatus.OnGround;
+        }
+
+        public bool IsInAir()
+        {
+            return Status == BodyStatus.InAir;
         }
     }
 }

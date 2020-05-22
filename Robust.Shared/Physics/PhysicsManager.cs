@@ -275,22 +275,6 @@ namespace Robust.Shared.Physics
 
         public event Action<DebugRayData> DebugDrawRay;
 
-        public IEnumerable<(IPhysBody, IPhysBody)> GetCollisions()
-        {
-            foreach (var mapId in _mapManager.GetAllMapIds())
-            {
-                foreach (var collision in this[mapId].GetCollisions())
-                {
-                    var (a, b) = collision;
-
-                    if (CollidesOnMask(a, b))
-                    {
-                        yield return collision;
-                    }
-                }
-            }
-        }
-
         public bool Update(IPhysBody collider)
             => this[collider.MapID].Update(collider);
 

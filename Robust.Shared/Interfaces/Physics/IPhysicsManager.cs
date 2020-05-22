@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -71,6 +70,12 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source);
 
+        /// <summary>
+        ///     Calculates the penetration depth of the axis-of-least-penetration for a
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
         float CalculatePenetration(ICollidableComponent target, ICollidableComponent source);
 
         Vector2 SolveCollisionImpulse(Manifold manifold);
@@ -87,8 +92,6 @@ namespace Robust.Shared.Interfaces.Physics
         IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true);
 
         event Action<DebugRayData> DebugDrawRay;
-
-        IEnumerable<(IPhysBody, IPhysBody)> GetCollisions();
 
         bool Update(IPhysBody collider);
 

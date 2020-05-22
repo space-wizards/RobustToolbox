@@ -1,7 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
@@ -13,9 +12,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Log;
-using Robust.Shared.Physics;
-using Robust.Shared.Random;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -42,32 +38,54 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted).ToList());
+            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e)).ToList());
         }
 
         private void SimulateWorld(float frameTime, ICollection<IEntity> entities)
         {
-            // simulation can introduce deleted entities into the query results
             foreach (var entity in entities)
             {
-                if (_pauseManager.IsEntityPaused(entity))
-                {
-                    continue;
-                }
+                var physics = entity.GetComponent<PhysicsComponent>();
 
-                ResolveImpulse(entity, frameTime);
+                physics.Controller?.UpdateBeforeProcessing();
             }
 
             // Calculate collisions and store them in the cache
             ProcessCollisions();
 
-            const float solveIterations = 4.0f;
+            // Remove all entities that were deleted during collision handling
+            foreach (var entity in entities.Where(e => e.Deleted).ToList())
+            {
+                entities.Remove(entity);
+            }
+
+            // Process frictional forces
+            foreach (var entity in entities)
+            {
+                ProcessFriction(entity, frameTime);
+            }
+
+            foreach (var entity in entities)
+            {
+                var physics = entity.GetComponent<PhysicsComponent>();
+
+                physics.Controller?.UpdateAfterProcessing();
+            }
+
+            // Remove all entities that were deleted due to the controller
+            foreach (var entity in entities.Where(e => e.Deleted).ToList())
+            {
+                entities.Remove(entity);
+            }
+
+            const float solveIterations = 3.0f;
 
             for (var i = 0; i < solveIterations; i++)
             {
                 foreach (var entity in entities)
                 {
                     UpdatePosition(entity, frameTime / solveIterations);
+                    //ProcessFriction(entity, frameTime);
                 }
                 FixClipping(_collisionCache);
             }
@@ -77,7 +95,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         private void ProcessCollisions()
         {
             _collisionCache.Clear();
-            //var collisionsWith = new Dictionary<ICollideBehavior, int>();
+            var collisionsWith = new Dictionary<ICollideBehavior, int>();
             var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
             var combinations = new List<(EntityUid, EntityUid)>();
             var entities = RelevantEntities.ToList();
@@ -127,13 +145,50 @@ namespace Robust.Server.GameObjects.EntitySystems
                 {
                     physicsComponents[collision.B].Momentum += impulse;
                 }
+
+                // Apply onCollide behavior
+                var aBehaviors = (collision.A as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                foreach (var behavior in aBehaviors)
+                {
+                    var entity = (collision.B as CollidableComponent).Owner;
+                    if (entity.Deleted) continue;
+                    behavior.CollideWith(entity);
+                    if (collisionsWith.ContainsKey(behavior))
+                    {
+                        collisionsWith[behavior] += 1;
+                    }
+                    else
+                    {
+                        collisionsWith[behavior] = 1;
+                    }
+                }
+                var bBehaviors = (collision.B as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                foreach (var behavior in bBehaviors)
+                {
+                    var entity = (collision.A as CollidableComponent).Owner;
+                    if (entity.Deleted) continue;
+                    behavior.CollideWith(entity);
+                    if (collisionsWith.ContainsKey(behavior))
+                    {
+                        collisionsWith[behavior] += 1;
+                    }
+                    else
+                    {
+                        collisionsWith[behavior] = 1;
+                    }
+                }
+            }
+
+            foreach (var behavior in collisionsWith.Keys)
+            {
+                behavior.PostCollide(collisionsWith[behavior]);
             }
         }
 
         private bool GetNextCollision(List<Manifold> collisions, int counter, out Manifold collision)
         {
-            // The +1000 is completely arbitrary
-            if (counter > collisions.Count + 1000)
+            // The *4 is completely arbitrary
+            if (counter > collisions.Count * 4)
             {
                 collision = collisions[0];
                 return false;
@@ -157,30 +212,32 @@ namespace Robust.Server.GameObjects.EntitySystems
             return false;
         }
 
-        private void ResolveImpulse(IEntity entity, float frameTime)
+        private void ProcessFriction(IEntity entity, float frameTime)
         {
+            // A constant that scales frictional force to work with the rest of the engine
+            const float frictionScalingConstant = 60.0f;
+
             var physics = entity.GetComponent<PhysicsComponent>();
 
-            // Run the virtual controller
-            physics.Controller?.UpdateBeforeProcessing();
+            if (physics.LinearVelocity == Vector2.Zero) return;
 
-            // Next, calculate frictional impulse
-            var friction = GetFriction(entity);
+            // Calculate frictional force
+            var friction = GetFriction(entity) * frameTime * frictionScalingConstant;
 
             // Clamp friction because friction can't make you accelerate backwards
             friction = Math.Min(friction, physics.LinearVelocity.Length);
 
-            // No multiplication/division by mass here since that would be redundant
-            var frictionImpulse = physics.LinearVelocity == Vector2.Zero ? Vector2.Zero : physics.LinearVelocity.Normalized * -friction;
+            // No multiplication/division by mass here since that would be redundant.
+            var frictionVelocityChange = physics.LinearVelocity.Normalized * -friction;
 
-            physics.LinearVelocity += frictionImpulse;
+            physics.LinearVelocity += frictionVelocityChange;
         }
 
         private void UpdatePosition(IEntity entity, float frameTime)
         {
             var physics = entity.GetComponent<PhysicsComponent>();
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
-            if (physics.Anchored || (physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon)) return;
+            if (physics.Anchored || physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
             physics.Owner.Transform.WorldRotation += physics.AngularVelocity * frameTime;
             physics.Owner.Transform.WorldPosition += physics.LinearVelocity * frameTime;
@@ -197,9 +254,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (penetration > allowance)
                 {
                     var correction = collision.Normal * Math.Abs(penetration) * percent;
-                    if (collision.APhysics != null)
+                    if (collision.APhysics != null && !(collision.APhysics as PhysicsComponent).Anchored && !collision.APhysics.Deleted)
                         collision.APhysics.Owner.Transform.WorldPosition -= correction;
-                    if (collision.BPhysics != null)
+                    if (collision.BPhysics != null && !(collision.BPhysics as PhysicsComponent).Anchored && !collision.BPhysics.Deleted)
                         collision.BPhysics.Owner.Transform.WorldPosition += correction;
                 }
             }
@@ -207,7 +264,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private float GetFriction(IEntity entity)
         {
-            if (entity.TryGetComponent(out CollidableComponent collider) && entity.TryGetComponent(out PhysicsComponent physics) && physics.OnGround)
+            if (entity.HasComponent<CollidableComponent>() && entity.TryGetComponent(out PhysicsComponent physics) && physics.OnGround)
             {
                 var location = entity.Transform;
                 var grid = _mapManager.GetGrid(location.GridPosition.GridID);
@@ -215,10 +272,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
                 return tileDef.Friction;
             }
-            return 0;
+            return 0.0f;
         }
-
-        private static readonly IComparer<Vector2> LengthComparer =
-            Comparer<Vector2>.Create((a, b) => a.LengthSquared.CompareTo(b.LengthSquared));
     }
 }

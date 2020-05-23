@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Exceptions;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
@@ -22,10 +23,12 @@ namespace Robust.Shared.GameObjects
 
         private readonly List<Component> _deleteList = new List<Component>();
 
-        #pragma warning disable 649
-        [Dependency]
-        private readonly IComponentFactory _componentFactory;
-        #pragma warning restore 649
+#pragma warning disable 649
+        [Dependency] private readonly IComponentFactory _componentFactory;
+#if EXCEPTION_TOLERANCE
+        [Dependency] private readonly IRuntimeLog _runtimeLog;
+#endif
+#pragma warning restore 649
 
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs> ComponentAdded;
@@ -89,7 +92,8 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 if (!overwrite)
-                    throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
+                    throw new InvalidOperationException(
+                        $"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
                 if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
@@ -190,7 +194,20 @@ namespace Robust.Shared.GameObjects
             {
                 if (kvTypeDict.Value.TryGetValue(uid, out var comp))
                 {
-                    comp.Running = false;
+                    #if EXCEPTION_TOLERANCE
+                    try
+                    {
+#endif
+
+                        comp.Running = false;
+#if EXCEPTION_TOLERANCE
+                    }
+                    catch (Exception e)
+                    {
+                        _runtimeLog.LogException(e,
+                            $"DisposeComponents comp.Running=false, owner={uid}, type={comp.GetType()}");
+                    }
+#endif
                 }
             }
 
@@ -213,18 +230,30 @@ namespace Robust.Shared.GameObjects
             if (component.Deleted)
                 return;
 
-            // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+#if EXCEPTION_TOLERANCE
+            try
             {
-                DebugTools.Assert("Tried to remove a protected component.");
-                return;
+#endif
+                // these two components are required on all entities and cannot be removed normally.
+                if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+                {
+                    DebugTools.Assert("Tried to remove a protected component.");
+                    return;
+                }
+
+                _deleteList.Add(component);
+
+                component.Running = false;
+                component.OnRemove();
+                ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
+#if EXCEPTION_TOLERANCE
             }
-
-            _deleteList.Add(component);
-
-            component.Running = false;
-            component.OnRemove();
-            ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
+            catch (Exception e)
+            {
+                _runtimeLog.LogException(e,
+                    $"RemoveComponentDeferred, owner={component.Owner}, type={component.GetType()}");
+            }
+#endif
         }
 
         private void RemoveComponentImmediate(Component component)
@@ -428,7 +457,7 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
-                list.Add((T)(object)comp);
+                list.Add((T) (object) comp);
             }
 
             return list;
@@ -454,8 +483,8 @@ namespace Robust.Shared.GameObjects
             }
 
             return list;
-
         }
+
         #endregion
 
         private void FillComponentDict()

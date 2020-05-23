@@ -9,10 +9,9 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.Serialization
 {
-    [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(YamlFlagSerializer))]
-    class YamlFlagSerializer_Test
+    class YamlFlagSerializer_Test : RobustUnitTest
     {
         public sealed class GenericFlagTag {}
         public sealed class GenericFlagWithZeroTag {}

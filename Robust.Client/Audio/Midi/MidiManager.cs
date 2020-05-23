@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Content.Shared.Physics;
 using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -62,6 +61,8 @@ namespace Robust.Client.Audio.Midi
         ///     If true, MIDI support is available.
         /// </summary>
         bool IsAvailable { get; }
+
+        public int OcclusionCollisionMask { get; set; }
     }
 
     internal class MidiManager : IDisposable, IMidiManager
@@ -111,6 +112,8 @@ namespace Robust.Client.Audio.Midi
 
         private NFluidsynth.Logger.LoggerDelegate _loggerDelegate;
         private ISawmill _sawmill;
+
+        public int OcclusionCollisionMask { get; set; }
 
         private void InitializeFluidsynth()
         {
@@ -284,7 +287,7 @@ namespace Robust.Client.Audio.Midi
                                     new CollisionRay(
                                         pos.Position,
                                         sourceRelative.Normalized,
-                                        (int) (CollisionGroup.Impassable)),
+                                        OcclusionCollisionMask),
                                     sourceRelative.Length,
                                     (e) => { occlusion++; return false; }, false);
                             }

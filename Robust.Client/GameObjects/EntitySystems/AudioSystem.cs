@@ -13,7 +13,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
-using Content.Shared.Physics;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Interfaces.Physics;
@@ -32,6 +31,8 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning restore 649
 
         private readonly List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
+
+        public int OcclusionCollisionMask;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -113,7 +114,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                                 new CollisionRay(
                                     pos.Position,
                                     sourceRelative.Normalized,
-                                    (int) (CollisionGroup.Impassable)),
+                                    OcclusionCollisionMask),
                                 sourceRelative.Length,
                                 (e) => { occlusion++; return false; }, false);
                         }

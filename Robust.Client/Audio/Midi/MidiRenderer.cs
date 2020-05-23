@@ -436,9 +436,6 @@ namespace Robust.Client.Audio.Midi
             if (DisablePercussionChannel && midiEvent.Channel == 9)
                 return;
 
-            // We play every note on channel 0 to prevent a bug where some notes didn't get turned off correctly.
-            const int ch = 0;
-
             try
             {
                 lock(_playerStateLock)

@@ -70,8 +70,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override void FrameUpdate(float frameTime)
         {
-            var currentMap = _eyeManager.CurrentMap;
-
             // Update positions of streams every frame.
             foreach (var stream in _playingClydeStreams)
             {
@@ -100,7 +98,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 if (mapPos != null)
                 {
                     var pos = mapPos.Value;
-                    if (pos.MapId != currentMap)
+                    if (pos.MapId != _eyeManager.CurrentMap)
                     {
                         stream.Source.SetVolume(-10000000);
                     }

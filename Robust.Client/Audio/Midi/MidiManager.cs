@@ -256,8 +256,6 @@ namespace Robust.Client.Audio.Midi
                         continue;
                     }
 
-                    var currentMap = _eyeManager.CurrentMap;
-
                     MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
@@ -271,7 +269,7 @@ namespace Robust.Client.Audio.Midi
                     if (mapPos != null)
                     {
                         var pos = mapPos.Value;
-                        if (pos.MapId != currentMap)
+                        if (pos.MapId != _eyeManager.CurrentMap)
                         {
                             renderer.Source.SetVolume(-10000000);
                         }

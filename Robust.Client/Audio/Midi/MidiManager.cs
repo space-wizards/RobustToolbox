@@ -80,6 +80,7 @@ namespace Robust.Client.Audio.Midi
         private bool _alive = true;
         private Settings _settings;
         private Thread _midiThread;
+        private ISawmill _midiSawmill;
 
         private static readonly string[] LinuxSoundfonts =
         {
@@ -137,6 +138,8 @@ namespace Robust.Client.Audio.Midi
 
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
+
+            _midiSawmill = IoCManager.Resolve<ILogManager>().GetSawmill("midi");
 
             _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
 
@@ -242,9 +245,11 @@ namespace Robust.Client.Audio.Midi
 
             // Update positions of streams every frame.
             lock (_renderers)
-                for (var i = 0; i < _renderers.Count; i++)
+                foreach (var renderer in _renderers)
                 {
-                    var renderer = _renderers[i];
+                    if (renderer.Disposed)
+                        continue;
+
                     if (!renderer.Mono)
                     {
                         renderer.Source.SetGlobal();
@@ -253,19 +258,16 @@ namespace Robust.Client.Audio.Midi
 
                     if (renderer.TrackingCoordinates != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                        {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
-                        }
+                        if (renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
+                            continue;
+                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                        renderer.Source.StopPlaying();
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition))
-                        {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
-                        }
+                        if (renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition)) continue;
+                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                        renderer.Source.StopPlaying();
                     }
                 }
         }
@@ -278,13 +280,12 @@ namespace Robust.Client.Audio.Midi
             while (_alive)
             {
                 lock (_renderers)
-                    for (var i = 0; i < _renderers.Count; i++)
+                    foreach (var renderer in _renderers)
                     {
-                        var renderer = _renderers[i];
                         if (renderer != null && !renderer.Disposed)
                             renderer.Render();
                         else
-                            _renderers.RemoveAt(i);
+                            _renderers.Remove(renderer);
                     }
 
                 Thread.Sleep(1);

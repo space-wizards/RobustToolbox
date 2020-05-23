@@ -190,7 +190,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             // The *4 is completely arbitrary
             if (counter > collisions.Count * 4)
             {
-                collision = collisions[0];
+                collision = default;
                 return false;
             }
             var indexes = new List<int>();
@@ -208,7 +208,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 }
             }
 
-            collision = collisions[0];
+            collision = default;
             return false;
         }
 

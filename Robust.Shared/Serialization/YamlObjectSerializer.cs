@@ -931,13 +931,7 @@ namespace Robust.Shared.Serialization
             {
                 var color = (Color)obj;
 
-                Int32 hexColor = 0;
-                hexColor += color.RByte << 24;
-                hexColor += color.GByte << 16;
-                hexColor += color.BByte << 8;
-                hexColor += color.AByte;
-
-                return new YamlScalarNode("#" + hexColor.ToString("X"));
+                return new YamlScalarNode(color.ToHex());
             }
         }
 

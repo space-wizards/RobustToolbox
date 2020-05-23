@@ -975,7 +975,13 @@ namespace Robust.Shared.Maths
 
         public string ToHex()
         {
-            return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";
+            var hexColor = 0;
+            hexColor += RByte << 24;
+            hexColor += GByte << 16;
+            hexColor += BByte << 8;
+            hexColor += AByte;
+
+            return $"#{hexColor:X8}";
         }
 
         /// <summary>

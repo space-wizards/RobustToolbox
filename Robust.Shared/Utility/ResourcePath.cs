@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
@@ -12,7 +13,7 @@ namespace Robust.Shared.Utility
     ///     Provides object-oriented path manipulation for resource paths.
     ///     ResourcePaths are immutable.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Serializable, NetSerializable]
     public sealed class ResourcePath : IEquatable<ResourcePath>
     {
         /// <summary>

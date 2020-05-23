@@ -105,15 +105,16 @@ namespace Robust.Client.GameObjects.EntitySystems
                     else
                     {
                         var occlusion = 0;
-                        if ((_eyeManager.CurrentEye.Position.Position - pos.Position).Length > 0)
+                        var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                        if (sourceRelative.Length > 0)
                         {
                             IoCManager.Resolve<IPhysicsManager>().IntersectRayWithPredicate(
                                 pos.MapId,
                                 new CollisionRay(
                                     pos.Position,
-                                    (_eyeManager.CurrentEye.Position.Position - pos.Position).Normalized,
+                                    sourceRelative.Normalized,
                                     (int) (CollisionGroup.Impassable)),
-                                (pos.Position - _eyeManager.CurrentEye.Position.Position).Length,
+                                sourceRelative.Length,
                                 (e) => { occlusion++; return false; }, false);
                         }
                         stream.Source.SetVolume(stream.Volume);

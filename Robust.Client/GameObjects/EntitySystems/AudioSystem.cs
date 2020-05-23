@@ -13,8 +13,11 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
+using Content.Shared.Physics;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -103,7 +106,20 @@ namespace Robust.Client.GameObjects.EntitySystems
                     }
                     else
                     {
+                        var occlusion = 0;
+                        if ((_eyeManager.CurrentEye.Position.Position - pos.Position).Length > 0)
+                        {
+                            IoCManager.Resolve<IPhysicsManager>().IntersectRayWithPredicate(
+                                pos.MapId,
+                                new CollisionRay(
+                                    pos.Position,
+                                    (_eyeManager.CurrentEye.Position.Position - pos.Position).Normalized,
+                                    (int) (CollisionGroup.Impassable)),
+                                (pos.Position - _eyeManager.CurrentEye.Position.Position).Length,
+                                (e) => { occlusion++; return false; }, false);
+                        }
                         stream.Source.SetVolume(stream.Volume);
+                        stream.Source.SetOcclusion(occlusion);
                     }
 
                     if (!stream.Source.SetPosition(pos.Position))

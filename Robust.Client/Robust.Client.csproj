@@ -26,7 +26,7 @@
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="1.0.0-beta0006" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
-    <PackageReference Include="OpenTK" Version="3.1.0" />
+    <PackageReference Include="OpenTK" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
@@ -37,6 +37,7 @@
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Content.Shared\Content.Shared.csproj" />
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
@@ -48,6 +49,9 @@
     </EmbeddedResource>
 
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Audio\Helper.cs" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <PropertyGroup>

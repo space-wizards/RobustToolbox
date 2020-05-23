@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Content.Shared.Physics;
 using JetBrains.Annotations;
 using NFluidsynth;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -63,6 +68,7 @@ namespace Robust.Client.Audio.Midi
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager;
 #pragma warning restore 649
 
         public bool IsAvailable
@@ -242,28 +248,53 @@ namespace Robust.Client.Audio.Midi
 
             // Update positions of streams every frame.
             lock (_renderers)
-                for (var i = 0; i < _renderers.Count; i++)
+                foreach (var renderer in _renderers)
                 {
-                    var renderer = _renderers[i];
                     if (!renderer.Mono)
                     {
                         renderer.Source.SetGlobal();
                         continue;
                     }
 
+                    var currentMap = _eyeManager.CurrentMap;
+
+                    MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                        {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
-                        }
+                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_mapManager);
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        if (!renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition))
+                        mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                    }
+
+                    if (mapPos != null)
+                    {
+                        var pos = mapPos.Value;
+                        if (pos.MapId != currentMap)
                         {
-                            Shared.Log.Logger.Warning("Interrupting positional audio, can't set position.");
+                            renderer.Source.SetVolume(-10000000);
+                        }
+                        else
+                        {
+                            var occlusion = 0;
+                            if ((_eyeManager.CurrentEye.Position.Position - pos.Position).Length > 0)
+                            {
+                                IoCManager.Resolve<IPhysicsManager>().IntersectRayWithPredicate(
+                                    pos.MapId,
+                                    new CollisionRay(
+                                        pos.Position,
+                                        (_eyeManager.CurrentEye.Position.Position - pos.Position).Normalized,
+                                        (int) (CollisionGroup.Impassable)),
+                                    (pos.Position - _eyeManager.CurrentEye.Position.Position).Length,
+                                    (e) => { occlusion++; return false; }, false);
+                            }
+                            renderer.Source.SetOcclusion(occlusion);
+                        }
+
+                        if (!renderer.Source.SetPosition(pos.Position))
+                        {
+                            Logger.Warning("Interrupting positional audio, can't set position.");
                             renderer.Source.StopPlaying();
                         }
                     }

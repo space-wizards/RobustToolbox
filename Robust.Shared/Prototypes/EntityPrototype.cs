@@ -143,6 +143,8 @@ namespace Robust.Shared.GameObjects
         {
             // Everybody gets a transform component!
             Components.Add("Transform", new YamlMappingNode());
+            // And a metadata component too!
+            Components.Add("MetaData", new YamlMappingNode());
         }
 
         public void LoadFrom(YamlMappingNode mapping)

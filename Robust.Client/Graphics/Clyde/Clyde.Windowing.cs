@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
-using OpenToolkit.Windowing.GraphicsLibraryFramework;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
@@ -248,6 +247,14 @@ namespace Robust.Client.Graphics.Clyde
             foreach (var handle in handles)
             {
                 handle.Free();
+            }
+        }
+
+        private class GLFWBindingsContext : IBindingsContext
+        {
+            public IntPtr GetProcAddress(string procName)
+            {
+                return GLFW.GetProcAddress(procName);
             }
         }
 

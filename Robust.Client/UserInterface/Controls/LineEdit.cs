@@ -271,15 +271,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            if (!SetText(_text.Insert(_cursorPosition, ((char) args.CodePoint).ToString())))
-            {
-                return;
-            }
-
-            _cursorPosition += 1;
-            _selectionStart = _cursorPosition;
-            OnTextChanged?.Invoke(new LineEditEventArgs(this, _text));
-            _updatePseudoClass();
+            InsertAtCursor(((char) args.CodePoint).ToString());
         }
 
         protected internal override void KeyBindDown(GUIBoundKeyEventArgs args)

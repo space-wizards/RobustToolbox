@@ -1,4 +1,4 @@
-using Robust.Shared.Asynchronous;
+﻿using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -43,6 +43,7 @@ namespace Robust.Shared
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();
+            IoCManager.Register<ICustomFormatManager, CustomFormatManager>();
             IoCManager.Register<IRuntimeLog, RuntimeLog>();
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();

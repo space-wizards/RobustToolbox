@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
@@ -23,7 +24,7 @@ namespace Robust.Shared.Serialization
     public class YamlObjectSerializer : ObjectSerializer
     {
         private static readonly Dictionary<Type, TypeSerializer> _typeSerializers;
-		public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
+        public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
         private YamlMappingNode WriteMap;
@@ -111,7 +112,7 @@ namespace Robust.Shared.Serialization
         // TODO: Theoretical optimization.
         // Might be a good idea to make DataField<T> use caching for value types without references too.
         /// <inheritdoc />
-        public override void DataField<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
@@ -119,7 +120,8 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         return;
                     }
                 }
@@ -132,8 +134,9 @@ namespace Robust.Shared.Serialization
                 if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
                     return;
 
+                var customFormatter = format.GetYamlSerializer();
                 var key = name;
-                var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+                var val = value == null ? customFormatter.TypeToNode(defaultValue, this) : customFormatter.TypeToNode(value, this);
 
                 // write the concrete type tag
                 if (typeof(T).IsAbstract || typeof(T).IsInterface)
@@ -468,7 +471,9 @@ namespace Robust.Shared.Serialization
 
             // val primitives
             if (type.IsPrimitive || type == typeof(decimal))
+            {
                 return StringToType(type, node.ToString());
+            }
 
             // val enum
             if (type.IsEnum)

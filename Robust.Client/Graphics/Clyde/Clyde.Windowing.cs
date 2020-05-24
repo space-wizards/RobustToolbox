@@ -6,7 +6,6 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using OpenToolkit;
-using OpenToolkit.Graphics;
 using OpenToolkit.Graphics.OpenGL4;
 using OpenToolkit.Windowing.GraphicsLibraryFramework;
 using Robust.Client.Input;

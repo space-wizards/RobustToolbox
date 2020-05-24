@@ -31,8 +31,8 @@ namespace Robust.Client.Graphics.Clyde
 
         // Used to track audio sources that were disposed in the finalizer thread,
         // so we need to properly send them off in the main thread.
-        private readonly ConcurrentQueue<(int, int)> _sourceDisposeQueue = new ConcurrentQueue<(int, int)>();
-        private readonly ConcurrentQueue<(int, int)> _bufferedSourceDisposeQueue = new ConcurrentQueue<(int, int)>();
+        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _sourceDisposeQueue = new ConcurrentQueue<(int, int)>();
+        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new ConcurrentQueue<(int, int)>();
         private readonly ConcurrentQueue<int> _bufferDisposeQueue = new ConcurrentQueue<int>();
 
         private bool _alcHasExtension(string extension) => _alcExtensions.Contains(extension);
@@ -141,21 +141,21 @@ namespace Robust.Client.Graphics.Clyde
             // Clear out finalized audio sources.
             while (_sourceDisposeQueue.TryDequeue(out var handles))
             {
-                Logger.DebugS("clyde.oal", "Cleaning out source {0} which finalized in another thread.", handles.Item1);
-                EFX.DeleteFilter(handles.Item2);
-                AL.DeleteSource(handles.Item1);
+                Logger.DebugS("clyde.oal", "Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
+                EFX.DeleteFilter(handles.filterHandle);
+                AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
-                _audioSources.Remove(handles.Item1);
+                _audioSources.Remove(handles.sourceHandle);
             }
 
             // Clear out finalized buffered audio sources.
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handles))
             {
-                Logger.DebugS("clyde.oal", "Cleaning out buffered source {0} which finalized in another thread.", handles.Item1);
-                EFX.DeleteFilter(handles.Item2);
-                AL.DeleteSource(handles.Item1);
+                Logger.DebugS("clyde.oal", "Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
+                EFX.DeleteFilter(handles.filterHandle);
+                AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
-                _bufferedAudioSources.Remove(handles.Item1);
+                _bufferedAudioSources.Remove(handles.sourceHandle);
             }
 
             // Clear out finalized audio buffers.

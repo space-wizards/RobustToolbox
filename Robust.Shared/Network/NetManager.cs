@@ -691,7 +691,15 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            callback?.Invoke(instance);
+            try
+            {
+                callback?.Invoke(instance);
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
+            }
             return true;
         }
 

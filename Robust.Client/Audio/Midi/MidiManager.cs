@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
@@ -284,18 +285,18 @@ namespace Robust.Client.Audio.Midi
                         }
                         else
                         {
-                            var occlusion = 0;
                             var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var occlusion = 0;
                             if (sourceRelative.Length > 0)
                             {
-                                IoCManager.Resolve<IPhysicsManager>().IntersectRayWithPredicate(
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRay(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,
                                         sourceRelative.Normalized,
                                         OcclusionCollisionMask),
                                     sourceRelative.Length,
-                                    (e) => { occlusion++; return false; }, false);
+                                    null, false).Count();
                             }
                             renderer.Source.SetOcclusion(occlusion);
                         }

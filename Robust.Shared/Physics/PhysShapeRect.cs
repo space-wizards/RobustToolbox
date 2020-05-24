@@ -46,8 +46,8 @@ namespace Robust.Shared.Physics
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0);
-            serializer.DataField(ref _collisionMask, "mask", 0);
+            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
+            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
         }
 

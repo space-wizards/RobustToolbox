@@ -98,10 +98,11 @@ namespace Robust.Server.GameObjects.EntitySystems
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
             var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
             var combinations = new List<(EntityUid, EntityUid)>();
-            var entities = RelevantEntities.ToList();
-            foreach (var entity in entities)
+            foreach (var entity in RelevantEntities)
             {
                 if (entity.Deleted) continue;
+                var physics = entity.GetComponent<PhysicsComponent>();
+                if (physics.LinearVelocity == Vector2.Zero) continue;
                 if (entity.TryGetComponent<CollidableComponent>(out var a))
                 {
                     foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
@@ -109,22 +110,14 @@ namespace Robust.Server.GameObjects.EntitySystems
                         if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
                             combinations.Contains((b.Owner.Uid, a.Owner.Uid))) continue;
                         combinations.Add((a.Owner.Uid, b.Owner.Uid));
-                        if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+                        if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
                         {
-                            physicsComponents[a] = aPhysics;
-                            if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                            {
-                                physicsComponents[b] = bPhysics;
-                                _collisionCache.Add(new Manifold(a, b, aPhysics, bPhysics));
-                            }
-                            else
-                            {
-                                _collisionCache.Add(new Manifold(a, b, aPhysics, null));
-                            }
+                            physicsComponents[b] = bPhysics;
+                            _collisionCache.Add(new Manifold(a, b, physics, bPhysics));
                         }
-                        else if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                        else
                         {
-                            _collisionCache.Add(new Manifold(a, b, null, bPhysics));
+                            _collisionCache.Add(new Manifold(a, b, physics, null));
                         }
                     }
                 }
@@ -237,7 +230,8 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             var physics = entity.GetComponent<PhysicsComponent>();
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
-            if (physics.Anchored || physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
+            if (physics.Anchored ||
+                physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
             if (ContainerHelpers.IsInContainer(entity) && physics.LinearVelocity != Vector2.Zero)
             {

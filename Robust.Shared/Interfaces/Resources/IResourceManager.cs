@@ -126,6 +126,12 @@ namespace Robust.Shared.Interfaces.Resources
         IEnumerable<ResourcePath> ContentFindFiles(string path);
 
         /// <summary>
+        ///     Returns a list of paths to all top-level content directories
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<ResourcePath> GetContentRoots();
+
+        /// <summary>
         ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
         ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
         ///     Hrm.

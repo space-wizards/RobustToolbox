@@ -311,6 +311,17 @@ namespace Robust.Shared.ContentPack
             }
         }
 
+        public IEnumerable<ResourcePath> GetContentRoots()
+        {
+            foreach (var (_, root) in _contentRoots)
+            {
+                if (root is DirLoader loader)
+                {
+                    yield return new ResourcePath(loader.GetPath(new ResourcePath(@"/")));
+                }
+            }
+        }
+
         internal static bool IsPathValid(ResourcePath path)
         {
             var asString = path.ToString();

@@ -21,21 +21,8 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
         {
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            // Clear all prototypes
-            prototypeManager.Clear();
-            prototypeManager.ReloadPrototypeTypes();
-            prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
-            prototypeManager.Resync();
-
-            foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
-            {
-                foreach (var entity in entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype.ID)))
-                {
-                    prototype.UpdateEntity(entity as Entity);
-                }
-            }
+            prototypeManager.ReloadPrototypes();
         }
     }
 }

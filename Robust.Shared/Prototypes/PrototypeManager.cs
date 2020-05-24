@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -60,9 +62,9 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void Clear();
         /// <summary>
-        ///     Reload all prototype types.
+        ///     Performs a reload on all prototypes, updating the game state accordingly
         /// </summary>
-        void ReloadPrototypeTypes();
+        void ReloadPrototypes();
         /// <summary>
         /// Syncs all inter-prototype data. Call this when operations adding new prototypes are done.
         /// </summary>
@@ -100,11 +102,17 @@ namespace Robust.Shared.Prototypes
         private readonly IDynamicTypeFactory _dynamicTypeFactory;
         [Dependency]
         private readonly IResourceManager _resources;
+
+        [Dependency] private readonly IEntityManager _entityManager;
 #pragma warning restore 649
 
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
         private bool _hasEverBeenReloaded;
+
+        private List<FileSystemWatcher> _watchers = new List<FileSystemWatcher>();
+
+        private DateTime timeSinceLastReload = DateTime.Now;
 
         #region IPrototypeManager members
         private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
@@ -162,6 +170,24 @@ namespace Robust.Shared.Prototypes
             indexedPrototypes.Clear();
         }
 
+        public void ReloadPrototypes()
+        {
+            Logger.Info("Reloading all prototypes...");
+            // Clear all prototypes
+            Clear();
+            ReloadPrototypeTypes();
+            LoadDirectory(new ResourcePath(@"/Prototypes/"));
+            Resync();
+
+            foreach (var prototype in EnumeratePrototypes<EntityPrototype>())
+            {
+                foreach (var entity in _entityManager.GetEntities(new PredicateEntityQuery(e => e.Prototype != null && e.Prototype.ID == prototype.ID)))
+                {
+                    prototype.UpdateEntity(entity as Entity);
+                }
+            }
+        }
+
         public void Resync()
         {
             foreach (Type type in prototypeTypes.Values.Where(t => typeof(ISyncingPrototype).IsAssignableFrom(t)))
@@ -208,6 +234,7 @@ namespace Robust.Shared.Prototypes
         public void LoadDirectory(ResourcePath path)
         {
             var sawmill = Logger.GetSawmill("eng");
+            if (!_hasEverBeenReloaded) WatchResources();
             _hasEverBeenReloaded = true;
             var yamlStreams = _resources.ContentFindFiles(path).ToList().AsParallel()
                 .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."))
@@ -273,7 +300,31 @@ namespace Robust.Shared.Prototypes
             ReloadPrototypeTypes();
         }
 
-        public void ReloadPrototypeTypes()
+        private void WatchResources()
+        {
+            foreach (var path in _resources.GetContentRoots().Select(r => r.ToString())
+                .Where(r => Directory.Exists(r + "/Prototypes")).Select(p => p + "/Prototypes"))
+            {
+                var watcher = new FileSystemWatcher(path, "*.yml")
+                {
+                    IncludeSubdirectories = true,
+                    NotifyFilter = NotifyFilters.LastWrite
+                };
+
+                watcher.Changed += (a, b) =>
+                {
+                    Logger.Debug("Reloading");
+                    // Wait at least two seconds before changing again!
+                    if ((DateTime.Now - timeSinceLastReload).TotalSeconds < 2.0) return;
+                    timeSinceLastReload = DateTime.Now;
+                    //ReloadPrototypes();
+                };
+                watcher.EnableRaisingEvents = true;
+                _watchers.Add(watcher);
+            }
+        }
+
+        private void ReloadPrototypeTypes()
         {
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())

@@ -280,8 +280,9 @@ namespace Robust.Client.Audio.Midi
             while (_alive)
             {
                 lock (_renderers)
-                    foreach (var renderer in _renderers)
+                    for (var i = 0; i < _renderers.Count; i++)
                     {
+                        var renderer = _renderers[i];
                         if (renderer != null && !renderer.Disposed)
                             renderer.Render();
                         else

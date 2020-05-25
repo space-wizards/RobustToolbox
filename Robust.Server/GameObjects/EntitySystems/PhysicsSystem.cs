@@ -122,23 +122,8 @@ namespace Robust.Server.GameObjects.EntitySystems
                     }
                 }
             }
-
-            var counter = 0;
-
-            while(GetNextCollision(_collisionCache, counter, out var collision))
+            foreach (var collision in _collisionCache)
             {
-                counter++;
-                var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                if (physicsComponents.ContainsKey(collision.A))
-                {
-                    physicsComponents[collision.A].Momentum -= impulse;
-                }
-
-                if (physicsComponents.ContainsKey(collision.B))
-                {
-                    physicsComponents[collision.B].Momentum += impulse;
-                }
-
                 // Apply onCollide behavior
                 var aBehaviors = (collision.A as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in aBehaviors)
@@ -169,6 +154,23 @@ namespace Robust.Server.GameObjects.EntitySystems
                     {
                         collisionsWith[behavior] = 1;
                     }
+                }
+            }
+
+            var counter = 0;
+
+            while(GetNextCollision(_collisionCache, counter, out var collision))
+            {
+                counter++;
+                var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                if (physicsComponents.ContainsKey(collision.A))
+                {
+                    physicsComponents[collision.A].Momentum -= impulse;
+                }
+
+                if (physicsComponents.ContainsKey(collision.B))
+                {
+                    physicsComponents[collision.B].Momentum += impulse;
                 }
             }
 

@@ -138,7 +138,10 @@ namespace Robust.Server.GameObjects.EntitySystems
                 {
                     physicsComponents[collision.B].Momentum += impulse;
                 }
+            }
 
+            foreach (var collision in _collisionCache)
+            {
                 // Apply onCollide behavior
                 var aBehaviors = (collision.A as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in aBehaviors)

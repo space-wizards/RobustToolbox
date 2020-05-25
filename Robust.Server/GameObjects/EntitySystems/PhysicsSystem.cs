@@ -13,6 +13,7 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
+using Robust.Shared.Log;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -97,30 +98,10 @@ namespace Robust.Server.GameObjects.EntitySystems
             _collisionCache.Clear();
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
             var physicsComponents = new Dictionary<ICollidableComponent, PhysicsComponent>();
-            var combinations = new List<(EntityUid, EntityUid)>();
-            foreach (var entity in RelevantEntities)
+
+            foreach (var collision in FindCollisions(RelevantEntities, physicsComponents))
             {
-                if (entity.Deleted) continue;
-                var physics = entity.GetComponent<PhysicsComponent>();
-                if (physics.LinearVelocity == Vector2.Zero) continue;
-                if (entity.TryGetComponent<CollidableComponent>(out var a))
-                {
-                    foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
-                    {
-                        if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
-                            combinations.Contains((b.Owner.Uid, a.Owner.Uid))) continue;
-                        combinations.Add((a.Owner.Uid, b.Owner.Uid));
-                        if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                        {
-                            physicsComponents[b] = bPhysics;
-                            _collisionCache.Add(new Manifold(a, b, physics, bPhysics));
-                        }
-                        else
-                        {
-                            _collisionCache.Add(new Manifold(a, b, physics, null));
-                        }
-                    }
-                }
+                _collisionCache.Add(collision);
             }
 
             var counter = 0;
@@ -178,6 +159,89 @@ namespace Robust.Server.GameObjects.EntitySystems
             foreach (var behavior in collisionsWith.Keys)
             {
                 behavior.PostCollide(collisionsWith[behavior]);
+            }
+        }
+
+        private IEnumerable<Manifold> FindCollisions(IEnumerable<IEntity> entities, Dictionary<ICollidableComponent, PhysicsComponent> physicsComponents)
+        {
+            var combinations = new List<(EntityUid, EntityUid)>();
+            var suspendedEntitiesToProcess = new Stack<CollidableComponent>();
+            var skippedEntities = new List<IEntity>();
+            foreach (var entity in entities)
+            {
+                if (entity.Deleted)
+                {
+                    continue;
+                }
+
+                if (entity.TryGetComponent<PhysicsComponent>(out var physics) && physics.LinearVelocity == Vector2.Zero)
+                {
+                    skippedEntities.Add(entity);
+                    continue;
+                }
+
+                if (!entity.TryGetComponent<CollidableComponent>(out var a)) continue;
+
+                foreach (var collision in FindCollisionsFor(a, combinations, physicsComponents, skippedEntities, suspendedEntitiesToProcess))
+                {
+                    yield return collision;
+                }
+            }
+            while (suspendedEntitiesToProcess.Count > 0)
+            {
+                var next = suspendedEntitiesToProcess.Pop();
+                foreach (var collision in FindCollisionsFor(next, combinations, physicsComponents, skippedEntities, suspendedEntitiesToProcess))
+                {
+                    yield return collision;
+                }
+            }
+        }
+
+        private IEnumerable<Manifold> FindCollisionsFor(CollidableComponent a,
+            List<(EntityUid, EntityUid)> combinations,
+            Dictionary<ICollidableComponent, PhysicsComponent> physicsComponents,
+            List<IEntity> skippedEntities,
+            Stack<CollidableComponent> suspendedEntitiesToProcess)
+        {
+            foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
+            {
+                if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
+                    combinations.Contains((b.Owner.Uid, a.Owner.Uid)))
+                {
+                    continue;
+                }
+
+                combinations.Add((a.Owner.Uid, b.Owner.Uid));
+                if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+                {
+                    physicsComponents[a] = aPhysics;
+                    if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                    {
+                        physicsComponents[b] = bPhysics;
+                        if (skippedEntities.Contains(b.Owner))
+                        {
+                            Logger.Debug(b.Owner.Name);
+                            suspendedEntitiesToProcess.Push(b);
+                        }
+                        yield return new Manifold(a, b, aPhysics, bPhysics);
+                    }
+                    else
+                    {
+                        yield return new Manifold(a, b, aPhysics, null);
+                    }
+                }
+                else
+                {
+                    if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                    {
+                        physicsComponents[b] = bPhysics;
+                        if (skippedEntities.Contains(b.Owner))
+                        {
+                            suspendedEntitiesToProcess.Push(b);
+                        }
+                        yield return new Manifold(a, b, null, bPhysics);
+                    }
+                }
             }
         }
 

@@ -142,7 +142,7 @@ namespace Robust.Client.Graphics.Clyde
             while (_sourceDisposeQueue.TryDequeue(out var handles))
             {
                 Logger.DebugS("clyde.oal", "Cleaning out source {0} which finalized in another thread.", handles.sourceHandle);
-                EFX.DeleteFilter(handles.filterHandle);
+                if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
                 _audioSources.Remove(handles.sourceHandle);
@@ -152,7 +152,7 @@ namespace Robust.Client.Graphics.Clyde
             while (_bufferedSourceDisposeQueue.TryDequeue(out var handles))
             {
                 Logger.DebugS("clyde.oal", "Cleaning out buffered source {0} which finalized in another thread.", handles.sourceHandle);
-                EFX.DeleteFilter(handles.filterHandle);
+                if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
                 AL.DeleteSource(handles.sourceHandle);
                 _checkAlError();
                 _bufferedAudioSources.Remove(handles.sourceHandle);
@@ -173,11 +173,7 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: This really shouldn't be indexing based on the ClydeHandle...
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle.Value.Value].BufferHandle);
 
-            var filter = EFX.GenFilter();
-            EFX.Filter(filter, FilterInteger.FilterType, (int) FilterType.Lowpass);
-            AL.Source(source, ALSourcei.EfxDirectFilter, filter);
-
-            var audioSource = new AudioSource(this, source, stream, filter);
+            var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
             return audioSource;
         }
@@ -186,13 +182,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             var source = AL.GenSource();
 
-            var filter = EFX.GenFilter();
-            EFX.Filter(filter, FilterInteger.FilterType, (int) FilterType.Lowpass);
-            AL.Source(source, ALSourcei.EfxDirectFilter, filter);
-
             // ReSharper disable once PossibleInvalidOperationException
 
-            var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), filter, floatAudio);
+            var audioSource = new BufferedAudioSource(this, source, AL.GenBuffers(buffers), floatAudio);
             _bufferedAudioSources.Add(source, new WeakReference<BufferedAudioSource>(audioSource));
             return audioSource;
         }
@@ -351,12 +343,11 @@ namespace Robust.Client.Graphics.Clyde
             private bool _didPositionWarning;
 #endif
 
-            public AudioSource(Clyde master, int sourceHandle, AudioStream sourceStream, int filterHandle)
+            public AudioSource(Clyde master, int sourceHandle, AudioStream sourceStream)
             {
                 _master = master;
                 SourceHandle = sourceHandle;
                 _sourceStream = sourceStream;
-                FilterHandle = filterHandle;
             }
 
             public void StartPlaying()
@@ -419,6 +410,12 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 var cutoff = (float) Math.Exp(-blocks * 1);
                 float gain = (float) Math.Pow(cutoff, 0.1);
+                if (FilterHandle == 0)
+                {
+                    FilterHandle = EFX.GenFilter();
+                    EFX.Filter(FilterHandle, FilterInteger.FilterType, (int) FilterType.Lowpass);
+                }
+
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
                 AL.Source(SourceHandle, ALSourcei.EfxDirectFilter, FilterHandle);
@@ -496,7 +493,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    EFX.DeleteFilter(FilterHandle);
+                    if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
                     AL.DeleteSource(SourceHandle);
                     _master._audioSources.Remove(SourceHandle);
                     _checkAlError();
@@ -526,7 +523,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public int SampleRate { get; set; } = 44100;
 
-            public BufferedAudioSource(Clyde master, int sourceHandle, int[] bufferHandles, int filterHandle, bool floatAudio = false)
+            public BufferedAudioSource(Clyde master, int sourceHandle, int[] bufferHandles, bool floatAudio = false)
             {
                 _master = master;
                 SourceHandle = sourceHandle;
@@ -536,7 +533,6 @@ namespace Robust.Client.Graphics.Clyde
                     var bufferHandle = BufferHandles[i];
                     BufferMap[bufferHandle] = i;
                 }
-                FilterHandle = filterHandle;
                 _float = floatAudio;
             }
 
@@ -600,6 +596,11 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 var cutoff = (float) Math.Exp(-blocks * 1.5);
                 float gain = (float) Math.Pow(cutoff, 0.1);
+                if (FilterHandle == 0)
+                {
+                    FilterHandle = EFX.GenFilter();
+                    EFX.Filter(FilterHandle, FilterInteger.FilterType, (int) FilterType.Lowpass);
+                }
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
                 AL.Source(SourceHandle.Value, ALSourcei.EfxDirectFilter, FilterHandle);
@@ -673,7 +674,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
-                    EFX.DeleteFilter(FilterHandle);
+                    if (FilterHandle != 0) EFX.DeleteFilter(FilterHandle);
                     AL.DeleteSource(SourceHandle.Value);
                     AL.DeleteBuffers(BufferHandles);
                     _master._bufferedAudioSources.Remove(SourceHandle.Value);

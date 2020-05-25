@@ -126,8 +126,13 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Sets the controller of a physics component. Does nothing if a controller of the same type is the current controller.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         public void SetController<T>() where T: VirtualController, new()
         {
+            if (_controller is T) return;
             _controller = new T {ControlledComponent = this};
         }
 

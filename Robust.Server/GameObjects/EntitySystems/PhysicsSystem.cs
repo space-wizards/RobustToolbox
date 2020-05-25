@@ -165,8 +165,6 @@ namespace Robust.Server.GameObjects.EntitySystems
         private IEnumerable<Manifold> FindCollisions(IEnumerable<IEntity> entities, Dictionary<ICollidableComponent, PhysicsComponent> physicsComponents)
         {
             var combinations = new List<(EntityUid, EntityUid)>();
-            var suspendedEntitiesToProcess = new Stack<CollidableComponent>();
-            var skippedEntities = new List<IEntity>();
             foreach (var entity in entities)
             {
                 if (entity.Deleted)
@@ -174,23 +172,14 @@ namespace Robust.Server.GameObjects.EntitySystems
                     continue;
                 }
 
-                if (entity.TryGetComponent<PhysicsComponent>(out var physics) && physics.LinearVelocity == Vector2.Zero)
+                if (entity.GetComponent<PhysicsComponent>().LinearVelocity == Vector2.Zero)
                 {
-                    skippedEntities.Add(entity);
                     continue;
                 }
 
                 if (!entity.TryGetComponent<CollidableComponent>(out var a)) continue;
 
-                foreach (var collision in FindCollisionsFor(a, combinations, physicsComponents, skippedEntities, suspendedEntitiesToProcess))
-                {
-                    yield return collision;
-                }
-            }
-            while (suspendedEntitiesToProcess.Count > 0)
-            {
-                var next = suspendedEntitiesToProcess.Pop();
-                foreach (var collision in FindCollisionsFor(next, combinations, physicsComponents, skippedEntities, suspendedEntitiesToProcess))
+                foreach (var collision in FindCollisionsFor(a, combinations, physicsComponents))
                 {
                     yield return collision;
                 }
@@ -199,9 +188,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private IEnumerable<Manifold> FindCollisionsFor(CollidableComponent a,
             List<(EntityUid, EntityUid)> combinations,
-            Dictionary<ICollidableComponent, PhysicsComponent> physicsComponents,
-            List<IEntity> skippedEntities,
-            Stack<CollidableComponent> suspendedEntitiesToProcess)
+            Dictionary<ICollidableComponent, PhysicsComponent> physicsComponents)
         {
             foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
             {
@@ -212,35 +199,16 @@ namespace Robust.Server.GameObjects.EntitySystems
                 }
 
                 combinations.Add((a.Owner.Uid, b.Owner.Uid));
-                if (a.Owner.TryGetComponent<PhysicsComponent>(out var aPhysics))
+                var aPhysics = a.Owner.GetComponent<PhysicsComponent>();
+                physicsComponents[a] = aPhysics;
+                if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
                 {
-                    physicsComponents[a] = aPhysics;
-                    if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                    {
-                        physicsComponents[b] = bPhysics;
-                        if (skippedEntities.Contains(b.Owner))
-                        {
-                            Logger.Debug(b.Owner.Name);
-                            suspendedEntitiesToProcess.Push(b);
-                        }
-                        yield return new Manifold(a, b, aPhysics, bPhysics);
-                    }
-                    else
-                    {
-                        yield return new Manifold(a, b, aPhysics, null);
-                    }
+                    physicsComponents[b] = bPhysics;
+                    yield return new Manifold(a, b, aPhysics, bPhysics);
                 }
                 else
                 {
-                    if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
-                    {
-                        physicsComponents[b] = bPhysics;
-                        if (skippedEntities.Contains(b.Owner))
-                        {
-                            suspendedEntitiesToProcess.Push(b);
-                        }
-                        yield return new Manifold(a, b, null, bPhysics);
-                    }
+                    yield return new Manifold(a, b, aPhysics, null);
                 }
             }
         }

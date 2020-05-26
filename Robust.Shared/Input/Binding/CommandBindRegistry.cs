@@ -13,7 +13,8 @@ namespace Robust.Shared.Input.Binding
         // handlers in the order they should be resolved for the given key function.
         // internally we use a graph to construct this but we render it down to a flattened
         // list so we don't need to do any graph traversal at query time
-        private readonly Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey;
+        private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
+            new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
 
         /// <inheritdoc />
         public void Register(TypeBindings typeBindings)
@@ -47,16 +48,11 @@ namespace Robust.Shared.Input.Binding
 
         private void RebuildGraph()
         {
-            // we only need to resolve dependencies between handlers bound to the same key function,
-            // so we'll segregate them by key function as the first step
-            var functionToBindings = FunctionToBindings();
-
-            // holds our final list of handlers for each key function in the order they should be resolved
-            var bindingsForKey = new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
+            _bindingsForKey.Clear();
 
             foreach (var functionBindings in FunctionToBindings())
             {
-                bindingsForKey[functionBindings.Key] = ResolveDependencies(functionBindings.Key, functionBindings.Value);
+                _bindingsForKey[functionBindings.Key] = ResolveDependencies(functionBindings.Key, functionBindings.Value);
 
             }
 

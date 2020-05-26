@@ -82,15 +82,35 @@ namespace Robust.Shared.Input.Binding
             }
 
             /// <summary>
+            /// Bind the indicated handlers to the indicated function, with no
+            /// particular dependency on bindings from other types.
+            ///
+            /// If multiple
+            /// handlers in this builder are registered to the same key function,
+            /// the handlers will fire in the order in which they were added to this builder.
+            /// </summary>
+            public BindingsBuilder Bind(BoundKeyFunction function, IEnumerable<InputCmdHandler> commands)
+            {
+                foreach (var command in commands)
+                {
+                    Bind(new TypeBinding(_type, function, command));
+                }
+
+                return this;
+            }
+
+            /// <summary>
             /// Bind the indicated handler to the indicated function. If other types register bindings for this key
             /// function, this handler will always fire after them if they appear in the "after" list.
             ///
             /// If multiple handlers in this builder are registered to the same key function,
             /// the handlers will fire in the order in which they were added to this builder.
             /// </summary>
+            /// <param name="after">If other types register bindings for this key
+            /// function, this handler will always fire after them if they appear in this list</param>
             public BindingsBuilder BindAfter(BoundKeyFunction function, InputCmdHandler command, params Type[] after)
             {
-                return Bind(new TypeBinding(_type, function, command, after));
+                return Bind(new TypeBinding(_type, function, command, after: after));
             }
 
             /// <summary>
@@ -100,6 +120,8 @@ namespace Robust.Shared.Input.Binding
             /// If multiple handlers in this builder are registered to the same key function,
             /// the handlers will fire in the order in which they were added to this builder.
             /// </summary>
+            /// <param name="before">If other types register bindings for this key
+            /// function, this handler will always fire before them if they appear in this list</param>
             public BindingsBuilder BindBefore(BoundKeyFunction function, InputCmdHandler command, params Type[] before)
             {
                 return Bind(new TypeBinding(_type, function, command, before));

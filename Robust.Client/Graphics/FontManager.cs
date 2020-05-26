@@ -234,7 +234,7 @@ namespace Robust.Client.Graphics
         {
             var map = new Dictionary<char, uint>();
 
-            // TODO: Render more than extended ASCII + Cyrillic, somehow.
+            // TODO: Render more than extended ASCII, Cyrillic and Greek. somehow.
             // Does it make sense to just render every glyph in the font?
 
             // Render all the extended ASCII characters.
@@ -246,6 +246,12 @@ namespace Robust.Client.Graphics
 
             // Render basic cyrillic.
             for (var i = 0x0410u; i <= 0x044F; i++)
+            {
+                _addGlyph(i, face, map);
+            }
+
+            // Render greek.
+            for (var i = 0x03B1u; i <= 0x03C9; i++)
             {
                 _addGlyph(i, face, map);
             }

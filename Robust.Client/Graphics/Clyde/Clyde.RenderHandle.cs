@@ -251,11 +251,6 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawPrimitives(primitiveTopology, texture, indices, vertices, realColor);
                 }
 
-                public override void DrawCircle(Vector2 position, float radius, Color color)
-                {
-                    // TODO: Implement this.
-                }
-
                 public override void DrawLine(Vector2 from, Vector2 to, Color color)
                 {
                     _renderHandle.DrawLine(@from, to, color * Modulate);

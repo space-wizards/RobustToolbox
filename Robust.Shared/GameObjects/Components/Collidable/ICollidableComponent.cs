@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects.Components
     public interface ICollidableComponent : IComponent, IPhysBody
     {
 
-        bool IsColliding(Vector2 offset);
+        bool IsColliding(Vector2 offset, bool approximate = true);
 
         IEnumerable<IEntity> GetCollidingEntities(Vector2 offset);
         bool UpdatePhysicsTree();

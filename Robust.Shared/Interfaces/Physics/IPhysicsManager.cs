@@ -45,7 +45,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="body"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        bool IsColliding(IPhysBody body, Vector2 offset);
+        bool IsColliding(IPhysBody body, Vector2 offset, bool approx);
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
@@ -149,15 +149,16 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly Vector2 Normal;
         public readonly ICollidableComponent A;
         public readonly ICollidableComponent B;
+        public readonly bool Soft;
         [CanBeNull] public SharedPhysicsComponent APhysics;
         [CanBeNull] public SharedPhysicsComponent BPhysics;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && !Soft;
 
-        public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics)
+        public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics, bool soft = false)
         {
             var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;
@@ -165,6 +166,7 @@ namespace Robust.Shared.Interfaces.Physics
             Normal = physicsManager.CalculateNormal(A, B);
             APhysics = aPhysics;
             BPhysics = bPhysics;
+            Soft = soft;
         }
     }
 }

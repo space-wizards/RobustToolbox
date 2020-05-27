@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.Physics;
@@ -204,11 +205,11 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (b.Owner.TryGetComponent<PhysicsComponent>(out var bPhysics))
                 {
                     physicsComponents[b] = bPhysics;
-                    yield return new Manifold(a, b, aPhysics, bPhysics);
+                    yield return new Manifold(a, b, aPhysics, bPhysics, !a.Hard || !b.Hard);
                 }
                 else
                 {
-                    yield return new Manifold(a, b, aPhysics, null);
+                    yield return new Manifold(a, b, aPhysics, null, !a.Hard || !b.Hard);
                 }
             }
         }
@@ -286,6 +287,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             const float percent = 0.4f;
             foreach (var collision in collisions)
             {
+                if (collision.Soft) continue;
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
                 if (penetration > allowance)
                 {

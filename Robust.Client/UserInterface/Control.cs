@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -96,6 +97,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="VisibleInTree"/>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public bool Visible
         {
             get => _visible;
@@ -277,6 +279,7 @@ namespace Robust.Client.UserInterface
         ///     Modulation is multiplying or tinting the color basically.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color Modulate { get; set; } = Color.White;
 
         /// <summary>

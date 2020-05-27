@@ -9,12 +9,10 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Log;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {

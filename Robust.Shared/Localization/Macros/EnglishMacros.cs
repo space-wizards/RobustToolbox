@@ -74,4 +74,19 @@
             };
         }
     }
+
+    [RegisterTextMacro("theyre", "en")]
+    public class Theyre : ITextMacro
+    {
+        public string Format(object argument)
+        {
+            return IGenderable.GetGenderOrEpicene(argument) switch
+            {
+                Gender.Female => "she's",
+                Gender.Male => "he's",
+                Gender.Neuter => "it's",
+                _ => "they're",
+            };
+        }
+    }
 }

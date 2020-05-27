@@ -12,7 +12,9 @@ namespace Robust.Server.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
+#pragma warning disable 649
         [Dependency] private IPlayerManager _playerManager;
+#pragma warning restore 649
 
 
         public const int AudioDistanceRange = 20;

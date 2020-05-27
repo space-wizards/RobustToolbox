@@ -18,6 +18,7 @@ namespace Robust.Client.Interfaces.Graphics
         void SetPitch(float pitch);
         void SetGlobal();
         void SetVolume(float decibels);
+        void SetOcclusion(float blocks);
         void SetPlaybackPosition(float seconds);
     }
 }

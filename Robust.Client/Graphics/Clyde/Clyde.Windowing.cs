@@ -5,10 +5,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL4;
-using OpenToolkit.GraphicsLibraryFramework;
+using OpenToolkit;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
@@ -20,10 +18,22 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
+using GLFW = OpenToolkit.GraphicsLibraryFramework.GLFW;
+using GLFWCallbacks = OpenToolkit.GraphicsLibraryFramework.GLFWCallbacks;
 using Image = SixLabors.ImageSharp.Image;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
+using InputAction = OpenToolkit.GraphicsLibraryFramework.InputAction;
+using KeyModifiers = OpenToolkit.GraphicsLibraryFramework.KeyModifiers;
+using Keys = OpenToolkit.GraphicsLibraryFramework.Keys;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using MouseButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
+using OpenGlProfile = OpenToolkit.GraphicsLibraryFramework.OpenGlProfile;
+using Window = OpenToolkit.GraphicsLibraryFramework.Window;
+using WindowHintBool = OpenToolkit.GraphicsLibraryFramework.WindowHintBool;
+using WindowHintInt = OpenToolkit.GraphicsLibraryFramework.WindowHintInt;
+using WindowHintOpenGlProfile = OpenToolkit.GraphicsLibraryFramework.WindowHintOpenGlProfile;
+using WindowHintString = OpenToolkit.GraphicsLibraryFramework.WindowHintString;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -43,7 +53,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _glfwInitialized;
 
-        private GraphicsContext _graphicsContext;
+        private IBindingsContext _graphicsContext;
         private Window* _glfwWindow;
 
         private Vector2i _framebufferSize;
@@ -240,11 +250,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private class GLFWBindingsContext : IBindingsContext
+        {
+            public IntPtr GetProcAddress(string procName)
+            {
+                return GLFW.GetProcAddress(procName);
+            }
+        }
+
         private void InitGLContext()
         {
             // Initialize the OpenTK 3 GL context with GLFW.
-            _graphicsContext = new GraphicsContext(new ContextHandle((IntPtr) _glfwWindow), GLFW.GetProcAddress,
-                () => new ContextHandle((IntPtr) GLFW.GetCurrentContext()));
+            _graphicsContext = new GLFWBindingsContext();
+            GL.LoadBindings(_graphicsContext);
         }
 
         private void ShutdownWindowing()

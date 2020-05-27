@@ -1,7 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Runtime.Intrinsics.X86;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics;
@@ -10,9 +8,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Timers;
 using Robust.Shared.Utility;
-using Logger = Robust.Shared.Log.Logger;
 using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
@@ -157,7 +153,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private ITaskManager _taskManager;
         [Dependency] private ILogManager _logger;
 #pragma warning restore 649
-        
+
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
@@ -354,7 +350,7 @@ namespace Robust.Client.Audio.Midi
 
             unsafe
             {
-                Span<uint> buffers = stackalloc uint[buffersProcessed];
+                Span<int> buffers = stackalloc int[buffersProcessed];
                 Span<float> audio = stackalloc float[bufferLength * buffers.Length];
 
                 Source.GetBuffersProcessed(buffers);
@@ -439,9 +435,6 @@ namespace Robust.Client.Audio.Midi
 
             if (DisablePercussionChannel && midiEvent.Channel == 9)
                 return;
-
-            // We play every note on channel 0 to prevent a bug where some notes didn't get turned off correctly.
-            const int ch = 0;
 
             try
             {

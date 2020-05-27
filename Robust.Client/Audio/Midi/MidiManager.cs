@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
 using NFluidsynth;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -57,12 +62,15 @@ namespace Robust.Client.Audio.Midi
         ///     If true, MIDI support is available.
         /// </summary>
         bool IsAvailable { get; }
+
+        public int OcclusionCollisionMask { get; set; }
     }
 
     internal class MidiManager : IDisposable, IMidiManager
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager;
 #pragma warning restore 649
 
         public bool IsAvailable
@@ -106,6 +114,8 @@ namespace Robust.Client.Audio.Midi
 
         private NFluidsynth.Logger.LoggerDelegate _loggerDelegate;
         private ISawmill _sawmill;
+
+        public int OcclusionCollisionMask { get; set; }
 
         private void InitializeFluidsynth()
         {
@@ -256,18 +266,46 @@ namespace Robust.Client.Audio.Midi
                         continue;
                     }
 
+                    MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
-                        if (renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                            continue;
-                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                        renderer.Source.StopPlaying();
+                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_mapManager);
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        if (renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition)) continue;
-                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                        renderer.Source.StopPlaying();
+                        mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                    }
+
+                    if (mapPos != null)
+                    {
+                        var pos = mapPos.Value;
+                        if (pos.MapId != _eyeManager.CurrentMap)
+                        {
+                            renderer.Source.SetVolume(-10000000);
+                        }
+                        else
+                        {
+                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var occlusion = 0;
+                            if (sourceRelative.Length > 0)
+                            {
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRay(
+                                    pos.MapId,
+                                    new CollisionRay(
+                                        pos.Position,
+                                        sourceRelative.Normalized,
+                                        OcclusionCollisionMask),
+                                    sourceRelative.Length,
+                                    null, false).Count();
+                            }
+                            renderer.Source.SetOcclusion(occlusion);
+                        }
+
+                        if (!renderer.Source.SetPosition(pos.Position))
+                        {
+                            _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                            renderer.Source.StopPlaying();
+                        }
                     }
                 }
         }

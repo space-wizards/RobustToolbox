@@ -153,7 +153,15 @@ namespace Robust.Server.GameObjects
 
         public void RemoveController()
         {
+            _controller.ControlledComponent = null;
             _controller = null;
+        }
+
+        protected override void Shutdown()
+        {
+            base.Shutdown();
+
+            RemoveController();
         }
     }
 }

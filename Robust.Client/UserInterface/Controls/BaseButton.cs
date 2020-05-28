@@ -242,6 +242,18 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
+            var drawMode = DrawMode;
+            var hasPoint = HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale);
+
+            if (!hasPoint)
+            {
+                _attemptingPress = false;
+                if (drawMode != DrawMode)
+                {
+                    DrawModeChanged();
+                }
+            }
+
             if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
@@ -250,8 +262,7 @@ namespace Robust.Client.UserInterface.Controls
             var buttonEventArgs = new ButtonEventArgs(this, args);
             OnButtonUp?.Invoke(buttonEventArgs);
 
-            var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
+            if (Mode == ActionMode.Release && _attemptingPress && hasPoint)
             {
                 // Can't un press a radio button directly.
                 if (Group == null || !Pressed)

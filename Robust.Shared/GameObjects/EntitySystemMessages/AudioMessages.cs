@@ -11,8 +11,25 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public abstract class AudioMessage : EntitySystemMessage
     {
+        public ushort Identifier { get; set; }
         public string FileName { get; set; }
         public AudioParams AudioParams { get; set; }
+    }
+
+    [Serializable, NetSerializable]
+    public class StopAudioMessageClient : AudioMessage
+    {
+
+    }
+
+    /// <summary>
+    /// DO NOT USE.
+    /// This is actually used for removing an identifier from the Server's list of stream ids.
+    /// </summary>
+    [Serializable, NetSerializable]
+    internal class StopAudioMessageServer: AudioMessage
+    {
+
     }
 
     [Serializable, NetSerializable]

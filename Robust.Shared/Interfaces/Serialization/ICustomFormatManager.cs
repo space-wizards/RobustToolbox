@@ -45,7 +45,7 @@ namespace Robust.Shared.Interfaces.Serialization
             return new YamlCustomFormatSerializer<T>(this);
         }
 
-        private class DoNothing<T> : WithFormat<T>
+        private class DoNothing : WithFormat<T>
         {
             public override Type Format => typeof(T);
             public override T FromCustomFormat(object obj) { return (T)obj; }
@@ -68,6 +68,6 @@ namespace Robust.Shared.Interfaces.Serialization
         /// <summary>
         /// The identity format i.e. the format which represents a value as itself.
         /// </summary>
-        public static readonly WithFormat<T> NoFormat = new DoNothing<T>();
+        public static readonly WithFormat<T> NoFormat = new DoNothing();
     }
 }

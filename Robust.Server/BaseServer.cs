@@ -58,8 +58,7 @@ namespace Robust.Server
         [Dependency] private readonly IServerNetManager _network;
         [Dependency] private readonly ISystemConsoleManager _systemConsole;
         [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly ILocalizationManager _localizationManager;
-        [Dependency] private IRuntimeLog runtimeLog;
+        [Dependency] private readonly IRuntimeLog runtimeLog;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly IWatchdogApi _watchdogApi;
         [Dependency] private readonly IScriptHost _scriptHost;

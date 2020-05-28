@@ -25,10 +25,6 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// <seealso cref="BoundUserInterface"/>
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
-
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new Dictionary<object, BoundUserInterface>();
 

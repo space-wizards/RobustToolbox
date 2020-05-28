@@ -30,8 +30,6 @@ namespace Robust.Client
 
         [Dependency] private readonly IPlayerManager _playMan;
 
-        [Dependency] private readonly IStateManager _stateManager;
-
         [Dependency] private readonly IConfigurationManager _configManager;
 
         [Dependency] private readonly IClientEntityManager _entityManager;

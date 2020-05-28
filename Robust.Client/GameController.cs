@@ -54,7 +54,6 @@ namespace Robust.Client
         [Dependency] private readonly IClientConsole _console;
         [Dependency] private readonly ITimerManager _timerManager;
         [Dependency] private readonly IClientEntityManager _entityManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
         [Dependency] private readonly IPlacementManager _placementManager;
         [Dependency] private readonly IClientGameStateManager _gameStateManager;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager;
@@ -64,7 +63,6 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord;
         [Dependency] private readonly IClydeInternal _clyde;
         [Dependency] private readonly IFontManagerInternal _fontManager;
-        [Dependency] private readonly ILocalizationManager _localizationManager;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly ISignalHandler _signalHandler;
         [Dependency] private readonly IClientConGroupController _conGroupController;

@@ -1,44 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
-using Robust.Shared.Random;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
 
-        private static List<ushort> _streams = new List<ushort>(ushort.MaxValue);
-        private RobustRandom _random = new RobustRandom();
-        private static ushort _previousRandom = 0;
+        public class AudioSource
+        {
+            public readonly byte Id;
+            private readonly AudioSystem _audioSystem;
+
+            public AudioSource(AudioSystem parent, byte identifier)
+            {
+                _audioSystem = parent;
+                Id = identifier;
+            }
+            public void Stop()
+            {
+                _audioSystem.InternalStop(Id);
+            }
+        }
+
+        private static readonly byte[] _streams = new byte[int.MaxValue];
+        private static byte _streamIndex = 0;
 
         public override void Initialize()
         {
             base.Initialize();
             SubscribeNetworkEvent<StopAudioMessageServer>(StopAudioMessageHandler);
-
         }
 
         private void StopAudioMessageHandler(StopAudioMessageServer msg, EntitySessionEventArgs args)
         {
-            _streams.RemoveAll(s => s == msg.Identifier);
+            _streams[msg.Identifier] = 0;
         }
 
-        private ushort CacheIdentifier()
+        private void InternalStop(byte id)
         {
-            var streamID = (ushort)_random.Next(ushort.MaxValue);
-            while (streamID == _previousRandom)
+            var msg = new StopAudioMessageClient
             {
-                streamID = (ushort)_random.Next(ushort.MaxValue);
-                break;
-            }
-            _streams.Add(streamID);
-            _previousRandom = streamID;
-            return streamID;
+                Identifier = id
+            };
+
+            RaiseNetworkEvent(msg);
+        }
+
+        private byte CacheIdentifier()
+        {
+            var newId = _streams[_streamIndex] = _streamIndex++;
+            return newId;
         }
 
         /// <summary>
@@ -46,7 +63,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
-        public ushort PlayGlobal(string filename, AudioParams? audioParams = null)
+        public AudioSource PlayGlobal(string filename, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -56,7 +73,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            return id;
+            var src = new AudioSource(this, id);
+            return src;
+
         }
 
         /// <summary>
@@ -65,7 +84,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public ushort PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null)
+        public AudioSource PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioEntityMessage
@@ -76,7 +95,8 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            return id;
+            var src = new AudioSource(this, id);
+            return src;
         }
 
         /// <summary>
@@ -85,7 +105,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public ushort PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
+        public AudioSource PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioPositionalMessage
@@ -96,22 +116,8 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            return id;
-        }
-
-        /// <summary>
-        ///     Stop an audio event.
-        /// </summary>
-        /// <param name="identifier">The ushort returned by the Play function used to start playing a sound.</param>
-        public void Stop(ushort identifier)
-        {
-            var msg = new StopAudioMessageClient
-            {
-                Identifier = identifier
-            };
-
-            RaiseNetworkEvent(msg);
-            _streams.RemoveAll(s => s == identifier);
+            var src = new AudioSource(this, id);
+            return src;
         }
 
         #region DEPRECATED

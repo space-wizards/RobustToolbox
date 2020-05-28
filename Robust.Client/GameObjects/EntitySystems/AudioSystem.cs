@@ -28,7 +28,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         [Dependency] private readonly IEyeManager _eyeManager;
 #pragma warning restore 649
 
-        private static readonly Dictionary<ushort, PlayingStream> _playingClydeStreams = new Dictionary<ushort, PlayingStream>();
+        private static Dictionary<byte, PlayingStream> _playingClydeStreams = new Dictionary<byte, PlayingStream>();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -41,8 +41,10 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
         {
-            _playingClydeStreams.TryGetValue(ev.Identifier, out var stream);
-            StreamDone(ev.Identifier, stream);
+            if (_playingClydeStreams.TryGetValue(ev.Identifier, out var stream))
+            {
+                StreamDone(ev.Identifier, stream);
+            }
         }
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
@@ -151,7 +153,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             _playingClydeStreams.Values.ToList().RemoveAll(p => p.Done);
         }
 
-        private static void StreamDone(ushort key, PlayingStream stream)
+        private static void StreamDone(byte key, PlayingStream stream)
         {
             _playingClydeStreams.Remove(key);
             stream.Source.Dispose();
@@ -307,6 +309,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             public GridCoordinates? TrackingCoordinates;
             public bool Done;
             public float Volume;
+            public PlayingStream InnerStream;
 
             public void Stop()
             {

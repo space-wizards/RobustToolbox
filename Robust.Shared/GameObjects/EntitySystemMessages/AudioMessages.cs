@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public abstract class AudioMessage : EntitySystemMessage
     {
-        public ushort Identifier { get; set; }
+        public byte Identifier { get; set; }
         public string FileName { get; set; }
         public AudioParams AudioParams { get; set; }
     }

@@ -106,11 +106,6 @@ namespace Robust.Client.UserInterface.CustomControls
             set => TitleLabel.Text = value;
         }
 
-        /// <summary>
-        ///     Invoked when the close button of this window is pressed.
-        /// </summary>
-        public override event Action OnClose;
-
         // Drag resizing and moving code is mostly taken from Godot's WindowDialog.
 
         protected override void Dispose(bool disposing)

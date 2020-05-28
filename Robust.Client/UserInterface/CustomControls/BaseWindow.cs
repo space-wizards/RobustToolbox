@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.CustomControls
         /// <summary>
         ///     Invoked when the close button of this window is pressed.
         /// </summary>
-        public virtual event Action OnClose;
+        public event Action OnClose;
 
         public virtual void Close()
         {

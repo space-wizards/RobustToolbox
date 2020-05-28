@@ -144,13 +144,13 @@ namespace Robust.Server
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
+            _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
             _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd"))
-                .Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
+                .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
             var fullPath = Path.Combine(logPath, logFilename);
 
             if (!Path.IsPathRooted(fullPath))

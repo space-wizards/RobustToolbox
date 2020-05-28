@@ -178,6 +178,12 @@ namespace Robust.Server.GameObjects
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
+                var cmp = y.SourceTick.CompareTo(x.SourceTick);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
                 return y.Sequence.CompareTo(x.Sequence);
             }
         }

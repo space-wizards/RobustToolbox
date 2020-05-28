@@ -23,12 +23,11 @@ namespace Robust.Client.Graphics.Drawing
             DrawTextureRectRegion(texture, rect, null, modulate);
         }
 
-        public override void DrawCircle(Vector2 position, float radius, Color color)
+        public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
         {
             const int segments = 64;
-            Span<Vector2> buffer = stackalloc Vector2[segments + 2];
+            Span<Vector2> buffer = stackalloc Vector2[segments + 1];
 
-            buffer[0] = position;
             for (var i = 0; i <= segments; i++)
             {
                 var angle = i / (float) segments * MathHelper.TwoPi;
@@ -37,7 +36,8 @@ namespace Robust.Client.Graphics.Drawing
                 buffer[i] = position + pos * radius;
             }
 
-            DrawPrimitives(DrawPrimitiveTopology.TriangleFan, buffer, color);
+            DrawPrimitiveTopology type = filled ? DrawPrimitiveTopology.TriangleFan : DrawPrimitiveTopology.LineStrip;
+            DrawPrimitives(type, buffer, color);
         }
     }
 }

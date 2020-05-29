@@ -41,17 +41,19 @@ namespace Robust.Shared.Input.Binding
         IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function);
 
         /// <summary>
-        /// Unregisters all bindings currently defined by the indicated type so they will
-        /// no longer receive / handle inputs. Should usually be typeof(this)  - same type
-        /// as the calling class.
+        /// Unregisters all bindings currently registered under indicated type so they will
+        /// no longer receive / handle inputs.
         /// </summary>
+        /// <param name="forType">type whose bindings should be unregistered, typically a system / manager,
+        /// should usually be typeof(this) - same type as the calling class.</param>
         void Unregister(Type forType);
 
         /// <summary>
-        /// Unregisters all bindings currently defined by the indicated type so they will
-        /// no longer receive / handle inputs. Should usually be typeof(this) - same type
-        /// as the calling class.
+        /// Unregisters all bindings currently registered under indicated type so they will
+        /// no longer receive / handle inputs.
         /// </summary>
+        /// <typeparam name="T">type whose bindings should be unregistered, typically a system / manager,
+        /// should usually be typeof(this) - same type as the calling class.</typeparam>
         void Unregister<T>();
     }
 }

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Input.Binding
 {
@@ -27,11 +30,31 @@ namespace Robust.Shared.Input.Binding
         public static BindingsBuilder Builder => new BindingsBuilder();
 
         /// <summary>
+        /// Unregisters from the current InputSystem's BindRegistry all bindings currently registered under
+        /// indicated type so they will no longer receive / handle inputs. No effect if input system
+        /// no longer exists.
+        /// </summary>
+        /// <typeparam name="T">type whose bindings should be unregistered, typically a system / manager,
+        /// should usually be typeof(this) - same type as the calling class.</typeparam>
+        public static void Unregister<T>()
+        {
+            if (EntitySystem.TryGet<SharedInputSystem>(out var inputSystem))
+            {
+                inputSystem.BindRegistry.Unregister<T>();
+            }
+        }
+
+        /// <summary>
         /// For creating Bindings.
         /// </summary>
         public class BindingsBuilder
         {
             private readonly List<CommandBind> _bindings = new List<CommandBind>();
+
+            public static BindingsBuilder Create()
+            {
+                return new BindingsBuilder();
+            }
 
             /// <summary>
             /// Bind the indicated handler to the indicated function, with no
@@ -120,6 +143,16 @@ namespace Robust.Shared.Input.Binding
                 var bindings = Build();
                 registry.Register<T>(bindings);
                 return bindings;
+            }
+
+            /// <summary>
+            /// Create the Bindings based on the current configuration and register
+            /// with the indicated mappings to the current InputSystem's BindRegistry
+            /// so they will be allowed to handle inputs.
+            /// </summary>
+            public CommandBinds Register<T>()
+            {
+                return Register<T>(EntitySystem.Get<SharedInputSystem>().BindRegistry);
             }
         }
     }

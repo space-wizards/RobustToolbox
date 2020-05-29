@@ -34,6 +34,16 @@ namespace Robust.Client.Audio.Midi
         byte MidiProgram { get; set; }
 
         /// <summary>
+        ///     The instrument bank the renderer is using.
+        /// </summary>
+        byte MidiBank { get; set; }
+
+        /// <summary>
+        ///     The soundfont currently selected by the renderer.
+        /// </summary>
+        uint MidiSoundfont { get; set; }
+
+        /// <summary>
         ///     The current status of the renderer.
         ///     "None" if the renderer isn't playing from input or a midi file.
         ///     "Input" if the renderer is playing from midi input.

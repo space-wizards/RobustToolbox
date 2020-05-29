@@ -13,6 +13,7 @@ namespace Robust.Shared.Serialization
     public class CustomFormatManager : ICustomFormatManager
     {
         private Dictionary<Type, WithFormat<int>> _flagFormatters = new Dictionary<Type, WithFormat<int>>();
+        private Dictionary<Type, WithFormat<int>> _constantFormatters = new Dictionary<Type, WithFormat<int>>();
 
         public WithFormat<int> FlagFormat<T>()
         {
@@ -20,6 +21,17 @@ namespace Robust.Shared.Serialization
             {
                 formatter = new WithFlagRepresentation(GetFlag<T>());
                 _flagFormatters.Add(typeof(T), formatter);
+            }
+
+            return formatter;
+        }
+
+        public WithFormat<int> ConstantFormat<T>()
+        {
+            if (!_constantFormatters.TryGetValue(typeof(T), out var formatter))
+            {
+                formatter = new WithConstantRepresentation(GetConstants<T>());
+                _constantFormatters.Add(typeof(T), formatter);
             }
 
             return formatter;
@@ -100,6 +112,73 @@ namespace Robust.Shared.Serialization
 
             return flagType;
         }
+
+        /// <summary>
+        /// Get the constant type for the given tag <typeparamref name="T"/>.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The tag type to use for finding the constant representation. To learn more,
+        /// see the <see cref="ConstantsForAttribute"/>.
+        /// </typeparam>
+        /// <exception cref="ConstantsSerializerException">
+        /// Thrown if:
+        /// <list type="bullet">
+        /// <item>
+        /// <description>The tag type corresponds to no constant representation.</description>
+        /// </item>
+        /// <item>
+        /// <description>The tag type corresponds to more than one constant representation.</description>
+        /// </item>
+        /// <item>
+        /// <description>The tag type corresponds to a non-enum representation.</description>
+        /// </item>
+        /// <item>
+        /// <description>The tag type corresponds to a non-int enum representation.</description>
+        /// </item>
+        /// </list>
+        /// </exception>
+        /// <returns>
+        /// The unique int-backed enum constant type for the given tag.
+        /// </returns>
+        private Type GetConstants<T>()
+        {
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+            Type constantType = null;
+
+            foreach (Type enumConstantType in reflectionManager.FindTypesWithAttribute<ConstantsForAttribute>())
+            {
+                foreach (var constantsForAttribute in enumConstantType.GetCustomAttributes<ConstantsForAttribute>(true))
+                {
+                    if (typeof(T) == constantsForAttribute.Tag)
+                    {
+                        if (constantType != null)
+                        {
+                            throw new NotSupportedException($"Multiple constant enums declared for the tag {constantsForAttribute.Tag}.");
+                        }
+
+                        if (!enumConstantType.IsEnum)
+                        {
+                            throw new ConstantSerializerException($"Could not create ConstantSerializer for non-enum {enumConstantType}.");
+                        }
+
+                        if (Enum.GetUnderlyingType(enumConstantType) != typeof(int))
+                        {
+                            throw new ConstantSerializerException($"Could not create ConstantSerializer for non-int enum {enumConstantType}.");
+                        }
+
+                        constantType = enumConstantType;
+                    }
+                }
+            }
+
+            if (constantType == null)
+            {
+                throw new FlagSerializerException($"Found no type marked with a `ConstantsForAttribute(typeof({typeof(T)}))`.");
+            }
+
+            return constantType;
+        }
     }
 
     /// <summary>
@@ -173,6 +252,55 @@ namespace Robust.Shared.Serialization
     internal sealed class FlagSerializerException : Exception
     {
         public FlagSerializerException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>
+    /// <c>int</c> representation in terms of some constant enum constructors.
+    /// </summary>
+    public class WithConstantRepresentation : WithFormat<int>
+    {
+        private Type _constantType;
+        public Type ConstantType => _constantType;
+
+        private YamlConstantSerializer _serializer;
+
+        public WithConstantRepresentation(Type constantType)
+        {
+            _constantType = constantType;
+            _serializer = new YamlConstantSerializer(_constantType, this);
+
+        }
+
+        public override YamlObjectSerializer.TypeSerializer GetYamlSerializer()
+        {
+            return _serializer;
+        }
+
+        public override Type Format => typeof(string);
+
+        public override int FromCustomFormat(object obj)
+        {
+            return (int)Enum.Parse(_constantType, (string)obj);
+        }
+
+        public override object ToCustomFormat(int value)
+        {
+            var constantName = Enum.GetName(_constantType, value);
+
+            if (constantName == null)
+            {
+                throw new ConstantSerializerException($"No constant corresponding to value {value} in {_constantType}.");
+            }
+
+            return constantName;
+        }
+    }
+
+    internal sealed class ConstantSerializerException : Exception
+    {
+        public ConstantSerializerException(string message) : base(message)
         {
         }
     }

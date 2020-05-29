@@ -43,5 +43,10 @@ namespace Robust.Shared.Serialization
         {
             return IoCManager.Resolve<ICustomFormatManager>().FlagFormat<T>();
         }
+
+        public static WithFormat<int> Constants<T>()
+        {
+            return IoCManager.Resolve<ICustomFormatManager>().ConstantFormat<T>();
+        }
     }
 }

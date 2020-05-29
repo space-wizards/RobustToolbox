@@ -115,7 +115,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     We will allow for unique interactions with other objects with the same key.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables(VVAccess.ReadOnly)]
         public string SpriteKey => _spriteKey;
 
         private RSI _baseRsi;

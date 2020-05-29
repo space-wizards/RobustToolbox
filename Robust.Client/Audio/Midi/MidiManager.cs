@@ -11,6 +11,7 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -71,6 +72,7 @@ namespace Robust.Client.Audio.Midi
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IResourceManager _resourceManager;
 #pragma warning restore 649
 
         public bool IsAvailable
@@ -203,7 +205,14 @@ namespace Robust.Client.Audio.Midi
 
                 var renderer = new MidiRenderer(_settings, soundfontLoader);
 
-                // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
+                foreach (var file in _resourceManager.ContentFindFiles(new ResourcePath("/MidiCustom/")))
+                {
+                    if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                    _resourceManager.TryGetDiskFilePath(file, out var path);
+                    renderer.LoadSoundfont(path);
+                }
+
+                // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
                 renderer.LoadSoundfont(FallbackSoundfont);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))

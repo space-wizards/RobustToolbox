@@ -7,6 +7,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using MidiEvent = NFluidsynth.MidiEvent;
@@ -168,7 +169,9 @@ namespace Robust.Client.Audio.Midi
         private Sequencer _sequencer;
         private NFluidsynth.Player _player;
         private MidiDriver _driver;
-        private byte _midiprogram = 1;
+        private byte _midiProgram = 1;
+        private byte _midiBank = 1;
+        private uint _midiSoundfont = 0;
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
@@ -179,18 +182,45 @@ namespace Robust.Client.Audio.Midi
 
         public byte MidiProgram
         {
-            get => _midiprogram;
+            get => _midiProgram;
             set
             {
                 lock (_playerStateLock)
                     for (var i = 0; i < 16; i++)
                         _synth.ProgramChange(i, value);
 
-                _midiprogram = value;
+                _midiProgram = value;
+            }
+        }
+
+        public byte MidiBank
+        {
+            get => _midiBank;
+            set
+            {
+                lock (_playerStateLock)
+                    for (var i = 0; i < 16; i++)
+                        _synth.BankSelect(i, value);
+
+                _midiBank = value;
+            }
+        }
+
+        public uint MidiSoundfont
+        {
+            get => _midiSoundfont;
+            set
+            {
+                lock (_playerStateLock)
+                    for (var i = 0; i < 16; i++)
+                        _synth.SoundFontSelect(i, value);
+
+                _midiSoundfont = value;
             }
         }
 
         public bool DisablePercussionChannel { get; set; } = true;
+        public bool DisableProgramChangeEvent { get; set; } = true;
 
         public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
         public int PlayerTick => _player?.CurrentTick ?? 0;
@@ -225,6 +255,7 @@ namespace Robust.Client.Audio.Midi
         {
             IoCManager.InjectDependencies(this);
             _midiSawmill = _logger.GetSawmill("midi");
+            _midiSawmill.Level = LogLevel.Info;
             Source = _clydeAudio.CreateBufferedAudioSource(Buffers, true);
             Source.SampleRate = SampleRate;
             _settings = settings;
@@ -234,6 +265,7 @@ namespace Robust.Client.Audio.Midi
             _synthRegister = _sequencer.RegisterFluidsynth(_synth);
 
             _synth.AddSoundFontLoader(soundFontLoader);
+
             Mono = mono;
             Source.EmptyBuffers();
             Source.StartPlaying();
@@ -327,8 +359,7 @@ namespace Robust.Client.Audio.Midi
             lock (_playerStateLock)
             {
                 _synth.LoadSoundFont(filename, resetPresets);
-                for (var i = 0; i < 16; i++)
-                    _synth.SoundFontSelect(i, 1);
+                MidiSoundfont = 1;
             }
         }
 
@@ -439,18 +470,62 @@ namespace Robust.Client.Audio.Midi
             try
             {
                 lock(_playerStateLock)
-                    if (midiEvent.Type == 144 && midiEvent.Velocity != 0)
-                        _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
-                    else if (midiEvent.Type == 128 || (midiEvent.Type == 144 && midiEvent.Velocity == 0))
-                        _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
-                    else if (midiEvent.Type == 224)
-                        _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
-                    else if (midiEvent.Type == 176)
-                        _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                    switch (midiEvent.Type)
+                    {
+                        // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
+                        case 1:
+                        case 81:
+                            break;
+
+                        // Note On 0x80
+                        case 144:
+                            _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
+                            break;
+
+                        // Note Off - 0x90
+                        case 128:
+                            _synth.NoteOff(midiEvent.Channel, midiEvent.Key);
+                            break;
+
+                        // After Touch - 0xA
+                        case 160:
+                            _synth.KeyPressure(midiEvent.Channel, midiEvent.Key, midiEvent.Value);
+                            break;
+
+                        // Control Change - 0xB0
+                        case 176:
+                            _synth.CC(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                            break;
+
+                        // Program Change - 0xC0
+                        case 192:
+                            if(!DisableProgramChangeEvent)
+                                _synth.ProgramChange(midiEvent.Channel, midiEvent.Program);
+                            break;
+
+                        // Channel Pressure - 0xD0
+                        case 208:
+                            _synth.ChannelPressure(midiEvent.Channel, midiEvent.Value);
+                            break;
+
+                        // Pitch Bend - 0xE0
+                        case 224:
+                            _synth.PitchBend(midiEvent.Channel, midiEvent.Pitch);
+                            break;
+
+                        // System Messages - 0xF0
+                        case 240:
+                            break;
+
+                        default:
+                            _midiSawmill.Warning("Unhandled midi event of type {0}", midiEvent.Type, midiEvent);
+                            break;
+                    }
             }
             catch (FluidSynthInteropException e)
             {
-                _midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e);
+                // This spams NoteOff errors most of the time for no good reason.
+                //_midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e, midiEvent);
             }
 
             _taskManager.RunOnMainThread(() => OnMidiEvent?.Invoke(midiEvent));

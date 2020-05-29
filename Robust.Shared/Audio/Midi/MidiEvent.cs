@@ -61,6 +61,11 @@ namespace Robust.Shared.Audio.Midi
             };
         }
 
+        public override string ToString()
+        {
+            return $"{base.ToString()} >> TYPE: {Type} || CHANNEL: {Channel} || CONTROL: {Control} || KEY: {Key} || VELOCITY: {Velocity} || PITCH: {Pitch} || PROGRAM: {Program} || VALUE: {Value} <<";
+        }
+
         public static implicit operator NFluidsynth.SequencerEvent(MidiEvent midiEvent)
         {
             var @event = new NFluidsynth.SequencerEvent();

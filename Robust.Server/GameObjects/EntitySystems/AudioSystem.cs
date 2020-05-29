@@ -13,19 +13,19 @@ namespace Robust.Server.GameObjects.EntitySystems
     {
         private static byte _streamIndex = byte.MaxValue - 1;
 
-        public class AudioSource
+        public class AudioSourceServer
         {
-            private readonly byte Id;
+            private readonly byte _id;
             private readonly AudioSystem _audioSystem;
 
-            public AudioSource(AudioSystem parent, byte identifier)
+            public AudioSourceServer(AudioSystem parent, byte identifier)
             {
                 _audioSystem = parent;
-                Id = identifier;
+                _id = identifier;
             }
             public void Stop()
             {
-                _audioSystem.InternalStop(Id);
+                _audioSystem.InternalStop(_id);
             }
         }
 
@@ -53,7 +53,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
-        public AudioSource PlayGlobal(string filename, AudioParams? audioParams = null)
+        public AudioSourceServer PlayGlobal(string filename, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -63,7 +63,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            var src = new AudioSource(this, id);
+            var src = new AudioSourceServer(this, id);
             return src;
 
         }
@@ -74,7 +74,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public AudioSource PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null)
+        public AudioSourceServer PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioEntityMessage
@@ -85,7 +85,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            var src = new AudioSource(this, id);
+            var src = new AudioSourceServer(this, id);
             return src;
         }
 
@@ -95,7 +95,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public AudioSource PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
+        public AudioSourceServer PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioPositionalMessage
@@ -106,7 +106,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 Identifier = id
             };
             RaiseNetworkEvent(msg);
-            var src = new AudioSource(this, id);
+            var src = new AudioSourceServer(this, id);
             return src;
         }
 

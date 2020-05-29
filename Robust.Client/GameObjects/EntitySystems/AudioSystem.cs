@@ -91,10 +91,8 @@ namespace Robust.Client.GameObjects.EntitySystems
             var currentMap = _eyeManager.CurrentMap;
 
             // Update positions of streams every frame.
-            foreach (var kvp in _playingClydeStreams)
+            foreach (var (key, stream) in _playingClydeStreams)
             {
-                var stream = kvp.Value;
-                var key = kvp.Key;
                 if (!stream.Source.IsPlaying)
                 {
                     StreamDone(key,stream);

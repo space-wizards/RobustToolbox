@@ -11,10 +11,11 @@ namespace Robust.Server.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
+        private static byte _streamIndex = byte.MaxValue - 1;
 
         public class AudioSource
         {
-            public readonly byte Id;
+            private readonly byte Id;
             private readonly AudioSystem _audioSystem;
 
             public AudioSource(AudioSystem parent, byte identifier)
@@ -26,20 +27,6 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 _audioSystem.InternalStop(Id);
             }
-        }
-
-        private static readonly byte[] _streams = new byte[int.MaxValue];
-        private static byte _streamIndex = 0;
-
-        public override void Initialize()
-        {
-            base.Initialize();
-            SubscribeNetworkEvent<StopAudioMessageServer>(StopAudioMessageHandler);
-        }
-
-        private void StopAudioMessageHandler(StopAudioMessageServer msg, EntitySessionEventArgs args)
-        {
-            _streams[msg.Identifier] = 0;
         }
 
         private void InternalStop(byte id)
@@ -54,8 +41,11 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private byte CacheIdentifier()
         {
-            var newId = _streams[_streamIndex] = _streamIndex++;
-            return newId;
+            if (_streamIndex >= byte.MaxValue)
+            {
+                _streamIndex = 0;
+            }
+            return _streamIndex++;
         }
 
         /// <summary>

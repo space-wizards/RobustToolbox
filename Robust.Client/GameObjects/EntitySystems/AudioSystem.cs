@@ -137,19 +137,6 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            foreach (var kvp in _playingClydeStreams)
-            {
-                if (!kvp.Value.Done)
-                {
-                    continue;
-                }
-
-                var msgToServer = new StopAudioMessageServer
-                {
-                    Identifier = kvp.Key
-                };
-                RaiseNetworkEvent(msgToServer);
-            }
             _playingClydeStreams.Values.ToList().RemoveAll(p => p.Done);
         }
 

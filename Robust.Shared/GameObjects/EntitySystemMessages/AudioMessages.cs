@@ -22,16 +22,6 @@ namespace Robust.Shared.GameObjects
 
     }
 
-    /// <summary>
-    /// DO NOT USE.
-    /// This is actually used for removing an identifier from the Server's list of stream ids.
-    /// </summary>
-    [Serializable, NetSerializable]
-    internal class StopAudioMessageServer: AudioMessage
-    {
-
-    }
-
     [Serializable, NetSerializable]
     public class PlayAudioGlobalMessage : AudioMessage
     {

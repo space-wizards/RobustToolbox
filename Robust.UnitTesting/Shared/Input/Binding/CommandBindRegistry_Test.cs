@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -188,9 +189,33 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             }
         }
 
+        [Test]
         public void ThrowsError_WhenCircularDependency()
         {
-            //TODO: implement
+            var registry = new CommandBindRegistry();
+            var bkf = new BoundKeyFunction("test");
+
+            var aHandler1 = new NullInputCmdHandler("a1");
+            var aHandler2 = new NullInputCmdHandler("a2");
+            var bHandler1 = new NullInputCmdHandler("b1");
+            var bHandler2 = new NullInputCmdHandler("b2");
+            var cHandler1 = new NullInputCmdHandler("c1");
+            var cHandler2 = new NullInputCmdHandler("c2");
+
+            CommandBinds.Builder
+                .Bind(bkf, aHandler1)
+                .BindAfter(bkf, aHandler2, typeof(TypeB), typeof(TypeC))
+                .Register<TypeA>(registry);
+            CommandBinds.Builder
+                .Bind(bkf, bHandler1)
+                .Bind(bkf, bHandler2)
+                .Register<TypeB>(registry);
+
+            Assert.Throws<InvalidOperationException>(() =>
+                CommandBinds.Builder
+                    .Bind(bkf, cHandler1)
+                    .BindAfter(bkf, cHandler2, typeof(TypeA))
+                    .Register<TypeC>(registry));
         }
     }
 }

@@ -9,7 +9,7 @@ namespace Robust.Shared.Input.Binding
     public class CommandBindRegistry : ICommandBindRegistry
     {
         // all registered bindings
-        private List<TypeBinding> _bindings = new List<TypeBinding>();
+        private List<TypedCommandBind> _bindings = new List<TypedCommandBind>();
         // handlers in the order they should be resolved for the given key function.
         // internally we use a graph to construct this but we render it down to a flattened
         // list so we don't need to do any graph traversal at query time
@@ -17,11 +17,22 @@ namespace Robust.Shared.Input.Binding
             new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
 
         /// <inheritdoc />
-        public void Register(TypeBindings typeBindings)
+        public void Register<T>(CommandBinds commandBinds)
         {
-            _bindings.AddRange(typeBindings.Bindings);
+            Register(commandBinds, typeof(T));
+        }
+
+        /// <inheritdoc />
+        public void Register(CommandBinds commandBinds, Type forType)
+        {
+            foreach (var binding in commandBinds.Bindings)
+            {
+                _bindings.Add(new TypedCommandBind(forType, binding));
+            }
+
             RebuildGraph();
         }
+
 
         /// <inheritdoc />
         public IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function)
@@ -58,17 +69,17 @@ namespace Robust.Shared.Input.Binding
 
         }
 
-        private Dictionary<BoundKeyFunction, List<TypeBinding>> FunctionToBindings()
+        private Dictionary<BoundKeyFunction, List<TypedCommandBind>> FunctionToBindings()
         {
-            var functionToBindings = new Dictionary<BoundKeyFunction, List<TypeBinding>>();
+            var functionToBindings = new Dictionary<BoundKeyFunction, List<TypedCommandBind>>();
             foreach (var typeBinding in _bindings)
             {
-                if (!functionToBindings.ContainsKey(typeBinding.BoundKeyFunction))
+                if (!functionToBindings.ContainsKey(typeBinding.CommandBind.BoundKeyFunction))
                 {
-                    functionToBindings[typeBinding.BoundKeyFunction] = new List<TypeBinding>();
+                    functionToBindings[typeBinding.CommandBind.BoundKeyFunction] = new List<TypedCommandBind>();
                 }
 
-                functionToBindings[typeBinding.BoundKeyFunction].Add(typeBinding);
+                functionToBindings[typeBinding.CommandBind.BoundKeyFunction].Add(typeBinding);
             }
 
             return functionToBindings;
@@ -79,7 +90,7 @@ namespace Robust.Shared.Input.Binding
         /// Determines the order in which the indicated bindings handlers should be resolved for a
         /// particular bound key function
         /// </summary>
-        private List<InputCmdHandler> ResolveDependencies(BoundKeyFunction function, List<TypeBinding> bindingsForFunction)
+        private List<InputCmdHandler> ResolveDependencies(BoundKeyFunction function, List<TypedCommandBind> bindingsForFunction)
         {
             //TODO: Probably could be optimized if needed! Generally shouldn't be a big issue since there is a relatively
             // tiny amount of bindings
@@ -101,7 +112,7 @@ namespace Robust.Shared.Input.Binding
             //add the graph edges
             foreach (var curBinding in allNodes)
             {
-                foreach (var afterType in curBinding.TypeBinding.After)
+                foreach (var afterType in curBinding.TypedCommandBind.CommandBind.After)
                 {
                     // curBinding should always fire after bindings associated with this afterType, i.e.
                     // this binding DEPENDS ON afterTypes' bindings
@@ -113,7 +124,7 @@ namespace Robust.Shared.Input.Binding
                         }
                     }
                 }
-                foreach (var beforeType in curBinding.TypeBinding.Before)
+                foreach (var beforeType in curBinding.TypedCommandBind.CommandBind.Before)
                 {
                     // curBinding should always fire before bindings associated with this beforeType, i.e.
                     // beforeTypes' bindings DEPENDS ON this binding
@@ -135,7 +146,7 @@ namespace Robust.Shared.Input.Binding
 
             foreach (var node in topoSorted)
             {
-                result.Add(node.TypeBinding.Handler);
+                result.Add(node.TypedCommandBind.CommandBind.Handler);
             }
 
             return result;
@@ -172,11 +183,28 @@ namespace Robust.Shared.Input.Binding
         private class GraphNode
         {
             public List<GraphNode> DependsOn = new List<GraphNode>();
-            public readonly TypeBinding TypeBinding;
+            public readonly TypedCommandBind TypedCommandBind;
 
-            public GraphNode(TypeBinding typeBinding)
+            public GraphNode(TypedCommandBind typedCommandBind)
             {
-                TypeBinding = typeBinding;
+                TypedCommandBind = typedCommandBind;
+            }
+        }
+
+        /// <summary>
+        /// Command bind which has an associated type.
+        /// The only time a client should need to think about the type for a binding is when they are
+        /// registering a set of bindings, so we don't include this information in CommandBind
+        /// </summary>
+        private class TypedCommandBind
+        {
+            public readonly Type ForType;
+            public readonly CommandBind CommandBind;
+
+            public TypedCommandBind(Type forType, CommandBind commandBind)
+            {
+                ForType = forType;
+                CommandBind = commandBind;
             }
         }
 

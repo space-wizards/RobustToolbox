@@ -60,15 +60,15 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 theseHandlers.AddRange(bHandlers);
                 theseHandlers.AddRange(cHandlers);
 
-                TypeBindings.Builder<TypeA>()
+                CommandBinds.Builder
                     .Bind(bkf, aHandlers)
-                    .Register(registry);
-                TypeBindings.Builder<TypeB>()
+                    .Register<TypeA>(registry);
+                CommandBinds.Builder
                     .Bind(bkf, bHandlers)
-                    .Register(registry);
-                TypeBindings.Builder<TypeC>()
+                    .Register<TypeB>(registry);
+                CommandBinds.Builder
                     .Bind(bkf, cHandlers)
-                    .Register(registry);
+                    .Register<TypeC>(registry);
             }
 
 
@@ -105,48 +105,48 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             // a handler 2 should run after both b and c handlers for all the below cases
             if (before && after)
             {
-                TypeBindings.Builder<TypeA>()
+                CommandBinds.Builder
                     .Bind(bkf, aHandler1)
                     .BindAfter(bkf, aHandler2, typeof(TypeB), typeof(TypeC))
-                    .Register(registry);
-                TypeBindings.Builder<TypeB>()
+                    .Register<TypeA>(registry);
+                CommandBinds.Builder
                     .BindBefore(bkf, bHandler1, typeof(TypeA))
                     .BindBefore(bkf, bHandler2, typeof(TypeA))
-                    .Register(registry);
-                TypeBindings.Builder<TypeC>()
+                    .Register<TypeB>(registry);
+                CommandBinds.Builder
                     .BindBefore(bkf, cHandler1, typeof(TypeA))
                     .BindBefore(bkf, cHandler2, typeof(TypeA))
-                    .Register(registry);
+                    .Register<TypeC>(registry);
             }
             else if (before)
             {
-                TypeBindings.Builder<TypeA>()
+                CommandBinds.Builder
                     .Bind(bkf, aHandler1)
                     .Bind(bkf, aHandler2)
-                    .Register(registry);
-                TypeBindings.Builder<TypeB>()
+                    .Register<TypeA>(registry);
+                CommandBinds.Builder
                     .BindBefore(bkf, bHandler1, typeof(TypeA))
                     .BindBefore(bkf, bHandler2, typeof(TypeA))
-                    .Register(registry);
-                TypeBindings.Builder<TypeC>()
+                    .Register<TypeB>(registry);
+                CommandBinds.Builder
                     .BindBefore(bkf, cHandler1, typeof(TypeA))
                     .BindBefore(bkf, cHandler2, typeof(TypeA))
-                    .Register(registry);
+                    .Register<TypeC>(registry);
             }
             else if (after)
             {
-                TypeBindings.Builder<TypeA>()
+                CommandBinds.Builder
                     .Bind(bkf, aHandler1)
                     .BindAfter(bkf, aHandler2, typeof(TypeB), typeof(TypeC))
-                    .Register(registry);
-                TypeBindings.Builder<TypeB>()
+                    .Register<TypeA>(registry);
+                CommandBinds.Builder
                     .Bind(bkf, bHandler1)
                     .Bind(bkf, bHandler2)
-                    .Register(registry);
-                TypeBindings.Builder<TypeC>()
+                    .Register<TypeB>(registry);
+                CommandBinds.Builder
                     .Bind(bkf, cHandler1)
                     .Bind(bkf, cHandler2)
-                    .Register(registry);
+                    .Register<TypeC>(registry);
             }
 
 

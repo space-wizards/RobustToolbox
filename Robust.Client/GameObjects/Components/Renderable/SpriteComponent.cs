@@ -30,6 +30,7 @@ namespace Robust.Client.GameObjects
         IComponentDebug
     {
         private bool _visible = true;
+        private string _spriteKey;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Visible
@@ -110,6 +111,12 @@ namespace Robust.Client.GameObjects
         }
 
         private bool _directional = true;
+
+        /// <summary>
+        ///     We will allow for unique interactions with other objects with the same key.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public string SpriteKey => _spriteKey;
 
         private RSI _baseRsi;
 
@@ -1110,6 +1117,7 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);
+            serializer.DataFieldCached(ref _spriteKey, "key", "");
 
             // TODO: Writing?
             if (!serializer.Reading)

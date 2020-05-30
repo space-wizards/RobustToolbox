@@ -10,6 +10,6 @@ namespace Robust.Client.Interfaces.GameObjects
     /// </summary>
     public interface IClickTargetComponent : IComponent
     {
-        DrawDepth DrawDepth { get; }
+        int DrawDepth { get; }
     }
 }

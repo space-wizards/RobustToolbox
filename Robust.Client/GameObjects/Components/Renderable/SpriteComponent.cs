@@ -8,6 +8,7 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -38,13 +39,13 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        private DrawDepth drawDepth = DrawDepth.Objects;
+        private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public DrawDepth DrawDepth
+        public int DrawDepth
         {
             get => drawDepth;
             set => drawDepth = value;
@@ -1106,7 +1107,7 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref scale, "scale", Vector2.One);
             serializer.DataFieldCached(ref rotation, "rotation", Angle.Zero);
             serializer.DataFieldCached(ref offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepth.Objects);
+            serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepthTag.Default, WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref color, "color", Color.White);
             serializer.DataFieldCached(ref _directional, "directional", true);
             serializer.DataFieldCached(ref _visible, "visible", true);

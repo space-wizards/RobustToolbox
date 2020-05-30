@@ -19,7 +19,7 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// <summary>
         ///     Z-index for drawing.
         /// </summary>
-        DrawDepth DrawDepth { get; set; }
+        int DrawDepth { get; set; }
 
         /// <summary>
         ///     A scale applied to all layers.

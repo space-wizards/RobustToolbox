@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         protected class SpriteComponentState : ComponentState
         {
             public readonly bool Visible;
-            public readonly DrawDepth DrawDepth;
+            public readonly int DrawDepth;
             public readonly Vector2 Scale;
             public readonly Angle Rotation;
             public readonly Vector2 Offset;
@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
 
             public SpriteComponentState(
                 bool visible,
-                DrawDepth drawDepth,
+                int drawDepth,
                 Vector2 scale,
                 Angle rotation,
                 Vector2 offset,

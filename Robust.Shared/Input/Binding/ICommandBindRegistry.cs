@@ -5,32 +5,32 @@ namespace Robust.Shared.Input.Binding
 {
     /// <summary>
     /// Allows registering bindings so that they will receive and handle inputs. Each set of bindings
-    /// is registered to a particular Type, which is typically a system or a manager.
+    /// is registered to a particular owner Type, which is typically a system or a manager.
     ///
-    /// This association of bindings with types allows allows the bindings to declare
+    /// This association of bindings with owner types allows allows the bindings to declare
     /// dependencies on each other - for example to ensure that one system's handlers will always
     /// fire after another system's handlers. This also allows easy unregistering of all bindings
     /// for a given system / manager.
     /// </summary>
     public interface ICommandBindRegistry
     {
-        /// <summary>
-        /// Registers the indicated bindings, under the given type.
+        /// <summary>CO
+        /// Registers the indicated bindings, under the given owner type.
         /// The handlers in the bindings will receive input events.
         /// </summary>
         /// <param name="commandBinds">Bindings to register.</param>
-        /// <typeparam name="T">type to register the bindings under, typically a system / manager,
+        /// <typeparam name="TOwner">type that owns these bindings, typically a system / manager,
         /// should usually be typeof(this) - same type as the calling class.</typeparam>
-        void Register<T>(CommandBinds commandBinds);
+        void Register<TOwner>(CommandBinds commandBinds);
 
         /// <summary>
         /// Registers the indicated bindings, under the given type.
         /// The handlers in the bindings will receive input events.
         /// </summary>
         /// <param name="commandBinds">Bindings to register.</param>
-        /// <param name="forType">type to register the bindings under, typically a system / manager,
+        /// <param name="owner">type that owns these bindings, typically a system / manager,
         /// should usually be typeof(this) - same type as the calling class.</param>
-        void Register(CommandBinds commandBinds, Type forType);
+        void Register(CommandBinds commandBinds, Type owner);
 
         /// <summary>
         /// Gets the command handlers bound to the indicated function, in the order
@@ -44,16 +44,16 @@ namespace Robust.Shared.Input.Binding
         /// Unregisters all bindings currently registered under indicated type so they will
         /// no longer receive / handle inputs.
         /// </summary>
-        /// <param name="forType">type whose bindings should be unregistered, typically a system / manager,
+        /// <param name="owner">owner type whose bindings should be unregistered, typically a system / manager,
         /// should usually be typeof(this) - same type as the calling class.</param>
-        void Unregister(Type forType);
+        void Unregister(Type owner);
 
         /// <summary>
         /// Unregisters all bindings currently registered under indicated type so they will
         /// no longer receive / handle inputs.
         /// </summary>
-        /// <typeparam name="T">type whose bindings should be unregistered, typically a system / manager,
+        /// <typeparam name="TOwner">owner type whose bindings should be unregistered, typically a system / manager,
         /// should usually be typeof(this) - same type as the calling class.</typeparam>
-        void Unregister<T>();
+        void Unregister<TOwner>();
     }
 }

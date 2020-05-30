@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             CommandBinds.Builder
                 .Bind(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler())
                 .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
-                .Register<EyeUpdateSystem>();
+                .Register<EyeUpdateSystem, InputSystem>();
         }
 
         /// <inheritdoc />

@@ -31,16 +31,16 @@ namespace Robust.Shared.Input.Binding
 
         /// <summary>
         /// Unregisters from the current InputSystem's BindRegistry all bindings currently registered under
-        /// indicated type so they will no longer receive / handle inputs. No effect if input system
+        /// indicated owner type so they will no longer receive / handle inputs. No effect if input system
         /// no longer exists.
         /// </summary>
-        /// <typeparam name="T">type whose bindings should be unregistered, typically a system / manager,
+        /// <typeparam name="TOwner">owner type whose bindings should be unregistered, typically a system / manager,
         /// should usually be typeof(this) - same type as the calling class.</typeparam>
-        public static void Unregister<T>()
+        public static void Unregister<TOwner>()
         {
             if (EntitySystem.TryGet<SharedInputSystem>(out var inputSystem))
             {
-                inputSystem.BindRegistry.Unregister<T>();
+                inputSystem.BindRegistry.Unregister<TOwner>();
             }
         }
 
@@ -58,7 +58,7 @@ namespace Robust.Shared.Input.Binding
 
             /// <summary>
             /// Bind the indicated handler to the indicated function, with no
-            /// particular dependency on bindings from other types. If multiple
+            /// particular dependency on bindings from other owner types. If multiple
             /// handlers in this builder are registered to the same key function,
             /// the handlers will fire in the order in which they were added to this builder.
             /// </summary>
@@ -69,7 +69,7 @@ namespace Robust.Shared.Input.Binding
 
             /// <summary>
             /// Bind the indicated handlers to the indicated function, with no
-            /// particular dependency on bindings from other types.
+            /// particular dependency on bindings from other owner types.
             ///
             /// If multiple
             /// handlers in this builder are registered to the same key function,
@@ -86,13 +86,13 @@ namespace Robust.Shared.Input.Binding
             }
 
             /// <summary>
-            /// Bind the indicated handler to the indicated function. If other types register bindings for this key
+            /// Bind the indicated handler to the indicated function. If other owner types register bindings for this key
             /// function, this handler will always fire after them if they appear in the "after" list.
             ///
             /// If multiple handlers in this builder are registered to the same key function,
             /// the handlers will fire in the order in which they were added to this builder.
             /// </summary>
-            /// <param name="after">If other types register bindings for this key
+            /// <param name="after">If other owner types register bindings for this key
             /// function, this handler will always fire after them if they appear in this list</param>
             public BindingsBuilder BindAfter(BoundKeyFunction function, InputCmdHandler command, params Type[] after)
             {
@@ -100,13 +100,13 @@ namespace Robust.Shared.Input.Binding
             }
 
             /// <summary>
-            /// Bind the indicated handler to the indicated function. If other types register bindings for this key
+            /// Bind the indicated handler to the indicated function. If other owner types register bindings for this key
             /// function, this handler will always fire before them if they appear in the "before" list.
             ///
             /// If multiple handlers in this builder are registered to the same key function,
             /// the handlers will fire in the order in which they were added to this builder.
             /// </summary>
-            /// <param name="before">If other types register bindings for this key
+            /// <param name="before">If other owner types register bindings for this key
             /// function, this handler will always fire before them if they appear in this list</param>
             public BindingsBuilder BindBefore(BoundKeyFunction function, InputCmdHandler command, params Type[] before)
             {
@@ -137,22 +137,31 @@ namespace Robust.Shared.Input.Binding
             /// Create the Bindings based on the current configuration and register
             /// with the indicated mappings so they will be allowed to handle inputs.
             /// </summary>
+            /// <typeparam name="TOwner">type that owns these bindings, typically a system / manager,
+            /// should usually be typeof(this) - same type as the calling class.</typeparam>
             /// <param name="registry">mappings to register these bindings with</param>
-            public CommandBinds Register<T>(ICommandBindRegistry registry)
+            public CommandBinds Register<TOwner>(ICommandBindRegistry registry)
             {
                 var bindings = Build();
-                registry.Register<T>(bindings);
+                registry.Register<TOwner>(bindings);
                 return bindings;
             }
 
             /// <summary>
             /// Create the Bindings based on the current configuration and register
-            /// with the indicated mappings to the current InputSystem's BindRegistry
+            /// with the indicated mappings to the indicated active InputSystem's BindRegistry
             /// so they will be allowed to handle inputs.
             /// </summary>
-            public CommandBinds Register<T>()
+            /// <typeparam name="TOwner">type that owns these bindings, typically a system / manager,
+            /// should usually be typeof(this) - same type as the calling class.</typeparam>
+            /// <typeparam name="TInputSystem">type of the InputSystem to register under.
+            /// TODO: Remove this param if/when EntitySystemManager provides a way to
+            /// get an entity system by its supertype. This is only here because EntitySystem.Get on
+            /// SharedInputSystem won't work</typeparam>
+            public CommandBinds Register<TOwner, TInputSystem>()
+                where TInputSystem : SharedInputSystem
             {
-                return Register<T>(EntitySystem.Get<SharedInputSystem>().BindRegistry);
+                return Register<TOwner>(EntitySystem.Get<TInputSystem>().BindRegistry);
             }
         }
     }

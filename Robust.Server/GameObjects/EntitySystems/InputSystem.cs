@@ -21,14 +21,9 @@ namespace Robust.Server.GameObjects.EntitySystems
 #pragma warning restore 649
 
         private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
-        private readonly CommandBindRegistry _bindRegistry = new CommandBindRegistry();
+
 
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new Dictionary<IPlayerSession, uint>();
-
-        /// <summary>
-        ///     Server side input command binds.
-        /// </summary>
-        public override ICommandBindRegistry BindRegistry => _bindRegistry;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -67,7 +62,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             // route the cmdMessage to the proper bind
             //Client Sanitization: unbound command, just ignore
-            foreach (var handler in _bindRegistry.GetHandlers(function))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
                 if (handler.HandleCmdMessage(session, msg)) return;
             }

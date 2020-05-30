@@ -5,6 +5,11 @@ namespace Robust.Shared.GameObjects.Systems
 {
     public abstract class SharedInputSystem : EntitySystem
     {
-        public abstract ICommandBindRegistry BindRegistry { get; }
+        private readonly CommandBindRegistry _bindRegistry = new CommandBindRegistry();
+
+        /// <summary>
+        ///     Holds the keyFunction -> handler bindings for the simulation.
+        /// </summary>
+        public ICommandBindRegistry BindRegistry => _bindRegistry;
     }
 }

@@ -4,6 +4,9 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
+using Robust.Shared.Interfaces.Log;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
@@ -34,6 +37,15 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             {
                 return false;
             }
+        }
+
+        [OneTimeSetUp]
+        public void SetUp()
+        {
+            //needed due to usage of logging within command bind registry
+            IoCManager.InitThread();
+            IoCManager.Register<ILogManager, LogManager>();
+            IoCManager.BuildGraph();
         }
 
         [TestCase(1,1)]

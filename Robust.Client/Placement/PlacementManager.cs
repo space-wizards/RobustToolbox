@@ -260,7 +260,7 @@ namespace Robust.Client.Placement
                             return;
                         Clear();
                     }))
-                .Register<PlacementManager>();
+                .Register<PlacementManager, InputSystem>();
 
             var localPlayer = PlayerManager.LocalPlayer;
             localPlayer.EntityAttached += OnEntityAttached;

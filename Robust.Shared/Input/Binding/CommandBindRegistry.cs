@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.Input.Binding
@@ -17,17 +18,17 @@ namespace Robust.Shared.Input.Binding
             new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
 
         /// <inheritdoc />
-        public void Register<T>(CommandBinds commandBinds)
+        public void Register<TOwner>(CommandBinds commandBinds)
         {
-            Register(commandBinds, typeof(T));
+            Register(commandBinds, typeof(TOwner));
         }
 
         /// <inheritdoc />
-        public void Register(CommandBinds commandBinds, Type forType)
+        public void Register(CommandBinds commandBinds, Type owner)
         {
             foreach (var existingBinding in _bindings)
             {
-                if (existingBinding.ForType == forType)
+                if (existingBinding.ForType == owner)
                 {
                     // feel free to delete this if there's an actual need for registering multiple
                     // bindings for a given type in separate calls to Register()
@@ -35,13 +36,13 @@ namespace Robust.Shared.Input.Binding
                                    " to register more. This may " +
                                    "be a programming error. Did you register these under the wrong type, or " +
                                    "did you forget to unregister these bindings when" +
-                                   " your system / manager is shutdown?", forType.Name);
+                                   " your system / manager is shutdown?", owner.Name);
                     break;
                 }
             }
             foreach (var binding in commandBinds.Bindings)
             {
-                _bindings.Add(new TypedCommandBind(forType, binding));
+                _bindings.Add(new TypedCommandBind(owner, binding));
             }
 
             RebuildGraph();
@@ -59,16 +60,16 @@ namespace Robust.Shared.Input.Binding
         }
 
         /// <inheritdoc />
-        public void Unregister(Type forType)
+        public void Unregister(Type owner)
         {
-            _bindings.RemoveAll(binding => binding.ForType != forType);
+            _bindings.RemoveAll(binding => binding.ForType != owner);
             RebuildGraph();
         }
 
         /// <inheritdoc />
-        public void Unregister<T>()
+        public void Unregister<TOwner>()
         {
-            Unregister(typeof(T));
+            Unregister(typeof(TOwner));
         }
 
         private void RebuildGraph()

@@ -19,7 +19,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
 #pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
@@ -34,11 +34,6 @@ namespace Robust.Client.GameObjects.EntitySystems
         ///     Current states for all of the keyFunctions.
         /// </summary>
         public IPlayerCommandStates CmdStates => _cmdStates;
-
-        /// <summary>
-        ///     Holds the keyFunction -> handler bindings for the simulation.
-        /// </summary>
-        public ICommandBindRegistry BindRegistry => _bindRegistry;
 
         /// <summary>
         /// If the input system is currently predicting input.

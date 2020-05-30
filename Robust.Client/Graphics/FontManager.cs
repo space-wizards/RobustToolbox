@@ -122,9 +122,9 @@ namespace Robust.Client.Graphics
             var atlasEntriesVertical =
                 (int) Math.Ceiling(count / (float) atlasEntriesHorizontal);
             var atlasDimX =
-                (int) Math.Round(atlasEntriesHorizontal * maxGlyphSize.X / 4f, MidpointRounding.AwayFromZero) * 4;
+                (int) Math.Ceiling(atlasEntriesHorizontal * maxGlyphSize.X / 4f) * 4;
             var atlasDimY =
-                (int) Math.Round(atlasEntriesVertical * maxGlyphSize.Y / 4f, MidpointRounding.AwayFromZero) * 4;
+                (int) Math.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
 
             using (var atlas = new Image<Alpha8>(atlasDimX, atlasDimY))
             {
@@ -234,7 +234,7 @@ namespace Robust.Client.Graphics
         {
             var map = new Dictionary<char, uint>();
 
-            // TODO: Render more than extended ASCII + Cyrillic, somehow.
+            // TODO: Render more than extended ASCII, Cyrillic and Greek. somehow.
             // Does it make sense to just render every glyph in the font?
 
             // Render all the extended ASCII characters.
@@ -246,6 +246,12 @@ namespace Robust.Client.Graphics
 
             // Render basic cyrillic.
             for (var i = 0x0410u; i <= 0x044F; i++)
+            {
+                _addGlyph(i, face, map);
+            }
+
+            // Render greek.
+            for (var i = 0x03B1u; i <= 0x03C9; i++)
             {
                 _addGlyph(i, face, map);
             }

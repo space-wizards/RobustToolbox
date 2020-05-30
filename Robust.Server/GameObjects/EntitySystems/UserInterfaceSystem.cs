@@ -31,6 +31,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             foreach (var userInterface in _activeInterfaces.ToList())
             {
                 CheckRange(userInterface);
+                userInterface.DispatchPendingState();
             }
         }
 

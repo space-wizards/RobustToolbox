@@ -91,6 +91,14 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.PlacementOffset, Is.EqualTo(new Vector2i(30, 45)));
         }
 
+        [Test]
+        public void TestPlacementInheritance()
+        {
+            var prototype = manager.Index<EntityPrototype>("PlaceInheritTester");
+
+            Assert.AreEqual(prototype.PlacementMode, "SnapgridCenter");
+        }
+
         private enum YamlTestEnum
         {
             Foo,
@@ -147,6 +155,12 @@ namespace Robust.UnitTesting.Shared.Prototypes
     - 1
     - 2
     - 3
+
+- type: entity
+  id: PlaceInheritTester
+  parent: mounttester
+  placement:
+    mode: SnapgridCenter
 ";
     }
 

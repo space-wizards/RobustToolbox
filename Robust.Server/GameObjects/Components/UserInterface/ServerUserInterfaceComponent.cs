@@ -25,10 +25,6 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// <seealso cref="BoundUserInterface"/>
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
-
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new Dictionary<object, BoundUserInterface>();
 
@@ -73,7 +69,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             SendNetworkMessage(new BoundInterfaceMessageWrapMessage(message, uiKey), session.ConnectedClient);
         }
 
-        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null)
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
+            ICommonSession session = null)
         {
             base.HandleNetworkMessage(message, netChannel, session);
 
@@ -91,6 +88,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                             wrapped.UiKey);
                         return;
                     }
+
                     @interface.ReceiveMessage(wrapped.Message, session as IPlayerSession);
                     break;
             }
@@ -108,6 +106,11 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
         private BoundUserInterfaceState _lastState;
+
+        private bool _stateDirty;
+
+        private readonly Dictionary<IPlayerSession, BoundUserInterfaceState> _playerStateOverrides =
+            new Dictionary<IPlayerSession, BoundUserInterfaceState>();
 
         /// <summary>
         ///     All of the sessions currently subscribed to this UserInterface.
@@ -139,11 +142,16 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         /// </param>
         public void SetState(BoundUserInterfaceState state, IPlayerSession session = null)
         {
-            if(session == null)
-                SendMessage(new UpdateBoundStateMessage(state));
+            if (session == null)
+            {
+                _lastState = state;
+                _playerStateOverrides.Clear();
+            }
             else
-                SendMessage(new UpdateBoundStateMessage(state), session);
-            _lastState = state;
+            {
+                _playerStateOverrides[session] = state;
+            }
+            _stateDirty = true;
         }
 
         /// <summary>
@@ -223,6 +231,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         {
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
+            _playerStateOverrides.Remove(session);
 
             if (_subscribedSessions.Count == 0)
             {
@@ -320,12 +329,36 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 throw new ArgumentException("Player session does not have this UI open.");
             }
         }
+
+        public void DispatchPendingState()
+        {
+            if (!_stateDirty)
+            {
+                return;
+            }
+
+            foreach (var playerSession in _subscribedSessions)
+            {
+                if (!_playerStateOverrides.ContainsKey(playerSession))
+                {
+                    SendMessage(new UpdateBoundStateMessage(_lastState), playerSession);
+                }
+            }
+
+            foreach (var (player, state) in _playerStateOverrides)
+            {
+                SendMessage(new UpdateBoundStateMessage(state), player);
+            }
+
+            _stateDirty = false;
+        }
     }
 
     public class ServerBoundUserInterfaceMessage
     {
         public BoundUserInterfaceMessage Message { get; }
         public IPlayerSession Session { get; }
+
         public ServerBoundUserInterfaceMessage(BoundUserInterfaceMessage message, IPlayerSession session)
         {
             Message = message;

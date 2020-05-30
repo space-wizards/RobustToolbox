@@ -18,9 +18,7 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Log;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates

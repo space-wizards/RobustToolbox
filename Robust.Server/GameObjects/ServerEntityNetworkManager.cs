@@ -5,6 +5,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -18,12 +19,13 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// The server implementation of the Entity Network Manager.
     /// </summary>
-    public class ServerEntityNetworkManager : IServerEntityNetworkManager
+    public class ServerEntityNetworkManager : IServerEntityNetworkManager, IPostInjectInit
     {
 #pragma warning disable 649
         [Dependency] private readonly IServerNetManager _networkManager;
         [Dependency] private readonly IGameTiming _gameTiming;
         [Dependency] private readonly IPlayerManager _playerManager;
+        [Dependency] private readonly IConfigurationManager _configurationManager;
 #pragma warning restore 649
 
         /// <inheritdoc />
@@ -37,12 +39,16 @@ namespace Robust.Server.GameObjects
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
             new Dictionary<IPlayerSession, uint>();
 
+        private bool _logLateMsgs;
+
         /// <inheritdoc />
         public void SetupNetworking()
         {
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+
+            _logLateMsgs = _configurationManager.GetCVar<bool>("net.log_late_msg");
         }
 
         public void Update()
@@ -111,7 +117,7 @@ namespace Robust.Server.GameObjects
 
             if (msgT <= cT)
             {
-                if (msgT < cT)
+                if (msgT < cT && _logLateMsgs)
                 {
                     Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
                         (int) msgT.Value - (int) cT.Value, message.MsgChannel.SessionId, msgT, cT);
@@ -178,8 +184,19 @@ namespace Robust.Server.GameObjects
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
+                var cmp = y.SourceTick.CompareTo(x.SourceTick);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
                 return y.Sequence.CompareTo(x.Sequence);
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _configurationManager.RegisterCVar("net.log_late_msg", true, onValueChanged: b => _logLateMsgs = b);
         }
     }
 }

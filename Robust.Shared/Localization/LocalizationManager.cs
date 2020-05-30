@@ -6,6 +6,7 @@ using System.Linq;
 using NGettext;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization.Macros;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -15,6 +16,7 @@ namespace Robust.Shared.Localization
     {
 #pragma warning disable 649
         [Dependency] private readonly IResourceManager _resourceManager;
+        [Dependency] private readonly ITextMacroFactory _textMacroFactory;
 #pragma warning restore 649
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
@@ -118,10 +120,11 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
-            var catalog = new Catalog(culture);
+            var catalog = new CustomFormatCatalog(culture);
             _catalogs.Add(culture, catalog);
 
             _loadData(culture, catalog);
+            _loadMacros(culture, catalog);
             if (DefaultCulture == null)
             {
                 DefaultCulture = culture;
@@ -179,6 +182,12 @@ namespace Robust.Shared.Localization
             }
 
             catalog.Translations.Add(id, strings);
+        }
+
+        private void _loadMacros(CultureInfo culture, CustomFormatCatalog catalog)
+        {
+            var macros = _textMacroFactory.GetMacrosForLanguage(culture.IetfLanguageTag);
+            catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }
 }

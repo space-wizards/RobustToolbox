@@ -216,6 +216,11 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public void SetOcclusion(float blocks)
+            {
+                // Nada.
+            }
+
             public void SetPlaybackPosition(float seconds)
             {
                 // Nada.
@@ -227,22 +232,22 @@ namespace Robust.Client.Graphics.Clyde
             public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
             public int SampleRate { get; set; } = 0;
 
-            public void WriteBuffer(uint handle, ReadOnlySpan<ushort> data)
+            public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
             {
                 // Nada.
             }
 
-            public void WriteBuffer(uint handle, ReadOnlySpan<float> data)
+            public void WriteBuffer(int handle, ReadOnlySpan<float> data)
             {
                 // Nada.
             }
 
-            public void QueueBuffer(uint handle)
+            public void QueueBuffer(int handle)
             {
                 // Nada.
             }
 
-            public void QueueBuffers(ReadOnlySpan<uint> handles)
+            public void QueueBuffers(ReadOnlySpan<int> handles)
             {
                 // Nada.
             }
@@ -252,7 +257,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void GetBuffersProcessed(Span<uint> handles)
+            public void GetBuffersProcessed(Span<int> handles)
             {
                 // Nada.
             }

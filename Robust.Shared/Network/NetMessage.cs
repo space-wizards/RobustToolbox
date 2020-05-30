@@ -95,7 +95,6 @@ namespace Robust.Shared.Network
                 switch (MsgGroup)
                 {
                     case MsgGroups.Entity:
-                        return NetDeliveryMethod.Unreliable;
                     case MsgGroups.Core:
                     case MsgGroups.String:
                     case MsgGroups.Command:

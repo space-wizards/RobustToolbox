@@ -15,6 +15,7 @@ using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
+using Robust.Shared.Localization.Macros;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
@@ -48,6 +49,7 @@ namespace Robust.Shared
             IoCManager.Register<ITaskManager, TaskManager>();
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
+            IoCManager.Register<ITextMacroFactory, TextMacroFactory>();
         }
     }
 }

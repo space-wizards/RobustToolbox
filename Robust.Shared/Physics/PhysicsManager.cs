@@ -243,17 +243,17 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (predicate != null && predicate.Invoke(body.Owner))
-                {
-                    return true;
-                }
-
                 if (!body.CanCollide)
                 {
                     return true;
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (predicate != null && predicate.Invoke(body.Owner))
                 {
                     return true;
                 }

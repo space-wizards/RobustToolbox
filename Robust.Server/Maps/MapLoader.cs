@@ -44,7 +44,6 @@ namespace Robust.Server.Maps
 
         [Dependency] private readonly IPauseManager _pauseManager;
         [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IComponentFactory _componentFactory;
         [Dependency] private readonly IPrototypeManager _prototypeManager;
 #pragma warning restore 649
 

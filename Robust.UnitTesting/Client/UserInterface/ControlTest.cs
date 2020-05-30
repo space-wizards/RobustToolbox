@@ -23,6 +23,9 @@ namespace Robust.UnitTesting.Client.UserInterface
         private static readonly AttachedProperty _nullableAttachedProperty
             = AttachedProperty.Create("_nullable", typeof(ControlTest), typeof(float?));
 
+        private static readonly AttachedProperty<int> _genericProperty =
+            AttachedProperty<int>.Create("generic", typeof(ControlTest), 5, i => i % 2 == 1);
+
         public override UnitTestProject Project => UnitTestProject.Client;
 
         [OneTimeSetUp]
@@ -127,6 +130,20 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control();
 
             control.SetValue(_nullableAttachedProperty, null);
+        }
+
+        [Test]
+        public void TestAttachedPropertiesGeneric()
+        {
+            var control = new Control();
+
+            Assert.AreEqual(5, control.GetValue(_genericProperty));
+
+            control.SetValue(_genericProperty, 11);
+
+            Assert.AreEqual(11, control.GetValue(_genericProperty));
+
+            Assert.That(() => control.SetValue(_genericProperty, 10), Throws.ArgumentException);
         }
 
         [Test]

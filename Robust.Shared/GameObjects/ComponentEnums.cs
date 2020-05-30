@@ -20,6 +20,7 @@
         Objects = 7,
         Items = 8,
         Mobs = 9,
-        Overlays = 10,
+        Ghosts = 10,
+        Overlays = 11,
     }
 }

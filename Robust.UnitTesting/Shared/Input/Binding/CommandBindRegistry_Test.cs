@@ -11,20 +11,23 @@ using Robust.Shared.Players;
 
 namespace Robust.UnitTesting.Shared.Input.Binding
 {
-    [TestFixture]
-    public class CommandBindRegistry_Test
+    [TestFixture, TestOf(typeof(CommandBindRegistry))]
+    public class CommandBindRegistry_Test : RobustUnitTest
     {
 
         private class TypeA { }
         private class TypeB { }
         private class TypeC { }
 
-        private class NullInputCmdHandler : InputCmdHandler
+        private class TestInputCmdHandler : InputCmdHandler
         {
+            // these vars only for tracking / debugging during testing
             private readonly string name;
+            public readonly Type ForType;
 
-            public NullInputCmdHandler(string name = "")
+            public TestInputCmdHandler(Type forType = null, string name = "")
             {
+                this.ForType = forType;
                 this.name = name;
             }
 
@@ -37,15 +40,6 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             {
                 return false;
             }
-        }
-
-        [OneTimeSetUp]
-        public void SetUp()
-        {
-            //needed due to usage of logging within command bind registry
-            IoCManager.InitThread();
-            IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.BuildGraph();
         }
 
         [TestCase(1,1)]
@@ -65,9 +59,9 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var cHandlers = new List<InputCmdHandler>();
                 for (int j = 0; j < handlersPerType; j++)
                 {
-                    aHandlers.Add(new NullInputCmdHandler());
-                    bHandlers.Add(new NullInputCmdHandler());
-                    cHandlers.Add(new NullInputCmdHandler());
+                    aHandlers.Add(new TestInputCmdHandler(typeof(TypeA)));
+                    bHandlers.Add(new TestInputCmdHandler(typeof(TypeB)));
+                    cHandlers.Add(new TestInputCmdHandler(typeof(TypeC)));
                 }
                 theseHandlers.AddRange(aHandlers);
                 theseHandlers.AddRange(bHandlers);
@@ -92,11 +86,22 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 var expectedHandlers = bkfToExpectedHandlers.Value;
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
 
-                foreach (var expectedHandler in expectedHandlers)
-                {
-                    Assert.True(returnedHandlers.Contains(expectedHandler));
-                }
+                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
             }
+
+            // type b stuff should no longer fire
+            CommandBinds.Unregister<TypeB>(registry);
+
+            foreach (var bkfToExpectedHandlers in allHandlers)
+            {
+                var bkf = bkfToExpectedHandlers.Key;
+                var expectedHandlers = bkfToExpectedHandlers.Value;
+                expectedHandlers.RemoveAll(handler => ((TestInputCmdHandler) handler).ForType == typeof(TypeB));
+                HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
+                CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+            }
+
+
         }
 
 
@@ -108,12 +113,12 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             var registry = new CommandBindRegistry();
             var bkf = new BoundKeyFunction("test");
 
-            var aHandler1 = new NullInputCmdHandler("a1");
-            var aHandler2 = new NullInputCmdHandler("a2");
-            var bHandler1 = new NullInputCmdHandler("b1");
-            var bHandler2 = new NullInputCmdHandler("b2");
-            var cHandler1 = new NullInputCmdHandler("c1");
-            var cHandler2 = new NullInputCmdHandler("c2");
+            var aHandler1 = new TestInputCmdHandler( );
+            var aHandler2 = new TestInputCmdHandler();
+            var bHandler1 = new TestInputCmdHandler();
+            var bHandler2 = new TestInputCmdHandler();
+            var cHandler1 = new TestInputCmdHandler();
+            var cHandler2 = new TestInputCmdHandler();
 
             // a handler 2 should run after both b and c handlers for all the below cases
             if (before && after)
@@ -207,12 +212,12 @@ namespace Robust.UnitTesting.Shared.Input.Binding
             var registry = new CommandBindRegistry();
             var bkf = new BoundKeyFunction("test");
 
-            var aHandler1 = new NullInputCmdHandler("a1");
-            var aHandler2 = new NullInputCmdHandler("a2");
-            var bHandler1 = new NullInputCmdHandler("b1");
-            var bHandler2 = new NullInputCmdHandler("b2");
-            var cHandler1 = new NullInputCmdHandler("c1");
-            var cHandler2 = new NullInputCmdHandler("c2");
+            var aHandler1 = new TestInputCmdHandler();
+            var aHandler2 = new TestInputCmdHandler();
+            var bHandler1 = new TestInputCmdHandler();
+            var bHandler2 = new TestInputCmdHandler();
+            var cHandler1 = new TestInputCmdHandler();
+            var cHandler2 = new TestInputCmdHandler();
 
             CommandBinds.Builder
                 .Bind(bkf, aHandler1)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
@@ -21,6 +22,10 @@ namespace Robust.Shared.GameObjects
         /// Maps system types to instances.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        /// <summary>
+        /// Maps system supertypes to instances.
+        /// </summary>
+        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
         [ViewVariables]
         private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
@@ -29,9 +34,17 @@ namespace Robust.Shared.GameObjects
             where T : IEntitySystem
         {
             var type = typeof(T);
+            // check using exact match first, then check using the supertype
             if (!_systems.ContainsKey(type))
             {
-                throw new InvalidEntitySystemException();
+                if (!_supertypeSystems.ContainsKey(type))
+                {
+                    throw new InvalidEntitySystemException();
+                }
+                else
+                {
+                    return (T) _supertypeSystems[type];
+                }
             }
 
             return (T)_systems[type];
@@ -47,6 +60,12 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
+            if (_supertypeSystems.TryGetValue(typeof(T), out var systemFromSupertype))
+            {
+                entitySystem = (T) systemFromSupertype;
+                return true;
+            }
+
             entitySystem = default;
             return false;
         }
@@ -54,6 +73,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Initialize()
         {
+            HashSet<Type> excludedTypes = new HashSet<Type>();
+
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>())
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
@@ -61,12 +82,42 @@ namespace Robust.Shared.GameObjects
                 var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
 
                 _systems.Add(type, instance);
+
+                // also register systems under their supertypes, so they can be retrieved by their supertype.
+                // We don't do this if there are multiple subtype systems of that supertype though, otherwise
+                // it wouldn't be clear which instance to return when asking for the supertype
+                foreach (var baseType in GetBaseTypes(type))
+                {
+                    // already known that there are multiple subtype systems of this type,
+                    // so don't register under the supertype because it would be unclear
+                    // which instance to return if we retrieved it by the supertype
+                    if (excludedTypes.Contains(baseType)) continue;
+                    if (_supertypeSystems.ContainsKey(baseType))
+                    {
+                        _supertypeSystems.Remove(baseType);
+                        excludedTypes.Add(baseType);
+                    }
+                    else
+                    {
+                        _supertypeSystems.Add(baseType, instance);
+                    }
+                }
+
             }
 
             foreach (var system in _systems.Values)
             {
                 system.Initialize();
             }
+        }
+
+        private static IEnumerable<Type> GetBaseTypes(Type type) {
+            if(type.BaseType == null) return type.GetInterfaces();
+
+            return Enumerable.Repeat(type.BaseType, 1)
+                .Concat(type.GetInterfaces())
+                .Concat(type.GetInterfaces().SelectMany<Type, Type>(GetBaseTypes))
+                .Concat(GetBaseTypes(type.BaseType));
         }
 
         /// <inheritdoc />
@@ -80,6 +131,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _systems.Clear();
+            _supertypeSystems.Clear();
         }
 
         /// <inheritdoc />

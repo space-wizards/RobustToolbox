@@ -82,14 +82,10 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
-            //TODO: If there are multiple handlers how should prediction work? I think this code isn't even used
-
-            // handle local binds before sending off
             Predicted = true;
             var session = _playerManager.LocalPlayer.Session;
             foreach (var handler in _bindRegistry.GetHandlers(keyFunc))
             {
-                // local handlers can block sending over the network.
                 if (handler.HandleCmdMessage(session, inputCmd)) break;
             }
             Predicted = false;

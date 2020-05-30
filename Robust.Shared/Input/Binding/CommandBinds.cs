@@ -40,8 +40,20 @@ namespace Robust.Shared.Input.Binding
         {
             if (EntitySystem.TryGet<SharedInputSystem>(out var inputSystem))
             {
-                inputSystem.BindRegistry.Unregister<TOwner>();
+                Unregister<TOwner>(inputSystem.BindRegistry);
             }
+        }
+
+        /// <summary>
+        /// Unregisters from the given BindRegistry all bindings currently registered under
+        /// indicated owner type so they will no longer receive / handle inputs. No effect if input system
+        /// no longer exists.
+        /// </summary>
+        /// <typeparam name="TOwner">owner type whose bindings should be unregistered, typically a system / manager,
+        /// should usually be typeof(this) - same type as the calling class.</typeparam>
+        public static void Unregister<TOwner>(ICommandBindRegistry bindRegistry)
+        {
+            bindRegistry.Unregister<TOwner>();
         }
 
         /// <summary>
@@ -149,19 +161,14 @@ namespace Robust.Shared.Input.Binding
 
             /// <summary>
             /// Create the Bindings based on the current configuration and register
-            /// with the indicated mappings to the indicated active InputSystem's BindRegistry
+            /// with the indicated mappings to the active InputSystem's BindRegistry
             /// so they will be allowed to handle inputs.
             /// </summary>
             /// <typeparam name="TOwner">type that owns these bindings, typically a system / manager,
             /// should usually be typeof(this) - same type as the calling class.</typeparam>
-            /// <typeparam name="TInputSystem">type of the InputSystem to register under.
-            /// TODO: Remove this param if/when EntitySystemManager provides a way to
-            /// get an entity system by its supertype. This is only here because EntitySystem.Get on
-            /// SharedInputSystem won't work</typeparam>
-            public CommandBinds Register<TOwner, TInputSystem>()
-                where TInputSystem : SharedInputSystem
+            public CommandBinds Register<TOwner>()
             {
-                return Register<TOwner>(EntitySystem.Get<TInputSystem>().BindRegistry);
+                return Register<TOwner>(EntitySystem.Get<SharedInputSystem>().BindRegistry);
             }
         }
     }

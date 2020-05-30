@@ -6,7 +6,6 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Input.Binding
 {
-    /// <inheritdoc />
     public class CommandBindRegistry : ICommandBindRegistry
     {
         // all registered bindings
@@ -17,13 +16,11 @@ namespace Robust.Shared.Input.Binding
         private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
             new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
 
-        /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
         {
             Register(commandBinds, typeof(TOwner));
         }
 
-        /// <inheritdoc />
         public void Register(CommandBinds commandBinds, Type owner)
         {
             foreach (var existingBinding in _bindings)
@@ -49,7 +46,6 @@ namespace Robust.Shared.Input.Binding
         }
 
 
-        /// <inheritdoc />
         public IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function)
         {
             if (_bindingsForKey.TryGetValue(function, out var handlers))
@@ -59,14 +55,12 @@ namespace Robust.Shared.Input.Binding
             return Enumerable.Empty<InputCmdHandler>();
         }
 
-        /// <inheritdoc />
         public void Unregister(Type owner)
         {
-            _bindings.RemoveAll(binding => binding.ForType != owner);
+            _bindings.RemoveAll(binding => binding.ForType == owner);
             RebuildGraph();
         }
 
-        /// <inheritdoc />
         public void Unregister<TOwner>()
         {
             Unregister(typeof(TOwner));

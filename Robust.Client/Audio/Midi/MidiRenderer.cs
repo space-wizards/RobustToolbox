@@ -77,7 +77,7 @@ namespace Robust.Client.Audio.Midi
         uint SequencerTick { get; }
 
         /// <summary>
-        ///     Gets or sets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
+        ///     Gets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
         /// </summary>
         double SequencerTimeScale { get; }
 

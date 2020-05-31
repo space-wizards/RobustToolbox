@@ -28,7 +28,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning restore 649
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
-        private readonly CommandBindRegistry _bindRegistry = new CommandBindRegistry();
 
         /// <summary>
         ///     Current states for all of the keyFunctions.
@@ -64,7 +63,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             _cmdStates.SetState(function, message.State);
 
             // handle local binds before sending off
-            foreach (var handler in _bindRegistry.GetHandlers(function))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
                 // local handlers can block sending over the network.
                 if (handler.HandleCmdMessage(session, message)) return;
@@ -84,7 +83,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             Predicted = true;
             var session = _playerManager.LocalPlayer.Session;
-            foreach (var handler in _bindRegistry.GetHandlers(keyFunc))
+            foreach (var handler in BindRegistry.GetHandlers(keyFunc))
             {
                 if (handler.HandleCmdMessage(session, inputCmd)) break;
             }

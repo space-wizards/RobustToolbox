@@ -195,11 +195,11 @@ namespace Robust.Client.Placement
             _overlayManager.AddOverlay(_drawOverlay);
 
             // a bit ugly, oh well
-            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
-            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput(_entitySystemManager);
+            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput();
+            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput();
         }
 
-        private void SetupInput(IEntitySystemManager entSysMan)
+        private void SetupInput()
         {
             CommandBinds.Builder
                 .Bind(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
@@ -266,7 +266,7 @@ namespace Robust.Client.Placement
             localPlayer.EntityAttached += OnEntityAttached;
         }
 
-        private void TearDownInput(IEntitySystemManager entSysMan)
+        private void TearDownInput()
         {
             CommandBinds.Unregister<PlacementManager>();
 

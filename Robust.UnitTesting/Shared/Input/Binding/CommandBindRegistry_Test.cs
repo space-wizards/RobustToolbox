@@ -100,8 +100,6 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
                 CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
             }
-
-
         }
 
 

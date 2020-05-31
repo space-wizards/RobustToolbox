@@ -310,11 +310,22 @@ namespace Robust.Client.Audio.Midi
                             renderer.Source.SetOcclusion(occlusion);
                         }
 
-                        if (!renderer.Source.SetPosition(pos.Position))
+                        if (renderer.Source.SetPosition(pos.Position))
                         {
-                            _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                            renderer.Source.StopPlaying();
+                            continue;
                         }
+
+                        if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
+                        {
+                            // just move the source far away instead of to NaN
+                            if (renderer.Source.SetPosition(new Vector2(float.MaxValue, float.MaxValue)))
+                            {
+                                continue;
+                            }
+                        }
+
+                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
+                        renderer.Source.StopPlaying();
                     }
                 }
         }

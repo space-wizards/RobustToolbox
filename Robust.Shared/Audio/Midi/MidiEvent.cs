@@ -29,7 +29,7 @@ namespace Robust.Shared.Audio.Midi
 
         public byte Pitch { get; set; }
 
-        public uint Timestamp { get; set; }
+        public uint Tick { get; set; }
 
         public static explicit operator MidiEvent(NFluidsynth.MidiEvent midiEvent)
         {

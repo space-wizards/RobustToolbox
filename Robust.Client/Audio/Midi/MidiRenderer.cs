@@ -79,7 +79,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Gets or sets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
         /// </summary>
-        double SequencerTimeScale { get; set; }
+        double SequencerTimeScale { get; }
 
         /// <summary>
         ///     Start listening for midi input.
@@ -235,12 +235,7 @@ namespace Robust.Client.Audio.Midi
         public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
         public int PlayerTick => _player?.CurrentTick ?? 0;
         public uint SequencerTick => _sequencer?.Tick ?? 0;
-
-        public double SequencerTimeScale
-        {
-            get => _sequencer.TimeScale;
-            set => _sequencer.TimeScale = value;
-        }
+        public double SequencerTimeScale => _sequencer?.TimeScale ?? 0;
 
         public bool Mono { get; set; }
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
@@ -455,7 +450,7 @@ namespace Robust.Client.Audio.Midi
             if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing) return 0;
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
-            midiEv.Timestamp = timestamp;
+            midiEv.Tick = timestamp;
             SendMidiEvent(midiEv);
             return 0;
         }
@@ -465,7 +460,7 @@ namespace Robust.Client.Audio.Midi
             if (Disposed || Status != MidiRendererStatus.Input) return 0;
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
-            midiEv.Timestamp = timestamp;
+            midiEv.Tick = timestamp;
             SendMidiEvent(midiEv);
             return 0;
         }

@@ -2,7 +2,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 
-namespace Robust.Shared.Input
+namespace Robust.Shared.Input.Binding
 {
     public delegate void StateInputCmdDelegate(ICommonSession session);
 
@@ -79,22 +79,38 @@ namespace Robust.Shared.Input
     public class PointerInputCmdHandler : InputCmdHandler
     {
         private PointerInputCmdDelegate2 _callback;
+        private bool _ignoreUp;
 
-        public PointerInputCmdHandler(PointerInputCmdDelegate callback)
+        /// <summary>
+        /// Handler which will handle the command using the indicated callback
+        /// </summary>
+        /// <param name="callback">callback to handle the command</param>
+        /// <param name="ignoreUp">whether keyup actions will be ignored by this handler (like lifting a key or releasing
+        /// mouse button)</param>
+        public PointerInputCmdHandler(PointerInputCmdDelegate callback, bool ignoreUp = true)
             : this((in PointerInputCmdArgs args) =>
-            callback(args.Session, args.Coordinates, args.EntityUid)) { }
+            callback(args.Session, args.Coordinates, args.EntityUid), ignoreUp) { }
 
-        public PointerInputCmdHandler(PointerInputCmdDelegate2 callback)
+        /// <summary>
+        /// Handler which will handle the command using the indicated callback
+        /// </summary>
+        /// <param name="callback">callback to handle the command</param>
+        /// <param name="ignoreUp">whether keyup actions will be ignored by this handler (like lifting a key or releasing
+        /// mouse button)</param>
+        public PointerInputCmdHandler(PointerInputCmdDelegate2 callback, bool ignoreUp = true)
         {
             _callback = callback;
+            _ignoreUp = ignoreUp;
+
         }
 
         public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
         {
-            if (!(message is FullInputCmdMessage msg) || msg.State != BoundKeyState.Down)
+            if (!(message is FullInputCmdMessage msg) || (_ignoreUp && msg.State != BoundKeyState.Down))
                 return false;
 
-            var handled = _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates, msg.ScreenCoordinates, msg.Uid));
+            var handled = _callback?.Invoke(new PointerInputCmdArgs(session, msg.Coordinates,
+                msg.ScreenCoordinates, msg.Uid, msg.State));
             return handled.HasValue && handled.Value;
         }
 
@@ -104,14 +120,16 @@ namespace Robust.Shared.Input
             public readonly GridCoordinates Coordinates;
             public readonly ScreenCoordinates ScreenCoordinates;
             public readonly EntityUid EntityUid;
+            public readonly BoundKeyState State;
 
             public PointerInputCmdArgs(ICommonSession session, GridCoordinates coordinates,
-                ScreenCoordinates screenCoordinates, EntityUid entityUid)
+                ScreenCoordinates screenCoordinates, EntityUid entityUid, BoundKeyState state)
             {
                 Session = session;
                 Coordinates = coordinates;
                 ScreenCoordinates = screenCoordinates;
                 EntityUid = entityUid;
+                State = state;
             }
         }
     }

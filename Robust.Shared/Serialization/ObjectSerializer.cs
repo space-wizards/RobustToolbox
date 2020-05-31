@@ -226,16 +226,25 @@ namespace Robust.Shared.Serialization
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataField" />.
         /// </summary>
-        public abstract bool TryReadDataField<T>(string name, out T value);
+        public virtual bool TryReadDataField<T>(string name, out T value)
+        {
+            return TryReadDataField(name, WithFormat<T>.NoFormat, out value);
+        }
+
+        public abstract bool TryReadDataField<T>(string name, WithFormat<T> format, out T value);
 
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataFieldCached" />.
         /// </summary>
         public virtual bool TryReadDataFieldCached<T>(string name, out T value)
         {
-            return TryReadDataField(name, out value);
+            return TryReadDataFieldCached(name, WithFormat<T>.NoFormat, out value);
         }
 
+        public virtual bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, out T value)
+        {
+            return TryReadDataField(name, format, out value);
+        }
 
         /// <summary>
         ///     Sets a cached field for this serialization context.

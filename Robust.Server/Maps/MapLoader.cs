@@ -17,6 +17,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
 using YamlDotNet.Core;
 
@@ -781,7 +782,7 @@ namespace Robust.Server.Maps
                 return CurrentReadingEntityComponents.Keys;
             }
 
-            public override bool IsValueDefault<T>(string field, T value)
+            public override bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
             {
                 if (CurrentWritingEntity.Prototype == null)
                 {
@@ -796,7 +797,7 @@ namespace Robust.Server.Maps
                 }
 
                 var testSer = YamlObjectSerializer.NewReader(compData);
-                if (testSer.TryReadDataFieldCached(field, out T prototypeVal))
+                if (testSer.TryReadDataFieldCached(field, format, out var prototypeVal))
                 {
                     if (value == null)
                     {

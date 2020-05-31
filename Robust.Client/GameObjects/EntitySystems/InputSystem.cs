@@ -7,6 +7,7 @@ using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -18,7 +19,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
 #pragma warning disable 649
         [Dependency] private readonly IInputManager _inputManager;
@@ -27,17 +28,11 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning restore 649
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
-        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
         /// <summary>
         ///     Current states for all of the keyFunctions.
         /// </summary>
         public IPlayerCommandStates CmdStates => _cmdStates;
-
-        /// <summary>
-        ///     Holds the keyFunction -> handler bindings for the simulation.
-        /// </summary>
-        public ICommandBindMapping BindMap => _bindMap;
 
         /// <summary>
         /// If the input system is currently predicting input.
@@ -68,11 +63,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             _cmdStates.SetState(function, message.State);
 
             // handle local binds before sending off
-            if (_bindMap.TryGetHandler(function, out var handler))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
                 // local handlers can block sending over the network.
-                if (handler.HandleCmdMessage(session, message))
-                    return;
+                if (handler.HandleCmdMessage(session, message)) return;
             }
 
             // send it off to the client
@@ -87,15 +81,14 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
-            if (!_bindMap.TryGetHandler(keyFunc, out var handler))
-                return;
-
             Predicted = true;
-
             var session = _playerManager.LocalPlayer.Session;
-            handler.HandleCmdMessage(session, inputCmd);
-
+            foreach (var handler in BindRegistry.GetHandlers(keyFunc))
+            {
+                if (handler.HandleCmdMessage(session, inputCmd)) break;
+            }
             Predicted = false;
+
         }
 
         private void DispatchInputCommand(FullInputCmdMessage message)

@@ -28,6 +28,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Player;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -194,87 +195,80 @@ namespace Robust.Client.Placement
             _overlayManager.AddOverlay(_drawOverlay);
 
             // a bit ugly, oh well
-            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
-            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput(_entitySystemManager);
+            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput();
+            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput();
         }
 
-        private void SetupInput(IEntitySystemManager entSysMan)
+        private void SetupInput()
         {
-            var inputSys = entSysMan.GetEntitySystem<InputSystem>();
-
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) ActivateLineMode();
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) ActivateGridMode();
-                }));
-
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                (session, coords, uid) =>
-                {
-                    if (!IsActive)
-                        return false;
-
-                    if (Eraser)
+            CommandBinds.Builder
+                .Bind(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
+                    session =>
                     {
-                        if (uid == EntityUid.Invalid)
-                        {
+                        if (IsActive && !Eraser) ActivateLineMode();
+                    }))
+                .Bind(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (IsActive && !Eraser) ActivateGridMode();
+                    }))
+                .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
+                    (session, coords, uid) =>
+                    {
+                        if (!IsActive)
                             return false;
+
+                        if (Eraser)
+                        {
+                            if (uid == EntityUid.Invalid)
+                            {
+                                return false;
+                            }
+
+                            HandleDeletion(_entityManager.GetEntity(uid));
                         }
-                        HandleDeletion(_entityManager.GetEntity(uid));
-                    }
-                    else
+                        else
+                        {
+                            _placenextframe = true;
+                        }
+
+                        return true;
+                    },
+                    (session, coords, uid) =>
                     {
-                        _placenextframe = true;
-                    }
+                        if (!IsActive || Eraser || !_placenextframe)
+                            return false;
 
-                    return true;
-                },
-                (session, coords, uid) =>
-                {
-                    if (!IsActive || Eraser || !_placenextframe)
-                        return false;
+                        //Places objects for non-tile entities
+                        if (!CurrentPermission.IsTile)
+                            HandlePlacement();
 
-                    //Places objects for non-tile entities
-                    if (!CurrentPermission.IsTile)
-                        HandlePlacement();
-
-                    _placenextframe = false;
-                    return true;
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) Rotate();
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (!IsActive || Eraser)
-                        return;
-                    if (DeactivateSpecialPlacement())
-                        return;
-                    Clear();
-                }));
+                        _placenextframe = false;
+                        return true;
+                    }))
+                .Bind(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (IsActive && !Eraser) Rotate();
+                    }))
+                .Bind(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (!IsActive || Eraser)
+                            return;
+                        if (DeactivateSpecialPlacement())
+                            return;
+                        Clear();
+                    }))
+                .Register<PlacementManager>();
 
             var localPlayer = PlayerManager.LocalPlayer;
             localPlayer.EntityAttached += OnEntityAttached;
         }
 
-        private void TearDownInput(IEntitySystemManager entSysMan)
+        private void TearDownInput()
         {
-            if (entSysMan.TryGetEntitySystem(out InputSystem inputSys))
-            {
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorLinePlace);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorGridPlace);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorPlaceObject);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorRotateObject);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorCancelPlace);
-            }
+            CommandBinds.Unregister<PlacementManager>();
 
             if (PlayerManager.LocalPlayer != null)
             {

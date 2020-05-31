@@ -188,7 +188,7 @@ namespace Robust.Shared.Serialization
         }
 
         /// <inheritdoc />
-        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
@@ -202,7 +202,8 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -213,7 +214,7 @@ namespace Robust.Shared.Serialization
             }
             else // write
             {
-                DataField(ref value, name, defaultValue, alwaysWrite);
+                DataField(ref value, name, defaultValue, format, alwaysWrite);
             }
         }
 

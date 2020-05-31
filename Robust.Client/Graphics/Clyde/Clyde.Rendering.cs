@@ -993,7 +993,7 @@ namespace Robust.Client.Graphics.Clyde
                 var a = _drawList[x].Item1;
                 var b = _drawList[y].Item1;
 
-                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                var cmp = (a.DrawDepth).CompareTo(b.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;

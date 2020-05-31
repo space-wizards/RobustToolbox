@@ -32,6 +32,21 @@ namespace Robust.Client.UserInterface
             return value;
         }
 
+        public T GetValue<T>(AttachedProperty<T> property)
+        {
+            if (_attachedProperties == null)
+            {
+                return property.DefaultValue;
+            }
+
+            if (!_attachedProperties.TryGetValue(property, out var value))
+            {
+                return property.DefaultValue;
+            }
+
+            return (T) value;
+        }
+
         /// <summary>
         /// Gets the value of an attached property on this control.
         /// </summary>
@@ -103,6 +118,32 @@ namespace Robust.Client.UserInterface
             }
 
             var changed = new AttachedPropertyChangedEventArgs(value, oldValue);
+
+            _attachedProperties[property] = value;
+
+            property.Changed?.Invoke(this, changed);
+        }
+
+        public void SetValue<T>(AttachedProperty<T> property, T value)
+        {
+            _attachedProperties ??= new Dictionary<AttachedProperty, object>();
+
+            if (property.Validate != null && !property.Validate(value))
+            {
+                throw new ArgumentException("Value is not valid for this property.", nameof(value));
+            }
+
+            T oldValue;
+            if (!_attachedProperties.TryGetValue(property, out var oldValueBoxed))
+            {
+                oldValue = property.DefaultValue;
+            }
+            else
+            {
+                oldValue = (T) oldValueBoxed;
+            }
+
+            var changed = new AttachedPropertyChangedEventArgs<T>(value, oldValue);
 
             _attachedProperties[property] = value;
 

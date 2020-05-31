@@ -89,7 +89,24 @@ namespace Robust.Shared.Serialization
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
         public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
-            DataField(ref value, name, defaultValue, alwaysWrite);
+            DataField(ref value, name, defaultValue, WithFormat<T>.NoFormat, alwaysWrite);
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        ///     This method can cache results and share them with other objects.
+        ///     As such, when reading, your value may NOT be private. Do not modify it as if it's purely your own.
+        ///     This can cut out parsing steps and memory cost for commonly used objects such as walls.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
+        /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat, bool alwaysWrite = false)
+        {
+            DataField(ref value, name, defaultValue, withFormat, alwaysWrite);
         }
 
         /// <summary>

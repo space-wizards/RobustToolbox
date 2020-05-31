@@ -3,9 +3,9 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace Robust.Shared.Serialization
 {
@@ -283,6 +283,16 @@ namespace Robust.Shared.Serialization
         public override int FromCustomFormat(object obj)
         {
             return (int)Enum.Parse(_constantType, (string)obj);
+        }
+
+        public int FromCustomFormatText(string text)
+        {
+            if (Enum.TryParse(_constantType, text, out var val))
+            {
+                return (int) val;
+            }
+
+            return int.Parse(text, CultureInfo.InvariantCulture);
         }
 
         public override object ToCustomFormat(int value)

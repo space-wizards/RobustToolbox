@@ -48,6 +48,10 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
+
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
             gc._disableAssemblyLoadContext = contentStart;
             if (!gc.Startup())
             {

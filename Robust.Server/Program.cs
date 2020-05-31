@@ -20,7 +20,7 @@ namespace Robust.Server
             Start(args);
         }
 
-        internal static void Start(string[] args)
+        internal static void Start(string[] args, bool contentStart=false)
         {
             if (_hasStarted)
             {
@@ -31,11 +31,11 @@ namespace Robust.Server
 
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed);
+                ParsedMain(parsed, contentStart);
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
@@ -45,6 +45,10 @@ namespace Robust.Server
 
             var server = IoCManager.Resolve<IBaseServerInternal>();
 
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
+            server.DisableLoadContext = contentStart;
             server.SetCommandLineArgs(args);
 
             Logger.Info("Server -> Starting");

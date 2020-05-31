@@ -199,6 +199,8 @@ namespace Robust.Server
             _resources.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
+            _modLoader.SetUseLoadContext(!DisableLoadContext);
+
             //identical code in game controller for client
             if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
             {
@@ -291,6 +293,8 @@ namespace Robust.Server
 
             _shutdownEvent.Set();
         }
+
+        public bool DisableLoadContext { private get; set; }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {

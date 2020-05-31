@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
-
-using Robust.Shared.Interfaces.Reflection;
-using Robust.Shared.Interfaces.Serialization;
-using Robust.Shared.IoC;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
@@ -19,6 +13,7 @@ namespace Robust.Shared.Serialization
     internal class YamlConstantSerializer : YamlCustomFormatSerializer<int>
     {
         private readonly Type _constantType;
+        private readonly WithConstantRepresentation _formatter;
 
         /// <summary>
         /// Create a YamlConstantSerializer using the given bitflag representation type.
@@ -27,9 +22,10 @@ namespace Robust.Shared.Serialization
         /// The enum for which the constructors will be used to represent constant values.
         /// </param>
         /// </exception>
-        public YamlConstantSerializer(Type type, WithFormat<int> formatter) : base(formatter)
+        public YamlConstantSerializer(Type type, WithConstantRepresentation formatter) : base(formatter)
         {
             _constantType = type;
+            _formatter = formatter;
         }
 
         /// <summary>
@@ -37,16 +33,12 @@ namespace Robust.Shared.Serialization
         /// </summary>
         public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer objectSerializer)
         {
-            try
+            if (!(node is YamlScalarNode scalar))
             {
-                // First try to deserialize a legacy integer value
-                return (int)objectSerializer.NodeToType(typeof(int), node);
-            }
-            catch (ArgumentException e)
-            {
-                return base.NodeToType(type, node, objectSerializer);
+                throw new FormatException("Constant must be a YAML scalar.");
             }
 
+            return _formatter.FromCustomFormatText(scalar.AsString());
         }
 
         /// <summary>

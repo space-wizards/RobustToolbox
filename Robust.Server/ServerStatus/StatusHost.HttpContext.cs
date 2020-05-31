@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
@@ -13,7 +14,9 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
 
-        private HttpContextFactory _ctxFactory = default!;
+        private IHttpContextFactory _ctxFactory = default!;
+
+        private static readonly DefaultServiceProviderFactory _spFactory = new DefaultServiceProviderFactory();
 
         public HttpContext CreateContext(IFeatureCollection contextFeatures) => _ctxFactory.Create(contextFeatures);
 
@@ -27,12 +30,16 @@ namespace Robust.Server.ServerStatus
             _ctxFactory.Dispose(context);
         }
 
-        private static HttpContextFactory CreateHttpContextFactory()
+        private static IHttpContextFactory CreateHttpContextFactory()
         {
             var ctxFacOptions = Options.Create(new FormOptions
             {
             });
-            var ctxFactory = new HttpContextFactory(ctxFacOptions, new HttpContextAccessor());
+            var services = new ServiceCollection()
+                .AddOptions()
+                .AddHttpContextAccessor()
+                .BuildServiceProvider();
+            var ctxFactory = new DefaultHttpContextFactory(services);
             return ctxFactory;
         }
 

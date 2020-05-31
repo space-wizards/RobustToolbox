@@ -5,12 +5,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -32,7 +31,7 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
         : IStatusHost, IDisposable,
             IHttpApplication<HttpContext>,
-            IApplicationLifetime,
+            IHostApplicationLifetime,
             ILoggerFactory
     {
 
@@ -103,8 +102,7 @@ namespace Robust.Server.ServerStatus
 
             var kestrelOpts = new KestrelServerOptions
             {
-                AllowSynchronousIO = true,
-                ApplicationSchedulingMode = SchedulingMode.ThreadPool
+                AllowSynchronousIO = true
             };
 
             kestrelOpts.Listen(GetBinding());
@@ -151,7 +149,6 @@ namespace Robust.Server.ServerStatus
                 {
                     IOQueueCount = 42
                 }),
-                this,
                 this
             );
             return transportFactory;

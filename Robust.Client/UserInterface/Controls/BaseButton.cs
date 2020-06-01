@@ -188,7 +188,7 @@ namespace Robust.Client.UserInterface.Controls
 
         protected BaseButton()
         {
-            MouseFilter = MouseFilterMode.Pass;
+            MouseFilter = MouseFilterMode.Stop;
         }
 
         protected virtual void DrawModeChanged()

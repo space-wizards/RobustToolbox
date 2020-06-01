@@ -135,7 +135,12 @@ namespace Robust.Client.Audio.Midi
                 _settings["synth.lock-memory"].IntValue = 0;
                 _settings["synth.threadsafe-api"].IntValue = 1;
                 _settings["synth.gain"].DoubleValue = 1.0d;
+                _settings["synth.polyphony"].IntValue = 1024;
+                _settings["synth.cpu-cores"].IntValue = 2;
+                _settings["synth.overflow.age"].DoubleValue = 3000;
                 _settings["audio.driver"].StringValue = "file";
+                _settings["audio.periods"].IntValue = 8;
+                _settings["audio.period-size"].IntValue = 4096;
                 _settings["midi.autoconnect"].IntValue = 1;
                 _settings["player.reset-synth"].IntValue = 0;
                 _settings["synth.midi-bank-select"].StringValue = "gm";
@@ -317,11 +322,9 @@ namespace Robust.Client.Audio.Midi
 
                         if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
                         {
-                            // just move the source far away instead of to NaN
-                            if (renderer.Source.SetPosition(new Vector2(float.MaxValue, float.MaxValue)))
-                            {
-                                continue;
-                            }
+                            // just duck out instead of move to NaN
+                            renderer.Source.SetOcclusion(float.MaxValue);
+                            continue;
                         }
 
                         _midiSawmill?.Warning("Interrupting positional audio, can't set position.");

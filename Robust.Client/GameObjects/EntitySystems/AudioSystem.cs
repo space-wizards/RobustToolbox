@@ -294,8 +294,6 @@ namespace Robust.Client.GameObjects.EntitySystems
             public GridCoordinates? TrackingCoordinates;
             public bool Done;
             public float Volume;
-            public PlayingStream InnerStream;
-
             public void Stop()
             {
                 Source.StopPlaying();

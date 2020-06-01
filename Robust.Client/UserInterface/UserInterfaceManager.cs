@@ -300,7 +300,11 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
-            _controlFocused = null;
+
+            if (guiArgs.Handled || args.Function == EngineKeyFunctions.UIClick)
+            {
+                _controlFocused = null;
+            }
 
             // Always mark this as handled.
             // The only case it should not be is if we do not have a control to click on,

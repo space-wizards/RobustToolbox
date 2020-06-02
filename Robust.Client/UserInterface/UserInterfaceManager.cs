@@ -168,7 +168,6 @@ namespace Robust.Client.UserInterface
 
         public void Dispose()
         {
-            _controlFocused?.Dispose();
             RootControl?.Dispose();
         }
 

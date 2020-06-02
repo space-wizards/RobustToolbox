@@ -532,7 +532,7 @@ namespace Robust.Client.Audio.Midi
                             break;
                     }
             }
-            catch (FluidSynthInteropException e)
+            catch (FluidSynthInteropException)
             {
                 // This spams NoteOff errors most of the time for no good reason.
                 //_midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e, midiEvent);

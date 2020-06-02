@@ -254,6 +254,11 @@ namespace Robust.Client.UserInterface
             return true;
         }
 
+        public void HandleCanFocusUp()
+        {
+            _controlFocused = null;
+        }
+
         public void KeyBindDown(BoundKeyEventArgs args)
         {
             if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
@@ -300,7 +305,6 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
-            _controlFocused = null;
 
             // Always mark this as handled.
             // The only case it should not be is if we do not have a control to click on,

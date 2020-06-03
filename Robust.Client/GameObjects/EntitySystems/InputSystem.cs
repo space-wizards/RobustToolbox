@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Robust.Client.GameObjects.Components;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Input;
@@ -7,7 +6,6 @@ using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -69,7 +67,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 if (handler.HandleCmdMessage(session, message)) return;
             }
 
-            // send it off to the client
+            // send it off to the server
             DispatchInputCommand(message);
         }
 

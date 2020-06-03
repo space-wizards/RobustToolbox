@@ -691,7 +691,6 @@ namespace Robust.Client.UserInterface
             _tooltip.Visible = true;
             _tooltip.Text = hovered.ToolTip;
             LayoutContainer.SetPosition(_tooltip, _inputManager.MouseScreenPosition);
-            LayoutContainer.SetSize(_tooltip, _tooltip.CustomMinimumSize);
 
             var (right, bottom) = _tooltip.Position + _tooltip.Size;
 

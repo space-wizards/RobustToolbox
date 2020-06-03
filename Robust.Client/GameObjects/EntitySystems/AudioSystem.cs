@@ -117,7 +117,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                                     sourceRelative.Normalized,
                                     OcclusionCollisionMask),
                                 sourceRelative.Length,
-                                null, false).Count();
+                                stream.TrackingEntity, false).Count();
                         }
                         stream.Source.SetVolume(stream.Volume);
                         stream.Source.SetOcclusion(occlusion);

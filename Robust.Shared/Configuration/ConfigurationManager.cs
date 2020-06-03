@@ -215,12 +215,15 @@ namespace Robust.Shared.Configuration
             //TODO: Make flags work, required non-derpy net system.
             if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
             {
-                cVar.Value = value;
-                cVar.ValueChanged?.Invoke(value);
+                if (!Equals(cVar.Value, value))
+                {
+                    cVar.Value = value;
+                    cVar.ValueChanged?.Invoke(value);
 
-                // Setting an override value just turns off the override, basically.
-                cVar.OverrideValue = null;
-                cVar.OverrideValueParsed = null;
+                    // Setting an override value just turns off the override, basically.
+                    cVar.OverrideValue = null;
+                    cVar.OverrideValueParsed = null;
+                }
             }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");

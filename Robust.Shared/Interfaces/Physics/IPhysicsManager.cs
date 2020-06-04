@@ -63,13 +63,13 @@ namespace Robust.Shared.Interfaces.Physics
 
 
         /// <summary>
-        ///     Casts a ray in the world and returns the summed distance the ray traveled while colliding with entities
+        ///     Casts a ray in the world and returns the distance the ray traveled while colliding with entities
         /// </summary>
         /// <param name="mapId"></param>
         /// <param name="ray">Ray to cast in the world.</param>
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
-        /// <returns>The summed distance the ray traveled while colliding with entities</returns>
+        /// <returns>The distance the ray traveled while colliding with entities</returns>
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null);
 
         /// <summary>

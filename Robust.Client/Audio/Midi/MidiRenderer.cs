@@ -343,6 +343,7 @@ namespace Robust.Client.Audio.Midi
             {
                 if (_player == null) return false;
                 _player?.Stop();
+                _player?.Join();
                 _player?.Dispose();
                 _player = null;
             }

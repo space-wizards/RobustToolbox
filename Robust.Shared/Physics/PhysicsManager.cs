@@ -276,6 +276,26 @@ namespace Robust.Shared.Physics
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
+        /// <inheritdoc />
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null)
+        {
+            var penetration = 0f;
+
+            var sourceToDest = (List<RayCastResults>) IntersectRay(mapId, ray, maxLength, ignoredEnt, false);
+            var destToSource = (List<RayCastResults>) IntersectRay(mapId,
+                new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
+                maxLength, ignoredEnt, false);
+
+            if (sourceToDest.Count != destToSource.Count) Logger.Error("This should never occur.");
+
+            for (int i = 0; i < sourceToDest.Count; i++)
+            {
+                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Count - 1 - i].HitPos).Length;
+            }
+
+            return penetration;
+        }
+
         public event Action<DebugRayData> DebugDrawRay;
 
         public bool Update(IPhysBody collider)

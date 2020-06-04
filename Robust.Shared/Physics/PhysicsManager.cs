@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
@@ -286,7 +287,7 @@ namespace Robust.Shared.Physics
                 new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
                 maxLength, ignoredEnt, false).ToArray();
 
-            if (sourceToDest.Length != destToSource.Length) Logger.Error("This should never occur.");
+            Debug.Assert(sourceToDest.Length == destToSource.Length);
 
             for (int i = 0; i < sourceToDest.Length; i++)
             {

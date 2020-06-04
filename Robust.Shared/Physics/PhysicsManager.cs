@@ -281,16 +281,16 @@ namespace Robust.Shared.Physics
         {
             var penetration = 0f;
 
-            var sourceToDest = (List<RayCastResults>) IntersectRay(mapId, ray, maxLength, ignoredEnt, false);
-            var destToSource = (List<RayCastResults>) IntersectRay(mapId,
+            var sourceToDest = IntersectRay(mapId, ray, maxLength, ignoredEnt, false).ToArray();
+            var destToSource = IntersectRay(mapId,
                 new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
-                maxLength, ignoredEnt, false);
+                maxLength, ignoredEnt, false).ToArray();
 
-            if (sourceToDest.Count != destToSource.Count) Logger.Error("This should never occur.");
+            if (sourceToDest.Length != destToSource.Length) Logger.Error("This should never occur.");
 
-            for (int i = 0; i < sourceToDest.Count; i++)
+            for (int i = 0; i < sourceToDest.Length; i++)
             {
-                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Count - 1 - i].HitPos).Length;
+                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Length - 1 - i].HitPos).Length;
             }
 
             return penetration;

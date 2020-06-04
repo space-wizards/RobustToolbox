@@ -203,8 +203,8 @@ namespace Robust.Client.Graphics.Clyde
 
                     var box = Box2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
 
-                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                        box.TopRight, Color.White, null, 0);
+                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture,
+                        new Box2Rotated(box.BottomLeft, box.TopRight), Color.White, null);
 
                     _renderHandle.SetSpace(CurrentSpace.WorldSpace);
                     _renderHandle.UseShader(null);

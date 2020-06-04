@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -352,12 +351,13 @@ namespace Robust.Client.GameObjects
                         currentShader = newShader;
                     }
 
-                    worldHandle.SetTransform(
-                        effect.Coordinates.ToMapPos(_mapManager),
-                        new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
-                    worldHandle.DrawTexture(effectSprite,
-                        -((Vector2) effectSprite.Size / EyeManager.PixelsPerMeter) / 2, ToColor(effect.Color));
+                    var effectOrigin = effect.Coordinates.ToMapPos(_mapManager);
+                    var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
+
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);
+
+                    worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }
             }
         }

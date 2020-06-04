@@ -85,7 +85,7 @@ namespace Robust.Shared.Network.Messages
                     return NetDeliveryMethod.ReliableUnordered;
                 }
 
-                return NetDeliveryMethod.Unreliable;
+                return base.DeliveryMethod;
             }
         }
     }

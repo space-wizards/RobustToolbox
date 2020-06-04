@@ -479,6 +479,7 @@ namespace Robust.Client.Audio.Midi
                     {
                         // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
                         case 1:
+                        case 5:
                         case 81:
                             break;
 

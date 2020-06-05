@@ -416,6 +416,7 @@ namespace Robust.Client.Placement
             }
             else Clear();
         }
+
         public void BeginPlacing(PlacementInformation info)
         {
             BeginHijackedPlacing(info);

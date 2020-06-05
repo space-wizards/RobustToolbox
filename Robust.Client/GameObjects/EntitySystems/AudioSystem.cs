@@ -15,6 +15,7 @@ using Robust.Shared.Utility;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using System.Linq;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -28,7 +29,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         [Dependency] private readonly IEyeManager _eyeManager;
 #pragma warning restore 649
 
-        private static Dictionary<byte, PlayingStream> _playingClydeStreams = new Dictionary<byte, PlayingStream>();
+        private static List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
 
         /// <inheritdoc />
         public override void Initialize()
@@ -41,10 +42,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)
         {
-            if (_playingClydeStreams.TryGetValue(ev.Identifier, out var stream))
-            {
-                StreamDone(ev.Identifier, stream);
-            }
+            StreamDone(_playingClydeStreams.ElementAt(ev.Identifier));
         }
 
         private void PlayAudioPositionalHandler(PlayAudioPositionalMessage ev)
@@ -58,7 +56,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             var stream = Play(ev.FileName, ev.Coordinates, ev.AudioParams);
             if (stream != null)
             {
-                _playingClydeStreams.TryAdd(ev.Identifier, (PlayingStream)stream);
+                _playingClydeStreams.Add((PlayingStream)stream);
             }
         }
 
@@ -67,7 +65,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             var stream = Play(ev.FileName, ev.AudioParams);
             if (stream != null)
             {
-                _playingClydeStreams.TryAdd(ev.Identifier, (PlayingStream)stream);
+                _playingClydeStreams.Add((PlayingStream)stream);
             }
         }
 
@@ -82,7 +80,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             var stream = Play(ev.FileName, entity, ev.AudioParams);
             if (stream != null)
             {
-                _playingClydeStreams.TryAdd(ev.Identifier, (PlayingStream)stream);
+                _playingClydeStreams.Add((PlayingStream)stream);
             }
         }
 
@@ -91,11 +89,11 @@ namespace Robust.Client.GameObjects.EntitySystems
             var currentMap = _eyeManager.CurrentMap;
 
             // Update positions of streams every frame.
-            foreach (var (key, stream) in _playingClydeStreams)
+            foreach (var stream in _playingClydeStreams)
             {
                 if (!stream.Source.IsPlaying)
                 {
-                    StreamDone(key,stream);
+                    StreamDone(stream);
                     continue;
                 }
 
@@ -108,7 +106,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 {
                     if (stream.TrackingEntity.Deleted)
                     {
-                        StreamDone(key,stream);
+                        StreamDone(stream);
                         continue;
                     }
 
@@ -135,12 +133,11 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            _playingClydeStreams.Values.ToList().RemoveAll(p => p.Done);
+            _playingClydeStreams.RemoveAll(p => p.Done);
         }
 
-        private static void StreamDone(byte key, PlayingStream stream)
+        private static void StreamDone(PlayingStream stream)
         {
-            _playingClydeStreams.Remove(key);
             stream.Source.Dispose();
             stream.Done = true;
             stream.DoPlaybackDone();

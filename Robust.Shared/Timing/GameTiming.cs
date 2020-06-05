@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.Log;
 
 namespace Robust.Shared.Timing
 {
@@ -136,14 +137,28 @@ namespace Robust.Shared.Timing
             }
         }
 
+        // Cached values for making CalcCurTime not jump whenever the tickrate
+        // changes. This holds the last calculated value of CurTime, and the
+        // tick that the value was calculated for. The next time CurTime is
+        // calculated, it should only try to monotonically inccrease both of
+        // these values
+        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.Zero);
+
         private TimeSpan CalcCurTime()
         {
-            // calculate simulation CurTime
-            var time = TimeSpan.FromTicks(TickPeriod.Ticks * CurTick.Value);
+            var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
+
+            var newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
+
+            _cachedCurTimeInfo = (newTime, CurTick);
+
+            var updateInterval = newTime - cachedTime;
+            if (updateInterval.Seconds > 1)
+              Logger.Warning($"Current newTime jumped by {updateInterval}");
 
             if (!InSimulation) // rendering can draw frames between ticks
-                return time + TickRemainder;
-            return time;
+                return newTime + TickRemainder;
+            return newTime;
         }
 
         /// <summary>

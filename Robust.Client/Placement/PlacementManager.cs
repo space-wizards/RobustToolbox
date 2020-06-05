@@ -254,7 +254,7 @@ namespace Robust.Client.Placement
                 .Bind(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
                     session =>
                     {
-                        if (!IsActive || Eraser)
+                        if (!IsActive)
                             return;
                         if (DeactivateSpecialPlacement())
                             return;
@@ -318,17 +318,17 @@ namespace Robust.Client.Placement
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
-        public event EventHandler PlacementCanceled;
+        public event EventHandler PlacementChanged;
 
         public void Clear()
         {
+            PlacementChanged?.Invoke(this, null);
             Hijack = null;
             CurrentBaseSprite = null;
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
             DeactivateSpecialPlacement();
-            if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
             _placenextframe = false;
             IsActive = false;
             Eraser = false;
@@ -416,7 +416,6 @@ namespace Robust.Client.Placement
             }
             else Clear();
         }
-
         public void BeginPlacing(PlacementInformation info)
         {
             BeginHijackedPlacing(info);

@@ -16,7 +16,7 @@ namespace Robust.Client.Interfaces.Placement
         PlacementMode CurrentMode { get; set; }
         PlacementInformation CurrentPermission { get; set; }
 
-        event EventHandler PlacementCanceled;
+        event EventHandler PlacementChanged;
 
         void BeginPlacing(PlacementInformation info);
         void Clear();

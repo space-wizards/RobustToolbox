@@ -107,17 +107,17 @@ namespace Robust.Client.GameObjects.EntitySystems
                     else
                     {
                         var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                        var occlusion = 0;
+                        var occlusion = 0f;
                         if (sourceRelative.Length > 0)
                         {
-                            occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRay(
+                            occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
                                 pos.MapId,
                                 new CollisionRay(
                                     pos.Position,
                                     sourceRelative.Normalized,
                                     OcclusionCollisionMask),
                                 sourceRelative.Length,
-                                stream.TrackingEntity, false).Count();
+                                stream.TrackingEntity);
                         }
                         stream.Source.SetVolume(stream.Volume);
                         stream.Source.SetOcclusion(occlusion);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Utility;
@@ -41,11 +42,32 @@ namespace Robust.Shared.Timing
         /// </summary>
         public bool Paused { get; set; }
 
+        // Cached values for making CurTime not jump whenever the tickrate
+        // changes. This holds the last calculated value of CurTime, and the
+        // tick that the value was calculated for. The next time CurTime is
+        // calculated, it should only try to monotonically increase both of
+        // these values
+        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.Zero);
+
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
         ///     prediction, and is affected by Paused and TimeScale.
         /// </summary>
-        public TimeSpan CurTime => CalcCurTime();
+        public TimeSpan CurTime
+        {
+            get
+            {
+                CacheCurTime();
+
+                var (time, lastTimeTick) = _cachedCurTimeInfo;
+
+                Debug.Assert(lastTimeTick == CurTick);
+
+                if (!InSimulation) // rendering can draw frames between ticks
+                    return time + TickRemainder;
+                return time;
+            }
+        }
 
         /// <summary>
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
@@ -82,10 +104,27 @@ namespace Robust.Shared.Timing
         /// </summary>
         public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
 
+        private byte _tickRate;
+
         /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
-        public byte TickRate { get; set; }
+        public byte TickRate
+        {
+            get => _tickRate;
+            set
+            {
+                // Check this, because TickRate is a divisor in the cache calculation
+                // The first time TickRate is set, no time will have passed anyways
+                if (_tickRate != 0)
+                    // Cache BEFORE updating the tick rate, because ticks up until
+                    // now have been on a different rate, so they count for a
+                    // different amount of time
+                    CacheCurTime();
+
+                _tickRate = value;
+            }
+        }
 
         /// <summary>
         ///     The length of a tick at the current TickRate. 1/TickRate.
@@ -137,28 +176,16 @@ namespace Robust.Shared.Timing
             }
         }
 
-        // Cached values for making CalcCurTime not jump whenever the tickrate
-        // changes. This holds the last calculated value of CurTime, and the
-        // tick that the value was calculated for. The next time CurTime is
-        // calculated, it should only try to monotonically inccrease both of
-        // these values
-        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.Zero);
-
-        private TimeSpan CalcCurTime()
+        // Calculate and store the current time value, based on the current tick rate.
+        // Call this whenever you want an updated value for CurTime, or when
+        // you change the TickRate
+        private void CacheCurTime()
         {
             var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
 
             var newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
 
             _cachedCurTimeInfo = (newTime, CurTick);
-
-            var updateInterval = newTime - cachedTime;
-            if (updateInterval.Seconds > 1)
-              Logger.Warning($"Current newTime jumped by {updateInterval}");
-
-            if (!InSimulation) // rendering can draw frames between ticks
-                return newTime + TickRemainder;
-            return newTime;
         }
 
         /// <summary>

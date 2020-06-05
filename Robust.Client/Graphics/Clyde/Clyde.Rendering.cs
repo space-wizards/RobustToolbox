@@ -458,7 +458,7 @@ namespace Robust.Client.Graphics.Clyde
             AllocRenderCommand(RenderCommandType.ResetViewMatrix);
         }
 
-        private void DrawTexture(ClydeHandle texture, in Box2Rotated drawRegion, Color modulate, UIBox2? subRegion)
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
         {
             EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
 
@@ -488,10 +488,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            Vector2 bl = _currentModelMatrix.Transform(drawRegion.BottomLeft);
-            Vector2 br = _currentModelMatrix.Transform(drawRegion.BottomRight);
-            Vector2 tr = _currentModelMatrix.Transform(drawRegion.TopRight);
-            Vector2 tl = _currentModelMatrix.Transform(drawRegion.TopLeft);
+            bl = _currentModelMatrix.Transform(bl);
+            br = _currentModelMatrix.Transform(br);
+            tr = _currentModelMatrix.Transform(tr);
+            tl = _currentModelMatrix.Transform(tl);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;

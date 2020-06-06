@@ -371,7 +371,7 @@ namespace Robust.Shared.Network
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
-            netConfig.MaximumHandshakeAttempts = 1;
+            netConfig.MaximumHandshakeAttempts = 5;
 
             var verbose = _config.GetCVar<bool>("net.verbose");
             netConfig.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, verbose);

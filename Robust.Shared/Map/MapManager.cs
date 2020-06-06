@@ -278,6 +278,7 @@ namespace Robust.Shared.Map
 
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
+            Logger.DebugS("map", $"Grid {newDefaultGrid.Index} is the default grid for map {actualID}");
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
 
             return actualID;
@@ -438,7 +439,7 @@ namespace Robust.Shared.Map
 
             var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
-            Logger.DebugS("map", $"Creating new {(grid.IsDefaultGrid ? "default" : String.Empty)} grid {actualID}");
+            Logger.DebugS("map", $"Creating new grid {actualID}");
 
             if (actualID != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
             {

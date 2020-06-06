@@ -2,6 +2,7 @@
 using System.Globalization;
 using NUnit.Framework;
 using Robust.Shared.Localization.Macros;
+using Robust.Shared.Localization.Macros.English;
 
 namespace Robust.UnitTesting.Shared.Localization.Macros
 {

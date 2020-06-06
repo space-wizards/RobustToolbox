@@ -1,4 +1,4 @@
-﻿namespace Robust.Shared.Localization.Macros
+﻿namespace Robust.Shared.Localization.Macros.English
 {
     [RegisterTextMacro("they", "en")]
     public class They : ITextMacro

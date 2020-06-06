@@ -47,7 +47,10 @@ namespace Robust.Shared.Timing
         // tick that the value was calculated for. The next time CurTime is
         // calculated, it should only try to monotonically increase both of
         // these values
-        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.Zero);
+        //
+        // Notice that it starts from GameTick 1  - the "first tick" has no impact
+        // on timing
+        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);
 
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for

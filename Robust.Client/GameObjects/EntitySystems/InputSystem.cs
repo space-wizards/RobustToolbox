@@ -43,7 +43,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="session">Player session that raised the command. On client, this is always the LocalPlayer session.</param>
         /// <param name="function">Function that is being changed.</param>
         /// <param name="message">Arguments for this event.</param>
-        public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message)
+        /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
+        /// old input that was saved or buffered until further processing could be done</param>
+        public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -53,12 +55,14 @@ namespace Robust.Client.GameObjects.EntitySystems
             #endif
 
             // set state, state change is updated regardless if it is locally bound
-            if (_cmdStates.GetState(function) == message.State)
+            if (!replay)
             {
-                return;
+                if (_cmdStates.GetState(function) == message.State)
+                {
+                    return;
+                }
+                _cmdStates.SetState(function, message.State);
             }
-
-            _cmdStates.SetState(function, message.State);
 
             // handle local binds before sending off
             foreach (var handler in BindRegistry.GetHandlers(function))

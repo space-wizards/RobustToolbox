@@ -97,6 +97,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _flushQueue();
 
+            if (!Visible)
+            {
+                return;
+            }
+
             var targetLocation = _targetVisible ? 0 : -MainControl.Height;
             var (posX, posY) = MainControl.Position;
 
@@ -218,7 +223,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
                     CommandBar.ClearHistory();
                     CommandBar.History.AddRange(data);
-                    CommandBar.HistoryIndex = CommandBar.History.Count; 
+                    CommandBar.HistoryIndex = CommandBar.History.Count;
                 }
             }
             finally

@@ -65,7 +65,7 @@ namespace Robust.Client.GameObjects
             }
 
             var component = Owner.GetComponent<IClickTargetComponent>();
-            drawdepth = (int)component.DrawDepth;
+            drawdepth = component.DrawDepth;
             return true;
         }
     }

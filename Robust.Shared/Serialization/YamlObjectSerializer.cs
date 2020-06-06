@@ -131,7 +131,7 @@ namespace Robust.Shared.Serialization
             else // write
             {
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, format))
                     return;
 
                 var customFormatter = format.GetYamlSerializer();
@@ -188,7 +188,7 @@ namespace Robust.Shared.Serialization
         }
 
         /// <inheritdoc />
-        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
@@ -202,7 +202,8 @@ namespace Robust.Shared.Serialization
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -213,7 +214,7 @@ namespace Robust.Shared.Serialization
             }
             else // write
             {
-                DataField(ref value, name, defaultValue, alwaysWrite);
+                DataField(ref value, name, defaultValue, format, alwaysWrite);
             }
         }
 
@@ -248,7 +249,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<TTarget>.NoFormat))
                 {
                     return;
                 }
@@ -348,7 +349,7 @@ namespace Robust.Shared.Serialization
         }
 
         /// <inheritdoc />
-        public override bool TryReadDataField<T>(string name, out T value)
+        public override bool TryReadDataField<T>(string name, WithFormat<T> format, out T value)
         {
             if (!Reading)
             {
@@ -359,7 +360,8 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     return true;
                 }
             }
@@ -367,8 +369,7 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        /// <inheritdoc />
-        public override bool TryReadDataFieldCached<T>(string name, out T value)
+        public override bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, out T value)
         {
             if (!Reading)
             {
@@ -384,7 +385,8 @@ namespace Robust.Shared.Serialization
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     _context?.SetCachedField(name, value);
                     return true;
                 }
@@ -392,6 +394,7 @@ namespace Robust.Shared.Serialization
             value = default;
             return false;
         }
+
 
         /// <inheritdoc />
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
@@ -418,7 +421,7 @@ namespace Robust.Shared.Serialization
             var value = func.Invoke();
 
             // don't write if value is null or default
-            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+            if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<T>.NoFormat))
                 return;
 
             var key = name;
@@ -697,7 +700,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 
-        bool IsValueDefault<T>(string field, T value, T providedDefault)
+        bool IsValueDefault<T>(string field, T value, T providedDefault, WithFormat<T> format)
         {
             if ((value != null || providedDefault == null) && (value == null || IsSerializedEqual(value, providedDefault)))
             {
@@ -706,7 +709,7 @@ namespace Robust.Shared.Serialization
 
             if (_context != null)
             {
-                return _context.IsValueDefault(field, value);
+                return _context.IsValueDefault(field, value, format);
             }
 
             return false;
@@ -847,7 +850,7 @@ namespace Robust.Shared.Serialization
                 return false;
             }
 
-            public virtual bool IsValueDefault<T>(string field, T value)
+            public virtual bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
             {
                 return false;
             }

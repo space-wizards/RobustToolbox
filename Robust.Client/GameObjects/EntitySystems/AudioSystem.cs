@@ -13,8 +13,11 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -29,6 +32,8 @@ namespace Robust.Client.GameObjects.EntitySystems
 #pragma warning restore 649
 
         private readonly List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
+
+        public int OcclusionCollisionMask;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -67,8 +72,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         public override void FrameUpdate(float frameTime)
         {
-            var currentMap = _eyeManager.CurrentMap;
-
             // Update positions of streams every frame.
             foreach (var stream in _playingClydeStreams)
             {
@@ -97,13 +100,27 @@ namespace Robust.Client.GameObjects.EntitySystems
                 if (mapPos != null)
                 {
                     var pos = mapPos.Value;
-                    if (pos.MapId != currentMap)
+                    if (pos.MapId != _eyeManager.CurrentMap)
                     {
                         stream.Source.SetVolume(-10000000);
                     }
                     else
                     {
+                        var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                        var occlusion = 0f;
+                        if (sourceRelative.Length > 0)
+                        {
+                            occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                pos.MapId,
+                                new CollisionRay(
+                                    pos.Position,
+                                    sourceRelative.Normalized,
+                                    OcclusionCollisionMask),
+                                sourceRelative.Length,
+                                stream.TrackingEntity);
+                        }
                         stream.Source.SetVolume(stream.Volume);
+                        stream.Source.SetOcclusion(occlusion);
                     }
 
                     if (!stream.Source.SetPosition(pos.Position))

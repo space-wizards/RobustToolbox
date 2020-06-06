@@ -230,6 +230,7 @@ namespace Robust.Shared.GameObjects
             if (mapping.TryGetNode("mode", out YamlNode node))
             {
                 PlacementMode = node.AsString();
+                _placementOverriden = true;
             }
 
             if (mapping.TryGetNode("offset", out node))

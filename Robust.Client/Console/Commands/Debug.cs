@@ -541,7 +541,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var group = new ButtonGroup();
-            var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
+            var vBoxRadioButtons = new VBoxContainer();
             for (var i = 0; i < 10; i++)
             {
                 vBoxRadioButtons.AddChild(new Button
@@ -554,6 +554,8 @@ namespace Robust.Client.Console.Commands
             }
 
             tabContainer.AddChild(vBoxRadioButtons);
+
+            TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
 
             tabContainer.AddChild(new VBoxContainer
             {

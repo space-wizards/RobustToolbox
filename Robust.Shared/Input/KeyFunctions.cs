@@ -36,6 +36,10 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
 
+        // Buttons to navigate between UI controls.
+        public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
+        public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
+
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";

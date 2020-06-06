@@ -30,6 +30,9 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.CameraRotateRight);
             common.AddFunction(EngineKeyFunctions.CameraRotateLeft);
 
+            common.AddFunction(EngineKeyFunctions.GuiTabNavigateNext);
+            common.AddFunction(EngineKeyFunctions.GuiTabNavigatePrev);
+
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);
             common.AddFunction(EngineKeyFunctions.TextCursorWordLeft);

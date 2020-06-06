@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
@@ -243,17 +244,17 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (predicate != null && predicate.Invoke(body.Owner))
-                {
-                    return true;
-                }
-
                 if (!body.CanCollide)
                 {
                     return true;
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (predicate != null && predicate.Invoke(body.Owner))
                 {
                     return true;
                 }
@@ -275,6 +276,26 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
+
+        /// <inheritdoc />
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null)
+        {
+            var penetration = 0f;
+
+            var sourceToDest = IntersectRay(mapId, ray, maxLength, ignoredEnt, false).ToArray();
+            var destToSource = IntersectRay(mapId,
+                new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
+                maxLength, ignoredEnt, false).ToArray();
+
+            Debug.Assert(sourceToDest.Length == destToSource.Length);
+
+            for (int i = 0; i < sourceToDest.Length; i++)
+            {
+                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Length - 1 - i].HitPos).Length;
+            }
+
+            return penetration;
+        }
 
         public event Action<DebugRayData> DebugDrawRay;
 

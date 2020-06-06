@@ -115,5 +115,7 @@ namespace Robust.Shared.Interfaces.Timing
 
             return new PredictionGuard(this);
         }
+
+        string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}";
     }
 }

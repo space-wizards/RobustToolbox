@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;

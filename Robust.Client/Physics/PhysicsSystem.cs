@@ -8,8 +8,6 @@ namespace Robust.Client.Physics
     [UsedImplicitly]
     public class PhysicsSystem: EntitySystem
     {
-        private float _lastServerMsg;
-
         public override void Initialize()
         {
             base.Initialize();

@@ -21,6 +21,18 @@ namespace Robust.Shared.Interfaces.Serialization
         /// A custom serialization format for int values, chosen by the tag type.
         /// </returns>
         public WithFormat<int> FlagFormat<T>();
+
+        /// <summary>
+        /// Get a custom <c>int</c> format in terms of enum constants, chosen by a tag type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The tag type to select the representation with. To understand more about how
+        /// tag types are used, see the <see cref="ConstantsForAttribute"/>.
+        /// </typeparam>
+        /// <returns>
+        /// A custom serialization format for int values, chosen by the tag type.
+        /// </returns>
+        public WithFormat<int> ConstantFormat<T>();
     }
 
 
@@ -45,7 +57,7 @@ namespace Robust.Shared.Interfaces.Serialization
             return new YamlCustomFormatSerializer<T>(this);
         }
 
-        private class DoNothing<T> : WithFormat<T>
+        private class DoNothing : WithFormat<T>
         {
             public override Type Format => typeof(T);
             public override T FromCustomFormat(object obj) { return (T)obj; }
@@ -68,6 +80,6 @@ namespace Robust.Shared.Interfaces.Serialization
         /// <summary>
         /// The identity format i.e. the format which represents a value as itself.
         /// </summary>
-        public static readonly WithFormat<T> NoFormat = new DoNothing<T>();
+        public static readonly WithFormat<T> NoFormat = new DoNothing();
     }
 }

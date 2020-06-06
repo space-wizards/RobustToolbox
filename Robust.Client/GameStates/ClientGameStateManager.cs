@@ -18,9 +18,7 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Log;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameStates
@@ -83,7 +81,7 @@ namespace Robust.Client.GameStates
             _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
             _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
             _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
-            _config.RegisterCVar("net.predict_size", 2, CVar.ARCHIVE, i => PredictSize = i);
+            _config.RegisterCVar("net.predict_size", 1, CVar.ARCHIVE, i => PredictSize = i);
 
             _processor.Interpolation = _config.GetCVar<bool>("net.interp");
             _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
@@ -145,6 +143,7 @@ namespace Robust.Client.GameStates
         {
             var state = message.State;
 
+            // We temporarily change CurTick here so the GameStateProcessor gets the right values.
             var lastCurTick = _timing.CurTick;
             _timing.CurTick = _lastProcessedTick + 1;
 
@@ -153,6 +152,7 @@ namespace Robust.Client.GameStates
             // we always ack everything we receive, even if it is late
             AckGameState(state.ToSequence);
 
+            // And reset CurTick to what it was.
             _timing.CurTick = lastCurTick;
         }
 
@@ -174,6 +174,9 @@ namespace Robust.Client.GameStates
 
                 ResetPredictedEntities(_timing.CurTick);
             }
+
+            // Store last tick we got from the GameStateProcessor.
+            _lastProcessedTick = _timing.CurTick;
 
             // apply current state
             var createdEntities = ApplyGameState(curState, nextState);
@@ -205,7 +208,6 @@ namespace Robust.Client.GameStates
             }
 
             DebugTools.Assert(_timing.InSimulation);
-            _lastProcessedTick = _timing.CurTick;
 
             if (Predicting)
             {
@@ -224,8 +226,8 @@ namespace Robust.Client.GameStates
                 var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
                 var ping = _network.ServerChannel.Ping / 1000f; // seconds.
-                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize + _timing.TickRate * ping +
-                                 PredictSize;
+                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
+                                 (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
 
                 //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
@@ -261,7 +263,12 @@ namespace Robust.Client.GameStates
                     }
 
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
+                    ((IEntityEventBus)_entities.EventBus).ProcessEventQueue();
                 }
+
+                // Target tick is set once the loop is done since this is the first time this tick has been reached.
+                // So EntitySystemManager.Update getting called from the main game loop will be FirstTimePredicted.
+                _timing.CurTick = new GameTick((uint) targetTick);
             }
         }
 

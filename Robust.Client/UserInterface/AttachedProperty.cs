@@ -7,12 +7,15 @@ namespace Robust.Client.UserInterface
     /// <param name="eventArgs"></param>
     public delegate void AttachedPropertyChangedCallback(Control owner, AttachedPropertyChangedEventArgs eventArgs);
 
+    public delegate void AttachedPropertyChangedCallback<T>(Control owner,
+        AttachedPropertyChangedEventArgs<T> eventArgs);
+
     /// <summary>
     ///     An attached property is a property that can be assigned to any control,
     ///     without having to modify the base <see cref="Control" /> class to add it.
     ///     This is useful for storing data for specific controls like <see cref="LayoutContainer" />
     /// </summary>
-    public sealed class AttachedProperty
+    public class AttachedProperty
     {
         /// <summary>
         ///     The name of the property.
@@ -46,7 +49,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         public AttachedPropertyChangedCallback Changed { get; }
 
-        private AttachedProperty(string name, Type owningType, Type propertyType,
+        internal AttachedProperty(string name, Type owningType, Type propertyType,
             object defaultValue = null,
             Func<object, bool> validate = null,
             AttachedPropertyChangedCallback changed = null)
@@ -78,10 +81,40 @@ namespace Robust.Client.UserInterface
         }
     }
 
+    public sealed class AttachedProperty<T> : AttachedProperty
+    {
+        public new Func<T, bool> Validate { get; }
+
+        public new AttachedPropertyChangedCallback<T> Changed { get; }
+
+        public new T DefaultValue { get; }
+
+        internal AttachedProperty(string name, Type owningType, T defaultValue = default,
+            Func<T, bool> validate = null, AttachedPropertyChangedCallback<T> changed = null)
+            : base(name, owningType, typeof(T), defaultValue,
+                validate != null ? o => validate((T) o) : (Func<object, bool>) null,
+                changed != null
+                    ? (o, ev) => changed(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue, (T) ev.OldValue))
+                    : (AttachedPropertyChangedCallback) null)
+        {
+            Validate = validate;
+            Changed = changed;
+            DefaultValue = defaultValue;
+        }
+
+        public static AttachedProperty<T> Create(string name, Type owningType,
+            T defaultValue = default,
+            Func<T, bool> validate = null,
+            AttachedPropertyChangedCallback<T> changed = null)
+        {
+            return new AttachedProperty<T>(name, owningType, defaultValue, validate, changed);
+        }
+    }
+
     /// <summary>
     ///     Event args for when an attached property on a control changes.
     /// </summary>
-    public struct AttachedPropertyChangedEventArgs
+    public readonly struct AttachedPropertyChangedEventArgs
     {
         public AttachedPropertyChangedEventArgs(object newValue, object oldValue)
         {
@@ -91,5 +124,17 @@ namespace Robust.Client.UserInterface
 
         public object NewValue { get; }
         public object OldValue { get; }
+    }
+
+    public readonly struct AttachedPropertyChangedEventArgs<T>
+    {
+        public T NewValue { get; }
+        public T OldValue { get; }
+
+        public AttachedPropertyChangedEventArgs(T newValue, T oldValue)
+        {
+            NewValue = newValue;
+            OldValue = oldValue;
+        }
     }
 }

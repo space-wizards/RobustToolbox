@@ -178,6 +178,7 @@ namespace Robust.Client.Input
                 return;
             }
 
+            var hasCanFocus = false;
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
@@ -187,11 +188,17 @@ namespace Robust.Client.Input
                 if (PackedContainsKey(binding.PackedKeyCombo, args.Key) &&
                     PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
+                    hasCanFocus |= binding.CanFocus;
                     UpBind(binding);
                 }
             }
 
             _keysPressed[(int) args.Key] = false;
+
+            if (hasCanFocus)
+            {
+                _userInterfaceManagerInternal.HandleCanFocusUp();
+            }
         }
 
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)

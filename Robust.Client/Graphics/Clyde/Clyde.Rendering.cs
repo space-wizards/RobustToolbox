@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
@@ -16,7 +16,7 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
-using StencilOp = OpenTK.Graphics.OpenGL4.StencilOp;
+using StencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -993,7 +993,7 @@ namespace Robust.Client.Graphics.Clyde
                 var a = _drawList[x].Item1;
                 var b = _drawList[y].Item1;
 
-                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                var cmp = (a.DrawDepth).CompareTo(b.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;

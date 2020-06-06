@@ -58,8 +58,7 @@ namespace Robust.Server
         [Dependency] private readonly IServerNetManager _network;
         [Dependency] private readonly ISystemConsoleManager _systemConsole;
         [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly ILocalizationManager _localizationManager;
-        [Dependency] private IRuntimeLog runtimeLog;
+        [Dependency] private readonly IRuntimeLog runtimeLog;
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly IWatchdogApi _watchdogApi;
         [Dependency] private readonly IScriptHost _scriptHost;
@@ -145,13 +144,13 @@ namespace Robust.Server
 
             //Sets up Logging
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-%(time)s.txt", CVar.ARCHIVE);
+            _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
             _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
 
             var logPath = _config.GetCVar<string>("log.path");
             var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyyMMdd"))
-                .Replace("%(time)s", DateTime.Now.ToString("hhmmss"));
+            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
+                .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
             var fullPath = Path.Combine(logPath, logFilename);
 
             if (!Path.IsPathRooted(fullPath))
@@ -199,6 +198,8 @@ namespace Robust.Server
             _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
             _resources.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
+
+            _modLoader.SetUseLoadContext(!DisableLoadContext);
 
             //identical code in game controller for client
             if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
@@ -292,6 +293,8 @@ namespace Robust.Server
 
             _shutdownEvent.Set();
         }
+
+        public bool DisableLoadContext { private get; set; }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {

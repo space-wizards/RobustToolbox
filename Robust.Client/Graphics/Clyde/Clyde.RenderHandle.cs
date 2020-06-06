@@ -299,7 +299,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.UseShader(shader);
                 }
 
-                public override void DrawCircle(Vector2 position, float radius, Color color)
+                public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
                 {
                     // TODO: Implement this.
                 }

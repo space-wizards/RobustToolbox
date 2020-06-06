@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using JetBrains.Annotations;
 using NFluidsynth;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Logger = Robust.Shared.Log.Logger;
 
@@ -57,12 +63,16 @@ namespace Robust.Client.Audio.Midi
         ///     If true, MIDI support is available.
         /// </summary>
         bool IsAvailable { get; }
+
+        public int OcclusionCollisionMask { get; set; }
     }
 
     internal class MidiManager : IDisposable, IMidiManager
     {
 #pragma warning disable 649
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager;
+        [Dependency] private readonly IResourceManager _resourceManager;
 #pragma warning restore 649
 
         public bool IsAvailable
@@ -107,6 +117,8 @@ namespace Robust.Client.Audio.Midi
         private NFluidsynth.Logger.LoggerDelegate _loggerDelegate;
         private ISawmill _sawmill;
 
+        public int OcclusionCollisionMask { get; set; }
+
         private void InitializeFluidsynth()
         {
             if (FluidsynthInitialized || _failedInitialize) return;
@@ -123,7 +135,12 @@ namespace Robust.Client.Audio.Midi
                 _settings["synth.lock-memory"].IntValue = 0;
                 _settings["synth.threadsafe-api"].IntValue = 1;
                 _settings["synth.gain"].DoubleValue = 1.0d;
+                _settings["synth.polyphony"].IntValue = 1024;
+                _settings["synth.cpu-cores"].IntValue = 2;
+                _settings["synth.overflow.age"].DoubleValue = 3000;
                 _settings["audio.driver"].StringValue = "file";
+                _settings["audio.periods"].IntValue = 8;
+                _settings["audio.period-size"].IntValue = 4096;
                 _settings["midi.autoconnect"].IntValue = 1;
                 _settings["player.reset-synth"].IntValue = 0;
                 _settings["synth.midi-bank-select"].StringValue = "gm";
@@ -193,7 +210,14 @@ namespace Robust.Client.Audio.Midi
 
                 var renderer = new MidiRenderer(_settings, soundfontLoader);
 
-                // Since the last loaded soundfont takes priority, we load the fallback soundfont first.
+                foreach (var file in _resourceManager.ContentFindFiles(new ResourcePath("/MidiCustom/")))
+                {
+                    if (file.Extension != "sf2" && file.Extension != "dls") continue;
+                    _resourceManager.TryGetDiskFilePath(file, out var path);
+                    renderer.LoadSoundfont(path);
+                }
+
+                // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
                 renderer.LoadSoundfont(FallbackSoundfont);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
@@ -256,16 +280,53 @@ namespace Robust.Client.Audio.Midi
                         continue;
                     }
 
+                    MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
-                        if (renderer.Source.SetPosition(renderer.TrackingCoordinates.Value.ToMapPos(_mapManager)))
-                            continue;
-                        _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                        renderer.Source.StopPlaying();
+                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_mapManager);
                     }
                     else if (renderer.TrackingEntity != null)
                     {
-                        if (renderer.Source.SetPosition(renderer.TrackingEntity.Transform.WorldPosition)) continue;
+                        mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                    }
+
+                    if (mapPos != null)
+                    {
+                        var pos = mapPos.Value;
+                        if (pos.MapId != _eyeManager.CurrentMap)
+                        {
+                            renderer.Source.SetVolume(-10000000);
+                        }
+                        else
+                        {
+                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var occlusion = 0f;
+                            if (sourceRelative.Length > 0)
+                            {
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                    pos.MapId,
+                                    new CollisionRay(
+                                        pos.Position,
+                                        sourceRelative.Normalized,
+                                        OcclusionCollisionMask),
+                                    sourceRelative.Length,
+                                    renderer.TrackingEntity);
+                            }
+                            renderer.Source.SetOcclusion(occlusion);
+                        }
+
+                        if (renderer.Source.SetPosition(pos.Position))
+                        {
+                            continue;
+                        }
+
+                        if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
+                        {
+                            // just duck out instead of move to NaN
+                            renderer.Source.SetOcclusion(float.MaxValue);
+                            continue;
+                        }
+
                         _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
                         renderer.Source.StopPlaying();
                     }

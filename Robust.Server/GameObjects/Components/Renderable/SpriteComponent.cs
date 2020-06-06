@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -17,7 +18,7 @@ namespace Robust.Server.GameObjects
         private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
 
         private bool _visible;
-        private DrawDepth _drawDepth = DrawDepth.Objects;
+        private int _drawDepth = DrawDepthTag.Default;
         private Vector2 _scale;
         private Vector2 _offset;
         private Color _color;
@@ -26,7 +27,7 @@ namespace Robust.Server.GameObjects
         private Angle _rotation;
 
         [ViewVariables]
-        public DrawDepth DrawDepth
+        public int DrawDepth
         {
             get => _drawDepth;
             set
@@ -390,7 +391,7 @@ namespace Robust.Server.GameObjects
             base.ExposeData(serializer);
 
             serializer.DataFieldCached(ref _visible, "visible", true);
-            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepth.Objects);
+            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepthTag.Default, WithFormat.Constants<DrawDepthTag>());
             serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
             serializer.DataFieldCached(ref _scale, "scale", Vector2.One);
             serializer.DataFieldCached(ref _color, "color", Color.White);

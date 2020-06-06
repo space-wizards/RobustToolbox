@@ -20,6 +20,7 @@ using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
@@ -106,6 +107,8 @@ namespace Robust.Client
                     _configurationManager.SetSaveFile(configFile);
                 }
             }
+
+            _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
             {

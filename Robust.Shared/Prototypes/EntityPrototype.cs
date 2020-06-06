@@ -33,6 +33,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables, CanBeNull]
         public string Name { get; private set; } = "";
 
+        private bool _nameModified;
+        private bool _descriptionModified;
+
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
         ///     to provide additional info without ruining the Name property itself.
@@ -145,6 +148,7 @@ namespace Robust.Shared.GameObjects
 
             if (mapping.TryGetNode("name", out var node))
             {
+                _nameModified = true;
                 Name = Loc.GetString(node.AsString());
             }
 
@@ -156,6 +160,7 @@ namespace Robust.Shared.GameObjects
             // DESCRIPTION
             if (mapping.TryGetNode("description", out node))
             {
+                _descriptionModified = true;
                 Description = Loc.GetString(node.AsString());
             }
 
@@ -391,7 +396,7 @@ namespace Robust.Shared.GameObjects
                 target.PlacementRange = source.PlacementRange;
             }
 
-            if (target.Description == null)
+            if (!target._descriptionModified)
             {
                 target.Description = source.Description;
             }
@@ -409,7 +414,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (target.Name == null)
+            if (!target._nameModified)
             {
                 target.Name = source.Name;
             }

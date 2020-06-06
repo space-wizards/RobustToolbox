@@ -36,7 +36,7 @@ namespace Robust.Client.UserInterface.Controls
             var contentBox = ActualStyleBox.GetContentBox(PixelSizeBox);
             foreach (var child in Children)
             {
-                FitChildInBox(child, contentBox);
+                FitChildInPixelBox(child, (UIBox2i) contentBox);
             }
         }
 

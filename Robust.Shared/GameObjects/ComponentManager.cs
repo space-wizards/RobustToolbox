@@ -5,6 +5,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -81,6 +82,8 @@ namespace Robust.Shared.GameObjects
 
             if (component.Owner != entity)
                 throw new InvalidOperationException("Component is not owned by entity.");
+
+            component.ExposeData(new EmptySerializer());
 
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);

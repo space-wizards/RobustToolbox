@@ -420,6 +420,17 @@ namespace Robust.Client.UserInterface
             return _mouseFindControlAtPos(RootControl, coordinates);
         }
 
+        public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+        public Vector2 ScreenToUIPosition(Vector2 position)
+        {
+            return position / UIScale;
+        }
+
+        public Vector2 ScreenToUIPosition(ScreenCoordinates coordinates)
+        {
+            return ScreenToUIPosition(coordinates.Position);
+        }
+
         /// <inheritdoc />
         public void GrabKeyboardFocus(Control control)
         {
@@ -690,7 +701,7 @@ namespace Robust.Client.UserInterface
 
             _tooltip.Visible = true;
             _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, _inputManager.MouseScreenPosition);
+            LayoutContainer.SetPosition(_tooltip, MousePositionScaled);
 
             var (right, bottom) = _tooltip.Position + _tooltip.Size;
 

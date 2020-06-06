@@ -4,6 +4,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -44,6 +45,14 @@ namespace Robust.Client.Interfaces.UserInterface
         void Popup(string contents, string title = "Alert!");
 
         Control MouseGetControl(Vector2 coordinates);
+
+        /// <summary>
+        ///     Gets the mouse position in UI space, accounting for <see cref="UIScale"/>.
+        /// </summary>
+        Vector2 MousePositionScaled { get; }
+
+        Vector2 ScreenToUIPosition(Vector2 position);
+        Vector2 ScreenToUIPosition(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).

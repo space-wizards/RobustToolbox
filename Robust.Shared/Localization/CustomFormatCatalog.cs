@@ -11,7 +11,7 @@ namespace Robust.Shared.Localization
     /// </summary>
     public class CustomFormatCatalog : Catalog
     {
-        public IFormatProvider CustomFormatProvider;
+        public IFormatProvider? CustomFormatProvider;
 
         public CustomFormatCatalog()
             : base()

@@ -6,6 +6,8 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgPlacement : NetMessage

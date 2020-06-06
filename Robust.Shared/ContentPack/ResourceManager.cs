@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -16,10 +17,7 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal partial class ResourceManager : IResourceManagerInternal
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IConfigurationManager _config;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _config = default!;
 
         private readonly ReaderWriterLockSlim _contentRootsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
 
@@ -35,7 +33,7 @@ namespace Robust.Shared.ContentPack
             new Regex("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
-        public IWritableDirProvider UserData { get; private set; }
+        public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
         public void Initialize(string userData)
@@ -68,7 +66,7 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentPack(string pack, ResourcePath prefix = null)
+        public void MountContentPack(string pack, ResourcePath? prefix = null)
         {
             if (prefix == null)
             {
@@ -104,7 +102,7 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public void MountContentDirectory(string path, ResourcePath prefix = null)
+        public void MountContentDirectory(string path, ResourcePath? prefix = null)
         {
             if (prefix == null)
             {
@@ -154,13 +152,13 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(string path, out Stream fileStream)
+        public bool TryContentFileRead(string path, [NotNullWhen(true)] out Stream? fileStream)
         {
             return TryContentFileRead(new ResourcePath(path), out fileStream);
         }
 
         /// <inheritdoc />
-        public bool TryContentFileRead(ResourcePath path, out Stream fileStream)
+        public bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream)
         {
             if (path == null)
             {
@@ -264,7 +262,7 @@ namespace Robust.Shared.ContentPack
         }
 
         // TODO: Remove this when/if we can get Godot to load from not-the-filesystem.
-        public bool TryGetDiskFilePath(ResourcePath path, out string diskPath)
+        public bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath)
         {
             // loop over each root trying to get the file
             _contentRootsLock.EnterReadLock();

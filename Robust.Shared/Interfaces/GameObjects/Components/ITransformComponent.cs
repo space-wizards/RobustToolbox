@@ -62,7 +62,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
-        ITransformComponent Parent { get; }
+        ITransformComponent? Parent { get; }
 
         /// <summary>
         /// The UID of the parent entity that this entity is attached to.

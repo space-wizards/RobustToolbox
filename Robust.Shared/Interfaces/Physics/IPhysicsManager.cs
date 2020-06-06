@@ -59,7 +59,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
-        IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true);
+        IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true);
 
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>The distance the ray traveled while colliding with entities</returns>
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null);
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null);
 
         /// <summary>
         ///     Calculates the normal vector for two colliding bodies
@@ -99,7 +99,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true);
+        IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true);
 
         event Action<DebugRayData> DebugDrawRay;
 

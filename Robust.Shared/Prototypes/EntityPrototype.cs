@@ -4,6 +4,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Localization;
@@ -20,39 +21,30 @@ namespace Robust.Shared.GameObjects
     [Prototype("entity")]
     public class EntityPrototype : IPrototype, IIndexedPrototype, ISyncingPrototype
     {
-#pragma warning disable 649
-        [Dependency] private readonly ILocalizationManager _localization;
-#pragma warning restore 649
-
-        /// <summary>
-        /// The type string of this prototype used in files.
-        /// </summary>
-        public string TypeString { get; private set; }
-
         /// <summary>
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
-        public string ID { get; private set; }
+        public string ID { get; private set; } = default!;
 
         /// <summary>
         /// The "in game name" of the object. What is displayed to most players.
         /// </summary>
         [ViewVariables, CanBeNull]
-        public string Name { get; private set; }
+        public string Name { get; private set; } = "";
 
         /// <summary>
         ///     Optional suffix to display in development menus like the entity spawn panel,
         ///     to provide additional info without ruining the Name property itself.
         /// </summary>
         [ViewVariables]
-        public string EditorSuffix { get; private set; }
+        public string? EditorSuffix { get; private set; }
 
         /// <summary>
         /// The description of the object that shows upon using examine
         /// </summary>
         [ViewVariables]
-        public string Description { get; private set; }
+        public string Description { get; private set; } = "";
 
         /// <summary>
         ///     If true, this object should not show up in the entity spawn panel.
@@ -64,7 +56,7 @@ namespace Robust.Shared.GameObjects
         /// The different mounting points on walls. (If any).
         /// </summary>
         [ViewVariables]
-        public List<int> MountingPoints { get; private set; }
+        public List<int>? MountingPoints { get; private set; }
 
         /// <summary>
         /// The Placement mode used for client-initiated placement. This is used for admin and editor placement. The serverside version controls what type the server assigns in normal gameplay.
@@ -105,20 +97,20 @@ namespace Robust.Shared.GameObjects
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        public EntityPrototype Parent { get; private set; }
+        public EntityPrototype? Parent { get; private set; }
 
         /// <summary>
         /// A list of children inheriting from this prototype.
         /// </summary>
         [ViewVariables]
-        public List<EntityPrototype> Children { get; private set; }
+        public List<EntityPrototype> Children { get; private set; } = new List<EntityPrototype>();
 
         public bool IsRoot => Parent == null;
 
         /// <summary>
         /// Used to store the parent id until we sync when all templates are done loading.
         /// </summary>
-        private string parentTemp;
+        private string? parentTemp;
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
@@ -128,16 +120,16 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
         /// </summary>
-        public YamlMappingNode DataNode { get; set; }
+        public YamlMappingNode? DataNode { get; set; }
 
         private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
 
-        string CurrentDeserializingComponent;
+        string? CurrentDeserializingComponent;
 
-        readonly Dictionary<string, Dictionary<(string, Type), object>> FieldCache =
-            new Dictionary<string, Dictionary<(string, Type), object>>();
+        readonly Dictionary<string, Dictionary<(string, Type), object?>> FieldCache =
+            new Dictionary<string, Dictionary<(string, Type), object?>>();
 
-        readonly Dictionary<string, object> DataCache = new Dictionary<string, object>();
+        readonly Dictionary<string, object?> DataCache = new Dictionary<string, object?>();
 
         public EntityPrototype()
         {
@@ -149,13 +141,11 @@ namespace Robust.Shared.GameObjects
 
         public void LoadFrom(YamlMappingNode mapping)
         {
-            TypeString = mapping.GetNode("type").ToString();
-
             ID = mapping.GetNode("id").AsString();
 
-            if (mapping.TryGetNode("name", out YamlNode node))
+            if (mapping.TryGetNode("name", out var node))
             {
-                Name = _localization.GetString(node.AsString());
+                Name = Loc.GetString(node.AsString());
             }
 
             if (mapping.TryGetNode("parent", out node))
@@ -166,12 +156,12 @@ namespace Robust.Shared.GameObjects
             // DESCRIPTION
             if (mapping.TryGetNode("description", out node))
             {
-                Description = _localization.GetString(node.AsString());
+                Description = Loc.GetString(node.AsString());
             }
 
             if (mapping.TryGetNode("suffix", out node))
             {
-                EditorSuffix = _localization.GetString(node.AsString());
+                EditorSuffix = Loc.GetString(node.AsString());
             }
 
             // COMPONENTS
@@ -227,7 +217,7 @@ namespace Robust.Shared.GameObjects
 
         private void ReadPlacementProperties(YamlMappingNode mapping)
         {
-            if (mapping.TryGetNode("mode", out YamlNode node))
+            if (mapping.TryGetNode("mode", out var node))
             {
                 PlacementMode = node.AsString();
                 _placementOverriden = true;
@@ -349,7 +339,7 @@ namespace Robust.Shared.GameObjects
             // Copy component data over.
             foreach (KeyValuePair<string, YamlMappingNode> component in source.Components)
             {
-                if (target.Components.TryGetValue(component.Key, out YamlMappingNode targetComponent))
+                if (target.Components.TryGetValue(component.Key, out var targetComponent))
                 {
                     // Copy over values the target component does not have.
                     foreach (YamlNode key in component.Value.Children.Keys)
@@ -430,10 +420,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal static void LoadEntity(EntityPrototype prototype, Entity entity, IComponentFactory factory,
-            IEntityLoadContext context)
+        internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory,
+            IEntityLoadContext? context)
         {
-            YamlObjectSerializer.Context defaultContext = null;
+            YamlObjectSerializer.Context? defaultContext = null;
             if (context == null)
             {
                 defaultContext = new PrototypeSerializationContext(prototype);
@@ -534,16 +524,16 @@ namespace Robust.Shared.GameObjects
 
         class PrototypeSerializationContext : YamlObjectSerializer.Context
         {
-            readonly EntityPrototype prototype;
+            readonly EntityPrototype? prototype;
 
-            public PrototypeSerializationContext(EntityPrototype owner)
+            public PrototypeSerializationContext(EntityPrototype? owner)
             {
                 prototype = owner;
             }
 
             public override void SetCachedField<T>(string field, T value)
             {
-                if (StackDepth != 0)
+                if (StackDepth != 0 || prototype?.CurrentDeserializingComponent == null)
                 {
                     base.SetCachedField<T>(field, value);
                     return;
@@ -551,16 +541,16 @@ namespace Robust.Shared.GameObjects
 
                 if (!prototype.FieldCache.TryGetValue(prototype.CurrentDeserializingComponent, out var fieldList))
                 {
-                    fieldList = new Dictionary<(string, Type), object>();
+                    fieldList = new Dictionary<(string, Type), object?>();
                     prototype.FieldCache[prototype.CurrentDeserializingComponent] = fieldList;
                 }
 
                 fieldList[(field, typeof(T))] = value;
             }
 
-            public override bool TryGetCachedField<T>(string field, out T value)
+            public override bool TryGetCachedField<T>(string field, [MaybeNullWhen(false)] out T value)
             {
-                if (StackDepth != 0)
+                if (StackDepth != 0 || prototype?.CurrentDeserializingComponent == null)
                 {
                     return base.TryGetCachedField<T>(field, out value);
                 }
@@ -569,18 +559,18 @@ namespace Robust.Shared.GameObjects
                 {
                     if (dict.TryGetValue((field, typeof(T)), out var theValue))
                     {
-                        value = (T) theValue;
+                        value = (T) theValue!;
                         return true;
                     }
                 }
 
-                value = default;
+                value = default!;
                 return false;
             }
 
             public override void SetDataCache(string field, object value)
             {
-                if (StackDepth != 0)
+                if (StackDepth != 0 || prototype == null)
                 {
                     base.SetDataCache(field, value);
                     return;
@@ -589,9 +579,9 @@ namespace Robust.Shared.GameObjects
                 prototype.DataCache[field] = value;
             }
 
-            public override bool TryGetDataCache(string field, out object value)
+            public override bool TryGetDataCache(string field, out object? value)
             {
-                if (StackDepth != 0)
+                if (StackDepth != 0 || prototype == null)
                 {
                     return base.TryGetDataCache(field, out value);
                 }

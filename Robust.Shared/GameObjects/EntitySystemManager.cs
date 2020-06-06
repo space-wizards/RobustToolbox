@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
@@ -13,9 +14,9 @@ namespace Robust.Shared.GameObjects
     public class EntitySystemManager : IEntitySystemManager
     {
 #pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
-        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetEntitySystem<T>(out T entitySystem)
+        public bool TryGetEntitySystem<T>([MaybeNullWhen(false)] out T entitySystem)
             where T : IEntitySystem
         {
             if (_systems.TryGetValue(typeof(T), out var system))

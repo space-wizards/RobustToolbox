@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Serialization;
 
+#nullable disable
+
 namespace Robust.Shared.ViewVariables
 {
     /// <summary>

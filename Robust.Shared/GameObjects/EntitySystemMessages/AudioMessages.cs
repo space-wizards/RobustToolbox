@@ -3,6 +3,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using System;
 
+#nullable disable
+
 namespace Robust.Shared.GameObjects
 {
     // TODO: This is quite bandwidth intensive.

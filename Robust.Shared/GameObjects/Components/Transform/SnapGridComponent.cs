@@ -21,11 +21,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private bool IsSet;
         private SnapGridOffset _offset = SnapGridOffset.Center;
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
-        public event Action OnPositionChanged;
+        public event Action? OnPositionChanged;
 
         private GridId _lastGrid;
         public MapIndices Position { get; private set; }

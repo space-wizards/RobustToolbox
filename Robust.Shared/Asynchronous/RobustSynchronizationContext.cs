@@ -16,10 +16,10 @@ namespace Robust.Shared.Asynchronous
             _runtimeLog = runtimeLog;
         }
 
-        private readonly ConcurrentQueue<(SendOrPostCallback d, object state)> _pending
-            = new ConcurrentQueue<(SendOrPostCallback, object)>();
+        private readonly ConcurrentQueue<(SendOrPostCallback d, object? state)> _pending
+            = new ConcurrentQueue<(SendOrPostCallback, object?)>();
 
-        public override void Send(SendOrPostCallback d, object state)
+        public override void Send(SendOrPostCallback d, object? state)
         {
             if (Current != this)
             {
@@ -32,7 +32,7 @@ namespace Robust.Shared.Asynchronous
             d(state);
         }
 
-        public override void Post(SendOrPostCallback d, object state)
+        public override void Post(SendOrPostCallback d, object? state)
         {
             _pending.Enqueue((d, state));
         }

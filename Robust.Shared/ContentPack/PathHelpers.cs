@@ -19,13 +19,18 @@ namespace Robust.Shared.ContentPack
             // TODO: remove this shitty hack, either through making it less hardcoded into shared,
             //   or by making our file structure less spaghetti somehow.
             var assembly = typeof(PathHelpers).Assembly;
+            if (assembly.CodeBase == null)
+            {
+                throw new InvalidOperationException("Cannot find path of executable.");
+            }
+
             var pathUri = new Uri(assembly.CodeBase);
             var path = pathUri.LocalPath;
             if (pathUri.Fragment != "")
             {
                 path += pathUri.Fragment;
             }
-            return Path.GetDirectoryName(path);
+            return Path.GetDirectoryName(path)!;
         }
 
         /// <summary>

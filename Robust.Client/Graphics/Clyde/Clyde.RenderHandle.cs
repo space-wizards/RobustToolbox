@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
@@ -42,8 +42,7 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawResetViewTransform();
             }
 
-            public void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-                Angle angle)
+            public void DrawTexture(Texture texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
             {
                 if (texture is AtlasTexture atlas)
                 {
@@ -63,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var clydeTexture = (ClydeTexture) texture;
 
-                _clyde.DrawTexture(clydeTexture.TextureId, a, b, modulate, subRegion, angle);
+                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, modulate, subRegion);
             }
 
             public void SetScissor(UIBox2i? scissorBox)
@@ -275,8 +274,8 @@ namespace Robust.Client.Graphics.Clyde
                     Color? modulate = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
-                    _renderHandle.DrawTexture(texture, rect.TopLeft, rect.BottomRight, color,
-                        subRegion, 0);
+                    _renderHandle.DrawTexture(texture, rect.TopLeft, rect.TopRight,
+                        rect.BottomLeft, rect.BottomRight, color, subRegion);
                 }
             }
 
@@ -344,7 +343,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.TopRight, color, subRegion, 0);
+                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, subRegion);
                 }
 
                 public override void DrawTextureRectRegion(Texture texture, in Box2Rotated rect,
@@ -352,8 +352,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTexture(texture, rect.Box.BottomLeft, rect.Box.TopRight, color, subRegion,
-                        (float) rect.Rotation);
+                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, subRegion);
                 }
 
                 public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,

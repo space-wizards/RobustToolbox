@@ -458,8 +458,7 @@ namespace Robust.Client.Graphics.Clyde
             AllocRenderCommand(RenderCommandType.ResetViewMatrix);
         }
 
-        private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-            Angle angle)
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
         {
             EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
 
@@ -489,24 +488,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            Vector2 bl;
-            Vector2 br;
-            Vector2 tr;
-            Vector2 tl;
-            if (angle == Angle.Zero)
-            {
-                bl = _currentModelMatrix.Transform(a);
-                br = _currentModelMatrix.Transform(new Vector2(b.X, a.Y));
-                tr = _currentModelMatrix.Transform(b);
-                tl = _currentModelMatrix.Transform(new Vector2(a.X, b.Y));
-            }
-            else
-            {
-                bl = _currentModelMatrix.Transform(angle.RotateVec(a));
-                br = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(b.X, a.Y)));
-                tr = _currentModelMatrix.Transform(angle.RotateVec(b));
-                tl = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(a.X, b.Y)));
-            }
+            bl = _currentModelMatrix.Transform(bl);
+            br = _currentModelMatrix.Transform(br);
+            tr = _currentModelMatrix.Transform(tr);
+            tl = _currentModelMatrix.Transform(tl);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;

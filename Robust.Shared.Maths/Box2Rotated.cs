@@ -10,26 +10,35 @@ namespace Robust.Shared.Maths
     {
         public readonly Box2 Box;
         public readonly Angle Rotation;
-        public readonly Vector2 Position;
+        /// <summary>
+        /// The point about which the rotation occurs.
+        /// </summary>
+        public readonly Vector2 Origin;
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
         public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
 
-        public Vector2 BottomRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Bottom));
-        public Vector2 TopLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Top));
-        public Vector2 TopRight => Position + Rotation.RotateVec(new Vector2(Box.Right, Box.Top));
-        public Vector2 BottomLeft => Position + Rotation.RotateVec(new Vector2(Box.Left, Box.Bottom));
+        public Vector2 BottomRight => Origin + Rotation.RotateVec(Box.BottomRight - Origin);
+        public Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
+        public Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
+        public Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
+
+        public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
+            : this(new Box2(bottomLeft, topRight)) { }
+
+        public Box2Rotated(Box2 box)
+            : this(box, 0) { }
 
         public Box2Rotated(Box2 box, Angle rotation)
             : this(box, rotation, Vector2.Zero) { }
 
-        public Box2Rotated(Box2 box, Angle rotation, Vector2 position)
+        public Box2Rotated(Box2 box, Angle rotation, Vector2 origin)
         {
             Box = box;
             Rotation = rotation;
-            Position = position;
+            Origin = origin;
         }
 
         /// <summary>

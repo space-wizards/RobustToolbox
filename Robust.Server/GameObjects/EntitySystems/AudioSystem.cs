@@ -55,10 +55,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
         private uint CacheIdentifier()
         {
-            unchecked
-            {
-                return _streamIndex++;
-            }
+            return unchecked(_streamIndex++);
         }
 
         /// <summary>

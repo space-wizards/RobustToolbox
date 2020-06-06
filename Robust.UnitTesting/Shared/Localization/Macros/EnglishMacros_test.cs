@@ -7,16 +7,19 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
     [TestFixture, Parallelizable]
     public class EnglishMacros_test
     {
-        private struct Subject : IGenderable
+        private struct Subject : IGenderable, IPropernamable
         {
             public string Name;
 
             public Gender Gender { get; set; }
 
-            public Subject(string name, Gender gender)
+            public bool Proper { get; set; }
+
+            public Subject(string name, Gender gender, bool proper)
             {
                 Name = name;
                 Gender = gender;
+                Proper = proper;
             }
 
             public override string ToString()
@@ -25,10 +28,10 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
             }
         }
 
-        private readonly Subject female = new Subject("Lisa", Gender.Female);
-        private readonly Subject male = new Subject("Bob", Gender.Male);
-        private readonly Subject epicene = new Subject("Michel", Gender.Epicene);
-        private readonly Subject neuter = new Subject("D.O.O.R.K.N.O.B.", Gender.Neuter);
+        private readonly Subject female = new Subject("Lisa", Gender.Female, true);
+        private readonly Subject male = new Subject("Bob", Gender.Male, true);
+        private readonly Subject epicene = new Subject("Michel", Gender.Epicene, true);
+        private readonly Subject neuter = new Subject("D.O.O.R.K.N.O.B.", Gender.Neuter, true);
 
         public void TestThey()
         {
@@ -87,6 +90,16 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
             Assert.AreEqual("he's", sut.Format(male));
             Assert.AreEqual("they're", sut.Format(epicene));
             Assert.AreEqual("it's", sut.Format(neuter));
+        }
+
+        [Test]
+        public void TestTheName()
+        {
+            var cpu = new Subject("CPU", Gender.Neuter, false);
+            ITextMacro sut = new TheName();
+            Assert.AreEqual("The CPU", sut.CapitalizedFormat(cpu));
+            Assert.AreEqual("the CPU", sut.Format(cpu));
+            Assert.AreEqual(male.Name, sut.Format(male));
         }
     }
 }

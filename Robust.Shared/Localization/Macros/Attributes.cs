@@ -33,4 +33,21 @@ namespace Robust.Shared.Localization.Macros
                 return (argument as IGenderable)?.Gender ?? Gender.Epicene;
         }
     }
+
+    public interface IPropernamable
+    {
+        public bool Proper => false;
+
+        public static bool GetProperOrFalse(object argument)
+        {
+            // FIXME The Entity special case is not really good
+            if (argument is IEntity entity)
+            {
+                // FIXME And this is not really better.
+                return Enumerable.FirstOrDefault(entity.GetAllComponents<IPropernamable>())?.Proper ?? false;
+            }
+
+            return (argument as IPropernamable)?.Proper ?? false;
+        }
+    }
 }

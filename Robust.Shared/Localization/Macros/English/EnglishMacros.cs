@@ -89,4 +89,15 @@
             };
         }
     }
+
+    [RegisterTextMacro("theName", "en")]
+    public class TheName : ITextMacro
+    {
+        public string Format(object argument)
+        {
+            return IPropernamable.GetProperOrFalse(argument)
+                ? argument.ToString()
+                : "the " + argument.ToString();
+        }
+    }
 }

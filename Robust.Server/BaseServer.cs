@@ -136,6 +136,8 @@ namespace Robust.Server
                 }
             }
 
+            _config.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
+
             if (_commandLineArgs != null)
             {
                 _config.OverrideConVars(_commandLineArgs.CVars);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Prometheus;
 using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
@@ -27,6 +28,9 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
+        private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
+            "robust_entities_count",
+            "Amount of alive entities.");
 
         private const float MinimumMotionForMovers = 1 / 128f;
 
@@ -921,6 +925,13 @@ namespace Robust.Server.GameObjects
                 if ((visibilityMask & visibility.Layer) == 0)
                     set.Remove(entity);
             }
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            EntitiesCount.Set(AllEntities.Count);
         }
     }
 }

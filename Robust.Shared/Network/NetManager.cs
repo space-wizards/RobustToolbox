@@ -9,6 +9,7 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -35,6 +36,31 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
+        private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_sent_packets",
+            "Number of packets sent since server startup.");
+
+        private static readonly Counter RecvPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_recv_packets",
+            "Number of packets sent since server startup.");
+
+        private static readonly Counter SentMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_messages",
+            "Number of messages sent since server startup.");
+
+        private static readonly Counter RecvMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_messages",
+            "Number of messages sent since server startup.");
+
+        private static readonly Counter SentBytesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_bytes",
+            "Number of bytes sent since server startup.");
+
+        private static readonly Counter RecvBytesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_bytes",
+            "Number of bytes sent since server startup.");
+
+
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
         /// <summary>
@@ -293,6 +319,13 @@ namespace Robust.Shared.Network
 
         public void ProcessPackets()
         {
+            var sentMessages = 0L;
+            var recvMessages = 0L;
+            var sentBytes = 0L;
+            var recvBytes = 0L;
+            var sentPackets = 0L;
+            var recvPackets = 0L;
+
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
@@ -343,6 +376,13 @@ namespace Robust.Shared.Network
                         peer.Recycle(msg);
                     }
                 }
+
+                sentMessages += peer.Statistics.SentMessages;
+                recvMessages += peer.Statistics.ReceivedMessages;
+                sentBytes += peer.Statistics.SentBytes;
+                recvBytes += peer.Statistics.ReceivedBytes;
+                sentPackets += peer.Statistics.SentPackets;
+                recvPackets += peer.Statistics.ReceivedPackets;
             }
 
             if (_toCleanNetPeers.Count != 0)
@@ -352,6 +392,13 @@ namespace Robust.Shared.Network
                     _netPeers.Remove(peer);
                 }
             }
+
+            SentMessagesMetrics.IncTo(sentMessages);
+            RecvMessagesMetrics.IncTo(recvMessages);
+            SentBytesMetrics.IncTo(sentBytes);
+            RecvBytesMetrics.IncTo(recvBytes);
+            SentPacketsMetrics.IncTo(sentPackets);
+            RecvPacketsMetrics.IncTo(recvPackets);
         }
 
         /// <inheritdoc />

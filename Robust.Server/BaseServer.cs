@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Threading;
+using Prometheus;
 using Robust.Server.Console;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
@@ -30,12 +30,13 @@ using Robust.Shared.Utility;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Exceptions;
-using Robust.Shared.Localization;
 using Robust.Server.Interfaces.Debugging;
 using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
+using Robust.Server.DataMetrics;
+using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
 {
@@ -44,6 +45,19 @@ namespace Robust.Server
     /// </summary>
     internal sealed class BaseServer : IBaseServerInternal
     {
+        private static readonly Gauge ServerUpTime = Metrics.CreateGauge(
+            "robust_server_uptime",
+            "The real time the server main loop has been running.");
+
+        private static readonly Gauge ServerCurTime = Metrics.CreateGauge(
+            "robust_server_curtime",
+            "The IGameTiming.CurTime of the server.");
+
+        private static readonly Gauge ServerCurTick = Metrics.CreateGauge(
+            "robust_server_curtick",
+            "The IGameTiming.CurTick of the server.");
+
+
 #pragma warning disable 649
         [Dependency] private readonly IConfigurationManager _config;
         [Dependency] private readonly IComponentManager _components;
@@ -62,7 +76,10 @@ namespace Robust.Server
         [Dependency] private readonly IModLoader _modLoader;
         [Dependency] private readonly IWatchdogApi _watchdogApi;
         [Dependency] private readonly IScriptHost _scriptHost;
+        [Dependency] private readonly IMetricsManager _metricsManager;
 #pragma warning restore 649
+
+        private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
         private CommandLineArgs _commandLineArgs;
         private FileLogHandler fileLogHandler;
@@ -168,6 +185,9 @@ namespace Robust.Server
             _taskManager.Initialize();
 
             LoadSettings();
+
+            // Load metrics really early so that we can profile startup times in the future maybe.
+            _metricsManager.Initialize();
 
             var netMan = IoCManager.Resolve<IServerNetManager>();
             try
@@ -285,7 +305,14 @@ namespace Robust.Server
                 };
             }
 
+            _uptimeStopwatch.Start();
+
             _mainLoop.Tick += (sender, args) => Update(args);
+
+            _mainLoop.Update += (sender, args) =>
+            {
+                ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
+            };
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
@@ -394,6 +421,9 @@ namespace Robust.Server
 
         private void Update(FrameEventArgs frameEventArgs)
         {
+            ServerCurTick.Set(_time.CurTick.Value);
+            ServerCurTime.Set(_time.CurTime.TotalSeconds);
+
             UpdateTitle();
             _systemConsole.Update();
 

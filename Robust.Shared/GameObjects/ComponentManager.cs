@@ -83,8 +83,6 @@ namespace Robust.Shared.GameObjects
             if (component.Owner != entity)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            component.ExposeData(DefaultValueSerializer.Reader());
-
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -130,6 +128,8 @@ namespace Robust.Shared.GameObjects
 
                 ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
             }
+
+            // component.ExposeData(DefaultValueSerializer.Reader());
 
             component.OnAdd();
 

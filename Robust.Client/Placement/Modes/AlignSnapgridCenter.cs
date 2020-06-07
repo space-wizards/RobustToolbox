@@ -23,7 +23,8 @@ namespace Robust.Client.Placement.Modes
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
 
                 var mapCoords = pManager.eyeManager.ScreenToMap(Vector2.Zero);
-                DebugTools.Assert(pManager.MapManager.TryFindGridAt(mapCoords, out var grid));
+                if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+                    grid = pManager.MapManager.GetDefaultGrid(mapCoords.MapId);
                 var position = grid.MapToGrid(mapCoords);
 
                 var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords

@@ -22,4 +22,4 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-build Robust.UnitTests/Robust.UnitTesting.csproj
+      run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj

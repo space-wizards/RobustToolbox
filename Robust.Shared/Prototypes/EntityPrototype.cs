@@ -430,8 +430,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal static void LoadEntity(EntityPrototype prototype, Entity entity, IComponentFactory factory,
-            IEntityLoadContext context)
+        internal static void LoadEntity(EntityPrototype prototype, Entity entity, IComponentFactory factory, IEntityLoadContext context)
         {
             YamlObjectSerializer.Context defaultContext = null;
             if (context == null)
@@ -443,20 +442,6 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var (name, data) in prototype.Components)
                 {
-                    var compRegistration = factory.GetRegistration(name);
-
-                    Component component;
-                    if (entity.TryGetComponent(compRegistration.Type, out var existingComp))
-                    {
-                        component = (Component) existingComp;
-                    }
-                    else
-                    {
-                        component = (Component) factory.GetComponent(name);
-                        component.Owner = entity;
-                        entity.AddComponent(component);
-                    }
-
                     ObjectSerializer ser;
                     if (context != null)
                     {
@@ -468,31 +453,34 @@ namespace Robust.Shared.GameObjects
                         ser = YamlObjectSerializer.NewReader(data, defaultContext);
                     }
 
-                    component.ExposeData(ser);
+                    EnsureCompExistsAndDeserialize(entity, factory, name, ser);
                 }
             }
 
-            if (context == null)
+            if (context != null)
             {
-                return;
-            }
-
-            // This is for map loading.
-            // Components that have been ADDED NEW need to be handled too.
-            foreach (var name in context.GetExtraComponentTypes())
-            {
-                if ((prototype != null && prototype.Components.ContainsKey(name)) || name == "Transform" || name == "Metadata")
+                foreach (var name in context.GetExtraComponentTypes())
                 {
-                    continue;
+                    var ser = context.GetComponentSerializer(name, null);
+
+                    EnsureCompExistsAndDeserialize(entity, factory, name, ser);
                 }
-
-                var component = (Component) factory.GetComponent(name);
-                component.Owner = entity;
-                var ser = context.GetComponentSerializer(name, null);
-                component.ExposeData(ser);
-
-                entity.AddComponent(component);
             }
+        }
+
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, ObjectSerializer ser)
+        {
+            var compType = factory.GetRegistration(compName).Type;
+
+            if (!entity.TryGetComponent(compType, out var component))
+            {
+                var newComponent = (Component) factory.GetComponent(compName);
+                newComponent.Owner = entity;
+                entity.AddComponent(newComponent);
+                component = newComponent;
+            }
+
+            component.ExposeData(ser);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -532,7 +520,7 @@ namespace Robust.Shared.GameObjects
             return $"EntityPrototype({ID})";
         }
 
-        class PrototypeSerializationContext : YamlObjectSerializer.Context
+        private class PrototypeSerializationContext : YamlObjectSerializer.Context
         {
             readonly EntityPrototype prototype;
 

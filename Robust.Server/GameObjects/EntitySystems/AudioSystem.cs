@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             {
                 _audioSystem = parent;
                 _id = identifier;
-                _sessions = null;
+                _sessions = sessions;
             }
             public void Stop()
             {

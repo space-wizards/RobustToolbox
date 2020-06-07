@@ -4,8 +4,18 @@ using Robust.Shared.Interfaces.Serialization;
 
 namespace Robust.Shared.Serialization
 {
-    public sealed class EmptySerializer : ObjectSerializer
+    public sealed class DefaultValueSerializer : ObjectSerializer
     {
+        public static DefaultValueSerializer Reader()
+        {
+            return new DefaultValueSerializer()
+            {
+                Reading = true,
+            };
+        }
+
+        private DefaultValueSerializer() {}
+
         public override void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat, bool alwaysWrite = false)
         {
             if (Reading)

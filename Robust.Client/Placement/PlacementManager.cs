@@ -318,6 +318,7 @@ namespace Robust.Client.Placement
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
+        /// <inheritdoc />
         public event EventHandler PlacementChanged;
 
         public void Clear()

@@ -186,7 +186,12 @@ namespace Robust.Shared.Timing
         {
             var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
 
-            var newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
+            TimeSpan newTime;
+
+            if (CurTick.Value >= lastTimeTick.Value)
+              newTime = cachedTime + (TickPeriod * (CurTick.Value - lastTimeTick.Value));
+            else
+              newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
 
             _cachedCurTimeInfo = (newTime, CurTick);
         }

@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization
         public override bool TryReadDataField<T>(string name, WithFormat<T> format, out T value)
         {
             value = default;
-            return true;
+            return false;
         }
 
         public override void DataField<TTarget, TSource>(

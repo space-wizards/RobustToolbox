@@ -17,7 +17,7 @@ namespace Robust.Shared.Map
         private GridId _gridId;
 
         [NonSerialized]
-        private IMapGridInternal _mapGrid;
+        private IMapGridInternal _mapGrid = default!;
 
         /// <inheritdoc />
         /// <remarks>

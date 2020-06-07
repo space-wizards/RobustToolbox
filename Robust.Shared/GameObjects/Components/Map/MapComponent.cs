@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 

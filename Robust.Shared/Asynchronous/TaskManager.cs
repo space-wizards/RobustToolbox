@@ -7,11 +7,9 @@ namespace Robust.Shared.Asynchronous
 {
     internal sealed class TaskManager : ITaskManager
     {
-        private RobustSynchronizationContext _mainThreadContext;
+        private RobustSynchronizationContext _mainThreadContext = default!;
 
-#pragma warning disable 649
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
-#pragma warning restore 649
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         public void Initialize()
         {
@@ -31,7 +29,7 @@ namespace Robust.Shared.Asynchronous
 
         private static readonly SendOrPostCallback _runCallback = o =>
         {
-            ((Action)o)();
+            ((Action?)o)?.Invoke();
         };
     }
 

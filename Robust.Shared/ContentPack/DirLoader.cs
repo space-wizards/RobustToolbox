@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.Interfaces.Log;
@@ -37,7 +38,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var path = GetPath(relPath);
                 if (!File.Exists(path))

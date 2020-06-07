@@ -11,8 +11,8 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
 
         protected sealed class PrototypeData : IExposeData
         {
-            public object UiKey { get; private set; }
-            public string ClientType { get; private set; }
+            public object UiKey { get; private set; } = default!;
+            public string ClientType { get; private set; } = default!;
 
             public void ExposeData(ObjectSerializer serializer)
             {

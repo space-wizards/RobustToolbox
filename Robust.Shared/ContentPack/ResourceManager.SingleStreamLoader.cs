@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Shared.Utility;
 
@@ -22,7 +23,7 @@ namespace Robust.Shared.ContentPack
                 // Nothing to do here I'm pretty sure.
             }
 
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 if (relPath == _resourcePath)
                 {

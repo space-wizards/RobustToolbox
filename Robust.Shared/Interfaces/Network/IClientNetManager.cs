@@ -11,7 +11,7 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     The NetChannel of the server.
         /// </summary>
-        INetChannel ServerChannel { get; }
+        INetChannel? ServerChannel { get; }
 
         ClientConnectionState ClientConnectState { get; }
         event Action<ClientConnectionState> ClientConnectStateChanged;

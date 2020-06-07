@@ -31,7 +31,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GameTick other && Equals(other);

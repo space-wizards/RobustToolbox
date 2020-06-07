@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects
                 return Handler.Equals(other.Handler);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return ReferenceEquals(this, obj) || obj is HandlerWrapper<T> other && Equals(other);
             }

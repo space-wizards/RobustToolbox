@@ -38,8 +38,13 @@ namespace Robust.Shared.Input
             InputFunctionId = inputFunctionId;
         }
 
-        public int CompareTo(InputCmdMessage other)
+        public int CompareTo(InputCmdMessage? other)
         {
+            if (other == null)
+            {
+                return 1;
+            }
+
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
             return InputSequence.CompareTo(other.InputSequence);

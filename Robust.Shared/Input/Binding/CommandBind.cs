@@ -46,8 +46,8 @@ namespace Robust.Shared.Input.Binding
         /// before them if they appear in this list.</param>
         /// <param name="after">If other types register bindings for this key function, this handler will always fire
         /// after them if they appear in this list.</param>
-        public CommandBind(BoundKeyFunction boundKeyFunction, InputCmdHandler handler, IEnumerable<Type> before = null,
-            IEnumerable<Type> after = null)
+        public CommandBind(BoundKeyFunction boundKeyFunction, InputCmdHandler handler, IEnumerable<Type>? before = null,
+            IEnumerable<Type>? after = null)
         {
             _boundKeyFunction = boundKeyFunction;
             _after = after ?? Enumerable.Empty<Type>();

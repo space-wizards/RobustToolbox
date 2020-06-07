@@ -24,8 +24,8 @@ namespace Robust.Shared.Input
         /// <param name="enabled">The delegate to be ran when this command is enabled.</param>
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
-        public static InputCmdHandler FromDelegate(StateInputCmdDelegate enabled = null,
-            StateInputCmdDelegate disabled = null, bool handle=true)
+        public static InputCmdHandler FromDelegate(StateInputCmdDelegate? enabled = null,
+            StateInputCmdDelegate? disabled = null, bool handle=true)
         {
             return new StateInputCmdHandler
             {
@@ -37,8 +37,8 @@ namespace Robust.Shared.Input
 
         private class StateInputCmdHandler : InputCmdHandler
         {
-            public StateInputCmdDelegate EnabledDelegate;
-            public StateInputCmdDelegate DisabledDelegate;
+            public StateInputCmdDelegate? EnabledDelegate;
+            public StateInputCmdDelegate? DisabledDelegate;
             public bool Handle { get; set; }
 
             public override void Enabled(ICommonSession session)

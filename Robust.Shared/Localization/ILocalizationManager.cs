@@ -58,7 +58,7 @@ namespace Robust.Shared.Localization
         ///     Default culture used by other methods when no culture is explicitly specified.
         ///     Changing this also changes the current thread's culture.
         /// </summary>
-        CultureInfo DefaultCulture { get; set; }
+        CultureInfo? DefaultCulture { get; set; }
 
         /// <summary>
         ///     Load data for a culture.

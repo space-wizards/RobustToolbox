@@ -28,6 +28,11 @@ namespace Robust.Shared
                 {
                     var assemblyDir = Path.GetDirectoryName(assembly.Location);
 
+                    if (assemblyDir == null)
+                    {
+                        return IntPtr.Zero;
+                    }
+
                     string libName;
                     if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     {

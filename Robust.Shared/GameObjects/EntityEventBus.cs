@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="subscriber">Subscriber that owns the handler.</param>
         /// <param name="eventHandler">Delegate that handles the event.</param>
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
-            EntityEventHandler<T> eventHandler);
+            EntityEventHandler<T> eventHandler) where T : notnull;
 
         /// <summary>
         /// Unsubscribes all event handlers of a given type.
@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Event type being unsubscribed from.</typeparam>
         /// <param name="source"></param>
         /// <param name="subscriber">Subscriber that owns the handlers.</param>
-        void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber);
+        void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull;
 
         /// <summary>
         /// Immediately raises an event onto the bus.
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="toRaise">Event being raised.</param>
         void RaiseEvent(EventSource source, object toRaise);
 
-        void RaiseEvent<T>(EventSource source, T toRaise);
+        void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull;
 
         /// <summary>
         /// Queues an event to be raised at a later time.
@@ -55,7 +55,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Event type being waited for.</typeparam>
         /// <param name="source"></param>
         /// <returns></returns>
-        Task<T> AwaitEvent<T>(EventSource source);
+        Task<T> AwaitEvent<T>(EventSource source) where T : notnull;
 
         /// <summary>
         /// Waits for an event to be raised. You do not have to subscribe to the event.
@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="source"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken);
+        Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull;
 
         /// <summary>
         /// Unsubscribes all event handlers for a given subscriber.
@@ -136,7 +136,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler)
+        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventHandler<T> eventHandler) where T : notnull
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -174,7 +174,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber)
+        public void UnsubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber) where T : notnull
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             ProcessSingleEvent(source, toRaise);
         }
 
-        public void RaiseEvent<T>(EventSource source, T toRaise)
+        public void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull
         {
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -225,13 +225,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public Task<T> AwaitEvent<T>(EventSource source)
+        public Task<T> AwaitEvent<T>(EventSource source) where T : notnull
         {
             return AwaitEvent<T>(source, default);
         }
 
         /// <inheritdoc />
-        public Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken)
+        public Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull
         {
             if(source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
@@ -298,7 +298,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void ProcessSingleEvent<T>(EventSource source, T eventArgs)
+        private void ProcessSingleEvent<T>(EventSource source, T eventArgs) where T : notnull
         {
             var eventType = typeof(T);
 
@@ -347,7 +347,7 @@ namespace Robust.Shared.GameObjects
                 return Mask == other.Mask && Equals(EqualityToken, other.EqualityToken);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is Registration other && Equals(other);
             }

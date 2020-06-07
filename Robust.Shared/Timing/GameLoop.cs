@@ -61,10 +61,10 @@ namespace Robust.Shared.Timing
         private TimeSpan _lastTick; // last wall time tick
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
 
-        public event EventHandler<FrameEventArgs> Input;
-        public event EventHandler<FrameEventArgs> Tick;
-        public event EventHandler<FrameEventArgs> Update;
-        public event EventHandler<FrameEventArgs> Render;
+        public event EventHandler<FrameEventArgs>? Input;
+        public event EventHandler<FrameEventArgs>? Tick;
+        public event EventHandler<FrameEventArgs>? Update;
+        public event EventHandler<FrameEventArgs>? Render;
 
         /// <summary>
         ///     Enables single step mode. If this is enabled, after every tick the GameTime will pause.

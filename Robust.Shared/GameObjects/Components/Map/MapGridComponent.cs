@@ -22,9 +22,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     /// <inheritdoc cref="IMapGridComponent"/>
     internal class MapGridComponent : Component, IMapGridComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
         private GridId _gridIndex;
@@ -71,7 +69,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 

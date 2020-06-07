@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -89,14 +90,9 @@ namespace Robust.Shared.Prototypes
 
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IReflectionManager ReflectionManager;
-        [Dependency]
-        private readonly IDynamicTypeFactory _dynamicTypeFactory;
-        [Dependency]
-        private readonly IResourceManager _resources;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IResourceManager _resources = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
@@ -215,7 +211,7 @@ namespace Robust.Shared.Prototypes
                         var yamlStream = new YamlStream();
                         yamlStream.Load(reader);
 
-                        return (yamlStream, filePath);
+                        return ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
                     }
                     catch (YamlException e)
                     {
@@ -274,7 +270,7 @@ namespace Robust.Shared.Prototypes
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
-                var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+                var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
                 if (attribute == null)
                 {
                     throw new InvalidImplementationException(type, typeof(IPrototype), "No " + nameof(PrototypeAttribute) + " to give it a type string.");
@@ -336,14 +332,14 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, out T prototype) where T : IIndexedPrototype
+        public bool TryIndex<T>(string id, [MaybeNullWhen(false)] out T prototype) where T : IIndexedPrototype
         {
             if (!indexedPrototypes.TryGetValue(typeof(T), out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
             var returned = index.TryGetValue(id, out var uncast);
-            prototype = (T)uncast;
+            prototype = (T) uncast!;
             return returned;
         }
 
@@ -380,7 +376,7 @@ namespace Robust.Shared.Prototypes
     public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;
-        public readonly string Prototype;
+        public readonly string? Prototype;
         public UnknownPrototypeException(string prototype)
         {
             Prototype = prototype;
@@ -388,7 +384,7 @@ namespace Robust.Shared.Prototypes
 
         public UnknownPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-            Prototype = (string)info.GetValue("prototype", typeof(string));
+            Prototype = (string?)info.GetValue("prototype", typeof(string));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

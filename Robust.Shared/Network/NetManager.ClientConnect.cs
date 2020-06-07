@@ -14,7 +14,7 @@ namespace Robust.Shared.Network
 {
     public partial class NetManager
     {
-        private CancellationTokenSource _cancelConnectTokenSource;
+        private CancellationTokenSource? _cancelConnectTokenSource;
         private ClientConnectionState _clientConnectState;
 
         public ClientConnectionState ClientConnectState
@@ -27,7 +27,7 @@ namespace Robust.Shared.Network
             }
         }
 
-        public event Action<ClientConnectionState> ClientConnectStateChanged;
+        public event Action<ClientConnectionState>? ClientConnectStateChanged;
 
         private readonly
             Dictionary<NetConnection, (CancellationTokenRegistration reg, TaskCompletionSource<string> tcs)>
@@ -92,7 +92,7 @@ namespace Robust.Shared.Network
             ClientConnectState = ClientConnectionState.EstablishingConnection;
 
             IPAddress first;
-            IPAddress second = null;
+            IPAddress? second = null;
             if (ipv6 != null)
             {
                 // If there's an IPv6 address try it first then the IPv4.
@@ -101,7 +101,7 @@ namespace Robust.Shared.Network
             }
             else
             {
-                first = ipv4;
+                first = ipv4!;
             }
 
             Logger.DebugS("net", "First attempt IP address is {0}, second attempt {1}", first, second);
@@ -127,9 +127,9 @@ namespace Robust.Shared.Network
             // Create first peer.
             var firstPeer = CreatePeerForIp(first);
             var firstConnection = firstPeer.Connect(new IPEndPoint(first, port));
-            NetPeer secondPeer = null;
-            NetConnection secondConnection = null;
-            string secondReason = null;
+            NetPeer? secondPeer = null;
+            NetConnection? secondConnection = null;
+            string? secondReason = null;
 
             async Task<string> AwaitNonInitStatusChange(NetConnection connection, CancellationToken cancellationToken)
             {
@@ -161,9 +161,9 @@ namespace Robust.Shared.Network
                 secondReason = await AwaitNonInitStatusChange(secondConnection, cancellationToken);
             }
 
-            NetPeer winningPeer;
-            NetConnection winningConnection;
-            string firstReason = null;
+            NetPeer? winningPeer;
+            NetConnection? winningConnection;
+            string? firstReason = null;
             try
             {
                 if (second != null)
@@ -207,7 +207,7 @@ namespace Robust.Shared.Network
                     }
                     else
                     {
-                        if (secondConnection.Status == NetConnectionStatus.Connected)
+                        if (secondConnection!.Status == NetConnectionStatus.Connected)
                         {
                             // Second peer won!
                             Logger.DebugS("net", "Second peer succeeded.");
@@ -221,7 +221,7 @@ namespace Robust.Shared.Network
                         {
                             // First peer failed, try the second one I guess.
                             Logger.DebugS("net", "Second peer failed.");
-                            secondPeer.Shutdown("You failed.");
+                            secondPeer!.Shutdown("You failed.");
                             _toCleanNetPeers.Add(secondPeer);
                             firstReason = await firstPeerChanged;
                             winningPeer = firstPeer;
@@ -254,11 +254,11 @@ namespace Robust.Shared.Network
 
             // winningPeer can still be failed at this point.
             // If it is, neither succeeded. RIP.
-            if (winningConnection.Status != NetConnectionStatus.Connected)
+            if (winningConnection!.Status != NetConnectionStatus.Connected)
             {
-                winningPeer.Shutdown("You failed");
+                winningPeer!.Shutdown("You failed");
                 _toCleanNetPeers.Add(winningPeer);
-                OnConnectFailed(secondReason ?? firstReason);
+                OnConnectFailed((secondReason ?? firstReason)!);
                 ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
@@ -267,7 +267,7 @@ namespace Robust.Shared.Network
 
             // We're connected start handshaking.
 
-            var userNameRequestMsg = winningPeer.CreateMessage(userNameRequest);
+            var userNameRequestMsg = winningPeer!.CreateMessage(userNameRequest);
             winningPeer.SendMessage(userNameRequestMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
 
             try
@@ -284,7 +284,7 @@ namespace Robust.Shared.Network
             catch (TaskCanceledException)
             {
                 winningPeer.Shutdown("Cancelled");
-                _toCleanNetPeers.Add(secondPeer);
+                _toCleanNetPeers.Add(secondPeer!);
                 ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
@@ -293,7 +293,7 @@ namespace Robust.Shared.Network
                 OnConnectFailed(e.Message);
                 Logger.ErrorS("net", "Exception during handshake: {0}", e);
                 winningPeer.Shutdown("Something happened.");
-                _toCleanNetPeers.Add(secondPeer);
+                _toCleanNetPeers.Add(secondPeer!);
                 ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
@@ -347,7 +347,7 @@ namespace Robust.Shared.Network
             return tcs.Task;
         }
 
-        public static async Task<IPAddress[]> ResolveDnsAsync(string ipOrHost)
+        public static async Task<IPAddress[]?> ResolveDnsAsync(string ipOrHost)
         {
             if (string.IsNullOrEmpty(ipOrHost))
             {

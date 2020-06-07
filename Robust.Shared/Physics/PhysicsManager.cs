@@ -16,9 +16,7 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
@@ -228,7 +226,7 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
-            Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true)
+            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new List<RayCastResults>();
 
@@ -272,11 +270,11 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         /// <inheritdoc />
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null)
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
         {
             var penetration = 0f;
 
@@ -308,7 +306,7 @@ namespace Robust.Shared.Physics
             return penetration;
         }
 
-        public event Action<DebugRayData> DebugDrawRay;
+        public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
             => this[collider.MapID].Update(collider);

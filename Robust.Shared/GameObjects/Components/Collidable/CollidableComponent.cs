@@ -14,9 +14,7 @@ namespace Robust.Shared.GameObjects.Components
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPhysicsManager _physicsManager;
-#pragma warning restore 649
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private bool _canCollide;
         private BodyStatus _status;
@@ -53,7 +51,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;

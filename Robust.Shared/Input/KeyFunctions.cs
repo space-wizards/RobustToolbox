@@ -92,9 +92,13 @@ namespace Robust.Shared.Input
 
         #region Code for easy equality and sorting.
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
-            return CompareTo((BoundKeyFunction) obj);
+            if (!(obj is BoundKeyFunction func))
+            {
+                return 1;
+            }
+            return CompareTo(func);
         }
 
         public int CompareTo(BoundKeyFunction other)
@@ -103,9 +107,9 @@ namespace Robust.Shared.Input
         }
 
         // Could maybe go dirty and optimize these on the assumption that they're singletons.
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return Equals((BoundKeyFunction) obj);
+            return obj is BoundKeyFunction func && Equals(func);
         }
 
         public bool Equals(BoundKeyFunction other)

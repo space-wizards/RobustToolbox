@@ -3,6 +3,7 @@ using Robust.Shared.Reflection;
 using System.Collections.Generic;
 using System.Reflection;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Interfaces.Reflection
 {
@@ -59,11 +60,11 @@ namespace Robust.Shared.Interfaces.Reflection
         /// it will add <code>Robust.Client</code>, <code>Robust.Shared</code>, etc... in front of it.
         /// </param>
         /// <returns></returns>
-        Type GetType(string name);
+        Type? GetType(string name);
 
         Type LooseGetType(string name);
 
-        bool TryLooseGetType(string name, out Type type);
+        bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type);
 
         /// <summary>
         /// Finds all Types in all Assemblies that have a specific Attribute.
@@ -86,7 +87,7 @@ namespace Robust.Shared.Interfaces.Reflection
         /// Fired whenever an assembly is added through <see cref="LoadAssemblies"/>,
         /// this means more types might be available from <see cref="GetType(string)"/> and <see cref="GetAllChildren{T}(bool)"/>
         /// </summary>
-        event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+        event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 
         /// <summary>
         ///     Tries to parse an enum in the form "enum.PowerStorageAppearance.Charge", for use in prototyping.
@@ -102,7 +103,7 @@ namespace Robust.Shared.Interfaces.Reflection
         /// <exception cref="ArgumentException">
         ///     Thrown if this string is an enum reference, but the enum could not be resolved.
         /// </exception>
-        bool TryParseEnumReference(string reference, out Enum @enum);
+        bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum);
     }
 
     public class ReflectionUpdateEventArgs : EventArgs

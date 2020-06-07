@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -74,7 +75,43 @@ namespace Robust.Shared.Serialization
         ///     szr.DataField(this, x => x.SomeProperty, "some-property", SomeDefaultValue);
         /// </example>
         /// </remarks>
-        public abstract void DataField<TRoot, T>(TRoot root, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false);
+        public virtual void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
+        {
+            if (o == null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            if (expr == null)
+            {
+                throw new ArgumentNullException(nameof(expr));
+            }
+
+            if (!(expr.Body is MemberExpression mExpr))
+            {
+                throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
+            }
+
+
+            WriteFunctionDelegate<T> getter;
+            ReadFunctionDelegate<T> setter;
+            switch (mExpr.Member)
+            {
+                case FieldInfo fi:
+                    getter = () => (T) fi.GetValue(o);
+                    setter = v => fi.SetValue(o, v);
+                    break;
+                case PropertyInfo pi:
+                    getter = () => (T) pi.GetValue(o);
+                    setter = v => pi.SetValue(o, v);
+                    break;
+                default:
+                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
+            }
+
+            DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
+        }
+
 
         /// <summary>
         ///     Writes or reads a simple field by reference.

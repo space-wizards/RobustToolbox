@@ -25,10 +25,6 @@ namespace Robust.Shared.Serialization
             return true;
         }
 
-        public override void DataField<TRoot, T>(TRoot root, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
-        {
-        }
-        
         public override void DataField<TTarget, TSource>(
             ref TTarget value,
             string name,

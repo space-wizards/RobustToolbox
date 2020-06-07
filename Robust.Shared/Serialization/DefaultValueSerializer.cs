@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using Robust.Shared.Interfaces.Serialization;
 
@@ -20,7 +21,8 @@ namespace Robust.Shared.Serialization
         {
             if (Reading)
             {
-                value = defaultValue;
+                if (EqualityComparer<T>.Default.Equals(value, default))
+                  value = defaultValue;
             }
         }
 
@@ -46,7 +48,8 @@ namespace Robust.Shared.Serialization
         {
             if (Reading)
             {
-                value = defaultValue;
+                if (EqualityComparer<TTarget>.Default.Equals(value, default))
+                  value = defaultValue;
             }
         }
 

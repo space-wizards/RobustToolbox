@@ -129,7 +129,7 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
             }
 
-            // component.ExposeData(DefaultValueSerializer.Reader());
+            component.ExposeData(DefaultValueSerializer.Reader());
 
             component.OnAdd();
 

@@ -217,7 +217,12 @@ namespace Robust.Client.Placement
 
         protected GridCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
-            return pManager.eyeManager.ScreenToWorld(coords.Position);
+            var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+            {
+                grid = pManager.MapManager.GetDefaultGrid(mapCoords.MapId);
+            }
+            return grid.MapToGrid(mapCoords);
         }
     }
 }

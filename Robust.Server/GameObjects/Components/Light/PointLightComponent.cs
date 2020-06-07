@@ -9,7 +9,7 @@ namespace Robust.Server.GameObjects
     {
         private Color _color;
         private bool _enabled;
-        private int _radius;
+        private float _radius;
         private Vector2 _offset;
 
         public override string Name => "PointLight";
@@ -38,7 +38,7 @@ namespace Robust.Server.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public int Radius
+        public float Radius
         {
             get => _radius;
             set

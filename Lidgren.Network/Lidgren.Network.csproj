@@ -6,5 +6,6 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <SonarQubeExclude>true</SonarQubeExclude>
+    <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS</DefineConstants>
   </PropertyGroup>
 </Project>

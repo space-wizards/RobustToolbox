@@ -277,6 +277,7 @@ namespace Robust.Shared.Map
 
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
+            Logger.DebugS("map", $"Grid {newDefaultGrid.Index} is the default grid for map {actualID}");
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
 
             return actualID;

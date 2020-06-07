@@ -198,14 +198,22 @@ namespace Robust.Server.Console.Commands
 
             // no loading null space
             if (mapID == MapId.Nullspace)
+            {
+                shell.SendText(player, "You cannot load into map 0.");
                 return;
+            }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
             if (mapManager.MapExists(mapID))
+            {
+                shell.SendText(player, $"Map {mapID} already exists.");
                 return;
+            }
 
             // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, "Maps/Demo/DemoMap.yaml");
+            var mapPath = "Maps/Demo/DemoMap.yaml";
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, mapPath);
+            shell.SendText(player, $"Map {mapID} has been loaded from {mapPath}.");
         }
     }
 

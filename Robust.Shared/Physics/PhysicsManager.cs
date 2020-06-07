@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -280,17 +278,30 @@ namespace Robust.Shared.Physics
         {
             var penetration = 0f;
 
-            var sourceToDest = IntersectRay(mapId, ray, maxLength, ignoredEnt, false).ToArray();
-            var destToSource = IntersectRay(mapId,
-                new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
-                maxLength, ignoredEnt, false).ToArray();
-
-            Debug.Assert(sourceToDest.Length == destToSource.Length);
-
-            for (int i = 0; i < sourceToDest.Length; i++)
+            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
-                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Length - 1 - i].HitPos).Length;
-            }
+                if (distFromOrigin > maxLength)
+                {
+                    return true;
+                }
+
+                if (!body.CanCollide)
+                {
+                    return true;
+                }
+
+                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
+                    body.WorldAABB, out _, out var exitPoint))
+                {
+                    penetration += (point - exitPoint).Length;
+                }
+                return true;
+            }, ray.Position, ray.Direction);
 
             return penetration;
         }

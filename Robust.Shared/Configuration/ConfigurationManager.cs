@@ -246,7 +246,7 @@ namespace Robust.Shared.Configuration
             return cVar.Value?.GetType() ?? typeof(string);
         }
 
-        public void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars)
+        public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
         {
             foreach (var (key, value) in cVars)
             {

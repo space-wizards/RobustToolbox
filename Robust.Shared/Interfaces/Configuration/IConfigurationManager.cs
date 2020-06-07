@@ -64,6 +64,6 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar</param>
         Type GetCVarType(string name);
 
-        void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars);
+        void OverrideConVars(IEnumerable<(string key, string value)> cVars);
     }
 }

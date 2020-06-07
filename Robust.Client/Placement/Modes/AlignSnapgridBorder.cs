@@ -3,6 +3,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -24,7 +25,11 @@ namespace Robust.Client.Placement.Modes
             {
                 const int ppm = EyeManager.PixelsPerMeter;
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
-                var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
+
+                var mapCoords = pManager.eyeManager.ScreenToMap(Vector2.Zero);
+                DebugTools.Assert(pManager.MapManager.TryFindGridAt(mapCoords, out var grid));
+                var position = grid.MapToGrid(mapCoords);
+
                 var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstart = pManager.eyeManager.WorldToScreen(

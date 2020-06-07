@@ -2,6 +2,7 @@
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -20,7 +21,11 @@ namespace Robust.Client.Placement.Modes
             if (onGrid)
             {
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
-                var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
+
+                var mapCoords = pManager.eyeManager.ScreenToMap(Vector2.Zero);
+                DebugTools.Assert(pManager.MapManager.TryFindGridAt(mapCoords, out var grid));
+                var position = grid.MapToGrid(mapCoords);
+
                 var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                     (float)(Math.Round(position.X / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize,
                     (float)(Math.Round(position.Y / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize));

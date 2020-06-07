@@ -729,12 +729,18 @@ namespace Robust.Client.Console.Commands
             var inputMan = IoCManager.Resolve<IInputManager>();
             var eyeMan = IoCManager.Resolve<IEyeManager>();
 
-            var mousePos = eyeMan.ScreenToWorld(inputMan.MouseScreenPosition);
+            var mousePos = eyeMan.ScreenToMap(inputMan.MouseScreenPosition);
 
-            var grid = (IMapGridInternal)mapMan.GetGrid(mousePos.GridID);
+            if (!mapMan.TryFindGridAt(mousePos, out var grid))
+            {
+                console.AddLine("No grid under your mouse cursor.");
+                return false;
+            }
 
-            var chunkIndex = grid.LocalToChunkIndices(mousePos);
-            var chunk = grid.GetChunk(chunkIndex);
+            var internalGrid = (IMapGridInternal)grid;
+
+            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
+            var chunk = internalGrid.GetChunk(chunkIndex);
 
             console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
             return false;

@@ -26,10 +26,7 @@ namespace Robust.Client.Placement.Modes
                 const int ppm = EyeManager.PixelsPerMeter;
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
 
-                var mapCoords = pManager.eyeManager.ScreenToMap(Vector2.Zero);
-                if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
-                    grid = pManager.MapManager.GetDefaultGrid(mapCoords.MapId);
-                var position = grid.MapToGrid(mapCoords);
+                var position = pManager.eyeManager.ScreenToMap(Vector2.Zero);
 
                 var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;

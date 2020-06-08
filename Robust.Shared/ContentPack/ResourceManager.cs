@@ -5,9 +5,11 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
@@ -105,6 +107,12 @@ namespace Robust.Shared.ContentPack
             {
                 _contentRootsLock.ExitWriteLock();
             }
+
+            Logger.InfoS("res", $"Mapping file path strings from {pack}");
+            if (IoCManager.Resolve<INetManager>().IsServer)
+            {
+                RobustSerializer.MappedStringSerializer.AddStrings(loader.GetRelativeFilePaths());
+            }
         }
 
         private static ResourcePath SanitizePrefix(ResourcePath? prefix)
@@ -135,6 +143,12 @@ namespace Robust.Shared.ContentPack
 
             var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"));
             AddRoot(prefix, loader);
+
+            Logger.InfoS("res", $"Mapping file path strings from {path}");
+            if (IoCManager.Resolve<INetManager>().IsServer)
+            {
+                RobustSerializer.MappedStringSerializer.AddStrings(loader.GetRelativeFilePaths());
+            }
         }
 
         /// <inheritdoc />
@@ -309,6 +323,12 @@ namespace Robust.Shared.ContentPack
             finally
             {
                 _contentRootsLock.ExitWriteLock();
+            }
+
+            Logger.InfoS("res", $"Mapping file path strings from {loader}");
+            if (IoCManager.Resolve<INetManager>().IsServer)
+            {
+                RobustSerializer.MappedStringSerializer.AddStrings(loader.GetRelativeFilePaths());
             }
         }
 

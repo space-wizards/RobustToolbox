@@ -14,13 +14,14 @@ using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
 {
-    /// <summary>
+   /// <summary>
     ///     Callback for registered NetMessages.
     /// </summary>
     /// <param name="message">The message received.</param>
@@ -37,6 +38,9 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
+
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+
         private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
             "robust_net_sent_packets",
             "Number of packets sent since server startup.");
@@ -226,7 +230,16 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
 #endif
 
-            _strings.Initialize(this, () => { OnConnected(ServerChannel!); });
+            //_strings.Initialize(this, () => { OnConnected(ServerChannel!); });
+            _strings.Initialize(this, () =>
+            {
+                Logger.InfoS("net","Message string table loaded.");
+            });
+            _serializer.ClientHandshakeComplete += () =>
+            {
+                Logger.InfoS("net","Client completed serializer handshake.");
+                OnConnected(ServerChannel!);
+            };
 
             _initialized = true;
         }
@@ -621,7 +634,7 @@ namespace Robust.Shared.Network
             HandleInitialHandshakeComplete(connection);
         }
 
-        private void HandleInitialHandshakeComplete(NetConnection sender)
+        private async void HandleInitialHandshakeComplete(NetConnection sender)
         {
             var session = _assignedSessions[sender];
 
@@ -629,6 +642,8 @@ namespace Robust.Shared.Network
             _channels.Add(sender, channel);
 
             _strings.SendFullTable(channel);
+
+            await _serializer.Handshake(channel);
 
             Logger.InfoS("net", $"{channel.RemoteEndPoint}: Connected");
 
@@ -666,13 +681,22 @@ namespace Robust.Shared.Network
         {
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
+            {
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
                 return true;
+            }
 
             if (peer.Status == NetPeerStatus.NotRunning)
+            {
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
                 return true;
+            }
 
             if (!IsConnected)
+            {
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
                 return true;
+            }
 
             if (_awaitingData.TryGetValue(msg.SenderConnection, out var info))
             {
@@ -680,6 +704,7 @@ namespace Robust.Shared.Network
                 _awaitingData.Remove(msg.SenderConnection);
                 cancel.Dispose();
                 tcs.TrySetResult(msg);
+                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message - had awaiting data.");
                 return false;
             }
 

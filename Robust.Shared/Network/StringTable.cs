@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -55,6 +56,7 @@ namespace Robust.Shared.Network
             {
                 if (_network.IsServer) // Server does not receive entries from clients.
                     return;
+                Logger.InfoS("net",$"Received message name string table.");
 
                 foreach (var entry in message.Entries)
                 {
@@ -245,6 +247,7 @@ namespace Robust.Shared.Network
 
             }
 
+            Logger.InfoS("net",$"Sending message name string table to {channel.RemoteEndPoint.Address}.");
             _network.ServerSendMessage(message, channel);
         }
     }

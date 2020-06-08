@@ -47,6 +47,11 @@ namespace Robust.Shared.ContentPack
                     yield return _resourcePath;
                 }
             }
+
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                yield return _resourcePath.ToString();
+            }
         }
     }
 }

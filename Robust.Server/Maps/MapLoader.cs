@@ -871,6 +871,7 @@ namespace Robust.Server.Maps
 
                 RootNode = stream.Documents[0].RootNode;
                 GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
+                RobustSerializer.MappedStringSerializer.AddStrings(stream);
             }
         }
     }

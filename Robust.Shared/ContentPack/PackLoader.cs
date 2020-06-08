@@ -88,6 +88,20 @@ namespace Robust.Shared.ContentPack
                     {
                         yield return new ResourcePath(entry.FullName).ToRelativePath();
                     }
+                    }
+                }
+            }
+
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                foreach (ZipEntry zipEntry in _zip)
+                {
+                    if (zipEntry == null) continue;
+
+                    if (zipEntry.IsFile)
+                    {
+                        yield return new ResourcePath(zipEntry.Name).ToRootedPath().ToString();
+                    }
                 }
             }
         }

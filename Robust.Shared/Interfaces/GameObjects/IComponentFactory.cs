@@ -105,6 +105,13 @@ namespace Robust.Shared.Interfaces.GameObjects
         IComponent GetComponent(string componentName);
 
         /// <summary>
+        /// Gets a new component instantiated of the specified <see cref="IComponent.Name"/>.
+        /// </summary>
+        /// <param name="netId">net id of component to make</param>
+        /// <returns>A Component</returns>
+        IComponent GetComponent(uint netId);
+
+        /// <summary>
         /// Gets the registration belonging to a component.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>

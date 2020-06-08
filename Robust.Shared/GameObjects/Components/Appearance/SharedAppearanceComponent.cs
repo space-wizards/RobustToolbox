@@ -29,7 +29,8 @@ namespace Robust.Shared.GameObjects.Components.Appearance
         {
             public readonly Dictionary<object, object> Data;
 
-            public AppearanceComponentState(Dictionary<object, object> data) : base(NetIDs.APPEARANCE)
+            public override uint NetID => NetIDs.APPEARANCE;
+            public AppearanceComponentState(Dictionary<object, object> data)
             {
                 Data = data;
             }

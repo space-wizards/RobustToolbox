@@ -26,6 +26,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public string? PrototypeId { get; }
 
+        public override uint NetID => NetIDs.META_DATA;
+
+
         /// <summary>
         ///     Constructs a new instance of <see cref="MetaDataComponentState"/>.
         /// </summary>
@@ -33,7 +36,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="description">The in-game description of this entity.</param>
         /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
         public MetaDataComponentState(string? name, string? description, string? prototypeId)
-            : base(NetIDs.META_DATA)
         {
             Name = name;
             Description = description;

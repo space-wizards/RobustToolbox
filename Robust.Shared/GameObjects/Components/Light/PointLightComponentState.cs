@@ -12,9 +12,9 @@ namespace Robust.Shared.GameObjects
 
         public readonly float Radius;
         public readonly Vector2 Offset;
+        public override uint NetID => NetIDs.POINT_LIGHT;
 
         public PointLightComponentState(bool enabled, Color color, float radius, Vector2 offset)
-            : base(NetIDs.POINT_LIGHT)
         {
             Enabled = enabled;
             Color = color;

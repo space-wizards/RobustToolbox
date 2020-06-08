@@ -86,7 +86,7 @@ namespace Robust.Server.ServerStatus
 
             var downloadUrlWindows = _configurationManager.GetCVar<string>("build.download_url_windows");
 
-            JObject buildInfo;
+            JObject? buildInfo;
 
             if (downloadUrlWindows == null)
             {

@@ -11,11 +11,9 @@ namespace Robust.Server.Console
 {
     internal sealed class SystemConsoleManager : ISystemConsoleManager, IPostInjectInit, IDisposable
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConsoleShell _conShell;
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly IBaseServer _baseServer;
-#pragma warning restore 649
+        [Dependency] private readonly IConsoleShell _conShell = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IBaseServer _baseServer = default!;
 
         private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
         private string currentBuffer = "";

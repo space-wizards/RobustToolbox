@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
             public readonly Vector2 Offset;
             public readonly Color Color;
             public readonly bool Directional;
-            public readonly string BaseRsiPath;
+            public readonly string? BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
             public override uint NetID => NetIDs.SPRITE;
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 Vector2 offset,
                 Color color,
                 bool directional,
-                string baseRsiPath,
+                string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
             {

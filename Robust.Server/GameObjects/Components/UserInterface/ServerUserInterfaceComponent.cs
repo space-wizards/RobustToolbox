@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.Player;
@@ -54,7 +55,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             return _interfaces[uiKey];
         }
 
-        public bool TryGetBoundUserInterface(object uiKey, out BoundUserInterface boundUserInterface)
+        public bool TryGetBoundUserInterface(object uiKey, [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
         {
             return _interfaces.TryGetValue(uiKey, out boundUserInterface);
         }
@@ -70,7 +71,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         }
 
         public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
-            ICommonSession session = null)
+            ICommonSession? session = null)
         {
             base.HandleNetworkMessage(message, netChannel, session);
 
@@ -89,7 +90,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                         return;
                     }
 
-                    @interface.ReceiveMessage(wrapped.Message, session as IPlayerSession);
+                    @interface.ReceiveMessage(wrapped.Message, (IPlayerSession)session);
                     break;
             }
         }
@@ -105,7 +106,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         public object UiKey { get; }
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
-        private BoundUserInterfaceState _lastState;
+        private BoundUserInterfaceState? _lastState;
 
         private bool _stateDirty;
 
@@ -117,8 +118,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         /// </summary>
         public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
-        public event Action<ServerBoundUserInterfaceMessage> OnReceiveMessage;
-        public event Action<IPlayerSession> OnClosed;
+        public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
+        public event Action<IPlayerSession>? OnClosed;
 
         public BoundUserInterface(object uiKey, ServerUserInterfaceComponent owner)
         {
@@ -140,7 +141,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         ///     The player session to send this new state to.
         ///     Set to null for sending it to every subscribed player session.
         /// </param>
-        public void SetState(BoundUserInterfaceState state, IPlayerSession session = null)
+        public void SetState(BoundUserInterfaceState state, IPlayerSession? session = null)
         {
             if (session == null)
             {
@@ -197,7 +198,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
         }
 
-        private void OnSessionOnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        private void OnSessionOnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
         {
             if (args.NewStatus == SessionStatus.Disconnected)
             {
@@ -339,7 +340,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             foreach (var playerSession in _subscribedSessions)
             {
-                if (!_playerStateOverrides.ContainsKey(playerSession))
+                if (!_playerStateOverrides.ContainsKey(playerSession) && _lastState != null)
                 {
                     SendMessage(new UpdateBoundStateMessage(_lastState), playerSession);
                 }

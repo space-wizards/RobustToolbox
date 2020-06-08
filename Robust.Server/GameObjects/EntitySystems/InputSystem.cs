@@ -16,9 +16,7 @@ namespace Robust.Server.GameObjects.EntitySystems
     /// </summary>
     public class InputSystem : SharedInputSystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
 
@@ -78,7 +76,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             return _lastProcessedInputCmd[session];
         }
 
-        private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)
             {

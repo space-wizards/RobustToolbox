@@ -23,7 +23,7 @@ namespace Robust.Server.GameObjects
         private Vector2 _offset;
         private Color _color;
         private bool _directional;
-        private string _baseRSIPath;
+        private string? _baseRSIPath;
         private Angle _rotation;
 
         [ViewVariables]
@@ -104,7 +104,7 @@ namespace Robust.Server.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string BaseRSIPath
+        public string? BaseRSIPath
         {
             get => _baseRSIPath;
             set
@@ -415,8 +415,8 @@ namespace Robust.Server.GameObjects
                 serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
 
             {
-                var baseState = serializer.ReadDataField<string>("state", null);
-                var texturePath = serializer.ReadDataField<string>("texture", null);
+                var baseState = serializer.ReadDataField<string?>("state", null);
+                var texturePath = serializer.ReadDataField<string?>("texture", null);
 
                 if (baseState != null || texturePath != null)
                 {

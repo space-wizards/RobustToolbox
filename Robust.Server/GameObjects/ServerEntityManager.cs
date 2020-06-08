@@ -36,13 +36,9 @@ namespace Robust.Server.GameObjects
 
         #region IEntityManager Members
 
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-
-        [Dependency] private readonly IPauseManager _pauseManager;
-
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private float? _maxUpdateRangeCache;
 
@@ -60,13 +56,13 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName)
+        public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
             if (coordinates.GridID != GridId.Invalid)
@@ -80,7 +76,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
             if (prototypeName != null)
@@ -101,7 +97,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
         {
             if (coordinates.GridID == GridId.Invalid)
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} onto invalid grid.");
@@ -118,7 +114,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
@@ -126,7 +122,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
@@ -134,7 +130,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates(GameTick fromTick)
+        public List<EntityState>? GetEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -323,7 +319,7 @@ namespace Robust.Server.GameObjects
             = new PlayerSeenEntityStatesResources(false);
 
         /// <inheritdoc />
-        public List<EntityState> UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
+        public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
@@ -683,7 +679,7 @@ namespace Robust.Server.GameObjects
             _deletionHistory.Add((CurrentTick, e.Uid));
         }
 
-        public List<EntityUid> GetDeletedEntities(GameTick fromTick)
+        public List<EntityUid>? GetDeletedEntities(GameTick fromTick)
         {
             var list = new List<EntityUid>();
             foreach (var (tick, id) in _deletionHistory)
@@ -819,7 +815,7 @@ namespace Robust.Server.GameObjects
 
         #endregion IEntityManager Members
 
-        IEntity IServerEntityManagerInternal.AllocEntity(string prototypeName, EntityUid? uid)
+        IEntity IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
         {
             return AllocEntity(prototypeName, uid);
         }
@@ -829,7 +825,7 @@ namespace Robust.Server.GameObjects
             return new EntityUid(_nextServerEntityUid++);
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext context)
+        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
         {
             LoadEntity((Entity) entity, context);
         }
@@ -882,13 +878,13 @@ namespace Robust.Server.GameObjects
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID.Value, comp.Name));
+                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
                 }
                 else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(comp.NetID.Value));
+                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
                 }
             }
 

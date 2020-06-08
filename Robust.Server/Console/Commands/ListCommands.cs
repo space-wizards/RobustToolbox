@@ -11,7 +11,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Outputs a list of all commands which are currently available to you.";
         public string Help => "list";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var builder = new StringBuilder("SIDE NAME            DESC\n-------------------------\n");
             foreach (var command in shell.AvailableCommands.Values.OrderBy(c => c.Command))

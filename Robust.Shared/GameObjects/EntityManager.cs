@@ -216,7 +216,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
+        private protected Entity AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -267,7 +267,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
+        private protected Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -287,7 +287,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(Entity entity, IEntityLoadContext context)
+        private protected void LoadEntity(Entity entity, IEntityLoadContext? context)
         {
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }

@@ -19,7 +19,7 @@ namespace Robust.Server.GameObjects
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController _controller = null;
+        private VirtualController? _controller = null;
         private BodyStatus _status;
 
         /// <inheritdoc />
@@ -99,7 +99,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController Controller
+        public override VirtualController? Controller
         {
             get => _controller;
         }

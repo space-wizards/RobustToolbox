@@ -9,10 +9,8 @@ namespace Robust.Server.Debugging
 {
     internal class DebugDrawingManager : IDebugDrawingManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IServerNetManager _net;
-        [Dependency] private readonly IPhysicsManager _physics;
-#pragma warning restore 649
+        [Dependency] private readonly IServerNetManager _net = default!;
+        [Dependency] private readonly IPhysicsManager _physics = default!;
 
         public void Initialize()
         {

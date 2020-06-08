@@ -27,16 +27,14 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<long, GameTick> _ackedStates = new Dictionary<long, GameTick>();
         private GameTick _lastOldestAck = GameTick.Zero;
 
-#pragma warning disable 649
-        [Dependency] private readonly IServerEntityManager _entityManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IEntitySystemManager _systemManager;
-        [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public bool PvsEnabled => _configurationManager.GetCVar<bool>("net.pvs");
 
@@ -53,7 +51,7 @@ namespace Robust.Server.GameStates
             _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
 
-        private void HandleClientConnected(object sender, NetChannelArgs e)
+        private void HandleClientConnected(object? sender, NetChannelArgs e)
         {
             if (!_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Add(e.Channel.ConnectionId, GameTick.Zero);
@@ -61,7 +59,7 @@ namespace Robust.Server.GameStates
                 _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
         }
 
-        private void HandleClientDisconnect(object sender, NetChannelArgs e)
+        private void HandleClientDisconnect(object? sender, NetChannelArgs e)
         {
             _entityManager.DropPlayerState(_playerManager.GetSessionById(e.Channel.SessionId));
 

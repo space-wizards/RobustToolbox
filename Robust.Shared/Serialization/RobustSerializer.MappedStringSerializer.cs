@@ -14,7 +14,9 @@ using System.Text;
 using System.Threading.Tasks;
 using NetSerializer;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -27,6 +29,8 @@ namespace Robust.Shared.Serialization
 
         public partial class MappedStringSerializer : IStaticTypeSerializer
         {
+
+            private static readonly ISawmill _sawmill  = Logger.GetSawmill("szr");
 
             private static readonly HashSet<INetChannel> IncompleteHandshakes = new HashSet<INetChannel>();
 
@@ -42,7 +46,7 @@ namespace Robust.Shared.Serialization
                 if (!LockMappedStrings)
                 {
                     LockMappedStrings = true;
-                    Logger.InfoS("szr", $"Locked in at {_MappedStrings.Count} mapped strings.");
+                    _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
                 }
 
                 IncompleteHandshakes.Add(channel);
@@ -56,7 +60,7 @@ namespace Robust.Shared.Serialization
                     await Task.Delay(1);
                 }
 
-                Logger.InfoS("szr", $"Completed handshake with {channel.RemoteEndPoint.Address}.");
+                _sawmill.Info($"Completed handshake with {channel.RemoteEndPoint.Address}.");
             }
 
             public static void NetworkInitialize(INetManager net)
@@ -67,7 +71,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsServer)
                         {
-                            Logger.Error("Received server handshake on server.");
+                            _sawmill.Error("Received server handshake on server.");
                             return;
                         }
 
@@ -76,13 +80,13 @@ namespace Robust.Shared.Serialization
 
                         var cached = ReadStringCache(msg.Hash!, out var hashStr);
 
-                        Logger.InfoS("szr", $"Received server handshake with hash {hashStr}.");
+                        _sawmill.Info($"Received server handshake with hash {hashStr}.");
 
                         if (cached)
                         {
-                            Logger.InfoS("szr", $"We had a cached string map that matches {hashStr}.");
+                            _sawmill.Info($"We had a cached string map that matches {hashStr}.");
                             LockMappedStrings = true;
-                            Logger.InfoS("szr", $"Locked in at {_MappedStrings.Count} mapped strings.");
+                            _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
                             // ok we're good now
                             var channel = msg.MsgChannel;
                             OnClientCompleteHandshake(net, channel);
@@ -90,7 +94,7 @@ namespace Robust.Shared.Serialization
                         else
                         {
                             var handshake = net.CreateNetMessage<MsgClientHandshake>();
-                            Logger.InfoS("szr", "Asking server to send mapped strings.");
+                            _sawmill.Info("Asking server to send mapped strings.");
                             handshake.NeedsStrings = true;
                             msg.MsgChannel.SendMessage(handshake);
                         }
@@ -102,14 +106,14 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsClient)
                         {
-                            Logger.Error("Received client handshake on client.");
+                            _sawmill.Error("Received client handshake on client.");
                             return;
                         }
-                        Logger.InfoS("szr", $"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
+                        _sawmill.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
 
                         if (!msg.NeedsStrings)
                         {
-                            Logger.InfoS("szr", $"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
+                            _sawmill.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
                             IncompleteHandshakes.Remove(msg.MsgChannel);
                             return;
                         }
@@ -120,7 +124,7 @@ namespace Robust.Shared.Serialization
                             WriteStringPackage(ms);
                             ms.Position = 0;
                             strings.Package = ms.ToArray();
-                            Logger.InfoS("szr", $"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
+                            _sawmill.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
                         }
 
                         msg.MsgChannel.SendMessage(strings);
@@ -132,7 +136,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsServer)
                         {
-                            Logger.Error("Received strings from client.");
+                            _sawmill.Error("Received strings from client.");
                             return;
                         }
 
@@ -150,7 +154,7 @@ namespace Robust.Shared.Serialization
                         _stringMapHash = ServerHash;
                         LockMappedStrings = true;
 
-                        Logger.InfoS("szr", $"Locked in at {_MappedStrings.Count} mapped strings.");
+                        _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
 
                         WriteStringCache();
 
@@ -162,14 +166,14 @@ namespace Robust.Shared.Serialization
 
             private static void OnClientCompleteHandshake(INetManager net, INetChannel channel)
             {
-                Logger.InfoS("szr", "Letting server know we're good to go.");
+                _sawmill.Info("Letting server know we're good to go.");
                 var handshake = net.CreateNetMessage<MsgClientHandshake>();
                 handshake.NeedsStrings = false;
                 channel.SendMessage(handshake);
 
                 if (ClientHandshakeComplete == null)
                 {
-                    Logger.WarningS("szr", "There's no handler attached to ClientHandshakeComplete.");
+                    _sawmill.Warning("There's no handler attached to ClientHandshakeComplete.");
                 }
 
                 ClientHandshakeComplete?.Invoke();
@@ -184,7 +188,7 @@ namespace Robust.Shared.Serialization
                 using var file = File.OpenWrite(fileName);
                 WriteStringPackage(file);
 
-                Logger.InfoS("szr", $"Wrote string cache {hashStr}.");
+                _sawmill.Info($"Wrote string cache {hashStr}.");
             }
 
             private static byte[]? _mappedStringsPackage;
@@ -236,7 +240,7 @@ namespace Robust.Shared.Serialization
                     zs.Flush();
                 }
 
-                Logger.InfoS("szr", $"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
+                _sawmill.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
             }
 
             private static bool ReadStringCache(byte[] hash, out string hashStr)
@@ -254,7 +258,7 @@ namespace Robust.Shared.Serialization
                 var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
                 if (!File.Exists(fileName))
                 {
-                    Logger.InfoS("szr", $"No string cache for {hashStr}.");
+                    _sawmill.Info($"No string cache for {hashStr}.");
                     return false;
                 }
 
@@ -262,7 +266,7 @@ namespace Robust.Shared.Serialization
                 var added = LoadStrings(file);
 
                 _stringMapHash = hash;
-                Logger.InfoS("szr", $"Read {added} strings from cache {hashStr}.");
+                _sawmill.Info($"Read {added} strings from cache {hashStr}.");
                 return true;
             }
 
@@ -322,7 +326,7 @@ namespace Robust.Shared.Serialization
                     throw new InvalidDataException("Could not verify package was read correctly.");
                 }
 
-                Logger.InfoS("szr", $"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
+                _sawmill.Info($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
             }
 
             private static string ConvertToBase64Url(byte[]? data)
@@ -463,7 +467,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                Logger.InfoS("szr", $"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
+                _sawmill.Info($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
             }
 
             public static void AddStrings(YamlStream yaml)
@@ -490,7 +494,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                Logger.InfoS("szr", $"Mapping {added} strings from YAML took {sw.ElapsedMilliseconds}ms.");
+                _sawmill.Info($"Mapping {added} strings from YAML took {sw.ElapsedMilliseconds}ms.");
             }
 
             public static void ClearStrings()
@@ -514,7 +518,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                Logger.InfoS("szr", $"Mapping {added} strings.");
+                _sawmill.Info($"Mapping {added} strings.");
             }
 
             private static byte[]? _stringMapHash;
@@ -532,8 +536,8 @@ namespace Robust.Shared.Serialization
 
                 var hash = CalculateHash(MappedStringsPackage);
 
-                Logger.InfoS("szr", $"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
-                Logger.InfoS("szr", $"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
+                _sawmill.Info($"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
+                _sawmill.Info($"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
                 return hash;
             }
 

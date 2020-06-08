@@ -33,6 +33,8 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
         void MountContentPack(string pack, ResourcePath? prefix = null);
 
+        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
+
         /// <summary>
         ///     Adds a directory to search inside of to the VFS. The directory is relative to
         ///     the executable location on disk.

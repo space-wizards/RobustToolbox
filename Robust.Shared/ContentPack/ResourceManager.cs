@@ -68,15 +68,7 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public void MountContentPack(string pack, ResourcePath? prefix = null)
         {
-            if (prefix == null)
-            {
-                prefix = ResourcePath.Root;
-            }
-
-            if (!prefix.IsRooted)
-            {
-                throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
-            }
+            prefix = SanitizePrefix(prefix);
 
             pack = PathHelpers.ExecutableRelativeFile(pack);
 
@@ -88,7 +80,21 @@ namespace Robust.Shared.ContentPack
             }
 
             //create new PackLoader
+
             var loader = new PackLoader(packInfo);
+            AddRoot(prefix, loader);
+        }
+
+        public void MountContentPack(Stream zipStream, ResourcePath? prefix = null)
+        {
+            prefix = SanitizePrefix(prefix);
+
+            var loader = new PackLoader(zipStream);
+            AddRoot(prefix, loader);
+        }
+
+        private void AddRoot(ResourcePath prefix, IContentRoot loader)
+        {
             loader.Mount();
             _contentRootsLock.EnterWriteLock();
             try
@@ -101,18 +107,24 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        /// <inheritdoc />
-        public void MountContentDirectory(string path, ResourcePath? prefix = null)
+        private static ResourcePath SanitizePrefix(ResourcePath? prefix)
         {
             if (prefix == null)
             {
                 prefix = ResourcePath.Root;
             }
-
-            if (!prefix.IsRooted)
+            else if (!prefix.IsRooted)
             {
                 throw new ArgumentException("Prefix must be rooted.", nameof(prefix));
             }
+
+            return prefix;
+        }
+
+        /// <inheritdoc />
+        public void MountContentDirectory(string path, ResourcePath? prefix = null)
+        {
+            prefix = SanitizePrefix(prefix);
 
             path = PathHelpers.ExecutableRelativeFile(path);
             var pathInfo = new DirectoryInfo(path);
@@ -122,16 +134,7 @@ namespace Robust.Shared.ContentPack
             }
 
             var loader = new DirLoader(pathInfo, Logger.GetSawmill("res"));
-            loader.Mount();
-            _contentRootsLock.EnterWriteLock();
-            try
-            {
-                _contentRoots.Add((prefix, loader));
-            }
-            finally
-            {
-                _contentRootsLock.ExitWriteLock();
-            }
+            AddRoot(prefix, loader);
         }
 
         /// <inheritdoc />

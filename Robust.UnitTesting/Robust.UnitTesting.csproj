@@ -32,6 +32,11 @@
     <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Shared\ContentPack\ZipTest.zip">
+      <LogicalName>Robust.UnitTesting.Shared.ContentPack.ZipTest.zip</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
 </Project>

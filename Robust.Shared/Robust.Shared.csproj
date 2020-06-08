@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
   <PropertyGroup>
     <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
@@ -21,7 +21,6 @@
     <PackageReference Include="NGettext" Version="0.6.5" />
     <PackageReference Include="Pidgin" Version="2.2.0" />
     <PackageReference Include="prometheus-net" Version="3.5.0" />
-    <PackageReference Include="SharpZipLib" Version="1.2.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>

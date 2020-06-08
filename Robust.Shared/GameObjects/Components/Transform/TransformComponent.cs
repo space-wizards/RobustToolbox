@@ -35,11 +35,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
 
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Transform";
@@ -67,7 +65,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 // branch or leaf node
                 if (_parent.IsValid())
-                    return Parent.GridID;
+                    return Parent!.GridID;
 
                 // Not on a grid
                 return GridId.Invalid;
@@ -101,7 +99,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    return Parent.WorldRotation + GetLocalRotation();
+                    return Parent!.WorldRotation + GetLocalRotation();
                 }
 
                 return GetLocalRotation();
@@ -118,7 +116,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         ///     Current parent entity of this entity.
         /// </summary>
         [ViewVariables]
-        public ITransformComponent Parent
+        public ITransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
             set
@@ -148,7 +146,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    var parentMatrix = Parent.WorldMatrix;
+                    var parentMatrix = Parent!.WorldMatrix;
                     var myMatrix = GetLocalMatrix();
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
                     return result;
@@ -165,7 +163,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    var matP = Parent.InvWorldMatrix;
+                    var matP = Parent!.InvWorldMatrix;
                     var myMatrix = GetLocalMatrixInv();
                     Matrix3.Multiply(ref matP, ref myMatrix, out var result);
                     return result;
@@ -186,7 +184,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     // transform _position from parent coords to world coords
-                    var worldPos = Parent.WorldMatrix.Transform(GetLocalPosition());
+                    var worldPos = Parent!.WorldMatrix.Transform(GetLocalPosition());
                     return new GridCoordinates(worldPos, GridID);
                 }
                 else
@@ -212,7 +210,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
-                var newPos = Parent.InvWorldMatrix.Transform(worldCoords);
+                var newPos = Parent!.InvWorldMatrix.Transform(worldCoords);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
@@ -243,7 +241,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     // parent coords to world coords
-                    return Parent.WorldMatrix.Transform(GetLocalPosition());
+                    return Parent!.WorldMatrix.Transform(GetLocalPosition());
                 }
                 else
                 {
@@ -259,7 +257,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
-                var newPos = Parent.InvWorldMatrix.Transform(value);
+                var newPos = Parent!.InvWorldMatrix.Transform(value);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
@@ -327,7 +325,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
-                ((TransformComponent) Parent)._children.Add(Owner.Uid);
+                ((TransformComponent) Parent!)._children.Add(Owner.Uid);
 
                 MapID = Parent.MapID;
             }
@@ -459,7 +457,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
 
             var oldParent = Parent;
-            var oldConcrete = (TransformComponent) oldParent;
+            var oldConcrete = (TransformComponent?) oldParent;
             var uid = Owner.Uid;
             oldConcrete?._children.Remove(uid);
             var newConcrete = (TransformComponent) newParent;
@@ -586,7 +584,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState != null)
             {
@@ -774,6 +772,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             /// </summary>
             public readonly Angle Rotation;
 
+            public override uint NetID => NetIDs.TRANSFORM;
+
+
             /// <summary>
             ///     Constructs a new state snapshot of a TransformComponent.
             /// </summary>
@@ -781,7 +782,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
             public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid? parentId)
-                : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;

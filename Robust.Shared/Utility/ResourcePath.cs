@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
@@ -468,7 +469,7 @@ namespace Robust.Shared.Utility
         /// <param name="relative">The path of how we are relative to <paramref name="basePath"/>, if at all.</param>
         /// <returns>True if we are relative to <paramref name="basePath"/>, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if the separators are not the same.</exception>
-        public bool TryRelativeTo(ResourcePath basePath, out ResourcePath relative)
+        public bool TryRelativeTo(ResourcePath basePath, [NotNullWhen(true)] out ResourcePath? relative)
         {
             if (basePath.Separator != Separator)
             {
@@ -617,7 +618,7 @@ namespace Robust.Shared.Utility
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is ResourcePath path && Equals(path);
         }
@@ -629,7 +630,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="other">The path to check equality with.</param>
         /// <returns>True if the paths are equal, false otherwise.</returns>
-        public bool Equals(ResourcePath other)
+        public bool Equals(ResourcePath? other)
         {
             if (other == null)
             {
@@ -652,17 +653,17 @@ namespace Robust.Shared.Utility
             return true;
         }
 
-        public static bool operator ==(ResourcePath a, ResourcePath b)
+        public static bool operator ==(ResourcePath? a, ResourcePath? b)
         {
-            if ((object) a == null)
+            if ((object?) a == null)
             {
-                return (object) b == null;
+                return (object?) b == null;
             }
 
             return a.Equals(b);
         }
 
-        public static bool operator !=(ResourcePath a, ResourcePath b)
+        public static bool operator !=(ResourcePath? a, ResourcePath? b)
         {
             return !(a == b);
         }

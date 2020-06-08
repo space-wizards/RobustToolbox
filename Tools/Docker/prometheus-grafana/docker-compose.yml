@@ -1,0 +1,19 @@
+version: "3.4"
+
+services:
+  prometheus:
+    image: prom/prometheus
+    network_mode: host
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    network_mode: host
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_provisioning:/etc/grafana/provisioning/
+
+volumes:
+  grafana_data:
+  grafana_provisioning:

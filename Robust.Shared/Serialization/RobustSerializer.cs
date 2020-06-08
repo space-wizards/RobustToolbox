@@ -13,24 +13,21 @@ namespace Robust.Shared.Serialization
     public class RobustSerializer : IRobustSerializer
     {
 
-        [Dependency]
-#pragma warning disable 649
-        private readonly IReflectionManager reflectionManager;
-#pragma warning restore 649
-        private Serializer Serializer;
+        [Dependency] private readonly IReflectionManager reflectionManager = default!;
+        private Serializer Serializer = default!;
 
-        private HashSet<Type> SerializableTypes;
+        private HashSet<Type> SerializableTypes = default!;
 
 #region Statistics
         public static long LargestObjectSerializedBytes { get; private set; }
-        public static Type LargestObjectSerializedType { get; private set; }
+        public static Type? LargestObjectSerializedType { get; private set; }
 
         public static long BytesSerialized { get; private set; }
 
         public static long ObjectsSerialized { get; private set; }
 
         public static long LargestObjectDeserializedBytes { get; private set; }
-        public static Type LargestObjectDeserializedType { get; private set; }
+        public static Type? LargestObjectDeserializedType { get; private set; }
 
         public static long BytesDeserialized { get; private set; }
 
@@ -43,7 +40,7 @@ namespace Robust.Shared.Serialization
 #if DEBUG
             foreach (var type in types)
             {
-                if (type.Assembly.FullName.Contains("Server") || type.Assembly.FullName.Contains("Client"))
+                if (type.Assembly.FullName!.Contains("Server") || type.Assembly.FullName.Contains("Client"))
                 {
                     throw new InvalidOperationException($"Type {type} is server/client specific but has a NetSerializableAttribute!");
                 }

@@ -14,13 +14,11 @@ namespace Robust.Shared.Localization
 {
     internal sealed class LocalizationManager : ILocalizationManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly ITextMacroFactory _textMacroFactory;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly ITextMacroFactory _textMacroFactory = default!;
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
-        private CultureInfo _defaultCulture;
+        private CultureInfo? _defaultCulture;
 
         public string GetString(string text)
         {
@@ -102,11 +100,16 @@ namespace Robust.Shared.Localization
             return catalog.GetParticularPluralString(context, text, pluralText, n, args);
         }
 
-        public CultureInfo DefaultCulture
+        public CultureInfo? DefaultCulture
         {
             get => _defaultCulture;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
                 if (!_catalogs.ContainsKey(value))
                 {
                     throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));

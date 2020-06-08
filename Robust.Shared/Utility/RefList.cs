@@ -135,7 +135,7 @@ namespace Robust.Shared.Utility
 
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
             {
-                _array[_size] = default;
+                _array[_size] = default!;
             }
         }
 
@@ -207,7 +207,7 @@ namespace Robust.Shared.Utility
 
             T IEnumerator<T>.Current => Current;
 
-            object IEnumerator.Current => Current;
+            object? IEnumerator.Current => Current;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Dispose()

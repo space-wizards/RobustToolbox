@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using ICSharpCode.SharpZipLib.Zip;
 using Robust.Shared.Log;
@@ -14,7 +15,7 @@ namespace Robust.Shared.ContentPack
         class PackLoader : IContentRoot
         {
             private readonly FileInfo _pack;
-            private ZipFile _zip;
+            private ZipFile _zip = default!;
 
             /// <summary>
             ///     Constructor.
@@ -35,7 +36,7 @@ namespace Robust.Shared.ContentPack
             }
 
             /// <inheritdoc />
-            public bool TryGetFile(ResourcePath relPath, out Stream stream)
+            public bool TryGetFile(ResourcePath relPath, [NotNullWhen(true)] out Stream? stream)
             {
                 var entry = _zip.GetEntry(relPath.ToRootedPath().ToString());
 
@@ -63,9 +64,9 @@ namespace Robust.Shared.ContentPack
             /// <inheritdoc />
             public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
             {
-                foreach (ZipEntry zipEntry in _zip)
+                foreach (var o in _zip)
                 {
-                    if (zipEntry.IsFile && zipEntry.Name.StartsWith(path.ToRootedPath().ToString()))
+                    if (o is ZipEntry zipEntry && zipEntry.IsFile && zipEntry.Name.StartsWith(path.ToRootedPath().ToString()))
                         yield return new ResourcePath(zipEntry.Name).ToRelativePath();
                 }
             }

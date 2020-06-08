@@ -11,7 +11,7 @@ namespace Robust.Shared.Log
         {
             public string Name { get; }
 
-            public Sawmill Parent { get; }
+            public Sawmill? Parent { get; }
 
             public LogLevel? Level
             {
@@ -30,7 +30,7 @@ namespace Robust.Shared.Log
             private readonly List<ILogHandler> _handlers = new List<ILogHandler>();
             private readonly ReaderWriterLockSlim _handlerLock = new ReaderWriterLockSlim();
 
-            public Sawmill(Sawmill parent, string name)
+            public Sawmill(Sawmill? parent, string name)
             {
                 Parent = parent;
                 Name = name;
@@ -62,7 +62,7 @@ namespace Robust.Shared.Log
                 }
             }
 
-            public void Log(LogLevel level, string message, params object[] args)
+            public void Log(LogLevel level, string message, params object?[] args)
             {
                 Log(level, string.Format(message, args));
             }
@@ -102,10 +102,10 @@ namespace Robust.Shared.Log
                 {
                     return Level.Value;
                 }
-                return Parent.GetPracticalLevel();
+                return Parent?.GetPracticalLevel() ?? default;
             }
 
-            public void Debug(string message, params object[] args)
+            public void Debug(string message, params object?[] args)
             {
                 Log(LogLevel.Debug, message, args);
             }
@@ -115,7 +115,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Debug, message);
             }
 
-            public void Info(string message, params object[] args)
+            public void Info(string message, params object?[] args)
             {
                 Log(LogLevel.Info, message, args);
             }
@@ -125,7 +125,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Info, message);
             }
 
-            public void Warning(string message, params object[] args)
+            public void Warning(string message, params object?[] args)
             {
                 Log(LogLevel.Warning, message, args);
             }
@@ -135,7 +135,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Warning, message);
             }
 
-            public void Error(string message, params object[] args)
+            public void Error(string message, params object?[] args)
             {
                 Log(LogLevel.Error, message, args);
             }
@@ -145,7 +145,7 @@ namespace Robust.Shared.Log
                 Log(LogLevel.Error, message);
             }
 
-            public void Fatal(string message, params object[] args)
+            public void Fatal(string message, params object?[] args)
             {
                 Log(LogLevel.Fatal, message, args);
             }

@@ -30,6 +30,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
             public readonly string BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
+            public override uint NetID => NetIDs.SPRITE;
 
             public SpriteComponentState(
                 bool visible,
@@ -42,7 +43,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 string baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
-                : base(NetIDs.SPRITE)
             {
                 Visible = visible;
                 DrawDepth = drawDepth;
@@ -60,15 +60,15 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         [Serializable, NetSerializable]
         protected struct PrototypeLayerData : IExposeData
         {
-            public string Shader;
-            public string TexturePath;
-            public string RsiPath;
-            public string State;
+            public string? Shader;
+            public string? TexturePath;
+            public string? RsiPath;
+            public string? State;
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
             public Color Color;
-            public List<string> MapKeys;
+            public List<string>? MapKeys;
 
             public static PrototypeLayerData New()
             {

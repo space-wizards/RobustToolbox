@@ -132,6 +132,7 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveMap(MapId mapId, string yamlPath)
         {
+            Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
@@ -153,6 +154,7 @@ namespace Robust.Server.Maps
                     stream.Save(new YamlMappingFix(new Emitter(writer)), false);
                 }
             }
+            Logger.InfoS("map", "Save completed!");
         }
 
         /// <inheritdoc />
@@ -164,7 +166,7 @@ namespace Robust.Server.Maps
             // try user
             if (!_resMan.UserData.Exists(resPath))
             {
-                Logger.InfoS("map", $"No user blueprint found: {resPath}");
+                Logger.InfoS("map", $"No user map found: {resPath}");
 
                 // fallback to content
                 if (_resMan.TryContentFileRead(resPath, out var contentReader))
@@ -173,7 +175,7 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    Logger.ErrorS("map", $"No blueprint found: {resPath}");
+                    Logger.ErrorS("map", $"No map found: {resPath}");
                     return;
                 }
             }
@@ -188,11 +190,6 @@ namespace Robust.Server.Maps
                 Logger.InfoS("map", $"Loading Map: {resPath}");
 
                 var data = new MapData(reader);
-
-                if (data.GridCount != 1)
-                {
-                    throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
-                }
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
@@ -279,6 +276,9 @@ namespace Robust.Server.Maps
 
                 // First we load map meta data like version.
                 ReadMetaSection();
+
+                // Create the new map.
+                AllocMap();
 
                 // Load grids.
                 ReadTileMapSection();
@@ -450,6 +450,23 @@ namespace Robust.Server.Maps
                     if (newId != null)
                     {
                         Grids.Add(_mapManager.GetGrid(newId.Value));
+                    }
+                }
+            }
+
+            private void AllocMap()
+            {
+                // Both blueprint and map deserialization use this,
+                // so we need to ensure the map exists (and the map entity)
+                // before allocating entities.
+
+                if (!_mapManager.MapExists(TargetMap))
+                {
+                    _mapManager.CreateMap(TargetMap);
+
+                    if (!MapIsPostInit)
+                    {
+                        _pauseManager.AddUninitializedMap(TargetMap);
                     }
                 }
             }

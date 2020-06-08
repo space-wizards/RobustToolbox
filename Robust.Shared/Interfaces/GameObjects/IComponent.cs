@@ -117,7 +117,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="message">Incoming event message.</param>
         /// <param name="netChannel">The channel of the remote client that sent the message.</param>
         /// <param name="session">The session data for the player who sent this message. Null if this is a client.</param>
-        void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null);
+        void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null);
 
         /// <summary>
         ///     Get the component's state for replicating on the client.
@@ -136,6 +136,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </remarks>
         /// <param name="curState">Current component state for this tick.</param>
         /// <param name="nextState">Next component state for the next tick.</param>
-        void HandleComponentState([CanBeNull]ComponentState curState, [CanBeNull]ComponentState nextState);
+        void HandleComponentState(ComponentState? curState, ComponentState? nextState);
     }
 }

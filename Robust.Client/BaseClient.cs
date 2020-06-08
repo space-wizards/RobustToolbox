@@ -195,6 +195,7 @@ namespace Robust.Client
         private void HandleSetTickRate(MsgSetTickRate message)
         {
             _timing.TickRate = message.NewTickRate;
+            Logger.InfoS("client", $"Tickrate changed to: {message.NewTickRate}");
         }
 
         private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)

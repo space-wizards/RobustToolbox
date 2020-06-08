@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using Robust.Shared.Interfaces.Serialization;
 
@@ -31,7 +32,7 @@ namespace Robust.Shared.Serialization
             return defaultValue;
         }
 
-        public override bool TryReadDataField<T>(string name, WithFormat<T> format, out T value)
+        public override bool TryReadDataField<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
         {
             value = default;
             return false;
@@ -41,8 +42,8 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false
         )
         {
@@ -60,7 +61,7 @@ namespace Robust.Shared.Serialization
                 func(defaultValue);
             }
         }
-        
+
         public override void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false)
         {
         }

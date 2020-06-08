@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 
@@ -76,9 +76,9 @@ namespace Robust.Shared.GameObjects.Components.Map
     internal class MapComponentState : ComponentState
     {
         public MapId MapId { get; }
+        public override uint NetID => NetIDs.MAP_MAP;
 
         public MapComponentState(MapId mapId)
-            : base(NetIDs.MAP_MAP)
         {
             MapId = mapId;
         }

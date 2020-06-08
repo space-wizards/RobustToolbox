@@ -15,16 +15,19 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The in-game name of this entity.
         /// </summary>
-        public string Name { get; }
+        public string? Name { get; }
 
         /// <summary>
         ///     The in-game description of this entity.
         /// </summary>
-        public string Description { get; }
+        public string? Description { get; }
         /// <summary>
         ///     The prototype this entity was created from, if any.
         /// </summary>
-        public string PrototypeId { get; }
+        public string? PrototypeId { get; }
+
+        public override uint NetID => NetIDs.META_DATA;
+
 
         /// <summary>
         ///     Constructs a new instance of <see cref="MetaDataComponentState"/>.
@@ -32,8 +35,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="name">The in-game name of this entity.</param>
         /// <param name="description">The in-game description of this entity.</param>
         /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
-        public MetaDataComponentState(string name, string description, string prototypeId)
-            : base(NetIDs.META_DATA)
+        public MetaDataComponentState(string? name, string? description, string? prototypeId)
         {
             Name = name;
             Description = description;
@@ -59,19 +61,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The prototype this entity was created from, if any.
         /// </summary>
-        EntityPrototype EntityPrototype { get; set; }
+        EntityPrototype? EntityPrototype { get; set; }
     }
 
     /// <inheritdoc cref="IMetaDataComponent"/>
     internal class MetaDataComponent : Component, IMetaDataComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPrototypeManager _prototypes;
-#pragma warning restore 649
+        [Dependency] private readonly IPrototypeManager _prototypes = default!;
 
-        private string _entityName;
-        private string _entityDescription;
-        private EntityPrototype _entityPrototype;
+        private string? _entityName;
+        private string? _entityDescription;
+        private EntityPrototype? _entityPrototype;
 
         /// <inheritdoc />
         public override string Name => "MetaData";
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
             }
             set
             {
-                var newValue = value;
+                string? newValue = value;
                 if (_entityPrototype != null && _entityPrototype.Name == newValue)
                     newValue = null;
 
@@ -115,7 +115,7 @@ namespace Robust.Shared.GameObjects
             }
             set
             {
-                var newValue = value;
+                string? newValue = value;
                 if (_entityPrototype != null && _entityPrototype.Description == newValue)
                     newValue = null;
 
@@ -129,7 +129,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityPrototype EntityPrototype
+        public EntityPrototype? EntityPrototype
         {
             get => _entityPrototype;
             set
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 

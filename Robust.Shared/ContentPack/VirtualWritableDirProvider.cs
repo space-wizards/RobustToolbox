@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using Robust.Shared.Interfaces.Resources;
@@ -17,7 +18,7 @@ namespace Robust.Shared.ContentPack
         private readonly DirectoryNode _rootDirectoryNode = new DirectoryNode();
 
         /// <inheritdoc />
-        public string RootDir => null;
+        public string? RootDir => null;
 
         public void CreateDir(ResourcePath path)
         {
@@ -105,7 +106,7 @@ namespace Robust.Shared.ContentPack
                 throw new ArgumentException("There is a directory at that location.");
             }
 
-            var fileNode = (FileNode) maybeFileNode;
+            var fileNode = (FileNode) maybeFileNode!;
 
             switch (fileMode)
             {
@@ -192,7 +193,7 @@ namespace Robust.Shared.ContentPack
             throw new System.NotImplementedException();
         }
 
-        private bool TryGetNodeAt(ResourcePath path, out INode node)
+        private bool TryGetNodeAt(ResourcePath path, [NotNullWhen(true)] out INode? node)
         {
             if (!path.IsRooted)
             {

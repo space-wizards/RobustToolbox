@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         ///     Specifies the name of the RSI state to use if <see cref="EffectSprite"/> is an RSI.
         /// </summary>
-        public string RsiState { get; set; }
+        public string? RsiState { get; set; }
 
         /// <summary>
         ///     If the sprite is an RSI state, controls whether the animation loops or ends on the last frame.

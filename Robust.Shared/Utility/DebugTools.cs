@@ -55,7 +55,7 @@ namespace Robust.Shared.Utility
         [Conditional("DEBUG")]
         [AssertionMethod]
         public static void AssertNotNull([AssertionCondition(AssertionConditionType.IS_NOT_NULL)]
-            object arg)
+            object? arg)
         {
             if (arg == null)
             {
@@ -71,7 +71,7 @@ namespace Robust.Shared.Utility
         [Conditional("DEBUG")]
         [AssertionMethod]
         public static void AssertNull([AssertionCondition(AssertionConditionType.IS_NULL)]
-            object arg)
+            object? arg)
         {
             if (arg != null)
             {

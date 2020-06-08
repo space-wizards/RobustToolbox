@@ -6,6 +6,7 @@ using Robust.Shared.Exceptions;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -126,6 +127,8 @@ namespace Robust.Shared.GameObjects
 
                 ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
             }
+
+            component.ExposeData(DefaultValueSerializer.Reader());
 
             component.OnAdd();
 

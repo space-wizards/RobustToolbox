@@ -94,11 +94,9 @@ namespace Robust.Shared.ContentPack
 
             public IEnumerable<string> GetRelativeFilePaths()
             {
-                foreach (ZipEntry zipEntry in _zip)
+                foreach (var zipEntry in _zip.Cast<ZipEntry>())
                 {
-                    if (zipEntry == null) continue;
-
-                    if (zipEntry.IsFile)
+                    if (zipEntry!.IsFile)
                     {
                         yield return new ResourcePath(zipEntry.Name).ToRootedPath().ToString();
                     }

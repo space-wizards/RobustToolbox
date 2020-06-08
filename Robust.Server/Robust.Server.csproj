@@ -6,7 +6,6 @@
     <LangVersion>8</LangVersion>
     <IsPackable>false</IsPackable>
     <OutputType>Exe</OutputType>
-    <Platforms>x64</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Server</OutputPath>
   </PropertyGroup>

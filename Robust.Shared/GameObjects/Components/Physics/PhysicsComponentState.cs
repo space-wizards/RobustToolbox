@@ -25,15 +25,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly float AngularVelocity;
 
-        public override uint NetID => NetIDs.PHYSICS;
-
-
         /// <summary>
         ///     Constructs a new state snapshot of a PhysicsComponent.
         /// </summary>
         /// <param name="mass">Current Mass of the entity.</param>
         /// <param name="velocity">Current Velocity of the entity.</param>
         public PhysicsComponentState(float mass, Vector2 linearVelocity, float angularVelocity)
+            : base(NetIDs.PHYSICS)
         {
             Mass = (int) Math.Round(mass *1000); // rounds kg to nearest gram
             LinearVelocity = linearVelocity;

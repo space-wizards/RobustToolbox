@@ -11,9 +11,9 @@ namespace Robust.Shared.GameObjects.Components
         public readonly bool CanCollide;
         public readonly BodyStatus Status;
         public readonly List<IPhysShape> PhysShapes;
-        public override uint NetID => NetIDs.COLLIDABLE;
 
         public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes)
+            : base(NetIDs.COLLIDABLE)
         {
             CanCollide = canCollide;
             Status = status;

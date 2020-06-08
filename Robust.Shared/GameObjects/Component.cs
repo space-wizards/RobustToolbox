@@ -205,7 +205,7 @@ namespace Robust.Shared.GameObjects
             if (NetID == null)
                 throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
 
-            return new ComponentState(NetID.Value);
+            return new NetIdComponentState(NetID.Value);
         }
 
         /// <inheritdoc />

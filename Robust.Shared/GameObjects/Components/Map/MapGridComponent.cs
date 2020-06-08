@@ -99,12 +99,14 @@ namespace Robust.Shared.GameObjects.Components.Map
         /// </summary>
         public GridId GridIndex { get; }
 
+        public override uint NetID => NetIDs.MAP_GRID;
+
+
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         public MapGridComponentState(GridId gridIndex)
-            : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
         }

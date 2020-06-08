@@ -13,8 +13,7 @@ namespace Robust.Shared.GameObjects.Components
     {
         public Box2? LocalBounds { get; }
 
-        public override uint NetID => NetIDs.CLICKABLE;
-        public ClickableComponentState(Box2? localBounds)
+        public ClickableComponentState(Box2? localBounds) : base(NetIDs.CLICKABLE)
         {
             LocalBounds = localBounds;
         }

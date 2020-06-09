@@ -15,7 +15,7 @@ namespace Robust.Server.GameObjects.EntitySystems
     {
         [Dependency] private IPlayerManager _playerManager;
 
-        public const int AudioDistanceRange = 20;
+        public const int AudioDistanceRange = 25;
 
         private uint _streamIndex;
 

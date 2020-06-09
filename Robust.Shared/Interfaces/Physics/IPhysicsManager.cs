@@ -123,7 +123,6 @@ namespace Robust.Shared.Interfaces.Physics
             get;
         }
 
-        [CanBeNull]
         public RayCastResults? Results { get; }
         public float MaxLength { get; }
     }
@@ -159,15 +158,15 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly Vector2 Normal;
         public readonly ICollidableComponent A;
         public readonly ICollidableComponent B;
-        [CanBeNull] public SharedPhysicsComponent APhysics;
-        [CanBeNull] public SharedPhysicsComponent BPhysics;
+        public SharedPhysicsComponent? APhysics;
+        public SharedPhysicsComponent? BPhysics;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
 
-        public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics)
+        public Manifold(ICollidableComponent A, ICollidableComponent B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics)
         {
             var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;

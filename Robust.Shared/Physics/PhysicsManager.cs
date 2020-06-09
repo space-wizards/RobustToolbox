@@ -87,7 +87,7 @@ namespace Robust.Shared.Physics
             var normal = CalculateNormal(manifold.A, manifold.B);
             var rV = aP != null
                 ? bP != null ? bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity
-                : bP.LinearVelocity;
+                : bP!.LinearVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)

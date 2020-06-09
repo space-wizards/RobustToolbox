@@ -58,38 +58,36 @@ namespace Robust.Server
             "The IGameTiming.CurTick of the server.");
 
 
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _config;
-        [Dependency] private readonly IComponentManager _components;
-        [Dependency] private readonly IServerEntityManager _entities;
-        [Dependency] private readonly ILogManager _log;
-        [Dependency] private readonly IRobustSerializer _serializer;
-        [Dependency] private readonly IGameTiming _time;
-        [Dependency] private readonly IResourceManagerInternal _resources;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly ITimerManager timerManager;
-        [Dependency] private readonly IServerGameStateManager _stateManager;
-        [Dependency] private readonly IServerNetManager _network;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole;
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly IRuntimeLog runtimeLog;
-        [Dependency] private readonly IModLoader _modLoader;
-        [Dependency] private readonly IWatchdogApi _watchdogApi;
-        [Dependency] private readonly IScriptHost _scriptHost;
-        [Dependency] private readonly IMetricsManager _metricsManager;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IComponentManager _components = default!;
+        [Dependency] private readonly IServerEntityManager _entities = default!;
+        [Dependency] private readonly ILogManager _log = default!;
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IGameTiming _time = default!;
+        [Dependency] private readonly IResourceManagerInternal _resources = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly ITimerManager timerManager = default!;
+        [Dependency] private readonly IServerGameStateManager _stateManager = default!;
+        [Dependency] private readonly IServerNetManager _network = default!;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IRuntimeLog runtimeLog = default!;
+        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly IScriptHost _scriptHost = default!;
+        [Dependency] private readonly IMetricsManager _metricsManager = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
-        private CommandLineArgs _commandLineArgs;
-        private FileLogHandler fileLogHandler;
-        private IGameLoop _mainLoop;
+        private CommandLineArgs _commandLineArgs = default!;
+        private FileLogHandler fileLogHandler = default!;
+        private IGameLoop _mainLoop = default!;
 
         private TimeSpan _lastTitleUpdate;
         private int _lastReceivedBytes;
         private int _lastSentBytes;
 
-        private string _shutdownReason;
+        private string? _shutdownReason;
 
         private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
@@ -109,7 +107,7 @@ namespace Robust.Server
         }
 
         /// <inheritdoc />
-        public void Shutdown(string reason)
+        public void Shutdown(string? reason)
         {
             if (string.IsNullOrWhiteSpace(reason))
                 Logger.InfoS("srv", "Shutting down...");
@@ -281,7 +279,7 @@ namespace Robust.Server
             return false;
         }
 
-        private void ProcessExiting(object sender, EventArgs e)
+        private void ProcessExiting(object? sender, EventArgs e)
         {
             _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
             // Give the server 10 seconds to shut down.

@@ -2,6 +2,7 @@
 using Robust.Shared.GameObjects.Components.Appearance;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Server.GameObjects
 {
@@ -31,17 +32,17 @@ namespace Robust.Server.GameObjects
             return (T)data[key];
         }
 
-        public override bool TryGetData<T>(Enum key, out T data)
+        public override bool TryGetData<T>(Enum key, [MaybeNullWhen(false)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        public override bool TryGetData<T>(string key, out T data)
+        public override bool TryGetData<T>(string key, [MaybeNullWhen(false)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        bool TryGetData<T>(object key, out T data)
+        bool TryGetData<T>(object key, [MaybeNullWhen(false)] out T data)
         {
             if (this.data.TryGetValue(key, out var dat))
             {

@@ -13,6 +13,6 @@ namespace Robust.Shared.Players
         /// </summary>
         SessionStatus Status { get; set; }
 
-        IEntity AttachedEntity { get; }
+        IEntity? AttachedEntity { get; }
     }
 }

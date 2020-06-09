@@ -21,18 +21,16 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public class ServerEntityNetworkManager : IServerEntityNetworkManager, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
-        public event EventHandler<object> ReceivedSystemMessage;
+        public event EventHandler<object>? ReceivedSystemMessage;
 
         private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageSequenceComparer());
 
@@ -65,7 +63,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
+        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
             ComponentMessage message)
         {
             if (_networkManager.IsClient)
@@ -157,13 +155,13 @@ namespace Robust.Server.GameObjects
                 case EntityMessageType.SystemMessage:
                     var msg = message.SystemMessage;
                     var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg);
+                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
                     ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }
         }
 
-        private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)
             {
@@ -179,12 +177,12 @@ namespace Robust.Server.GameObjects
 
         private sealed class MessageSequenceComparer : IComparer<MsgEntity>
         {
-            public int Compare(MsgEntity x, MsgEntity y)
+            public int Compare(MsgEntity? x, MsgEntity? y)
             {
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
-                var cmp = y.SourceTick.CompareTo(x.SourceTick);
+                var cmp = y!.SourceTick.CompareTo(x!.SourceTick);
                 if (cmp != 0)
                 {
                     return cmp;

@@ -14,7 +14,7 @@ namespace Robust.Server.ViewVariables.Traits
             _entity = (IEntity) Session.Object;
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {

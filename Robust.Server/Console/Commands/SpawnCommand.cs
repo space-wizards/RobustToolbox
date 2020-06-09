@@ -12,7 +12,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Spawns an entity with specific type at your feet.";
         public string Help => "spawn <entity type>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var ent = IoCManager.Resolve<IServerEntityManager>();
             if (player?.AttachedEntity != null)

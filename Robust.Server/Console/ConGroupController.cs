@@ -18,16 +18,14 @@ namespace Robust.Server.Console
     /// </summary>
     internal class ConGroupController : IConGroupController
     {
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly ILogManager _logManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly INetManager _netManager;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly INetManager _netManager = default!;
 
-        private ConGroupContainer _groups;
-        private SessionGroupContainer _sessions;
+        private ConGroupContainer _groups = default!;
+        private SessionGroupContainer _sessions = default!;
 
         public void Initialize()
         {
@@ -49,7 +47,7 @@ namespace Robust.Server.Console
             UpdateAllClientData();
         }
 
-        private void _onClientStatusChanged(object sender, SessionStatusEventArgs e)
+        private void _onClientStatusChanged(object? sender, SessionStatusEventArgs e)
         {
             _sessions.OnClientStatusChanged(sender, e);
 

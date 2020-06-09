@@ -13,7 +13,7 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
 
-        private HttpContextFactory _ctxFactory;
+        private HttpContextFactory _ctxFactory = default!;
 
         public HttpContext CreateContext(IFeatureCollection contextFeatures) => _ctxFactory.Create(contextFeatures);
 
@@ -45,7 +45,7 @@ namespace Robust.Server.ServerStatus
             }
 
             IoCManager.Clear();
-            ILogManager logMgr = null;
+            ILogManager? logMgr = null;
             WaitSync(() =>
             {
                 logMgr = IoCManager.Resolve<ILogManager>();

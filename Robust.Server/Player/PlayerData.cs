@@ -15,6 +15,6 @@ namespace Robust.Server.Player
         public NetSessionId SessionId { get; }
 
         [ViewVariables]
-        public object ContentDataUncast { get; set; }
+        public object? ContentDataUncast { get; set; }
     }
 }

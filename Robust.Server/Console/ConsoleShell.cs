@@ -21,15 +21,13 @@ namespace Robust.Server.Console
     {
         private const string SawmillName = "con";
 
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IPlayerManager _players;
-        [Dependency] private readonly IServerNetManager _net;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole;
-        [Dependency] private readonly ILogManager _logMan;
-        [Dependency] private readonly IConfigurationManager _configMan;
-        [Dependency] private readonly IConGroupController _groupController;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private readonly IServerNetManager _net = default!;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private readonly IConfigurationManager _configMan = default!;
+        [Dependency] private readonly IConGroupController _groupController = default!;
 
         private readonly Dictionary<string, IClientCommand> _availableCommands =
             new Dictionary<string, IClientCommand>();
@@ -87,7 +85,7 @@ namespace Robust.Server.Console
             _availableCommands.Clear();
             foreach (var type in _reflectionManager.GetAllChildren<IClientCommand>())
             {
-                var instance = (IClientCommand) Activator.CreateInstance(type, null);
+                var instance = (IClientCommand) Activator.CreateInstance(type, null)!;
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                     throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand),
                         $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
@@ -114,7 +112,7 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void ExecuteCommand(IPlayerSession session, string command)
+        public void ExecuteCommand(IPlayerSession? session, string command)
         {
             try
             {
@@ -156,7 +154,7 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void SendText(IPlayerSession session, string text)
+        public void SendText(IPlayerSession? session, string? text)
         {
             if (session != null)
                 SendText(session.ConnectedClient, text);
@@ -165,14 +163,14 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void SendText(INetChannel target, string text)
+        public void SendText(INetChannel target, string? text)
         {
             var replyMsg = _net.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
             _net.ServerSendMessage(replyMsg, target);
         }
 
-        private static string FormatPlayerString(IPlayerSession session)
+        private static string FormatPlayerString(IPlayerSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
         }
@@ -204,7 +202,7 @@ namespace Robust.Server.Console
             public string Description => "Elevates client to admin permission group.";
             public string Help => "login";
 
-            public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
                 // system console can't log in to itself, and is pointless anyways
                 if (player == null)
@@ -234,7 +232,7 @@ namespace Robust.Server.Console
             public string Description => "Prints your current permission group.";
             public string Help => "group";
 
-            public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
                 // only the local server console bypasses permissions
                 if (player == null)

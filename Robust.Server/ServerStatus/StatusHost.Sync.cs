@@ -7,7 +7,7 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
 
-        private SynchronizationContext _syncCtx;
+        private SynchronizationContext _syncCtx = default!;
 
         public void DeferSync(Action a)
         {
@@ -16,7 +16,7 @@ namespace Robust.Server.ServerStatus
                 return;
             }
 
-            _syncCtx.Post(x => ((Action) x)(), a);
+            _syncCtx.Post(x => ((Action) x!)(), a);
         }
 
         public void WaitSync(Action a, CancellationToken ct = default)

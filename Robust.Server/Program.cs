@@ -60,7 +60,7 @@ namespace Robust.Server
                 return;
             }
 
-            string strVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            string strVersion = Assembly.GetExecutingAssembly().GetName().Version!.ToString();
             Logger.Info("Server Version " + strVersion + " -> Ready");
 
             IoCManager.Resolve<ISignalHandler>().MaybeStart();

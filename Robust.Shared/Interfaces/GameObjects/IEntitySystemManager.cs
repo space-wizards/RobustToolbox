@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Interfaces.GameObjects.Systems;
+﻿using System;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects.Systems;
 
 namespace Robust.Shared.Interfaces.GameObjects
 {
@@ -52,5 +54,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <seealso cref="IEntitySystem.Update(float)"/>
         void Update(float frameTime);
         void FrameUpdate(float frameTime);
+
+        /// <summary>
+        ///     Adds an extra entity system type that otherwise would not be loaded automatically, useful for testing.
+        /// </summary>
+        /// <typeparam name="T">The type of the entity system to load.</typeparam>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if the manager has been initialized already.
+        /// </exception>
+        void LoadExtraSystemType<T>() where T : IEntitySystem, new();
     }
 }

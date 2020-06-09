@@ -3,30 +3,14 @@ using System;
 
 namespace Robust.Shared.GameObjects
 {
-
     [Serializable, NetSerializable]
-    public abstract class ComponentState
+    public class ComponentState
     {
+        public uint NetID { get; }
 
-        public abstract uint NetID { get; }
-
-        protected ComponentState()
+        public ComponentState(uint netID)
         {
+            NetID = netID;
         }
-
     }
-
-    [Serializable, NetSerializable]
-    internal sealed class NetIdComponentState : ComponentState
-    {
-
-        public override uint NetID { get; }
-
-        public NetIdComponentState(uint netId)
-        {
-            NetID = netId;
-        }
-
-    }
-
 }

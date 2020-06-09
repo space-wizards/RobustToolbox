@@ -456,6 +456,14 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var name in context.GetExtraComponentTypes())
                 {
+                    if (prototype != null && prototype.Components.ContainsKey(name))
+                    {
+                        // This component also exists in the prototype.
+                        // This means that the previous step already caught both the prototype data AND map data.
+                        // Meaning that re-running EnsureCompExistsAndDeserialize would wipe prototype data.
+                        continue;
+                    }
+
                     var ser = context.GetComponentSerializer(name, null);
 
                     EnsureCompExistsAndDeserialize(entity, factory, name, ser);

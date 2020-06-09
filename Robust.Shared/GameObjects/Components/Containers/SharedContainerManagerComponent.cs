@@ -29,8 +29,7 @@ namespace Robust.Shared.GameObjects.Components.Containers
         {
             public Dictionary<string,(bool, List<EntityUid>)> Containers { get; }
 
-            public override uint NetID => NetIDs.CONTAINER_MANAGER;
-            public ContainerManagerComponentState(Dictionary<string, (bool, List<EntityUid>)> containers)
+            public ContainerManagerComponentState(Dictionary<string, (bool, List<EntityUid>)> containers) : base(NetIDs.CONTAINER_MANAGER)
             {
                 Containers = containers;
             }

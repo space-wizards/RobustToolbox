@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -14,6 +16,7 @@ using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -299,7 +302,13 @@ namespace Robust.UnitTesting
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
                     }
 
-                    _options?.BeforeStart?.Invoke();
+                    if (_options != null)
+                    {
+                        _options.BeforeStart?.Invoke();
+                        IoCManager.Resolve<IConfigurationManager>()
+                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                    }
+
                     if (server.Start())
                     {
                         throw new Exception("Server failed to start.");
@@ -379,7 +388,14 @@ namespace Robust.UnitTesting
                     }
 
                     client.LoadConfigAndUserData = false;
-                    _options?.BeforeStart?.Invoke();
+
+                    if (_options != null)
+                    {
+                        _options.BeforeStart?.Invoke();
+                        IoCManager.Resolve<IConfigurationManager>()
+                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                    };
+
                     client.Startup();
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
@@ -497,6 +513,8 @@ namespace Robust.UnitTesting
             public Action InitIoC { get; set; }
             public Action BeforeStart { get; set; }
             public Assembly SharedContentAssembly { get; set; }
+
+            public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }
 
         /// <summary>

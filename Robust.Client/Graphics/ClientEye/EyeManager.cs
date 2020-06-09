@@ -122,6 +122,12 @@ namespace Robust.Client.Graphics.ClientEye
         }
 
         /// <inheritdoc />
+        public MapCoordinates ScreenToMap(ScreenCoordinates point)
+        {
+            return ScreenToMap(point.Position);
+        }
+
+        /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             var newPoint = point;

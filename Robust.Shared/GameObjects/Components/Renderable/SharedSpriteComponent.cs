@@ -30,7 +30,6 @@ namespace Robust.Shared.GameObjects.Components.Renderable
             public readonly string? BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
-            public override uint NetID => NetIDs.SPRITE;
 
             public SpriteComponentState(
                 bool visible,
@@ -43,6 +42,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
+                : base(NetIDs.SPRITE)
             {
                 Visible = visible;
                 DrawDepth = drawDepth;

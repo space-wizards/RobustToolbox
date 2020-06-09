@@ -5,7 +5,6 @@
     <TargetFramework>$(TargetFramework)</TargetFramework>
     <LangVersion>8</LangVersion>
     <IsPackable>false</IsPackable>
-    <Platforms>x64</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/UnitTesting</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -32,6 +31,11 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Shared\ContentPack\ZipTest.zip">
+      <LogicalName>Robust.UnitTesting.Shared.ContentPack.ZipTest.zip</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />

@@ -136,7 +136,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildEntityList();
 
-            this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            this.placementManager.PlacementChanged += OnPlacementCanceled;
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -153,7 +153,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                placementManager.PlacementCanceled -= OnPlacementCanceled;
+                placementManager.PlacementChanged -= OnPlacementCanceled;
             }
         }
 

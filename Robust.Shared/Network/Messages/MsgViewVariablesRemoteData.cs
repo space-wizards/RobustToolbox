@@ -5,6 +5,8 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.ViewVariables;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     /// <summary>

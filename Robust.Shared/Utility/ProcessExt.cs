@@ -11,7 +11,7 @@ namespace Robust.Shared.Utility
         {
             var tcs = new TaskCompletionSource<bool>();
 
-            void ProcessExited(object sender, EventArgs e)
+            void ProcessExited(object? sender, EventArgs e)
             {
                 tcs.TrySetResult(true);
             }

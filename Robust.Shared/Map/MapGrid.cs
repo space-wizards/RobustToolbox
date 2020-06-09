@@ -212,7 +212,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
+        public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
             //TODO: needs world -> local -> tile translations.
             var gridTileLb = new MapIndices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Bottom));
@@ -254,7 +254,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null)
+        public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
             var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius, worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
 

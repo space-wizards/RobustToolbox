@@ -7,8 +7,8 @@
     <IsPackable>false</IsPackable>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Shared</OutputPath>
-    <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
@@ -20,7 +20,7 @@
     <PackageReference Include="nfluidsynth" Version="0.3.0" />
     <PackageReference Include="NGettext" Version="0.6.5" />
     <PackageReference Include="Pidgin" Version="2.2.0" />
-    <PackageReference Include="SharpZipLib" Version="1.2.0" />
+    <PackageReference Include="prometheus-net" Version="3.5.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>

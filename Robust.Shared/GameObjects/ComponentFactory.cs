@@ -11,10 +11,8 @@ namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
-#pragma warning disable 649
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private class ComponentRegistration : IComponentRegistration
         {
@@ -80,7 +78,7 @@ namespace Robust.Shared.GameObjects
 
             // Create a dummy to be able to fetch instance properties like name.
             // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = (IComponent)Activator.CreateInstance(type);
+            var dummy = (IComponent)Activator.CreateInstance(type)!;
 
             var name = dummy.Name;
             var netID = dummy.NetID;

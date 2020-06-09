@@ -3,6 +3,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -71,7 +72,7 @@ namespace Robust.Shared.Serialization
         {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
 
-            Type flagType = null;
+            Type? flagType = null;
 
             foreach (Type bitflagType in reflectionManager.FindTypesWithAttribute<FlagsForAttribute>())
             {
@@ -144,7 +145,7 @@ namespace Robust.Shared.Serialization
         {
             var reflectionManager = IoCManager.Resolve<IReflectionManager>();
 
-            Type constantType = null;
+            Type? constantType = null;
 
             foreach (Type enumConstantType in reflectionManager.FindTypesWithAttribute<ConstantsForAttribute>())
             {
@@ -218,7 +219,7 @@ namespace Robust.Shared.Serialization
             return flags;
         }
 
-        public override object ToCustomFormat(int flags)
+        public override object ToCustomFormat([NotNull] int flags)
         {
             var flagNames = new List<string>();
 
@@ -289,13 +290,13 @@ namespace Robust.Shared.Serialization
         {
             if (Enum.TryParse(_constantType, text, out var val))
             {
-                return (int) val;
+                return (int) val!;
             }
 
             return int.Parse(text, CultureInfo.InvariantCulture);
         }
 
-        public override object ToCustomFormat(int value)
+        public override object ToCustomFormat([NotNull] int value)
         {
             var constantName = Enum.GetName(_constantType, value);
 

@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
@@ -26,6 +26,9 @@ namespace Robust.Server.Player
     /// </summary>
     internal class PlayerManager : IPlayerManager
     {
+        private static readonly Gauge PlayerCountMetric = Metrics
+            .CreateGauge("robust_player_count", "Number of players on the server.");
+
 #pragma warning disable 649
         [Dependency] private readonly IBaseServer _baseServer;
         [Dependency] private readonly IGameTiming _timing;
@@ -324,6 +327,8 @@ namespace Robust.Server.Player
             {
                 _sessionsLock.ExitWriteLock();
             }
+
+            PlayerCountMetric.Set(PlayerCount);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -353,6 +358,7 @@ namespace Robust.Server.Player
                 _sessionsLock.ExitWriteLock();
             }
 
+            PlayerCountMetric.Set(PlayerCount);
             Dirty();
         }
 

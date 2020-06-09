@@ -15,7 +15,7 @@ namespace Robust.Shared.Localization.Macros
             CultureInfo = cultureInfo;
         }
 
-        public object GetFormat(Type formatType)
+        public object? GetFormat(Type? formatType)
         {
             if (formatType == typeof(ICustomFormatter))
                 return Formatter;

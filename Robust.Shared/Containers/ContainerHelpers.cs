@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Utility;
 
@@ -16,7 +17,7 @@ namespace Robust.Shared.Containers
         /// <returns>If the entity is inside of a container.</returns>
         public static bool IsInContainer(IEntity entity)
         {
-            DebugTools.Assert(entity != null);
+            DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
             // Notice the recursion starts at the Owner of the passed in entity, this
@@ -34,9 +35,9 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="manager">The container manager that this entity is inside of.</param>
         /// <returns>If a container manager was found.</returns>
-        public static bool TryGetContainerMan(IEntity entity, out IContainerManager manager)
+        public static bool TryGetContainerMan(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
-            DebugTools.Assert(entity != null);
+            DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
             if (entity.Transform.Parent != null && TryGetManagerComp(entity.Transform.Parent.Owner, out manager) && manager.ContainsEntity(entity))
@@ -52,9 +53,9 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="container">The container that this entity is inside of.</param>
         /// <returns>If a container was found.</returns>
-        public static bool TryGetContainer(IEntity entity, out IContainer container)
+        public static bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
-            DebugTools.Assert(entity != null);
+            DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
             if (TryGetContainerMan(entity, out var manager))
@@ -64,9 +65,9 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        private static bool TryGetManagerComp(IEntity entity, out IContainerManager manager)
+        private static bool TryGetManagerComp(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
-            DebugTools.Assert(entity != null);
+            DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
 
             if (entity.TryGetComponent(out manager))

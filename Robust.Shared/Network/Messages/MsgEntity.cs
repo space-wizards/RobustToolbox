@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using Robust.Shared.Enums;
 using Robust.Shared.Timing;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgEntity : NetMessage

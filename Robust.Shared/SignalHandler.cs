@@ -11,12 +11,10 @@ namespace Robust.Shared
 {
     internal abstract class SignalHandler : ISignalHandler, IDisposable, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        private Thread _signalThread;
+        private Thread? _signalThread;
 
         public void PostInject()
         {
@@ -52,18 +50,18 @@ namespace Robust.Shared
                 var assembly = FindMonoPosix();
                 Logger.Debug("Successfully loaded Mono.Posix. Registering signal handlers...");
 
-                var signalType = assembly.GetType("Mono.Unix.UnixSignal");
+                var signalType = assembly.GetType("Mono.Unix.UnixSignal")!;
                 // Mono.Unix.UnixSignal[]
                 var signalArrayType = signalType.MakeArrayType();
-                var signumType = assembly.GetType("Mono.Unix.Native.Signum");
+                var signumType = assembly.GetType("Mono.Unix.Native.Signum")!;
 
                 var SIGTERM = Enum.Parse(signumType, "SIGTERM");
                 var SIGINT = Enum.Parse(signumType, "SIGINT");
 
                 // int UnixSignal.WaitAny(UnixSignal[])
-                var WaitAny = signalType.GetMethod("WaitAny", new Type[] {signalArrayType});
+                var WaitAny = signalType.GetMethod("WaitAny", new Type[] {signalArrayType})!;
                 // UnixSignal.Signum
-                var Signum = signalType.GetProperty("Signum");
+                var Signum = signalType.GetProperty("Signum")!;
 
                 var signals = Array.CreateInstance(signalType, 2);
                 signals.SetValue(Activator.CreateInstance(signalType, SIGTERM), 0);
@@ -76,10 +74,10 @@ namespace Robust.Shared
                         var args = new object[] {signals};
                         // int UnixSignal.WaitAny(UnixSignal[])
                         // ReSharper disable once PossibleNullReferenceException
-                        var index = (int) WaitAny.Invoke(null, args);
+                        var index = (int) WaitAny.Invoke(null, args)!;
                         // signals[index].Signum
                         // ReSharper disable once PossibleNullReferenceException
-                        var signum = Signum.GetValue(signals.GetValue(index), null).ToString();
+                        var signum = Signum.GetValue(signals.GetValue(index), null)!.ToString();
 
                         // Can't use switch with reflection. Shame.
                         // Tried to compare the objects directly. Didn't work.

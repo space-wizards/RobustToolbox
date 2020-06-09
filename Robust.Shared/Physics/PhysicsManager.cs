@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -18,9 +16,7 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
@@ -230,7 +226,7 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
-            Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true)
+            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new List<RayCastResults>();
 
@@ -274,30 +270,43 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         /// <inheritdoc />
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity ignoredEnt = null)
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
         {
             var penetration = 0f;
 
-            var sourceToDest = IntersectRay(mapId, ray, maxLength, ignoredEnt, false).ToArray();
-            var destToSource = IntersectRay(mapId,
-                new CollisionRay(ray.Position + ray.Direction * maxLength, -ray.Direction, ray.CollisionMask),
-                maxLength, ignoredEnt, false).ToArray();
-
-            Debug.Assert(sourceToDest.Length == destToSource.Length);
-
-            for (int i = 0; i < sourceToDest.Length; i++)
+            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
-                penetration += (sourceToDest[i].HitPos - destToSource[sourceToDest.Length - 1 - i].HitPos).Length;
-            }
+                if (distFromOrigin > maxLength)
+                {
+                    return true;
+                }
+
+                if (!body.CanCollide)
+                {
+                    return true;
+                }
+
+                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
+                    body.WorldAABB, out _, out var exitPoint))
+                {
+                    penetration += (point - exitPoint).Length;
+                }
+                return true;
+            }, ray.Position, ray.Direction);
 
             return penetration;
         }
 
-        public event Action<DebugRayData> DebugDrawRay;
+        public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
             => this[collider.MapID].Update(collider);

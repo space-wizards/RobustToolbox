@@ -8,16 +8,14 @@ namespace Robust.Shared.Localization.Macros
 {
     public class TextMacroFactory : ITextMacroFactory
     {
-#pragma warning disable 649
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private struct TextMacroRegistration
         {
             public Type MacroType;
             public string MacroName;
-            public string LanguageTag;
+            public string? LanguageTag;
         }
 
         private IList<TextMacroRegistration> Macros = new List<TextMacroRegistration>();
@@ -51,7 +49,7 @@ namespace Robust.Shared.Localization.Macros
             Register(name, null, macroType);
         }
 
-        public void Register(string name, string languageTag, Type macroType)
+        public void Register(string name, string? languageTag, Type macroType)
         {
             Macros.Add(new TextMacroRegistration
             {

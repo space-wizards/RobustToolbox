@@ -16,7 +16,10 @@ namespace Robust.Client.Interfaces.Placement
         PlacementMode CurrentMode { get; set; }
         PlacementInformation CurrentPermission { get; set; }
 
-        event EventHandler PlacementCanceled;
+        /// <summary>
+        /// Gets called when the PlacementManager changed its build/erase mode or when the hijacks changed
+        /// </summary>
+        event EventHandler PlacementChanged;
 
         void BeginPlacing(PlacementInformation info);
         void Clear();

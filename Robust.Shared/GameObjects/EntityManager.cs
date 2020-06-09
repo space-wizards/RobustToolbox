@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -24,15 +25,13 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-#pragma warning disable 649
-        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager;
-        [Dependency] private readonly IPrototypeManager PrototypeManager;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
-        [Dependency] private readonly IComponentFactory ComponentFactory;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
+        [Dependency] private readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         #endregion Dependencies
 
@@ -97,22 +96,22 @@ namespace Robust.Shared.GameObjects
         #region Entity Management
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntity(string? protoName, GridCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string protoName, MapCoordinates coordinates);
+        public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
@@ -130,7 +129,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(EntityUid uid, out IEntity entity)
+        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
             if (Entities.TryGetValue(uid, out entity) && !entity.Deleted)
             {
@@ -219,7 +218,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
         {
-            EntityPrototype prototype = null;
+            EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
             {
                 // If the prototype doesn't exist then we throw BEFORE we allocate the entity.

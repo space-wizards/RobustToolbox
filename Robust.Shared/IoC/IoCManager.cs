@@ -78,7 +78,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.Register<TInterface, TImplementation>(overwrite);
+            _container.Value!.Register<TInterface, TImplementation>(overwrite);
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.RegisterInstance<TInterface>(implementation, overwrite);
+            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Robust.Shared.IoC
         public static void Clear()
         {
             if (_container.IsValueCreated)
-                _container.Value.Clear();
+                _container.Value!.Clear();
         }
 
         /// <summary>
@@ -124,7 +124,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            return _container.Value.Resolve<T>();
+            return _container.Value!.Resolve<T>();
         }
 
         /// <summary>
@@ -140,7 +140,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            return _container.Value.ResolveType(type);
+            return _container.Value!.ResolveType(type);
         }
 
         /// <summary>
@@ -151,7 +151,7 @@ namespace Robust.Shared.IoC
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value.BuildGraph();
+            _container.Value!.BuildGraph();
         }
 
         /// <summary>
@@ -166,10 +166,10 @@ namespace Robust.Shared.IoC
         ///     Thrown if a dependency field on the object is not registered.
         /// </exception>
         /// <seealso cref="BuildGraph"/>
-        public static T InjectDependencies<T>(T obj)
+        public static T InjectDependencies<T>(T obj) where T : notnull
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
-            _container.Value.InjectDependencies(obj);
+            _container.Value!.InjectDependencies(obj);
             return obj;
         }
     }

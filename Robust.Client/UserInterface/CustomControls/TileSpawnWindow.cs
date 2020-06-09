@@ -64,7 +64,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildTileList();
 
-            _placementManager.PlacementCanceled += OnPlacementCanceled;
+            _placementManager.PlacementChanged += OnPlacementCanceled;
         }
 
         protected override void Dispose(bool disposing)
@@ -73,7 +73,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                _placementManager.PlacementCanceled -= OnPlacementCanceled;
+                _placementManager.PlacementChanged -= OnPlacementCanceled;
             }
         }
 

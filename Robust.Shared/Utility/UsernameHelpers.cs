@@ -18,7 +18,7 @@ namespace Robust.Shared.Utility
         /// </summary>
         /// <param name="name">The name to check.</param>
         /// <returns>True if the name is acceptable, false otherwise.</returns>
-        public static (bool, string reason) IsNameValid(string name)
+        public static (bool, string? reason) IsNameValid(string name)
         {
             // No empty username.
             if (string.IsNullOrWhiteSpace(name))

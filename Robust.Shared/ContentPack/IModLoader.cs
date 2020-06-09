@@ -12,7 +12,7 @@ namespace Robust.Shared.ContentPack
         /// <typeparam name="T">The type of the entry point to search for.</typeparam>
         /// <param name="assembly">Byte array of the assembly.</param>
         /// <param name="symbols">Optional byte array of the debug symbols.</param>
-        void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
+        void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
             where T : GameShared;
 
         /// <summary>

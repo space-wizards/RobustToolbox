@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -239,6 +240,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         private static IComponentManager ManagerFactory(out IEntityManager entityManager)
         {
             var dependencies = new DependencyCollection();
+
+            var runtimeLog = new Mock<IRuntimeLog>();
+            dependencies.RegisterInstance<IRuntimeLog>(runtimeLog.Object);
 
             // set up the registration
             var mockRegistration = new Mock<IComponentRegistration>();

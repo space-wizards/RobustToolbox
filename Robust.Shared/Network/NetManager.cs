@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -9,6 +10,7 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -35,6 +37,31 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
+        private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_sent_packets",
+            "Number of packets sent since server startup.");
+
+        private static readonly Counter RecvPacketsMetrics = Metrics.CreateCounter(
+            "robust_net_recv_packets",
+            "Number of packets sent since server startup.");
+
+        private static readonly Counter SentMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_messages",
+            "Number of messages sent since server startup.");
+
+        private static readonly Counter RecvMessagesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_messages",
+            "Number of messages sent since server startup.");
+
+        private static readonly Counter SentBytesMetrics = Metrics.CreateCounter(
+            "robust_net_sent_bytes",
+            "Number of bytes sent since server startup.");
+
+        private static readonly Counter RecvBytesMetrics = Metrics.CreateCounter(
+            "robust_net_recv_bytes",
+            "Number of bytes sent since server startup.");
+
+
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
         /// <summary>
@@ -53,9 +80,7 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
 
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _config;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _config = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -136,7 +161,7 @@ namespace Robust.Shared.Network
         public IReadOnlyDictionary<Type, ProcessMessage> CallbackAudit => _callbacks;
 
         /// <inheritdoc />
-        public INetChannel ServerChannel
+        public INetChannel? ServerChannel
         {
             get
             {
@@ -201,7 +226,7 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
 #endif
 
-            _strings.Initialize(this, () => { OnConnected(ServerChannel); });
+            _strings.Initialize(this, () => { OnConnected(ServerChannel!); });
 
             _initialized = true;
         }
@@ -293,6 +318,13 @@ namespace Robust.Shared.Network
 
         public void ProcessPackets()
         {
+            var sentMessages = 0L;
+            var recvMessages = 0L;
+            var sentBytes = 0L;
+            var recvBytes = 0L;
+            var sentPackets = 0L;
+            var recvPackets = 0L;
+
             foreach (var peer in _netPeers)
             {
                 NetIncomingMessage msg;
@@ -343,6 +375,13 @@ namespace Robust.Shared.Network
                         peer.Recycle(msg);
                     }
                 }
+
+                sentMessages += peer.Statistics.SentMessages;
+                recvMessages += peer.Statistics.ReceivedMessages;
+                sentBytes += peer.Statistics.SentBytes;
+                recvBytes += peer.Statistics.ReceivedBytes;
+                sentPackets += peer.Statistics.SentPackets;
+                recvPackets += peer.Statistics.ReceivedPackets;
             }
 
             if (_toCleanNetPeers.Count != 0)
@@ -352,13 +391,23 @@ namespace Robust.Shared.Network
                     _netPeers.Remove(peer);
                 }
             }
+
+            SentMessagesMetrics.IncTo(sentMessages);
+            RecvMessagesMetrics.IncTo(recvMessages);
+            SentBytesMetrics.IncTo(sentBytes);
+            RecvBytesMetrics.IncTo(recvBytes);
+            SentPacketsMetrics.IncTo(sentPackets);
+            RecvPacketsMetrics.IncTo(recvPackets);
         }
 
         /// <inheritdoc />
         public void ClientDisconnect(string reason)
         {
             DebugTools.Assert(IsClient, "Should never be called on the server.");
-            Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
+            if (ServerChannel != null)
+            {
+                Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
+            }
             Shutdown(reason);
         }
 
@@ -371,7 +420,7 @@ namespace Robust.Shared.Network
 
             netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
             netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
-            netConfig.MaximumHandshakeAttempts = 1;
+            netConfig.MaximumHandshakeAttempts = 5;
 
             var verbose = _config.GetCVar<bool>("net.verbose");
             netConfig.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, verbose);
@@ -428,13 +477,13 @@ namespace Robust.Shared.Network
             if (connection == null)
                 throw new ArgumentNullException(nameof(connection));
 
-            if (_channels.TryGetValue(connection, out NetChannel channel))
+            if (_channels.TryGetValue(connection, out var channel))
                 return channel;
 
             throw new NetManagerException("There is no NetChannel for this NetConnection.");
         }
 
-        private bool TryGetChannel(NetConnection connection, out INetChannel channel)
+        private bool TryGetChannel(NetConnection connection, [NotNullWhen(true)] out INetChannel? channel)
         {
             if (connection == null)
             {
@@ -684,7 +733,7 @@ namespace Robust.Shared.Network
                     $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
             }
 
-            if (!_callbacks.TryGetValue(type, out ProcessMessage callback))
+            if (!_callbacks.TryGetValue(type, out var callback))
             {
                 Logger.WarningS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{type}, but callback was not registered.");
@@ -715,7 +764,7 @@ namespace Robust.Shared.Network
                 return false;
             }
 
-            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)});
+            var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)})!;
 
             DebugTools.AssertNotNull(constructor);
 
@@ -738,7 +787,7 @@ namespace Robust.Shared.Network
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
             where T : NetMessage
         {
             _strings.AddString(name);
@@ -763,7 +812,7 @@ namespace Robust.Shared.Network
 
         private void CacheBlankFunction(Type type)
         {
-            var constructor = type.GetConstructor(new[] {typeof(INetChannel)});
+            var constructor = type.GetConstructor(new[] {typeof(INetChannel)})!;
 
             DebugTools.AssertNotNull(constructor);
 
@@ -884,16 +933,16 @@ namespace Robust.Shared.Network
         }
 
         /// <inheritdoc />
-        public event EventHandler<NetConnectingArgs> Connecting;
+        public event EventHandler<NetConnectingArgs>? Connecting;
 
         /// <inheritdoc />
-        public event EventHandler<NetConnectFailArgs> ConnectFailed;
+        public event EventHandler<NetConnectFailArgs>? ConnectFailed;
 
         /// <inheritdoc />
-        public event EventHandler<NetChannelArgs> Connected;
+        public event EventHandler<NetChannelArgs>? Connected;
 
         /// <inheritdoc />
-        public event EventHandler<NetDisconnectedArgs> Disconnect;
+        public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
         #endregion Events
 

@@ -85,7 +85,7 @@ namespace Robust.Shared.Timers
         /// <returns>The task that can be awaited.</returns>
         public static Task Delay(int milliseconds, CancellationToken cancellationToken = default)
         {
-            var tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object?>();
             Spawn(milliseconds, () => tcs.SetResult(null), cancellationToken);
             return tcs.Task;
         }

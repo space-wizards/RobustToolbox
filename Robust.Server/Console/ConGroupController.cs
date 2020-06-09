@@ -123,6 +123,18 @@ namespace Robust.Server.Console
             UpdateClientData(session);
         }
 
+        public ConGroupIndex GetGroupIndex(IPlayerSession session)
+        {
+            return _sessions.GetSessionGroup(session);
+        }
+
+        public string GetGroupName(ConGroupIndex index)
+        {
+            var groupDict = _groups.Groups;
+
+            return groupDict.TryGetValue(index, out var group) ? group?.Name : null;
+        }
+
         /// <summary>
         /// Update a single clients group data.
         /// </summary>

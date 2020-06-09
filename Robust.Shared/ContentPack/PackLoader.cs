@@ -88,18 +88,20 @@ namespace Robust.Shared.ContentPack
                     {
                         yield return new ResourcePath(entry.FullName).ToRelativePath();
                     }
-                    }
                 }
             }
 
             public IEnumerable<string> GetRelativeFilePaths()
             {
-                foreach (var zipEntry in _zip.Cast<ZipEntry>())
+                foreach (var entry in _zip.Entries)
                 {
-                    if (zipEntry!.IsFile)
+                    if (entry.Name == "")
                     {
-                        yield return new ResourcePath(zipEntry.Name).ToRootedPath().ToString();
+                        // Dir node.
+                        continue;
                     }
+
+                    yield return new ResourcePath(entry.FullName).ToRootedPath().ToString();
                 }
             }
         }

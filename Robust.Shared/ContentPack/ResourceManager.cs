@@ -108,7 +108,7 @@ namespace Robust.Shared.ContentPack
                 _contentRootsLock.ExitWriteLock();
             }
 
-            Logger.InfoS("res", $"Mapping file path strings from {pack}");
+            Logger.InfoS("res", $"Mapping file path strings from {loader}");
             if (IoCManager.Resolve<INetManager>().IsServer)
             {
                 RobustSerializer.MappedStringSerializer.AddStrings(loader.GetRelativeFilePaths());

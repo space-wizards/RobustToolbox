@@ -1,51 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using JetBrains.Annotations;
+using Robust.Server.Interfaces.Player;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
+        [Dependency] private IPlayerManager _playerManager;
+
+        public const int AudioDistanceRange = 25;
+
         private uint _streamIndex;
 
         public class AudioSourceServer
         {
             private readonly uint _id;
             private readonly AudioSystem _audioSystem;
+            private readonly IEnumerable<IPlayerSession> _sessions;
 
-            internal AudioSourceServer(AudioSystem parent, uint identifier)
+            internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<IPlayerSession> sessions = null)
             {
                 _audioSystem = parent;
                 _id = identifier;
+                _sessions = sessions;
             }
             public void Stop()
             {
-                _audioSystem.InternalStop(_id);
+                _audioSystem.InternalStop(_id, _sessions);
             }
         }
 
-        private void InternalStop(uint id)
+        private void InternalStop(uint id, IEnumerable<IPlayerSession> sessions = null)
         {
             var msg = new StopAudioMessageClient
             {
                 Identifier = id
             };
 
-            RaiseNetworkEvent(msg);
+            if(sessions == null)
+                RaiseNetworkEvent(msg);
+            else
+                foreach (var session in sessions)
+                {
+                    RaiseNetworkEvent(msg, session.ConnectedClient);
+                }
         }
 
         private uint CacheIdentifier()
         {
-            if (_streamIndex >= uint.MaxValue)
-            {
-                _streamIndex = 0;
-            }
-            return _streamIndex++;
+            return unchecked(_streamIndex++);
         }
 
         /// <summary>
@@ -53,7 +63,8 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
-        public AudioSourceServer PlayGlobal(string filename, AudioParams? audioParams = null)
+        /// <param name="predicate">The predicate that will be used to send the audio to players, or null to send to everyone.</param>
+        public AudioSourceServer PlayGlobal(string filename, AudioParams? audioParams = null, Func<IPlayerSession, bool> predicate = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage
@@ -62,9 +73,21 @@ namespace Robust.Server.GameObjects.EntitySystems
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
-            RaiseNetworkEvent(msg);
-            var src = new AudioSourceServer(this, id);
-            return src;
+
+            if (predicate == null)
+            {
+                RaiseNetworkEvent(msg);
+                return new AudioSourceServer(this, id);
+            }
+
+            var players = _playerManager.GetPlayersBy(predicate);
+
+            foreach(var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+
+            return new AudioSourceServer(this, id, players);
 
         }
 
@@ -74,7 +97,8 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams"></param>
-        public AudioSourceServer PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null)
+        /// <param name="range">The max range at which the audio will be heard. Less than or equal to 0 to send to every player.</param>
+        public AudioSourceServer PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null, int range = AudioDistanceRange)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioEntityMessage
@@ -84,9 +108,21 @@ namespace Robust.Server.GameObjects.EntitySystems
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
-            RaiseNetworkEvent(msg);
-            var src = new AudioSourceServer(this, id);
-            return src;
+
+            if (range <= 0)
+            {
+                RaiseNetworkEvent(msg);
+                return new AudioSourceServer(this, id);
+            }
+
+            var players = _playerManager.GetPlayersInRange(entity.Transform.GridPosition, range);
+
+            foreach(var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+
+            return new AudioSourceServer(this, id, players);
         }
 
         /// <summary>
@@ -95,7 +131,8 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
-        public AudioSourceServer PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
+        /// <param name="range">The max range at which the audio will be heard. Less than or equal to 0 to send to every player.</param>
+        public AudioSourceServer PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null, int range = AudioDistanceRange)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioPositionalMessage
@@ -105,9 +142,21 @@ namespace Robust.Server.GameObjects.EntitySystems
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
-            RaiseNetworkEvent(msg);
-            var src = new AudioSourceServer(this, id);
-            return src;
+
+            if (range <= 0)
+            {
+                RaiseNetworkEvent(msg);
+                return new AudioSourceServer(this, id);
+            }
+
+            var players = _playerManager.GetPlayersInRange(coordinates, range);
+
+            foreach(var player in players)
+            {
+                RaiseNetworkEvent(msg, player.ConnectedClient);
+            }
+
+            return new AudioSourceServer(this, id, players);
         }
 
         #region DEPRECATED
@@ -119,12 +168,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Obsolete("Deprecated. Use PlayGlobal instead.")]
         public void Play(string filename, AudioParams? audioParams = null)
         {
-            var msg = new PlayAudioGlobalMessage
-            {
-                FileName = filename,
-                AudioParams = audioParams ?? AudioParams.Default
-            };
-            RaiseNetworkEvent(msg);
+            PlayGlobal(filename, audioParams);
         }
 
 
@@ -137,13 +181,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Obsolete("Deprecated. Use PlayFromEntity instead.")]
         public void Play(string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            var msg = new PlayAudioEntityMessage
-            {
-                FileName = filename,
-                EntityUid = entity.Uid,
-                AudioParams = audioParams ?? AudioParams.Default
-            };
-            RaiseNetworkEvent(msg);
+            PlayFromEntity(filename, entity, audioParams);
         }
 
         /// <summary>
@@ -155,13 +193,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         [Obsolete("Deprecated. Use PlayAtCoords instead.")]
         public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
         {
-            var msg = new PlayAudioPositionalMessage
-            {
-                FileName = filename,
-                Coordinates = coordinates,
-                AudioParams = audioParams ?? AudioParams.Default
-            };
-            RaiseNetworkEvent(msg);
+            PlayAtCoords(filename, coordinates, audioParams);
         }
 
         #endregion

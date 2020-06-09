@@ -28,8 +28,8 @@ jobs:
     - name: Check out engine version
       run: |
         cd RobustToolbox
-        git fetch ${{ github.sha }}
-        git checkout ${{ github.sha }} 
+        git fetch origin ${{ github.sha }}
+        git checkout FETCH_HEAD 
     - name: Install dependencies
       run: dotnet restore
     - name: Build

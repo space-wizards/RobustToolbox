@@ -62,13 +62,13 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName)
         {
-            return CreateEntity(prototypeName);
+            return CreateEntityServer(prototypeName);
         }
 
         /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntityServer(prototypeName);
             if (coordinates.GridID != GridId.Invalid)
             {
                 var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntityId;
@@ -82,22 +82,37 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntityServer(prototypeName);
+            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+            newEntity.Transform.WorldPosition = coordinates.Position;
+            return newEntity;
+        }
+
+        private Entity CreateEntityServer(string prototypeName)
+        {
+            var entity = CreateEntity(prototypeName);
+
             if (prototypeName != null)
             {
+                var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+
                 // At this point in time, all data configure on the entity *should* be purely from the prototype.
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(newEntity.Uid))
+                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
                 {
-                    ((Component) component).ClearTicks();
+                    // Make sure to ONLY get components that are defined in the prototype.
+                    // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
+                    // And those aren't guaranteed to exist on the client, so don't clear them.
+                    if (prototype.Components.ContainsKey(component.Name))
+                    {
+                        ((Component) component).ClearTicks();
+                    }
                 }
             }
 
-            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
-            newEntity.Transform.WorldPosition = coordinates.Position;
-            return newEntity;
+            return entity;
         }
 
         /// <inheritdoc />

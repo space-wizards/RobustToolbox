@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
-        [Dependency] private readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [Dependency] private readonly IComponentFactory ComponentFactory = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;

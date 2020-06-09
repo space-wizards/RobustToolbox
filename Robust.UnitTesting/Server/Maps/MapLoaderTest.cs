@@ -80,7 +80,7 @@ entities:
         }
 
         [Test]
-        public async Task TestDataLoadPriority()
+        public void TestDataLoadPriority()
         {
             var map = IoCManager.Resolve<IMapManager>();
 

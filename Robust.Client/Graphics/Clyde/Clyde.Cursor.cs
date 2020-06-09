@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
             new Dictionary<StandardCursorShape, CursorImpl>();
 
         // Keep current active cursor around so it doesn't get garbage collected.
-        private CursorImpl _currentCursor;
+        private CursorImpl? _currentCursor;
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
@@ -40,7 +40,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public unsafe void SetCursor(ICursor cursor)
+        public unsafe void SetCursor(ICursor? cursor)
         {
             if (_currentCursor == cursor)
             {

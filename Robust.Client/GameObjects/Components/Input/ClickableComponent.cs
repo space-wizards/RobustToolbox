@@ -36,7 +36,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState is ClickableComponentState state)
             {

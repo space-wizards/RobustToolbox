@@ -173,15 +173,19 @@ namespace Robust.Client.UserInterface.Controls
 
         private float _getGrabberBoxMinSize()
         {
-            StyleBox styleBox = _getGrabberStyleBox();
+            var styleBox = _getGrabberStyleBox();
+            if (styleBox == null)
+            {
+                return 0;
+            }
+
             return _orientation == OrientationMode.Horizontal ? styleBox.MinimumSize.X : styleBox.MinimumSize.Y;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getGrabberStyleBox()
+        private StyleBox? _getGrabberStyleBox()
         {
-            if (TryGetStyleProperty(StylePropertyGrabber, out StyleBox styleBox))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyGrabber, out var styleBox))
             {
                 return styleBox;
             }

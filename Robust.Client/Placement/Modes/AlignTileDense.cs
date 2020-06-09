@@ -18,7 +18,7 @@ namespace Robust.Client.Placement.Modes
             float tileSize = mapGrid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
                                                   CurrentTile.Y + tileSize / 2,
@@ -38,7 +38,7 @@ namespace Robust.Client.Placement.Modes
             {
                 return false;
             }
-            if (!pManager.CurrentPermission.IsTile && !IsColliding(position))
+            if (!pManager.CurrentPermission!.IsTile && !IsColliding(position))
             {
                 return false;
             }

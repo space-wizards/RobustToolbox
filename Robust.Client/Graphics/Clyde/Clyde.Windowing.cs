@@ -40,27 +40,27 @@ namespace Robust.Client.Graphics.Clyde
     internal unsafe partial class Clyde
     {
         // Keep delegates around to prevent GC issues.
-        private GLFWCallbacks.ErrorCallback _errorCallback;
-        private GLFWCallbacks.CharCallback _charCallback;
-        private GLFWCallbacks.CursorPosCallback _cursorPosCallback;
-        private GLFWCallbacks.KeyCallback _keyCallback;
-        private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback;
-        private GLFWCallbacks.ScrollCallback _scrollCallback;
-        private GLFWCallbacks.WindowCloseCallback _windowCloseCallback;
-        private GLFWCallbacks.WindowSizeCallback _windowSizeCallback;
-        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback;
-        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback;
+        private GLFWCallbacks.ErrorCallback _errorCallback = default!;
+        private GLFWCallbacks.CharCallback _charCallback = default!;
+        private GLFWCallbacks.CursorPosCallback _cursorPosCallback = default!;
+        private GLFWCallbacks.KeyCallback _keyCallback = default!;
+        private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = default!;
+        private GLFWCallbacks.ScrollCallback _scrollCallback = default!;
+        private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = default!;
+        private GLFWCallbacks.WindowSizeCallback _windowSizeCallback = default!;
+        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback = default!;
+        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback = default!;
 
         private bool _glfwInitialized;
 
-        private IBindingsContext _graphicsContext;
+        private IBindingsContext _graphicsContext = default!;
         private Window* _glfwWindow;
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
-        private Thread _mainThread;
+        private Thread? _mainThread;
 
         private Vector2 _lastMousePos;
 
@@ -97,7 +97,7 @@ namespace Robust.Client.Graphics.Clyde
             return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
         }
 
-        private List<Exception> _glfwExceptionList;
+        private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
 
         private bool InitGlfw()

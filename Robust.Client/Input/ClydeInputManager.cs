@@ -6,9 +6,7 @@ namespace Robust.Client.Input
 {
     internal sealed class ClydeInputManager : InputManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClydeInternal _clyde;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeInternal _clyde = default!;
 
         public override Vector2 MouseScreenPosition => _clyde.MouseScreenPosition;
 

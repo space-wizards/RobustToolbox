@@ -13,8 +13,8 @@ namespace Robust.Client.Interfaces.Placement
         void Initialize();
         bool IsActive { get; }
         bool Eraser { get; }
-        PlacementMode CurrentMode { get; set; }
-        PlacementInformation CurrentPermission { get; set; }
+        PlacementMode? CurrentMode { get; set; }
+        PlacementInformation? CurrentPermission { get; set; }
 
         /// <summary>
         /// Gets called when the PlacementManager changed its build/erase mode or when the hijacks changed

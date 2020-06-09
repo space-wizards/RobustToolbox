@@ -4,19 +4,19 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.Input
 {
-    public delegate void StateInputCmdDelegate(ICommonSession session);
+    public delegate void StateInputCmdDelegate(ICommonSession? session);
 
     public abstract class InputCmdHandler
     {
-        public virtual void Enabled(ICommonSession session)
+        public virtual void Enabled(ICommonSession? session)
         {
         }
 
-        public virtual void Disabled(ICommonSession session)
+        public virtual void Disabled(ICommonSession? session)
         {
         }
 
-        public abstract bool HandleCmdMessage(ICommonSession session, InputCmdMessage message);
+        public abstract bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message);
 
         /// <summary>
         ///     Makes a quick input command from enabled and disabled delegates.
@@ -41,17 +41,17 @@ namespace Robust.Shared.Input
             public StateInputCmdDelegate? DisabledDelegate;
             public bool Handle { get; set; }
 
-            public override void Enabled(ICommonSession session)
+            public override void Enabled(ICommonSession? session)
             {
                 EnabledDelegate?.Invoke(session);
             }
 
-            public override void Disabled(ICommonSession session)
+            public override void Disabled(ICommonSession? session)
             {
                 DisabledDelegate?.Invoke(session);
             }
 
-            public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
             {
                 if (!(message is FullInputCmdMessage msg))
                     return false;
@@ -72,7 +72,7 @@ namespace Robust.Shared.Input
         }
     }
 
-    public delegate bool PointerInputCmdDelegate(ICommonSession session, GridCoordinates coords, EntityUid uid);
+    public delegate bool PointerInputCmdDelegate(ICommonSession? session, GridCoordinates coords, EntityUid uid);
 
     public delegate bool PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
@@ -89,7 +89,7 @@ namespace Robust.Shared.Input
             _callback = callback;
         }
 
-        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
         {
             if (!(message is FullInputCmdMessage msg) || msg.State != BoundKeyState.Down)
                 return false;
@@ -100,12 +100,12 @@ namespace Robust.Shared.Input
 
         public readonly struct PointerInputCmdArgs
         {
-            public readonly ICommonSession Session;
+            public readonly ICommonSession? Session;
             public readonly GridCoordinates Coordinates;
             public readonly ScreenCoordinates ScreenCoordinates;
             public readonly EntityUid EntityUid;
 
-            public PointerInputCmdArgs(ICommonSession session, GridCoordinates coordinates,
+            public PointerInputCmdArgs(ICommonSession? session, GridCoordinates coordinates,
                 ScreenCoordinates screenCoordinates, EntityUid entityUid)
             {
                 Session = session;
@@ -128,7 +128,7 @@ namespace Robust.Shared.Input
         }
 
         /// <inheritdoc />
-        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
         {
             if (!(message is FullInputCmdMessage msg))
                 return false;
@@ -155,7 +155,7 @@ namespace Robust.Shared.Input
     public class NullInputCmdHandler : InputCmdHandler
     {
         /// <inheritdoc />
-        public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+        public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
         {
             return true;
         }

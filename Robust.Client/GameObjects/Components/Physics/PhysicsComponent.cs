@@ -81,10 +81,10 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController Controller => null;
+        public override VirtualController? Controller => null;
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;

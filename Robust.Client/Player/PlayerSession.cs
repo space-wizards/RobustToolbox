@@ -10,7 +10,7 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public SessionStatus Status { get; set; } = SessionStatus.Connecting;
 
-        public IEntity AttachedEntity { get; set; }
+        public IEntity? AttachedEntity { get; set; }
 
         /// <inheritdoc />
         public NetSessionId SessionId { get; }

@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleMessage(ComponentMessage message, IComponent component) { }
+        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
 
         /// <inheritdoc />
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }

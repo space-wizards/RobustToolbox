@@ -52,7 +52,7 @@ namespace Robust.Client.Interfaces.Input
         /// </summary>
         /// <param name="function">The key function to find the bound input command for.</param>
         /// <returns>An input command, if any. Null if no command is set.</returns>
-        InputCmdHandler GetInputCommand(BoundKeyFunction function);
+        InputCmdHandler? GetInputCommand(BoundKeyFunction function);
 
         void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
 

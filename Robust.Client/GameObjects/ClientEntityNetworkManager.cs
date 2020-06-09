@@ -16,17 +16,15 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public class ClientEntityNetworkManager : IEntityNetworkManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _networkManager;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
-        public event EventHandler<object> ReceivedSystemMessage;
+        public event EventHandler<object>? ReceivedSystemMessage;
 
         private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageTickComparer());
 
@@ -68,7 +66,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component, ComponentMessage message)
+        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component, ComponentMessage message)
         {
             if (!component.NetID.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
@@ -110,12 +108,12 @@ namespace Robust.Client.GameObjects
 
         private sealed class MessageTickComparer : IComparer<MsgEntity>
         {
-            public int Compare(MsgEntity x, MsgEntity y)
+            public int Compare(MsgEntity? x, MsgEntity? y)
             {
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
-                return y.SourceTick.CompareTo(x.SourceTick);
+                return y!.SourceTick.CompareTo(x!.SourceTick);
             }
         }
     }

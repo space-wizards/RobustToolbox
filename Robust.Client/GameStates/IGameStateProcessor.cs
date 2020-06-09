@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
@@ -70,7 +71,7 @@ namespace Robust.Client.GameStates
         /// <param name="curState">Current state for the given tick. This can be null.</param>
         /// <param name="nextState">Current state for tick + 1. This can be null.</param>
         /// <returns>Was the function able to correctly calculate the states for the given tick?</returns>
-        bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState);
+        bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState);
 
         /// <summary>
         ///     Resets the processor back to its initial state.

@@ -11,16 +11,14 @@ namespace Robust.Client.Console
     /// </summary>
     public class ClientConGroupController : IClientConGroupController
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _netManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _netManager = default!;
 
         /// <summary>
         /// The console group this client is in. Determines which commands the client can use and if they can use vv.
         /// </summary>
-        private ConGroup _clientConGroup;
+        private ConGroup? _clientConGroup;
 
-        public event Action ConGroupUpdated;
+        public event Action? ConGroupUpdated;
 
         public void Initialize()
         {
@@ -31,7 +29,7 @@ namespace Robust.Client.Console
         {
             if (_clientConGroup == null)
                 return false;
-            return _clientConGroup.Commands.Contains(cmdName);
+            return _clientConGroup.Commands!.Contains(cmdName);
         }
 
         public bool CanViewVar()

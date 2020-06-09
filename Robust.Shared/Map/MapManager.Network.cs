@@ -84,7 +84,7 @@ namespace Robust.Shared.Map
             _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
         }
 
-        public void ApplyGameStatePre(GameStateMapData data)
+        public void ApplyGameStatePre(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
@@ -183,7 +183,7 @@ namespace Robust.Shared.Map
             }
         }
 
-        public void ApplyGameStatePost(GameStateMapData data)
+        public void ApplyGameStatePost(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 

@@ -171,7 +171,7 @@ namespace Robust.Client.Graphics.Clyde
             var source = AL.GenSource();
             // ReSharper disable once PossibleInvalidOperationException
             // TODO: This really shouldn't be indexing based on the ClydeHandle...
-            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle.Value.Value].BufferHandle);
+            AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value.Value].BufferHandle);
 
             var audioSource = new AudioSource(this, source, stream);
             _audioSources.Add(source, new WeakReference<AudioSource>(audioSource));
@@ -210,7 +210,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream, string name = null)
+        public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             var vorbis = _readOggVorbis(stream);
 
@@ -250,7 +250,7 @@ namespace Robust.Client.Graphics.Clyde
             return new AudioStream(handle, length, (int) vorbis.Channels, name);
         }
 
-        public AudioStream LoadAudioWav(Stream stream, string name = null)
+        public AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             var wav = _readWav(stream);
 
@@ -540,7 +540,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.SourcePlay(stackalloc int[] {SourceHandle.Value});
+                AL.SourcePlay(stackalloc int[] {SourceHandle!.Value});
                 _checkAlError();
             }
 
@@ -548,7 +548,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.SourceStop(SourceHandle.Value);
+                AL.SourceStop(SourceHandle!.Value);
                 _checkAlError();
             }
 
@@ -558,7 +558,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     _checkDisposed();
                     // ReSharper disable once PossibleInvalidOperationException
-                    var state = AL.GetSourceState(SourceHandle.Value);
+                    var state = AL.GetSourceState(SourceHandle!.Value);
                     return state == ALSourceState.Playing;
                 }
             }
@@ -574,7 +574,7 @@ namespace Robust.Client.Graphics.Clyde
                 _checkDisposed();
                 _mono = false;
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle.Value, ALSourceb.SourceRelative, true);
+                AL.Source(SourceHandle!.Value, ALSourceb.SourceRelative, true);
                 _checkAlError();
             }
 
@@ -587,7 +587,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle.Value, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
                 _checkAlError();
             }
 
@@ -603,7 +603,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGain, gain);
                 EFX.Filter(FilterHandle, FilterFloat.LowpassGainHF, cutoff);
-                AL.Source(SourceHandle.Value, ALSourcei.EfxDirectFilter, FilterHandle);
+                AL.Source(SourceHandle!.Value, ALSourcei.EfxDirectFilter, FilterHandle);
                 _checkAlError();
             }
 
@@ -611,7 +611,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle.Value, ALSourcef.SecOffset, seconds);
+                AL.Source(SourceHandle!.Value, ALSourcef.SecOffset, seconds);
                 _checkAlError();
             }
 
@@ -628,7 +628,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 _mono = true;
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle.Value, ALSource3f.Position, x, y, 0);
+                AL.Source(SourceHandle!.Value, ALSource3f.Position, x, y, 0);
                 _checkAlError();
                 return true;
             }
@@ -647,7 +647,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle.Value, ALSourcef.Pitch, pitch);
+                AL.Source(SourceHandle!.Value, ALSourcef.Pitch, pitch);
                 _checkAlError();
             }
 
@@ -696,7 +696,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.GetSource(SourceHandle.Value, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
+                AL.GetSource(SourceHandle!.Value, ALGetSourcei.BuffersProcessed, out var buffersProcessed);
                 return buffersProcessed;
             }
 
@@ -706,7 +706,7 @@ namespace Robust.Client.Graphics.Clyde
                 var entries = Math.Min(Math.Min(handles.Length, BufferHandles.Length), GetNumberOfBuffersProcessed());
                 fixed (int* ptr = handles)
                     // ReSharper disable once PossibleInvalidOperationException
-                    AL.SourceUnqueueBuffers(SourceHandle.Value, entries, ptr);
+                    AL.SourceUnqueueBuffers(SourceHandle!.Value, entries, ptr);
 
                 for (var i = 0; i < entries; i++)
                     handles[i] = BufferMap[handles[i]];
@@ -765,7 +765,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 fixed (int* ptr = realHandles)
                     // ReSharper disable once PossibleInvalidOperationException
-                    AL.SourceQueueBuffers(SourceHandle.Value, handles.Length, ptr);
+                    AL.SourceQueueBuffers(SourceHandle!.Value, handles.Length, ptr);
             }
 
             public unsafe void EmptyBuffers()

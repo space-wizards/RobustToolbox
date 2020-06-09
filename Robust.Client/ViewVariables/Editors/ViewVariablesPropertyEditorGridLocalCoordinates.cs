@@ -8,9 +8,9 @@ namespace Robust.Client.ViewVariables.Editors
 {
     public class ViewVariablesPropertyEditorGridLocalCoordinates : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
-            var coords = (GridCoordinates) value;
+            var coords = (GridCoordinates) value!;
             var hBoxContainer = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(240, 0),

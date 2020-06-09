@@ -25,8 +25,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         public Vector2 MouseScreenPosition => ScreenSize / 2;
-        public IClydeDebugInfo DebugInfo => null;
-        public IClydeDebugStats DebugStats => null;
+        public IClydeDebugInfo DebugInfo { get; } = new DummyDebugInfo();
+        public IClydeDebugStats DebugStats { get; } = new DummyDebugStats();
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
         {
@@ -49,9 +49,11 @@ namespace Robust.Client.Graphics.Clyde
             return true;
         }
 
-#pragma warning disable CS0067
-        public override event Action<WindowResizedEventArgs> OnWindowResized;
-#pragma warning restore CS0067
+        public override event Action<WindowResizedEventArgs> OnWindowResized
+        {
+            add {}
+            remove {}
+        }
 
         public void Render()
         {
@@ -68,7 +70,7 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             using (var image = Image.Load(stream))
@@ -77,14 +79,14 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             return new DummyTexture((image.Width, image.Height));
         }
 
         public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
-            TextureSampleParameters? sampleParameters = null, string name = null)
+            TextureSampleParameters? sampleParameters = null, string? name = null)
         {
             return new DummyRenderTarget(size, new DummyTexture(size));
         }
@@ -104,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyCursor();
         }
 
-        public void SetCursor(ICursor cursor)
+        public void SetCursor(ICursor? cursor)
         {
             // Nada.
         }
@@ -114,7 +116,7 @@ namespace Robust.Client.Graphics.Clyde
             callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
         {
             return default;
         }
@@ -129,13 +131,13 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        public AudioStream LoadAudioOggVorbis(Stream stream, string name = null)
+        public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
             return new AudioStream(default, default, 1, name);
         }
 
-        public AudioStream LoadAudioWav(Stream stream, string name = null)
+        public AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
             return new AudioStream(default, default, 1, name);
@@ -370,6 +372,23 @@ namespace Robust.Client.Graphics.Clyde
             public void Delete()
             {
             }
+        }
+
+        private sealed class DummyDebugStats : IClydeDebugStats
+        {
+            public int LastGLDrawCalls => 0;
+            public int LastClydeDrawCalls => 0;
+            public int LastBatches => 0;
+            public (int vertices, int indices) LargestBatchSize => (0, 0);
+        }
+
+        private sealed class DummyDebugInfo : IClydeDebugInfo
+        {
+            public Version OpenGLVersion { get; } = new Version(3, 3);
+            public Version MinimumVersion { get; } = new Version(3, 3);
+            public string Renderer => "ClydeHeadless";
+            public string Vendor => "Space Wizards Federation";
+            public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
         }
     }
 }

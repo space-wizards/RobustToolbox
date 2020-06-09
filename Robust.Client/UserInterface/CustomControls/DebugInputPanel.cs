@@ -9,9 +9,7 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     internal class DebugInputPanel : PanelContainer
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
         private readonly Label _label;
 

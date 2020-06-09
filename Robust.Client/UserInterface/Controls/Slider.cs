@@ -19,12 +19,12 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _grabbed;
 
-        private StyleBox _backgroundStyleBoxOverride;
-        private StyleBox _foregroundStyleBoxOverride;
-        private StyleBox _fillStyleBoxOverride;
-        private StyleBox _grabberStyleBoxOverride;
+        private StyleBox? _backgroundStyleBoxOverride;
+        private StyleBox? _foregroundStyleBoxOverride;
+        private StyleBox? _fillStyleBoxOverride;
+        private StyleBox? _grabberStyleBoxOverride;
 
-        public StyleBox ForegroundStyleBoxOverride
+        public StyleBox? ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set
@@ -34,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox BackgroundStyleBoxOverride
+        public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -44,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox FillStyleBoxOverride
+        public StyleBox? FillStyleBoxOverride
         {
             get => _fillStyleBoxOverride;
             set
@@ -54,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox GrabberStyleBoxOverride
+        public StyleBox? GrabberStyleBoxOverride
         {
             get => _grabberStyleBoxOverride;
             set
@@ -163,9 +163,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateStyleBoxes()
         {
-            StyleBox GetStyleBox(string name)
+            StyleBox? GetStyleBox(string name)
             {
-                if (TryGetStyleProperty(name, out StyleBox box))
+                if (TryGetStyleProperty<StyleBox>(name, out var box))
                 {
                     return box;
                 }

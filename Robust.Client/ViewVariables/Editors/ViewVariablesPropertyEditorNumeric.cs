@@ -15,11 +15,11 @@ namespace Robust.Client.ViewVariables.Editors
             _type = type;
         }
 
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var lineEdit = new LineEdit
             {
-                Text = NumberToText(value),
+                Text = NumberToText(value!),
                 Editable = !ReadOnly,
                 CustomMinimumSize = new Vector2(240, 0)
             };

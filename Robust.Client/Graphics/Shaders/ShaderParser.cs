@@ -47,7 +47,7 @@ namespace Robust.Client.Graphics.Shaders
             ShaderBlendMode? blendMode = null;
             ShaderPreset? preset = null;
 
-            Token token;
+            Token? token;
 
             while (_tokenIndex < _tokens.Count)
             {
@@ -76,7 +76,7 @@ namespace Robust.Client.Graphics.Shaders
                     token = _takeToken();
                     if (!(token is TokenWord unshadedWord) || unshadedWord.Word != "unshaded")
                     {
-                        throw new ShaderParseException("Expected 'unshaded'", token.Position);
+                        throw new ShaderParseException("Expected 'unshaded'", token?.Position);
                     }
 
                     lightMode = ShaderLightMode.Unshaded;
@@ -85,7 +85,7 @@ namespace Robust.Client.Graphics.Shaders
                     if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
                         semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
                     {
-                        throw new ShaderParseException("Expected ';'", token.Position);
+                        throw new ShaderParseException("Expected ';'", token?.Position);
                     }
                 }
                 else if (word.Word == "blend_mode")
@@ -112,7 +112,7 @@ namespace Robust.Client.Graphics.Shaders
                     if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
                         semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
                     {
-                        throw new ShaderParseException("Expected ';'", token.Position);
+                        throw new ShaderParseException("Expected ';'", token?.Position);
                     }
                 }
                 else if (word.Word == "preset")
@@ -137,7 +137,7 @@ namespace Robust.Client.Graphics.Shaders
                     if (!(token is TokenSymbol semicolonUnshadedSymbol) ||
                         semicolonUnshadedSymbol.Symbol != Symbols.Semicolon)
                     {
-                        throw new ShaderParseException("Expected ';'", token.Position);
+                        throw new ShaderParseException("Expected ';'", token?.Position);
                     }
                 }
                 else
@@ -199,7 +199,7 @@ namespace Robust.Client.Graphics.Shaders
             var token = _takeToken();
             if (!(token is TokenWord typeToken))
             {
-                throw new ShaderParseException("Expected type.", token.Position);
+                throw new ShaderParseException("Expected type.", token?.Position);
             }
 
             var retType = _parseShaderType(typeToken);
@@ -207,7 +207,7 @@ namespace Robust.Client.Graphics.Shaders
             token = _takeToken();
             if (!(token is TokenWord nameToken))
             {
-                throw new ShaderParseException("Expected function name.", token.Position);
+                throw new ShaderParseException("Expected function name.", token?.Position);
             }
 
             var name = nameToken.Word;
@@ -215,7 +215,7 @@ namespace Robust.Client.Graphics.Shaders
             token = _takeToken();
             if (!(token is TokenSymbol parenthesesOpenToken) || parenthesesOpenToken.Symbol != Symbols.ParenOpen)
             {
-                throw new ShaderParseException("Expected '('.", token.Position);
+                throw new ShaderParseException("Expected '('.", token?.Position);
             }
 
             var paramsParsed = new List<ShaderFunctionParameter>();
@@ -234,12 +234,12 @@ namespace Robust.Client.Graphics.Shaders
                 {
                     if (!(token is TokenWord paramTypeOrQualifierToken))
                     {
-                        throw new ShaderParseException("Expected type, 'in', 'out' or 'inout'.", token.Position);
+                        throw new ShaderParseException("Expected type, 'in', 'out' or 'inout'.", token?.Position);
                     }
 
                     var qualifier = ShaderParameterQualifiers.None;
 
-                    TokenWord paramTypeToken = null;
+                    TokenWord? paramTypeToken = null;
                     if (paramTypeOrQualifierToken.Word == "in")
                     {
                         qualifier = ShaderParameterQualifiers.In;
@@ -262,7 +262,7 @@ namespace Robust.Client.Graphics.Shaders
                         token = _takeToken();
                         if (!(token is TokenWord paramTypeTokenForReal))
                         {
-                            throw new ShaderParseException("Expected type ')'.", token.Position);
+                            throw new ShaderParseException("Expected type ')'.", token?.Position);
                         }
 
                         paramTypeToken = paramTypeTokenForReal;
@@ -273,7 +273,7 @@ namespace Robust.Client.Graphics.Shaders
                     token = _takeToken();
                     if (!(token is TokenWord paramNameToken))
                     {
-                        throw new ShaderParseException("Expected parameter name.", token.Position);
+                        throw new ShaderParseException("Expected parameter name.", token?.Position);
                     }
 
                     var paramName = paramNameToken.Word;
@@ -295,7 +295,7 @@ namespace Robust.Client.Graphics.Shaders
                         }
                     }
 
-                    throw new ShaderParseException("Expected ')' or ','", token.Position);
+                    throw new ShaderParseException("Expected ')' or ','", token?.Position);
                 }
             }
 
@@ -303,7 +303,7 @@ namespace Robust.Client.Graphics.Shaders
 
             if (!(token is TokenSymbol braceOpenToken) || braceOpenToken.Symbol != Symbols.BraceOpen)
             {
-                throw new ShaderParseException("Expected '{'", token.Position);
+                throw new ShaderParseException("Expected '{'", token?.Position);
             }
 
             var tokens = new List<Token>(10);
@@ -347,7 +347,7 @@ namespace Robust.Client.Graphics.Shaders
             var typeToken = _takeToken();
             if (!(typeToken is TokenWord wordType))
             {
-                throw new ShaderParseException("Expected type.", typeToken.Position);
+                throw new ShaderParseException("Expected type.", typeToken?.Position);
             }
 
             var type = _parseShaderType(wordType);
@@ -355,7 +355,7 @@ namespace Robust.Client.Graphics.Shaders
             var nameToken = _takeToken();
             if (!(nameToken is TokenWord wordName))
             {
-                throw new ShaderParseException("Expected uniform name.", nameToken.Position);
+                throw new ShaderParseException("Expected uniform name.", nameToken?.Position);
             }
 
             var name = wordName.Word;
@@ -364,7 +364,7 @@ namespace Robust.Client.Graphics.Shaders
 
             if (!(defaultValueMaybe is TokenSymbol defValueMaybeSymbol))
             {
-                throw new ShaderParseException("Expected ';' or '='", defaultValueMaybe.Position);
+                throw new ShaderParseException("Expected ';' or '='", defaultValueMaybe?.Position);
             }
 
             if (defValueMaybeSymbol.Symbol == Symbols.Semicolon)
@@ -409,7 +409,7 @@ namespace Robust.Client.Graphics.Shaders
             var typeToken = _takeToken();
             if (!(typeToken is TokenWord wordType))
             {
-                throw new ShaderParseException("Expected type.", typeToken.Position);
+                throw new ShaderParseException("Expected type.", typeToken?.Position);
             }
 
             var type = _parseShaderType(wordType);
@@ -417,7 +417,7 @@ namespace Robust.Client.Graphics.Shaders
             var nameToken = _takeToken();
             if (!(nameToken is TokenWord wordName))
             {
-                throw new ShaderParseException("Expected constant name.", nameToken.Position);
+                throw new ShaderParseException("Expected constant name.", nameToken?.Position);
             }
 
             var name = wordName.Word;
@@ -426,7 +426,7 @@ namespace Robust.Client.Graphics.Shaders
 
             if (!(equals is TokenSymbol equalsSymbol) || equalsSymbol.Symbol != Symbols.Equals)
             {
-                throw new ShaderParseException("Expected '='", equals.Position);
+                throw new ShaderParseException("Expected '='", equals?.Position);
             }
 
             var tokens = new List<Token>();
@@ -457,7 +457,7 @@ namespace Robust.Client.Graphics.Shaders
             var typeToken = _takeToken();
             if (!(typeToken is TokenWord wordType))
             {
-                throw new ShaderParseException("Expected type.", typeToken.Position);
+                throw new ShaderParseException("Expected type.", typeToken?.Position);
             }
 
             var type = _parseShaderType(wordType);
@@ -465,7 +465,7 @@ namespace Robust.Client.Graphics.Shaders
             var nameToken = _takeToken();
             if (!(nameToken is TokenWord wordName))
             {
-                throw new ShaderParseException("Expected varying name.", nameToken.Position);
+                throw new ShaderParseException("Expected varying name.", nameToken?.Position);
             }
 
             var name = wordName.Word;
@@ -474,7 +474,7 @@ namespace Robust.Client.Graphics.Shaders
 
             if (!(semicolonToken is TokenSymbol semicolon) || semicolon.Symbol != Symbols.Semicolon)
             {
-                throw new ShaderParseException("Expected ';'", semicolonToken.Position);
+                throw new ShaderParseException("Expected ';'", semicolonToken?.Position);
             }
 
             var def = new ShaderVaryingDefinition(name, type);
@@ -482,7 +482,7 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         [System.Diagnostics.Contracts.Pure]
-        private Token _peekToken()
+        private Token? _peekToken()
         {
             if (_tokenIndex >= _tokens.Count)
             {
@@ -492,7 +492,7 @@ namespace Robust.Client.Graphics.Shaders
             return _tokens[_tokenIndex];
         }
 
-        private Token _takeToken()
+        private Token? _takeToken()
         {
             if (_tokenIndex >= _tokens.Count)
             {
@@ -590,7 +590,7 @@ namespace Robust.Client.Graphics.Shaders
         {
         }
 
-        public ShaderParseException(string message, ShaderParser.TextFileRange range) : this($"{range}: {message}")
+        public ShaderParseException(string message, ShaderParser.TextFileRange? range) : this(range != null ? $"{range}: {message}" : $"EOL: {message}")
         {
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Robust.Client.Graphics;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -11,8 +12,8 @@ namespace Robust.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
-        public override ResourcePath Fallback => new ResourcePath("/Textures/noSprite.png");
-        public Texture Texture { get; private set; }
+        public override ResourcePath? Fallback => new ResourcePath("/Textures/noSprite.png");
+        public Texture Texture { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
@@ -54,9 +55,12 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
+        // TODO: Due to a bug in Roslyn, NotNullIfNotNullAttribute doesn't work.
+        // So this can't work with both nullables and non-nullables at the same time.
+        // I decided to only have it work with non-nullables as such.
         public static implicit operator Texture(TextureResource res)
         {
-            return res?.Texture;
+            return res.Texture;
         }
     }
 }

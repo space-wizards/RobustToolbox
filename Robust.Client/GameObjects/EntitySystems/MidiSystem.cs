@@ -6,9 +6,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class MidiSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMidiManager _midiManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMidiManager _midiManager = default!;
 
         public override void FrameUpdate(float frameTime)
         {

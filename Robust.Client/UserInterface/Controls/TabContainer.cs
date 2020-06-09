@@ -65,7 +65,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public event Action<int> OnTabChanged;
+        public event Action<int>? OnTabChanged;
 
         public TabContainer()
         {
@@ -350,18 +350,16 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getTabBoxActive()
+        private StyleBox? _getTabBoxActive()
         {
-            TryGetStyleProperty(StylePropertyTabStyleBox, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getTabBoxInactive()
+        private StyleBox? _getTabBoxInactive()
         {
-            TryGetStyleProperty(StylePropertyTabStyleBoxInactive, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyTabStyleBoxInactive, out var box);
             return box;
         }
 
@@ -386,18 +384,16 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getPanel()
+        private StyleBox? _getPanel()
         {
-            TryGetStyleProperty(StylePropertyPanelStyleBox, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyPanelStyleBox, out var box);
             return box;
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [NotNull]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }

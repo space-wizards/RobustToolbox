@@ -36,23 +36,23 @@ namespace Robust.Client.UserInterface
         ///     The default value of the property.
         ///     This is returned if no value is set and <see cref="Control.GetValue"/> is called.
         /// </summary>
-        public object DefaultValue { get; }
+        public object? DefaultValue { get; }
 
         /// <summary>
         ///     An optional validation function.
         ///     If the value to <see cref="Control.SetValue"/> fails this check, an exception will be thrown.
         /// </summary>
-        public Func<object, bool> Validate { get; }
+        public Func<object?, bool>? Validate { get; }
 
         /// <summary>
         ///     A callback to run whenever this property changes on a control.
         /// </summary>
-        public AttachedPropertyChangedCallback Changed { get; }
+        public AttachedPropertyChangedCallback? Changed { get; }
 
         internal AttachedProperty(string name, Type owningType, Type propertyType,
-            object defaultValue = null,
-            Func<object, bool> validate = null,
-            AttachedPropertyChangedCallback changed = null)
+            object? defaultValue = null,
+            Func<object?, bool>? validate = null,
+            AttachedPropertyChangedCallback? changed = null)
         {
             Name = name;
             OwningType = owningType;
@@ -67,14 +67,14 @@ namespace Robust.Client.UserInterface
         /// </remarks>
         public static AttachedProperty Create(
             string name, Type owningType, Type propertyType,
-            object defaultValue = null,
-            Func<object, bool> validate = null,
-            AttachedPropertyChangedCallback changed = null)
+            object? defaultValue = null,
+            Func<object?, bool>? validate = null,
+            AttachedPropertyChangedCallback? changed = null)
         {
             if (propertyType.IsValueType && defaultValue == null)
             {
                 // Use activator to create uninitialized version of value type.
-                defaultValue = Activator.CreateInstance(propertyType);
+                defaultValue = Activator.CreateInstance(propertyType)!;
             }
 
             return new AttachedProperty(name, owningType, propertyType, defaultValue, validate, changed);
@@ -83,19 +83,19 @@ namespace Robust.Client.UserInterface
 
     public sealed class AttachedProperty<T> : AttachedProperty
     {
-        public new Func<T, bool> Validate { get; }
+        public new Func<T, bool>? Validate { get; }
 
-        public new AttachedPropertyChangedCallback<T> Changed { get; }
+        public new AttachedPropertyChangedCallback<T>? Changed { get; }
 
         public new T DefaultValue { get; }
 
         internal AttachedProperty(string name, Type owningType, T defaultValue = default,
-            Func<T, bool> validate = null, AttachedPropertyChangedCallback<T> changed = null)
+            Func<T, bool>? validate = null, AttachedPropertyChangedCallback<T>? changed = null)
             : base(name, owningType, typeof(T), defaultValue,
-                validate != null ? o => validate((T) o) : (Func<object, bool>) null,
+                validate != null ? o => validate!((T) o!) : (Func<object?, bool>?) null,
                 changed != null
-                    ? (o, ev) => changed(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue, (T) ev.OldValue))
-                    : (AttachedPropertyChangedCallback) null)
+                    ? (o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!))
+                    : (AttachedPropertyChangedCallback?) null)
         {
             Validate = validate;
             Changed = changed;
@@ -104,8 +104,8 @@ namespace Robust.Client.UserInterface
 
         public static AttachedProperty<T> Create(string name, Type owningType,
             T defaultValue = default,
-            Func<T, bool> validate = null,
-            AttachedPropertyChangedCallback<T> changed = null)
+            Func<T, bool>? validate = null,
+            AttachedPropertyChangedCallback<T>? changed = null)
         {
             return new AttachedProperty<T>(name, owningType, defaultValue, validate, changed);
         }
@@ -116,14 +116,14 @@ namespace Robust.Client.UserInterface
     /// </summary>
     public readonly struct AttachedPropertyChangedEventArgs
     {
-        public AttachedPropertyChangedEventArgs(object newValue, object oldValue)
+        public AttachedPropertyChangedEventArgs(object? newValue, object? oldValue)
         {
             NewValue = newValue;
             OldValue = oldValue;
         }
 
-        public object NewValue { get; }
-        public object OldValue { get; }
+        public object? NewValue { get; }
+        public object? OldValue { get; }
     }
 
     public readonly struct AttachedPropertyChangedEventArgs<T>

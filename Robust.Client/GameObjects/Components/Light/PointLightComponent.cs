@@ -65,7 +65,7 @@ namespace Robust.Client.GameObjects
         ///     The mask's red channel will be linearly multiplied.p
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Texture Mask { get; set; }
+        public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Energy
@@ -118,7 +118,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, IComponent component)
+        public override void HandleMessage(ComponentMessage message, IComponent? component)
         {
             base.HandleMessage(message, component);
 
@@ -156,14 +156,14 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
 
-            if (serializer.Reading && serializer.TryReadDataField("mask", out string value))
+            if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
             {
                 Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
             }
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;

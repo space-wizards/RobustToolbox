@@ -16,11 +16,9 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-#pragma warning disable 649
-        [Dependency] private IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public Texture TileTextureAtlas { get; private set; }
+        public Texture TileTextureAtlas { get; private set; } = default!;
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
 

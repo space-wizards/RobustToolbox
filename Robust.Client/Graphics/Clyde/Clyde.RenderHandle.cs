@@ -117,14 +117,14 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawLine(a, b, color);
             }
 
-            public void UseShader(ShaderInstance shader)
+            public void UseShader(ShaderInstance? shader)
             {
                 if (shader != null && shader.Disposed)
                 {
                     throw new ArgumentException("Unable to use disposed shader instance.", nameof(shader));
                 }
 
-                var clydeShader = (ClydeShaderInstance) shader;
+                var clydeShader = (ClydeShaderInstance?) shader;
 
                 _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
             }
@@ -134,9 +134,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawViewport(viewport);
             }
 
-            public void UseRenderTarget(IRenderTarget renderTarget)
+            public void UseRenderTarget(IRenderTarget? renderTarget)
             {
-                var target = (RenderTarget) renderTarget;
+                var target = (RenderTarget?) renderTarget;
 
                 _clyde.DrawRenderTarget(target?.Handle ?? default);
             }
@@ -213,7 +213,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override void UseShader(ShaderInstance shader)
+                public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
                 }
@@ -293,7 +293,7 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override void UseShader(ShaderInstance shader)
+                public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
                 }

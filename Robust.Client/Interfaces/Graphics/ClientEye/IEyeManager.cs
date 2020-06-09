@@ -101,5 +101,7 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// <param name="point">Point on screen to transform.</param>
         /// <returns>Corresponding point in the world.</returns>
         MapCoordinates ScreenToMap(Vector2 point);
+
+        void ClearCurrentEye();
     }
 }

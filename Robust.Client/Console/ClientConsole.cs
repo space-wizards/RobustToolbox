@@ -43,14 +43,9 @@ namespace Robust.Client.Console
     {
         private static readonly Color MsgColor = new Color(65, 105, 225);
 
-        [Dependency]
-#pragma warning disable 649
-        private readonly IClientNetManager _network;
-        [Dependency]
-        private readonly IReflectionManager _reflectionManager;
-        [Dependency]
-        private readonly ILogManager logManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _network = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly ILogManager logManager = default!;
 
         private readonly Dictionary<string, IConsoleCommand> _commands = new Dictionary<string, IConsoleCommand>();
         private bool _requestedCommands;
@@ -77,7 +72,7 @@ namespace Robust.Client.Console
             SendServerCommandRequest();
         }
 
-        private void OnNetworkConnected(object sender, NetChannelArgs netChannelArgs)
+        private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)
         {
             SendServerCommandRequest();
         }
@@ -105,9 +100,9 @@ namespace Robust.Client.Console
             ClearText?.Invoke(this, EventArgs.Empty);
         }
 
-        public event EventHandler<AddStringArgs> AddString;
-        public event EventHandler ClearText;
-        public event EventHandler<AddFormattedMessageArgs> AddFormatted;
+        public event EventHandler<AddStringArgs>? AddString;
+        public event EventHandler? ClearText;
+        public event EventHandler<AddFormattedMessageArgs>? AddFormatted;
 
         private void HandleConCmdAck(MsgConCmdAck msg)
         {
@@ -175,7 +170,7 @@ namespace Robust.Client.Console
         {
             foreach (var t in _reflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand)Activator.CreateInstance(t, null);
+                var instance = (IConsoleCommand)Activator.CreateInstance(t)!;
                 if (_commands.ContainsKey(instance.Command))
                     throw new InvalidOperationException($"Command already registered: {instance.Command}");
 

@@ -27,9 +27,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _cursorPosition;
         private int _selectionStart;
-        [NotNull] private string _text = "";
+        private string _text = "";
         private bool _editable = true;
-        [CanBeNull] private string _placeHolder;
+        private string? _placeHolder;
 
         private int _drawOffset;
 
@@ -42,13 +42,13 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool IsPlaceHolderVisible => string.IsNullOrEmpty(_text) && _placeHolder != null;
 
-        public event Action<LineEditEventArgs> OnTextChanged;
-        public event Action<LineEditEventArgs> OnTextEntered;
+        public event Action<LineEditEventArgs>? OnTextChanged;
+        public event Action<LineEditEventArgs>? OnTextEntered;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
         /// </summary>
-        public Func<string, bool> IsValid { get; set; }
+        public Func<string, bool>? IsValid { get; set; }
 
         /// <summary>
         ///     The actual text currently stored in the LineEdit.
@@ -111,7 +111,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string PlaceHolder
+        public string? PlaceHolder
         {
             get => _placeHolder;
             set
@@ -598,7 +598,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }
@@ -609,7 +609,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private StyleBox _getStyleBox()
         {
-            if (TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
             {
                 return box;
             }
@@ -746,7 +746,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 var offsetY = (contentBox.Height - font.GetHeight(UIScale)) / 2;
 
-                var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder : _master._text;
+                var renderedText = _master.IsPlaceHolderVisible ? _master._placeHolder! : _master._text;
                 DebugTools.AssertNotNull(renderedText);
 
                 ref var drawOffset = ref _master._drawOffset;

@@ -19,9 +19,7 @@ namespace Robust.Client.Graphics
 {
     internal sealed class FontManager : IFontManagerInternal, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _configuration;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configuration = default!;
 
         private uint BaseFontDPI;
 
@@ -298,7 +296,7 @@ namespace Robust.Client.Graphics
                 FaceHandle = faceHandle;
             }
 
-            public Texture GetCharTexture(char chr, float scale)
+            public Texture? GetCharTexture(char chr, float scale)
             {
                 var glyph = _getGlyph(chr);
                 if (glyph == 0)

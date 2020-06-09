@@ -10,7 +10,7 @@ namespace Robust.Client.GameObjects
 {
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
-        internal SnapGridComponent SnapGrid { get; private set; }
+        internal SnapGridComponent? SnapGrid { get; private set; }
         [ViewVariables] private (GridId, MapIndices) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
@@ -42,7 +42,7 @@ namespace Robust.Client.GameObjects
         private void SnapGridOnPositionChanged()
         {
             SendDirty();
-            _lastPosition = (Owner.Transform.GridID, SnapGrid.Position);
+            _lastPosition = (Owner.Transform.GridID, SnapGrid!.Position);
         }
 
         protected override void Shutdown()

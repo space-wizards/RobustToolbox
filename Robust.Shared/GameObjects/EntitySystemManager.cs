@@ -140,7 +140,18 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var system in _systems.Values)
             {
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
                 system.Update(frameTime);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("entsys", e.ToString());
+                }
+#endif
             }
         }
 
@@ -149,7 +160,18 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var system in _systems.Values)
             {
-                system.FrameUpdate(frameTime);
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
+                    system.FrameUpdate(frameTime);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("entsys", e.ToString());
+                }
+#endif
             }
         }
     }

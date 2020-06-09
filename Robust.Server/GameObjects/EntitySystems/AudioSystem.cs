@@ -13,7 +13,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 {
     public class AudioSystem : EntitySystem
     {
-        [Dependency] private IPlayerManager _playerManager;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         public const int AudioDistanceRange = 25;
 
@@ -23,9 +23,9 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             private readonly uint _id;
             private readonly AudioSystem _audioSystem;
-            private readonly IEnumerable<IPlayerSession> _sessions;
+            private readonly IEnumerable<IPlayerSession>? _sessions;
 
-            internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<IPlayerSession> sessions = null)
+            internal AudioSourceServer(AudioSystem parent, uint identifier, IEnumerable<IPlayerSession>? sessions = null)
             {
                 _audioSystem = parent;
                 _id = identifier;
@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             }
         }
 
-        private void InternalStop(uint id, IEnumerable<IPlayerSession> sessions = null)
+        private void InternalStop(uint id, IEnumerable<IPlayerSession>? sessions = null)
         {
             var msg = new StopAudioMessageClient
             {
@@ -64,7 +64,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams"></param>
         /// <param name="predicate">The predicate that will be used to send the audio to players, or null to send to everyone.</param>
-        public AudioSourceServer PlayGlobal(string filename, AudioParams? audioParams = null, Func<IPlayerSession, bool> predicate = null)
+        public AudioSourceServer PlayGlobal(string filename, AudioParams? audioParams = null, Func<IPlayerSession, bool>? predicate = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioGlobalMessage

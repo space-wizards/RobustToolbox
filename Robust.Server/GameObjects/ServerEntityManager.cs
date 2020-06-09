@@ -84,7 +84,7 @@ namespace Robust.Server.GameObjects
             return newEntity;
         }
 
-        private Entity CreateEntityServer(string prototypeName)
+        private Entity CreateEntityServer(string? prototypeName)
         {
             var entity = CreateEntity(prototypeName);
 

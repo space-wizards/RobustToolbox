@@ -42,9 +42,9 @@ namespace Robust.Shared.ContentPack
 
             public IEnumerable<ResourcePath> FindFiles(ResourcePath path)
             {
-                if (path.TryRelativeTo(_resourcePath, out var relative))
+                if (_resourcePath.TryRelativeTo(path, out var relative))
                 {
-                    yield return relative;
+                    yield return _resourcePath;
                 }
             }
         }

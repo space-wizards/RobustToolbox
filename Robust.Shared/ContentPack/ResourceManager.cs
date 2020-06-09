@@ -36,7 +36,7 @@ namespace Robust.Shared.ContentPack
         public IWritableDirProvider UserData { get; private set; } = default!;
 
         /// <inheritdoc />
-        public void Initialize(string userData)
+        public void Initialize(string? userData)
         {
             if (userData != null)
             {

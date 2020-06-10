@@ -372,7 +372,7 @@ namespace Robust.Shared.Serialization
 
             private static readonly Regex RxSymbolSplitter
                 = new Regex(
-                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])",
+                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])|(?<=[A-Za-z0-9])(?=_)",
                     RegexOptions.CultureInvariant | RegexOptions.Compiled
                 );
 
@@ -398,9 +398,21 @@ namespace Robust.Shared.Serialization
                     return false;
                 }
 
+                if (str.Length <= 3) return false;
+
                 str = str.Trim();
 
+                if (str.Length <= 3) return false;
+
                 str = str.Replace(Environment.NewLine, "\n");
+
+                if (str.Length <= 3) return false;
+
+                var symTrimmedStr = str.Trim( TrimmableSymbolChars );
+                if (symTrimmedStr != str)
+                {
+                    AddString(symTrimmedStr);
+                }
 
                 if (str.Contains('/'))
                 {
@@ -622,6 +634,8 @@ namespace Robust.Shared.Serialization
             private static readonly MethodInfo WriteMappedStringMethodInfo = ((WriteStringDelegate) WriteMappedString).Method;
 
             private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
+
+            private static readonly char[] TrimmableSymbolChars = new char[] {'.', '\\', '/',',','#','$','?','!','@','|','&','*','(',')','^','`','"','\'','`','~','[',']','{','}',':',';'};
 
             private const int MappedNull = 1;
 

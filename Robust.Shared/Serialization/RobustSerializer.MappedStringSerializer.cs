@@ -11,6 +11,7 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetSerializer;
 using Robust.Shared.ContentPack;
@@ -30,7 +31,7 @@ namespace Robust.Shared.Serialization
         public partial class MappedStringSerializer : IStaticTypeSerializer
         {
 
-            private static readonly ISawmill _sawmill  = Logger.GetSawmill("szr");
+            private static readonly ISawmill _sawmill = Logger.GetSawmill("szr");
 
             private static readonly HashSet<INetChannel> IncompleteHandshakes = new HashSet<INetChannel>();
 
@@ -109,6 +110,7 @@ namespace Robust.Shared.Serialization
                             _sawmill.Error("Received client handshake on client.");
                             return;
                         }
+
                         _sawmill.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
 
                         if (!msg.NeedsStrings)
@@ -368,6 +370,12 @@ namespace Robust.Shared.Serialization
 
             public static bool LockMappedStrings { get; set; }
 
+            private static readonly Regex RxSymbolSplitter
+                = new Regex(
+                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])",
+                    RegexOptions.CultureInvariant | RegexOptions.Compiled
+                );
+
             public static bool AddString(string str)
             {
                 if (LockMappedStrings)
@@ -428,6 +436,47 @@ namespace Robust.Shared.Serialization
                                     _MappedStrings.Add(subSubStr);
                                 }
                             }
+                        }
+                    }
+                }
+                else if (str.Contains("_"))
+                {
+                    foreach (var substr in str.Split("_"))
+                    {
+                        AddString(substr);
+                    }
+                }
+                else if (str.Contains(" "))
+                {
+                    foreach (var substr in str.Split(" "))
+                    {
+                        if (substr == str) continue;
+
+                        AddString(substr);
+                    }
+                }
+                else
+                {
+                    var parts = RxSymbolSplitter.Split(str);
+                    foreach (var substr in parts)
+                    {
+                        if (substr == str) continue;
+
+                        AddString(substr);
+                    }
+
+                    for (var si = 0; si < parts.Length; ++si)
+                    {
+                        for (var sl = 1; sl <= parts.Length - si; ++sl)
+                        {
+                            var subSubStr = string.Concat(parts.Skip(si).Take(sl));
+                            if (_StringMapping.ContainsKey(subSubStr))
+                            {
+                                continue;
+                            }
+
+                            _StringMapping[subSubStr] = _MappedStrings.Count;
+                            _MappedStrings.Add(subSubStr);
                         }
                     }
                 }
@@ -575,9 +624,10 @@ namespace Robust.Shared.Serialization
             private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
 
             private const int MappedNull = 1;
-            private const int UnmappedString = 1;
-            private const int FirstMappedIndexStart = 2;
 
+            private const int UnmappedString = 1;
+
+            private const int FirstMappedIndexStart = 2;
 
             public static void WriteMappedString(Stream stream, string? value)
             {

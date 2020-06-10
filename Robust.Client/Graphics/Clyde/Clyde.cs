@@ -141,7 +141,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             DetectOpenGLFeatures();
 
-            HijackDebugCallback();
+            SetupDebugCallback();
 
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
@@ -257,7 +257,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void HijackDebugCallback()
+        private void SetupDebugCallback()
         {
             if (!_hasKhrDebug)
             {
@@ -269,12 +269,8 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
             GCHandle.Alloc(_debugMessageCallbackInstance);
-            // See https://github.com/opentk/opentk/issues/880
-            var type = typeof(GL);
-            // ReSharper disable once PossibleNullReferenceException
-            var entryPoints = (IntPtr[]) type.GetField("EntryPoints", BindingFlags.Static | BindingFlags.NonPublic)
-                .GetValue(null);
-            var ep = entryPoints[184];
+
+            var ep = _graphicsContext.GetProcAddress("glDebugMessageCallback");
             var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
             _debugMessageCallbackInstance = DebugMessageCallback;
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);

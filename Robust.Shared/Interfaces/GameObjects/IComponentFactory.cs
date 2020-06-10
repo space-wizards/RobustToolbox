@@ -105,7 +105,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         IComponent GetComponent(string componentName);
 
         /// <summary>
-        /// Gets a new component instantiated of the specified <see cref="IComponent.Name"/>.
+        /// Gets a new component instantiated of the specified network ID.
         /// </summary>
         /// <param name="netId">net id of component to make</param>
         /// <returns>A Component</returns>

@@ -503,7 +503,7 @@ namespace Robust.Shared.GameObjects
         #region Entity DynamicTree
 
         private readonly ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
+            new ConcurrentDictionary<MapId, DynamicTree<IEntity>>(1,4);
 
         public virtual bool UpdateEntityTree(IEntity entity)
         {

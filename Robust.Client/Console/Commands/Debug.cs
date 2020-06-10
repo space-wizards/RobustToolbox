@@ -758,7 +758,7 @@ namespace Robust.Client.Console.Commands
 
         public static Dictionary<string, FileSystemWatcher> _watchers;
 
-        public static ConcurrentDictionary<string, bool> _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
+        public static ConcurrentDictionary<string, bool> _reloadShadersQueued = new ConcurrentDictionary<string, bool>(1,4);
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -779,13 +779,13 @@ namespace Robust.Client.Console.Commands
                     var stringComparer = PathHelpers.IsFileSystemCaseSensitive()
                         ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase;
 
-                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
+                    var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(1,4,stringComparer);
 
                     var syncCtx = SynchronizationContext.Current;
 
                     var shaderCount = 0;
                     var created = 0;
-                    var dirs = new ConcurrentDictionary<string, SortedSet<string>>(stringComparer);
+                    var dirs = new ConcurrentDictionary<string, SortedSet<string>>(1,4,stringComparer);
                     foreach (var (path, src) in resC.GetAllResources<ShaderSourceResource>())
                     {
                         if (!resC.TryGetDiskFilePath(path, out var fullPath))

@@ -4,12 +4,15 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Physics
 {
@@ -19,7 +22,7 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
-            new ConcurrentDictionary<MapId, BroadPhase>();
+            new ConcurrentDictionary<MapId, BroadPhase>(1,4);
 
         private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
@@ -52,22 +55,29 @@ namespace Robust.Shared.Physics
 
         public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
         {
-            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            var sourceBox = source.WorldAABB;
+            var targetBox = target.WorldAABB;
+
+            var manifold = targetBox.Intersect(sourceBox);
+
             if (manifold.IsEmpty()) return Vector2.Zero;
-            if (manifold.Height > manifold.Width)
-            {
-                // X is the axis of seperation
-                var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
-                var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
-                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
-            }
-            else
-            {
-                // Y is the axis of seperation
-                var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
-                var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
-                return new Vector2(0, bottomDist > topDist ? 1 : -1);
-            }
+
+            // X is the axis of separation
+            var leftDist = sourceBox.Right - targetBox.Left;
+            var rightDist = targetBox.Right - sourceBox.Left;
+            var x = leftDist - rightDist;
+            // Y is the axis of separation
+            var bottomDist = sourceBox.Top - targetBox.Bottom;
+            var topDist = targetBox.Top - sourceBox.Bottom;
+            var y = bottomDist - topDist;
+
+            // octagonal surface normals; create 8 regions, a third of each of the 4 faces is flat
+            // corners are treated as curved during resolution, making players feel somewhat pill shaped
+            const float faceToCornerBias = 1/3f; // higher is more square, higher is more pill shaped
+            if (MathF.Abs(x) < faceToCornerBias) x = 0;
+            if (MathF.Abs(y) < faceToCornerBias) y = 0;
+
+            return new Vector2(x, y).Normalized;
         }
 
         public float CalculatePenetration(ICollidableComponent target, ICollidableComponent source)
@@ -95,6 +105,8 @@ namespace Robust.Shared.Physics
                 return Vector2.Zero;
             }
 
+            // TODO: check container's item's total mass
+
             var impulse = -(1.0f + restitution) * vAlongNormal;
             // So why the 100.0f instead of 0.0f? Well, because the other object needs to have SOME mass value,
             // or otherwise the physics object can actually sink in slightly to the physics-less object.
@@ -106,29 +118,32 @@ namespace Robust.Shared.Physics
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
-            var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
+            var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>().ToList();
+
             foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB, approximate))
             {
                 if (body.Owner.Deleted) {
                     continue;
                 }
 
-                if (CollidesOnMask(physBody, body))
+                if (!CollidesOnMask(physBody, body))
                 {
-                    var preventCollision = false;
-                    var otherModifiers = body.Owner.GetAllComponents<ICollideSpecial>();
-                    foreach (var modifier in modifiers)
-                    {
-                        preventCollision |= modifier.PreventCollide(body);
-                    }
-                    foreach (var modifier in otherModifiers)
-                    {
-                        preventCollision |= modifier.PreventCollide(physBody);
-                    }
-
-                    if (preventCollision) continue;
-                    yield return body.Owner;
+                    continue;
                 }
+
+                var preventCollision = false;
+                var otherModifiers = body.Owner.GetAllComponents<ICollideSpecial>();
+                foreach (var modifier in modifiers)
+                {
+                    preventCollision |= modifier.PreventCollide(body);
+                }
+                foreach (var modifier in otherModifiers)
+                {
+                    preventCollision |= modifier.PreventCollide(physBody);
+                }
+
+                if (preventCollision) continue;
+                yield return body.Owner;
             }
         }
 

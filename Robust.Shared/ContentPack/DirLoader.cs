@@ -126,35 +126,9 @@ namespace Robust.Shared.ContentPack
                     }
                 });
             }
-
             public IEnumerable<string> GetRelativeFilePaths()
             {
-                foreach (var file in _directory.EnumerateFiles())
-                {
-                    if ((file.Attributes & FileAttributes.Hidden) != 0 || file.Name[0] == '.')
-                        continue;
-
-                    var filePath = file.FullName;
-                    var relPath = filePath.Substring(_directory.FullName.Length);
-                    yield return ResourcePath.FromRelativeSystemPath(relPath).ToRootedPath().ToString();
-                }
-
-                foreach (var subDir in _directory.EnumerateDirectories())
-                {
-                    if ((subDir.Attributes & FileAttributes.Hidden) != 0 || subDir.Name[0] == '.')
-                        continue;
-
-                    switch (subDir.Name)
-                    {
-                        case "logs":
-                            continue;
-                    }
-
-                    foreach (var relPath in GetRelativeFilePaths(subDir))
-                    {
-                        yield return relPath;
-                    }
-                }
+                return GetRelativeFilePaths(_directory);
             }
 
             private IEnumerable<string> GetRelativeFilePaths(DirectoryInfo dir)
@@ -184,8 +158,6 @@ namespace Robust.Shared.ContentPack
                     }
                 }
             }
-
-
         }
     }
 }

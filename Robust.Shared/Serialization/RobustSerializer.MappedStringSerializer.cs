@@ -574,22 +574,27 @@ namespace Robust.Shared.Serialization
 
             private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
 
+            private const int MappedNull = 1;
+            private const int UnmappedString = 1;
+            private const int FirstMappedIndexStart = 2;
+
+
             public static void WriteMappedString(Stream stream, string? value)
             {
                 if (value == null)
                 {
-                    WriteCompressedUnsignedInt(stream, 0);
+                    WriteCompressedUnsignedInt(stream, MappedNull);
                     return;
                 }
 
                 if (_StringMapping.TryGetValue(value, out var mapping))
                 {
-                    WriteCompressedUnsignedInt(stream, (uint) mapping + 2);
+                    WriteCompressedUnsignedInt(stream, (uint) mapping + FirstMappedIndexStart);
                     return;
                 }
 
                 // indicate not mapped
-                WriteCompressedUnsignedInt(stream, 1);
+                WriteCompressedUnsignedInt(stream, UnmappedString);
                 var buf = Encoding.UTF8.GetBytes(value);
                 WriteCompressedUnsignedInt(stream, (uint) buf.Length + 1);
                 stream.Write(buf);
@@ -603,13 +608,13 @@ namespace Robust.Shared.Serialization
                 }
 
                 var mapIndex = ReadCompressedUnsignedInt(stream);
-                if (mapIndex == 0)
+                if (mapIndex == MappedNull)
                 {
                     value = null;
                     return;
                 }
 
-                if (mapIndex == 1)
+                if (mapIndex == UnmappedString)
                 {
                     // not mapped
                     var length = ReadCompressedUnsignedInt(stream);
@@ -619,7 +624,7 @@ namespace Robust.Shared.Serialization
                     return;
                 }
 
-                value = _MappedStrings[(int) mapIndex - 2];
+                value = _MappedStrings[(int) mapIndex - FirstMappedIndexStart];
             }
 
             public static int WriteCompressedUnsignedInt(Stream stream, uint value)

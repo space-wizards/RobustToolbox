@@ -204,9 +204,14 @@ namespace Robust.Shared.Serialization
                 return ms.ToArray();
             }
 
-            private static void WriteStringPackage(Stream stream)
+            /// <summary>
+            ///     Strings longer than this will throw an exception and a better strategy will need to be employed to deal with large strings.
+            /// <summary>
+            public static int StringPackageMaximumBufferSize = 65536;
+
+            public static void WriteStringPackage(Stream stream)
             {
-                var buf = new byte[65536];
+                var buf = new byte[StringPackageMaximumBufferSize];
                 var sw = Stopwatch.StartNew();
                 var enc = Encoding.UTF8.GetEncoder();
 
@@ -215,14 +220,14 @@ namespace Robust.Shared.Serialization
                     var bytesWritten = WriteCompressedUnsignedInt(zs, (uint) MappedStrings.Count);
                     foreach (var str in MappedStrings)
                     {
-                        if (str.Length >= 65536)
+                        if (str.Length >= StringPackageMaximumBufferSize)
                         {
                             throw new NotImplementedException("Overly long string in strings package.");
                         }
 
                         var l = enc.GetBytes(str, buf, true);
 
-                        if (l >= 65536)
+                        if (l >= StringPackageMaximumBufferSize)
                         {
                             throw new NotImplementedException("Overly long string in strings package.");
                         }

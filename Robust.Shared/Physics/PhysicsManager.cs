@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics
 
             // octagonal surface normals; create 8 regions, a third of each of the 4 faces is flat
             // corners are treated as curved during resolution, making players feel somewhat pill shaped
-            const float faceToCornerBias = 1/3f; // higher is more square, higher is more pill shaped
+            const float faceToCornerBias = 1/3f; // higher is more square, lower is more pill shaped
             if (MathF.Abs(x) < faceToCornerBias) x = 0;
             if (MathF.Abs(y) < faceToCornerBias) y = 0;
 

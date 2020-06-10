@@ -398,6 +398,8 @@ namespace Robust.Shared.Serialization
                     return false;
                 }
 
+                if (str.Length >= MaxMappedStringSize) return false;
+
                 if (str.Length <= 3) return false;
 
                 str = str.Trim();
@@ -636,6 +638,8 @@ namespace Robust.Shared.Serialization
             private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
 
             private static readonly char[] TrimmableSymbolChars = new char[] {'.', '\\', '/',',','#','$','?','!','@','|','&','*','(',')','^','`','"','\'','`','~','[',']','{','}',':',';'};
+
+            private const int MaxMappedStringSize = 420;
 
             private const int MappedNull = 1;
 

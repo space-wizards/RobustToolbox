@@ -596,6 +596,7 @@ namespace Robust.Shared.Serialization
                 // indicate not mapped
                 WriteCompressedUnsignedInt(stream, UnmappedString);
                 var buf = Encoding.UTF8.GetBytes(value);
+                // TODO: is +1 here and -1 in decode actually needed?
                 WriteCompressedUnsignedInt(stream, (uint) buf.Length + 1);
                 stream.Write(buf);
             }
@@ -618,6 +619,7 @@ namespace Robust.Shared.Serialization
                 {
                     // not mapped
                     var length = ReadCompressedUnsignedInt(stream);
+                    // TODO: is -1 here and +1 in encode actually needed?
                     var buf = new byte[length - 1];
                     stream.Read(buf);
                     value = Encoding.UTF8.GetString(buf);

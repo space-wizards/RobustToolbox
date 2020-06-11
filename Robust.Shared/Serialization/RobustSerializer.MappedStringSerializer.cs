@@ -1145,6 +1145,11 @@ namespace Robust.Shared.Serialization
             /// <param name="value"> The (possibly null) string to write.</param>
             public static void WriteMappedString(Stream stream, string? value)
             {
+                if (!LockMappedStrings)
+                {
+                    throw new InvalidOperationException("Not performing unlocked string mapping.");
+                }
+                
                 if (value == null)
                 {
                     WriteCompressedUnsignedInt(stream, MappedNull);

@@ -109,6 +109,7 @@ namespace Robust.Shared.Serialization
             /// string mapping; the client checks that hash against any local
             /// caches; and if necessary, the client requests a new copy of the
             /// mapping from the server.
+            /// </remarks>
             /// <param name="net">
             /// The <see cref="INetManager"/> to perform the protocol steps over.
             /// </param>
@@ -117,124 +118,134 @@ namespace Robust.Shared.Serialization
             /// <seealso cref="MsgStrings"/>
             public static void NetworkInitialize(INetManager net)
             {
-                net.RegisterNetMessage<MsgServerHandshake>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgServerHandshake)}",
-                    (msg) =>
+                void HandleServerHandshake(MsgServerHandshake msg)
+                {
+                    if (net.IsServer)
                     {
-                        if (net.IsServer)
-                        {
-                            LogSzr.Error("Received server handshake on server.");
-                            return;
-                        }
+                        LogSzr.Error("Received server handshake on server.");
+                        return;
+                    }
 
-                        ServerHash = msg.Hash;
-                        LockMappedStrings = false;
+                    ServerHash = msg.Hash;
+                    LockMappedStrings = false;
 
-                        if (LockMappedStrings)
-                        {
-                            throw new InvalidOperationException("Mapped strings are locked.");
-                        }
-
-                        ClearStrings();
-
-                        var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
-
-                        LogSzr.Info($"Received server handshake with hash {hashStr}.");
-
-                        var fileName = CacheForHash(hashStr);
-                        if (!File.Exists(fileName))
-                        {
-                            LogSzr.Info($"No string cache for {hashStr}.");
-                            var handshake = net.CreateNetMessage<MsgClientHandshake>();
-                            LogSzr.Info("Asking server to send mapped strings.");
-                            handshake.NeedsStrings = true;
-                            msg.MsgChannel.SendMessage(handshake);
-                        }
-                        else
-                        {
-                            LogSzr.Info($"We had a cached string map that matches {hashStr}.");
-                            using var file = File.OpenRead(fileName);
-                            var added = LoadStrings(file);
-
-                            _stringMapHash = msg.Hash!;
-                            LogSzr.Info($"Read {added} strings from cache {hashStr}.");
-                            LockMappedStrings = true;
-                            LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
-                            // ok we're good now
-                            var channel = msg.MsgChannel;
-                            OnClientCompleteHandshake(net, channel);
-                        }
-                    });
-
-                net.RegisterNetMessage<MsgClientHandshake>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgClientHandshake)}",
-                    (msg) =>
+                    if (LockMappedStrings)
                     {
-                        if (net.IsClient)
-                        {
-                            LogSzr.Error("Received client handshake on client.");
-                            return;
-                        }
+                        throw new InvalidOperationException("Mapped strings are locked.");
+                    }
 
-                        LogSzr.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
+                    ClearStrings();
 
-                        if (!msg.NeedsStrings)
-                        {
-                            LogSzr.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
-                            IncompleteHandshakes.Remove(msg.MsgChannel);
-                            return;
-                        }
+                    var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
 
-                        var strings = msg.MsgChannel.NetPeer.CreateNetMessage<MsgStrings>();
-                        using (var ms = new MemoryStream())
-                        {
-                            WriteStringPackage(ms);
-                            ms.Position = 0;
-                            strings.Package = ms.ToArray();
-                            LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
-                        }
+                    LogSzr.Info($"Received server handshake with hash {hashStr}.");
 
-                        msg.MsgChannel.SendMessage(strings);
-                    });
-
-                net.RegisterNetMessage<MsgStrings>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgStrings)}",
-                    (msg) =>
+                    var fileName = CacheForHash(hashStr);
+                    if (!File.Exists(fileName))
                     {
-                        if (net.IsServer)
-                        {
-                            LogSzr.Error("Received strings from client.");
-                            return;
-                        }
+                        LogSzr.Info($"No string cache for {hashStr}.");
+                        var handshake = net.CreateNetMessage<MsgClientHandshake>();
+                        LogSzr.Info("Asking server to send mapped strings.");
+                        handshake.NeedsStrings = true;
+                        msg.MsgChannel.SendMessage(handshake);
+                    }
+                    else
+                    {
+                        LogSzr.Info($"We had a cached string map that matches {hashStr}.");
+                        using var file = File.OpenRead(fileName);
+                        var added = LoadStrings(file);
 
-                        LockMappedStrings = false;
-                        ClearStrings();
-                        DebugTools.Assert(msg.Package != null, "msg.Package != null");
-                        LoadStrings(new MemoryStream(msg.Package!, false));
-                        var checkHash = CalculateHash(msg.Package!);
-                        if (!checkHash.SequenceEqual(ServerHash))
-                        {
-                            throw new InvalidOperationException("Unable to verify strings package by hash." +
-                                $"\n{ConvertToBase64Url(checkHash)} vs. {ConvertToBase64Url(ServerHash)}");
-                        }
-
-                        _stringMapHash = ServerHash;
+                        _stringMapHash = msg.Hash!;
+                        LogSzr.Info($"Read {added} strings from cache {hashStr}.");
                         LockMappedStrings = true;
-
                         LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
-
-                        WriteStringCache();
-
                         // ok we're good now
                         var channel = msg.MsgChannel;
                         OnClientCompleteHandshake(net, channel);
-                    });
+                    }
+                }
+
+                void HandleClientHandshake(MsgClientHandshake msg)
+                {
+                    if (net.IsClient)
+                    {
+                        LogSzr.Error("Received client handshake on client.");
+                        return;
+                    }
+
+                    LogSzr.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
+
+                    if (!msg.NeedsStrings)
+                    {
+                        LogSzr.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
+                        IncompleteHandshakes.Remove(msg.MsgChannel);
+                        return;
+                    }
+
+                    // TODO: count and limit number of requests to send strings during handshake
+
+                    var strings = msg.MsgChannel.NetPeer.CreateNetMessage<MsgStrings>();
+                    using (var ms = new MemoryStream())
+                    {
+                        WriteStringPackage(ms);
+                        ms.Position = 0;
+                        strings.Package = ms.ToArray();
+                        LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
+                    }
+
+                    msg.MsgChannel.SendMessage(strings);
+                }
+
+                void HandleStringsMessage(MsgStrings msg)
+                {
+                    if (net.IsServer)
+                    {
+                        LogSzr.Error("Received strings from client.");
+                        return;
+                    }
+
+                    LockMappedStrings = false;
+                    ClearStrings();
+                    DebugTools.Assert(msg.Package != null, "msg.Package != null");
+                    LoadStrings(new MemoryStream(msg.Package!, false));
+                    var checkHash = CalculateHash(msg.Package!);
+                    if (!checkHash.SequenceEqual(ServerHash))
+                    {
+                        // TODO: retry sending MsgClientHandshake with NeedsStrings = false
+                        throw new InvalidOperationException("Unable to verify strings package by hash." + $"\n{ConvertToBase64Url(checkHash)} vs. {ConvertToBase64Url(ServerHash)}");
+                    }
+
+                    _stringMapHash = ServerHash;
+                    LockMappedStrings = true;
+
+                    LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
+
+                    WriteStringCache();
+
+                    // ok we're good now
+                    var channel = msg.MsgChannel;
+                    OnClientCompleteHandshake(net, channel);
+                }
+
+
+                net.RegisterNetMessage<MsgServerHandshake>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgServerHandshake)}",
+                    HandleServerHandshake);
+
+                net.RegisterNetMessage<MsgClientHandshake>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgClientHandshake)}",
+                    HandleClientHandshake);
+
+                net.RegisterNetMessage<MsgStrings>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgStrings)}",
+                    HandleStringsMessage);
             }
 
             /// <summary>
             /// Inform the server that the client has a complete copy of the
             /// mapping, and alert other code that the handshake is over.
             /// </summary>
+            /// <seealso cref="ClientHandshakeComplete"/>
             private static void OnClientCompleteHandshake(INetManager net, INetChannel channel)
             {
                 LogSzr.Info("Letting server know we're good to go.");
@@ -262,6 +273,9 @@ namespace Robust.Shared.Serialization
             private static string CacheForHash(string hashStr)
               => PathHelpers.ExecutableRelativeFile($"strings-{hashStr}");
 
+            /// <summary>
+            ///  Saves the string cache to a file based on it's hash.
+            /// </summary>
             private static void WriteStringCache()
             {
                 var hashStr = Convert.ToBase64String(MappedStringsHash);
@@ -280,6 +294,12 @@ namespace Robust.Shared.Serialization
                 ? _mappedStringsPackage ??= WriteStringPackage()
                 : throw new InvalidOperationException("Mapped strings must be locked.");
 
+            /// <summary>
+            /// Writes strings to a package and converts to an array of bytes.
+            /// </summary>
+            /// <remarks>
+            /// This is invoked by accessing <see cref="MappedStringsPackage"/> for the first time.
+            /// </remarks>
             private static byte[] WriteStringPackage()
             {
                 using var ms = new MemoryStream();
@@ -292,6 +312,11 @@ namespace Robust.Shared.Serialization
             /// <summary>
             public static int StringPackageMaximumBufferSize = 65536;
 
+            /// <summary>
+            /// Writes a strings package to a stream.
+            /// </summary>
+            /// <param name="stream">A writable stream.</param>
+            /// <exception cref="NotImplementedException">Overly long string in strings package.</exception>
             public static void WriteStringPackage(Stream stream)
             {
                 var buf = new byte[StringPackageMaximumBufferSize];
@@ -331,6 +356,16 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
             }
 
+            /// <summary>
+            /// Loads a strings package from a stream.
+            /// </summary>
+            /// <remarks>
+            /// Uses <see cref="ReadStringPackage"/> to extract strings and adds them to the mapping.
+            /// </remarks>
+            /// <param name="stream">A readable stream.</param>
+            /// <returns>The number of strings loaded.</returns>
+            /// <exception cref="InvalidOperationException">Mapped strings are locked, will not load.</exception>
+            /// <exception cref="InvalidDataException">Did not read all bytes in package!</exception>
             private static int LoadStrings(Stream stream)
             {
                 if (LockMappedStrings)
@@ -349,7 +384,7 @@ namespace Robust.Shared.Serialization
                 {
                     if (stream.Position != stream.Length)
                     {
-                        throw new Exception("Did not read all bytes in package!");
+                        throw new InvalidDataException("Did not read all bytes in package!");
                     }
                 }
 
@@ -357,6 +392,15 @@ namespace Robust.Shared.Serialization
                 return added;
             }
 
+            /// <summary>
+            /// Reads the contents of a strings package.
+            /// </summary>
+            /// <remarks>
+            /// Does not add strings to the current mapping.
+            /// </remarks>
+            /// <param name="stream">A readable stream.</param>
+            /// <returns>Strings from within the package.</returns>
+            /// <exception cref="InvalidDataException">Could not read the full length of string #N.</exception>
             private static IEnumerable<string> ReadStringPackage(Stream stream)
             {
                 var buf = ArrayPool<byte>.Shared.Rent(65536);
@@ -390,9 +434,18 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
             }
 
+            /// <summary>
+            /// Converts a byte array such as a hash to a Base64 representation that is URL safe.
+            /// </summary>
+            /// <param name="data"></param>
+            /// <returns>A base64url string form of the byte array.</returns>
             private static string ConvertToBase64Url(byte[]? data)
                 => data == null ? "" : ConvertToBase64Url(Convert.ToBase64String(data));
 
+            /// <summary>
+            /// Converts a a Base64 string to one that is URL safe.
+            /// </summary>
+            /// <returns>A base64url formed string.</returns>
             private static string ConvertToBase64Url(string b64Str)
             {
                 if (b64Str is null)
@@ -405,6 +458,11 @@ namespace Robust.Shared.Serialization
                 return b64Str;
             }
 
+            /// <summary>
+            /// Converts a URL-safe Base64 string into a byte array.
+            /// </summary>
+            /// <param name="s">A base64url formed string.</param>
+            /// <returns>The represented byte array.</returns>
             public static byte[] ConvertFromBase64Url(string s)
             {
                 var l = s.Length % 3;
@@ -454,7 +512,9 @@ namespace Robust.Shared.Serialization
             /// <remarks>
             /// If the string has multiple detectable subcomponents, such as a
             /// filepath, it may result in more than one string being added to
-            /// the mapping.
+            /// the mapping. As string parts are commonly sent as subsets or
+            /// scoped names, this increases the likelyhood of a successful
+            /// string mapping.
             /// </remarks>
             /// <returns>
             /// <c>true</c> if the string was added to the mapping for the first
@@ -795,11 +855,12 @@ namespace Robust.Shared.Serialization
             /// Add strings from the given enumeration to the mapping.
             /// </summary>
             /// <param name="strings">The strings to add.</param>
+            /// <param name="providerName">The source provider of the strings to be logged.</param>
             /// <exception cref="InvalidOperationException">
             /// Thrown if the mapping is locked.
             /// </exception>
             [MethodImpl(MethodImplOptions.Synchronized)]
-            public static void AddStrings(IEnumerable<string> strings)
+            public static void AddStrings(IEnumerable<string> strings, string providerName)
             {
                 var started = MappedStrings.Count;
                 foreach (var str in strings)
@@ -808,7 +869,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                LogSzr.Info($"Mapping {added} strings.");
+                LogSzr.Info($"Mapping {added} strings from {providerName}.");
             }
 
             private static byte[]? _stringMapHash;
@@ -837,6 +898,12 @@ namespace Robust.Shared.Serialization
                 return hash;
             }
 
+            /// <summary>
+            /// Creates a SHA512 hash of the given array of bytes.
+            /// </summary>
+            /// <param name="data">An array of bytes to be hashed.</param>
+            /// <returns>A 512-bit (64-byte) hash result as an array of bytes.</returns>
+            /// <exception cref="ArgumentNullException"></exception>
             private static byte[] CalculateHash(byte[] data)
             {
                 if (data is null)
@@ -849,21 +916,38 @@ namespace Robust.Shared.Serialization
                 return hash;
             }
 
+            /// <summary>
+            /// Implements <see cref="ITypeSerializer.Handles"/>.
+            /// Specifies that this implementation handles strings.
+            /// </summary>
             public bool Handles(Type type) => type == typeof(string);
 
+            /// <summary>
+            /// Implements <see cref="ITypeSerializer.GetSubtypes"/>.
+            /// </summary>
             public IEnumerable<Type> GetSubtypes(Type type) => Type.EmptyTypes;
 
+            /// <summary>
+            /// Implements <see cref="IStaticTypeSerializer.GetStaticWriter"/>.
+            /// </summary>
+            /// <seealso cref="WriteMappedString"/>
             public MethodInfo GetStaticWriter(Type type) => WriteMappedStringMethodInfo;
 
+            /// <summary>
+            /// Implements <see cref="IStaticTypeSerializer.GetStaticReader"/>.
+            /// </summary>
+            /// <seealso cref="ReadMappedString"/>
             public MethodInfo GetStaticReader(Type type) => ReadMappedStringMethodInfo;
 
             private delegate void WriteStringDelegate(Stream stream, string? value);
 
             private delegate void ReadStringDelegate(Stream stream, out string? value);
 
-            private static readonly MethodInfo WriteMappedStringMethodInfo = ((WriteStringDelegate) WriteMappedString).Method;
+            private static readonly MethodInfo WriteMappedStringMethodInfo
+                = ((WriteStringDelegate) WriteMappedString).Method;
 
-            private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
+            private static readonly MethodInfo ReadMappedStringMethodInfo
+                = ((ReadStringDelegate) ReadMappedString).Method;
 
             private static readonly char[] TrimmableSymbolChars =
             {
@@ -1031,6 +1115,7 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
+
             [UsedImplicitly]
             public static unsafe void WriteUnsignedInt(Stream stream, uint value)
             {
@@ -1047,6 +1132,9 @@ namespace Robust.Shared.Serialization
                 return value;
             }
 
+            /// <summary>
+            /// See <see cref="OnClientCompleteHandshake"/>.
+            /// </summary>
             public static event Action? ClientHandshakeComplete;
 
 

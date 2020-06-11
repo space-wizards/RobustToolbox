@@ -109,6 +109,33 @@ namespace Robust.Shared.Serialization
             /// string mapping; the client checks that hash against any local
             /// caches; and if necessary, the client requests a new copy of the
             /// mapping from the server.
+            ///
+            /// Uncached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; |
+            /// </code>
+            ///
+            /// Cached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Dont Need Strings -&gt; |
+            /// </code>
+            ///
+            /// Verification failure flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// + Hash Failed          |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; |
+            ///  </code>
+            ///
+            /// NOTE: Verification failure flow is currently not implemented.
             /// </remarks>
             /// <param name="net">
             /// The <see cref="INetManager"/> to perform the protocol steps over.

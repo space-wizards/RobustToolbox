@@ -143,129 +143,225 @@ namespace Robust.Shared.Serialization
             /// <seealso cref="MsgServerHandshake"/>
             /// <seealso cref="MsgClientHandshake"/>
             /// <seealso cref="MsgStrings"/>
+            /// <seealso cref="HandleServerHandshake"/>
+            /// <seealso cref="HandleClientHandshake"/>
+            /// <seealso cref="HandleStringsMessage"/>
+            /// <seealso cref="OnClientCompleteHandshake"/>
             public static void NetworkInitialize(INetManager net)
             {
-                void HandleServerHandshake(MsgServerHandshake msg)
+                net.RegisterNetMessage<MsgServerHandshake>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgServerHandshake)}",
+                    msg => HandleServerHandshake(net, msg));
+
+                net.RegisterNetMessage<MsgClientHandshake>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgClientHandshake)}",
+                    msg => HandleClientHandshake(net, msg));
+
+                net.RegisterNetMessage<MsgStrings>(
+                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgStrings)}",
+                    msg => HandleStringsMessage(net, msg));
+            }
+
+            /// <summary>
+            /// Handles the reception, verification of a strings package
+            /// and subsequent mapping of strings and initiator of
+            /// receipt response.
+            ///
+            /// Uncached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; | &lt;- you are here on client
+            ///
+            /// Verification failure flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// + Hash Failed          | &lt;- you are here on client
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; | &lt;- you are here on client
+            ///  </code>
+            ///
+            /// NOTE: Verification failure flow is currently not implemented.
+            /// </code>
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Unable to verify strings package by hash.</exception>
+            /// <seealso cref="NetworkInitialize"/>
+            private static void HandleStringsMessage(INetManager net, MsgStrings msg)
+            {
+                if (net.IsServer)
                 {
-                    if (net.IsServer)
-                    {
-                        LogSzr.Error("Received server handshake on server.");
-                        return;
-                    }
-
-                    ServerHash = msg.Hash;
-                    LockMappedStrings = false;
-
-                    if (LockMappedStrings)
-                    {
-                        throw new InvalidOperationException("Mapped strings are locked.");
-                    }
-
-                    ClearStrings();
-
-                    var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
-
-                    LogSzr.Info($"Received server handshake with hash {hashStr}.");
-
-                    var fileName = CacheForHash(hashStr);
-                    if (!File.Exists(fileName))
-                    {
-                        LogSzr.Info($"No string cache for {hashStr}.");
-                        var handshake = net.CreateNetMessage<MsgClientHandshake>();
-                        LogSzr.Info("Asking server to send mapped strings.");
-                        handshake.NeedsStrings = true;
-                        msg.MsgChannel.SendMessage(handshake);
-                    }
-                    else
-                    {
-                        LogSzr.Info($"We had a cached string map that matches {hashStr}.");
-                        using var file = File.OpenRead(fileName);
-                        var added = LoadStrings(file);
-
-                        _stringMapHash = msg.Hash!;
-                        LogSzr.Info($"Read {added} strings from cache {hashStr}.");
-                        LockMappedStrings = true;
-                        LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
-                        // ok we're good now
-                        var channel = msg.MsgChannel;
-                        OnClientCompleteHandshake(net, channel);
-                    }
+                    LogSzr.Error("Received strings from client.");
+                    return;
                 }
 
-                void HandleClientHandshake(MsgClientHandshake msg)
+                LockMappedStrings = false;
+                ClearStrings();
+                DebugTools.Assert(msg.Package != null, "msg.Package != null");
+                LoadStrings(new MemoryStream(msg.Package!, false));
+                var checkHash = CalculateHash(msg.Package!);
+                if (!checkHash.SequenceEqual(ServerHash))
                 {
-                    if (net.IsClient)
-                    {
-                        LogSzr.Error("Received client handshake on client.");
-                        return;
-                    }
-
-                    LogSzr.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
-
-                    if (!msg.NeedsStrings)
-                    {
-                        LogSzr.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
-                        IncompleteHandshakes.Remove(msg.MsgChannel);
-                        return;
-                    }
-
-                    // TODO: count and limit number of requests to send strings during handshake
-
-                    var strings = msg.MsgChannel.NetPeer.CreateNetMessage<MsgStrings>();
-                    using (var ms = new MemoryStream())
-                    {
-                        WriteStringPackage(ms);
-                        ms.Position = 0;
-                        strings.Package = ms.ToArray();
-                        LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
-                    }
-
-                    msg.MsgChannel.SendMessage(strings);
+                    // TODO: retry sending MsgClientHandshake with NeedsStrings = false
+                    throw new InvalidOperationException("Unable to verify strings package by hash." + $"\n{ConvertToBase64Url(checkHash)} vs. {ConvertToBase64Url(ServerHash)}");
                 }
 
-                void HandleStringsMessage(MsgStrings msg)
+                _stringMapHash = ServerHash;
+                LockMappedStrings = true;
+
+                LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
+
+                WriteStringCache();
+
+                // ok we're good now
+                var channel = msg.MsgChannel;
+                OnClientCompleteHandshake(net, channel);
+            }
+
+            /// <summary>
+            /// Interpret a client's handshake, either sending a package
+            /// of strings or completing the handshake.
+            ///
+            /// Uncached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; | &lt;- you are here on server
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; | &lt;- you are here on server
+            /// </code>
+            ///
+            /// Cached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Dont Need Strings -&gt; | &lt;- you are here on server
+            /// </code>
+            ///
+            /// Verification failure flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash |
+            /// | Need Strings ------&gt; | &lt;- you are here on server
+            /// | &lt;----------- Strings |
+            /// + Hash Failed          |
+            /// | Need Strings ------&gt; | &lt;- you are here on server
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; |
+            ///  </code>
+            ///
+            /// NOTE: Verification failure flow is currently not implemented.
+            /// </summary>
+            /// <seealso cref="NetworkInitialize"/>
+            private static void HandleClientHandshake(INetManager net, MsgClientHandshake msg)
+            {
+                if (net.IsClient)
                 {
-                    if (net.IsServer)
-                    {
-                        LogSzr.Error("Received strings from client.");
-                        return;
-                    }
+                    LogSzr.Error("Received client handshake on client.");
+                    return;
+                }
 
-                    LockMappedStrings = false;
-                    ClearStrings();
-                    DebugTools.Assert(msg.Package != null, "msg.Package != null");
-                    LoadStrings(new MemoryStream(msg.Package!, false));
-                    var checkHash = CalculateHash(msg.Package!);
-                    if (!checkHash.SequenceEqual(ServerHash))
-                    {
-                        // TODO: retry sending MsgClientHandshake with NeedsStrings = false
-                        throw new InvalidOperationException("Unable to verify strings package by hash." + $"\n{ConvertToBase64Url(checkHash)} vs. {ConvertToBase64Url(ServerHash)}");
-                    }
+                LogSzr.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
 
-                    _stringMapHash = ServerHash;
+                if (!msg.NeedsStrings)
+                {
+                    LogSzr.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
+                    IncompleteHandshakes.Remove(msg.MsgChannel);
+                    return;
+                }
+
+                // TODO: count and limit number of requests to send strings during handshake
+
+                var strings = msg.MsgChannel.NetPeer.CreateNetMessage<MsgStrings>();
+                using (var ms = new MemoryStream())
+                {
+                    WriteStringPackage(ms);
+                    ms.Position = 0;
+                    strings.Package = ms.ToArray();
+                    LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
+                }
+
+                msg.MsgChannel.SendMessage(strings);
+            }
+
+            /// <summary>
+            /// Interpret a server's handshake, either requesting a package
+            /// of strings or completing the handshake.
+            ///
+            /// Uncached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash | &lt;- you are here on client
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; |
+            /// </code>
+            ///
+            /// Cached flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash | &lt;- you are here on client
+            /// | Dont Need Strings -&gt; |
+            /// </code>
+            ///
+            /// Verification failure flow: <code>
+            /// Client      |      Server
+            /// | &lt;-------------- Hash | &lt;- you are here on client
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// + Hash Failed          |
+            /// | Need Strings ------&gt; |
+            /// | &lt;----------- Strings |
+            /// | Dont Need Strings -&gt; |
+            ///  </code>
+            ///
+            /// NOTE: Verification failure flow is currently not implemented.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">Mapped strings are locked.</exception>
+            /// <seealso cref="NetworkInitialize"/>
+            private static void HandleServerHandshake(INetManager net, MsgServerHandshake msg)
+            {
+                if (net.IsServer)
+                {
+                    LogSzr.Error("Received server handshake on server.");
+                    return;
+                }
+
+                ServerHash = msg.Hash;
+                LockMappedStrings = false;
+
+                if (LockMappedStrings)
+                {
+                    throw new InvalidOperationException("Mapped strings are locked.");
+                }
+
+                ClearStrings();
+
+                var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
+
+                LogSzr.Info($"Received server handshake with hash {hashStr}.");
+
+                var fileName = CacheForHash(hashStr);
+                if (!File.Exists(fileName))
+                {
+                    LogSzr.Info($"No string cache for {hashStr}.");
+                    var handshake = net.CreateNetMessage<MsgClientHandshake>();
+                    LogSzr.Info("Asking server to send mapped strings.");
+                    handshake.NeedsStrings = true;
+                    msg.MsgChannel.SendMessage(handshake);
+                }
+                else
+                {
+                    LogSzr.Info($"We had a cached string map that matches {hashStr}.");
+                    using var file = File.OpenRead(fileName);
+                    var added = LoadStrings(file);
+
+                    _stringMapHash = msg.Hash!;
+                    LogSzr.Info($"Read {added} strings from cache {hashStr}.");
                     LockMappedStrings = true;
-
                     LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
-
-                    WriteStringCache();
-
                     // ok we're good now
                     var channel = msg.MsgChannel;
                     OnClientCompleteHandshake(net, channel);
                 }
-
-
-                net.RegisterNetMessage<MsgServerHandshake>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgServerHandshake)}",
-                    HandleServerHandshake);
-
-                net.RegisterNetMessage<MsgClientHandshake>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgClientHandshake)}",
-                    HandleClientHandshake);
-
-                net.RegisterNetMessage<MsgStrings>(
-                    $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgStrings)}",
-                    HandleStringsMessage);
             }
 
             /// <summary>
@@ -273,6 +369,7 @@ namespace Robust.Shared.Serialization
             /// mapping, and alert other code that the handshake is over.
             /// </summary>
             /// <seealso cref="ClientHandshakeComplete"/>
+            /// <seealso cref="NetworkInitialize"/>
             private static void OnClientCompleteHandshake(INetManager net, INetChannel channel)
             {
                 LogSzr.Info("Letting server know we're good to go.");
@@ -298,7 +395,7 @@ namespace Robust.Shared.Serialization
             /// was made for the given hash.
             /// </returns>
             private static string CacheForHash(string hashStr)
-              => PathHelpers.ExecutableRelativeFile($"strings-{hashStr}");
+                => PathHelpers.ExecutableRelativeFile($"strings-{hashStr}");
 
             /// <summary>
             ///  Saves the string cache to a file based on it's hash.
@@ -560,6 +657,7 @@ namespace Robust.Shared.Serialization
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return false;
                     }
+
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
@@ -697,6 +795,7 @@ namespace Robust.Shared.Serialization
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
                     }
+
                     throw new InvalidOperationException("Mapped strings are locked, will not add .");
                 }
 
@@ -755,6 +854,7 @@ namespace Robust.Shared.Serialization
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
                     }
+
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
@@ -817,6 +917,7 @@ namespace Robust.Shared.Serialization
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
                     }
+
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
@@ -1067,7 +1168,6 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Not performing unlocked string mapping.");
                 }
 
-
                 var mapIndex = ReadCompressedUnsignedInt(stream, out _);
                 if (mapIndex == MappedNull)
                 {
@@ -1116,6 +1216,7 @@ namespace Robust.Shared.Serialization
                 stream.WriteByte((byte) value);
                 return length;
             }
+
             public static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
             {
                 byteCount = 0;
@@ -1142,7 +1243,6 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
-
             [UsedImplicitly]
             public static unsafe void WriteUnsignedInt(Stream stream, uint value)
             {
@@ -1163,7 +1263,6 @@ namespace Robust.Shared.Serialization
             /// See <see cref="OnClientCompleteHandshake"/>.
             /// </summary>
             public static event Action? ClientHandshakeComplete;
-
 
         }
 

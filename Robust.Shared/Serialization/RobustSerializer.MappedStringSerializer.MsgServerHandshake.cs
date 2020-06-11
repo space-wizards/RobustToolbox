@@ -19,6 +19,7 @@ namespace Robust.Shared.Serialization
             /// the current string mapping, so the client can check if it has
             /// a local copy.
             /// </summary>
+            /// <seealso cref="NetworkInitialize"/>
             [UsedImplicitly]
             private class MsgServerHandshake : NetMessage
             {

@@ -19,6 +19,7 @@ namespace Robust.Shared.Serialization
             /// server after the client requests an updated copy of the mapping.
             /// Contains the updated string mapping.
             /// </summary>
+            /// <seealso cref="NetworkInitialize"/>
             [UsedImplicitly]
             private class MsgStrings : NetMessage
             {

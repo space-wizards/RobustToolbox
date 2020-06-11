@@ -23,6 +23,7 @@ namespace Robust.Shared.Serialization
             /// <see cref="NeedsStrings"/> is <c>false</c>, otherwise it will be
             /// <c>true</c>.
             /// </remarks>
+            /// <seealso cref="NetworkInitialize"/>
             [UsedImplicitly]
             private class MsgClientHandshake : NetMessage
             {

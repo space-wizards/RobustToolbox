@@ -13,6 +13,12 @@ namespace Robust.Shared.Serialization
         public partial class MappedStringSerializer
         {
 
+            /// <summary>
+            /// The server part of the string-exchange handshake. Sent as the
+            /// first message in the handshake. Tells the client the hash of
+            /// the current string mapping, so the client can check if it has
+            /// a local copy.
+            /// </summary>
             [UsedImplicitly]
             private class MsgServerHandshake : NetMessage
             {
@@ -22,6 +28,9 @@ namespace Robust.Shared.Serialization
                 {
                 }
 
+                /// <value>
+                /// The hash of the current string mapping held by the server.
+                /// </value>
                 public byte[]? Hash { get; set; }
 
                 public override void ReadFromBuffer(NetIncomingMessage buffer)

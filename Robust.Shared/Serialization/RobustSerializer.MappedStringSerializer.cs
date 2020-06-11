@@ -32,6 +32,24 @@ namespace Robust.Shared.Serialization
     public partial class RobustSerializer
     {
 
+        /// <summary>
+        /// Serializer which manages a mapping of pre-loaded strings to constant
+        /// values, for message compression. The mapping is shared between the
+        /// server and client.
+        /// </summary>
+        /// <remarks>
+        /// Strings are long and expensive to send over the wire, and lots of
+        /// strings involved in messages are sent repeatedly between the server
+        /// and client - such as filenames, icon states, constant strings, etc.
+        ///
+        /// To compress these strings, we use a constant string mapping, decided
+        /// by the server when it starts up, that associates strings with a
+        /// fixed value. The mapping is shared with clients when they connect.
+        ///
+        /// When sending these strings over the wire, the serializer can then
+        /// send the constant value instead - and at the other end, the
+        /// serializer can use the same mapping to recover the original string.
+        /// </remarks>
         public partial class MappedStringSerializer : IStaticTypeSerializer
         {
 
@@ -41,6 +59,17 @@ namespace Robust.Shared.Serialization
 
             private static readonly HashSet<INetChannel> IncompleteHandshakes = new HashSet<INetChannel>();
 
+            /// <summary>
+            /// Starts the handshake from the server end of the given channel,
+            /// sending a <see cref="MsgServerHandshake"/>.
+            /// </summary>
+            /// <param name="channel">The network channel to perform the handshake over.</param>
+            /// <remarks>
+            /// Locks the string mapping if this is the first time the server is
+            /// performing the handshake.
+            /// </remarks>
+            /// <seealso cref="MsgClientHandshake"/>
+            /// <seealso cref="MsgStrings"/>
             public static async Task Handshake(INetChannel channel)
             {
                 var net = channel.NetPeer;
@@ -70,6 +99,22 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Completed handshake with {channel.RemoteEndPoint.Address}.");
             }
 
+            /// <summary>
+            /// Performs the setup so that the serializer can perform the string-
+            /// exchange protocol.
+            /// </summary>
+            /// <remarks>
+            /// The string-exchange protocol is started by the server when the
+            /// client first connects. The server sends the client a hash of the
+            /// string mapping; the client checks that hash against any local
+            /// caches; and if necessary, the client requests a new copy of the
+            /// mapping from the server.
+            /// <param name="net">
+            /// The <see cref="INetManager"/> to perform the protocol steps over.
+            /// </param>
+            /// <seealso cref="MsgServerHandshake"/>
+            /// <seealso cref="MsgClientHandshake"/>
+            /// <seealso cref="MsgStrings"/>
             public static void NetworkInitialize(INetManager net)
             {
                 net.RegisterNetMessage<MsgServerHandshake>(
@@ -96,7 +141,7 @@ namespace Robust.Shared.Serialization
 
                         LogSzr.Info($"Received server handshake with hash {hashStr}.");
 
-                        var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
+                        var fileName = CacheForHash(hashStr);
                         if (!File.Exists(fileName))
                         {
                             LogSzr.Info($"No string cache for {hashStr}.");
@@ -186,6 +231,10 @@ namespace Robust.Shared.Serialization
                     });
             }
 
+            /// <summary>
+            /// Inform the server that the client has a complete copy of the
+            /// mapping, and alert other code that the handshake is over.
+            /// </summary>
             private static void OnClientCompleteHandshake(INetManager net, INetChannel channel)
             {
                 LogSzr.Info("Letting server know we're good to go.");
@@ -201,12 +250,24 @@ namespace Robust.Shared.Serialization
                 ClientHandshakeComplete?.Invoke();
             }
 
+            /// <summary>
+            /// Gets the cache file associated with the given hash.
+            /// </summary>
+            /// <param name="hashStr">The hash to look up the cache for.</param>
+            /// <returns>
+            /// The filename where the cache for the given hash would be. The
+            /// file itself may or may not exist. If it does not exist, no cache
+            /// was made for the given hash.
+            /// </returns>
+            private static string CacheForHash(string hashStr)
+              => PathHelpers.ExecutableRelativeFile($"strings-{hashStr}");
+
             private static void WriteStringCache()
             {
                 var hashStr = Convert.ToBase64String(MappedStringsHash);
                 hashStr = ConvertToBase64Url(hashStr);
 
-                var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
+                var fileName = CacheForHash(hashStr);
                 using var file = File.OpenWrite(fileName);
                 WriteStringPackage(file);
 
@@ -366,6 +427,19 @@ namespace Robust.Shared.Serialization
 
             public static IReadOnlyList<String> MappedStrings => new ReadOnlyCollection<string>(_MappedStrings);
 
+            /// <summary>
+            /// Whether the string mapping is decided, and cannot be changed.
+            /// </summary>
+            /// <value>
+            /// <para>
+            /// While <c>false</c>, strings can be added to the mapping, but
+            /// it cannot be saved to a cache.
+            /// </para>
+            /// <para>
+            /// While <c>true</c>, the mapping cannot be modified, but can be
+            /// shared between the server and client and saved to a cache.
+            /// </para>
+            /// </value>
             public static bool LockMappedStrings { get; set; }
 
             private static readonly Regex RxSymbolSplitter
@@ -374,6 +448,22 @@ namespace Robust.Shared.Serialization
                     RegexOptions.CultureInvariant | RegexOptions.Compiled
                 );
 
+            /// <summary>
+            /// Add a string to the constant mapping.
+            /// </summary>
+            /// <remarks>
+            /// If the string has multiple detectable subcomponents, such as a
+            /// filepath, it may result in more than one string being added to
+            /// the mapping.
+            /// </remarks>
+            /// <returns>
+            /// <c>true</c> if the string was added to the mapping for the first
+            /// time, <c>false</c> otherwise.
+            /// </returns>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked, and strings cannot be added, or
+            /// if the string is not normalized (<see cref="String.IsNormalized()"/>).
+            /// </exception>
             public static bool AddString(string str)
             {
                 if (LockMappedStrings)
@@ -403,15 +493,15 @@ namespace Robust.Shared.Serialization
 
                 if (str.Length >= MaxMappedStringSize) return false;
 
-                if (str.Length <= 3) return false;
+                if (str.Length <= MinMappedStringSize) return false;
 
                 str = str.Trim();
 
-                if (str.Length <= 3) return false;
+                if (str.Length <= MinMappedStringSize) return false;
 
                 str = str.Replace(Environment.NewLine, "\n");
 
-                if (str.Length <= 3) return false;
+                if (str.Length <= MinMappedStringSize) return false;
 
                 var symTrimmedStr = str.Trim(TrimmableSymbolChars);
                 if (symTrimmedStr != str)
@@ -502,6 +592,14 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
+            /// <summary>
+            /// Add the constant strings from an <see cref="Assembly"/> to the
+            /// mapping.
+            /// </summary>
+            /// <param name="asm">The assembly from which to collect constant strings.</param>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked.
+            /// </exception>
             [MethodImpl(MethodImplOptions.Synchronized)]
             public static unsafe void AddStrings(Assembly asm)
             {
@@ -549,6 +647,17 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
             }
 
+            /// <summary>
+            /// Add strings from the given <see cref="YamlStream"/> to the mapping.
+            /// </summary>
+            /// <remarks>
+            /// Strings are taken from YAML anchors, tags, and leaf nodes.
+            /// </remarks>
+            /// <param name="yaml">The YAML to collect strings from.</param>
+            /// <param name="name">The stream name. Only used for logging.</param>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked.
+            /// </exception>
             [MethodImpl(MethodImplOptions.Synchronized)]
             public static void AddStrings(YamlStream yaml, string name)
             {
@@ -601,7 +710,17 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
             }
 
-
+            /// <summary>
+            /// Add strings from the given <see cref="JObject"/> to the mapping.
+            /// </summary>
+            /// <remarks>
+            /// Strings are taken from JSON property names and string nodes.
+            /// </remarks>
+            /// <param name="obj">The JSON to collect strings from.</param>
+            /// <param name="name">The stream name. Only used for logging.</param>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked.
+            /// </exception>
             public static void AddStrings(JObject obj, string name)
             {
                 if (LockMappedStrings)
@@ -654,6 +773,12 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
             }
 
+            /// <summary>
+            /// Remove all strings from the mapping, completely resetting it.
+            /// </summary>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked.
+            /// </exception>
             public static void ClearStrings()
             {
                 if (LockMappedStrings)
@@ -666,6 +791,13 @@ namespace Robust.Shared.Serialization
                 _stringMapHash = null;
             }
 
+            /// <summary>
+            /// Add strings from the given enumeration to the mapping.
+            /// </summary>
+            /// <param name="strings">The strings to add.</param>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is locked.
+            /// </exception>
             [MethodImpl(MethodImplOptions.Synchronized)]
             public static void AddStrings(IEnumerable<string> strings)
             {
@@ -681,6 +813,12 @@ namespace Robust.Shared.Serialization
 
             private static byte[]? _stringMapHash;
 
+            /// <value>
+            /// The hash of the string mapping.
+            /// </value>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is not locked.
+            /// </exception>
             public static byte[] MappedStringsHash => _stringMapHash ??= CalculateMappedStringsHash();
 
             private static byte[] CalculateMappedStringsHash()
@@ -732,14 +870,48 @@ namespace Robust.Shared.Serialization
                 '.', '\\', '/', ',', '#', '$', '?', '!', '@', '|', '&', '*', '(', ')', '^', '`', '"', '\'', '`', '~', '[', ']', '{', '}', ':', ';', '-'
             };
 
+            /// <summary>
+            /// The shortest a string can be in order to be inserted in the mapping.
+            /// </summary>
+            /// <remarks>
+            /// Strings below a certain length aren't worth compressing.
+            /// </remarks>
+            private const int MinMappedStringSize = 3;
+
+            /// <summary>
+            /// The longest a string can be in order to be inserted in the mapping.
+            /// </summary>
             private const int MaxMappedStringSize = 420;
 
+            /// <summary>
+            /// The special value corresponding to a <c>null</c> string in the
+            /// encoding.
+            /// </summary>
             private const int MappedNull = 0;
 
+            /// <summary>
+            /// The special value corresponding to a string which was not mapped.
+            /// This is followed by the bytes of the unmapped string.
+            /// </summary>
             private const int UnmappedString = 1;
 
+            /// <summary>
+            /// The first non-special value, used for encoding mapped strings.
+            /// </summary>
+            /// <remarks>
+            /// Since previous values are taken by <see cref="MappedNull"/> and
+            /// <see cref="UnmappedString"/>, this value is used to encode
+            /// mapped strings at an offset - in the encoding, a value
+            /// <c>>= FirstMappedIndexStart</c> represents the string with
+            /// mapping of that value <c> - FirstMappedIndexStart</c>.
+            /// </remarks>
             private const int FirstMappedIndexStart = 2;
 
+            /// <summary>
+            /// Write the encoding of the given string to the stream.
+            /// </summary>
+            /// <param name="stream">The stream to write to.</param>
+            /// <param name="value"> The (possibly null) string to write.</param>
             public static void WriteMappedString(Stream stream, string? value)
             {
                 if (value == null)
@@ -769,6 +941,14 @@ namespace Robust.Shared.Serialization
                 stream.Write(buf);
             }
 
+            /// <summary>
+            /// Try to read a string from the given stream..
+            /// </summary>
+            /// <param name="stream">The stream to read from.</param>
+            /// <param name="value"> The (possibly null) string read.</param>
+            /// <exception cref="InvalidOperationException">
+            /// Thrown if the mapping is not locked.
+            /// </exception>
             public static void ReadMappedString(Stream stream, out string? value)
             {
                 if (!LockMappedStrings)

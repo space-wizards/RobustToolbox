@@ -14,6 +14,11 @@ namespace Robust.Shared.Serialization
         public partial class MappedStringSerializer
         {
 
+            /// <summary>
+            /// The final part of the string-exchange handshake. Sent by the
+            /// server after the client requests an updated copy of the mapping.
+            /// Contains the updated string mapping.
+            /// </summary>
             [UsedImplicitly]
             private class MsgStrings : NetMessage
             {
@@ -23,6 +28,9 @@ namespace Robust.Shared.Serialization
                 {
                 }
 
+                /// <value>
+                /// The raw bytes of the string mapping held by the server.
+                /// </value>
                 public byte[]? Package { get; set; }
 
                 public override void ReadFromBuffer(NetIncomingMessage buffer)

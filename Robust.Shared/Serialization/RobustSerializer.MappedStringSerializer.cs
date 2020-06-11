@@ -53,7 +53,7 @@ namespace Robust.Shared.Serialization
         public partial class MappedStringSerializer : IStaticTypeSerializer
         {
 
-            private static readonly INetManager NetManager = IoCManager.Resolve<INetManager>();
+            private static INetManager? _net;
 
             private static readonly ISawmill LogSzr = Logger.GetSawmill("szr");
 
@@ -149,6 +149,8 @@ namespace Robust.Shared.Serialization
             /// <seealso cref="OnClientCompleteHandshake"/>
             public static void NetworkInitialize(INetManager net)
             {
+                _net = net;
+
                 net.RegisterNetMessage<MsgServerHandshake>(
                     $"{nameof(RobustSerializer)}.{nameof(MappedStringSerializer)}.{nameof(MsgServerHandshake)}",
                     msg => HandleServerHandshake(net, msg));
@@ -652,7 +654,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (NetManager.IsClient)
+                    if (_net.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return false;
@@ -790,7 +792,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (NetManager.IsClient)
+                    if (_net.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
@@ -849,7 +851,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (NetManager.IsClient)
+                    if (_net.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
@@ -912,7 +914,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (NetManager.IsClient)
+                    if (_net.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;

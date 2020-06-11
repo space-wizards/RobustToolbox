@@ -1147,9 +1147,9 @@ namespace Robust.Shared.Serialization
             {
                 if (!LockMappedStrings)
                 {
-                    throw new InvalidOperationException("Not performing unlocked string mapping.");
+                    LogSzr.Warning("Performing unlocked string mapping.");
                 }
-                
+
                 if (value == null)
                 {
                     WriteCompressedUnsignedInt(stream, MappedNull);

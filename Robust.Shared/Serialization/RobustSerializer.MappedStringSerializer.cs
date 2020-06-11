@@ -772,7 +772,7 @@ namespace Robust.Shared.Serialization
                 // indicate not mapped
                 WriteCompressedUnsignedInt(stream, UnmappedString);
                 var buf = Encoding.UTF8.GetBytes(value);
-                Logger.DebugS("szr", $"Encoded unmapped string: {value}");
+                //Logger.DebugS("szr", $"Encoded unmapped string: {value}");
                 WriteCompressedUnsignedInt(stream, (uint) buf.Length);
                 stream.Write(buf);
             }
@@ -799,7 +799,7 @@ namespace Robust.Shared.Serialization
                     var buf = new byte[length];
                     stream.Read(buf);
                     value = Encoding.UTF8.GetString(buf);
-                    Logger.DebugS("szr", $"Decoded unmapped string: {value}");
+                    //Logger.DebugS("szr", $"Decoded unmapped string: {value}");
                     return;
                 }
 

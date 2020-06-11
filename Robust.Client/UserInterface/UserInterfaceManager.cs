@@ -599,6 +599,8 @@ namespace Robust.Client.UserInterface
             }
 
             control.DrawInternal(renderHandle);
+            handle.UseShader(null);
+
             foreach (var child in control.Children)
             {
                 _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);

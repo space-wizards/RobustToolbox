@@ -9,11 +9,15 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using NetSerializer;
+using Newtonsoft.Json.Linq;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
@@ -31,7 +35,9 @@ namespace Robust.Shared.Serialization
         public partial class MappedStringSerializer : IStaticTypeSerializer
         {
 
-            private static readonly ISawmill _sawmill = Logger.GetSawmill("szr");
+            private static readonly INetManager NetManager = IoCManager.Resolve<INetManager>();
+
+            private static readonly ISawmill LogSzr = Logger.GetSawmill("szr");
 
             private static readonly HashSet<INetChannel> IncompleteHandshakes = new HashSet<INetChannel>();
 
@@ -47,7 +53,7 @@ namespace Robust.Shared.Serialization
                 if (!LockMappedStrings)
                 {
                     LockMappedStrings = true;
-                    _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
+                    LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
                 }
 
                 IncompleteHandshakes.Add(channel);
@@ -61,7 +67,7 @@ namespace Robust.Shared.Serialization
                     await Task.Delay(1);
                 }
 
-                _sawmill.Info($"Completed handshake with {channel.RemoteEndPoint.Address}.");
+                LogSzr.Info($"Completed handshake with {channel.RemoteEndPoint.Address}.");
             }
 
             public static void NetworkInitialize(INetManager net)
@@ -72,7 +78,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsServer)
                         {
-                            _sawmill.Error("Received server handshake on server.");
+                            LogSzr.Error("Received server handshake on server.");
                             return;
                         }
 
@@ -81,13 +87,13 @@ namespace Robust.Shared.Serialization
 
                         var cached = ReadStringCache(msg.Hash!, out var hashStr);
 
-                        _sawmill.Info($"Received server handshake with hash {hashStr}.");
+                        LogSzr.Info($"Received server handshake with hash {hashStr}.");
 
                         if (cached)
                         {
-                            _sawmill.Info($"We had a cached string map that matches {hashStr}.");
+                            LogSzr.Info($"We had a cached string map that matches {hashStr}.");
                             LockMappedStrings = true;
-                            _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
+                            LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
                             // ok we're good now
                             var channel = msg.MsgChannel;
                             OnClientCompleteHandshake(net, channel);
@@ -95,7 +101,7 @@ namespace Robust.Shared.Serialization
                         else
                         {
                             var handshake = net.CreateNetMessage<MsgClientHandshake>();
-                            _sawmill.Info("Asking server to send mapped strings.");
+                            LogSzr.Info("Asking server to send mapped strings.");
                             handshake.NeedsStrings = true;
                             msg.MsgChannel.SendMessage(handshake);
                         }
@@ -107,15 +113,15 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsClient)
                         {
-                            _sawmill.Error("Received client handshake on client.");
+                            LogSzr.Error("Received client handshake on client.");
                             return;
                         }
 
-                        _sawmill.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
+                        LogSzr.Info($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
 
                         if (!msg.NeedsStrings)
                         {
-                            _sawmill.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
+                            LogSzr.Info($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
                             IncompleteHandshakes.Remove(msg.MsgChannel);
                             return;
                         }
@@ -126,7 +132,7 @@ namespace Robust.Shared.Serialization
                             WriteStringPackage(ms);
                             ms.Position = 0;
                             strings.Package = ms.ToArray();
-                            _sawmill.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
+                            LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
                         }
 
                         msg.MsgChannel.SendMessage(strings);
@@ -138,7 +144,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (net.IsServer)
                         {
-                            _sawmill.Error("Received strings from client.");
+                            LogSzr.Error("Received strings from client.");
                             return;
                         }
 
@@ -156,7 +162,7 @@ namespace Robust.Shared.Serialization
                         _stringMapHash = ServerHash;
                         LockMappedStrings = true;
 
-                        _sawmill.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
+                        LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
 
                         WriteStringCache();
 
@@ -168,14 +174,14 @@ namespace Robust.Shared.Serialization
 
             private static void OnClientCompleteHandshake(INetManager net, INetChannel channel)
             {
-                _sawmill.Info("Letting server know we're good to go.");
+                LogSzr.Info("Letting server know we're good to go.");
                 var handshake = net.CreateNetMessage<MsgClientHandshake>();
                 handshake.NeedsStrings = false;
                 channel.SendMessage(handshake);
 
                 if (ClientHandshakeComplete == null)
                 {
-                    _sawmill.Warning("There's no handler attached to ClientHandshakeComplete.");
+                    LogSzr.Warning("There's no handler attached to ClientHandshakeComplete.");
                 }
 
                 ClientHandshakeComplete?.Invoke();
@@ -190,7 +196,7 @@ namespace Robust.Shared.Serialization
                 using var file = File.OpenWrite(fileName);
                 WriteStringPackage(file);
 
-                _sawmill.Info($"Wrote string cache {hashStr}.");
+                LogSzr.Info($"Wrote string cache {hashStr}.");
             }
 
             private static byte[]? _mappedStringsPackage;
@@ -247,7 +253,7 @@ namespace Robust.Shared.Serialization
                     zs.Flush();
                 }
 
-                _sawmill.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
+                LogSzr.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
             }
 
             private static bool ReadStringCache(byte[] hash, out string hashStr)
@@ -265,7 +271,7 @@ namespace Robust.Shared.Serialization
                 var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
                 if (!File.Exists(fileName))
                 {
-                    _sawmill.Info($"No string cache for {hashStr}.");
+                    LogSzr.Info($"No string cache for {hashStr}.");
                     return false;
                 }
 
@@ -273,7 +279,7 @@ namespace Robust.Shared.Serialization
                 var added = LoadStrings(file);
 
                 _stringMapHash = hash;
-                _sawmill.Info($"Read {added} strings from cache {hashStr}.");
+                LogSzr.Info($"Read {added} strings from cache {hashStr}.");
                 return true;
             }
 
@@ -281,7 +287,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                    throw new InvalidOperationException("Mapped strings are locked, will not load.");
                 }
 
                 var started = MappedStrings.Count;
@@ -333,7 +339,7 @@ namespace Robust.Shared.Serialization
                     throw new InvalidDataException("Could not verify package was read correctly.");
                 }
 
-                _sawmill.Info($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
+                LogSzr.Info($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
             }
 
             private static string ConvertToBase64Url(byte[]? data)
@@ -372,7 +378,7 @@ namespace Robust.Shared.Serialization
 
             private static readonly Regex RxSymbolSplitter
                 = new Regex(
-                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])|(?<=[A-Za-z0-9])(?=_)",
+                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])|(?<=[A-Za-z0-9])(?=_)|(?=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-])|(?<=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-])",
                     RegexOptions.CultureInvariant | RegexOptions.Compiled
                 );
 
@@ -380,6 +386,11 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
+                    if (NetManager.IsClient)
+                    {
+                        //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                        return false;
+                    }
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
@@ -410,7 +421,7 @@ namespace Robust.Shared.Serialization
 
                 if (str.Length <= 3) return false;
 
-                var symTrimmedStr = str.Trim( TrimmableSymbolChars );
+                var symTrimmedStr = str.Trim(TrimmableSymbolChars);
                 if (symTrimmedStr != str)
                 {
                     AddString(symTrimmedStr);
@@ -424,9 +435,8 @@ namespace Robust.Shared.Serialization
                         for (var l = 1; l <= parts.Length - i; ++l)
                         {
                             var subStr = string.Join('/', parts.Skip(i).Take(l));
-                            if (!_StringMapping.ContainsKey(subStr))
+                            if (_StringMapping.TryAdd(subStr, _MappedStrings.Count))
                             {
-                                _StringMapping[subStr] = _MappedStrings.Count;
                                 _MappedStrings.Add(subStr);
                             }
 
@@ -441,13 +451,11 @@ namespace Robust.Shared.Serialization
                                 for (var sl = 1; sl <= subParts.Length - si; ++sl)
                                 {
                                     var subSubStr = string.Join('.', subParts.Skip(si).Take(sl));
-                                    if (_StringMapping.ContainsKey(subSubStr))
+                                    // ReSharper disable once InvertIf
+                                    if (_StringMapping.TryAdd(subSubStr, _MappedStrings.Count))
                                     {
-                                        continue;
+                                        _MappedStrings.Add(subSubStr);
                                     }
-
-                                    _StringMapping[subSubStr] = _MappedStrings.Count;
-                                    _MappedStrings.Add(subSubStr);
                                 }
                             }
                         }
@@ -484,26 +492,37 @@ namespace Robust.Shared.Serialization
                         for (var sl = 1; sl <= parts.Length - si; ++sl)
                         {
                             var subSubStr = string.Concat(parts.Skip(si).Take(sl));
-                            if (_StringMapping.ContainsKey(subSubStr))
+                            if (_StringMapping.TryAdd(subSubStr, _MappedStrings.Count))
                             {
-                                continue;
+                                _MappedStrings.Add(subSubStr);
                             }
-
-                            _StringMapping[subSubStr] = _MappedStrings.Count;
-                            _MappedStrings.Add(subSubStr);
                         }
                     }
                 }
 
-                _StringMapping[str] = _MappedStrings.Count;
-                _MappedStrings.Add(str);
+                if (_StringMapping.TryAdd(str, _MappedStrings.Count))
+                {
+                    _MappedStrings.Add(str);
+                }
+
                 _stringMapHash = null;
                 _mappedStringsPackage = null;
                 return true;
             }
 
+            [MethodImpl(MethodImplOptions.Synchronized)]
             public static unsafe void AddStrings(Assembly asm)
             {
+                if (LockMappedStrings)
+                {
+                    if (NetManager.IsClient)
+                    {
+                        //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                        return;
+                    }
+                    throw new InvalidOperationException("Mapped strings are locked, will not add .");
+                }
+
                 var started = MappedStrings.Count;
                 var sw = Stopwatch.StartNew();
                 if (asm.TryGetRawMetadata(out var blob, out var len))
@@ -535,34 +554,112 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                _sawmill.Info($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
+                LogSzr.Info($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
             }
 
-            public static void AddStrings(YamlStream yaml)
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            public static void AddStrings(YamlStream yaml, string name)
             {
+                if (LockMappedStrings)
+                {
+                    if (NetManager.IsClient)
+                    {
+                        //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                        return;
+                    }
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
                 var started = MappedStrings.Count;
                 var sw = Stopwatch.StartNew();
                 foreach (var doc in yaml)
                 {
                     foreach (var node in doc.AllNodes)
                     {
-                        if (!(node is YamlScalarNode scalar))
+                        var a = node.Anchor;
+                        if (!string.IsNullOrEmpty(a))
                         {
-                            continue;
+                            AddString(a);
                         }
 
-                        var s = scalar.Value;
-                        if (string.IsNullOrEmpty(s))
+                        var t = node.Tag;
+                        if (!string.IsNullOrEmpty(t))
                         {
-                            continue;
+                            AddString(t);
                         }
 
-                        AddString(s);
+                        switch (node)
+                        {
+                            case YamlScalarNode scalar:
+                            {
+                                var v = scalar.Value;
+                                if (string.IsNullOrEmpty(v))
+                                {
+                                    continue;
+                                }
+
+                                AddString(v);
+                                break;
+                            }
+                        }
                     }
                 }
 
                 var added = MappedStrings.Count - started;
-                _sawmill.Info($"Mapping {added} strings from YAML took {sw.ElapsedMilliseconds}ms.");
+                LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
+            }
+
+
+            public static void AddStrings(JObject obj, string name)
+            {
+                if (LockMappedStrings)
+                {
+                    if (NetManager.IsClient)
+                    {
+                        //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                        return;
+                    }
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                var started = MappedStrings.Count;
+                var sw = Stopwatch.StartNew();
+                foreach (var node in obj.DescendantsAndSelf())
+                {
+                    switch (node)
+                    {
+                        case JValue value:
+                        {
+                            if (value.Type != JTokenType.String)
+                            {
+                                continue;
+                            }
+
+                            var v = value.Value?.ToString();
+                            if (string.IsNullOrEmpty(v))
+                            {
+                                continue;
+                            }
+
+                            AddString(v);
+                            break;
+                        }
+                        case JProperty prop:
+                        {
+                            var propName = prop.Name;
+                            if (string.IsNullOrEmpty(propName))
+                            {
+                                continue;
+                            }
+
+                            AddString(propName);
+                            break;
+                        }
+                    }
+                }
+
+                var added = MappedStrings.Count - started;
+                LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
             }
 
             public static void ClearStrings()
@@ -577,6 +674,7 @@ namespace Robust.Shared.Serialization
                 _stringMapHash = null;
             }
 
+            [MethodImpl(MethodImplOptions.Synchronized)]
             public static void AddStrings(IEnumerable<string> strings)
             {
                 var started = MappedStrings.Count;
@@ -586,7 +684,7 @@ namespace Robust.Shared.Serialization
                 }
 
                 var added = MappedStrings.Count - started;
-                _sawmill.Info($"Mapping {added} strings.");
+                LogSzr.Info($"Mapping {added} strings.");
             }
 
             private static byte[]? _stringMapHash;
@@ -604,8 +702,8 @@ namespace Robust.Shared.Serialization
 
                 var hash = CalculateHash(MappedStringsPackage);
 
-                _sawmill.Info($"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
-                _sawmill.Info($"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
+                LogSzr.Info($"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
+                LogSzr.Info($"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
                 return hash;
             }
 
@@ -637,11 +735,14 @@ namespace Robust.Shared.Serialization
 
             private static readonly MethodInfo ReadMappedStringMethodInfo = ((ReadStringDelegate) ReadMappedString).Method;
 
-            private static readonly char[] TrimmableSymbolChars = new char[] {'.', '\\', '/',',','#','$','?','!','@','|','&','*','(',')','^','`','"','\'','`','~','[',']','{','}',':',';'};
+            private static readonly char[] TrimmableSymbolChars =
+            {
+                '.', '\\', '/', ',', '#', '$', '?', '!', '@', '|', '&', '*', '(', ')', '^', '`', '"', '\'', '`', '~', '[', ']', '{', '}', ':', ';', '-'
+            };
 
             private const int MaxMappedStringSize = 420;
 
-            private const int MappedNull = 1;
+            private const int MappedNull = 0;
 
             private const int UnmappedString = 1;
 
@@ -657,15 +758,22 @@ namespace Robust.Shared.Serialization
 
                 if (_StringMapping.TryGetValue(value, out var mapping))
                 {
+#if DEBUG
+                    if (mapping >= _MappedStrings.Count || mapping < 0)
+                    {
+                        throw new InvalidOperationException("A string mapping outside of the mapped string table was encountered.");
+                    }
+#endif
                     WriteCompressedUnsignedInt(stream, (uint) mapping + FirstMappedIndexStart);
+                    //Logger.DebugS("szr", $"Encoded mapped string: {value}");
                     return;
                 }
 
                 // indicate not mapped
                 WriteCompressedUnsignedInt(stream, UnmappedString);
                 var buf = Encoding.UTF8.GetBytes(value);
-                // TODO: is +1 here and -1 in decode actually needed?
-                WriteCompressedUnsignedInt(stream, (uint) buf.Length + 1);
+                Logger.DebugS("szr", $"Encoded unmapped string: {value}");
+                WriteCompressedUnsignedInt(stream, (uint) buf.Length);
                 stream.Write(buf);
             }
 
@@ -676,7 +784,8 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Not performing unlocked string mapping.");
                 }
 
-                var mapIndex = ReadCompressedUnsignedInt(stream);
+
+                var mapIndex = ReadCompressedUnsignedInt(stream, out _);
                 if (mapIndex == MappedNull)
                 {
                     value = null;
@@ -686,17 +795,31 @@ namespace Robust.Shared.Serialization
                 if (mapIndex == UnmappedString)
                 {
                     // not mapped
-                    var length = ReadCompressedUnsignedInt(stream);
-                    // TODO: is -1 here and +1 in encode actually needed?
-                    var buf = new byte[length - 1];
+                    var length = ReadCompressedUnsignedInt(stream, out _);
+                    var buf = new byte[length];
                     stream.Read(buf);
                     value = Encoding.UTF8.GetString(buf);
+                    Logger.DebugS("szr", $"Decoded unmapped string: {value}");
                     return;
                 }
 
                 value = _MappedStrings[(int) mapIndex - FirstMappedIndexStart];
+                //Logger.DebugS("szr", $"Decoded mapped string: {value}");
             }
 
+#if ROBUST_SERIALIZER_DISABLE_COMPRESSED_UINTS
+            public static int WriteCompressedUnsignedInt(Stream stream, uint value)
+            {
+                WriteUnsignedInt(stream, value);
+                return 4;
+            }
+
+            public static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
+            {
+                byteCount = 4;
+                return ReadUnsignedInt(stream);
+            }
+#else
             public static int WriteCompressedUnsignedInt(Stream stream, uint value)
             {
                 var length = 1;
@@ -710,30 +833,6 @@ namespace Robust.Shared.Serialization
                 stream.WriteByte((byte) value);
                 return length;
             }
-
-            public static uint ReadCompressedUnsignedInt(Stream stream)
-            {
-                var value = 0u;
-                var shift = 0;
-                while (stream.CanRead)
-                {
-                    var current = stream.ReadByte();
-                    if (current == -1)
-                    {
-                        throw new EndOfStreamException();
-                    }
-
-                    value |= (0x7Fu & (byte) current) << shift;
-                    shift += 7;
-                    if ((0x80 & current) == 0)
-                    {
-                        return value;
-                    }
-                }
-
-                throw new EndOfStreamException();
-            }
-
             public static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
             {
                 byteCount = 0;
@@ -758,8 +857,26 @@ namespace Robust.Shared.Serialization
 
                 throw new EndOfStreamException();
             }
+#endif
+
+            [UsedImplicitly]
+            public static unsafe void WriteUnsignedInt(Stream stream, uint value)
+            {
+                var bytes = MemoryMarshal.AsBytes(new ReadOnlySpan<uint>(&value, 1));
+                stream.Write(bytes);
+            }
+
+            [UsedImplicitly]
+            public static unsafe uint ReadUnsignedInt(Stream stream)
+            {
+                uint value;
+                var bytes = MemoryMarshal.AsBytes(new Span<uint>(&value, 1));
+                stream.Read(bytes);
+                return value;
+            }
 
             public static event Action? ClientHandshakeComplete;
+
 
         }
 

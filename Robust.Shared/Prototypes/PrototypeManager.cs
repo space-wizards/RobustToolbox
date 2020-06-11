@@ -10,6 +10,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -211,7 +212,11 @@ namespace Robust.Shared.Prototypes
                         var yamlStream = new YamlStream();
                         yamlStream.Load(reader);
 
-                        return ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
+                        var result = ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
+
+                        RobustSerializer.MappedStringSerializer.AddStrings(yamlStream, filePath.ToString());
+
+                        return result;
                     }
                     catch (YamlException e)
                     {
@@ -255,6 +260,9 @@ namespace Robust.Shared.Prototypes
                     throw new PrototypeLoadException(string.Format("Failed to load prototypes from document#{0}", i), e);
                 }
             }
+
+
+            RobustSerializer.MappedStringSerializer.AddStrings(yaml, "anonymous prototypes YAML stream");
         }
 
         #endregion IPrototypeManager members

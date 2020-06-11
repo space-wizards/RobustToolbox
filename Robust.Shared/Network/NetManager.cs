@@ -704,7 +704,6 @@ namespace Robust.Shared.Network
                 _awaitingData.Remove(msg.SenderConnection);
                 cancel.Dispose();
                 tcs.TrySetResult(msg);
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message - had awaiting data.");
                 return false;
             }
 

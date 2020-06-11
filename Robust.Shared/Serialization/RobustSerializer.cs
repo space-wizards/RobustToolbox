@@ -78,13 +78,26 @@ namespace Robust.Shared.Serialization
             {
                 var defaultAssemblies = AssemblyLoadContext.Default.Assemblies;
                 var gameAssemblies = _reflectionManager.Assemblies;
-                var robustShared = defaultAssemblies.First(a => a.GetName().Name == "Robust.Shared");
+                var robustShared = defaultAssemblies
+                    .First(a => a.GetName().Name == "Robust.Shared");
                 MappedStringSerializer.AddStrings(robustShared);
+
                 // TODO: Need to add a GetSharedAssemblies method to the reflection manager
-                var contentShared = gameAssemblies.FirstOrDefault(a => a.GetName().Name == "Content.Shared");
+
+                var contentShared = gameAssemblies
+                    .FirstOrDefault(a => a.GetName().Name == "Content.Shared");
                 if (contentShared != null)
                 {
                     MappedStringSerializer.AddStrings(contentShared);
+                }
+
+                // TODO: Need to add a GetServerAssemblies method to the reflection manager
+
+                var contentServer = gameAssemblies
+                    .FirstOrDefault(a => a.GetName().Name == "Content.Server");
+                if (contentServer != null)
+                {
+                    MappedStringSerializer.AddStrings(contentServer);
                 }
             }
 

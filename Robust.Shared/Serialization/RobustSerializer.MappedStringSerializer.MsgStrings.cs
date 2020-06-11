@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization
         {
 
             /// <summary>
-            /// The final part of the string-exchange handshake. Sent by the
+            /// The meat of the string-exchange handshake sandwich. Sent by the
             /// server after the client requests an updated copy of the mapping.
             /// Contains the updated string mapping.
             /// </summary>

@@ -13,13 +13,15 @@ namespace Robust.Shared.Serialization
         {
             /// <summary>
             /// The client part of the string-exchange handshake, sent after the
-            /// client receives the mapping hash. Tells the server if the client
-            /// needs an updated copy of the mapping.
+            /// client receives the mapping hash and after the client receives a
+            /// strings package. Tells the server if the client needs an updated
+            /// copy of the mapping.
             /// </summary>
             /// <remarks>
             /// Also sent by the client after a new copy of the string mapping
-            /// has been successfully received and loaded. In this case, the value
-            /// of <see cref="NeedsStrings"/> is always <c>false</c>.
+            /// has been received. If successfully loaded, the value of
+            /// <see cref="NeedsStrings"/> is <c>false</c>, otherwise it will be
+            /// <c>true</c>.
             /// </remarks>
             [UsedImplicitly]
             private class MsgClientHandshake : NetMessage
@@ -36,9 +38,11 @@ namespace Robust.Shared.Serialization
                 /// </value>
                 public bool NeedsStrings { get; set; }
 
-                public override void ReadFromBuffer(NetIncomingMessage buffer) => NeedsStrings = buffer.ReadBoolean();
+                public override void ReadFromBuffer(NetIncomingMessage buffer)
+                    => NeedsStrings = buffer.ReadBoolean();
 
-                public override void WriteToBuffer(NetOutgoingMessage buffer) => buffer.Write(NeedsStrings);
+                public override void WriteToBuffer(NetOutgoingMessage buffer)
+                    => buffer.Write(NeedsStrings);
 
             }
 

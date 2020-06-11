@@ -85,25 +85,39 @@ namespace Robust.Shared.Serialization
                         ServerHash = msg.Hash;
                         LockMappedStrings = false;
 
-                        var cached = ReadStringCache(msg.Hash!, out var hashStr);
+                        if (LockMappedStrings)
+                        {
+                            throw new InvalidOperationException("Mapped strings are locked.");
+                        }
+
+                        ClearStrings();
+
+                        var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
 
                         LogSzr.Info($"Received server handshake with hash {hashStr}.");
 
-                        if (cached)
+                        var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
+                        if (!File.Exists(fileName))
+                        {
+                            LogSzr.Info($"No string cache for {hashStr}.");
+                            var handshake = net.CreateNetMessage<MsgClientHandshake>();
+                            LogSzr.Info("Asking server to send mapped strings.");
+                            handshake.NeedsStrings = true;
+                            msg.MsgChannel.SendMessage(handshake);
+                        }
+                        else
                         {
                             LogSzr.Info($"We had a cached string map that matches {hashStr}.");
+                            using var file = File.OpenRead(fileName);
+                            var added = LoadStrings(file);
+
+                            _stringMapHash = msg.Hash!;
+                            LogSzr.Info($"Read {added} strings from cache {hashStr}.");
                             LockMappedStrings = true;
                             LogSzr.Info($"Locked in at {_MappedStrings.Count} mapped strings.");
                             // ok we're good now
                             var channel = msg.MsgChannel;
                             OnClientCompleteHandshake(net, channel);
-                        }
-                        else
-                        {
-                            var handshake = net.CreateNetMessage<MsgClientHandshake>();
-                            LogSzr.Info("Asking server to send mapped strings.");
-                            handshake.NeedsStrings = true;
-                            msg.MsgChannel.SendMessage(handshake);
                         }
                     });
 
@@ -256,33 +270,6 @@ namespace Robust.Shared.Serialization
                 LogSzr.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
             }
 
-            private static bool ReadStringCache(byte[] hash, out string hashStr)
-            {
-                if (LockMappedStrings)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked.");
-                }
-
-                ClearStrings();
-
-                hashStr = Convert.ToBase64String(hash);
-                hashStr = ConvertToBase64Url(hashStr);
-
-                var fileName = PathHelpers.ExecutableRelativeFile("strings-" + hashStr);
-                if (!File.Exists(fileName))
-                {
-                    LogSzr.Info($"No string cache for {hashStr}.");
-                    return false;
-                }
-
-                using var file = File.OpenRead(fileName);
-                var added = LoadStrings(file);
-
-                _stringMapHash = hash;
-                LogSzr.Info($"Read {added} strings from cache {hashStr}.");
-                return true;
-            }
-
             private static int LoadStrings(Stream stream)
             {
                 if (LockMappedStrings)
@@ -347,6 +334,11 @@ namespace Robust.Shared.Serialization
 
             private static string ConvertToBase64Url(string b64Str)
             {
+                if (b64Str is null)
+                {
+                    throw new ArgumentNullException(nameof(b64Str));
+                }
+
                 var cut = b64Str[^1] == '=' ? b64Str[^2] == '=' ? 2 : 1 : 0;
                 b64Str = new StringBuilder(b64Str).Replace('+', '-').Replace('/', '_').ToString(0, b64Str.Length - cut);
                 return b64Str;

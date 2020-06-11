@@ -628,8 +628,14 @@ namespace Robust.Shared.Serialization
 
             private static readonly Regex RxSymbolSplitter
                 = new Regex(
-                    @"(?<=[^\s\W])(?=[A-Z])|(?<=[^0-9\s\W])(?=[0-9])|(?<=[A-Za-z0-9])(?=_)|(?=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-])|(?<=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-])",
-                    RegexOptions.CultureInvariant | RegexOptions.Compiled
+                    @"(?<=[^\s\W])(?=[A-Z]) # Match for split at start of new capital letter
+                            |(?<=[^0-9\s\W])(?=[0-9]) # Match for split before spans of numbers
+                            |(?<=[A-Za-z0-9])(?=_) # Match for a split before an underscore
+                            |(?=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-]) # Match for a split after symbols
+                            |(?<=[.\\\/,#$?!@|&*()^`""'`~[\]{}:;\-]) # Match for a split before symbols too",
+                    RegexOptions.CultureInvariant
+                    | RegexOptions.Compiled
+                    | RegexOptions.IgnorePatternWhitespace
                 );
 
             /// <summary>

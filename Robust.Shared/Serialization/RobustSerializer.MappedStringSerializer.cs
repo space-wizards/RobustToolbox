@@ -998,6 +998,17 @@ namespace Robust.Shared.Serialization
             [MethodImpl(MethodImplOptions.Synchronized)]
             public static void AddStrings(IEnumerable<string> strings, string providerName)
             {
+                if (LockMappedStrings)
+                {
+                    if (_net.IsClient)
+                    {
+                        //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                        return;
+                    }
+
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
                 var started = MappedStrings.Count;
                 foreach (var str in strings)
                 {

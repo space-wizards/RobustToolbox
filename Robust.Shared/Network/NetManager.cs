@@ -230,7 +230,6 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
 #endif
 
-            //_strings.Initialize(this, () => { OnConnected(ServerChannel!); });
             _strings.Initialize(this, () =>
             {
                 Logger.InfoS("net","Message string table loaded.");

@@ -105,6 +105,13 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        public void ChangeSeparatorRooted_Test()
+        {
+            var respath = new ResourcePath("/a/b/c").ChangeSeparator("👏");
+            Assert.That(respath.ToString(), Is.EqualTo("👏a👏b👏c"));
+        }
+
+        [Test]
         public void Combine_Test()
         {
             var path1 = new ResourcePath("/a/b");

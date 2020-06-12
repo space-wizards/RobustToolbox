@@ -268,8 +268,18 @@ namespace Robust.Shared.Utility
 
             // Convert the segments into a string path, then re-parse it.
             // Solves the edge case of the segments containing the new separator.
-            var path = new ResourcePath(Segments, newSeparator).ToString();
-            return new ResourcePath(path, newSeparator);
+            ResourcePath path;
+            if (IsRooted)
+            {
+                var clone = (string[]) Segments.Clone();
+                clone[0] = newSeparator;
+                path = new ResourcePath(clone, newSeparator);
+            }
+            else
+            {
+                path = new ResourcePath(Segments, newSeparator);
+            }
+            return new ResourcePath(path.ToString(), newSeparator);
         }
 
         /// <summary>

@@ -19,6 +19,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
+        private readonly List<Type> _extraLoadedTypes = new List<Type>();
+
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
@@ -27,6 +29,9 @@ namespace Robust.Shared.GameObjects
         /// Maps system supertypes to instances.
         /// </summary>
         private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
+
+        private bool _initialized;
+
         [ViewVariables]
         private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
@@ -76,7 +81,7 @@ namespace Robust.Shared.GameObjects
         {
             HashSet<Type> excludedTypes = new HashSet<Type>();
 
-            foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>())
+            foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 // Force IoC inject of all systems
@@ -110,6 +115,8 @@ namespace Robust.Shared.GameObjects
             {
                 system.Initialize();
             }
+
+            _initialized = true;
         }
 
         private static IEnumerable<Type> GetBaseTypes(Type type) {
@@ -133,6 +140,7 @@ namespace Robust.Shared.GameObjects
 
             _systems.Clear();
             _supertypeSystems.Clear();
+            _initialized = false;
         }
 
         /// <inheritdoc />
@@ -140,7 +148,18 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var system in _systems.Values)
             {
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
                 system.Update(frameTime);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("entsys", e.ToString());
+                }
+#endif
             }
         }
 
@@ -149,8 +168,30 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var system in _systems.Values)
             {
-                system.FrameUpdate(frameTime);
+#if EXCEPTION_TOLERANCE
+                try
+                {
+#endif
+                    system.FrameUpdate(frameTime);
+#if EXCEPTION_TOLERANCE
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("entsys", e.ToString());
+                }
+#endif
             }
+        }
+
+        public void LoadExtraSystemType<T>() where T : IEntitySystem, new()
+        {
+            if (_initialized)
+            {
+                throw new InvalidOperationException(
+                    "Cannot use LoadExtraSystemType when the entity system manager is initialized.");
+            }
+
+            _extraLoadedTypes.Add(typeof(T));
         }
     }
 

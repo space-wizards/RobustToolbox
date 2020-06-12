@@ -7,6 +7,7 @@ using NGettext;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization.Macros;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -163,6 +164,8 @@ namespace Robust.Shared.Localization
             {
                 _readEntry(entry, catalog);
             }
+
+            RobustSerializer.MappedStringSerializer.AddStrings(yamlStream, filePath.ToString());
         }
 
         private static void _readEntry(YamlMappingNode entry, Catalog catalog)

@@ -220,6 +220,15 @@ namespace Robust.UnitTesting
             }
 
             /// <summary>
+            ///     <see cref="RunTicks"/> followed by <see cref="WaitIdleAsync"/>
+            /// </summary>
+            public async Task WaitRunTicks(int ticks)
+            {
+                RunTicks(ticks);
+                await WaitIdleAsync();
+            }
+
+            /// <summary>
             ///     Queue for the server to be stopped.
             /// </summary>
             public void Stop()
@@ -243,6 +252,12 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryWrite(new PostMessage(post, _currentTicksId));
             }
 
+            public async Task WaitPost(Action post)
+            {
+                Post(post);
+                await WaitIdleAsync();
+            }
+
             /// <summary>
             ///     Queue for a delegate to be ran inside the main loop of the instance,
             ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
@@ -257,6 +272,12 @@ namespace Robust.UnitTesting
                 _isSurelyIdle = false;
                 _currentTicksId += 1;
                 _toInstanceWriter.TryWrite(new AssertMessage(assertion, _currentTicksId));
+            }
+
+            public async Task WaitAssertion(Action assertion)
+            {
+                Assert(assertion);
+                await WaitIdleAsync();
             }
         }
 
@@ -465,8 +486,8 @@ namespace Robust.UnitTesting
                             var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
-                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                                 Tick?.Invoke(this, simFrameEvent);
+                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                             }
 
                             _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));

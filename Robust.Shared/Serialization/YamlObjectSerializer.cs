@@ -511,7 +511,7 @@ namespace Robust.Shared.Serialization
                     }
                     else
                     {
-                        throw new YamlException($"Malformed type tag.");
+                        throw new YamlException("Malformed type tag.");
                     }
                 }
 

@@ -1295,9 +1295,14 @@ namespace Robust.Shared.Physics
                 _approx = approx;
             }
 
-            public IEnumerator<T> GetEnumerator()
+            public QueryEnumerator GetEnumerator()
             {
                 return new QueryEnumerator(_dynamicTree, _aabb, _approx);
+            }
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                return GetEnumerator();
             }
 
             IEnumerator IEnumerable.GetEnumerator()

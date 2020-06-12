@@ -90,6 +90,20 @@ namespace Robust.Shared.ContentPack
                     }
                 }
             }
+
+            public IEnumerable<string> GetRelativeFilePaths()
+            {
+                foreach (var entry in _zip.Entries)
+                {
+                    if (entry.Name == "")
+                    {
+                        // Dir node.
+                        continue;
+                    }
+
+                    yield return new ResourcePath(entry.FullName).ToRootedPath().ToString();
+                }
+            }
         }
     }
 }

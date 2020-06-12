@@ -271,7 +271,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _updateScrollbar()
         {
             var internalHeight = _getInternalHeight();
-            _scrollBar.MaxValue = internalHeight;
+            _scrollBar.MaxValue = Math.Max(internalHeight, PixelHeight);
             _scrollBar.Page = PixelHeight;
             _scrollBar.Visible = internalHeight > PixelHeight;
         }

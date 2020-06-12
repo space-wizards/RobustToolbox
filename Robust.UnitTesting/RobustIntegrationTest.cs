@@ -197,8 +197,8 @@ namespace Robust.UnitTesting
                             _unhandledException = shutDownMessage.UnhandledException;
                             if (throwOnUnhandled && _unhandledException != null)
                             {
-                                throw new Exception("Waiting instance shut down with unhandled exception",
-                                    _unhandledException);
+                                ExceptionDispatchInfo.Capture(_unhandledException).Throw();
+                                return;
                             }
 
                             break;
@@ -327,7 +327,7 @@ namespace Robust.UnitTesting
                     IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
-                    ServerProgram.SetupLogging();
+                    //ServerProgram.SetupLogging();
                     ServerProgram.InitReflectionManager();
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
@@ -349,7 +349,7 @@ namespace Robust.UnitTesting
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
                     }
 
-                    if (server.Start())
+                    if (server.Start(() => new TestLogHandler("SERVER")))
                     {
                         throw new Exception("Server failed to start.");
                     }
@@ -436,7 +436,7 @@ namespace Robust.UnitTesting
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
                     };
 
-                    client.Startup();
+                    client.Startup(() => new TestLogHandler("CLIENT"));
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);

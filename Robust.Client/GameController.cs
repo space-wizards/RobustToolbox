@@ -80,11 +80,11 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public bool Startup()
+        public bool Startup(Func<ILogHandler> logHandlerFactory = null)
         {
             ReadInitialLaunchState();
 
-            SetupLogging(_logManager);
+            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
 
             _taskManager.Initialize();
 
@@ -286,9 +286,9 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
 
-        internal static void SetupLogging(ILogManager logManager)
+        internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
         {
-            logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
+            logManager.RootSawmill.AddHandler(logHandlerFactory());
 
             logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;

@@ -1,6 +1,8 @@
-﻿using Robust.Client;
+﻿using System;
+using Robust.Client;
 using Robust.Client.Input;
 using Robust.Client.Interfaces;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting
@@ -19,7 +21,7 @@ namespace Robust.UnitTesting
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
-        public bool Startup()
+        public bool Startup(Func<ILogHandler> logHandlerFactory = null)
         {
             return true;
         }

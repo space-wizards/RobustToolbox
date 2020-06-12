@@ -35,18 +35,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Input\CommandBindMapping.cs" />
-    <Compile Update="Serialization\RobustSerializer.MappedStringSerializer.MsgClientHandshake.cs">
-      <DependentUpon>RobustSerializer.MappedStringSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Serialization\RobustSerializer.MappedStringSerializer.MsgServerHandshake.cs">
-      <DependentUpon>RobustSerializer.MappedStringSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Serialization\RobustSerializer.MappedStringSerializer.MsgStrings.cs">
-      <DependentUpon>RobustSerializer.MappedStringSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Update="Serialization\RobustSerializer.MappedStringSerializer.cs">
-      <DependentUpon>RobustSerializer.cs</DependentUpon>
-    </Compile>
     <Compile Update="Serialization\RobustSerializer.Handshake.cs">
       <DependentUpon>RobustSerializer.cs</DependentUpon>
     </Compile>

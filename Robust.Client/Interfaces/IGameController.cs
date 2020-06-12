@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Robust.Client.Input;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces
@@ -15,7 +17,7 @@ namespace Robust.Client.Interfaces
     {
         void SetCommandLineArgs(CommandLineArgs args);
         bool LoadConfigAndUserData { get; set; }
-        bool Startup();
+        bool Startup(Func<ILogHandler> logHandlerFactory = null);
         void MainLoop(GameController.DisplayMode mode);
         void KeyDown(KeyEventArgs keyEvent);
         void KeyUp(KeyEventArgs keyEvent);

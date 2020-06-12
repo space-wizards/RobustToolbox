@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -28,8 +30,6 @@ namespace Robust.Shared.Utility
             var document = yamlStream.Documents[0];
 
             _abbreviations = ParseAbbreviations((YamlSequenceNode) document.RootNode);
-
-            RobustSerializer.MappedStringSerializer.AddStrings(yamlStream, "(embedded) Robust.Shared.Utility.TypeAbbreviations.yaml");
         }
 
         /// <summary>

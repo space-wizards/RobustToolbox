@@ -36,6 +36,8 @@ using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
+using Robust.Server.Interfaces.Maps;
+using Robust.Shared.Serialization;
 using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
@@ -80,7 +82,8 @@ namespace Robust.Server
         private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
         private CommandLineArgs _commandLineArgs = default!;
-        private FileLogHandler fileLogHandler = default!;
+        private Func<ILogHandler>? _logHandlerFactory;
+        private ILogHandler _logHandler = default!;
         private IGameLoop _mainLoop = default!;
 
         private TimeSpan _lastTitleUpdate;
@@ -103,7 +106,7 @@ namespace Robust.Server
             Logger.InfoS("srv", "Restarting Server...");
 
             Cleanup();
-            Start();
+            Start(_logHandlerFactory);
         }
 
         /// <inheritdoc />
@@ -117,8 +120,8 @@ namespace Robust.Server
             _shutdownReason = reason;
 
             _mainLoop.Running = false;
-            _log.RootSawmill.RemoveHandler(fileLogHandler);
-            fileLogHandler.Dispose();
+            _log.RootSawmill.RemoveHandler(_logHandler);
+            (_logHandler as IDisposable)?.Dispose();
         }
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -127,7 +130,7 @@ namespace Robust.Server
         }
 
         /// <inheritdoc />
-        public bool Start()
+        public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
             // Sets up the configMgr
             // If a config file path was passed, use it literally.
@@ -160,24 +163,41 @@ namespace Robust.Server
 
 
             //Sets up Logging
+            _config.RegisterCVar("log.enabled", true, CVar.ARCHIVE);
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
             _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
 
-            var logPath = _config.GetCVar<string>("log.path");
-            var logFormat = _config.GetCVar<string>("log.format");
-            var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
-                .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
-            var fullPath = Path.Combine(logPath, logFilename);
+            _logHandlerFactory = logHandlerFactory;
 
-            if (!Path.IsPathRooted(fullPath))
+            var logHandler = logHandlerFactory?.Invoke() ?? null;
+
+            var logEnabled = _config.GetCVar<bool>("log.enabled");
+
+            if (logHandler == null)
             {
-                logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                var logPath = _config.GetCVar<string>("log.path");
+                var logFormat = _config.GetCVar<string>("log.format");
+                var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
+                    .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
+                var fullPath = Path.Combine(logPath, logFilename);
+
+                if (!Path.IsPathRooted(fullPath))
+                {
+                    logPath = PathHelpers.ExecutableRelativeFile(fullPath);
+                }
+
+                logHandler = new FileLogHandler(logPath);
             }
 
-            fileLogHandler = new FileLogHandler(logPath);
+            _logHandler = logHandler;
+
             _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
-            _log.RootSawmill.AddHandler(fileLogHandler);
+
+            if (logEnabled)
+            {
+                _log.RootSawmill.AddHandler(_logHandler);
+            }
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
@@ -240,6 +260,11 @@ namespace Robust.Server
             // Else the content types won't be included.
             // TODO: solve this properly.
             _serializer.Initialize();
+
+            //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
+            //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
+            IoCManager.Resolve<IPrototypeManager>().LoadedData +=
+                IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;

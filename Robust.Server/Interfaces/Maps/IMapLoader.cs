@@ -1,4 +1,6 @@
-﻿using Robust.Shared.Map;
+﻿using System;
+using Robust.Shared.Map;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Interfaces.Maps
 {
@@ -9,5 +11,7 @@ namespace Robust.Server.Interfaces.Maps
 
         void LoadMap(MapId mapId, string path);
         void SaveMap(MapId mapId, string yamlPath);
+
+        event Action<YamlStream, string> LoadedMapData;
     }
 }

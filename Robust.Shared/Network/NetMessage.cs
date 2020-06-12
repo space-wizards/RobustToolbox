@@ -101,8 +101,9 @@ namespace Robust.Shared.Network
                     case MsgGroups.Core:
                     case MsgGroups.String:
                     case MsgGroups.Command:
-                    case MsgGroups.EntityEvent:
                         return NetDeliveryMethod.ReliableUnordered;
+                    case MsgGroups.EntityEvent:
+                        return NetDeliveryMethod.ReliableOrdered;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }

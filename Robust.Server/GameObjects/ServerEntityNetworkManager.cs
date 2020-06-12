@@ -79,6 +79,8 @@ namespace Robust.Server.GameObjects
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
 
+            // Logger.DebugS("net.ent", "Sending: {0}", msg);
+
             //Send the message
             if (channel == null)
                 _networkManager.ServerSendToAll(msg);

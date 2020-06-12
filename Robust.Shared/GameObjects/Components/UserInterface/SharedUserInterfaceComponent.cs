@@ -33,6 +33,11 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
                 Message = message;
                 UiKey = uiKey;
             }
+
+            public override string ToString()
+            {
+                return $"{nameof(BoundInterfaceMessageWrapMessage)}: {Message}";
+            }
         }
     }
 

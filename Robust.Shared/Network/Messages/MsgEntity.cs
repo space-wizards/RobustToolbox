@@ -244,5 +244,21 @@ namespace Robust.Shared.Network.Messages
         }
 
         #endregion Parameter Packing
+
+        public override string ToString()
+        {
+            var timingData = $"T: {SourceTick} S: {Sequence}";
+            switch (Type)
+            {
+                case EntityMessageType.Error:
+                    return "MsgEntity Error";
+                case EntityMessageType.ComponentMessage:
+                    return $"MsgEntity Comp, {timingData}, {EntityUid}/{NetId}: {ComponentMessage}";
+                case EntityMessageType.SystemMessage:
+                    return $"MsgEntity Comp, {timingData}, {SystemMessage}";
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
 }

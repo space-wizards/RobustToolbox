@@ -114,14 +114,15 @@ namespace Robust.Server.GameStates
             var oldestAck = GameTick.MaxValue;
 
 
-            foreach (var channel in _networkManager.Channels)
+
+            foreach (var session in _playerManager.GetAllPlayers())
             {
-                var session = _playerManager.GetSessionByChannel(channel);
-                if (session == null || session.Status != SessionStatus.InGame)
+                if (session.Status != SessionStatus.InGame)
                 {
-                    // client still joining, maybe iterate over sessions instead?
                     continue;
                 }
+
+                var channel = session.ConnectedClient;
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
                 {

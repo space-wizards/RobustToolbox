@@ -32,6 +32,12 @@ namespace Robust.Shared.ContentPack
             /// <param name="path">Directory to search inside of.</param>
             /// <returns>Enumeration of all relative file paths of the files found.</returns>
             IEnumerable<ResourcePath> FindFiles(ResourcePath path);
+
+            /// <summary>
+            ///     Recursively returns relative paths to resource files.
+            /// </summary>
+            /// <returns>Enumeration of all relative file paths.</returns>
+            IEnumerable<string> GetRelativeFilePaths();
         }
     }
 }

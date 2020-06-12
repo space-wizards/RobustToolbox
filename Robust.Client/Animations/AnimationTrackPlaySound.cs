@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.GameObjects.EntitySystems;
+using Robust.Shared.Audio;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -38,7 +40,7 @@ namespace Robust.Client.Animations
                 var keyFrame = KeyFrames[keyFrameIndex];
 
                 EntitySystem.Get<AudioSystem>()
-                    .Play(keyFrame.Resource, entity);
+                    .Play(keyFrame.Resource, entity, keyFrame.AudioParamsFunc.Invoke());
             }
 
             return (keyFrameIndex, playingTime);
@@ -52,14 +54,22 @@ namespace Robust.Client.Animations
             public readonly string Resource;
 
             /// <summary>
+            ///     A function that returns the audio parameter to be used.
+            ///     The reason this is a function is so that this can return
+            ///     an AudioParam with different parameters each time, such as random pitch.
+            /// </summary>
+            public readonly Func<AudioParams> AudioParamsFunc;
+
+            /// <summary>
             ///     The time between this keyframe and the last.
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(string resource, float keyTime)
+            public KeyFrame(string resource, float keyTime, Func<AudioParams> audioParams = null)
             {
                 Resource = resource;
                 KeyTime = keyTime;
+                AudioParamsFunc = audioParams ?? (() => AudioParams.Default);
             }
         }
     }

@@ -166,11 +166,13 @@ namespace Robust.Client.GameStates
                 return;
             }
 
+            // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
+            // this won't run meaning it could potentially get stuck dirty.
             if (Predicting)
             {
                 // Disable IsFirstTimePredicted while re-running HandleComponentState here.
                 // Helps with debugging.
-                using var _ = _timing.StartPastPredictionArea();
+                using var resetArea = _timing.StartPastPredictionArea();
 
                 ResetPredictedEntities(_timing.CurTick);
             }
@@ -209,66 +211,67 @@ namespace Robust.Client.GameStates
 
             DebugTools.Assert(_timing.InSimulation);
 
-            if (Predicting)
+            if (!Predicting) return;
+
+            using var _ = _timing.StartPastPredictionArea();
+
+            /*
+            if (_pendingInputs.Count > 0)
             {
-                using var _ = _timing.StartPastPredictionArea();
+                Logger.DebugS("State", "CL> Predicted:");
+            }
+            */
 
-                /*
-                if (_pendingInputs.Count > 0)
+            var pendingInputEnumerator = _pendingInputs.GetEnumerator();
+            var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
+            var hasPendingInput = pendingInputEnumerator.MoveNext();
+            var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+
+            var ping = _network.ServerChannel.Ping / 1000f; // seconds.
+            var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
+                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
+
+            //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+
+            for (var t = _lastProcessedTick.Value; t <= targetTick; t++)
+            {
+                var tick = new GameTick(t);
+                _timing.CurTick = tick;
+
+                while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
                 {
-                    Logger.DebugS("State", "CL> Predicted:");
+                    var inputCmd = pendingInputEnumerator.Current;
+
+                    inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
+                    /*
+                    Logger.DebugS("State",
+                        $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                        $"state={inputCmd.State}");
+                        */
+
+                    input.PredictInputCommand(inputCmd);
+
+                    hasPendingInput = pendingInputEnumerator.MoveNext();
                 }
-                */
 
-                var pendingInputEnumerator = _pendingInputs.GetEnumerator();
-                var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
-                var hasPendingInput = pendingInputEnumerator.MoveNext();
-                var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-
-                var ping = _network.ServerChannel.Ping / 1000f; // seconds.
-                var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                                 (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
-
-                //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
-
-                for (var t = _lastProcessedTick.Value; t < targetTick; t++)
+                while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
                 {
-                    var tick = new GameTick(t);
-                    _timing.CurTick = tick;
+                    var msg = pendingMessagesEnumerator.Current.msg;
 
-                    while (hasPendingInput && pendingInputEnumerator.Current.Tick <= tick)
-                    {
-                        var inputCmd = pendingInputEnumerator.Current;
+                    _entities.EventBus.RaiseEvent(EventSource.Local, msg);
+                    _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
 
-                        inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
-                        /*
-                        Logger.DebugS("State",
-                            $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
-                            $"state={inputCmd.State}");
-                            */
+                    hasPendingMessage = pendingMessagesEnumerator.MoveNext();
+                }
 
-                        input.PredictInputCommand(inputCmd);
-
-                        hasPendingInput = pendingInputEnumerator.MoveNext();
-                    }
-
-                    while (hasPendingMessage && pendingMessagesEnumerator.Current.sourceTick <= tick)
-                    {
-                        var msg = pendingMessagesEnumerator.Current.msg;
-
-                        _entities.EventBus.RaiseEvent(EventSource.Local, msg);
-                        _entities.EventBus.RaiseEvent(EventSource.Local, pendingMessagesEnumerator.Current.sessionMsg);
-
-                        hasPendingMessage = pendingMessagesEnumerator.MoveNext();
-                    }
-
+                if (t != targetTick)
+                {
+                    // Don't run EntitySystemManager.Update if this is the target tick,
+                    // because the rest of the main loop will call into it with the target tick later,
+                    // and it won't be a past prediction.
                     _entitySystemManager.Update((float) _timing.TickPeriod.TotalSeconds);
-                    ((IEntityEventBus)_entities.EventBus).ProcessEventQueue();
+                    ((IEntityEventBus) _entities.EventBus).ProcessEventQueue();
                 }
-
-                // Target tick is set once the loop is done since this is the first time this tick has been reached.
-                // So EntitySystemManager.Update getting called from the main game loop will be FirstTimePredicted.
-                _timing.CurTick = new GameTick((uint) targetTick);
             }
         }
 

@@ -420,7 +420,9 @@ namespace Robust.Server
 
             // Wrtie down exception log
             var logPath = _config.GetCVar<string>("log.path");
-            var pathToWrite = Path.Combine(PathHelpers.ExecutableRelativeFile(logPath),
+            var relPath = PathHelpers.ExecutableRelativeFile(logPath);
+            Directory.CreateDirectory(relPath);
+            var pathToWrite = Path.Combine(relPath,
                 "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
             File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
 

@@ -90,7 +90,9 @@ entities:
             var mapLoad = IoCManager.Resolve<IMapLoader>();
             var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
 
-            var entity = entMan.GetEntity(grid.GridEntityId).Transform.Children.Single().Owner;
+            Assert.That(grid, NUnit.Framework.Is.Not.Null);
+
+            var entity = entMan.GetEntity(grid!.GridEntityId).Transform.Children.Single().Owner;
             var c = entity.GetComponent<MapDeserializeTestComponent>();
 
             Assert.That(c.Bar, Is.EqualTo(2));

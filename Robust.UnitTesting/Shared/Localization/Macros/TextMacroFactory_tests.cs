@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
     [TestFixture, Parallelizable, TestOf(typeof(TextMacroFactory))]
     internal class TextMacroFactory_tests : RobustUnitTest
     {
-        private TextMacroFactory sut;
+        private TextMacroFactory sut = default!;
 
         [SetUp]
         public void SetUp()
@@ -19,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
         [RegisterTextMacro("mock_macro", "test-TE")]
         private class MockTextMacro : ITextMacro
         {
-            public string Format(object argument)
+            public string Format(object? argument)
             {
                 throw new System.NotImplementedException();
             }

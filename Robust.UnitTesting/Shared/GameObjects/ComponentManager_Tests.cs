@@ -270,7 +270,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class DummyComponent : Component, ICompType1, ICompType2
         {
-            public override string Name => null;
+            public override string Name => "Dummy";
             public override uint? NetID => CompNetId;
         }
 

@@ -40,7 +40,7 @@ namespace Robust.UnitTesting
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
-        protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions options = null)
+        protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
             var instance = new ServerIntegrationInstance(options);
             _integrationInstances.Add(instance);
@@ -50,7 +50,7 @@ namespace Robust.UnitTesting
         /// <summary>
         ///     Start a headless instance of the client and return an object that can be used to control it.
         /// </summary>
-        protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions options = null)
+        protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
             var instance = new ClientIntegrationInstance(options);
             _integrationInstances.Add(instance);
@@ -78,8 +78,8 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
-            private protected Thread InstanceThread;
-            private protected IDependencyCollection DependencyCollection;
+            private protected Thread InstanceThread = default!;
+            private protected IDependencyCollection DependencyCollection = default!;
 
             private protected readonly ChannelReader<object> _toInstanceReader;
             private protected readonly ChannelWriter<object> _toInstanceWriter;
@@ -91,7 +91,7 @@ namespace Robust.UnitTesting
 
             private bool _isSurelyIdle;
             private bool _isAlive = true;
-            private Exception _unhandledException;
+            private Exception? _unhandledException;
 
             /// <summary>
             ///     Whether the instance is still alive.
@@ -120,7 +120,7 @@ namespace Robust.UnitTesting
             /// <exception cref="InvalidOperationException">
             ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
             /// </exception>
-            public Exception UnhandledException
+            public Exception? UnhandledException
             {
                 get
                 {
@@ -302,9 +302,9 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            private readonly ServerIntegrationOptions _options;
+            private readonly ServerIntegrationOptions? _options;
 
-            internal ServerIntegrationInstance(ServerIntegrationOptions options)
+            internal ServerIntegrationInstance(ServerIntegrationOptions? options)
             {
                 _options = options;
                 InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
@@ -373,9 +373,9 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            private readonly ClientIntegrationOptions _options;
+            private readonly ClientIntegrationOptions? _options;
 
-            internal ClientIntegrationInstance(ClientIntegrationOptions options)
+            internal ClientIntegrationInstance(ClientIntegrationOptions? options)
             {
                 _options = options;
                 InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
@@ -465,10 +465,10 @@ namespace Robust.UnitTesting
             private readonly ChannelReader<object> _channelReader;
 
 #pragma warning disable 67
-            public event EventHandler<FrameEventArgs> Input;
-            public event EventHandler<FrameEventArgs> Tick;
-            public event EventHandler<FrameEventArgs> Update;
-            public event EventHandler<FrameEventArgs> Render;
+            public event EventHandler<FrameEventArgs>? Input;
+            public event EventHandler<FrameEventArgs>? Tick;
+            public event EventHandler<FrameEventArgs>? Update;
+            public event EventHandler<FrameEventArgs>? Render;
 #pragma warning restore 67
 
             public bool SingleStep { get; set; }
@@ -540,19 +540,19 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
-            public Assembly ServerContentAssembly { get; set; }
+            public Assembly? ServerContentAssembly { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
-            public Assembly ClientContentAssembly { get; set; }
+            public Assembly? ClientContentAssembly { get; set; }
         }
 
         public abstract class IntegrationOptions
         {
-            public Action InitIoC { get; set; }
-            public Action BeforeStart { get; set; }
-            public Assembly SharedContentAssembly { get; set; }
+            public Action? InitIoC { get; set; }
+            public Action? BeforeStart { get; set; }
+            public Assembly? SharedContentAssembly { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }
@@ -609,12 +609,12 @@ namespace Robust.UnitTesting
         /// </summary>
         private sealed class ShutDownMessage
         {
-            public ShutDownMessage(Exception unhandledException)
+            public ShutDownMessage(Exception? unhandledException)
             {
                 UnhandledException = unhandledException;
             }
 
-            public Exception UnhandledException { get; }
+            public Exception? UnhandledException { get; }
         }
 
         private sealed class PostMessage

@@ -150,7 +150,7 @@ namespace Robust.UnitTesting.Shared.Timing
         ///     Checks that IGameTiming.FrameTime returns the real delta time between the two most recent calls to IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>
-        ///     When outside the simulation, FrameTime returns the same value as RealFrameTime. This allows rendering code to also use 
+        ///     When outside the simulation, FrameTime returns the same value as RealFrameTime. This allows rendering code to also use
         ///     the FrameTime property instead of RealFrameTime.
         /// </remarks>
         [Test]
@@ -200,12 +200,12 @@ namespace Robust.UnitTesting.Shared.Timing
             // Assert
             Assert.That(result, Is.EqualTo(TimeSpan.Zero)); // But simulation time never increases.
         }
-        
+
         private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();
 
-            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.NonPublic | BindingFlags.Instance)!;
             field.SetValue(timing, stopwatch);
 
             Assert.That(timing.CurTime, Is.EqualTo(TimeSpan.Zero));

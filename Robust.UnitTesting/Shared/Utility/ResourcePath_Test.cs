@@ -231,7 +231,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(() => path.WithName("/foo"), Throws.ArgumentException);
             Assert.That(() => path.WithName("."), Throws.ArgumentException);
             Assert.That(() => path.WithName(""), Throws.ArgumentException);
-            Assert.That(() => path.WithName(null), Throws.ArgumentException);
+            Assert.That(() => path.WithName(null!), Throws.ArgumentException);
         }
 
         [Test]

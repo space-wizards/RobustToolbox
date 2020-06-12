@@ -18,8 +18,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 
-        private IServerEntityManager EntityManager;
-        private IMapManager MapManager;
+        private IServerEntityManager EntityManager = default!;
+        private IMapManager MapManager = default!;
 
         const string PROTOTYPES = @"
 - type: entity
@@ -30,9 +30,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 ";
 
         private MapId MapA;
-        private IMapGrid GridA;
+        private IMapGrid GridA = default!;
         private MapId MapB;
-        private IMapGrid GridB;
+        private IMapGrid GridB = default!;
 
         private static readonly GridCoordinates InitialPos = new GridCoordinates(0,0,new GridId(1));
 

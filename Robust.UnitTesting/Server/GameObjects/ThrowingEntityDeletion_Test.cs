@@ -16,9 +16,9 @@ namespace Robust.UnitTesting.Server.GameObjects
     [TestFixture]
     public class ThrowingEntityDeletion_Test : RobustUnitTest
     {
-        private IServerEntityManager EntityManager;
-        private IComponentFactory _componentFactory;
-        private IMapManager MapManager;
+        private IServerEntityManager EntityManager = default!;
+        private IComponentFactory _componentFactory = default!;
+        private IMapManager MapManager = default!;
 
         const string PROTOTYPES = @"
 - type: entity

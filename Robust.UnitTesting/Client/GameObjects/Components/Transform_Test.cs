@@ -19,8 +19,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IClientEntityManager EntityManager;
-        private IMapManager MapManager;
+        private IClientEntityManager EntityManager = default!;
+        private IMapManager MapManager = default!;
 
         const string PROTOTYPES = @"
 - type: entity
@@ -31,9 +31,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 ";
 
         private MapId MapA;
-        private IMapGrid GridA;
+        private IMapGrid GridA = default!;
         private MapId MapB;
-        private IMapGrid GridB;
+        private IMapGrid GridB = default!;
 
         [OneTimeSetUp]
         public void Setup()

@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapGrid.SetupGet(f => f.CurTick).Returns((() => curTick));
             mapGrid.SetupGet(f => f.ParentMapId).Returns(new MapId(11));
             mapGrid.SetupGet(f => f.Index).Returns(new GridId(13));
-            
+
             var chunk = new MapChunk(mapGrid.Object, 7, 9, 8);
 
             curTick = new GameTick(13);
@@ -100,7 +100,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result.GridIndex, Is.EqualTo(new GridId(13)));
             Assert.That(result.MapIndex, Is.EqualTo(new MapId(11)));
         }
-        
+
         [Test]
         public void GetTileRefByIndices()
         {
@@ -116,7 +116,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result.GridIndex, Is.EqualTo(new GridId(13)));
             Assert.That(result.MapIndex, Is.EqualTo(new MapId(11)));
         }
-        
+
         [Test]
         public void GetTileRefThrowsOutOfRange()
         {
@@ -135,7 +135,7 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             var result = chunk.GetTile(3, 5);
-            
+
             Assert.That(result.TypeId, Is.EqualTo(1));
             Assert.That(result.Data, Is.EqualTo((ushort)3));
         }
@@ -238,9 +238,9 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             var tiles = new List<TileRef>();
-            foreach (var tileRef in ((IEnumerable)chunk))
+            foreach (var tileRef in chunk)
             {
-                tiles.Add((TileRef)tileRef);
+                tiles.Add(tileRef);
             }
 
             Assert.That(tiles.Count, Is.EqualTo(2));
@@ -298,7 +298,7 @@ namespace Robust.UnitTesting.Shared.Map
         public void GetSnapGridThrowsOutOfRange()
         {
             var chunk = MapChunkFactory(7, 9);
-            
+
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0, SnapGridOffset.Center).ToList()));
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(0, 8, SnapGridOffset.Center).ToList()));
             Assert.Throws<ArgumentOutOfRangeException>((() => chunk.GetSnapGridCell(8,0,SnapGridOffset.Edge).ToList()));

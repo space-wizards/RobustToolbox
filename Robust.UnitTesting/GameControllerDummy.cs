@@ -9,7 +9,7 @@ namespace Robust.UnitTesting
     {
         public InitialLaunchState LaunchState { get; } = new InitialLaunchState(false, null, null, null);
 
-        public void Shutdown(string reason = null)
+        public void Shutdown(string? reason = null)
         {
         }
 
@@ -28,7 +28,7 @@ namespace Robust.UnitTesting
         {
         }
 
-        public string ContentRootDir { get; set; }
+        public string? ContentRootDir { get; set; }
 
         public void KeyDown(KeyEventArgs keyEvent)
         {

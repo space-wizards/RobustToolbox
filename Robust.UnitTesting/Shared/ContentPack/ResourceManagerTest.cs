@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.ContentPack
     public class ResourceManagerTest : RobustUnitTest
     {
         private static Stream ZipStream => typeof(ResourceManagerTest).Assembly
-            .GetManifestResourceStream("Robust.UnitTesting.Shared.ContentPack.ZipTest.zip");
+            .GetManifestResourceStream("Robust.UnitTesting.Shared.ContentPack.ZipTest.zip")!;
 
         private static readonly byte[] Data =
         {

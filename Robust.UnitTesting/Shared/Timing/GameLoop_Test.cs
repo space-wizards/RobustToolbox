@@ -47,7 +47,7 @@ namespace Robust.UnitTesting.Shared.Timing
         {
             var timing = new GameTiming();
 
-            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Instance | BindingFlags.NonPublic);
+            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.Instance | BindingFlags.NonPublic)!;
             field.SetValue(timing, stopwatch);
 
             return timing;

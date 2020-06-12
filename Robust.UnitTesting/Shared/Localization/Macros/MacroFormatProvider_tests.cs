@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
     [TestFixture, Parallelizable, TestOf(typeof(MacroFormatProvider))]
     internal class MacroFormatProvider_tests
     {
-        private MacroFormatProvider sut;
+        private MacroFormatProvider sut = default!;
 
         private class GenderedPerson : IGenderable
         {

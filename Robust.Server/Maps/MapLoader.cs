@@ -101,7 +101,7 @@ namespace Robust.Server.Maps
 
                 var data = new MapData(reader);
 
-                LoadedMapData?.Invoke(data.Stream, resPath.ToRelativeSystemPath());
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 if (data.GridCount != 1)
                 {
@@ -186,7 +186,7 @@ namespace Robust.Server.Maps
 
                 var data = new MapData(reader);
 
-                LoadedMapData?.Invoke(data.Stream, resPath.ToRelativeSystemPath());
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();

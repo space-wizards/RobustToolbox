@@ -35,12 +35,16 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
+        private readonly List<IntegrationInstance> _integrationInstances = new List<IntegrationInstance>();
+
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions options = null)
         {
-            return new ServerIntegrationInstance(options);
+            var instance = new ServerIntegrationInstance(options);
+            _integrationInstances.Add(instance);
+            return instance;
         }
 
         /// <summary>
@@ -48,7 +52,17 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions options = null)
         {
-            return new ClientIntegrationInstance(options);
+            var instance = new ClientIntegrationInstance(options);
+            _integrationInstances.Add(instance);
+            return instance;
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            _integrationInstances.ForEach(p => p.Stop());
+            await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
+            _integrationInstances.Clear();
         }
 
         /// <summary>
@@ -62,7 +76,7 @@ namespace Robust.UnitTesting
         ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
         ///     to prevent race conditions.
         /// </remarks>
-        public abstract class IntegrationInstance
+        public abstract class IntegrationInstance : IDisposable
         {
             private protected Thread InstanceThread;
             private protected IDependencyCollection DependencyCollection;
@@ -278,6 +292,11 @@ namespace Robust.UnitTesting
             {
                 Assert(assertion);
                 await WaitIdleAsync();
+            }
+
+            public void Dispose()
+            {
+                Stop();
             }
         }
 

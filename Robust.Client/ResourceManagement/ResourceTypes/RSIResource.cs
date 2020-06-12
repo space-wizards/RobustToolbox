@@ -81,7 +81,7 @@ namespace Robust.Client.ResourceManagement
             {
                 // Load image from disk.
                 var texPath = path / (stateObject.StateId + ".png");
-                var image = Image.Load(cache.ContentFileRead(texPath));
+                var image = Image.Load<Rgba32>(cache.ContentFileRead(texPath));
                 var sheetSize = new Vector2i(image.Width, image.Height);
 
                 if (sheetSize.X % frameSize.X != 0 || sheetSize.Y % frameSize.Y != 0)

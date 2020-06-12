@@ -10,6 +10,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Utility;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -215,7 +216,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 using (var stream = _resourceCache.ContentFileRead(file))
                 {
-                    var image = Image.Load(stream);
+                    var image = Image.Load<Rgba32>(stream);
                     icons.Add(image);
                 }
             }
@@ -231,6 +232,7 @@ namespace Robust.Client.Graphics.Clyde
                 .Select(i => (MemoryMarshal.Cast<Rgba32, byte>(i.GetPixelSpan()).ToArray(), i.Width, i.Height))
                 .ToList();
 
+            // ReSharper disable once SuggestVarOrType_Elsewhere
             Span<GCHandle> handles = stackalloc GCHandle[images.Count];
             Span<GlfwImage> glfwImages = new GlfwImage[images.Count];
 

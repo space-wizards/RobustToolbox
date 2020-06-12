@@ -23,14 +23,12 @@ namespace Robust.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameTiming gameTiming;
-        [Dependency] private readonly IResourceCache resourceCache;
-        [Dependency] private readonly IEyeManager eyeManager;
-        [Dependency] private readonly IOverlayManager overlayManager;
-        [Dependency] private readonly IPrototypeManager prototypeManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming gameTiming = default!;
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IOverlayManager overlayManager = default!;
+        [Dependency] private readonly IPrototypeManager prototypeManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly List<Effect> _Effects = new List<Effect>();
 
@@ -98,7 +96,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public Texture EffectSprite { get; set; }
 
-            public RSI.State RsiState { get; set; }
+            public RSI.State? RsiState { get; set; }
 
             public int AnimationIndex { get; set; }
 
@@ -334,7 +332,7 @@ namespace Robust.Client.GameObjects
                 var map = _owner.eyeManager.CurrentMap;
 
                 var worldHandle = (DrawingHandleWorld) handle;
-                ShaderInstance currentShader = null;
+                ShaderInstance? currentShader = null;
 
                 foreach (var effect in _owner._Effects)
                 {

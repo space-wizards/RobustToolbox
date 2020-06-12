@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private RenderHandle _renderHandle;
+        private RenderHandle _renderHandle = default!;
 
         /// <summary>
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
@@ -53,7 +53,7 @@ namespace Robust.Client.Graphics.Clyde
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
-        private LoadedTexture _batchLoadedTexture;
+        private LoadedTexture? _batchLoadedTexture;
         private ClydeHandle _queuedShader;
 
         private ProjViewMatrices _currentMatrices;
@@ -465,7 +465,7 @@ namespace Robust.Client.Graphics.Clyde
             Box2 sr;
             if (subRegion.HasValue)
             {
-                var (w, h) = _batchLoadedTexture.Size;
+                var (w, h) = _batchLoadedTexture!.Size;
                 var csr = subRegion.Value;
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {

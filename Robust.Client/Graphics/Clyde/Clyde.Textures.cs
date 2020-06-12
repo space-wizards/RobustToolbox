@@ -15,13 +15,13 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private ClydeTexture _stockTextureWhite;
-        private ClydeTexture _stockTextureBlack;
-        private ClydeTexture _stockTextureTransparent;
+        private ClydeTexture _stockTextureWhite = default!;
+        private ClydeTexture _stockTextureBlack = default!;
+        private ClydeTexture _stockTextureTransparent = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -32,7 +32,7 @@ namespace Robust.Client.Graphics.Clyde
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string name)
+        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name)
         {
             if (name != null)
             {
@@ -237,7 +237,7 @@ namespace Robust.Client.Graphics.Clyde
             public GLHandle OpenGLObject;
             public int Width;
             public int Height;
-            public string Name;
+            public string? Name;
             public Vector2i Size => (Width, Height);
         }
 

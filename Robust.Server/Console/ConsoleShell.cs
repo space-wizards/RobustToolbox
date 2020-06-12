@@ -236,7 +236,10 @@ namespace Robust.Server.Console
             {
                 // only the local server console bypasses permissions
                 if (player == null)
-                    shell.SendText((IPlayerSession) null, "LOCAL_CONSOLE");
+                {
+                    shell.SendText((IPlayerSession?) null, "LOCAL_CONSOLE");
+                    return;
+                }
 
                 var groupController = IoCManager.Resolve<IConGroupController>();
                 var groupIndex = groupController.GetGroupIndex(player);

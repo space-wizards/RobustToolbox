@@ -30,39 +30,37 @@ namespace Robust.Client.Graphics.Clyde
     /// </summary>
     internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly ILightManager _lightManager;
-        [Dependency] private readonly ILogManager _logManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly ILightManager _lightManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
         private const int ProjViewBindingIndex = 0;
         private const int UniformConstantsBindingIndex = 1;
-        private GLBuffer ProjViewUBO;
-        private GLBuffer UniformConstantsUBO;
+        private GLBuffer ProjViewUBO = default!;
+        private GLBuffer UniformConstantsUBO = default!;
 
-        private RenderTarget EntityPostRenderTarget;
+        private RenderTarget EntityPostRenderTarget = default!;
 
-        private GLBuffer BatchVBO;
-        private GLBuffer BatchEBO;
+        private GLBuffer BatchVBO = default!;
+        private GLBuffer BatchEBO = default!;
         private GLHandle BatchVAO;
 
         // VBO to draw a single quad.
-        private GLBuffer QuadVBO;
+        private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
         private bool _drawingSplash = true;
 
-        private GLShaderProgram _currentProgram;
+        private GLShaderProgram? _currentProgram;
 
         private bool _quartResLights = true;
 
@@ -77,7 +75,6 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
-            _debugStats = new ClydeDebugStats();
             if (!InitWindowing())
             {
                 return false;
@@ -104,7 +101,7 @@ namespace Robust.Client.Graphics.Clyde
             InitLighting();
         }
 
-        public IClydeDebugInfo DebugInfo { get; private set; }
+        public IClydeDebugInfo DebugInfo { get; private set; } = default!;
         public IClydeDebugStats DebugStats => _debugStats;
 
         protected override void ReadConfig()
@@ -130,7 +127,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.GridChanged += _updateOnGridModified;
         }
 
-        public override event Action<WindowResizedEventArgs> OnWindowResized;
+        public override event Action<WindowResizedEventArgs>? OnWindowResized;
 
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {
@@ -338,7 +335,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private static DebugProc _debugMessageCallbackInstance;
+        private static DebugProc? _debugMessageCallbackInstance;
 
         private static HashSet<string> GetGLExtensions()
         {
@@ -355,7 +352,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string label)
+        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string? label)
         {
             if (label == null)
             {
@@ -371,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, GLHandle name, string label)
+        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, GLHandle name, string? label)
         {
             ObjectLabelMaybe(identifier, name.Handle, label);
         }

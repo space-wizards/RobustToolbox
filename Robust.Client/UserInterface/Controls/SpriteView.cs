@@ -18,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public ISpriteComponent Sprite { get; set; }
+        public ISpriteComponent? Sprite { get; set; }
 
         /// <summary>
         ///     Overrides the direction used to render the sprite.

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Overlays;
 using Robust.Shared.Timing;
@@ -15,8 +16,8 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
         Overlay GetOverlay(string id);
         T GetOverlay<T>(string id) where T : Overlay;
 
-        bool TryGetOverlay(string id, out Overlay overlay);
-        bool TryGetOverlay<T>(string id, out T overlay) where T : Overlay;
+        bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay);
+        bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay;
 
         IEnumerable<Overlay> AllOverlays { get; }
     }

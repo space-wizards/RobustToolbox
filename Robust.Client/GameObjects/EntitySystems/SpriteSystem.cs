@@ -12,9 +12,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     [UsedImplicitly]
     public class SpriteSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)

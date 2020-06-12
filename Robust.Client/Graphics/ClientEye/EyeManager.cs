@@ -37,6 +37,11 @@ namespace Robust.Client.Graphics.ClientEye
             set => _currentEye = value;
         }
 
+        public void ClearCurrentEye()
+        {
+            _currentEye = _defaultEye;
+        }
+
         /// <inheritdoc />
         public MapId CurrentMap => CurrentEye.Position.MapId;
 

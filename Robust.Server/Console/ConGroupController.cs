@@ -128,7 +128,7 @@ namespace Robust.Server.Console
             return _sessions.GetSessionGroup(session);
         }
 
-        public string GetGroupName(ConGroupIndex index)
+        public string? GetGroupName(ConGroupIndex index)
         {
             var groupDict = _groups.Groups;
 

@@ -8,7 +8,7 @@ namespace Robust.Client.Interfaces
     {
         InitialLaunchState LaunchState { get; }
 
-        void Shutdown(string reason=null);
+        void Shutdown(string? reason=null);
     }
 
     internal interface IGameControllerInternal : IGameController
@@ -28,11 +28,11 @@ namespace Robust.Client.Interfaces
     public sealed class InitialLaunchState
     {
         public bool FromLauncher { get; }
-        public string ConnectAddress { get; }
-        public string Ss14Address { get; }
-        public DnsEndPoint ConnectEndpoint { get; }
+        public string? ConnectAddress { get; }
+        public string? Ss14Address { get; }
+        public DnsEndPoint? ConnectEndpoint { get; }
 
-        public InitialLaunchState(bool fromLauncher, string connectAddress, string ss14Address, DnsEndPoint connectEndpoint)
+        public InitialLaunchState(bool fromLauncher, string? connectAddress, string? ss14Address, DnsEndPoint? connectEndpoint)
         {
             FromLauncher = fromLauncher;
             ConnectAddress = connectAddress;

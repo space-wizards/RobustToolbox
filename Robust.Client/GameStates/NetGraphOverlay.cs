@@ -20,11 +20,9 @@ namespace Robust.Client.GameStates
     /// </summary>
     internal class NetGraphOverlay : Overlay
     {
-#pragma warning disable 0649
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager;
-#pragma warning restore 0649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
 
         private const int HistorySize = 60 * 3; // number of ticks to keep in history.
         private const int TargetPayloadBps = 56000 / 8; // Target Payload size in Bytes per second. A mind-numbing fifty-six thousand bits per second, who would ever need more?
@@ -61,7 +59,7 @@ namespace Robust.Client.GameStates
             _midrangePayloadSize = MidrangePayloadBps / _gameTiming.TickRate;
 
             // calc lag
-            var lag = _netManager.ServerChannel.Ping;
+            var lag = _netManager.ServerChannel!.Ping;
 
             // calc interp info
             var interpBuff = _gameStateManager.CurrentBufferSize - _gameStateManager.MinBufferSize;

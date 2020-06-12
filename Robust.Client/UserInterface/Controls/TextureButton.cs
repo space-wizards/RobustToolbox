@@ -9,7 +9,7 @@ namespace Robust.Client.UserInterface.Controls
     public class TextureButton : BaseButton
     {
         private Vector2 _scale = (1, 1);
-        private Texture _textureNormal;
+        private Texture? _textureNormal;
         public const string StylePropertyTexture = "texture";
         public const string StylePseudoClassNormal = "normal";
         public const string StylePseudoClassHover = "hover";
@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [ViewVariables]
-        public Texture TextureNormal
+        public Texture? TextureNormal
         {
             get => _textureNormal;
             set

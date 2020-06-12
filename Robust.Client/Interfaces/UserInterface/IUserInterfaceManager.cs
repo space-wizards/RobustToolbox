@@ -18,9 +18,9 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Default style sheet that applies to all controls
         ///     that do not have a more specific style sheet via <see cref="Control.Stylesheet"/>.
         /// </summary>
-        Stylesheet Stylesheet { get; set; }
+        Stylesheet? Stylesheet { get; set; }
 
-        Control KeyboardFocused { get; }
+        Control? KeyboardFocused { get; }
 
         LayoutContainer StateRoot { get; }
 
@@ -30,7 +30,7 @@ namespace Robust.Client.Interfaces.UserInterface
 
         PopupContainer ModalRoot { get; }
 
-        Control CurrentlyHovered { get; }
+        Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
 
@@ -44,7 +44,7 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void Popup(string contents, string title = "Alert!");
 
-        Control MouseGetControl(Vector2 coordinates);
+        Control? MouseGetControl(Vector2 coordinates);
 
         /// <summary>
         ///     Gets the mouse position in UI space, accounting for <see cref="UIScale"/>.
@@ -81,7 +81,7 @@ namespace Robust.Client.Interfaces.UserInterface
         /// <summary>
         ///     Cursor automatically used when the mouse is not over any UI control.
         /// </summary>
-        ICursor WorldCursor { get; set; }
+        ICursor? WorldCursor { get; set; }
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager

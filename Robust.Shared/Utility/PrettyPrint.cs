@@ -40,7 +40,7 @@ namespace Robust.Shared.Utility
         ///   returned value. Otherwise, <c>""</c>.
         /// </param>
         /// <returns>A readable representation of the object.</returns>
-        public static string? PrintUserFacingWithType(object? value, out string typeRep)
+        public static string PrintUserFacingWithType(object? value, out string typeRep)
         {
             if (value == null) {
                 typeRep = string.Empty;
@@ -61,7 +61,7 @@ namespace Robust.Shared.Utility
                 typeRep = TypeAbbreviation.Abbreviate(value.GetType());
             }
 
-            return stringRep;
+            return stringRep!;
         }
     }
 }

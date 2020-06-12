@@ -26,7 +26,7 @@ namespace Robust.Client.GameStates
     /// <inheritdoc />
     public class ClientGameStateManager : IClientGameStateManager
     {
-        private GameStateProcessor _processor;
+        private GameStateProcessor _processor = default!;
 
         private uint _nextInputCmdSeq = 1;
         private readonly Queue<FullInputCmdMessage> _pendingInputs = new Queue<FullInputCmdMessage>();
@@ -35,17 +35,15 @@ namespace Robust.Client.GameStates
             _pendingSystemMessages
                 = new Queue<(uint, GameTick, EntitySystemMessage, object)>();
 
-#pragma warning disable 649
-        [Dependency] private readonly IClientEntityManager _entities;
-        [Dependency] private readonly IPlayerManager _players;
-        [Dependency] private readonly IClientNetManager _network;
-        [Dependency] private readonly IBaseClient _client;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IGameTiming _timing;
-        [Dependency] private readonly IConfigurationManager _config;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClientEntityManager _entities = default!;
+        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private readonly IClientNetManager _network = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
@@ -66,7 +64,7 @@ namespace Robust.Client.GameStates
         public GameTick CurServerTick => _lastProcessedTick;
 
         /// <inheritdoc />
-        public event Action<GameStateAppliedArgs> GameStateApplied;
+        public event Action<GameStateAppliedArgs>? GameStateApplied;
 
         /// <inheritdoc />
         public void Initialize()
@@ -99,7 +97,7 @@ namespace Robust.Client.GameStates
             _lastProcessedSeq = 0;
         }
 
-        private void RunLevelChanged(object sender, RunLevelChangedEventArgs args)
+        private void RunLevelChanged(object? sender, RunLevelChangedEventArgs args)
         {
             if (args.NewLevel == ClientRunLevel.Initialize)
             {
@@ -132,7 +130,9 @@ namespace Robust.Client.GameStates
                 return default;
             }
 
-            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer.Session);
+            DebugTools.AssertNotNull(_players.LocalPlayer);
+
+            var evArgs = new EntitySessionEventArgs(_players.LocalPlayer!.Session);
             _pendingSystemMessages.Enqueue((_nextInputCmdSeq, _timing.CurTick, message,
                 new EntitySessionMessage<T>(evArgs, message)));
 
@@ -227,7 +227,7 @@ namespace Robust.Client.GameStates
             var hasPendingInput = pendingInputEnumerator.MoveNext();
             var hasPendingMessage = pendingMessagesEnumerator.MoveNext();
 
-            var ping = _network.ServerChannel.Ping / 1000f; // seconds.
+            var ping = _network.ServerChannel!.Ping / 1000f; // seconds.
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                              (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
 
@@ -294,7 +294,7 @@ namespace Robust.Client.GameStates
                 {
                     DebugTools.AssertNotNull(comp.NetID);
 
-                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(comp.NetID.Value, out var compState))
+                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(comp.NetID!.Value, out var compState))
                     {
                         continue;
                     }
@@ -342,7 +342,7 @@ namespace Robust.Client.GameStates
             _network.ClientSendMessage(msg);
         }
 
-        private List<EntityUid> ApplyGameState(GameState curState, GameState nextState)
+        private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
             _mapManager.ApplyGameStatePre(curState.MapData);
             var createdEntities = _entities.ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,

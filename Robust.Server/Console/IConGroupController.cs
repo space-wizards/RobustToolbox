@@ -13,6 +13,6 @@ namespace Robust.Server.Console
         bool CanScript(IPlayerSession session);
         void SetGroup(IPlayerSession session, ConGroupIndex newGroup);
         ConGroupIndex GetGroupIndex(IPlayerSession session);
-        string GetGroupName(ConGroupIndex index);
+        string? GetGroupName(ConGroupIndex index);
     }
 }

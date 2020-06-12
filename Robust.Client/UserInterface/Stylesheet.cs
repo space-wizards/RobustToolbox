@@ -108,7 +108,7 @@ namespace Robust.Client.UserInterface
             return TypeSelectors.CompareTo(other.TypeSelectors);
         }
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
             if (ReferenceEquals(null, obj)) return 1;
             return obj is StyleSpecificity other
@@ -145,14 +145,14 @@ namespace Robust.Client.UserInterface
 
     public sealed class SelectorElement : Selector
     {
-        private readonly string[] _elementClasses;
-        private readonly string[] _pseudoClasses;
+        private readonly string[]? _elementClasses;
+        private readonly string[]? _pseudoClasses;
 
         public SelectorElement(
-            Type elementType,
-            IEnumerable<string> elementClasses,
-            string elementId,
-            IEnumerable<string> pseudoClass)
+            Type? elementType,
+            IEnumerable<string>? elementClasses,
+            string? elementId,
+            IEnumerable<string>? pseudoClass)
         {
             if (elementType != null)
             {
@@ -188,10 +188,10 @@ namespace Robust.Client.UserInterface
             return new SelectorElement(null, null, id, null);
         }
 
-        public Type ElementType { get; }
-        public IReadOnlyList<string> ElementClasses => _elementClasses;
-        public string ElementId { get; }
-        public IReadOnlyList<string> PseudoClasses => _pseudoClasses;
+        public Type? ElementType { get; }
+        public IReadOnlyList<string>? ElementClasses => _elementClasses;
+        public string? ElementId { get; }
+        public IReadOnlyList<string>? PseudoClasses => _pseudoClasses;
 
         public override bool Matches(Control control)
         {
@@ -241,7 +241,7 @@ namespace Robust.Client.UserInterface
                 while (type != typeof(Control))
                 {
                     DebugTools.AssertNotNull(type);
-                    type = type.BaseType;
+                    type = type!.BaseType;
                     countTypes += 1;
                 }
             }

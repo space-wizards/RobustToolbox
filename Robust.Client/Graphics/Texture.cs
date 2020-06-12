@@ -56,7 +56,7 @@ namespace Robust.Client.Graphics
         ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
         /// </param>
         /// <typeparam name="T">The type of pixels of the image. At the moment, images must be <see cref="Rgba32"/>.</typeparam>
-        public static Texture LoadFromImage<T>(Image<T> image, string name = null,
+        public static Texture LoadFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParameters = null) where T : unmanaged, IPixel<T>
         {
             var manager = IoCManager.Resolve<IClyde>();
@@ -72,7 +72,7 @@ namespace Robust.Client.Graphics
         ///     Parameters that influence the loading of textures.
         ///     Defaults to <see cref="TextureLoadParameters.Default"/> if <c>null</c>.
         /// </param>
-        public static Texture LoadFromPNGStream(Stream stream, string name = null,
+        public static Texture LoadFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParameters = null)
         {
             var manager = IoCManager.Resolve<IClyde>();
@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics
         public static TextureLoadParameters FromYaml(YamlMappingNode yaml)
         {
             var loadParams = TextureLoadParameters.Default;
-            if (yaml.TryGetNode("sample", out YamlMappingNode sampleNode))
+            if (yaml.TryGetNode("sample", out YamlMappingNode? sampleNode))
             {
                 loadParams.SampleParameters = TextureSampleParameters.FromYaml(sampleNode);
             }

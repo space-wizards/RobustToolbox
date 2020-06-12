@@ -100,7 +100,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private Label TitleLabel;
 
-        public string Title
+        public string? Title
         {
             get => TitleLabel.Text;
             set => TitleLabel.Text = value;
@@ -127,7 +127,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override void Update(FrameEventArgs args)
         {
-            var (spaceX, spaceY) = Parent.Size;
+            var (spaceX, spaceY) = Parent!.Size;
             if (Position.Y > spaceY)
             {
                 LayoutContainer.SetPosition(this, (Position.X, spaceY - HEADER_SIZE_Y));

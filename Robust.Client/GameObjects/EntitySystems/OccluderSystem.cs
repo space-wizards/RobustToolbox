@@ -13,9 +13,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     internal sealed class OccluderSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly Queue<IEntity> _dirtyEntities = new Queue<IEntity>();
 

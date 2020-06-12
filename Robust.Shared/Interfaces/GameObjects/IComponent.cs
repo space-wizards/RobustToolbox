@@ -109,7 +109,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="message">Incoming event message.</param>
         /// <param name="component">The local component that sent the message.</param>
-        void HandleMessage(ComponentMessage message, IComponent component);
+        void HandleMessage(ComponentMessage message, IComponent? component);
 
         /// <summary>
         ///     Handles an incoming component message from the server.

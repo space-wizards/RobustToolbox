@@ -29,11 +29,9 @@ namespace Robust.Client.Input
 
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceMan;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceMan = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
             new Dictionary<BoundKeyFunction, InputCmdHandler>();
@@ -42,16 +40,16 @@ namespace Robust.Client.Input
         private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
-        public BoundKeyMap NetworkBindMap { get; private set; }
+        public BoundKeyMap NetworkBindMap { get; private set; } = default!;
 
         /// <inheritdoc />
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
+        public event Action<BoundKeyEventArgs>? UIKeyBindStateChanged;
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs> KeyBindStateChanged;
+        public event Action<BoundKeyEventArgs>? KeyBindStateChanged;
 
         public IEnumerable<BoundKeyFunction> DownKeyFunctions => _bindings
             .Where(x => x.State == BoundKeyState.Down)
@@ -95,7 +93,7 @@ namespace Robust.Client.Input
             }
         }
 
-        private void OnContextChanged(object sender, ContextChangedEventArgs args)
+        private void OnContextChanged(object? sender, ContextChangedEventArgs args)
         {
             // keyup any commands that are not in the new contexts, because it will not exist in the new context and get filtered. Luckily
             // the diff does not have to be symmetrical, otherwise instead of 'A \ B' we allocate all the things with '(A \ B) ∪ (B \ A)'
@@ -418,7 +416,7 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
-        public InputCmdHandler GetInputCommand(BoundKeyFunction function)
+        public InputCmdHandler? GetInputCommand(BoundKeyFunction function)
         {
             if (_commands.TryGetValue(function, out var val))
             {
@@ -501,7 +499,7 @@ namespace Robust.Client.Input
 
             private sealed class ProcessPriorityRelationalComparer : IComparer<KeyBinding>
             {
-                public int Compare(KeyBinding x, KeyBinding y)
+                public int Compare(KeyBinding? x, KeyBinding? y)
                 {
                     if (ReferenceEquals(x, y)) return 0;
                     if (ReferenceEquals(null, y)) return 1;
@@ -564,7 +562,7 @@ namespace Robust.Client.Input
                 return Packed == other.Packed;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is PackedKeyCombo other && Equals(other);
             }
@@ -628,14 +626,14 @@ namespace Robust.Client.Input
                 return false;
             }
 
-            var keyId = (Keyboard.Key) keyIdObj;
+            var keyId = (Keyboard.Key) keyIdObj!;
 
             if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
             {
                 console.AddLine($"BindMode '{args[1]}' is unrecognized.");
                 return false;
             }
-            var keyMode = (KeyBindingType)keyModeObj;
+            var keyMode = (KeyBindingType)keyModeObj!;
 
             var inputCommand = args[2];
 

@@ -19,7 +19,7 @@ namespace Robust.Client.Placement.Modes
             var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
             CurrentTile = mapGrid.GetTileRef(MouseCoords);
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
@@ -42,7 +42,7 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestEntity = snapToEntities[0];
-            if (!closestEntity.TryGetComponent<ISpriteComponent>(out var component))
+            if (!closestEntity.TryGetComponent<ISpriteComponent>(out var component) || component.BaseRSI == null)
             {
                 return;
             }
@@ -71,7 +71,7 @@ namespace Robust.Client.Placement.Modes
 
         public override bool IsValidPosition(GridCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return false;
             }

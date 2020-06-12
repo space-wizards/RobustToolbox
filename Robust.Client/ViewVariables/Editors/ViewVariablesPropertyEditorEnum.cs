@@ -10,9 +10,9 @@ namespace Robust.Client.ViewVariables.Editors
 {
     class ViewVariablesPropertyEditorEnum : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
-            DebugTools.Assert(value.GetType().IsEnum);
+            DebugTools.Assert(value!.GetType().IsEnum);
             var enumVal = (Enum)value;
             var enumType = value.GetType();
             var enumStorageType = enumType.GetEnumUnderlyingType();
@@ -37,8 +37,8 @@ namespace Robust.Client.ViewVariables.Editors
                     var parseMethod = enumStorageType.GetMethod("TryParse", parseSig);
                     DebugTools.AssertNotNull(parseMethod);
 
-                    var parameters = new object[] {e.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, null};
-                    var parseWorked = (bool)parseMethod.Invoke(null, parameters);
+                    var parameters = new object?[] {e.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, null};
+                    var parseWorked = (bool)parseMethod!.Invoke(null, parameters)!;
 
                     if (parseWorked) // textbox was the underlying type
                     {

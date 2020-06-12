@@ -187,7 +187,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="owner">Object that sent the event.</param>
         /// <param name="message">Message to send.</param>
-        void SendMessage(IComponent owner, ComponentMessage message);
+        void SendMessage(IComponent? owner, ComponentMessage message);
 
         /// <summary>
         ///     Sends a message over the network to the counterpart component. This works both ways.

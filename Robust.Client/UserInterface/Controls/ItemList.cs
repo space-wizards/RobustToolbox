@@ -21,9 +21,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private VScrollBar _scrollBar;
         private readonly List<Item> _itemList = new List<Item>();
-        public event Action<ItemListSelectedEventArgs> OnItemSelected;
-        public event Action<ItemListDeselectedEventArgs> OnItemDeselected;
-        public event Action<ItemListHoverEventArgs> OnItemHover;
+        public event Action<ItemListSelectedEventArgs>? OnItemSelected;
+        public event Action<ItemListDeselectedEventArgs>? OnItemDeselected;
+        public event Action<ItemListHoverEventArgs>? OnItemHover;
 
         public const string StylePropertyBackground = "itemlist-background";
         public const string StylePropertyItemBackground = "item-background";
@@ -92,7 +92,7 @@ namespace Robust.Client.UserInterface.Controls
                 _scrollBar.MoveToEnd();
         }
 
-        public Item AddItem(string text, Texture icon = null, bool selectable = true)
+        public Item AddItem(string text, Texture? icon = null, bool selectable = true)
         {
             var item = new Item(this) {Text = text, Icon = icon, Selectable = selectable};
             Add(item);
@@ -242,7 +242,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty("font", out Font font))
+                if (TryGetStyleProperty<Font>("font", out var font))
                 {
                     return font;
                 }
@@ -268,7 +268,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty(StylePropertyBackground, out StyleBox bg))
+                if (TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var bg))
                 {
                     return bg;
                 }
@@ -280,7 +280,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty(StylePropertyItemBackground, out StyleBox bg))
+                if (TryGetStyleProperty<StyleBox>(StylePropertyItemBackground, out var bg))
                 {
                     return bg;
                 }
@@ -293,7 +293,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty(StylePropertySelectedItemBackground, out StyleBox bg))
+                if (TryGetStyleProperty<StyleBox>(StylePropertySelectedItemBackground, out var bg))
                 {
                     return bg;
                 }
@@ -306,7 +306,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty(StylePropertyDisabledItemBackground, out StyleBox bg))
+                if (TryGetStyleProperty<StyleBox>(StylePropertyDisabledItemBackground, out var bg))
                 {
                     return bg;
                 }
@@ -580,16 +580,16 @@ namespace Robust.Client.UserInterface.Controls
 
         public sealed class Item
         {
-            public event Action<Item> OnSelected;
-            public event Action<Item> OnDeselected;
+            public event Action<Item>? OnSelected;
+            public event Action<Item>? OnDeselected;
 
             private bool _selected = false;
             private bool _disabled = false;
 
             public ItemList Owner { get; }
-            public string Text { get; set; }
-            public string TooltipText { get; set; }
-            public Texture Icon { get; set; }
+            public string? Text { get; set; }
+            public string? TooltipText { get; set; }
+            public Texture? Icon { get; set; }
             public UIBox2 IconRegion { get; set; }
             public Color IconModulate { get; set; } = Color.White;
             public bool Selectable { get; set; } = true;

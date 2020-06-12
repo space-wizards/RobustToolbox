@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
@@ -13,10 +14,10 @@ namespace Robust.Client.Interfaces.ResourceManagement
         T GetResource<T>(ResourcePath path, bool useFallback = true)
             where T : BaseResource, new();
 
-        bool TryGetResource<T>(string path, out T resource)
+        bool TryGetResource<T>(string path, [NotNullWhen(true)] out T? resource)
             where T : BaseResource, new();
 
-        bool TryGetResource<T>(ResourcePath path, out T resource)
+        bool TryGetResource<T>(ResourcePath path, [NotNullWhen(true)] out T? resource)
             where T : BaseResource, new();
 
         void ReloadResource<T>(string path)

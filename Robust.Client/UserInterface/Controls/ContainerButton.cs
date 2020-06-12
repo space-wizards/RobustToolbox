@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box))
+                if (TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box))
                 {
                     return box;
                 }

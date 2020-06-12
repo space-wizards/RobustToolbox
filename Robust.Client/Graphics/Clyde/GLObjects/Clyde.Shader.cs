@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
+            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string? name=null)
             {
                 _clyde = clyde;
                 Compile(type, shaderSource);

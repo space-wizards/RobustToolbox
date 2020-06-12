@@ -369,7 +369,7 @@ namespace Robust.Server.Player
             netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
             netMsg.TickRate = _timing.TickRate;
 
-            IPlayerSession session;
+            IPlayerSession? session;
             while (!TryGetSessionByChannel(channel, out session))
             {
                 await Task.Delay(10);

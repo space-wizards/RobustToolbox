@@ -6,9 +6,7 @@ namespace Robust.Client
 {
     internal sealed class ClientSignalHandler : SignalHandler
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameController _gameController;
-#pragma warning restore 649
+        [Dependency] private readonly IGameController _gameController = default!;
 
         protected override void OnReceiveTerminationSignal(string signal)
         {

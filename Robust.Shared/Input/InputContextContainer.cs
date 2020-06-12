@@ -12,7 +12,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     The current "active" context that should be used for filtering key binds.
         /// </summary>
-        IInputCmdContext? ActiveContext { get; }
+        IInputCmdContext ActiveContext { get; }
 
         /// <summary>
         ///     This event is raised when ever the Active Context is changed.
@@ -82,16 +82,16 @@ namespace Robust.Shared.Input
         public event EventHandler<ContextChangedEventArgs>? ContextChanged;
 
         private readonly Dictionary<string, InputCmdContext> _contexts = new Dictionary<string, InputCmdContext>();
-        private InputCmdContext? _activeContext;
+        private InputCmdContext _activeContext = default!;
 
         /// <inheritdoc />
-        public IInputCmdContext? ActiveContext
+        public IInputCmdContext ActiveContext
         {
             get => _activeContext;
             private set
             {
                 var args = new ContextChangedEventArgs(_activeContext, value);
-                _activeContext = (InputCmdContext?) value;
+                _activeContext = (InputCmdContext) value;
                 ContextChanged?.Invoke(this, args);
             }
         }

@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface.Controls
         private VBoxContainer _popupVBox;
         private Label _label;
 
-        public event Action<ItemSelectedEventArgs> OnItemSelected;
+        public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
         public string Prefix { get; set; }
 
@@ -72,11 +72,9 @@ namespace Robust.Client.UserInterface.Controls
                 ToggleMode = true
             };
             button.OnPressed += ButtonOnPressed;
-            var data = new ButtonData
+            var data = new ButtonData(label, button)
             {
-                Text = label,
                 Id = id.Value,
-                Button = button
             };
             _idMap.Add(id.Value, _buttonData.Count);
             _buttonData.Add(data);
@@ -119,14 +117,14 @@ namespace Robust.Client.UserInterface.Controls
             return _buttonData[idx].Id;
         }
 
-        public object GetItemMetadata(int idx)
+        public object? GetItemMetadata(int idx)
         {
             return _buttonData[idx].Metadata;
         }
 
         public int SelectedId { get; private set; }
 
-        public object SelectedMetadata => _buttonData[_idMap[SelectedId]].Metadata;
+        public object? SelectedMetadata => _buttonData[_idMap[SelectedId]].Metadata;
 
         public bool IsItemDisabled(int idx)
         {
@@ -239,9 +237,15 @@ namespace Robust.Client.UserInterface.Controls
         {
             public string Text;
             public bool Disabled;
-            public object Metadata;
+            public object? Metadata;
             public int Id;
             public Button Button;
+
+            public ButtonData(string text, Button button)
+            {
+                Text = text;
+                Button = button;
+            }
         }
     }
 }

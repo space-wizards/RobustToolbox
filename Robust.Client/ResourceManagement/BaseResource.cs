@@ -13,7 +13,7 @@ namespace Robust.Client.ResourceManagement
         /// <summary>
         ///     Fallback resource path if this one does not exist.
         /// </summary>
-        public virtual ResourcePath Fallback => null;
+        public virtual ResourcePath? Fallback => null;
 
         /// <summary>
         ///     Disposes this resource.

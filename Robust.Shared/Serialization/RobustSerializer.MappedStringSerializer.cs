@@ -660,7 +660,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (_net.IsClient)
+                    if (_net!.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return false;
@@ -798,7 +798,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (_net.IsClient)
+                    if (_net!.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
@@ -857,7 +857,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (_net.IsClient)
+                    if (_net!.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
@@ -920,7 +920,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (_net.IsClient)
+                    if (_net!.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;
@@ -1000,7 +1000,7 @@ namespace Robust.Shared.Serialization
             {
                 if (LockMappedStrings)
                 {
-                    if (_net.IsClient)
+                    if (_net!.IsClient)
                     {
                         //LogSzr.Info("On client and mapped strings are locked, will not add.");
                         return;

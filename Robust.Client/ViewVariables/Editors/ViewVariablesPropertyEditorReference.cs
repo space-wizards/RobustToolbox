@@ -7,9 +7,9 @@ namespace Robust.Client.ViewVariables.Editors
 {
     internal sealed class ViewVariablesPropertyEditorReference : ViewVariablesPropertyEditor
     {
-        public event Action OnPressed;
+        public event Action? OnPressed;
 
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             if (value == null)
             {

@@ -65,7 +65,7 @@ namespace Robust.Client.Animations
             /// </summary>
             public readonly float KeyTime;
 
-            public KeyFrame(string resource, float keyTime, Func<AudioParams> audioParams = null)
+            public KeyFrame(string resource, float keyTime, Func<AudioParams>? audioParams = null)
             {
                 Resource = resource;
                 KeyTime = keyTime;

@@ -30,7 +30,7 @@ namespace Robust.Client.Graphics.Clyde
         private const int FovMapSize = 2048;
         private const int MaxLightsPerScene = 128;
 
-        private ClydeShaderInstance _fovDebugShaderInstance;
+        private ClydeShaderInstance _fovDebugShaderInstance = default!;
 
         // Various shaders used in the light rendering process.
         // We keep ClydeHandles into the _loadedShaders dict so they can be reloaded.
@@ -48,21 +48,21 @@ namespace Robust.Client.Graphics.Clyde
         // Various render targets used in the light rendering process.
 
         // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
-        private RenderTarget _lightRenderTarget;
+        private RenderTarget _lightRenderTarget = default!;
 
         // For depth calculation for FOV.
-        private RenderTarget _fovRenderTarget;
+        private RenderTarget _fovRenderTarget = default!;
 
         // For depth calculation of lighting shadows.
-        private RenderTarget _shadowRenderTarget;
+        private RenderTarget _shadowRenderTarget = default!;
 
         // Unused, to be removed.
-        private RenderTarget _wallMaskRenderTarget;
+        private RenderTarget _wallMaskRenderTarget = default!;
 
         // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
         // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
-        private RenderTarget _wallBleedIntermediateRenderTarget1;
-        private RenderTarget _wallBleedIntermediateRenderTarget2;
+        private RenderTarget _wallBleedIntermediateRenderTarget1 = default!;
+        private RenderTarget _wallBleedIntermediateRenderTarget2 = default!;
 
         // Proxies to textures of some of the above render targets.
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
@@ -75,7 +75,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // Shader program used to calculate depth for shadows/FOV.
         // Sadly not .swsl since it has a different vertex format and such.
-        private GLShaderProgram _fovCalculationProgram;
+        private GLShaderProgram _fovCalculationProgram = default!;
 
         // Occlusion geometry used to render shadows and FOV.
 
@@ -83,8 +83,8 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionVbo;
-        private GLBuffer _occlusionEbo;
+        private GLBuffer _occlusionVbo = default!;
+        private GLBuffer _occlusionEbo = default!;
         private GLHandle _occlusionVao;
 
 
@@ -95,8 +95,8 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionMaskDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionMaskVbo;
-        private GLBuffer _occlusionMaskEbo;
+        private GLBuffer _occlusionMaskVbo = default!;
+        private GLBuffer _occlusionMaskEbo = default!;
         private GLHandle _occlusionMaskVao;
 
         private unsafe void InitLighting()
@@ -364,7 +364,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastRange = float.NaN;
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
-            Texture lastMask = null;
+            Texture? lastMask = null;
 
             for (var i = 0; i < lights.Count; i++)
             {
@@ -378,7 +378,7 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                Texture mask = null;
+                Texture? mask = null;
                 var rotation = Angle.Zero;
                 if (component.Mask != null)
                 {

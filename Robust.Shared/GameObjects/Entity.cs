@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
         #region Component Messaging
 
         /// <inheritdoc />
-        public void SendMessage(IComponent owner, ComponentMessage message)
+        public void SendMessage(IComponent? owner, ComponentMessage message)
         {
             var components = EntityManager.ComponentManager.GetComponents(Uid);
             foreach (var component in components)

@@ -160,8 +160,8 @@ namespace Robust.Shared.Interfaces.Map
 
         // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
         // but old ones can be deleted after.
-        void ApplyGameStatePre(GameStateMapData data);
-        void ApplyGameStatePost(GameStateMapData data);
+        void ApplyGameStatePre(GameStateMapData? data);
+        void ApplyGameStatePost(GameStateMapData? data);
         bool HasMapEntity(MapId mapId);
     }
 }

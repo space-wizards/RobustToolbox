@@ -20,6 +20,6 @@ jobs:
     - name: Install dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore /p:WarningsAsErrors=nullable
     - name: Test
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -v n

@@ -21,7 +21,7 @@ namespace Robust.UnitTesting
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
-        public bool Startup(Func<ILogHandler> logHandlerFactory = null)
+        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
         {
             return true;
         }

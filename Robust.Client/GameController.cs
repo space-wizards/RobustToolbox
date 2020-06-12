@@ -80,7 +80,7 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public bool Startup(Func<ILogHandler> logHandlerFactory = null)
+        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
         {
             ReadInitialLaunchState();
 

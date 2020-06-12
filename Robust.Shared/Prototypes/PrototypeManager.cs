@@ -72,7 +72,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void RegisterIgnore(string name);
 
-        event Action<YamlStream, string> LoadedData;
+        event Action<YamlStream, string>? LoadedData;
 
     }
 
@@ -359,7 +359,7 @@ namespace Robust.Shared.Prototypes
             IgnoredPrototypeTypes.Add(name);
         }
 
-        public event Action<YamlStream, string> LoadedData;
+        public event Action<YamlStream, string>? LoadedData;
 
     }
 

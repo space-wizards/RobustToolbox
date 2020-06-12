@@ -39,7 +39,7 @@ namespace Robust.Server.Maps
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
-        public event Action<YamlStream, string> LoadedMapData;
+        public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)

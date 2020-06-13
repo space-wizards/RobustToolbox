@@ -11,7 +11,7 @@ namespace Robust.Server.Console.Commands
     [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
     {
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {

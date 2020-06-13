@@ -113,9 +113,9 @@ namespace Robust.Shared.Map
         /// <param name="ignoreEmpty">Will empty tiles be returned?</param>
         /// <param name="predicate">Optional predicate to filter the files.</param>
         /// <returns></returns>
-        IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
+        IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
 
-        IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef> predicate = null);
+        IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
 
         #endregion TileAccess
 

@@ -13,7 +13,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Lists loaded assemblies by load context.";
         public string Help => Command;
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var sb = new StringBuilder();
             foreach (var context in AssemblyLoadContext.All)

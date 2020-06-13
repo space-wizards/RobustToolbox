@@ -55,8 +55,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private const int TARGET_ICON_HEIGHT = 32;
 
-        private EntitySpawnButton SelectedButton;
-        private EntityPrototype SelectedPrototype;
+        private EntitySpawnButton? SelectedButton;
+        private EntityPrototype? SelectedPrototype;
 
         protected override Vector2? CustomSize => (250, 300);
 
@@ -136,7 +136,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildEntityList();
 
-            this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            this.placementManager.PlacementChanged += OnPlacementCanceled;
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -153,7 +153,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                placementManager.PlacementCanceled -= OnPlacementCanceled;
+                placementManager.PlacementChanged -= OnPlacementCanceled;
             }
         }
 
@@ -172,7 +172,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 var newObjInfo = new PlacementInformation
                 {
                     PlacementOption = initOpts[args.Id],
-                    EntityType = placementManager.CurrentPermission.EntityType,
+                    EntityType = placementManager.CurrentPermission!.EntityType,
                     Range = 2,
                     IsTile = placementManager.CurrentPermission.IsTile
                 };
@@ -193,7 +193,7 @@ namespace Robust.Client.UserInterface.CustomControls
             placementManager.ToggleEraser();
         }
 
-        private void BuildEntityList(string searchStr = null)
+        private void BuildEntityList(string? searchStr = null)
         {
             _filteredPrototypes.Clear();
             PrototypeList.RemoveAllChildren();
@@ -239,7 +239,7 @@ namespace Robust.Client.UserInterface.CustomControls
             var endIndex = startIndex - 1;
             var spaceUsed = -height; // -height instead of 0 because else it cuts off the last button.
 
-            while (spaceUsed < PrototypeList.Parent.Height)
+            while (spaceUsed < PrototypeList.Parent!.Height)
             {
                 spaceUsed += height;
                 endIndex += 1;
@@ -354,7 +354,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            var item = (EntitySpawnButton) args.Button.Parent;
+            var item = (EntitySpawnButton) args.Button.Parent!;
             if (SelectedButton == item)
             {
                 SelectedButton = null;
@@ -459,7 +459,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
-            public EntityPrototype Prototype { get; set; }
+            public EntityPrototype Prototype { get; set; } = default!;
             public Button ActualButton { get; private set; }
             public Label EntityLabel { get; private set; }
             public TextureRect EntityTextureRect { get; private set; }
@@ -498,7 +498,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void OnPlacementCanceled(object sender, EventArgs e)
+        private void OnPlacementCanceled(object? sender, EventArgs e)
         {
             if (SelectedButton != null)
             {

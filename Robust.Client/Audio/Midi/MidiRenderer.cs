@@ -77,9 +77,9 @@ namespace Robust.Client.Audio.Midi
         uint SequencerTick { get; }
 
         /// <summary>
-        ///     Gets or sets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
+        ///     Gets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
         /// </summary>
-        double SequencerTimeScale { get; set; }
+        double SequencerTimeScale { get; }
 
         /// <summary>
         ///     Start listening for midi input.
@@ -132,7 +132,7 @@ namespace Robust.Client.Audio.Midi
         ///     The entity whose position will be used for positional audio.
         ///     This is only used if <see cref="Mono"/> is set to True.
         /// </summary>
-        IEntity TrackingEntity { get; set; }
+        IEntity? TrackingEntity { get; set; }
 
         /// <summary>
         ///     The position that will be used for positional audio.
@@ -159,11 +159,9 @@ namespace Robust.Client.Audio.Midi
 
     public class MidiRenderer : IMidiRenderer
     {
-#pragma warning disable 649
-        [Dependency] private IClydeAudio _clydeAudio;
-        [Dependency] private ITaskManager _taskManager;
-        [Dependency] private ILogManager _logger;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly ILogManager _logger = default!;
 
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
@@ -177,8 +175,8 @@ namespace Robust.Client.Audio.Midi
         private readonly SoundFontLoader _soundFontLoader;
         private Synth _synth;
         private Sequencer _sequencer;
-        private NFluidsynth.Player _player;
-        private MidiDriver _driver;
+        private NFluidsynth.Player? _player;
+        private MidiDriver? _driver;
         private byte _midiProgram = 1;
         private byte _midiBank = 1;
         private uint _midiSoundfont = 0;
@@ -235,12 +233,7 @@ namespace Robust.Client.Audio.Midi
         public int PlayerTotalTick => _player?.GetTotalTicks ?? 0;
         public int PlayerTick => _player?.CurrentTick ?? 0;
         public uint SequencerTick => _sequencer?.Tick ?? 0;
-
-        public double SequencerTimeScale
-        {
-            get => _sequencer.TimeScale;
-            set => _sequencer.TimeScale = value;
-        }
+        public double SequencerTimeScale => _sequencer?.TimeScale ?? 0;
 
         public bool Mono { get; set; }
         public MidiRendererStatus Status { get; private set; } = MidiRendererStatus.None;
@@ -256,7 +249,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public IEntity TrackingEntity { get; set; } = null;
+        public IEntity? TrackingEntity { get; set; } = null;
         public GridCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal bool Free { get; set; } = false;
@@ -348,6 +341,7 @@ namespace Robust.Client.Audio.Midi
             {
                 if (_player == null) return false;
                 _player?.Stop();
+                _player?.Join();
                 _player?.Dispose();
                 _player = null;
             }
@@ -373,8 +367,8 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
-        public event Action OnMidiPlayerFinished;
+        public event Action<Shared.Audio.Midi.MidiEvent>? OnMidiEvent;
+        public event Action? OnMidiPlayerFinished;
 
         internal void Render(int length = SampleRate / 250)
         {
@@ -455,7 +449,7 @@ namespace Robust.Client.Audio.Midi
             if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing) return 0;
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
-            midiEv.Timestamp = timestamp;
+            midiEv.Tick = timestamp;
             SendMidiEvent(midiEv);
             return 0;
         }
@@ -465,7 +459,7 @@ namespace Robust.Client.Audio.Midi
             if (Disposed || Status != MidiRendererStatus.Input) return 0;
             var timestamp = SequencerTick;
             var midiEv = (Shared.Audio.Midi.MidiEvent) midiEvent;
-            midiEv.Timestamp = timestamp;
+            midiEv.Tick = timestamp;
             SendMidiEvent(midiEv);
             return 0;
         }
@@ -484,6 +478,7 @@ namespace Robust.Client.Audio.Midi
                     {
                         // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
                         case 1:
+                        case 5:
                         case 81:
                             break;
 
@@ -532,7 +527,7 @@ namespace Robust.Client.Audio.Midi
                             break;
                     }
             }
-            catch (FluidSynthInteropException e)
+            catch (FluidSynthInteropException)
             {
                 // This spams NoteOff errors most of the time for no good reason.
                 //_midiSawmill.Error("Exception while sending midi event of type {0}: {1}", midiEvent.Type, e, midiEvent);
@@ -569,13 +564,6 @@ namespace Robust.Client.Audio.Midi
             _player?.Dispose();
             _driver?.Dispose();
             _sequencer?.Dispose();
-
-            _settings = null;
-            Source = null;
-            _synth = null;
-            _player = null;
-            _driver = null;
-            _sequencer = null;
         }
     }
 }

@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Client.UserInterface
     public class ControlTest : RobustUnitTest
     {
         private static readonly AttachedProperty _refTypeAttachedProperty
-            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string) v != "bar");
+            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");
 
         private static readonly AttachedProperty _valueTypeAttachedProperty
             = AttachedProperty.Create("_valueType", typeof(ControlTest), typeof(float));

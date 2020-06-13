@@ -13,13 +13,13 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyTexture = "texture";
 
         private bool _canShrink;
-        private Texture _texture;
+        private Texture? _texture;
         private Vector2 _textureScale = Vector2.One;
 
         /// <summary>
         ///     The texture to draw.
         /// </summary>
-        public Texture Texture
+        public Texture? Texture
         {
             get => _texture;
             set

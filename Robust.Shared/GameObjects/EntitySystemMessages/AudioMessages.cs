@@ -3,6 +3,8 @@ using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using System;
 
+#nullable disable
+
 namespace Robust.Shared.GameObjects
 {
     // TODO: This is quite bandwidth intensive.
@@ -11,8 +13,15 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public abstract class AudioMessage : EntitySystemMessage
     {
+        public uint Identifier { get; set; }
         public string FileName { get; set; }
         public AudioParams AudioParams { get; set; }
+    }
+
+    [Serializable, NetSerializable]
+    public class StopAudioMessageClient : EntitySystemMessage
+    {
+        public uint Identifier {get; set;}
     }
 
     [Serializable, NetSerializable]

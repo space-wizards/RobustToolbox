@@ -19,8 +19,7 @@ namespace Robust.Shared.Physics
 
         public abstract bool OnGround { get; }
 
-        [CanBeNull]
-        public abstract VirtualController Controller { get; }
+        public abstract VirtualController? Controller { get; }
     }
     [Serializable, NetSerializable]
     public enum BodyStatus

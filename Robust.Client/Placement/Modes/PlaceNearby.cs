@@ -16,7 +16,7 @@ namespace Robust.Client.Placement.Modes
 
         public override bool IsValidPosition(GridCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return false;
             }

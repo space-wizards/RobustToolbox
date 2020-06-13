@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Maps;
@@ -17,6 +18,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using System.Linq;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Prototypes;
 using YamlDotNet.Core;
 
@@ -29,23 +31,15 @@ namespace Robust.Server.Maps
     {
         private const int MapFormatVersion = 2;
 
-        [Dependency]
-#pragma warning disable 649
-        private readonly IResourceManager _resMan;
+        [Dependency] private readonly IResourceManager _resMan = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IServerEntityManagerInternal _serverEntityManager = default!;
+        [Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
-        [Dependency]
-        private readonly IMapManagerInternal _mapManager;
-
-        [Dependency]
-        private readonly ITileDefinitionManager _tileDefinitionManager;
-
-        [Dependency]
-        private readonly IServerEntityManagerInternal _serverEntityManager;
-
-        [Dependency] private readonly IPauseManager _pauseManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-#pragma warning restore 649
+        public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)
@@ -73,7 +67,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid LoadBlueprint(MapId mapId, string path)
+        public IMapGrid? LoadBlueprint(MapId mapId, string path)
         {
             TextReader reader;
             var resPath = new ResourcePath(path).ToRootedPath();
@@ -107,6 +101,8 @@ namespace Robust.Server.Maps
 
                 var data = new MapData(reader);
 
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
+
                 if (data.GridCount != 1)
                 {
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
@@ -131,6 +127,7 @@ namespace Robust.Server.Maps
         /// <inheritdoc />
         public void SaveMap(MapId mapId, string yamlPath)
         {
+            Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
@@ -152,6 +149,7 @@ namespace Robust.Server.Maps
                     stream.Save(new YamlMappingFix(new Emitter(writer)), false);
                 }
             }
+            Logger.InfoS("map", "Save completed!");
         }
 
         /// <inheritdoc />
@@ -163,7 +161,7 @@ namespace Robust.Server.Maps
             // try user
             if (!_resMan.UserData.Exists(resPath))
             {
-                Logger.InfoS("map", $"No user blueprint found: {resPath}");
+                Logger.InfoS("map", $"No user map found: {resPath}");
 
                 // fallback to content
                 if (_resMan.TryContentFileRead(resPath, out var contentReader))
@@ -172,7 +170,7 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    Logger.ErrorS("map", $"No blueprint found: {resPath}");
+                    Logger.ErrorS("map", $"No map found: {resPath}");
                     return;
                 }
             }
@@ -188,10 +186,7 @@ namespace Robust.Server.Maps
 
                 var data = new MapData(reader);
 
-                if (data.GridCount != 1)
-                {
-                    throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
-                }
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
@@ -235,12 +230,12 @@ namespace Robust.Server.Maps
             private readonly YamlMappingNode RootNode;
             private readonly MapId TargetMap;
 
-            private Dictionary<string, YamlMappingNode> CurrentReadingEntityComponents;
+            private Dictionary<string, YamlMappingNode>? CurrentReadingEntityComponents;
 
-            private string CurrentWritingComponent;
-            private IEntity CurrentWritingEntity;
+            private string? CurrentWritingComponent;
+            private IEntity? CurrentWritingEntity;
 
-            private Dictionary<ushort, string> _tileMap;
+            private Dictionary<ushort, string>? _tileMap;
 
             public bool MapIsPostInit { get; private set; }
 
@@ -278,6 +273,9 @@ namespace Robust.Server.Maps
 
                 // First we load map meta data like version.
                 ReadMetaSection();
+
+                // Create the new map.
+                AllocMap();
 
                 // Load grids.
                 ReadTileMapSection();
@@ -339,7 +337,7 @@ namespace Robust.Server.Maps
             {
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
-                    if (!data.TryGetNode("components", out YamlSequenceNode componentList))
+                    if (!data.TryGetNode("components", out YamlSequenceNode? componentList))
                     {
                         continue;
                     }
@@ -442,7 +440,7 @@ namespace Robust.Server.Maps
                         _mapManager, TargetMap, ref newId,
                         (YamlMappingNode)grid["settings"],
                         (YamlSequenceNode)grid["chunks"],
-                        _tileMap,
+                        _tileMap!,
                         _tileDefinitionManager
                     );
 
@@ -453,12 +451,29 @@ namespace Robust.Server.Maps
                 }
             }
 
+            private void AllocMap()
+            {
+                // Both blueprint and map deserialization use this,
+                // so we need to ensure the map exists (and the map entity)
+                // before allocating entities.
+
+                if (!_mapManager.MapExists(TargetMap))
+                {
+                    _mapManager.CreateMap(TargetMap);
+
+                    if (!MapIsPostInit)
+                    {
+                        _pauseManager.AddUninitializedMap(TargetMap);
+                    }
+                }
+            }
+
             private void AllocEntities()
             {
                 var entities = RootNode.GetNode<YamlSequenceNode>("entities");
                 foreach (var entityDef in entities.Cast<YamlMappingNode>())
                 {
-                    string type = null;
+                    string? type = null;
                     if (entityDef.TryGetNode("type", out var typeNode))
                     {
                         type = typeNode.AsString();
@@ -482,7 +497,7 @@ namespace Robust.Server.Maps
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
                     CurrentReadingEntityComponents = new Dictionary<string, YamlMappingNode>();
-                    if (data.TryGetNode("components", out YamlSequenceNode componentList))
+                    if (data.TryGetNode("components", out YamlSequenceNode? componentList))
                     {
                         foreach (var compData in componentList)
                         {
@@ -647,7 +662,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            public override bool TryNodeToType(YamlNode node, Type type, out object obj)
+            public override bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
             {
                 if (type == typeof(GridId))
                 {
@@ -704,7 +719,7 @@ namespace Robust.Server.Maps
                 return false;
             }
 
-            public override bool TryTypeToNode(object obj, out YamlNode node)
+            public override bool TryTypeToNode(object obj, [NotNullWhen(true)] out YamlNode? node)
             {
                 switch (obj)
                 {
@@ -724,7 +739,7 @@ namespace Robust.Server.Maps
                         if (!EntityUidMap.TryGetValue(entityUid, out var entityUidMapped))
                         {
                             // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                            if (!IsBlueprintMode || !CurrentWritingEntity.HasComponent<MapGridComponent>() ||
+                            if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
                                 CurrentWritingComponent != "Transform")
                             {
                                 Logger.WarningS("map", "Cannot write entity UID '{0}'.", entityUid);
@@ -756,47 +771,48 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode protoData)
+            ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
                     throw new InvalidOperationException();
                 }
 
+                var list = new List<YamlMappingNode>();
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    var list = new List<YamlMappingNode> {mapping};
-                    if (protoData != null)
-                    {
-                        list.Add(protoData);
-                    }
-                    return YamlObjectSerializer.NewReader(list, this);
+                    list.Add(mapping);
                 }
 
-                return YamlObjectSerializer.NewReader(protoData, this);
+                if (protoData != null)
+                {
+                    list.Add(protoData);
+                }
+
+                return YamlObjectSerializer.NewReader(list, this);
             }
 
             public IEnumerable<string> GetExtraComponentTypes()
             {
-                return CurrentReadingEntityComponents.Keys;
+                return CurrentReadingEntityComponents!.Keys;
             }
 
-            public override bool IsValueDefault<T>(string field, T value)
+            public override bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
             {
-                if (CurrentWritingEntity.Prototype == null)
+                if (CurrentWritingEntity!.Prototype == null)
                 {
                     // No prototype, can't be default.
                     return false;
                 }
 
-                if (!CurrentWritingEntity.Prototype.Components.TryGetValue(CurrentWritingComponent, out var compData))
+                if (!CurrentWritingEntity.Prototype.Components.TryGetValue(CurrentWritingComponent!, out var compData))
                 {
                     // This component was added mid-game.
                     return false;
                 }
 
                 var testSer = YamlObjectSerializer.NewReader(compData);
-                if (testSer.TryReadDataFieldCached(field, out T prototypeVal))
+                if (testSer.TryReadDataFieldCached(field, format, out var prototypeVal))
                 {
                     if (value == null)
                     {
@@ -839,7 +855,9 @@ namespace Robust.Server.Maps
         /// </summary>
         private class MapData
         {
-            public YamlNode RootNode { get; }
+            public YamlStream Stream { get; }
+
+            public YamlNode RootNode => Stream.Documents[0].RootNode;
             public int GridCount { get; }
 
             public MapData(TextReader reader)
@@ -859,7 +877,7 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
                 }
 
-                RootNode = stream.Documents[0].RootNode;
+                Stream = stream;
                 GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
             }
         }

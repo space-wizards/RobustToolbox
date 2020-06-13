@@ -19,7 +19,7 @@ namespace Robust.Client.Placement.Modes
             var grid = pManager.MapManager.GetGrid(MouseCoords.GridID);
             CurrentTile = grid.GetTileRef(MouseCoords);
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
@@ -42,7 +42,7 @@ namespace Robust.Client.Placement.Modes
 
         public override bool IsValidPosition(GridCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return false;
             }

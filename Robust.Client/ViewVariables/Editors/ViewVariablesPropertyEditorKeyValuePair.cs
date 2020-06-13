@@ -6,21 +6,19 @@ namespace Robust.Client.ViewVariables.Editors
 {
     public class ViewVariablesPropertyEditorKeyValuePair : ViewVariablesPropertyEditor
     {
-#pragma warning disable 649
-        [Dependency] private readonly IViewVariablesManagerInternal _viewVariables;
-#pragma warning restore 649
+        [Dependency] private readonly IViewVariablesManagerInternal _viewVariables = default!;
 
         public ViewVariablesPropertyEditorKeyValuePair()
         {
             IoCManager.InjectDependencies(this);
         }
 
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var hBox = new HBoxContainer();
 
-            var propK = value.GetType().GetProperty("Key");
-            var propV = value.GetType().GetProperty("Value");
+            var propK = value!.GetType().GetProperty("Key")!;
+            var propV = value.GetType().GetProperty("Value")!;
 
             var valueK = propK.GetValue(value);
             var valueV = propV.GetValue(value);
@@ -28,11 +26,11 @@ namespace Robust.Client.ViewVariables.Editors
             var typeK = valueK?.GetType();
             var typeV = valueV?.GetType();
 
-            var propertyEditorK = _viewVariables.PropertyFor(typeK);
-            var propertyEditorV = _viewVariables.PropertyFor(typeV);
+            var propertyEditorK = _viewVariables.PropertyFor(typeK!);
+            var propertyEditorV = _viewVariables.PropertyFor(typeV!);
 
-            WireReference(propertyEditorK, valueK);
-            WireReference(propertyEditorV, valueV);
+            WireReference(propertyEditorK, valueK!);
+            WireReference(propertyEditorV, valueV!);
 
             var controlK = propertyEditorK.Initialize(valueK, true);
             var controlV = propertyEditorV.Initialize(valueV, true);

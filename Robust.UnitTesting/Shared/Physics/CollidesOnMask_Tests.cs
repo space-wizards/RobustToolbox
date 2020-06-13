@@ -7,8 +7,8 @@ namespace Robust.UnitTesting.Shared.Physics
     [TestFixture]
     internal class CollidesOnMask_Tests
     {
-        private Mock<IPhysBody> A;
-        private Mock<IPhysBody> B;
+        private Mock<IPhysBody> A = default!;
+        private Mock<IPhysBody> B = default!;
 
         private bool Result;
 

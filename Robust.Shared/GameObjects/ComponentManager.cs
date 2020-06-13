@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Exceptions;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -23,21 +25,19 @@ namespace Robust.Shared.GameObjects
 
         private readonly List<Component> _deleteList = new List<Component>();
 
-#pragma warning disable 649
-        [Dependency] private readonly IComponentFactory _componentFactory;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
-#pragma warning restore 649
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentAdded;
+        public event EventHandler<ComponentEventArgs>? ComponentAdded;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentRemoved;
+        public event EventHandler<ComponentEventArgs>? ComponentRemoved;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentDeleted;
+        public event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
         public void Initialize()
         {
@@ -128,6 +128,8 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
             }
 
+            component.ExposeData(DefaultValueSerializer.Reader());
+
             component.OnAdd();
 
             if (entity.Initialized || entity.Initializing)
@@ -151,14 +153,14 @@ namespace Robust.Shared.GameObjects
         public void RemoveComponent(EntityUid uid, Type type)
         {
             var component = GetComponent(uid, type);
-            RemoveComponentDeferred(component as Component, false);
+            RemoveComponentDeferred((Component) component, false);
         }
 
         /// <inheritdoc />
         public void RemoveComponent(EntityUid uid, uint netId)
         {
-            var comp = GetComponent(uid, netId);
-            RemoveComponentDeferred(comp as Component, false);
+            var component = GetComponent(uid, netId);
+            RemoveComponentDeferred((Component) component, false);
         }
 
         /// <inheritdoc />
@@ -170,7 +172,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred(component as Component, false);
+            RemoveComponentDeferred((Component)component, false);
         }
 
         /// <inheritdoc />
@@ -366,7 +368,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>(EntityUid uid, out T component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
             if (TryGetComponent(uid, typeof(T), out var comp))
             {
@@ -374,12 +376,12 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            component = default;
+            component = default!;
             return false;
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, Type type, out IComponent component)
+        public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
             if (_dictComponents.TryGetValue(type, out var typeDict))
             {
@@ -395,7 +397,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, uint netId, out IComponent component)
+        public bool TryGetComponent(EntityUid uid, uint netId, [NotNullWhen(true)] out IComponent? component)
         {
             if (_netComponents.TryGetValue(uid, out var netDict))
             {

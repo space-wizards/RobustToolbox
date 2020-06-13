@@ -22,6 +22,6 @@ namespace Robust.Server.Interfaces.Player
         ///     Custom field that content can assign anything to.
         ///     Go wild.
         /// </summary>
-        object ContentDataUncast { get; set; }
+        object? ContentDataUncast { get; set; }
     }
 }

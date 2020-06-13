@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.ViewVariables;
 
@@ -14,7 +15,7 @@ namespace Robust.Client.UserInterface
         ///     Overrides the style sheet used for this control and its descendants.
         /// </summary>
         /// <seealso cref="IUserInterfaceManager.Stylesheet"/>
-        public Stylesheet Stylesheet
+        public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
@@ -28,7 +29,7 @@ namespace Robust.Client.UserInterface
         public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass;
 
         [ViewVariables]
-        public string StyleIdentifier
+        public string? StyleIdentifier
         {
             get => _styleIdentifier;
             set
@@ -48,10 +49,10 @@ namespace Robust.Client.UserInterface
         private bool _stylesheetUpdateNeeded;
         internal int RestyleGeneration;
 
-        private string _styleIdentifier;
+        private string? _styleIdentifier;
 
-        private Stylesheet _actualStylesheetCached;
-        private Stylesheet _stylesheet;
+        private Stylesheet? _actualStylesheetCached;
+        private Stylesheet? _stylesheet;
 
         public bool HasStylePseudoClass(string className)
         {
@@ -75,7 +76,7 @@ namespace Robust.Client.UserInterface
             Restyle();
         }
 
-        protected void SetOnlyStylePseudoClass(string className)
+        protected void SetOnlyStylePseudoClass(string? className)
         {
             _stylePseudoClass.Clear();
 
@@ -186,9 +187,9 @@ namespace Robust.Client.UserInterface
             }
 
             // Rules specific to our type.
-            for (var type = GetType(); type != typeof(Control); type = type.BaseType)
+            for (var type = GetType(); type != typeof(Control); type = type!.BaseType)
             {
-                if (!stylesheet.TypeSortedRules.TryGetValue(type, out var typeRuleList))
+                if (!stylesheet.TypeSortedRules.TryGetValue(type!, out var typeRuleList))
                 {
                     continue;
                 }
@@ -246,7 +247,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public bool TryGetStyleProperty<T>(string param, out T value)
+        public bool TryGetStyleProperty<T>(string param, [MaybeNullWhen(false)] out T value)
         {
             if (_styleProperties.TryGetValue(param, out var val))
             {

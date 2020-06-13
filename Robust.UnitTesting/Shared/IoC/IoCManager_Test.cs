@@ -149,10 +149,10 @@ namespace Robust.UnitTesting.Shared.IoC
     {
         [Dependency]
 #pragma warning disable 649
-        private readonly TestFieldInjection myself;
+        private readonly TestFieldInjection myself = default!;
 
         [Dependency]
-        public TestFieldInjection myotherself;
+        public TestFieldInjection myotherself = default!;
 #pragma warning restore 649
 
         public virtual void Test()
@@ -166,10 +166,10 @@ namespace Robust.UnitTesting.Shared.IoC
     {
         [Dependency]
 #pragma warning disable 649
-        private readonly TestFieldInjection myuniqueself;
+        private readonly TestFieldInjection myuniqueself = default!;
 
         [Dependency]
-        public TestFieldInjection mydifferentself;
+        public TestFieldInjection mydifferentself = default!;
 #pragma warning restore 649
 
         public override void Test()
@@ -182,10 +182,10 @@ namespace Robust.UnitTesting.Shared.IoC
 
     public class TestUnregisteredInjection
     {
-        #pragma warning disable CS0169
         [Dependency]
-        private readonly IIoCFailInterface FailInterface;
-        #pragma warning restore CS0169
+#pragma warning disable 414
+        private readonly IIoCFailInterface FailInterface = default!;
+#pragma warning restore 414
     }
 
     public class TestFailImplementation : IIoCFailInterface { }
@@ -202,6 +202,6 @@ namespace Robust.UnitTesting.Shared.IoC
 
     public class ExplicitInjectionTest
     {
-        [Dependency] public readonly IDependencyCollection DependencyCollection;
+        [Dependency] public readonly IDependencyCollection DependencyCollection = default!;
     }
 }

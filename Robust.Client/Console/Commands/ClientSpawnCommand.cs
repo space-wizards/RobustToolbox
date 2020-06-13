@@ -16,7 +16,7 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
-            if (player.ControlledEntity == null)
+            if (player?.ControlledEntity == null)
             {
                 console.AddLine("You don't have an attached entity.");
                 return false;

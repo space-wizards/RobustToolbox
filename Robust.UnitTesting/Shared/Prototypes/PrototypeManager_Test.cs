@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
     [TestFixture]
     public class PrototypeManager_Test : RobustUnitTest
     {
-        private IPrototypeManager manager;
+        private IPrototypeManager manager = default!;
         [OneTimeSetUp]
         public void Setup()
         {

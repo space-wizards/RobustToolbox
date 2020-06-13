@@ -112,16 +112,16 @@ namespace Robust.Client.GameObjects
 
         private bool _directional = true;
 
-        private RSI _baseRsi;
+        private RSI? _baseRsi;
 
         [ViewVariables]
-        public RSI BaseRSI
+        public RSI? BaseRSI
         {
             get => _baseRsi;
             set
             {
                 _baseRsi = value;
-                if (Layers == null)
+                if (Layers == null || value == null)
                 {
                     return;
                 }
@@ -149,28 +149,27 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public ShaderInstance PostShader { get; set; }
+        public ShaderInstance? PostShader { get; set; }
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
         [ViewVariables] private bool _layerMapShared;
-        [ViewVariables] private List<Layer> Layers;
+        [ViewVariables] private List<Layer> Layers = default!;
 
-#pragma warning disable 649
-        [Dependency] private readonly IResourceCache resourceCache;
-        [Dependency] private readonly IPrototypeManager prototypes;
-        [Dependency] private readonly IReflectionManager reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IReflectionManager reflectionManager = default!;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public uint RenderOrder { get; set; }
 
-        private static ShaderInstance _defaultShader;
+        // TODO: this should absolutely not be static.
+        private static ShaderInstance? _defaultShader;
 
         [ViewVariables]
-        private ShaderInstance DefaultShader => _defaultShader ??
-                                               (_defaultShader = prototypes
-                                                   .Index<ShaderPrototype>("shaded")
-                                                   .Instance());
+        private ShaderInstance? DefaultShader => _defaultShader ??
+                                                 (_defaultShader = prototypes
+                                                     .Index<ShaderPrototype>("shaded")
+                                                     .Instance());
 
         public const string LogCategory = "go.comp.sprite";
         const string LayerSerializationCache = "spritelayer";
@@ -275,10 +274,10 @@ namespace Robust.Client.GameObjects
                     Environment.StackTrace);
             }
 
-            return AddLayer(texture, newIndex);
+            return AddLayer(texture?.Texture, newIndex);
         }
 
-        public int AddLayer(Texture texture, int? newIndex = null)
+        public int AddLayer(Texture? texture, int? newIndex = null)
         {
             var layer = new Layer {Texture = texture};
             return AddLayer(layer, newIndex);
@@ -330,10 +329,10 @@ namespace Robust.Client.GameObjects
             return AddLayer(new RSI.StateId(stateId), rsiPath, newIndex);
         }
 
-        public int AddLayer(RSI.StateId stateId, RSI rsi, int? newIndex = null)
+        public int AddLayer(RSI.StateId stateId, RSI? rsi, int? newIndex = null)
         {
             var layer = new Layer {State = stateId, RSI = rsi};
-            if (rsi.TryGetState(stateId, out var state))
+            if (rsi != null && rsi.TryGetState(stateId, out var state))
             {
                 layer.AnimationTimeLeft = state.GetDelay(0);
             }
@@ -430,7 +429,7 @@ namespace Robust.Client.GameObjects
             RemoveLayer(layer);
         }
 
-        public void LayerSetShader(int layer, ShaderInstance shader)
+        public void LayerSetShader(int layer, ShaderInstance? shader)
         {
             if (Layers.Count <= layer)
             {
@@ -513,7 +512,7 @@ namespace Robust.Client.GameObjects
             LayerSetSprite(layer, specifier);
         }
 
-        public void LayerSetTexture(int layer, Texture texture)
+        public void LayerSetTexture(int layer, Texture? texture)
         {
             if (Layers.Count <= layer)
             {
@@ -523,7 +522,7 @@ namespace Robust.Client.GameObjects
             }
 
             var theLayer = Layers[layer];
-            theLayer.State = null;
+            theLayer.State = default;
             theLayer.Texture = texture;
 
             UpdateIsInert();
@@ -563,7 +562,7 @@ namespace Robust.Client.GameObjects
                     Environment.StackTrace);
             }
 
-            LayerSetTexture(layer, texture);
+            LayerSetTexture(layer, texture?.Texture);
         }
 
         public void LayerSetTexture(object layerKey, ResourcePath texturePath)
@@ -594,7 +593,7 @@ namespace Robust.Client.GameObjects
             }
 
             theLayer.State = stateId;
-            RSI.State state;
+            RSI.State? state;
             var rsi = theLayer.RSI ?? BaseRSI;
             if (rsi == null)
             {
@@ -630,7 +629,7 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId);
         }
 
-        public void LayerSetState(int layer, RSI.StateId stateId, RSI rsi)
+        public void LayerSetState(int layer, RSI.StateId stateId, RSI? rsi)
         {
             if (Layers.Count <= layer)
             {
@@ -709,7 +708,7 @@ namespace Robust.Client.GameObjects
             LayerSetState(layer, stateId, rsiPath);
         }
 
-        public void LayerSetRSI(int layer, RSI rsi)
+        public void LayerSetRSI(int layer, RSI? rsi)
         {
             if (Layers.Count <= layer)
             {
@@ -734,7 +733,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                if (rsi.TryGetState(theLayer.State, out var state))
+                if (actualRsi.TryGetState(theLayer.State, out var state))
                 {
                     theLayer.AnimationTimeLeft = state.GetDelay(0);
                 }
@@ -936,8 +935,13 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            // TODO: This could throw exceptions which shouldn't happen I think.
-            var state = (theLayer.RSI ?? BaseRSI)[theLayer.State];
+            var theLayerRSI = theLayer.RSI ?? BaseRSI;
+            if (theLayerRSI == null)
+            {
+                return;
+            }
+
+            var state = theLayerRSI[theLayer.State];
             if (animationTime > theLayer.AnimationTime)
             {
                 // Handle advancing differently from going backwards.
@@ -1009,7 +1013,7 @@ namespace Robust.Client.GameObjects
             return thelayer.State;
         }
 
-        public RSI LayerGetActualRSI(int layer)
+        public RSI? LayerGetActualRSI(int layer)
         {
             if (Layers.Count <= layer)
             {
@@ -1020,7 +1024,7 @@ namespace Robust.Client.GameObjects
             return BaseRSI ?? theLayer.RSI;
         }
 
-        public RSI LayerGetActualRSI(object layerKey)
+        public RSI? LayerGetActualRSI(object layerKey)
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
@@ -1104,7 +1108,7 @@ namespace Robust.Client.GameObjects
                     texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
                 }
 
-                texture ??= resourceCache.GetFallback<TextureResource>();
+                texture ??= resourceCache.GetFallback<TextureResource>().Texture;
 
                 if (layer.Shader != null)
                 {
@@ -1140,7 +1144,7 @@ namespace Robust.Client.GameObjects
             }
 
             {
-                var rsi = serializer.ReadDataField<string>("sprite", null);
+                var rsi = serializer.ReadDataField<string?>("sprite", null);
                 if (!string.IsNullOrWhiteSpace(rsi))
                 {
                     var rsiPath = TextureRoot / rsi;
@@ -1183,8 +1187,8 @@ namespace Robust.Client.GameObjects
                 serializer.ReadDataField("layers", new List<PrototypeLayerData>());
 
             {
-                var baseState = serializer.ReadDataField<string>("state", null);
-                var texturePath = serializer.ReadDataField<string>("texture", null);
+                var baseState = serializer.ReadDataField<string?>("state", null);
+                var texturePath = serializer.ReadDataField<string?>("texture", null);
 
                 if (baseState != null || texturePath != null)
                 {
@@ -1224,7 +1228,7 @@ namespace Robust.Client.GameObjects
                     {
                         Logger.ErrorS(LogCategory,
                             "Layer has no RSI to load states from."
-                            + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype.ID);
+                            + "cannot use 'state' property. Prototype: '{0}'", Owner.Prototype?.ID);
                     }
                     else
                     {
@@ -1270,7 +1274,7 @@ namespace Robust.Client.GameObjects
                     {
                         Logger.ErrorS(LogCategory,
                             "Shader prototype '{0}' does not exist. Prototype: '{1}'",
-                            layerDatum.Shader, Owner.Prototype.ID);
+                            layerDatum.Shader, Owner.Prototype?.ID);
                     }
                 }
 
@@ -1361,7 +1365,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;
@@ -1583,10 +1587,10 @@ namespace Robust.Client.GameObjects
 
         private class Layer
         {
-            public ShaderInstance Shader;
-            public Texture Texture;
+            public ShaderInstance? Shader;
+            public Texture? Texture;
 
-            public RSI RSI;
+            public RSI? RSI;
             public RSI.StateId State;
             public float AnimationTimeLeft;
             public float AnimationTime;

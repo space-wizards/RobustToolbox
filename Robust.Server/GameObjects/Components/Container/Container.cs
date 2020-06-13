@@ -77,7 +77,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner => Manager?.Owner;
+        public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -96,7 +96,7 @@ namespace Robust.Server.GameObjects.Components.Container
         protected BaseContainer(string id, IContainerManager manager)
         {
             DebugTools.Assert(!string.IsNullOrEmpty(id));
-            DebugTools.Assert(manager != null);
+            DebugTools.AssertNotNull(manager);
 
             ID = id;
             Manager = manager;
@@ -195,8 +195,9 @@ namespace Robust.Server.GameObjects.Components.Container
         protected virtual void InternalRemove(IEntity toremove)
         {
             DebugTools.Assert(!Deleted);
-            DebugTools.Assert(Manager != null);
-            DebugTools.Assert(toremove != null && toremove.IsValid());
+            DebugTools.AssertNotNull(Manager);
+            DebugTools.AssertNotNull(toremove);
+            DebugTools.Assert(toremove.IsValid());
 
             Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
 
@@ -219,7 +220,6 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             Manager.Dirty();
             Deleted = true;
-            Manager = null;
         }
     }
 

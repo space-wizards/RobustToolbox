@@ -23,9 +23,9 @@ namespace Robust.UnitTesting.Shared.Input.Binding
         {
             // these vars only for tracking / debugging during testing
             private readonly string name;
-            public readonly Type ForType;
+            public readonly Type? ForType;
 
-            public TestInputCmdHandler(Type forType = null, string name = "")
+            public TestInputCmdHandler(Type? forType = null, string name = "")
             {
                 this.ForType = forType;
                 this.name = name;
@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 return name;
             }
 
-            public override bool HandleCmdMessage(ICommonSession session, InputCmdMessage message)
+            public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
             {
                 return false;
             }

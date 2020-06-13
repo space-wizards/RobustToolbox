@@ -45,7 +45,7 @@ namespace Robust.Server.Console
         /// <summary>
         /// Event handler for when the status of a player session changes.
         /// </summary>
-        public void OnClientStatusChanged(object sender, SessionStatusEventArgs e)
+        public void OnClientStatusChanged(object? sender, SessionStatusEventArgs e)
         {
             switch (e.NewStatus)
             {

@@ -21,7 +21,7 @@ namespace Robust.Shared.Localization.Macros
         /// <summary>
         /// Helper function to get the gender of an object, or Epicene if the object is not IGenderable
         /// </summary>
-        public static Gender GetGenderOrEpicene(object argument)
+        public static Gender GetGenderOrEpicene(object? argument)
         {
             // FIXME The Entity special case is not really good
             if (argument is IEntity entity)

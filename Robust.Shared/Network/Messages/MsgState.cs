@@ -7,6 +7,8 @@ using Robust.Shared.IoC;
 using System.IO;
 using Robust.Shared.Utility;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgState : NetMessage
@@ -85,7 +87,7 @@ namespace Robust.Shared.Network.Messages
                     return NetDeliveryMethod.ReliableUnordered;
                 }
 
-                return NetDeliveryMethod.Unreliable;
+                return base.DeliveryMethod;
             }
         }
     }

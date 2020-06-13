@@ -33,7 +33,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         public void DeserializeListTest()
         {
             // Arrange
-            List<int> data = null;
+            List<int> data = null!;
             var rootNode = YamlTextToNode(SerializedListYaml);
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
@@ -69,7 +69,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         [Test]
         public void DeserializeDictTest()
         {
-            Dictionary<string, int> data = null;
+            Dictionary<string, int> data = null!;
             var rootNode = YamlTextToNode(SerializedDictYaml);
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
@@ -167,7 +167,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         private class DummyClass
         {
             public int Foo { get; set; }
-            public string Bar { get; set; }
+            public string Bar { get; set; } = default!;
             public Color Baz { get; set; } = Color.Orange;
         }
     }

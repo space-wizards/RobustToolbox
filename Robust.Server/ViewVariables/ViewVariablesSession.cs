@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Network;
@@ -53,7 +54,7 @@ namespace Robust.Server.ViewVariables
             }
         }
 
-        public ViewVariablesBlob DataRequest(ViewVariablesRequest messageRequestMeta)
+        public ViewVariablesBlob? DataRequest(ViewVariablesRequest messageRequestMeta)
         {
             if (messageRequestMeta is ViewVariablesRequestMetadata)
             {
@@ -89,7 +90,7 @@ namespace Robust.Server.ViewVariables
             }
         }
 
-        public bool TryGetRelativeObject(object[] propertyIndex, out object value)
+        public bool TryGetRelativeObject(object[] propertyIndex, out object? value)
         {
             foreach (var trait in _traits)
             {

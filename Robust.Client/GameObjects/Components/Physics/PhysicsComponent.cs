@@ -17,7 +17,6 @@ namespace Robust.Client.GameObjects
         private Vector2 _linVel;
         private float _angVel;
         private float _mass;
-        private VirtualController _controller;
         private BodyStatus _status;
 
         /// <inheritdoc />
@@ -82,13 +81,10 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController Controller
-        {
-            get => _controller;
-        }
+        public override VirtualController? Controller => null;
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;

@@ -23,10 +23,8 @@ namespace Robust.Client.Graphics
         private const string CVarVSync = "display.vsync";
         private const string CVarWindowMode = "display.windowmode";
 
-#pragma warning disable 649
-        [Dependency] protected readonly IConfigurationManager _configurationManager;
-        [Dependency] protected readonly IGameControllerInternal _gameController;
-#pragma warning restore 649
+        [Dependency] protected readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] protected readonly IGameControllerInternal _gameController = default!;
 
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         protected bool VSync { get; private set; } = true;

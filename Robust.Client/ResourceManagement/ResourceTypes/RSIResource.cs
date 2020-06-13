@@ -26,7 +26,7 @@ namespace Robust.Client.ResourceManagement
     /// </summary>
     public sealed class RSIResource : BaseResource
     {
-        public RSI RSI { get; private set; }
+        public RSI RSI { get; private set; } = default!;
 
         /// <summary>
         ///     The minimum version of RSI we can load.
@@ -81,7 +81,7 @@ namespace Robust.Client.ResourceManagement
             {
                 // Load image from disk.
                 var texPath = path / (stateObject.StateId + ".png");
-                var image = Image.Load(cache.ContentFileRead(texPath));
+                var image = Image.Load<Rgba32>(cache.ContentFileRead(texPath));
                 var sheetSize = new Vector2i(image.Width, image.Height);
 
                 if (sheetSize.X % frameSize.X != 0 || sheetSize.Y % frameSize.Y != 0)
@@ -325,13 +325,13 @@ namespace Robust.Client.ResourceManagement
 
         internal static RsiMetadata ParseMetaData(JObject manifestJson)
         {
-            var size = manifestJson["size"].ToObject<Vector2i>();
+            var size = manifestJson["size"]!.ToObject<Vector2i>();
             var states = new List<StateMetadata>();
 
             foreach (var stateObject in manifestJson["states"].Cast<JObject>())
             {
-                var stateName = stateObject["name"].ToObject<string>();
-                var dirValue = stateObject["directions"].ToObject<int>();
+                var stateName = stateObject["name"]!.ToObject<string>()!;
+                var dirValue = stateObject["directions"]!.ToObject<int>();
 
                 var directions = dirValue switch
                 {
@@ -348,7 +348,7 @@ namespace Robust.Client.ResourceManagement
                 float[][] delays;
                 if (stateObject.TryGetValue("delays", out var delayToken))
                 {
-                    delays = delayToken.ToObject<float[][]>();
+                    delays = delayToken.ToObject<float[][]>()!;
 
                     if (delays.Length != dirValue)
                     {
@@ -382,15 +382,15 @@ namespace Robust.Client.ResourceManagement
         }
 
 #if DEBUG
-        private static readonly JsonSchema RSISchema = GetSchema();
+        private static readonly JsonSchema? RSISchema = GetSchema();
 
-        private static JsonSchema GetSchema()
+        private static JsonSchema? GetSchema()
         {
             try
             {
                 string schema;
                 using (var schemaStream = Assembly.GetExecutingAssembly()
-                    .GetManifestResourceStream("Robust.Client.Graphics.RSI.RSISchema.json"))
+                    .GetManifestResourceStream("Robust.Client.Graphics.RSI.RSISchema.json")!)
                 using (var schemaReader = new StreamReader(schemaStream))
                 {
                     schema = schemaReader.ReadToEnd();

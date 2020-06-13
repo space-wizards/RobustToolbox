@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
-        private readonly List<object> _cache = new List<object>();
-        private IEnumerator _enumerator;
+        private readonly List<object?> _cache = new List<object?>();
+        private IEnumerator? _enumerator;
         private readonly IEnumerable _enumerable;
         private bool Ended => _enumerator == null;
 
@@ -17,7 +18,7 @@ namespace Robust.Server.ViewVariables.Traits
             _refresh();
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             if (viewVariablesRequest is ViewVariablesRequestEnumerable requestEnumerable)
             {
@@ -26,7 +27,7 @@ namespace Robust.Server.ViewVariables.Traits
                     _refresh();
                 }
                 _cacheTo(requestEnumerable.ToIndex);
-                var list = new List<object>();
+                var list = new List<object?>();
 
                 for (var i = requestEnumerable.FromIndex; i < _cache.Count && i <= requestEnumerable.ToIndex; i++)
                 {
@@ -39,7 +40,7 @@ namespace Robust.Server.ViewVariables.Traits
             return base.DataRequest(viewVariablesRequest);
         }
 
-        public override bool TryGetRelativeObject(object property, out object value)
+        public override bool TryGetRelativeObject(object property, out object? value)
         {
             if (!(property is ViewVariablesEnumerableIndexSelector selector))
             {
@@ -66,6 +67,8 @@ namespace Robust.Server.ViewVariables.Traits
 
         private void _cacheTo(int index)
         {
+            DebugTools.AssertNotNull(_enumerator);
+
             if (Ended || index < _cache.Count)
             {
                 return;
@@ -73,12 +76,12 @@ namespace Robust.Server.ViewVariables.Traits
 
             while (_cache.Count <= index)
             {
-                if (!_enumerator.MoveNext())
+                if (!_enumerator!.MoveNext())
                 {
                     _enumerator = null;
                     break;
                 }
-                _cache.Add(_enumerator.Current);
+                _cache.Add(_enumerator!.Current);
             }
         }
 

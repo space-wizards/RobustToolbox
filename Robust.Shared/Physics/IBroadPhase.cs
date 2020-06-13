@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics {
 
     }
 
-    public interface IBroadPhase<T> : ICollection<T> {
+    public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 
         int Capacity { get; set; }
 

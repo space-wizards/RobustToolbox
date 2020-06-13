@@ -60,6 +60,6 @@ namespace Robust.Client.GameObjects.Components.Animations
             }
         }
 
-        public event Action<string> AnimationCompleted;
+        public event Action<string>? AnimationCompleted;
     }
 }

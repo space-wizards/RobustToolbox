@@ -6,6 +6,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared.Input.Binding
 {
+    /// <inheritdoc cref="ICommandBindRegistry"/>
     public class CommandBindRegistry : ICommandBindRegistry
     {
         // all registered bindings
@@ -16,27 +17,26 @@ namespace Robust.Shared.Input.Binding
         private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
             new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
 
+        /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
         {
             Register(commandBinds, typeof(TOwner));
         }
 
+        /// <inheritdoc />
         public void Register(CommandBinds commandBinds, Type owner)
         {
-            foreach (var existingBinding in _bindings)
+            if (_bindings.Any(existing => existing.ForType == owner))
             {
-                if (existingBinding.ForType == owner)
-                {
-                    // feel free to delete this if there's an actual need for registering multiple
-                    // bindings for a given type in separate calls to Register()
-                    Logger.Warning("Command binds already registered for type {0}, but you are trying" +
-                                   " to register more. This may " +
-                                   "be a programming error. Did you register these under the wrong type, or " +
-                                   "did you forget to unregister these bindings when" +
-                                   " your system / manager is shutdown?", owner.Name);
-                    break;
-                }
+                // feel free to delete this if there's an actual need for registering multiple
+                // bindings for a given type in separate calls to Register()
+                Logger.Warning("Command binds already registered for type {0}, but you are trying" +
+                               " to register more. This may " +
+                               "be a programming error. Did you register these under the wrong type, or " +
+                               "did you forget to unregister these bindings when" +
+                               " your system / manager is shutdown?", owner.Name);
             }
+
             foreach (var binding in commandBinds.Bindings)
             {
                 _bindings.Add(new TypedCommandBind(owner, binding));
@@ -45,7 +45,7 @@ namespace Robust.Shared.Input.Binding
             RebuildGraph();
         }
 
-
+        /// <inheritdoc />
         public IEnumerable<InputCmdHandler> GetHandlers(BoundKeyFunction function)
         {
             if (_bindingsForKey.TryGetValue(function, out var handlers))
@@ -55,12 +55,14 @@ namespace Robust.Shared.Input.Binding
             return Enumerable.Empty<InputCmdHandler>();
         }
 
+        /// <inheritdoc />
         public void Unregister(Type owner)
         {
             _bindings.RemoveAll(binding => binding.ForType == owner);
             RebuildGraph();
         }
 
+        /// <inheritdoc />
         public void Unregister<TOwner>()
         {
             Unregister(typeof(TOwner));

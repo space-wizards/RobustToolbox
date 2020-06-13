@@ -9,10 +9,10 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyBackground = "background";
         public const string StylePropertyForeground = "foreground";
 
-        private StyleBox _backgroundStyleBoxOverride;
-        private StyleBox _foregroundStyleBoxOverride;
+        private StyleBox? _backgroundStyleBoxOverride;
+        private StyleBox? _foregroundStyleBoxOverride;
 
-        public StyleBox BackgroundStyleBoxOverride
+        public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox ForegroundStyleBoxOverride
+        public StyleBox? ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set
@@ -33,26 +33,26 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [Pure]
-        private StyleBox _getBackground()
+        private StyleBox? _getBackground()
         {
             if (BackgroundStyleBoxOverride != null)
             {
                 return BackgroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyBackground, out StyleBox ret);
+            TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var ret);
             return ret;
         }
 
         [Pure]
-        private StyleBox _getForeground()
+        private StyleBox? _getForeground()
         {
             if (ForegroundStyleBoxOverride != null)
             {
                 return ForegroundStyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyForeground, out StyleBox ret);
+            TryGetStyleProperty<StyleBox>(StylePropertyForeground, out var ret);
             return ret;
         }
 

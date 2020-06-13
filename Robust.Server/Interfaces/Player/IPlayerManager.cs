@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
@@ -49,9 +50,9 @@ namespace Robust.Server.Interfaces.Player
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
-        bool TryGetSessionByChannel(INetChannel channel, out IPlayerSession session);
+        bool TryGetSessionByChannel(INetChannel channel, [NotNullWhen(true)] out IPlayerSession? session);
 
-        bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session);
+        bool TryGetSessionById(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerSession? session);
 
         /// <summary>
         ///     Checks to see if a PlayerIndex is a valid session.
@@ -59,7 +60,7 @@ namespace Robust.Server.Interfaces.Player
         bool ValidSessionId(NetSessionId index);
 
         IPlayerData GetPlayerData(NetSessionId sessionId);
-        bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data);
+        bool TryGetPlayerData(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerData? data);
         bool HasPlayerData(NetSessionId sessionId);
 
         IEnumerable<IPlayerData> GetAllPlayerData();
@@ -68,6 +69,6 @@ namespace Robust.Server.Interfaces.Player
         List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
         List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate);
         List<IPlayerSession> GetAllPlayers();
-        List<PlayerState> GetPlayerStates(GameTick fromTick);
+        List<PlayerState>? GetPlayerStates(GameTick fromTick);
     }
 }

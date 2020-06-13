@@ -16,13 +16,14 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
 using StencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private RenderHandle _renderHandle;
+        private RenderHandle _renderHandle = default!;
 
         /// <summary>
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
@@ -53,7 +54,7 @@ namespace Robust.Client.Graphics.Clyde
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
-        private LoadedTexture _batchLoadedTexture;
+        private LoadedTexture? _batchLoadedTexture;
         private ClydeHandle _queuedShader;
 
         private ProjViewMatrices _currentMatrices;
@@ -458,15 +459,14 @@ namespace Robust.Client.Graphics.Clyde
             AllocRenderCommand(RenderCommandType.ResetViewMatrix);
         }
 
-        private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-            Angle angle)
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
         {
             EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
 
             Box2 sr;
             if (subRegion.HasValue)
             {
-                var (w, h) = _batchLoadedTexture.Size;
+                var (w, h) = _batchLoadedTexture!.Size;
                 var csr = subRegion.Value;
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {
@@ -489,24 +489,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            Vector2 bl;
-            Vector2 br;
-            Vector2 tr;
-            Vector2 tl;
-            if (angle == Angle.Zero)
-            {
-                bl = _currentModelMatrix.Transform(a);
-                br = _currentModelMatrix.Transform(new Vector2(b.X, a.Y));
-                tr = _currentModelMatrix.Transform(b);
-                tl = _currentModelMatrix.Transform(new Vector2(a.X, b.Y));
-            }
-            else
-            {
-                bl = _currentModelMatrix.Transform(angle.RotateVec(a));
-                br = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(b.X, a.Y)));
-                tr = _currentModelMatrix.Transform(angle.RotateVec(b));
-                tl = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(a.X, b.Y)));
-            }
+            bl = _currentModelMatrix.Transform(bl);
+            br = _currentModelMatrix.Transform(br);
+            tr = _currentModelMatrix.Transform(tr);
+            tl = _currentModelMatrix.Transform(tl);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;

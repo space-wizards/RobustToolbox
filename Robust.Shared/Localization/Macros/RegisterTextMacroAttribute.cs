@@ -17,7 +17,7 @@ namespace Robust.Shared.Localization.Macros
     {
         public readonly string MacroName;
 
-        public readonly string LanguageTag;
+        public readonly string? LanguageTag;
 
         public RegisterTextMacroAttribute(string name)
         {

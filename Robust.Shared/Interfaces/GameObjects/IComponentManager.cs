@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -15,18 +16,18 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     A component was added to the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs> ComponentAdded;
+        event EventHandler<ComponentEventArgs>? ComponentAdded;
 
         /// <summary>
         ///     A component was removed from the manager.
         /// </summary>
-        event EventHandler<ComponentEventArgs> ComponentRemoved;
+        event EventHandler<ComponentEventArgs>? ComponentRemoved;
 
         /// <summary>
         ///     A component was deleted. This is usually deferred until some time after it was removed.
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
-        event EventHandler<ComponentEventArgs> ComponentDeleted;
+        event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
@@ -153,7 +154,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent<T>(EntityUid uid, out T component);
+        bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component);
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -162,7 +163,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="type">Component reference type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent(EntityUid uid, Type type, out IComponent component);
+        bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns the component with a specified network ID.
@@ -171,7 +172,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="netID">Component Network ID to check for.</param>
         /// <param name="component">Component with the specified network id.</param>
         /// <returns>If the component existed in the entity.</returns>
-        bool TryGetComponent(EntityUid uid, uint netID, out IComponent component);
+        bool TryGetComponent(EntityUid uid, uint netID, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

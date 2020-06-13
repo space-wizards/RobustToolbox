@@ -118,7 +118,7 @@ namespace Robust.Shared.Interfaces.Network
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null)
+        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
             where T : NetMessage;
 
         /// <summary>

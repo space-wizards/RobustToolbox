@@ -15,11 +15,9 @@ namespace Robust.Client.Debugging
 {
     internal class DebugDrawingManager : IDebugDrawingManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _net;
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IGameTiming _gameTimer;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _net = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IGameTiming _gameTimer = default!;
 
         private readonly List<RayWithLifetime> raysWithLifeTime = new List<RayWithLifetime>();
         private bool _debugDrawRays;

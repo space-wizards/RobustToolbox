@@ -8,14 +8,14 @@ namespace Robust.Client.ViewVariables.Editors
 {
     public class ViewVariablesPropertyEditorEntityUid : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var hBox = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(200, 0)
             };
 
-            var uid = (EntityUid)value;
+            var uid = (EntityUid)value!;
             var lineEdit = new LineEdit
             {
                 Text = uid.ToString(),

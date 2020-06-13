@@ -20,17 +20,15 @@ namespace Robust.Server.GameObjects.EntitySystems
     [UsedImplicitly]
     internal class PhysicsSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPauseManager _pauseManager;
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IPhysicsManager _physicsManager;
-        [Dependency] private readonly IRobustRandom _random;
-#pragma warning restore 649
+        [Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        [Dependency] private readonly IRobustRandom _random = default!;
 
         private const float Epsilon = 1.0e-6f;
 
-        private List<Manifold> _collisionCache = new List<Manifold>();
+        private readonly List<Manifold> _collisionCache = new List<Manifold>();
 
         public PhysicsSystem()
         {
@@ -124,10 +122,10 @@ namespace Robust.Server.GameObjects.EntitySystems
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = (collision.A as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                var aBehaviors = ((CollidableComponent)collision.A).Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in aBehaviors)
                 {
-                    var entity = (collision.B as CollidableComponent).Owner;
+                    var entity = ((CollidableComponent)collision.B).Owner;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -139,10 +137,10 @@ namespace Robust.Server.GameObjects.EntitySystems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = (collision.B as CollidableComponent).Owner.GetAllComponents<ICollideBehavior>();
+                var bBehaviors = ((CollidableComponent)collision.B).Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in bBehaviors)
                 {
-                    var entity = (collision.A as CollidableComponent).Owner;
+                    var entity = ((CollidableComponent)collision.A).Owner;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -270,7 +268,7 @@ namespace Robust.Server.GameObjects.EntitySystems
 
             if (ContainerHelpers.IsInContainer(entity) && physics.LinearVelocity != Vector2.Zero)
             {
-                entity.Transform.Parent.Owner.SendMessage(entity.Transform, new RelayMovementEntityMessage(entity));
+                entity.Transform.Parent!.Owner.SendMessage(entity.Transform, new RelayMovementEntityMessage(entity));
                 // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
                 physics.LinearVelocity = Vector2.Zero;
             }
@@ -290,9 +288,9 @@ namespace Robust.Server.GameObjects.EntitySystems
                 if (penetration > allowance)
                 {
                     var correction = collision.Normal * Math.Abs(penetration) * percent;
-                    if (collision.APhysics != null && !(collision.APhysics as PhysicsComponent).Anchored && !collision.APhysics.Deleted)
+                    if (collision.APhysics != null && !((PhysicsComponent)collision.APhysics).Anchored && !collision.APhysics.Deleted)
                         collision.APhysics.Owner.Transform.WorldPosition -= correction;
-                    if (collision.BPhysics != null && !(collision.BPhysics as PhysicsComponent).Anchored && !collision.BPhysics.Deleted)
+                    if (collision.BPhysics != null && !((PhysicsComponent)collision.BPhysics).Anchored && !collision.BPhysics.Deleted)
                         collision.BPhysics.Owner.Transform.WorldPosition += correction;
                 }
             }

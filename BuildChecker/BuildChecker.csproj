@@ -26,8 +26,6 @@ https://docs.microsoft.com/en-us/visualstudio/msbuild/msbuild
     <OutputType>Library</OutputType>
     <TargetFrameworkMoniker>.NETFramework, Version=v4.6.1</TargetFrameworkMoniker>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' " />
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' " />
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>

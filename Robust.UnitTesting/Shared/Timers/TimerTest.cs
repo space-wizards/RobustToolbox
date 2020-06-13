@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Shared.Timers
     [TestOf(typeof(Timer))]
     public class TimerTest : RobustUnitTest
     {
-        private LogCatcher _catcher;
+        private LogCatcher _catcher = default!;
 
         [OneTimeSetUp]
         public void InstallLogCatcher()

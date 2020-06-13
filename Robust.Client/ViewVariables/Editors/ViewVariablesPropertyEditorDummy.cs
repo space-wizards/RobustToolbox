@@ -10,7 +10,7 @@ namespace Robust.Client.ViewVariables.Editors
     /// </summary>
     internal sealed class ViewVariablesPropertyEditorDummy : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             if (!ReadOnly)
             {
@@ -18,7 +18,7 @@ namespace Robust.Client.ViewVariables.Editors
             }
             return new Label
             {
-                Text = value == null ? "null" : value.ToString(),
+                Text = value == null ? "null" : value.ToString() ?? "<null ToString()>",
                 Align = Label.AlignMode.Right,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
             };

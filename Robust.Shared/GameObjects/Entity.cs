@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -18,7 +19,7 @@ namespace Robust.Shared.GameObjects
         #region Members
 
         /// <inheritdoc />
-        public IEntityManager EntityManager { get; private set; }
+        public IEntityManager EntityManager { get; private set; } = default!;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -26,7 +27,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityPrototype Prototype
+        public EntityPrototype? Prototype
         {
             get => MetaData.EntityPrototype;
             internal set => MetaData.EntityPrototype = value;
@@ -73,12 +74,12 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Deleted { get; private set; }
 
-        private ITransformComponent _transform;
+        private ITransformComponent? _transform;
         /// <inheritdoc />
         [ViewVariables]
         public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
 
-        private IMetaDataComponent _metaData;
+        private IMetaDataComponent? _metaData;
 
         private bool _initializing;
         /// <inheritdoc />
@@ -200,7 +201,7 @@ namespace Robust.Shared.GameObjects
         #region Component Messaging
 
         /// <inheritdoc />
-        public void SendMessage(IComponent owner, ComponentMessage message)
+        public void SendMessage(IComponent? owner, ComponentMessage message)
         {
             var components = EntityManager.ComponentManager.GetComponents(Uid);
             foreach (var component in components)
@@ -211,7 +212,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null)
+        public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
         {
             EntityManager.EntityNetManager.SendComponentNetworkMessage(channel, this, owner, message);
         }
@@ -280,7 +281,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>(out T component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
@@ -288,7 +289,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(Type type, out IComponent component)
+        public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
@@ -296,7 +297,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(uint netId, out IComponent component)
+        public bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 

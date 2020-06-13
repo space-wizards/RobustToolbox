@@ -3,7 +3,7 @@
     [RegisterTextMacro("they", "en")]
     public class They : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {
@@ -18,7 +18,7 @@
     [RegisterTextMacro("their", "en")]
     public class Their : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {
@@ -33,7 +33,7 @@
     [RegisterTextMacro("theirs", "en")]
     public class Theirs : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {
@@ -48,7 +48,7 @@
     [RegisterTextMacro("them", "en")]
     public class Them : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {
@@ -63,7 +63,7 @@
     [RegisterTextMacro("themself", "en")]
     public class Themself : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {
@@ -78,7 +78,7 @@
     [RegisterTextMacro("theyre", "en")]
     public class Theyre : ITextMacro
     {
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             return IGenderable.GetGenderOrEpicene(argument) switch
             {

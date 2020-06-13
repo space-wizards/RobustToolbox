@@ -78,7 +78,7 @@ namespace Robust.Client.Graphics.Shaders
 
     internal sealed class ShaderUniformDefinition
     {
-        public ShaderUniformDefinition(string name, ShaderDataType type, string defaultValue)
+        public ShaderUniformDefinition(string name, ShaderDataType type, string? defaultValue)
         {
             Name = name;
             Type = type;
@@ -87,7 +87,7 @@ namespace Robust.Client.Graphics.Shaders
 
         public string Name { get; }
         public ShaderDataType Type { get; }
-        public string DefaultValue { get; }
+        public string? DefaultValue { get; }
     }
 
     internal sealed class ShaderConstantDefinition

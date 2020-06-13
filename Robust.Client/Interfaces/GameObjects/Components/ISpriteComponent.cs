@@ -60,9 +60,9 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         ///     The RSI that is currently used as "base".
         ///     Layers will fall back to this RSI if they do not have their own RSI set.
         /// </summary>
-        RSI BaseRSI { get; set; }
+        RSI? BaseRSI { get; set; }
 
-        ShaderInstance PostShader { get; set; }
+        ShaderInstance? PostShader { get; set; }
         uint RenderOrder { get; set; }
         bool IsInert { get; }
 
@@ -190,11 +190,11 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// <summary>
         ///     Get the RSI used by a layer.
         /// </summary>
-        RSI LayerGetActualRSI(int layer);
+        RSI? LayerGetActualRSI(int layer);
 
         /// <summary>
         ///     Get the RSI used by a layer.
         /// </summary>
-        RSI LayerGetActualRSI(object layerKey);
+        RSI? LayerGetActualRSI(object layerKey);
     }
 }

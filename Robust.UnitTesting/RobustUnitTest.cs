@@ -57,6 +57,12 @@ namespace Robust.UnitTesting
             }
         }
 
+        [OneTimeTearDown]
+        public void BaseTearDown()
+        {
+            IoCManager.Clear();
+        }
+
         /// <summary>
         /// Called after all IoC registration has been done, but before the graph has been built.
         /// This allows one to add new IoC types or overwrite existing ones if needed.

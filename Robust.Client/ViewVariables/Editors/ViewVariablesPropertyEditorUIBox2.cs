@@ -15,7 +15,7 @@ namespace Robust.Client.ViewVariables.Editors
             _type = type;
         }
 
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var hBoxContainer = new HBoxContainer
             {
@@ -59,7 +59,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 case BoxType.Box2:
                 {
-                    var box = (Box2) value;
+                    var box = (Box2) value!;
                     left.Text = box.Left.ToString(CultureInfo.InvariantCulture);
                     top.Text = box.Top.ToString(CultureInfo.InvariantCulture);
                     right.Text = box.Right.ToString(CultureInfo.InvariantCulture);
@@ -68,7 +68,7 @@ namespace Robust.Client.ViewVariables.Editors
                 }
                 case BoxType.Box2i:
                 {
-                    var box = (Box2i) value;
+                    var box = (Box2i) value!;
                     left.Text = box.Left.ToString(CultureInfo.InvariantCulture);
                     top.Text = box.Top.ToString(CultureInfo.InvariantCulture);
                     right.Text = box.Right.ToString(CultureInfo.InvariantCulture);
@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Editors
                 }
                 case BoxType.UIBox2:
                 {
-                    var box = (UIBox2) value;
+                    var box = (UIBox2) value!;
                     left.Text = box.Left.ToString(CultureInfo.InvariantCulture);
                     top.Text = box.Top.ToString(CultureInfo.InvariantCulture);
                     right.Text = box.Right.ToString(CultureInfo.InvariantCulture);
@@ -86,7 +86,7 @@ namespace Robust.Client.ViewVariables.Editors
                 }
                 case BoxType.UIBox2i:
                 {
-                    var box = (UIBox2i) value;
+                    var box = (UIBox2i) value!;
                     left.Text = box.Left.ToString(CultureInfo.InvariantCulture);
                     top.Text = box.Top.ToString(CultureInfo.InvariantCulture);
                     right.Text = box.Right.ToString(CultureInfo.InvariantCulture);

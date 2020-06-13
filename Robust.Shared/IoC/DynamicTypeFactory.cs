@@ -76,10 +76,7 @@ namespace Robust.Shared.IoC
     {
         // https://blog.ploeh.dk/2012/03/15/ImplementinganAbstractFactory/
 
-        #pragma warning disable 649
-        [Dependency]
-        private readonly IDependencyCollection _dependencies;
-        #pragma warning restore 649
+        [Dependency] private readonly IDependencyCollection _dependencies = default!;
 
         /// <inheritdoc />
         public object CreateInstance(Type type)
@@ -87,7 +84,7 @@ namespace Robust.Shared.IoC
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            var instance = Activator.CreateInstance(type);
+            var instance = Activator.CreateInstance(type)!;
             _dependencies.InjectDependencies(instance);
             return instance;
         }
@@ -97,7 +94,7 @@ namespace Robust.Shared.IoC
             if (type == null)
                 throw new ArgumentNullException(nameof(type));
 
-            var instance = Activator.CreateInstance(type, args);
+            var instance = Activator.CreateInstance(type, args)!;
             _dependencies.InjectDependencies(instance);
             return instance;
         }

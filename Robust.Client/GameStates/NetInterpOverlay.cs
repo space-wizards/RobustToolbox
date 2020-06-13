@@ -16,11 +16,9 @@ namespace Robust.Client.GameStates
 {
     internal class NetInterpOverlay : Overlay
     {
-#pragma warning disable 0649
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-#pragma warning restore 0649
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 

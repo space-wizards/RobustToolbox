@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -33,6 +34,7 @@ namespace Robust.Server.ServerStatus
             writer.Write(text);
         }
 
+        [return: MaybeNull]
         public static T GetFromJson<T>(this HttpRequest request)
         {
             using var streamReader = new StreamReader(request.Body, EncodingHelpers.UTF8);

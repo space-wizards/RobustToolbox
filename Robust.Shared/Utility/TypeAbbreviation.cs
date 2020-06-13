@@ -1,6 +1,9 @@
 using System;
 using System.IO;
 using System.Text;
+using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
+using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Utility
@@ -19,7 +22,7 @@ namespace Robust.Shared.Utility
                     "Robust.Shared.Utility.TypeAbbreviations.yaml");
             DebugTools.AssertNotNull(stream);
 
-            using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
+            using var streamReader = new StreamReader(stream!, EncodingHelpers.UTF8);
             var yamlStream = new YamlStream();
 
             yamlStream.Load(streamReader);
@@ -36,6 +39,11 @@ namespace Robust.Shared.Utility
         /// <returns>A shorter representation of the passed type than given by `ToString()`.</returns>
         public static string Abbreviate(Type type)
         {
+            if (type.FullName == null)
+            {
+                return "<unnamed type>";
+            }
+
             var sb = new StringBuilder();
 
             // `Type.FullName` assembly-qualifies all type arguments, but we don't
@@ -115,7 +123,7 @@ namespace Robust.Shared.Utility
                 var shortName = subNode.GetNode("short").AsString() + ".";
                 var sub = Array.Empty<Abbreviation>();
 
-                if (subNode.TryGetNode("sub", out YamlSequenceNode node))
+                if (subNode.TryGetNode("sub", out YamlSequenceNode? node))
                 {
                     sub = ParseAbbreviations(node);
                 }

@@ -19,12 +19,12 @@ namespace Robust.Shared.GameObjects.Systems
     [Reflect(false), PublicAPI]
     public abstract class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
-        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager;
+        [Dependency] protected readonly IEntityManager EntityManager = default!;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
-        protected IEntityQuery EntityQuery;
-        protected IEnumerable<IEntity> RelevantEntities => EntityManager.GetEntities(EntityQuery);
+        protected IEntityQuery? EntityQuery;
+        protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
 
         /// <inheritdoc />
         public virtual void Initialize() { }

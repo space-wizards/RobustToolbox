@@ -12,8 +12,7 @@ namespace Robust.Server.GameObjects
     {
         public override string Name => "BasicActor";
 
-        [ViewVariables]
-        public IPlayerSession playerSession { get; internal set; }
+        [ViewVariables] public IPlayerSession playerSession { get; internal set; } = default!;
 
         /// <inheritdoc />
         protected override void Shutdown()

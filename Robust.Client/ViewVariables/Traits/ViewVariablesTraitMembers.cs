@@ -12,7 +12,7 @@ namespace Robust.Client.ViewVariables.Traits
         private readonly IViewVariablesManagerInternal _vvm;
         private readonly IResourceCache _resourceCache;
 
-        private VBoxContainer _memberList;
+        private VBoxContainer _memberList = default!;
 
         public override void Initialize(ViewVariablesInstanceObject instance)
         {
@@ -41,10 +41,10 @@ namespace Robust.Client.ViewVariables.Traits
             }
             else
             {
-                DebugTools.Assert(Instance.Session != null);
+                DebugTools.AssertNotNull(Instance.Session);
 
                 var blob = await Instance.ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(
-                    Instance.Session, new ViewVariablesRequestMembers());
+                    Instance.Session!, new ViewVariablesRequestMembers());
 
                 var otherStyle = false;
                 foreach (var propertyData in blob.Members)
@@ -57,13 +57,13 @@ namespace Robust.Client.ViewVariables.Traits
                     {
                         refEditor.OnPressed += () =>
                             Instance.ViewVariablesManager.OpenVV(
-                                new ViewVariablesSessionRelativeSelector(Instance.Session.SessionId,
+                                new ViewVariablesSessionRelativeSelector(Instance.Session!.SessionId,
                                     new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}));
                     }
 
                     editor.OnValueChanged += o =>
                     {
-                        Instance.ViewVariablesManager.ModifyRemote(Instance.Session,
+                        Instance.ViewVariablesManager.ModifyRemote(Instance.Session!,
                             new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}, o);
                     };
 

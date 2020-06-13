@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading.Tasks;
 using Robust.Shared.Utility;
@@ -30,7 +31,9 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
-        void MountContentPack(string pack, ResourcePath prefix = null);
+        void MountContentPack(string pack, ResourcePath? prefix = null);
+
+        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
 
         /// <summary>
         ///     Adds a directory to search inside of to the VFS. The directory is relative to
@@ -41,7 +44,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        void MountContentDirectory(string path, ResourcePath prefix = null);
+        void MountContentDirectory(string path, ResourcePath? prefix = null);
 
         /// <summary>
         ///     Read a file from the mounted content roots.
@@ -89,7 +92,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        bool TryContentFileRead(ResourcePath path, out Stream fileStream);
+        bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
         ///     Try to read a file from the mounted content roots.
@@ -99,7 +102,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        bool TryContentFileRead(string path, out Stream fileStream);
+        bool TryContentFileRead(string path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
         ///     Recursively finds all files in a directory and all sub directories.
@@ -130,7 +133,7 @@ namespace Robust.Shared.Interfaces.Resources
         ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
         ///     Hrm.
         /// </summary>
-        bool TryGetDiskFilePath(ResourcePath path, out string diskPath);
+        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
     }
 
     internal interface IResourceManagerInternal : IResourceManager
@@ -138,8 +141,11 @@ namespace Robust.Shared.Interfaces.Resources
         /// <summary>
         ///     Sets the manager up so that the base game can run.
         /// </summary>
-        /// <param name="userData">The directory to use for user data.</param>
-        void Initialize(string userData);
+        /// <param name="userData">
+        /// The directory to use for user data.
+        /// If null, a virtual temporary file system is used instead.
+        /// </param>
+        void Initialize(string? userData);
 
         /// <summary>
         ///     Mounts a single stream as a content file. Useful for unit testing.

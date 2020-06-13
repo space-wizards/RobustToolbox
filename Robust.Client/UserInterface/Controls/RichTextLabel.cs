@@ -9,7 +9,7 @@ namespace Robust.Client.UserInterface.Controls
 {
     public class RichTextLabel : Control
     {
-        private FormattedMessage _message;
+        private FormattedMessage? _message;
         private RichTextEntry _entry;
 
         public float? MaxWidth { get; set; }
@@ -88,7 +88,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }

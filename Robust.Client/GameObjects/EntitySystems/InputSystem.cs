@@ -54,9 +54,9 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             #endif
 
-            // set state, state change is updated regardless if it is locally bound
             if (!replay)
             {
+                // set state, state change is updated regardless if it is locally bound
                 if (_cmdStates.GetState(function) == message.State)
                 {
                     return;

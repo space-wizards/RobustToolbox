@@ -128,15 +128,6 @@ namespace Robust.Shared.GameObjects
                 .Concat(GetBaseTypes(type.BaseType));
         }
 
-        private static IEnumerable<Type> GetBaseTypes(Type type) {
-            if(type.BaseType == null) return type.GetInterfaces();
-
-            return Enumerable.Repeat(type.BaseType, 1)
-                .Concat(type.GetInterfaces())
-                .Concat(type.GetInterfaces().SelectMany<Type, Type>(GetBaseTypes))
-                .Concat(GetBaseTypes(type.BaseType));
-        }
-
         /// <inheritdoc />
         public void Shutdown()
         {

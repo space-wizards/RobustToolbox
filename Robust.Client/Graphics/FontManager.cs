@@ -13,7 +13,6 @@ using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 
 namespace Robust.Client.Graphics
 {
@@ -124,7 +123,7 @@ namespace Robust.Client.Graphics
             var atlasDimY =
                 (int) Math.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
 
-            using (var atlas = new Image<Alpha8>(atlasDimX, atlasDimY))
+            using (var atlas = new Image<A8>(atlasDimX, atlasDimY))
             {
                 var atlasRegions = new Dictionary<uint, UIBox2>();
                 count = 0;
@@ -167,10 +166,10 @@ namespace Robust.Client.Graphics
 
                         case PixelMode.Gray:
                         {
-                            ReadOnlySpan<Alpha8> span;
+                            ReadOnlySpan<A8> span;
                             unsafe
                             {
-                                span = new ReadOnlySpan<Alpha8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                                span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
                             }
 
                             span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
@@ -201,7 +200,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        private static Image<Alpha8> MonoBitMapToImage(FTBitmap bitmap)
+        private static Image<A8> MonoBitMapToImage(FTBitmap bitmap)
         {
             DebugTools.Assert(bitmap.PixelMode == PixelMode.Mono);
             DebugTools.Assert(bitmap.Pitch > 0);
@@ -212,7 +211,7 @@ namespace Robust.Client.Graphics
                 span = new ReadOnlySpan<byte>((void*) bitmap.Buffer, bitmap.Rows * bitmap.Pitch);
             }
 
-            var bitmapImage = new Image<Alpha8>(bitmap.Width, bitmap.Rows);
+            var bitmapImage = new Image<A8>(bitmap.Width, bitmap.Rows);
             for (var y = 0; y < bitmap.Rows; y++)
             {
                 for (var x = 0; x < bitmap.Width; x++)
@@ -221,7 +220,7 @@ namespace Robust.Client.Graphics
                     var bitIndex = x % 8;
 
                     var bit = (span[byteIndex] & (1 << (7 - bitIndex))) != 0;
-                    bitmapImage[x, y] = new Alpha8(bit ? byte.MaxValue : byte.MinValue);
+                    bitmapImage[x, y] = new A8(bit ? byte.MaxValue : byte.MinValue);
                 }
             }
 

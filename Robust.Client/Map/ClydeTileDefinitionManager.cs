@@ -58,7 +58,7 @@ namespace Robust.Client.Map
                 Image<Rgba32> image;
                 using (var stream = _resourceCache.ContentFileRead($"/Textures/Tiles/{def.SpriteName}.png"))
                 {
-                    image = Image.Load(stream);
+                    image = Image.Load<Rgba32>(stream);
                 }
 
                 if (image.Width != tileSize || image.Height != tileSize)

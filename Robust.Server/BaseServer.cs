@@ -120,8 +120,11 @@ namespace Robust.Server
             _shutdownReason = reason;
 
             _mainLoop.Running = false;
-            _log.RootSawmill.RemoveHandler(_logHandler);
-            (_logHandler as IDisposable)?.Dispose();
+            if (_logHandler != null)
+            {
+                _log.RootSawmill.RemoveHandler(_logHandler);
+                (_logHandler as IDisposable)?.Dispose();
+            }
         }
 
         public void SetCommandLineArgs(CommandLineArgs args)
@@ -192,10 +195,10 @@ namespace Robust.Server
 
             _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
 
-            if (logEnabled && _logHandler != null)
+            if (logEnabled && logHandler != null)
             {
                 _logHandler = logHandler;
-                _log.RootSawmill.AddHandler(_logHandler);
+                _log.RootSawmill.AddHandler(_logHandler!);
             }
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.

@@ -342,7 +342,7 @@ namespace Robust.Client.UserInterface.Controls
                 var activeSize = active?.MinimumSize ?? Vector2.Zero;
                 var inactiveSize = inactive?.MinimumSize ?? Vector2.Zero;
 
-                headerSize = (int) Math.Max(activeSize.Y, inactiveSize.Y);
+                headerSize = (int) MathF.Max(activeSize.Y, inactiveSize.Y);
                 headerSize += font.GetHeight(UIScale);
             }
 

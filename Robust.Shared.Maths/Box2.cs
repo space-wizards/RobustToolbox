@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -34,8 +37,8 @@ namespace Robust.Shared.Maths
         public Vector2 TopLeft => new Vector2(Left, Top);
         public Vector2 TopRight => new Vector2(Right, Top);
         public Vector2 BottomLeft => new Vector2(Left, Bottom);
-        public float Width => Math.Abs(Right - Left);
-        public float Height => Math.Abs(Bottom - Top);
+        public float Width => MathF.Abs(Right - Left);
+        public float Height => MathF.Abs(Bottom - Top);
         public Vector2 Size => new Vector2(Width, Height);
         public Vector2 Center => BottomLeft + Size / 2;
 
@@ -88,10 +91,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public Box2 Intersect(in Box2 other)
         {
-            var left = Math.Max(Left, other.Left);
-            var right = Math.Min(Right, other.Right);
-            var bottom = Math.Max(Bottom, other.Bottom);
-            var top = Math.Min(Top, other.Top);
+            var left = MathF.Max(Left, other.Left);
+            var right = MathF.Min(Right, other.Right);
+            var bottom = MathF.Max(Bottom, other.Bottom);
+            var top = MathF.Min(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -105,10 +108,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 Union(in Box2 other)
         {
-            var left = Math.Min(Left, other.Left);
-            var right = Math.Max(Right, other.Right);
-            var bottom = Math.Min(Bottom, other.Bottom);
-            var top = Math.Max(Top, other.Top);
+            var left = MathF.Min(Left, other.Left);
+            var right = MathF.Max(Right, other.Right);
+            var bottom = MathF.Min(Bottom, other.Bottom);
+            var top = MathF.Max(Top, other.Top);
 
             if (left <= right && bottom <= top)
                 return new Box2(left, bottom, right, top);
@@ -251,10 +254,10 @@ namespace Robust.Shared.Maths
             var (x, y) = vec;
 
             return new Box2(
-                Math.Min(x, Left),
-                Math.Min(y, Bottom),
-                Math.Max(x, Right),
-                Math.Max(y, Top));
+                MathF.Min(x, Left),
+                MathF.Min(y, Bottom),
+                MathF.Max(x, Right),
+                MathF.Max(y, Top));
         }
     }
 }

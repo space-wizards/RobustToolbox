@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -191,7 +194,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minWidth = Math.Max(minWidth, childWidth);
+                    minWidth = MathF.Max(minWidth, childWidth);
                 }
                 else
                 {
@@ -203,7 +206,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minHeight = Math.Max(minHeight, childHeight);
+                    minHeight = MathF.Max(minHeight, childHeight);
                 }
             }
 

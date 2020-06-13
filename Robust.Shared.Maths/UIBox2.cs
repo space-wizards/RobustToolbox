@@ -1,4 +1,7 @@
 ﻿using System;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -33,8 +36,8 @@ namespace Robust.Shared.Maths
         public Vector2 TopLeft => new Vector2(Left, Top);
         public Vector2 TopRight => new Vector2(Right, Top);
         public Vector2 BottomLeft => new Vector2(Left, Bottom);
-        public float Width => Math.Abs(Right - Left);
-        public float Height => Math.Abs(Top - Bottom);
+        public float Width => MathF.Abs(Right - Left);
+        public float Height => MathF.Abs(Top - Bottom);
         public Vector2 Size => new Vector2(Width, Height);
         public Vector2 Center => TopLeft + Size / 2;
 

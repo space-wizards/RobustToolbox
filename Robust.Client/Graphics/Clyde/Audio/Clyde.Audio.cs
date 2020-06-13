@@ -401,15 +401,15 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                AL.Source(SourceHandle, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                AL.Source(SourceHandle, ALSourcef.Gain, (float) MathF.Pow(10, decibels / 10));
                 _checkAlError();
             }
 
             public void SetOcclusion(float blocks)
             {
                 _checkDisposed();
-                var cutoff = (float) Math.Exp(-blocks * 1);
-                float gain = (float) Math.Pow(cutoff, 0.1);
+                var cutoff = (float) MathF.Exp(-blocks * 1);
+                float gain = (float) MathF.Pow(cutoff, 0.1f);
                 if (FilterHandle == 0)
                 {
                     FilterHandle = EFX.GenFilter();
@@ -587,15 +587,15 @@ namespace Robust.Client.Graphics.Clyde
             {
                 _checkDisposed();
                 // ReSharper disable once PossibleInvalidOperationException
-                AL.Source(SourceHandle!.Value, ALSourcef.Gain, (float) Math.Pow(10, decibels / 10));
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, (float) MathF.Pow(10, decibels / 10));
                 _checkAlError();
             }
 
             public void SetOcclusion(float blocks)
             {
                 _checkDisposed();
-                var cutoff = (float) Math.Exp(-blocks * 1.5);
-                float gain = (float) Math.Pow(cutoff, 0.1);
+                var cutoff = (float) MathF.Exp(-blocks * 1.5f);
+                float gain = (float) MathF.Pow(cutoff, 0.1f);
                 if (FilterHandle == 0)
                 {
                     FilterHandle = EFX.GenFilter();

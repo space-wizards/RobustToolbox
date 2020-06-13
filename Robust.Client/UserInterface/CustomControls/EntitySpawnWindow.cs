@@ -230,7 +230,7 @@ namespace Robust.Client.UserInterface.CustomControls
             // Calculate index of first prototype to render based on current scroll.
             var height = MeasureButton.CombinedMinimumSize.Y + PrototypeListContainer.Separation;
             var offset = -PrototypeList.Position.Y;
-            var startIndex = (int) Math.Floor(offset / height);
+            var startIndex = (int) MathF.Floor(offset / height);
             PrototypeList.ItemOffset = startIndex;
 
             var (prevStart, prevEnd) = _lastPrototypeIndices;

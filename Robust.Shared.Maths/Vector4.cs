@@ -27,6 +27,9 @@ SOFTWARE.
 using System;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -203,11 +206,7 @@ namespace Robust.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-#if NETCOREAPP
         public float Length => MathF.Sqrt(LengthSquared);
-#else
-        public float Length => (float) Math.Sqrt(LengthSquared);
-#endif
 
         #endregion public float Length
 

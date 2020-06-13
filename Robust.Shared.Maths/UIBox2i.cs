@@ -1,4 +1,7 @@
 ﻿using System;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {

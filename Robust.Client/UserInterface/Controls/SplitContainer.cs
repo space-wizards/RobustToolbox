@@ -1,5 +1,8 @@
 using System;
 using Robust.Shared.Maths;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -79,7 +82,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Vertical)
             {
-                var width = Math.Max(firstSizeX, secondSizeX);
+                var width = MathF.Max(firstSizeX, secondSizeX);
                 var height = firstSizeY + Separation + secondSizeY;
 
                 return (width, height);
@@ -87,7 +90,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 var width = firstSizeX + Separation + secondSizeX;
-                var height = Math.Max(firstSizeY, secondSizeY);
+                var height = MathF.Max(firstSizeY, secondSizeY);
 
                 return (width, height);
             }

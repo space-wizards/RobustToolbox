@@ -1,4 +1,7 @@
 ﻿using System;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -19,7 +22,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     public static class DirectionExtensions
     {
-        private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
+        private const double Segment = 2 * Math.π / 8.0; // Cut the circle into 8 pieces
         private const double Offset = Segment / 2.0; // offset the pieces by 1/2 their size
 
         /// <summary>
@@ -41,8 +44,8 @@ namespace Robust.Shared.Maths
         {
             var ang = Segment * (int) dir;
 
-            if (ang > Math.PI) // convert 0 > 2PI to -PI > +PI
-                ang -= 2 * Math.PI;
+            if (ang > Math.π) // convert 0 > 2PI to -PI > +PI
+                ang -= 2 * Math.π;
 
             return ang;
         }

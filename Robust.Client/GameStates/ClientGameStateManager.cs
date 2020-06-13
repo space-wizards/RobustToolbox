@@ -229,7 +229,7 @@ namespace Robust.Client.GameStates
 
             var ping = _network.ServerChannel!.Ping / 1000f; // seconds.
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
-                             (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
+                             (int) MathF.Ceiling(_timing.TickRate * ping) + PredictSize;
 
             //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 

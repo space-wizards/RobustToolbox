@@ -12,6 +12,9 @@
 
 using System;
 using System.Diagnostics;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -172,7 +175,7 @@ namespace Robust.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float) Math.PI / 180.0f;
+            const float degToRad = (float) (Math.π / 180.0f);
             return degrees * degToRad;
         }
 
@@ -183,7 +186,7 @@ namespace Robust.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float) Math.PI;
+            const float radToDeg = (float) (180.0f / Math.π);
             return radians * radToDeg;
         }
 
@@ -194,7 +197,7 @@ namespace Robust.Shared.Maths
         /// <returns>The angle expressed in radians</returns>
         public static double DegreesToRadians(double degrees)
         {
-            const double degToRad = Math.PI / 180.0;
+            const double degToRad = Math.π / 180.0;
             return degrees * degToRad;
         }
 
@@ -205,7 +208,7 @@ namespace Robust.Shared.Maths
         /// <returns>The angle expressed in degrees</returns>
         public static double RadiansToDegrees(double radians)
         {
-            const double radToDeg = 180.0 / Math.PI;
+            const double radToDeg = 180.0 / Math.π;
             return radians * radToDeg;
         }
 
@@ -243,12 +246,12 @@ namespace Robust.Shared.Maths
 
         public static float Min(float a, float b, float c, float d)
         {
-            return Math.Min(a, Math.Min(b, Math.Min(c, d)));
+            return MathF.Min(a, MathF.Min(b, MathF.Min(c, d)));
         }
 
         public static float Max(float a, float b, float c, float d)
         {
-            return Math.Max(a, Math.Max(b, Math.Max(c, d)));
+            return MathF.Max(a, MathF.Max(b, MathF.Max(c, d)));
         }
 
         /// <summary>
@@ -257,7 +260,7 @@ namespace Robust.Shared.Maths
         /// <returns>THe median.</returns>
         public static float Median(float a, float b, float c)
         {
-            return Math.Max(Math.Min(a, b), Math.Min(Math.Max(a, b), c));
+            return MathF.Max(MathF.Min(a, b), MathF.Min(MathF.Max(a, b), c));
         }
 
         #endregion MinMax

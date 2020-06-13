@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configurations>Debug;Release</Configurations>
@@ -8,4 +8,8 @@
     <SonarQubeExclude>true</SonarQubeExclude>
     <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS</DefineConstants>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="CannyFastMath" Version="1.0.2" />
+  </ItemGroup>
 </Project>

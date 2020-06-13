@@ -3,6 +3,9 @@ using System.Text;
 using System.Collections;
 using System.Diagnostics;
 using System.Globalization;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Lidgren.Network
 {

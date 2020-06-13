@@ -28,6 +28,9 @@ SOFTWARE.
 using System;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -138,11 +141,7 @@ namespace Robust.Shared.Maths
         /// Gets the length (magnitude) of the vector.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-#if NETCOREAPP
         public float Length => MathF.Sqrt(LengthSquared);
-#else
-        public float Length => (float) Math.Sqrt(LengthSquared);
-#endif
         #endregion
 
         #region public float LengthSquared
@@ -897,7 +896,7 @@ namespace Robust.Shared.Maths
         /// <remarks>Note that the returned angle is never bigger than the constant Pi.</remarks>
         public static float CalculateAngle(Vector3 first, Vector3 second)
         {
-            return (float) Math.Acos(Dot(first, second) / (first.Length * second.Length));
+            return (float) MathF.Acos(Dot(first, second) / (first.Length * second.Length));
         }
 
         /// <summary>Calculates the angle (in radians) between two vectors.</summary>
@@ -908,7 +907,7 @@ namespace Robust.Shared.Maths
         public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
         {
             Dot(ref first, ref second, out var temp);
-            result = (float) Math.Acos(temp / (first.Length * second.Length));
+            result = (float) MathF.Acos(temp / (first.Length * second.Length));
         }
 
         #endregion

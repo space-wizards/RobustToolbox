@@ -24,6 +24,9 @@ using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Runtime.InteropServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Lidgren.Network
 {

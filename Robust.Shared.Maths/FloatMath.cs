@@ -1,11 +1,14 @@
 ﻿using System;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
     public static class FloatMath
     {
-        public const float RadToDeg = (float) (180.0 / Math.PI);
-        public const float DegToRad = (float) (Math.PI / 180.0);
+        public const float RadToDeg = (float) (180.0 / Math.π);
+        public const float DegToRad = (float) (Math.π / 180.0);
 
         /// <summary>
         /// Returns the largest integer smaller to or equal to f.
@@ -27,15 +30,15 @@ namespace Robust.Shared.Maths
         public static bool CloseTo(float a, float b, double tolerance = .00001)
         {
             var epsilon =
-                Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance,
+                Math.Max(MathF.Max(MathF.Abs(a), MathF.Abs(b)) * tolerance,
                     tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            return Math.Abs(a - b) <= epsilon;
+            return MathF.Abs(a - b) <= epsilon;
         }
 
         public static bool CloseTo(float a, double b, double tolerance = .00001)
         {
             var epsilon =
-                Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance,
+                Math.Max(Math.Max(MathF.Abs(a), Math.Abs(b)) * tolerance,
                     tolerance); // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
             return Math.Abs(a - b) <= epsilon;
         }

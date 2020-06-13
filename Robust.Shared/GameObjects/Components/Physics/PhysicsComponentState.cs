@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects
         public PhysicsComponentState(float mass, Vector2 linearVelocity, float angularVelocity)
             : base(NetIDs.PHYSICS)
         {
-            Mass = (int) Math.Round(mass *1000); // rounds kg to nearest gram
+            Mass = (int) MathF.Round(mass *1000); // rounds kg to nearest gram
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;
         }

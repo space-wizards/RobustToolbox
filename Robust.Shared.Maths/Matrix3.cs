@@ -26,6 +26,9 @@ SOFTWARE.
 
 using System;
 using System.Runtime.InteropServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -886,8 +889,8 @@ namespace Robust.Shared.Maths
         public void Rotate(float angle)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float) MathF.Sin(angleRadians);
+            var cos = (float) MathF.Cos(angleRadians);
 
             var r0c0 = cos * R0C0 + sin * R1C0;
             var r0c1 = cos * R0C1 + sin * R1C1;
@@ -923,8 +926,8 @@ namespace Robust.Shared.Maths
         public void Rotate(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float) MathF.Sin(angleRadians);
+            var cos = (float) MathF.Cos(angleRadians);
 
             result.R0C0 = cos * R0C0 + sin * R1C0;
             result.R0C1 = cos * R0C1 + sin * R1C1;
@@ -940,8 +943,8 @@ namespace Robust.Shared.Maths
         public static void Rotate(ref Matrix3 matrix, float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float) MathF.Sin(angleRadians);
+            var cos = (float) MathF.Cos(angleRadians);
 
             result.R0C0 = cos * matrix.R0C0 + sin * matrix.R1C0;
             result.R0C1 = cos * matrix.R0C1 + sin * matrix.R1C1;
@@ -957,8 +960,8 @@ namespace Robust.Shared.Maths
         public static void RotateMatrix(float angle, out Matrix3 result)
         {
             var angleRadians = MathHelper.DegreesToRadians(angle);
-            var sin = (float) Math.Sin(angleRadians);
-            var cos = (float) Math.Cos(angleRadians);
+            var sin = (float) MathF.Sin(angleRadians);
+            var cos = (float) MathF.Cos(angleRadians);
 
             result.R0C0 = cos;
             result.R0C1 = sin;

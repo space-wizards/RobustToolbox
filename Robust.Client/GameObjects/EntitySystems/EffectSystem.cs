@@ -254,9 +254,9 @@ namespace Robust.Client.GameObjects
                     var radius = positionRelativeToEmitter.Length;
                     if (radius > 0)
                     {
-                        var theta = (float) Math.Atan2(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
+                        var theta = (float) MathF.Atan2(positionRelativeToEmitter.Y, positionRelativeToEmitter.X);
                         theta += TangentialVelocity * frameTime;
-                        deltaPosition += new Vector2(radius * (float) Math.Cos(theta), radius * (float) Math.Sin(theta))
+                        deltaPosition += new Vector2(radius * (float) MathF.Cos(theta), radius * (float) MathF.Sin(theta))
                                          - positionRelativeToEmitter;
                     }
                 }

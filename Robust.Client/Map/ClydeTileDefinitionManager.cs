@@ -11,6 +11,9 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.Map
 {
@@ -45,7 +48,7 @@ namespace Robust.Client.Map
             const int tileSize = EyeManager.PixelsPerMeter;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(defList.Count));
-            var dimensionY = (int) Math.Ceiling((float) defList.Count / dimensionX);
+            var dimensionY = (int) Math.Ceiling((double) defList.Count / dimensionX);
 
             var sheet = new Image<Rgba32>(dimensionX * tileSize, dimensionY * tileSize);
 

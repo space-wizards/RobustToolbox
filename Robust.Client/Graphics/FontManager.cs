@@ -117,11 +117,11 @@ namespace Robust.Client.Graphics
             //  but preferring to increase width if necessary.
             var atlasEntriesHorizontal = (int) Math.Ceiling(Math.Sqrt(count));
             var atlasEntriesVertical =
-                (int) Math.Ceiling(count / (float) atlasEntriesHorizontal);
+                (int) MathF.Ceiling(count / (float) atlasEntriesHorizontal);
             var atlasDimX =
-                (int) Math.Ceiling(atlasEntriesHorizontal * maxGlyphSize.X / 4f) * 4;
+                (int) MathF.Ceiling(atlasEntriesHorizontal * maxGlyphSize.X / 4f) * 4;
             var atlasDimY =
-                (int) Math.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
+                (int) MathF.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
 
             using (var atlas = new Image<A8>(atlasDimX, atlasDimY))
             {

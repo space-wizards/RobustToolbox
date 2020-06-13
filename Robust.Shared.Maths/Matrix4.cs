@@ -27,6 +27,9 @@ SOFTWARE.
 
 using System;
 using System.Runtime.InteropServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -336,8 +339,8 @@ namespace Robust.Shared.Maths
         /// <param name="result">A matrix instance.</param>
         public static void CreateFromAxisAngle(Vector3 axis, float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(-angle);
-            var sin = (float) Math.Sin(-angle);
+            var cos = (float) MathF.Cos(-angle);
+            var sin = (float) MathF.Sin(-angle);
             var t = 1.0f - cos;
 
             axis.Normalize();
@@ -371,8 +374,8 @@ namespace Robust.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationX(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float) MathF.Cos(angle);
+            var sin = (float) MathF.Sin(angle);
 
             result.Row0 = Vector4.UnitX;
             result.Row1 = new Vector4(0.0f, cos, sin, 0.0f);
@@ -398,8 +401,8 @@ namespace Robust.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationY(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float) MathF.Cos(angle);
+            var sin = (float) MathF.Sin(angle);
 
             result.Row0 = new Vector4(cos, 0.0f, -sin, 0.0f);
             result.Row1 = Vector4.UnitY;
@@ -425,8 +428,8 @@ namespace Robust.Shared.Maths
         /// <param name="result">The resulting Matrix4 instance.</param>
         public static void CreateRotationZ(float angle, out Matrix4 result)
         {
-            var cos = (float) Math.Cos(angle);
-            var sin = (float) Math.Sin(angle);
+            var cos = (float) MathF.Cos(angle);
+            var sin = (float) MathF.Sin(angle);
 
             result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
             result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);
@@ -600,7 +603,7 @@ namespace Robust.Shared.Maths
         /// </exception>
         public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result)
         {
-            if (fovy <= 0 || fovy > Math.PI)
+            if (fovy <= 0 || fovy > Math.π)
                 throw new ArgumentOutOfRangeException("fovy");
             if (aspect <= 0)
                 throw new ArgumentOutOfRangeException("aspect");
@@ -609,7 +612,7 @@ namespace Robust.Shared.Maths
             if (zFar <= 0)
                 throw new ArgumentOutOfRangeException("zFar");
 
-            var yMax = zNear * (float) Math.Tan(0.5f * fovy);
+            var yMax = zNear * (float) MathF.Tan(0.5f * fovy);
             var yMin = -yMax;
             var xMin = yMin * aspect;
             var xMax = yMax * aspect;

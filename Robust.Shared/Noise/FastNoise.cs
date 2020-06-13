@@ -38,6 +38,9 @@ using FN_DECIMAL = System.Single;
 #endif
 using System;
 using System.Runtime.CompilerServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Noise
 {
@@ -1132,7 +1135,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleValueFractalBillow(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleValue(seed, x, y, z)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleValue(seed, x, y, z)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1142,7 +1145,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleValue(++seed, x, y, z)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleValue(++seed, x, y, z)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1151,7 +1154,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleValueFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleValue(seed, x, y, z));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleValue(seed, x, y, z));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1161,7 +1164,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleValue(++seed, x, y, z))) * amp;
+                sum -= (1 - MathF.Abs(SingleValue(++seed, x, y, z))) * amp;
             }
 
             return sum;
@@ -1252,7 +1255,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleValueFractalBillow(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleValue(seed, x, y)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleValue(seed, x, y)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1260,7 +1263,7 @@ namespace Robust.Shared.Noise
                 x *= m_lacunarity;
                 y *= m_lacunarity;
                 amp *= m_gain;
-                sum += (Math.Abs(SingleValue(++seed, x, y)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleValue(++seed, x, y)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1269,7 +1272,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleValueFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleValue(seed, x, y));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleValue(seed, x, y));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1278,7 +1281,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleValue(++seed, x, y))) * amp;
+                sum -= (1 - MathF.Abs(SingleValue(++seed, x, y))) * amp;
             }
 
             return sum;
@@ -1362,7 +1365,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SinglePerlinFractalBillow(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SinglePerlin(seed, x, y, z)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SinglePerlin(seed, x, y, z)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1372,7 +1375,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SinglePerlin(++seed, x, y, z)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SinglePerlin(++seed, x, y, z)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1381,7 +1384,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SinglePerlinFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SinglePerlin(seed, x, y, z));
+            FN_DECIMAL sum = 1 - MathF.Abs(SinglePerlin(seed, x, y, z));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1391,7 +1394,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SinglePerlin(++seed, x, y, z))) * amp;
+                sum -= (1 - MathF.Abs(SinglePerlin(++seed, x, y, z))) * amp;
             }
 
             return sum;
@@ -1493,7 +1496,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SinglePerlinFractalBillow(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SinglePerlin(seed, x, y)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SinglePerlin(seed, x, y)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1502,7 +1505,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SinglePerlin(++seed, x, y)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SinglePerlin(++seed, x, y)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1511,7 +1514,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SinglePerlinFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SinglePerlin(seed, x, y));
+            FN_DECIMAL sum = 1 - MathF.Abs(SinglePerlin(seed, x, y));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1520,7 +1523,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SinglePerlin(++seed, x, y))) * amp;
+                sum -= (1 - MathF.Abs(SinglePerlin(++seed, x, y))) * amp;
             }
 
             return sum;
@@ -1609,7 +1612,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalBillow(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleSimplex(seed, x, y, z)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleSimplex(seed, x, y, z)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1619,7 +1622,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleSimplex(++seed, x, y, z)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleSimplex(++seed, x, y, z)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1628,7 +1631,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleSimplex(seed, x, y, z));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleSimplex(seed, x, y, z));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1638,7 +1641,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleSimplex(++seed, x, y, z))) * amp;
+                sum -= (1 - MathF.Abs(SingleSimplex(++seed, x, y, z))) * amp;
             }
 
             return sum;
@@ -1687,7 +1690,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalBillow(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z, FN_DECIMAL w)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleSimplex(seed, x, y, z, w)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleSimplex(seed, x, y, z, w)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1698,7 +1701,7 @@ namespace Robust.Shared.Noise
                 w *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleSimplex(++seed, x, y, z, w)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleSimplex(++seed, x, y, z, w)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1707,7 +1710,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z, FN_DECIMAL w)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleSimplex(seed, x, y, z, w));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleSimplex(seed, x, y, z, w));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1718,7 +1721,7 @@ namespace Robust.Shared.Noise
                 w *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleSimplex(++seed, x, y, z, w))) * amp;
+                sum -= (1 - MathF.Abs(SingleSimplex(++seed, x, y, z, w))) * amp;
             }
 
             return sum;
@@ -1895,7 +1898,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalBillow(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleSimplex(seed, x, y)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleSimplex(seed, x, y)) * 2 - 1;
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1904,7 +1907,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleSimplex(++seed, x, y)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleSimplex(++seed, x, y)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -1913,7 +1916,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleSimplexFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleSimplex(seed, x, y));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleSimplex(seed, x, y));
             FN_DECIMAL amp = 1;
 
             for (int i = 1; i < m_octaves; i++)
@@ -1922,7 +1925,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleSimplex(++seed, x, y))) * amp;
+                sum -= (1 - MathF.Abs(SingleSimplex(++seed, x, y))) * amp;
             }
 
             return sum;
@@ -2157,7 +2160,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleCubicFractalBillow(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleCubic(seed, x, y, z)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleCubic(seed, x, y, z)) * 2 - 1;
             FN_DECIMAL amp = 1;
             int i = 0;
 
@@ -2168,7 +2171,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleCubic(++seed, x, y, z)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleCubic(++seed, x, y, z)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -2177,7 +2180,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleCubicFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleCubic(seed, x, y, z));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleCubic(seed, x, y, z));
             FN_DECIMAL amp = 1;
             int i = 0;
 
@@ -2188,7 +2191,7 @@ namespace Robust.Shared.Noise
                 z *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleCubic(++seed, x, y, z))) * amp;
+                sum -= (1 - MathF.Abs(SingleCubic(++seed, x, y, z))) * amp;
             }
 
             return sum;
@@ -2306,7 +2309,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleCubicFractalBillow(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = Math.Abs(SingleCubic(seed, x, y)) * 2 - 1;
+            FN_DECIMAL sum = MathF.Abs(SingleCubic(seed, x, y)) * 2 - 1;
             FN_DECIMAL amp = 1;
             int i = 0;
 
@@ -2316,7 +2319,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum += (Math.Abs(SingleCubic(++seed, x, y)) * 2 - 1) * amp;
+                sum += (MathF.Abs(SingleCubic(++seed, x, y)) * 2 - 1) * amp;
             }
 
             return sum * m_fractalBounding;
@@ -2325,7 +2328,7 @@ namespace Robust.Shared.Noise
         private FN_DECIMAL SingleCubicFractalRigidMulti(FN_DECIMAL x, FN_DECIMAL y)
         {
             int seed = m_seed;
-            FN_DECIMAL sum = 1 - Math.Abs(SingleCubic(seed, x, y));
+            FN_DECIMAL sum = 1 - MathF.Abs(SingleCubic(seed, x, y));
             FN_DECIMAL amp = 1;
             int i = 0;
 
@@ -2335,7 +2338,7 @@ namespace Robust.Shared.Noise
                 y *= m_lacunarity;
 
                 amp *= m_gain;
-                sum -= (1 - Math.Abs(SingleCubic(++seed, x, y))) * amp;
+                sum -= (1 - MathF.Abs(SingleCubic(++seed, x, y))) * amp;
             }
 
             return sum;
@@ -2451,7 +2454,7 @@ namespace Robust.Shared.Noise
                                 FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
                                 FN_DECIMAL vecZ = zi - z + vec.z * m_cellularJitter;
 
-                                FN_DECIMAL newDistance = Math.Abs(vecX) + Math.Abs(vecY) + Math.Abs(vecZ);
+                                FN_DECIMAL newDistance = MathF.Abs(vecX) + MathF.Abs(vecY) + MathF.Abs(vecZ);
 
                                 if (newDistance < distance)
                                 {
@@ -2478,7 +2481,7 @@ namespace Robust.Shared.Noise
                                 FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
                                 FN_DECIMAL vecZ = zi - z + vec.z * m_cellularJitter;
 
-                                FN_DECIMAL newDistance = (Math.Abs(vecX) + Math.Abs(vecY) + Math.Abs(vecZ)) +
+                                FN_DECIMAL newDistance = (MathF.Abs(vecX) + MathF.Abs(vecY) + MathF.Abs(vecZ)) +
                                                          (vecX * vecX + vecY * vecY + vecZ * vecZ);
 
                                 if (newDistance < distance)
@@ -2538,8 +2541,8 @@ namespace Robust.Shared.Noise
                                 FN_DECIMAL newDistance = vecX * vecX + vecY * vecY + vecZ * vecZ;
 
                                 for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                    distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                                distance[0] = Math.Min(distance[0], newDistance);
+                                    distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                                distance[0] = MathF.Min(distance[0], newDistance);
                             }
                         }
                     }
@@ -2558,11 +2561,11 @@ namespace Robust.Shared.Noise
                                 FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
                                 FN_DECIMAL vecZ = zi - z + vec.z * m_cellularJitter;
 
-                                FN_DECIMAL newDistance = Math.Abs(vecX) + Math.Abs(vecY) + Math.Abs(vecZ);
+                                FN_DECIMAL newDistance = MathF.Abs(vecX) + MathF.Abs(vecY) + MathF.Abs(vecZ);
 
                                 for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                    distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                                distance[0] = Math.Min(distance[0], newDistance);
+                                    distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                                distance[0] = MathF.Min(distance[0], newDistance);
                             }
                         }
                     }
@@ -2581,12 +2584,12 @@ namespace Robust.Shared.Noise
                                 FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
                                 FN_DECIMAL vecZ = zi - z + vec.z * m_cellularJitter;
 
-                                FN_DECIMAL newDistance = (Math.Abs(vecX) + Math.Abs(vecY) + Math.Abs(vecZ)) +
+                                FN_DECIMAL newDistance = (MathF.Abs(vecX) + MathF.Abs(vecY) + MathF.Abs(vecZ)) +
                                                          (vecX * vecX + vecY * vecY + vecZ * vecZ);
 
                                 for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                    distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                                distance[0] = Math.Min(distance[0], newDistance);
+                                    distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                                distance[0] = MathF.Min(distance[0], newDistance);
                             }
                         }
                     }
@@ -2672,7 +2675,7 @@ namespace Robust.Shared.Noise
                             FN_DECIMAL vecX = xi - x + vec.x * m_cellularJitter;
                             FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
 
-                            FN_DECIMAL newDistance = (Math.Abs(vecX) + Math.Abs(vecY));
+                            FN_DECIMAL newDistance = (MathF.Abs(vecX) + MathF.Abs(vecY));
 
                             if (newDistance < distance)
                             {
@@ -2694,7 +2697,7 @@ namespace Robust.Shared.Noise
                             FN_DECIMAL vecX = xi - x + vec.x * m_cellularJitter;
                             FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
 
-                            FN_DECIMAL newDistance = (Math.Abs(vecX) + Math.Abs(vecY)) + (vecX * vecX + vecY * vecY);
+                            FN_DECIMAL newDistance = (MathF.Abs(vecX) + MathF.Abs(vecY)) + (vecX * vecX + vecY * vecY);
 
                             if (newDistance < distance)
                             {
@@ -2747,8 +2750,8 @@ namespace Robust.Shared.Noise
                             FN_DECIMAL newDistance = vecX * vecX + vecY * vecY;
 
                             for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                            distance[0] = Math.Min(distance[0], newDistance);
+                                distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                            distance[0] = MathF.Min(distance[0], newDistance);
                         }
                     }
 
@@ -2763,11 +2766,11 @@ namespace Robust.Shared.Noise
                             FN_DECIMAL vecX = xi - x + vec.x * m_cellularJitter;
                             FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
 
-                            FN_DECIMAL newDistance = Math.Abs(vecX) + Math.Abs(vecY);
+                            FN_DECIMAL newDistance = MathF.Abs(vecX) + MathF.Abs(vecY);
 
                             for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                            distance[0] = Math.Min(distance[0], newDistance);
+                                distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                            distance[0] = MathF.Min(distance[0], newDistance);
                         }
                     }
 
@@ -2782,11 +2785,11 @@ namespace Robust.Shared.Noise
                             FN_DECIMAL vecX = xi - x + vec.x * m_cellularJitter;
                             FN_DECIMAL vecY = yi - y + vec.y * m_cellularJitter;
 
-                            FN_DECIMAL newDistance = (Math.Abs(vecX) + Math.Abs(vecY)) + (vecX * vecX + vecY * vecY);
+                            FN_DECIMAL newDistance = (MathF.Abs(vecX) + MathF.Abs(vecY)) + (vecX * vecX + vecY * vecY);
 
                             for (int i = m_cellularDistanceIndex1; i > 0; i--)
-                                distance[i] = Math.Max(Math.Min(distance[i], newDistance), distance[i - 1]);
-                            distance[0] = Math.Min(distance[0], newDistance);
+                                distance[i] = MathF.Max(MathF.Min(distance[i], newDistance), distance[i - 1]);
+                            distance[0] = MathF.Min(distance[0], newDistance);
                         }
                     }
 

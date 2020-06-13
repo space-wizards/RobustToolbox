@@ -28,6 +28,9 @@ SOFTWARE.
 using System;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -187,8 +190,8 @@ namespace Robust.Shared.Maths
 
             var result = new Vector4();
 
-            result.W = 2.0f * (float) Math.Acos(q.W); // angle
-            var den = (float) Math.Sqrt(1.0 - q.W * q.W);
+            result.W = 2.0f * (float) MathF.Acos(q.W); // angle
+            var den = (float) MathF.Sqrt(1.0f - q.W * q.W);
             if (den > 0.0001f)
             {
                 result.Xyz = q.Xyz / den;
@@ -211,7 +214,7 @@ namespace Robust.Shared.Maths
         /// Gets the length (magnitude) of the quaternion.
         /// </summary>
         /// <seealso cref="LengthSquared"/>
-        public float Length => (float) Math.Sqrt(W * W + Xyz.LengthSquared);
+        public float Length => (float) MathF.Sqrt(W * W + Xyz.LengthSquared);
 
         #endregion public float Length
 
@@ -256,8 +259,8 @@ namespace Robust.Shared.Maths
 
         #region Fields
 
-        private const float RadToDeg = (float) (180.0 / Math.PI);
-        private const float DegToRad = (float) (Math.PI / 180.0);
+        private const float RadToDeg = (float) (180.0 / Math.π);
+        private const float DegToRad = (float) (Math.π / 180.0);
 
         /// <summary>
         /// Defines the identity quaternion.
@@ -490,8 +493,8 @@ namespace Robust.Shared.Maths
 
             angle *= 0.5f;
             axis.Normalize();
-            result.Xyz = axis * (float) Math.Sin(angle);
-            result.W = (float) Math.Cos(angle);
+            result.Xyz = axis * (float) MathF.Sin(angle);
+            result.W = (float) MathF.Cos(angle);
 
             return Normalize(result);
         }
@@ -545,11 +548,11 @@ namespace Robust.Shared.Maths
             if (cosHalfAngle < 0.99f)
             {
                 // do proper slerp for big angles
-                var halfAngle = (float) Math.Acos(cosHalfAngle);
-                var sinHalfAngle = (float) Math.Sin(halfAngle);
+                var halfAngle = (float) MathF.Acos(cosHalfAngle);
+                var sinHalfAngle = (float) MathF.Sin(halfAngle);
                 var oneOverSinHalfAngle = 1.0f / sinHalfAngle;
-                blendA = (float) Math.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
-                blendB = (float) Math.Sin(halfAngle * blend) * oneOverSinHalfAngle;
+                blendA = (float) MathF.Sin(halfAngle * (1.0f - blend)) * oneOverSinHalfAngle;
+                blendB = (float) MathF.Sin(halfAngle * blend) * oneOverSinHalfAngle;
             }
             else
             {
@@ -576,7 +579,7 @@ namespace Robust.Shared.Maths
                 return to;
             }
 
-            var t = Math.Min(1f, maxDegreesDelta / num);
+            var t = MathF.Min(1f, maxDegreesDelta / num);
             return Slerp(from, to, t);
         }
 
@@ -614,7 +617,7 @@ namespace Robust.Shared.Maths
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float) Math.Sqrt(num8 + 1f);
+                var num = (float) MathF.Sqrt(num8 + 1f);
                 quaternion.w = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -625,7 +628,7 @@ namespace Robust.Shared.Maths
 
             if (m00 >= m11 && m00 >= m22)
             {
-                var num7 = (float) Math.Sqrt(1f + m00 - m11 - m22);
+                var num7 = (float) MathF.Sqrt(1f + m00 - m11 - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -636,7 +639,7 @@ namespace Robust.Shared.Maths
 
             if (m11 > m22)
             {
-                var num6 = (float) Math.Sqrt(1f + m11 - m00 - m22);
+                var num6 = (float) MathF.Sqrt(1f + m11 - m00 - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -645,7 +648,7 @@ namespace Robust.Shared.Maths
                 return quaternion;
             }
 
-            var num5 = (float) Math.Sqrt(1f + m22 - m00 - m11);
+            var num5 = (float) MathF.Sqrt(1f + m22 - m00 - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -673,7 +676,7 @@ namespace Robust.Shared.Maths
             {
                 // singularity at north pole
                 v.Y = (float) (2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float) (Math.PI / 2);
+                v.X = (float) (Math.π / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
@@ -682,15 +685,15 @@ namespace Robust.Shared.Maths
             {
                 // singularity at south pole
                 v.Y = (float) (-2f * Math.Atan2(rotation.y, rotation.x));
-                v.X = (float) (-Math.PI / 2);
+                v.X = (float) (-Math.π / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
 
             var q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
-            v.Y = (float) Math.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
-            v.X = (float) Math.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
-            v.Z = (float) Math.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
+            v.Y = (float) MathF.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
+            v.X = (float) MathF.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
+            v.Z = (float) MathF.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
             return NormalizeAngles(v * RadToDeg);
         }
 

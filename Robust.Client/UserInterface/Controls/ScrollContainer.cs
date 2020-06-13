@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.Maths;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -149,25 +152,25 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (!_vScrollEnabled)
                 {
-                    totalY = Math.Max(totalY, child.CombinedMinimumSize.Y);
+                    totalY = MathF.Max(totalY, child.CombinedMinimumSize.Y);
                 }
 
                 if (!_hScrollEnabled)
                 {
-                    totalX = Math.Max(totalX, child.CombinedMinimumSize.X);
+                    totalX = MathF.Max(totalX, child.CombinedMinimumSize.X);
                 }
             }
 
             if (_vScrollEnabled)
             {
                 totalX += _vScrollBar.CombinedMinimumSize.X;
-                totalY = Math.Max(_vScrollBar.CombinedMinimumSize.Y, totalY);
+                totalY = MathF.Max(_vScrollBar.CombinedMinimumSize.Y, totalY);
             }
 
             if (_hScrollEnabled)
             {
                 totalY += _hScrollBar.CombinedMinimumSize.Y;
-                totalX = Math.Max(_vScrollBar.CombinedMinimumSize.X, totalX);
+                totalX = MathF.Max(_vScrollBar.CombinedMinimumSize.X, totalX);
             }
 
             return new Vector2(totalX, totalY);

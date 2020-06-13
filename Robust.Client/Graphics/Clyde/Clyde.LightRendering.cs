@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Calculate maximum distance for the projection based on screen size.
                 var screenSizeCut = ScreenSize / EyeManager.PixelsPerMeter;
-                var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
+                var maxDist = (float) MathF.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
                 // Once with back face culling like regular lighting.

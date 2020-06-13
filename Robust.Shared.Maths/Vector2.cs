@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using CannyFastMath;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
+
 
 namespace Robust.Shared.Maths
 {
@@ -54,11 +58,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Gets the length (magnitude) of the vector.
         /// </summary>
-#if NETCOREAPP
         public float Length => MathF.Sqrt(LengthSquared);
-#else
-        public float Length => (float) Math.Sqrt(LengthSquared);
-#endif
 
         /// <summary>
         ///     Gets the squared length of the vector.
@@ -80,7 +80,7 @@ namespace Robust.Shared.Maths
 
         public Vector2 Rounded()
         {
-            return new Vector2((float) Math.Round(X), (float) Math.Round(Y));
+            return new Vector2((float) MathF.Round(X), (float) MathF.Round(Y));
         }
 
         /// <summary>

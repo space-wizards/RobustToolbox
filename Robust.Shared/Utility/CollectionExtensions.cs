@@ -135,5 +135,11 @@ namespace Robust.Shared.Utility
 
             return array;
         }
+
+        //https://stackoverflow.com/a/26627149
+        public static bool IsNull<T, TU>(this KeyValuePair<T, TU> pair)
+        {
+            return pair.Equals(new KeyValuePair<T, TU>());
+        }
     }
 }

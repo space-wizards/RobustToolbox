@@ -83,7 +83,7 @@ namespace Robust.Server
 
         private CommandLineArgs _commandLineArgs = default!;
         private Func<ILogHandler>? _logHandlerFactory;
-        private ILogHandler _logHandler = default!;
+        private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
 
         private TimeSpan _lastTitleUpdate;
@@ -174,7 +174,7 @@ namespace Robust.Server
 
             var logEnabled = _config.GetCVar<bool>("log.enabled");
 
-            if (logHandler == null)
+            if (logEnabled && logHandler == null)
             {
                 var logPath = _config.GetCVar<string>("log.path");
                 var logFormat = _config.GetCVar<string>("log.format");
@@ -190,12 +190,11 @@ namespace Robust.Server
                 logHandler = new FileLogHandler(logPath);
             }
 
-            _logHandler = logHandler;
-
             _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
 
-            if (logEnabled)
+            if (logEnabled && _logHandler != null)
             {
+                _logHandler = logHandler;
                 _log.RootSawmill.AddHandler(_logHandler);
             }
 

@@ -164,8 +164,8 @@ namespace Robust.Shared.Localization
             {
                 _readEntry(entry, catalog);
             }
-
-            RobustSerializer.MappedStringSerializer.AddStrings(yamlStream, filePath.ToString());
+            IoCManager.Resolve<IRobustMappedStringSerializer>()
+                .AddStrings(yamlStream, filePath.ToString());
         }
 
         private static void _readEntry(YamlMappingNode entry, Catalog catalog)

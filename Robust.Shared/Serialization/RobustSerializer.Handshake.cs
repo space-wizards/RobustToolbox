@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization
         /// <param name="channel"></param>
         /// <returns></returns>
         public Task Handshake(INetChannel channel)
-            => MappedStringSerializer.Handshake(channel);
+            => _mappedStringSerializer.Handshake(channel);
 
         /// <summary>
         /// An event that occurs once all handshake extensions have
@@ -26,8 +26,8 @@ namespace Robust.Shared.Serialization
         /// </summary>
         public event Action ClientHandshakeComplete
         {
-            add => MappedStringSerializer.ClientHandshakeComplete += value;
-            remove => MappedStringSerializer.ClientHandshakeComplete -= value;
+            add => _mappedStringSerializer.ClientHandshakeComplete += value;
+            remove => _mappedStringSerializer.ClientHandshakeComplete -= value;
         }
 
     }

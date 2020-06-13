@@ -39,6 +39,8 @@ namespace Robust.Server.Maps
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
+        public event Action<YamlStream, string>? LoadedMapData;
+
         /// <inheritdoc />
         public void SaveBlueprint(GridId gridId, string yamlPath)
         {
@@ -98,6 +100,8 @@ namespace Robust.Server.Maps
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
 
                 var data = new MapData(reader);
+
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 if (data.GridCount != 1)
                 {
@@ -181,6 +185,8 @@ namespace Robust.Server.Maps
                 Logger.InfoS("map", $"Loading Map: {resPath}");
 
                 var data = new MapData(reader);
+
+                LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _componentManager, _prototypeManager, (YamlMappingNode)data.RootNode, mapId);
                 context.Deserialize();
@@ -849,7 +855,9 @@ namespace Robust.Server.Maps
         /// </summary>
         private class MapData
         {
-            public YamlNode RootNode { get; }
+            public YamlStream Stream { get; }
+
+            public YamlNode RootNode => Stream.Documents[0].RootNode;
             public int GridCount { get; }
 
             public MapData(TextReader reader)
@@ -869,9 +877,8 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Stream too many YAML documents. Map files store exactly one.");
                 }
 
-                RootNode = stream.Documents[0].RootNode;
+                Stream = stream;
                 GridCount = ((YamlSequenceNode)RootNode["grids"]).Children.Count;
-                RobustSerializer.MappedStringSerializer.AddStrings(stream, "anonymous map YAML stream");
             }
         }
     }

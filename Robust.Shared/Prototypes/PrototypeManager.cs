@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -70,6 +71,9 @@ namespace Robust.Shared.Prototypes
         ///     Registers a specific prototype name to be ignored.
         /// </summary>
         void RegisterIgnore(string name);
+
+        event Action<YamlStream, string>? LoadedData;
+
     }
 
     /// <summary>
@@ -214,7 +218,7 @@ namespace Robust.Shared.Prototypes
 
                         var result = ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
 
-                        RobustSerializer.MappedStringSerializer.AddStrings(yamlStream, filePath.ToString());
+                        LoadedData?.Invoke(yamlStream, filePath.ToString());
 
                         return result;
                     }
@@ -261,8 +265,7 @@ namespace Robust.Shared.Prototypes
                 }
             }
 
-
-            RobustSerializer.MappedStringSerializer.AddStrings(yaml, "anonymous prototypes YAML stream");
+            LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
         }
 
         #endregion IPrototypeManager members
@@ -355,6 +358,9 @@ namespace Robust.Shared.Prototypes
         {
             IgnoredPrototypeTypes.Add(name);
         }
+
+        public event Action<YamlStream, string>? LoadedData;
+
     }
 
     [Serializable]

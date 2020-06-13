@@ -23,6 +23,8 @@ namespace Robust.Shared.Serialization
 
         private HashSet<Type> _serializableTypes = default!;
 
+        private readonly RobustMappedStringSerializer _mappedStringSerializer = new RobustMappedStringSerializer();
+
         #region Statistics
 
         public static long LargestObjectSerializedBytes { get; private set; }
@@ -45,7 +47,8 @@ namespace Robust.Shared.Serialization
 
         public void Initialize()
         {
-            var mappedStringSerializer = new MappedStringSerializer();
+            IoCManager.RegisterInstance<IRobustMappedStringSerializer>(_mappedStringSerializer);
+
             var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
 #if !FULL_RELEASE
             // confirm only shared types are marked for serialization, no client & server only types
@@ -65,14 +68,14 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new ITypeSerializer[] {mappedStringSerializer}
+                CustomTypeSerializers = new ITypeSerializer[] {_mappedStringSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
 
             if (_netManager.IsClient)
             {
-                MappedStringSerializer.LockMappedStrings = true;
+                _mappedStringSerializer.LockMappedStrings = true;
             }
             else
             {
@@ -80,7 +83,7 @@ namespace Robust.Shared.Serialization
                 var gameAssemblies = _reflectionManager.Assemblies;
                 var robustShared = defaultAssemblies
                     .First(a => a.GetName().Name == "Robust.Shared");
-                MappedStringSerializer.AddStrings(robustShared);
+                _mappedStringSerializer.AddStrings(robustShared);
 
                 // TODO: Need to add a GetSharedAssemblies method to the reflection manager
 
@@ -88,7 +91,7 @@ namespace Robust.Shared.Serialization
                     .FirstOrDefault(a => a.GetName().Name == "Content.Shared");
                 if (contentShared != null)
                 {
-                    MappedStringSerializer.AddStrings(contentShared);
+                    _mappedStringSerializer.AddStrings(contentShared);
                 }
 
                 // TODO: Need to add a GetServerAssemblies method to the reflection manager
@@ -97,11 +100,11 @@ namespace Robust.Shared.Serialization
                     .FirstOrDefault(a => a.GetName().Name == "Content.Server");
                 if (contentServer != null)
                 {
-                    MappedStringSerializer.AddStrings(contentServer);
+                    _mappedStringSerializer.AddStrings(contentServer);
                 }
             }
 
-            MappedStringSerializer.NetworkInitialize(_netManager);
+            _mappedStringSerializer.NetworkInitialize(_netManager);
         }
 
         public void Serialize(Stream stream, object toSerialize)

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
+using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -20,6 +22,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -29,11 +32,44 @@ namespace Robust.Server.ServerStatus
 {
 
     internal sealed partial class StatusHost
-        : IStatusHost, IDisposable,
+        : IStatusHost,
+            IDisposable,
             IHttpApplication<HttpContext>,
             IHostApplicationLifetime,
             ILoggerFactory
     {
+        private static readonly AssemblyLoadContext LoadContext = new AssemblyLoadContext(nameof(StatusHost));
+
+        static StatusHost()
+            => AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            {
+                var reqAsm = args.RequestingAssembly;
+
+                if (reqAsm == null)
+                {
+                    return null;
+                }
+
+                var requesterName = reqAsm.GetName()!;
+                if (!requesterName.Name!.StartsWith("Microsoft.AspNetCore")
+                    && requesterName.GetPublicKey().AsSpan()
+                        .SequenceEqual(typeof(KestrelServer).Assembly.GetName().GetPublicKey()))
+                {
+                    return null;
+                }
+
+                var asmName = new AssemblyName(args.Name!);
+
+                var fileName = asmName.Name;
+
+                var localAsmPath = Path.GetDirectoryName(new Uri(typeof(StatusHost).Assembly.CodeBase!).LocalPath);
+
+                var loaded = LoadContext.LoadFromAssemblyPath(Path.Combine(localAsmPath!, fileName + ".dll"));
+
+                DebugTools.AssertNotNull(loaded);
+
+                return loaded;
+            };
 
         private const string Sawmill = "statushost";
 
@@ -183,19 +219,29 @@ namespace Robust.Server.ServerStatus
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
+
             [JsonProperty("hashes")] public PlatformData Hashes { get; set; } = default!;
+
             [JsonProperty("downloads")] public PlatformData Downloads { get; set; } = default!;
+
             [JsonProperty("fork_id")] public string ForkId { get; set; } = default!;
+
             [JsonProperty("version")] public string Version { get; set; } = default!;
+
         }
 
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class PlatformData
         {
+
             [JsonProperty("windows")] public string Windows { get; set; } = default!;
+
             [JsonProperty("linux")] public string Linux { get; set; } = default!;
+
             [JsonProperty("macos")] public string MacOS { get; set; } = default!;
+
         }
+
     }
 
 }

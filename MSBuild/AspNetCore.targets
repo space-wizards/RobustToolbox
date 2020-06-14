@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <AspNetCorePath>$(NetCoreRoot)shared/Microsoft.AspNetCore.App/3.1.4</AspNetCorePath>
+    <AssemblySearchPaths>$(AspNetCorePath);$(AssemblySearchPaths)</AssemblySearchPaths>
+  </PropertyGroup>
+</Project>

@@ -52,6 +52,26 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="ServerStatus\StatusHost.Handlers.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServerStatus\StatusHost.HttpContext.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServerStatus\StatusHost.Lifetime.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServerStatus\StatusHost.Logging.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServerStatus\StatusHost.SawmillWrapper.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+    <Compile Update="ServerStatus\StatusHost.Sync.cs">
+      <DependentUpon>StatusHost.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Import Project="..\MSBuild\AspNetCore.targets" />
 </Project>

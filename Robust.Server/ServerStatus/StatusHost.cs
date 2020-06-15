@@ -41,35 +41,37 @@ namespace Robust.Server.ServerStatus
         private static readonly AssemblyLoadContext LoadContext = new AssemblyLoadContext(nameof(StatusHost));
 
         static StatusHost()
-            => AppDomain.CurrentDomain.AssemblyResolve += (sender, args) =>
+            => AppDomain.CurrentDomain.AssemblyResolve += AspNetCoreAssemblyResolver;
+
+        private static Assembly? AspNetCoreAssemblyResolver(object? sender, ResolveEventArgs args)
+        {
+            var reqAsm = args.RequestingAssembly;
+
+            if (reqAsm == null)
             {
-                var reqAsm = args.RequestingAssembly;
+                return null;
+            }
 
-                if (reqAsm == null)
-                {
-                    return null;
-                }
+            var requesterName = reqAsm.GetName()!;
+            if (!requesterName.Name!.StartsWith("Microsoft.AspNetCore") && requesterName.GetPublicKey()
+                .AsSpan()
+                .SequenceEqual(typeof(KestrelServer).Assembly.GetName().GetPublicKey()))
+            {
+                return null;
+            }
 
-                var requesterName = reqAsm.GetName()!;
-                if (!requesterName.Name!.StartsWith("Microsoft.AspNetCore")
-                    && requesterName.GetPublicKey().AsSpan()
-                        .SequenceEqual(typeof(KestrelServer).Assembly.GetName().GetPublicKey()))
-                {
-                    return null;
-                }
+            var asmName = new AssemblyName(args.Name!);
 
-                var asmName = new AssemblyName(args.Name!);
+            var fileName = asmName.Name;
 
-                var fileName = asmName.Name;
+            var localAsmPath = Path.GetDirectoryName(new Uri(typeof(StatusHost).Assembly.CodeBase!).LocalPath);
 
-                var localAsmPath = Path.GetDirectoryName(new Uri(typeof(StatusHost).Assembly.CodeBase!).LocalPath);
+            var loaded = LoadContext.LoadFromAssemblyPath(Path.Combine(localAsmPath!, fileName + ".dll"));
 
-                var loaded = LoadContext.LoadFromAssemblyPath(Path.Combine(localAsmPath!, fileName + ".dll"));
+            DebugTools.AssertNotNull(loaded);
 
-                DebugTools.AssertNotNull(loaded);
-
-                return loaded;
-            };
+            return loaded;
+        }
 
         private const string Sawmill = "statushost";
 

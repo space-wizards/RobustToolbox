@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Interfaces.Resources;
@@ -36,9 +37,15 @@ namespace Robust.Client.Interfaces.ResourceManagement
             where T : BaseResource, new();
 
         IEnumerable<KeyValuePair<ResourcePath, T>> GetAllResources<T>() where T : BaseResource, new();
+
+        // Resource load callbacks so content can hook stuff like click maps.
+        event Action<TextureLoadedEventArgs> OnRawTextureLoaded;
+        event Action<RsiLoadedEventArgs> OnRsiLoaded;
     }
 
     internal interface IResourceCacheInternal : IResourceCache, IResourceManagerInternal
     {
+        void TextureLoaded(TextureLoadedEventArgs eventArgs);
+        void RsiLoaded(RsiLoadedEventArgs eventArgs);
     }
 }

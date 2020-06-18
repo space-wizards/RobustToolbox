@@ -79,7 +79,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         protected void RaiseLocalEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, (object)message);
         }
 
         protected void QueueLocalEvent(EntitySystemMessage message)

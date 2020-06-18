@@ -1,13 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
-using Robust.Client.Reflection;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
-using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.UnitTesting.Shared.Reflection;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -17,6 +15,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         public abstract class ESystemBase : IEntitySystem
         {
+            public virtual IEnumerable<Type> UpdatesAfter => Enumerable.Empty<Type>();
+            public virtual IEnumerable<Type> UpdatesBefore => Enumerable.Empty<Type>();
             public void Initialize() { }
             public void Shutdown() { }
             public void Update(float frameTime) { }

@@ -50,9 +50,9 @@ namespace Robust.Shared.IoC
             _container.Value = new DependencyCollection();
         }
 
-        public static void InitThread(IDependencyCollection collection)
+        public static void InitThread(IDependencyCollection collection, bool replaceExisting=false)
         {
-            if (_container.IsValueCreated)
+            if (_container.IsValueCreated && !replaceExisting)
             {
                 throw new InvalidOperationException("This thread has already been initialized.");
             }

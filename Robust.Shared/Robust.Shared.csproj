@@ -21,6 +21,7 @@
     <PackageReference Include="NGettext" Version="0.6.5" />
     <PackageReference Include="Pidgin" Version="2.2.0" />
     <PackageReference Include="prometheus-net" Version="3.5.0" />
+    <PackageReference Include="Robust.Shared.AuthLib" Version="0.1.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.0" />
   </ItemGroup>

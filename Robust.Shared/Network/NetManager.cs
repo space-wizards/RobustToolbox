@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 using Lidgren.Network;
 using Prometheus;
 using Robust.Shared.Configuration;
@@ -18,6 +17,7 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
 namespace Robust.Shared.Network
 {
@@ -580,10 +580,9 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            var (nameValid, invalidReason) = UsernameHelpers.IsNameValid(requestedUsername);
-            if (!nameValid)
+            if (!UsernameHelpers.IsNameValid(requestedUsername, out var reason))
             {
-                connection.Disconnect($"Username is invalid ({invalidReason}).");
+                connection.Disconnect($"Username is invalid ({reason.ToText()}).");
                 return;
             }
 

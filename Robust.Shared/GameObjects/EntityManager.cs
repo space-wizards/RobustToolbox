@@ -117,10 +117,10 @@ namespace Robust.Shared.GameObjects
         /// Returns an entity by id
         /// </summary>
         /// <param name="uid"></param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
-        public IEntity? GetEntity(EntityUid uid)
+        /// <returns>Entity or throws if the entity doesn't exist</returns>
+        public IEntity GetEntity(EntityUid uid)
         {
-            return Entities.GetValueOrDefault(uid, null);
+            return Entities[uid];
         }
 
         /// <summary>

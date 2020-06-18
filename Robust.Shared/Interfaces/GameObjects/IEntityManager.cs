@@ -68,7 +68,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="uid"></param>
         /// <returns>Entity or null if entity id doesn't exist</returns>
-        IEntity? GetEntity(EntityUid uid);
+        IEntity GetEntity(EntityUid uid);
 
         /// <summary>
         /// Attempt to get an entity, returning whether or not an entity was gotten.

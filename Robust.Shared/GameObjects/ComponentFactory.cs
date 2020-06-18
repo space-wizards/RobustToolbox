@@ -42,7 +42,8 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of component name to type.
         /// </summary>
-        private readonly Dictionary<string, ComponentRegistration> names = new Dictionary<string, ComponentRegistration>();
+        private readonly Dictionary<string, ComponentRegistration> names =
+            new Dictionary<string, ComponentRegistration>();
 
         /// <summary>
         /// Mapping of network ID to type.
@@ -69,7 +70,7 @@ namespace Robust.Shared.GameObjects
             Register(typeof(T), overwrite);
         }
 
-        private void Register(Type type, bool overwrite=false)
+        private void Register(Type type, bool overwrite = false)
         {
             if (types.ContainsKey(type))
             {
@@ -78,7 +79,7 @@ namespace Robust.Shared.GameObjects
 
             // Create a dummy to be able to fetch instance properties like name.
             // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = (IComponent)Activator.CreateInstance(type)!;
+            var dummy = (IComponent) Activator.CreateInstance(type)!;
 
             var name = dummy.Name;
             var netID = dummy.NetID;
@@ -108,7 +109,8 @@ namespace Robust.Shared.GameObjects
             {
                 if (!overwrite)
                 {
-                    throw new InvalidOperationException($"{name} has duplicate network ID {netID}, previous: {netIDs[netID.Value]}");
+                    throw new InvalidOperationException(
+                        $"{name} has duplicate network ID {netID}, previous: {netIDs[netID.Value]}");
                 }
 
                 RemoveComponent(netIDs[netID.Value].Name);
@@ -140,6 +142,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"Attempted to register a reference twice: {@interface}");
             }
+
             registration.References.Add(@interface);
         }
 
@@ -196,6 +199,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
+
             return _typeFactory.CreateInstance<IComponent>(types[componentType].Type);
         }
 
@@ -205,6 +209,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
+
             return _typeFactory.CreateInstance<T>(types[typeof(T)].Type);
         }
 
@@ -276,21 +281,40 @@ namespace Robust.Shared.GameObjects
                     continue;
                 }
 
+                var registerAttribute = (RegisterComponentAttribute) Attribute.GetCustomAttribute(type, typeof(RegisterComponentAttribute))!;
+
                 Register(type);
 
-                foreach (var attribute in Attribute.GetCustomAttributes(type, typeof(ComponentReferenceAttribute)))
+                var checkRefTypes = new List<Type> {type};
+
+                if (registerAttribute.Recursive)
                 {
-                    var cast = (ComponentReferenceAttribute) attribute;
-
-                    var refType = cast.ReferenceType;
-
-                    if (!refType.IsAssignableFrom(type))
+                    for (var t = type.BaseType!; t != typeof(Component); t = t.BaseType!)
                     {
-                        Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
-                        continue;
+                        if (Attribute.IsDefined(t, typeof(RegisterComponentAttribute)))
+                        {
+                            checkRefTypes.Add(t);
+                            RegisterReference(type, t);
+                        }
                     }
+                }
 
-                    RegisterReference(type, refType);
+                foreach (var checkRefType in checkRefTypes)
+                {
+                    foreach (var attribute in Attribute.GetCustomAttributes(checkRefType, typeof(ComponentReferenceAttribute)))
+                    {
+                        var cast = (ComponentReferenceAttribute) attribute;
+
+                        var refType = cast.ReferenceType;
+
+                        if (!refType.IsAssignableFrom(type))
+                        {
+                            Logger.Error("Type {0} has reference for type it does not implement: {1}.", type, refType);
+                            continue;
+                        }
+
+                        RegisterReference(type, refType);
+                    }
                 }
             }
         }
@@ -307,14 +331,19 @@ namespace Robust.Shared.GameObjects
         public UnknownComponentException()
         {
         }
+
         public UnknownComponentException(string message) : base(message)
         {
         }
+
         public UnknownComponentException(string message, Exception inner) : base(message, inner)
         {
         }
+
         protected UnknownComponentException(
-          SerializationInfo info,
-          StreamingContext context) : base(info, context) { }
+            SerializationInfo info,
+            StreamingContext context) : base(info, context)
+        {
+        }
     }
 }

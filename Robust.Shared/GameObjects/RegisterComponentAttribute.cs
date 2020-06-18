@@ -12,6 +12,9 @@ namespace Robust.Shared.GameObjects
     [MeansImplicitUse]
     public sealed class RegisterComponentAttribute : Attribute
     {
-
+        /// <summary>
+        ///     If true, this component will inherit component references from its parent recursively.
+        /// </summary>
+        public bool Recursive { get; set; } = true;
     }
 }

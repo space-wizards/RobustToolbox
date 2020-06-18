@@ -97,23 +97,6 @@ namespace Lidgren.Network
 		/// </summary>
 		public int ReceivedBytes { get { return m_receivedBytes; } }
 
-		/// <summary>
-		/// Gets the number of bytes allocated (and possibly garbage collected) for message storage
-		/// </summary>
-		public long StorageBytesAllocated { get { return m_bytesAllocated; } }
-
-		/// <summary>
-		/// Gets the number of bytes in the recycled pool
-		/// </summary>
-		public int BytesInRecyclePool
-		{
-			get
-			{
-				lock (m_peer.m_storagePool)
-					return m_peer.m_storagePoolBytes;
-			}
-		}
-
 #if !USE_RELEASE_STATISTICS
 		[Conditional("DEBUG")]
 #endif
@@ -150,8 +133,6 @@ namespace Lidgren.Network
 			bdr.AppendLine("Received (n/a) bytes in (n/a) messages in (n/a) packets");
 #endif
 			bdr.AppendLine("Storage allocated " + m_bytesAllocated + " bytes");
-			if (m_peer.m_storagePool != null)
-				bdr.AppendLine("Recycled pool " + m_peer.m_storagePoolBytes + " bytes (" + m_peer.m_storageSlotsUsedCount + " entries)");
 			return bdr.ToString();
 		}
 	}

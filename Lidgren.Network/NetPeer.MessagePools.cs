@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,27 +7,21 @@ namespace Lidgren.Network
 {
 	public partial class NetPeer
 	{
-		internal List<byte[]> m_storagePool;
 		private NetQueue<NetOutgoingMessage> m_outgoingMessagesPool;
 		private NetQueue<NetIncomingMessage> m_incomingMessagesPool;
 
-		internal int m_storagePoolBytes;
-		internal int m_storageSlotsUsedCount;
 		private int m_maxCacheCount;
 
 		private void InitializePools()
 		{
-			m_storageSlotsUsedCount = 0;
 
 			if (m_configuration.UseMessageRecycling)
 			{
-				m_storagePool = new List<byte[]>(16);
 				m_outgoingMessagesPool = new NetQueue<NetOutgoingMessage>(4);
 				m_incomingMessagesPool = new NetQueue<NetIncomingMessage>(4);
 			}
 			else
 			{
-				m_storagePool = null;
 				m_outgoingMessagesPool = null;
 				m_incomingMessagesPool = null;
 			}
@@ -36,63 +31,12 @@ namespace Lidgren.Network
 
 		internal byte[] GetStorage(int minimumCapacityInBytes)
 		{
-			if (m_storagePool == null)
-				return new byte[minimumCapacityInBytes];
-
-			lock (m_storagePool)
-			{
-				for (int i = 0; i < m_storagePool.Count; i++)
-				{
-					byte[] retval = m_storagePool[i];
-					if (retval != null && retval.Length >= minimumCapacityInBytes)
-					{
-						m_storagePool[i] = null;
-						m_storageSlotsUsedCount--;
-						m_storagePoolBytes -= retval.Length;
-						return retval;
-					}
-				}
-			}
-			m_statistics.m_bytesAllocated += minimumCapacityInBytes;
-			return new byte[minimumCapacityInBytes];
+			return ArrayPool<byte>.Shared.Rent(minimumCapacityInBytes);
 		}
 
 		internal void Recycle(byte[] storage)
 		{
-			if (m_storagePool == null || storage == null)
-				return;
-
-			lock (m_storagePool)
-			{
-				int cnt = m_storagePool.Count;
-				for (int i = 0; i < cnt; i++)
-				{
-					if (m_storagePool[i] == null)
-					{
-						m_storageSlotsUsedCount++;
-						m_storagePoolBytes += storage.Length;
-						m_storagePool[i] = storage;
-						return;
-					}
-				}
-
-				if (m_storagePool.Count >= m_maxCacheCount)
-				{
-					// pool is full; replace randomly chosen entry to keep size distribution
-					var idx = NetRandom.Instance.Next(m_storagePool.Count);
-
-					m_storagePoolBytes -= m_storagePool[idx].Length;
-					m_storagePoolBytes += storage.Length;
-					
-					m_storagePool[idx] = storage; // replace
-				}
-				else
-				{
-					m_storageSlotsUsedCount++;
-					m_storagePoolBytes += storage.Length;
-					m_storagePool.Add(storage);
-				}
-			}
+			ArrayPool<byte>.Shared.Return(storage);
 		}
 
 		/// <summary>
@@ -137,19 +81,19 @@ namespace Lidgren.Network
 			NetException.Assert(retval.m_recyclingCount == 0, "Wrong recycling count! Should be zero" + retval.m_recyclingCount);
 
 			if (initialCapacity > 0)
-				retval.m_data = GetStorage(initialCapacity);
+				retval.m_buf = GetStorage(initialCapacity);
 
 			return retval;
 		}
 
-		internal NetIncomingMessage CreateIncomingMessage(NetIncomingMessageType tp, byte[] useStorageData)
+		internal NetIncomingMessage CreateIncomingMessage(NetIncomingMessageType tp, ArraySegment<byte> useStorageData)
 		{
 			NetIncomingMessage retval;
 			if (m_incomingMessagesPool == null || !m_incomingMessagesPool.TryDequeue(out retval))
 				retval = new NetIncomingMessage(tp);
 			else
 				retval.m_incomingMessageType = tp;
-			retval.m_data = useStorageData;
+			retval.m_buf = useStorageData.Array;
 			return retval;
 		}
 
@@ -160,7 +104,7 @@ namespace Lidgren.Network
 				retval = new NetIncomingMessage(tp);
 			else
 				retval.m_incomingMessageType = tp;
-			retval.m_data = GetStorage(minimumByteSize);
+			retval.m_buf = GetStorage(minimumByteSize);
 			return retval;
 		}
 
@@ -174,8 +118,8 @@ namespace Lidgren.Network
 
 			NetException.Assert(m_incomingMessagesPool.Contains(msg) == false, "Recyling already recycled incoming message! Thread race?");
 
-			byte[] storage = msg.m_data;
-			msg.m_data = null;
+			byte[] storage = msg.m_buf;
+			msg.m_buf = null;
 			Recycle(storage);
 			msg.Reset();
 
@@ -207,8 +151,8 @@ namespace Lidgren.Network
 			// however, in RELEASE, we'll just have to accept this and move on with life
 			msg.m_recyclingCount = 0;
 
-			byte[] storage = msg.m_data;
-			msg.m_data = null;
+			byte[] storage = msg.m_buf;
+			msg.m_buf = null;
 
 			// message fragments cannot be recycled
 			// TODO: find a way to recycle large message after all fragments has been acknowledged; or? possibly better just to garbage collect them

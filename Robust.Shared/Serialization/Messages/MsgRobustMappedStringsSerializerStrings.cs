@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.IO;
 using JetBrains.Annotations;
 using Lidgren.Network;
@@ -7,6 +8,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
 {
+
     /// <summary>
     /// The meat of the string-exchange handshake sandwich. Sent by the
     /// server after the client requests an updated copy of the mapping.
@@ -22,6 +24,8 @@ namespace Robust.Shared.Serialization
         {
         }
 
+        public int PackageSize { get; set; }
+
         /// <value>
         /// The raw bytes of the string mapping held by the server.
         /// </value>
@@ -29,14 +33,8 @@ namespace Robust.Shared.Serialization
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            var l = buffer.ReadVariableInt32();
-            var success = buffer.ReadBytes(l, out var buf);
-            if (!success)
-            {
-                throw new InvalidDataException("Not all of the bytes were available in the message.");
-            }
-
-            Package = buf;
+            PackageSize = buffer.ReadVariableInt32();
+            buffer.ReadBytes(Package = new byte[PackageSize]);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

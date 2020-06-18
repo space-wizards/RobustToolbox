@@ -6,6 +6,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Shared.Serialization
 {
+
     /// <summary>
     /// The server part of the string-exchange handshake. Sent as the
     /// first message in the handshake. Tells the client the hash of
@@ -35,7 +36,7 @@ namespace Robust.Shared.Serialization
                 throw new InvalidOperationException("Hash too long.");
             }
 
-            Hash = buffer.ReadBytes(len);
+            buffer.ReadBytes(Hash = new byte[len]);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

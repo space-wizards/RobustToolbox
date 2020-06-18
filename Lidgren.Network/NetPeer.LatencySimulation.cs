@@ -20,6 +20,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 //#define USE_RELEASE_STATISTICS
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
@@ -89,8 +90,10 @@ namespace Lidgren.Network
 				// Enqueue delayed packet
 				DelayedPacket p = new DelayedPacket();
 				p.Target = target;
-				p.Data = new byte[numBytes];
-				Buffer.BlockCopy(m_sendBuffer, 0, p.Data, 0, numBytes);
+				p.Data = ArrayPool<byte>.Shared.Rent(numBytes);
+				//Buffer.BlockCopy(m_sendBuffer, 0, p.Data, 0, numBytes);
+				new Memory<byte>(m_sendBuffer, 0, numBytes)
+					.CopyTo(p.Data);
 				p.DelayedUntil = NetTime.Now + delay;
 
 				m_delayedPackets.Add(p);
@@ -113,8 +116,9 @@ namespace Lidgren.Network
 			{
 				if (now > p.DelayedUntil)
 				{
-					ActuallySendPacket(p.Data, p.Data.Length, p.Target, out connectionReset);
+					ActuallySendPacket(new Span<byte>(p.Data), p.Data.Length, p.Target, out connectionReset);
 					m_delayedPackets.Remove(p);
+					ArrayPool<byte>.Shared.Return(p.Data);
 					goto RestartDelaySending;
 				}
 			}
@@ -126,7 +130,10 @@ namespace Lidgren.Network
 			{
 				bool connectionReset;
 				foreach (DelayedPacket p in m_delayedPackets)
-					ActuallySendPacket(p.Data, p.Data.Length, p.Target, out connectionReset);
+				{
+					ActuallySendPacket(new Span<byte>(p.Data), p.Data.Length, p.Target, out connectionReset);
+					ArrayPool<byte>.Shared.Return(p.Data);
+				}
 				m_delayedPackets.Clear();
 			}
 			catch { }
@@ -135,7 +142,7 @@ namespace Lidgren.Network
         //Avoids allocation on mapping to IPv6
         private IPEndPoint targetCopy = new IPEndPoint(IPAddress.Any, 0);
 
-		internal bool ActuallySendPacket(byte[] data, int numBytes, NetEndPoint target, out bool connectionReset)
+		internal bool ActuallySendPacket(ReadOnlySpan<byte> data, int numBytes, NetEndPoint target, out bool connectionReset)
 		{
 			connectionReset = false;
 			IPAddress ba = default(IPAddress);
@@ -161,7 +168,7 @@ namespace Lidgren.Network
 	                targetCopy.Address = target.Address;
                 }
 
-                int bytesSent = m_socket.SendTo(data, 0, numBytes, SocketFlags.None, targetCopy);
+                int bytesSent = m_socket.SendTo(data.Slice( 0, numBytes ), 0, targetCopy);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
 

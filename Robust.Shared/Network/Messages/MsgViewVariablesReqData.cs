@@ -47,11 +47,8 @@ namespace Robust.Shared.Network.Messages
             SessionId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
-            var bytes = buffer.ReadBytes(length);
-            using (var stream = new MemoryStream(bytes))
-            {
-                RequestMeta = serializer.Deserialize<ViewVariablesRequest>(stream);
-            }
+            using var stream = buffer.ReadAsStream(length);
+            RequestMeta = serializer.Deserialize<ViewVariablesRequest>(stream);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -68,4 +65,3 @@ namespace Robust.Shared.Network.Messages
         }
     }
 }
-

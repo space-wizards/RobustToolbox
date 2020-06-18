@@ -70,11 +70,13 @@ namespace Robust.Client.ResourceManagement
             // Ok schema validated just fine.
             var manifestJson = JObject.Parse(manifestContents);
 
-            var toAtlas = new List<(Image<Rgba32> src, Texture[][] output, int[][] indices, int totalFrameCount)>();
+            var toAtlas = new List<(Image<Rgba32> src, Texture[][] output, int[][] indices, Vector2i[][] offsets, int totalFrameCount)>();
 
             var metaData = ParseMetaData(manifestJson);
             var frameSize = metaData.Size;
             var rsi = new RSI(frameSize);
+
+            var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>();
 
             // Do every state.
             foreach (var stateObject in metaData.States)
@@ -95,84 +97,92 @@ namespace Robust.Client.ResourceManagement
                 var (foldedDelays, foldedIndices) = FoldDelays(stateObject.Delays);
 
                 var textures = new Texture[foldedIndices.Length][];
+                var callbackOffset = new Vector2i[foldedIndices.Length][];
 
                 for (var i = 0; i < textures.Length; i++)
                 {
                     textures[i] = new Texture[foldedIndices[0].Length];
+                    callbackOffset[i] = new Vector2i[foldedIndices[0].Length];
                 }
 
                 var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays, textures);
                 rsi.AddState(state);
 
-                toAtlas.Add((image, textures, foldedIndices, frameCount));
+                toAtlas.Add((image, textures, foldedIndices, callbackOffset, frameCount));
+                callbackOffsets[stateObject.StateId] = callbackOffset;
             }
 
             // Poorly hacked in texture atlas support here.
+            var totalFrameCount = toAtlas.Sum(p => p.totalFrameCount);
+
+            // Generate atlas.
+            var dimensionX = (int) MathF.Ceiling(MathF.Sqrt(totalFrameCount));
+            var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
+
+            using var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
+
+            var sheetIndex = 0;
+            foreach (var (src, _, _, _, frameCount) in toAtlas)
             {
-                var totalFrameCount = toAtlas.Sum(p => p.totalFrameCount);
-
-                // Generate atlas.
-                var dimensionX = (int) MathF.Ceiling(MathF.Sqrt(totalFrameCount));
-                var dimensionY = (int) MathF.Ceiling((float) totalFrameCount / dimensionX);
-
-                using var sheet = new Image<Rgba32>(dimensionX * frameSize.X, dimensionY * frameSize.Y);
-
-                var sheetIndex = 0;
-                foreach (var (src, _, _, frameCount) in toAtlas)
+                // Blit all the frames over.
+                for (var i = 0; i < frameCount; i++)
                 {
-                    // Blit all the frames over.
-                    for (var i = 0; i < frameCount; i++)
-                    {
-                        var srcWidth = (src.Width / frameSize.X);
-                        var srcColumn = i % srcWidth;
-                        var srcRow = i / srcWidth;
-                        var srcPos = (srcColumn * frameSize.X, srcRow * frameSize.Y);
+                    var srcWidth = (src.Width / frameSize.X);
+                    var srcColumn = i % srcWidth;
+                    var srcRow = i / srcWidth;
+                    var srcPos = (srcColumn * frameSize.X, srcRow * frameSize.Y);
 
-                        var sheetColumn = (sheetIndex + i) % dimensionX;
-                        var sheetRow = (sheetIndex + i) / dimensionX;
-                        var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
+                    var sheetColumn = (sheetIndex + i) % dimensionX;
+                    var sheetRow = (sheetIndex + i) / dimensionX;
+                    var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
 
-                        var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
+                    var srcBox = UIBox2i.FromDimensions(srcPos, frameSize);
 
-                        src.Blit(srcBox, sheet, sheetPos);
-                    }
-
-                    sheetIndex += frameCount;
+                    src.Blit(srcBox, sheet, sheetPos);
                 }
 
-                // Load atlas.
-                var texture = Texture.LoadFromImage(sheet, path.ToString());
-
-                var sheetOffset = 0;
-                foreach (var (src, output, indices, frameCount) in toAtlas)
-                {
-                    for (var i = 0; i < indices.Length; i++)
-                    {
-                        var dirIndices = indices[i];
-                        var dirOutput = output[i];
-
-                        for (var j = 0; j < dirIndices.Length; j++)
-                        {
-                            var index = sheetOffset + dirIndices[j];
-
-                            var sheetColumn = index % dimensionX;
-                            var sheetRow = index / dimensionX;
-                            var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
-
-                            dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(sheetPos, frameSize));
-                        }
-                    }
-
-                    sheetOffset += frameCount;
-                }
+                sheetIndex += frameCount;
             }
 
-            foreach (var (image, _, _, _) in toAtlas)
+            // Load atlas.
+            var texture = Texture.LoadFromImage(sheet, path.ToString());
+
+            var sheetOffset = 0;
+            foreach (var (_, output, indices, offsets, frameCount) in toAtlas)
+            {
+                for (var i = 0; i < indices.Length; i++)
+                {
+                    var dirIndices = indices[i];
+                    var dirOutput = output[i];
+                    var dirOffsets = offsets[i];
+
+                    for (var j = 0; j < dirIndices.Length; j++)
+                    {
+                        var index = sheetOffset + dirIndices[j];
+
+                        var sheetColumn = index % dimensionX;
+                        var sheetRow = index / dimensionX;
+                        var sheetPos = (sheetColumn * frameSize.X, sheetRow * frameSize.Y);
+
+                        dirOffsets[j] = sheetPos;
+                        dirOutput[j] = new AtlasTexture(texture, UIBox2.FromDimensions(sheetPos, frameSize));
+                    }
+                }
+
+                sheetOffset += frameCount;
+            }
+
+            foreach (var (image, _, _, _, _) in toAtlas)
             {
                 image.Dispose();
             }
 
             RSI = rsi;
+
+            if (cache is IResourceCacheInternal cacheInternal)
+            {
+                cacheInternal.RsiLoaded(new RsiLoadedEventArgs(path, this, sheet, callbackOffsets));
+            }
         }
 
         /// <summary>

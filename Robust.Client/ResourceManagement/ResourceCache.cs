@@ -151,6 +151,9 @@ namespace Robust.Client.ResourceManagement
             return GetTypeDict<T>().Select(p => new KeyValuePair<ResourcePath, T>(p.Key, (T) p.Value));
         }
 
+        public event Action<TextureLoadedEventArgs>? OnRawTextureLoaded;
+        public event Action<RsiLoadedEventArgs>? OnRsiLoaded;
+
         #region IDisposable Members
 
         private bool disposed = false;
@@ -196,6 +199,16 @@ namespace Robust.Client.ResourceManagement
             }
 
             return ret;
+        }
+
+        public void TextureLoaded(TextureLoadedEventArgs eventArgs)
+        {
+            OnRawTextureLoaded?.Invoke(eventArgs);
+        }
+
+        public void RsiLoaded(RsiLoadedEventArgs eventArgs)
+        {
+            OnRsiLoaded?.Invoke(eventArgs);
         }
     }
 }

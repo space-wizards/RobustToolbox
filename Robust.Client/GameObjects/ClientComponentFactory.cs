@@ -44,11 +44,6 @@ namespace Robust.Client.GameObjects
 
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
-            RegisterReference<SpriteComponent, IClickTargetComponent>();
-
-            Register<ClickableComponent>();
-            RegisterReference<ClickableComponent, IClientClickableComponent>();
-            RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();

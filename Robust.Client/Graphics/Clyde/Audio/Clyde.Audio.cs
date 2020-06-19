@@ -35,8 +35,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new ConcurrentQueue<(int, int)>();
         private readonly ConcurrentQueue<int> _bufferDisposeQueue = new ConcurrentQueue<int>();
 
-        public bool HasDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
-        public bool HasContextExtension(string extension) => _alContextExtensions.Contains(extension);
+        public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
+        public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
 
         internal bool IsEfxSupported;
 
@@ -47,7 +47,7 @@ namespace Robust.Client.Graphics.Clyde
             // Create OpenAL context.
             _audioCreateContext();
 
-            IsEfxSupported = HasDeviceExtension("ALC_EXT_EFX");
+            IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
         }
 
         private void _audioCreateContext()
@@ -356,7 +356,6 @@ namespace Robust.Client.Graphics.Clyde
 #endif
 
             private float _gain;
-            private float _gainCoeff = 1;
 
             private bool IsEfxSupported => _master.IsEfxSupported;
 
@@ -419,8 +418,10 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                _gain = MathF.Pow(10, decibels / 10);
-                AL.Source(SourceHandle, ALSourcef.Gain, _gain * _gainCoeff);
+                AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                var priorOcclusion = priorGain / _gain;
+                _gain =  MathF.Pow(10, decibels / 10);
+                AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
 
@@ -436,7 +437,6 @@ namespace Robust.Client.Graphics.Clyde
                 else
                 {
                     gain *= gain * gain;
-                    _gainCoeff = gain;
                     AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
                 }
                 _checkAlError();
@@ -625,8 +625,10 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
+                AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
+                var priorOcclusion = priorGain / _gain;
                 _gain =  MathF.Pow(10, decibels / 10);
-                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * _gainCoeff);
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
 
@@ -642,7 +644,6 @@ namespace Robust.Client.Graphics.Clyde
                 else
                 {
                     gain *= gain * gain;
-                    _gainCoeff = gain;
                     AL.Source(SourceHandle!.Value, ALSourcef.Gain, gain * _gain);
                 }
 

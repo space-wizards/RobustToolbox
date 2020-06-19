@@ -258,6 +258,15 @@ namespace Robust.Client.Graphics.Clyde
                 TextureId = id;
                 _clyde = clyde;
             }
+
+            public override string ToString()
+            {
+                if (_clyde._loadedTextures.TryGetValue(TextureId, out var loaded) && loaded.Name != null)
+                {
+                    return $"ClydeTexture: {loaded.Name} ({TextureId})";
+                }
+                return $"ClydeTexture: ({TextureId})";
+            }
         }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)

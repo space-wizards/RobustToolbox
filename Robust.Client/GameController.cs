@@ -299,6 +299,7 @@ namespace Robust.Client
             logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
+            logManager.GetSawmill("net.predict").Level = LogLevel.Info;
         }
 
         private string GetUserDataDir()

@@ -1,12 +1,10 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.ViewVariables;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
-using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -41,6 +39,9 @@ namespace Robust.Client.GameObjects.EntitySystems
                 .Bind(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler())
                 .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
                 .Register<EyeUpdateSystem>();
+
+            // Make sure this runs *after* transforms are interpolated.
+            UpdatesAfter.Add(typeof(TransformSystem));
         }
 
         /// <inheritdoc />

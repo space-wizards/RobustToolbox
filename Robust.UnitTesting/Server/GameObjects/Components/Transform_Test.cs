@@ -87,10 +87,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
 
-            Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
-            Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
-            Assert.That(childTrans.GridPosition, Is.EqualTo(new GridCoordinates(4, 4, GridA)));
-            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
+                Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
+                Assert.That(childTrans.GridPosition, Is.EqualTo(new GridCoordinates(4, 4, GridA)));
+                Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
+            });
 
             // move the parent, and the child should move with it
             childTrans.WorldPosition = new Vector2(6, 6);
@@ -105,8 +109,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             childTrans.DetachParent();
 
             // the gridId won't match, because we just detached from the grid entity
-            Assert.That(childTrans.GridPosition.Position, Is.EqualTo(oldLpos.Position));
-            Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(childTrans.GridPosition.Position, Is.EqualTo(oldLpos.Position));
+                Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
+            });
         }
 
         /// <summary>
@@ -152,8 +160,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             //Assert
             var result = childTrans.WorldPosition;
-            Assert.That(FloatMath.CloseTo(result.X, 0), result.ToString);
-            Assert.That(FloatMath.CloseTo(result.Y, 2), result.ToString);
+            Assert.Multiple(() =>
+            {
+                Assert.That(FloatMath.CloseTo(result.X, 0));
+                Assert.That(FloatMath.CloseTo(result.Y, 2));
+            });
         }
 
         /// <summary>
@@ -176,8 +187,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             //Assert
             var result = childTrans.WorldPosition;
-            Assert.That(FloatMath.CloseTo(result.X, 1), result.ToString);
-            Assert.That(FloatMath.CloseTo(result.Y, 2), result.ToString);
+            Assert.Multiple(() =>
+            {
+                Assert.That(FloatMath.CloseTo(result.X, 1));
+                Assert.That(FloatMath.CloseTo(result.Y, 2));
+            });
         }
 
         /// <summary>
@@ -211,8 +225,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             //Assert
             var result = node4Trans.WorldPosition;
-            Assert.That(result.X, new ApproxEqualityConstraint(-2f));
-            Assert.That(result.Y, new ApproxEqualityConstraint(0f));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result.X, new ApproxEqualityConstraint(-2f));
+                Assert.That(result.Y, new ApproxEqualityConstraint(0f));
+            });
         }
 
         /// <summary>
@@ -251,8 +269,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var newWpos = node3Trans.WorldPosition;
 
             // Assert
-            Assert.That(FloatMath.CloseTo(oldWpos.X, newWpos.Y), newWpos.ToString);
-            Assert.That(FloatMath.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
+            Assert.Multiple(() =>
+            {
+                Assert.That(FloatMath.CloseTo(oldWpos.X, newWpos.Y), newWpos.ToString);
+                Assert.That(FloatMath.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
+            });
         }
 
         /// <summary>
@@ -294,8 +315,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             //NOTE: Yes, this does cause a non-zero error
 
             // Assert
-            Assert.That(FloatMath.CloseTo(oldWpos.X, newWpos.Y), newWpos.ToString);
-            Assert.That(FloatMath.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(FloatMath.CloseTo(oldWpos.X, newWpos.Y));
+                Assert.That(FloatMath.CloseTo(oldWpos.Y, newWpos.Y));
+            });
         }
 
         /// <summary>
@@ -337,11 +362,15 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Matrix3.Multiply(ref invWorldMat, ref worldMat, out var rightVerifyMatrix);
 
             //Assert
-            // these should be the same (A × A-1 = A-1 × A = I)
-            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix));
 
-            // verify matrix == identity matrix (or very close to because float precision)
-            Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(control));
+            Assert.Multiple(() =>
+            {
+                // these should be the same (A × A-1 = A-1 × A = I)
+                Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(rightVerifyMatrix));
+
+                // verify matrix == identity matrix (or very close to because float precision)
+                Assert.That(leftVerifyMatrix, new ApproxEqualityConstraint(control));
+            });
         }
 
         /// <summary>

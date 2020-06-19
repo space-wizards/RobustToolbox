@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -25,6 +26,12 @@ namespace Robust.Shared.GameObjects.Systems
 
         protected IEntityQuery? EntityQuery;
         protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
+
+        protected internal List<Type> UpdatesAfter { get; } = new List<Type>();
+        protected internal List<Type> UpdatesBefore { get; } = new List<Type>();
+
+        IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
+        IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
         /// <inheritdoc />
         public virtual void Initialize() { }
@@ -79,7 +86,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         protected void RaiseLocalEvent(EntitySystemMessage message)
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, (object)message);
         }
 
         protected void QueueLocalEvent(EntitySystemMessage message)

@@ -6,12 +6,16 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
+        public const float ClickThreshold = 0.25f;
+
         public override ResourcePath? Fallback => new ResourcePath("/Textures/noSprite.png");
         public Texture Texture { get; private set; } = default!;
 
@@ -29,7 +33,14 @@ namespace Robust.Client.ResourceManagement
 
             var manager = IoCManager.Resolve<IClyde>();
 
-            Texture = manager.LoadTextureFromPNGStream(stream, path.ToString(), loadParameters);
+            using var image = Image.Load<Rgba32>(stream);
+
+            Texture = manager.LoadTextureFromImage(image, path.ToString(), loadParameters);
+
+            if (cache is IResourceCacheInternal cacheInternal)
+            {
+                cacheInternal.TextureLoaded(new TextureLoadedEventArgs(path, image, this));
+            }
         }
 
         private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)

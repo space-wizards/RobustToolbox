@@ -18,8 +18,11 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.GameStates
 {
@@ -190,7 +193,7 @@ namespace Robust.Client.GameStates
 
             if (_lastProcessedSeq < curState.LastProcessedInput)
             {
-                //Logger.DebugS("State", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                Logger.DebugS("net.predict", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
                 _lastProcessedSeq = curState.LastProcessedInput;
             }
 
@@ -200,8 +203,8 @@ namespace Robust.Client.GameStates
                 var inCmd = _pendingInputs.Dequeue();
 
                 inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                //Logger.DebugS("State",
-                //    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+                Logger.DebugS("net.predict",
+                    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
             while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedSeq)
@@ -215,12 +218,12 @@ namespace Robust.Client.GameStates
 
             using var _ = _timing.StartPastPredictionArea();
 
-            /*
+
             if (_pendingInputs.Count > 0)
             {
-                Logger.DebugS("State", "CL> Predicted:");
+                Logger.DebugS("net.predict", "CL> Predicted:");
             }
-            */
+
 
             var pendingInputEnumerator = _pendingInputs.GetEnumerator();
             var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
@@ -231,7 +234,7 @@ namespace Robust.Client.GameStates
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                              (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
 
-            //Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+            // Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
             for (var t = _lastProcessedTick.Value; t <= targetTick; t++)
             {
@@ -243,11 +246,11 @@ namespace Robust.Client.GameStates
                     var inputCmd = pendingInputEnumerator.Current;
 
                     inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
-                    /*
-                    Logger.DebugS("State",
+
+                    Logger.DebugS("net.predict",
                         $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
-                        */
+
 
                     input.PredictInputCommand(inputCmd);
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Threading.Tasks;
+using System.Text;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Interfaces.Resources
@@ -134,6 +134,37 @@ namespace Robust.Shared.Interfaces.Resources
         ///     Hrm.
         /// </summary>
         bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
+
+        /// <summary>
+        ///     Read a file from the mounted content paths to a string.
+        /// </summary>
+        /// <param name="path">Path of the file to read.</param>
+        string ContentFileReadAllText(string path)
+        {
+            return ContentFileReadAllText(new ResourcePath(path));
+        }
+
+        /// <summary>
+        ///     Read a file from the mounted content paths to a string.
+        /// </summary>
+        /// <param name="path">Path of the file to read.</param>
+        string ContentFileReadAllText(ResourcePath path)
+        {
+            return ContentFileReadAllText(path, EncodingHelpers.UTF8);
+        }
+
+        /// <summary>
+        ///     Read a file from the mounted content paths to a string.
+        /// </summary>
+        /// <param name="path">Path of the file to read.</param>
+        /// <param name="encoding">Text encoding to use when reading.</param>
+        string ContentFileReadAllText(ResourcePath path, Encoding encoding)
+        {
+            using var stream = ContentFileRead(path);
+            using var reader = new StreamReader(stream, encoding);
+
+            return reader.ReadToEnd();
+        }
     }
 
     internal interface IResourceManagerInternal : IResourceManager

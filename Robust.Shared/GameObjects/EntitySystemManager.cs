@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
@@ -31,6 +32,8 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
 
         private bool _initialized;
+
+        private readonly List<IEntitySystem> _updateOrder = new List<IEntitySystem>();
 
         [ViewVariables]
         private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
@@ -116,7 +119,65 @@ namespace Robust.Shared.GameObjects
                 system.Initialize();
             }
 
+            // Create update order for entity systems.
+            _updateOrder.AddRange(CalculateUpdateOrder(_systems.Values));
+
             _initialized = true;
+        }
+
+        private static IEnumerable<IEntitySystem> CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
+        {
+            var allNodes = new List<GraphNode>();
+            var typeToNode = new Dictionary<Type, GraphNode>();
+
+            foreach (var system in systems)
+            {
+                var node = new GraphNode(system);
+
+                allNodes.Add(node);
+                typeToNode.Add(system.GetType(), node);
+            }
+
+            foreach (var node in allNodes)
+            {
+                foreach (var after in node.System.UpdatesAfter)
+                {
+                    var system = typeToNode[after];
+
+                    node.DependsOn.Add(system);
+                }
+
+                foreach (var before in node.System.UpdatesBefore)
+                {
+                    var system = typeToNode[before];
+
+                    system.DependsOn.Add(node);
+                }
+            }
+
+            return TopologicalSort(allNodes).Select(p => p.System);
+        }
+
+        private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes)
+        {
+            var elems = nodes.ToDictionary(node => node,
+                node => new HashSet<GraphNode>(node.DependsOn));
+            while (elems.Count > 0)
+            {
+                var elem =
+                    elems.FirstOrDefault(x => x.Value.Count == 0);
+                if (elem.Key == null)
+                {
+                    throw new InvalidOperationException(
+                        "Found circular dependency when resolving entity system update dependency graph");
+                }
+                elems.Remove(elem.Key);
+                foreach (var selem in elems)
+                {
+                    selem.Value.Remove(elem.Key);
+                }
+                yield return elem.Key;
+            }
         }
 
         private static IEnumerable<Type> GetBaseTypes(Type type) {
@@ -139,6 +200,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _systems.Clear();
+            _updateOrder.Clear();
             _supertypeSystems.Clear();
             _initialized = false;
         }
@@ -146,7 +208,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Update(float frameTime)
         {
-            foreach (var system in _systems.Values)
+            foreach (var system in _updateOrder)
             {
 #if EXCEPTION_TOLERANCE
                 try
@@ -166,7 +228,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void FrameUpdate(float frameTime)
         {
-            foreach (var system in _systems.Values)
+            foreach (var system in _updateOrder)
             {
 #if EXCEPTION_TOLERANCE
                 try
@@ -192,6 +254,18 @@ namespace Robust.Shared.GameObjects
             }
 
             _extraLoadedTypes.Add(typeof(T));
+        }
+
+        [DebuggerDisplay("GraphNode: {" + nameof(System) + "}")]
+        private sealed class GraphNode
+        {
+            public readonly IEntitySystem System;
+            public readonly List<GraphNode> DependsOn = new List<GraphNode>();
+
+            public GraphNode(IEntitySystem system)
+            {
+                System = system;
+            }
         }
     }
 

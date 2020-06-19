@@ -77,7 +77,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <summary>
         ///
         /// </summary>
-        Vector2 LerpDestination { get; }
+        Vector2? LerpDestination { get; }
 
         /// <summary>
         ///     Finds the transform located on the map or in nullspace

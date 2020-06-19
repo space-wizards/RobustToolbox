@@ -30,13 +30,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private Matrix3 _localMatrix = Matrix3.Identity;
         private Matrix3 _invLocalMatrix = Matrix3.Identity;
 
-        private Vector2 _nextPosition;
-        private Angle _nextRotation;
+        private Vector2? _nextPosition;
+        private Angle? _nextRotation;
+
+        private Vector2 _prevPosition;
+        private Angle _prevRotation;
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <inheritdoc />
@@ -77,12 +79,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [Animatable]
         public Angle LocalRotation
         {
-            get => GetLocalRotation();
+            get => _localRotation;
             set
             {
-                if (GetLocalRotation() == value)
+                if (_localRotation == value)
                     return;
 
+                // Set _nextRotation to null to break any active lerps if this is a client side prediction.
+                _nextRotation = null;
                 SetRotation(value);
                 RebuildMatrices();
                 Dirty();
@@ -99,10 +103,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (_parent.IsValid())
                 {
-                    return Parent!.WorldRotation + GetLocalRotation();
+                    return Parent!.WorldRotation + _localRotation;
                 }
 
-                return GetLocalRotation();
+                return _localRotation;
             }
             set
             {
@@ -184,12 +188,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     // transform _position from parent coords to world coords
-                    var worldPos = Parent!.WorldMatrix.Transform(GetLocalPosition());
+                    var worldPos = Parent!.WorldMatrix.Transform(_localPosition);
                     return new GridCoordinates(worldPos, GridID);
                 }
                 else
                 {
-                    return new GridCoordinates(GetLocalPosition(), GridID);
+                    return new GridCoordinates(_localPosition, GridID);
                 }
             }
             set
@@ -213,7 +217,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var newPos = Parent!.InvWorldMatrix.Transform(worldCoords);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
-                if ((newPos - GetLocalPosition()).LengthSquared < 10.0E-3)
+                if ((newPos - _localPosition).LengthSquared < 10.0E-3)
                     return;
 
                 SetPosition(newPos);
@@ -241,7 +245,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_parent.IsValid())
                 {
                     // parent coords to world coords
-                    return Parent!.WorldMatrix.Transform(GetLocalPosition());
+                    return Parent!.WorldMatrix.Transform(_localPosition);
                 }
                 else
                 {
@@ -263,18 +267,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
                 //    return;
 
-                if (_localPosition == newPos)
-                    return;
-
-                SetPosition(newPos);
-
-                RebuildMatrices();
-                Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
-
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, GridPosition, new GridCoordinates(GetLocalPosition(), GridID)));
+                LocalPosition = newPos;
             }
         }
 
@@ -288,17 +281,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [Animatable]
         public Vector2 LocalPosition
         {
-            get => GetLocalPosition();
+            get => _localPosition;
             set
             {
-                var oldPos = GridPosition;
+                // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
+                _nextPosition = null;
+                var oldGridPos = GridPosition;
                 SetPosition(value);
                 RebuildMatrices();
                 Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
+                    EventSource.Local, new MoveEvent(Owner, oldGridPos, GridPosition));
             }
         }
 
@@ -306,14 +301,25 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEnumerable<ITransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
 
-        [ViewVariables]
-        public IEnumerable<EntityUid> ChildEntityUids => _children;
+        [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
 
-        [ViewVariables]
-        public int ChildCount => _children.Count;
+        [ViewVariables] public int ChildCount => _children.Count;
 
         /// <inheritdoc />
-        public Vector2 LerpDestination => _nextPosition;
+        public Vector2? LerpDestination
+        {
+            get { return _nextPosition; }
+            set => _nextPosition = value;
+        }
+
+        public Angle? LerpAngle
+        {
+            get { return _nextRotation; }
+            set => _nextRotation = value;
+        }
+
+        public Vector2 LerpSource => _prevPosition;
+        public Angle LerpSourceAngle => _prevRotation;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -475,7 +481,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             Owner.SendMessage(this, compMessage);
 
             // offset position from world to parent
-            SetPosition(newParent.InvWorldMatrix.Transform(GetLocalPosition()));
+            SetPosition(newParent.InvWorldMatrix.Transform(_localPosition));
             RebuildMatrices();
             Dirty();
             UpdateEntityTree();
@@ -612,15 +618,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 if (_localPosition != newState.LocalPosition)
                 {
                     var oldPos = GridPosition;
-                    if (_localPosition != newState.LocalPosition)
-                    {
-                        SetPosition(newState.LocalPosition);
-                    }
+                    SetPosition(newState.LocalPosition);
 
                     Owner.EntityManager.EventBus.RaiseEvent(
                         EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
                     rebuildMatrices = true;
                 }
+
+                _prevPosition = newState.LocalPosition;
+                _prevRotation = newState.Rotation;
 
                 if (rebuildMatrices)
                 {
@@ -632,22 +638,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 TryUpdatePhysicsTree();
             }
 
-            if (nextState != null)
+            if (nextState is TransformComponentState nextTransform)
             {
-                var nextPos = ((TransformComponentState) nextState).LocalPosition;
-
-                if ((nextPos - _localPosition).LengthSquared < 2.0f)
-                    _nextPosition = nextPos;
-                else
-                    _nextPosition = _localPosition;
+                _nextPosition = nextTransform.LocalPosition;
+                _nextRotation = nextTransform.Rotation;
             }
             else
-                _nextPosition = _localPosition; // this should cause the lerp to do nothing
-
-            if (nextState != null)
-                _nextRotation = ((TransformComponentState) nextState).Rotation;
-            else
-                _nextRotation = _localRotation; // this should cause the lerp to do nothing
+            {
+                // this should cause the lerp to do nothing
+                _nextPosition = null;
+                _nextRotation = null;
+            }
         }
 
         // Hooks for GodotTransformComponent go here.
@@ -661,58 +662,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             _localRotation = rotation;
         }
 
-        protected virtual Vector2 GetLocalPosition()
-        {
-            if (_gameTiming.InSimulation || _localPosition == _nextPosition || Owner.Uid.IsClientSide())
-                return _localPosition;
-
-            return Vector2.Lerp(_localPosition, _nextPosition,
-                (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
-        }
-
-        protected virtual Angle GetLocalRotation()
-        {
-            if (_gameTiming.InSimulation || _localRotation == _nextRotation || Owner.Uid.IsClientSide())
-                return _localRotation;
-
-            return Angle.Lerp(_localRotation, _nextRotation,
-                (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds));
-        }
-
         public Matrix3 GetLocalMatrix()
         {
-            if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
-                return _localMatrix;
-
-            // there really is no point trying to cache this because it will only be used in one frame
-            var pos = GetLocalPosition();
-            var rot = GetLocalRotation().Theta;
-
-            var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float) rot);
-
-            Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
-
-            return transMat;
+            return _localMatrix;
         }
 
         public Matrix3 GetLocalMatrixInv()
         {
-            if (_gameTiming.InSimulation || Owner.Uid.IsClientSide())
-                return _invLocalMatrix;
-
-            // there really is no point trying to cache this because it will only be used in one frame
-            var pos = GetLocalPosition();
-            var rot = GetLocalRotation().Theta;
-
-            var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float) rot);
-            var posImat = Matrix3.Invert(posMat);
-            var rotImap = Matrix3.Invert(rotMat);
-
-            Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
-
-            return itransMat;
+            return _invLocalMatrix;
         }
 
         private void RebuildMatrices()

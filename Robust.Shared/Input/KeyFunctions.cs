@@ -16,7 +16,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction MoveDown = "MoveDown";
         public static readonly BoundKeyFunction MoveLeft = "MoveLeft";
         public static readonly BoundKeyFunction MoveRight = "MoveRight";
-        public static readonly BoundKeyFunction Run = "Run";
+        public static readonly BoundKeyFunction Walk = "Walk";
 
         public static readonly BoundKeyFunction CameraRotateRight = "CameraRotateRight";
         public static readonly BoundKeyFunction CameraRotateLeft = "CameraRotateLeft";

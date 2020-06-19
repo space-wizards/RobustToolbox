@@ -20,6 +20,7 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using Robust.Shared.Animations;
 using Robust.Shared.Interfaces.Reflection;
@@ -179,11 +180,14 @@ namespace Robust.Client.GameObjects
         public bool IsInert { get; private set; }
 
         /// <summary>
-        /// Update this sprite component to visibly match the other
+        /// Update this sprite component to visibly match the current state of other at the time
+        /// this is called. Does not keep them perpetually in sync.
+        /// This does some deep copying thus exerts some gc pressure, so avoid this for hot code paths.
         /// </summary>
         public void CopyFrom(SpriteComponent other)
         {
-            this._baseRsi = other._baseRsi;
+            //deep copying things to avoid entanglement
+            this._baseRsi = other._baseRsi == null ? null : new RSI(other._baseRsi);
             this._directional = other._directional;
             this._visible = other._visible;
             this._layerMapShared = other._layerMapShared;
@@ -192,10 +196,11 @@ namespace Robust.Client.GameObjects
             this.rotation = other.rotation;
             this.scale = other.scale;
             this.drawDepth = other.drawDepth;
-            this.Layers = other.Layers;
+            this.Layers = new List<Layer>(other.Layers);
             this.IsInert = other.IsInert;
-            this.LayerMap = other.LayerMap;
-            this.PostShader = other.PostShader;
+            this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            this.PostShader = other.PostShader?.Duplicate();
             this.RenderOrder = other.RenderOrder;
         }
 

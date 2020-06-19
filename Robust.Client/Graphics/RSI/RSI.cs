@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
+using SixLabors.ImageSharp.Processing.Processors.Dithering;
 
 namespace Robust.Client.Graphics
 {
@@ -39,6 +41,17 @@ namespace Robust.Client.Graphics
         public RSI(Vector2i size)
         {
             Size = size;
+        }
+
+        /// <summary>
+        /// Deep copy constructor
+        /// </summary>
+        public RSI(RSI toCopy)
+        {
+            Size = toCopy.Size;
+            // should be fine to just reuse the values of the other dictionary because they seem to be immutable
+            States = toCopy.States.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
         }
 
         public IEnumerator<State> GetEnumerator()

@@ -418,8 +418,12 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
-                var priorOcclusion = priorGain / _gain;
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
                 _gain =  MathF.Pow(10, decibels / 10);
                 AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
@@ -555,7 +559,6 @@ namespace Robust.Client.Graphics.Clyde
             private int FilterHandle;
 
             private float _gain;
-            private float _gainCoeff;
 
             public int SampleRate { get; set; } = 44100;
 
@@ -625,8 +628,12 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
-                var priorOcclusion = priorGain / _gain;
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
                 _gain =  MathF.Pow(10, decibels / 10);
                 AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();

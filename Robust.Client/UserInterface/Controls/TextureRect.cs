@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -63,6 +64,15 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
+        ///     The shader to use.
+        /// </summary>
+        public ShaderInstance? Shader
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         ///     Controls how the texture should be drawn if the control is larger than the size of the texture.
         /// </summary>
         public StretchMode Stretch { get; set; } = StretchMode.Keep;
@@ -70,6 +80,8 @@ namespace Robust.Client.UserInterface.Controls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
+
+            handle.UseShader(Shader);
 
             var texture = _texture;
 
@@ -97,7 +109,8 @@ namespace Robust.Client.UserInterface.Controls
                 case StretchMode.KeepCentered:
                 {
                     var position = (PixelSize - texture.Size * _textureScale * UIScale) / 2;
-                    handle.DrawTextureRect(texture, UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale));
+                    handle.DrawTextureRect(texture,
+                        UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale));
                     break;
                 }
 

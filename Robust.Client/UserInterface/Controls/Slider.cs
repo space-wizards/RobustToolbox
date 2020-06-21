@@ -5,23 +5,34 @@ using static Robust.Client.UserInterface.Controls.LayoutContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
+
     public class Slider : Range
     {
+
         public const string StylePropertyBackground = "background";
+
         public const string StylePropertyForeground = "foreground";
+
         public const string StylePropertyFill = "fill";
+
         public const string StylePropertyGrabber = "grabber";
 
         private readonly PanelContainer _foregroundPanel;
+
         private readonly PanelContainer _backgroundPanel;
+
         private readonly PanelContainer _fillPanel;
+
         private readonly PanelContainer _grabber;
 
         private bool _grabbed;
 
         private StyleBox? _backgroundStyleBoxOverride;
+
         private StyleBox? _foregroundStyleBoxOverride;
+
         private StyleBox? _fillStyleBoxOverride;
+
         private StyleBox? _grabberStyleBoxOverride;
 
         public StyleBox? ForegroundStyleBoxOverride
@@ -178,5 +189,7 @@ namespace Robust.Client.UserInterface.Controls
             _fillPanel.PanelOverride = FillStyleBoxOverride ?? GetStyleBox(StylePropertyFill);
             _grabber.PanelOverride = GrabberStyleBoxOverride ?? GetStyleBox(StylePropertyGrabber);
         }
+
     }
+
 }

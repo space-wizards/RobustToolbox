@@ -6,9 +6,17 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using OpenToolkit.Mathematics;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
+using Matrix3 = Robust.Shared.Maths.Matrix3;
+using Matrix4 = Robust.Shared.Maths.Matrix4;
+using Vector2 = Robust.Shared.Maths.Vector2;
+using Vector2i = Robust.Shared.Maths.Vector2i;
+using Vector3 = Robust.Shared.Maths.Vector3;
+using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -25,6 +33,9 @@ namespace Robust.Client.Graphics.Shaders
         // Source shader variables.
         private ShaderSourceResource? Source;
         private Dictionary<string, object>? ShaderParams;
+
+        public IReadOnlyDictionary<string, object>? Parameters
+            => ShaderParams == null ? null : new ReadOnlyDictionary<string, object>(ShaderParams);
 
         // Canvas shader variables.
         private ClydeHandle CompiledCanvasShader;
@@ -161,18 +172,73 @@ namespace Robust.Client.Graphics.Shaders
             if (mapping.TryGetNode<YamlMappingNode>("params", out var paramMapping))
             {
                 ShaderParams = new Dictionary<string, object>();
-                foreach (var item in paramMapping)
-                {
-                    var name = item.Key.AsString();
-                    if (!Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
-                    {
-                        Logger.ErrorS("shader", "Shader param '{0}' does not exist on shader '{1}'", name, path);
-                        continue;
-                    }
+                ParseMapping(this, paramMapping, ShaderParams, path.ToString());
+            }
+        }
 
-                    var value = _parseUniformValue(item.Value, uniformDefinition.Type);
-                    ShaderParams.Add(name, value);
+        public static void ParseMapping(ShaderPrototype prototype, YamlMappingNode paramMapping, IDictionary<string, object> shaderParams, string shaderName = null)
+        {
+            if (prototype.Source == null)
+            {
+                throw new ArgumentException("Shader prototype has no source.");
+            }
+
+            foreach (var (nameNode, valueNode) in paramMapping)
+            {
+                var name = nameNode.AsString();
+                if (!prototype.Source.ParsedShader.Uniforms.TryGetValue(name, out var uniformDefinition))
+                {
+                    Logger.ErrorS("shader", shaderName != null
+                        ? $"Shader param '{name}' does not exist on shader '{shaderName}'"
+                        : $"Shader param '{name}' does not exist on this shader."
+                    );
+
+                    continue;
                 }
+
+                var value = _parseUniformValue(valueNode, uniformDefinition.Type);
+                shaderParams[name] = value;
+            }
+        }
+
+        public static void ExportUniforms(ShaderPrototype prototype, IDictionary<string, object> shaderParams)
+        {
+            if (prototype.Source == null)
+            {
+                throw new ArgumentException("Shader prototype has no source.");
+            }
+
+            foreach (var (name, def) in prototype.Source.ParsedShader.Uniforms)
+            {
+                shaderParams.TryAdd(name, (def.DefaultValue != null
+                    ? _parseUniformValue(def.DefaultValue, def.Type)
+                    : def.Type switch
+                    {
+                        ShaderDataType.Void => null,
+                        ShaderDataType.Bool => false,
+                        ShaderDataType.BVec2 => (false, false),
+                        ShaderDataType.BVec3 => (false, false, false),
+                        ShaderDataType.BVec4 => (false, false, false, false),
+                        ShaderDataType.Int => 0,
+                        ShaderDataType.IVec2 => default(Vector2i),
+                        ShaderDataType.IVec3 => default(Vector3i),
+                        ShaderDataType.IVec4 => default(Vector4i),
+                        ShaderDataType.UInt => 0u,
+                        ShaderDataType.UVec2 => default(Vector2u),
+                        ShaderDataType.UVec3 => (0u, 0u, 0u),
+                        ShaderDataType.UVec4 => (0u, 0u, 0u, 0u),
+                        ShaderDataType.Float => 0f,
+                        ShaderDataType.Vec2 => default(Vector2),
+                        ShaderDataType.Vec3 => default(Vector3),
+                        ShaderDataType.Vec4 => default(Vector4),
+                        ShaderDataType.Mat2 => (0u, 0u, 0u, 0u),
+                        ShaderDataType.Mat3 => default(Matrix3),
+                        ShaderDataType.Mat4 => default(Matrix4),
+                        ShaderDataType.Sampler2D => throw new NotImplementedException(),
+                        ShaderDataType.ISampler2D => throw new NotImplementedException(),
+                        ShaderDataType.USampler2D => throw new NotImplementedException(),
+                        _ => throw new NotImplementedException()
+                    })!);
             }
         }
 

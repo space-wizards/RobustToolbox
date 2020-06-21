@@ -24,6 +24,7 @@
     <PackageReference Include="Robust.Shared.AuthLib" Version="0.1.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.2" />
+    <PackageReference Include="StringToExpression" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

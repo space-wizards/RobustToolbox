@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public ICollection<string> StyleClasses { get; }
+        public ICollection<string> StyleClasses { get; set; }
         public IReadOnlyCollection<string> StylePseudoClass => _stylePseudoClass;
 
         [ViewVariables]

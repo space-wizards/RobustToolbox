@@ -474,6 +474,61 @@ namespace Robust.Client.UserInterface
             ChildAdded(child);
         }
 
+
+        /// <summary>
+        ///     Make the provided control a parent of this control.
+        /// </summary>
+        /// <param name="index">The index to insert at.</param>
+        /// <param name="child">The control to make a child of this control.</param>
+        /// <exception cref="InvalidOperationException">
+        ///     Thrown if we already have a component with the same name,
+        ///     or the provided component is still parented to a different control.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        ///     <paramref name="child" /> is <c>null</c>.
+        /// </exception>
+        protected void InsertChild(int index, Control child)
+        {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
+            if (child == null) throw new ArgumentNullException(nameof(child));
+            if (child.Parent != null)
+            {
+                throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
+            }
+
+            DebugTools.Assert(!child.Disposed, "Child is disposed.");
+
+            if (child == this)
+            {
+                throw new InvalidOperationException("You can't parent something to itself!");
+            }
+
+            // Ensure this control isn't a parent of ours.
+            // Doesn't need to happen if the control has no children of course.
+            if (child.ChildCount != 0)
+            {
+                for (var parent = Parent; parent != null; parent = parent.Parent)
+                {
+                    if (parent == child)
+                    {
+                        throw new ArgumentException("This control is one of our parents!", nameof(child));
+                    }
+                }
+            }
+
+            child.Parent = this;
+            _orderedChildren.Insert(index, child);
+
+            child.Parented(this);
+            if (IsInsideTree)
+            {
+                child._propagateEnterTree();
+            }
+
+            ChildAdded(child);
+        }
+
         /// <summary>
         ///     Called after a new child is added to this control.
         /// </summary>

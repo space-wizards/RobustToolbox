@@ -6,7 +6,6 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -59,9 +58,11 @@ namespace Robust.Shared.GameObjects
         public bool Initialized { get; private set; }
 
         [ViewVariables]
-        public bool Initializing {
+        public bool Initializing
+        {
             get => _initializing;
-            private set {
+            private set
+            {
                 _initializing = value;
                 if (value)
                 {
@@ -75,16 +76,18 @@ namespace Robust.Shared.GameObjects
         public bool Deleted { get; private set; }
 
         private ITransformComponent? _transform;
+
         /// <inheritdoc />
         [ViewVariables]
-        public ITransformComponent Transform => _transform ?? (_transform = GetComponent<ITransformComponent>());
+        public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
 
         private IMetaDataComponent? _metaData;
 
         private bool _initializing;
+
         /// <inheritdoc />
         [ViewVariables]
-        public IMetaDataComponent MetaData => _metaData ?? (_metaData = GetComponent<IMetaDataComponent>());
+        public IMetaDataComponent MetaData => _metaData ??= GetComponent<IMetaDataComponent>();
 
         #endregion Members
 
@@ -140,27 +143,31 @@ namespace Robust.Shared.GameObjects
         {
             Initializing = true;
             // Initialize() can modify the collection of components.
-            var components = EntityManager.ComponentManager.GetComponents(Uid);
-            foreach (var t in components)
-            {
-                var comp = (Component) t;
-                if (comp != null && !comp.Initialized)
+            var components = EntityManager.ComponentManager.GetComponents(Uid)
+                .OrderBy(x => x switch
                 {
-                    comp.Initialize();
+                    ITransformComponent _ => 0,
+                    ICollidableComponent _ => 1,
+                    _ => int.MaxValue
+                }).ToList();
 
-                    DebugTools.Assert(comp.Initialized, $"Component {comp.Name} did not call base {nameof(comp.Initialize)} in derived method.");
-                }
+            foreach (var comp in components)
+            {
+                if (comp == null || comp.Initialized) continue;
+
+                comp.Initialize();
+
+                DebugTools.Assert(comp.Initialized, $"Component {comp.Name} did not call base {nameof(comp.Initialize)} in derived method.");
             }
 
-            #if DEBUG
-
+#if DEBUG
             // Second integrity check in case of.
             foreach (var t in EntityManager.ComponentManager.GetComponents(Uid))
             {
                 DebugTools.Assert(t.Initialized, $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
             }
 
-            #endif
+#endif
 
             Initialized = true;
             Initializing = false;
@@ -173,27 +180,44 @@ namespace Robust.Shared.GameObjects
         {
             // Startup() can modify _components
             // TODO: This code can only handle additions to the list. Is there a better way?
-            var components = EntityManager.ComponentManager.GetComponents(Uid);
+            var compMan = EntityManager.ComponentManager;
+            //IReadOnlyList<IComponent>? components = compMan.GetComponents(Uid).ToList();
 
-            foreach (var t in components.OfType<ITransformComponent>())
-            {
-                if (t.Initialized && !t.Deleted)
-                    t.Running = true;
+            /*
+            if (compMan.TryGetComponent<ITransformComponent>(Uid, out var txf)) {
+
+                if (txf.Initialized && !txf.Deleted)
+                {
+                    txf.Running = true;
+                }
             }
-            foreach (var t in components.OfType<ICollidableComponent>())
+
+            foreach (ICollidableComponent comp in compMan.GetComponents<ICollidableComponent>(Uid))
             {
-                if (t.Initialized && !t.Deleted)
-                    t.Running = true;
+                if (comp.Initialized && !comp.Deleted)
+                {
+                    comp.Running = true;
+                }
+            }
+            */
+
+            var remainingComps = compMan.GetComponents(Uid)
+                .OrderBy(x => x switch
+                {
+                    ITransformComponent _ => 0,
+                    ICollidableComponent _ => 1,
+                    _ => int.MaxValue
+                }).ToList();
+
+            foreach (var comp in remainingComps)
+            {
+                if (comp != null && comp.Initialized && !comp.Deleted)
+                {
+                    comp.Running = true;
+                }
             }
 
             EntityManager.UpdateEntityTree(this);
-
-            foreach (var t in components)
-            {
-                var comp = (Component)t;
-                if (comp != null && comp.Initialized && !comp.Deleted)
-                    comp.Running = true;
-            }
         }
 
         #endregion Initialization

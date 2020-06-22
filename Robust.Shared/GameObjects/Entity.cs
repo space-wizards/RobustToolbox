@@ -201,7 +201,7 @@ namespace Robust.Shared.GameObjects
             }
             */
 
-            var remainingComps = compMan.GetComponents(Uid)
+            var comps = compMan.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
                     _ => int.MaxValue
                 });
 
-            foreach (var comp in remainingComps)
+            foreach (var comp in comps)
             {
                 if (comp != null && comp.Initialized && !comp.Deleted)
                 {

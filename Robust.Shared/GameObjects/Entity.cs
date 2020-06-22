@@ -179,28 +179,9 @@ namespace Robust.Shared.GameObjects
         public void StartAllComponents()
         {
             // Startup() can modify _components
-            // TODO: This code can only handle additions to the list. Is there a better way?
             var compMan = EntityManager.ComponentManager;
-            //IReadOnlyList<IComponent>? components = compMan.GetComponents(Uid).ToList();
 
-            /*
-            if (compMan.TryGetComponent<ITransformComponent>(Uid, out var txf)) {
-
-                if (txf.Initialized && !txf.Deleted)
-                {
-                    txf.Running = true;
-                }
-            }
-
-            foreach (ICollidableComponent comp in compMan.GetComponents<ICollidableComponent>(Uid))
-            {
-                if (comp.Initialized && !comp.Deleted)
-                {
-                    comp.Running = true;
-                }
-            }
-            */
-
+            // This code can only handle additions to the list. Is there a better way? Probably not.
             var comps = compMan.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {

@@ -104,17 +104,6 @@ namespace Robust.Shared.Utility.Internal
         [CollectionAccess(CollectionAccessType.UpdatedContent)]
         void Initialize(IEnumerable<KeyValuePair<TKey, ISet<TValue>>> index);
 
-        /// <summary>
-        /// Accesses the mutable set for a given key.
-        /// </summary>
-        /// <param name="key">A given key.</param>
-        [CollectionAccess(CollectionAccessType.Read | CollectionAccessType.UpdatedContent)]
-        ISet<TValue> this[TKey key] { get; }
-
-        /// <inheritdoc/>
-        [CollectionAccess(CollectionAccessType.Read)]
-        IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator();
-
     }
 
 }

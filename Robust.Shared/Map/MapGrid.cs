@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -32,7 +33,20 @@ namespace Robust.Shared.Map
 
         public EntityUid GridEntityId { get; internal set; }
 
-        public bool HasGravity { get; set; }
+        public bool HasGravity
+        {
+            get => _hasGravity;
+            set
+            {
+                _hasGravity = value;
+
+                if (GridEntityId.IsValid())
+                {
+                    // HasGravity is synchronized MapGridComponent states.
+                    _mapManager.EntityManager.GetEntity(GridEntityId).GetComponent<MapGridComponent>().Dirty();
+                }
+            }
+        }
 
         /// <summary>
         ///     Grid chunks than make up this grid.
@@ -40,6 +54,7 @@ namespace Robust.Shared.Map
         private readonly Dictionary<MapIndices, IMapChunkInternal> _chunks = new Dictionary<MapIndices, IMapChunkInternal>();
 
         private readonly IMapManagerInternal _mapManager;
+        private bool _hasGravity;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.

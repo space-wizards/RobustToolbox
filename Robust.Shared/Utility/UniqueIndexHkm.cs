@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -13,12 +12,12 @@ namespace Robust.Shared.Utility
 
     /// <summary>
     /// An immutable dictionary of mutable sets for use as an index of unique values related to another collection.
-    /// Imitates the behavior of a read-focused index in a RDBMS.
+    /// Imitates the behavior of a write-focused index in a RDBMS.
     /// </summary>
     /// <remarks>
-    /// Use when the index's keys don't change that rapidly or when fast lookup is preferred over creation time.
-    /// It is not intended to explicitly construct this index before use.
-    /// Do not refer to a <see cref="UniqueIndex{TKey,TValue}"/> by it's interface.
+    /// Use when the index's keys change more rapidly or when insertion and removal of keys is preferred over read time.
+    /// It is intended to explicitly construct this index before use.
+    /// Do not refer to a <see cref="UniqueIndexHkm{TKey,TValue}"/> by it's interface.
     /// See <see cref="IUniqueIndex{TKey,TValue}"/> for details.
     /// </remarks>
     /// <typeparam name="TKey">The type of key.</typeparam>
@@ -26,48 +25,43 @@ namespace Robust.Shared.Utility
     /// <seealso cref="UniqueIndexExtensions"/>
     /// <seealso cref="IUniqueIndex{TKey,TValue}" />
     [PublicAPI]
-    public struct UniqueIndex<TKey, TValue> : IUniqueIndex<TKey, TValue> where TKey : notnull
+    public struct UniqueIndexHkm<TKey, TValue> : IUniqueIndex<TKey, TValue> where TKey : notnull
     {
 
-        private ImmutableDictionary<TKey, ISet<TValue>> _index;
+        [NotNull]
+        private readonly Dictionary<TKey, ISet<TValue>> _index;
+
+        public UniqueIndexHkm(int capacity)
+            => _index = new Dictionary<TKey, ISet<TValue>>(capacity);
 
         /// <inheritdoc />
         public int KeyCount => _index.Count;
 
+        private void InitializedCheck()
+        {
+            if (_index == null) throw new NotSupportedException("UniqueIndexHkm instances must use the non-default constructor.");
+        }
+
         /// <inheritdoc />
         public bool Add(TKey key, TValue value)
         {
-            ISet<TValue> set;
+            InitializedCheck();
 
-            if (_index is null)
-            {
-                set = new HashSet<TValue> { value };
-                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, ISet<TValue>>(key, set)});
-                return true;
-            }
-
-            if (_index.TryGetValue(key, out set))
+            if (_index.TryGetValue(key, out var set))
             {
                 return set.Add(value);
             }
 
-            _index = _index.Add(key, new HashSet<TValue> {value});
+            _index.Add(key, new HashSet<TValue> {value});
             return true;
         }
 
         /// <inheritdoc />
         public int AddRange(TKey key, IEnumerable<TValue> values)
         {
-            ISet<TValue> set;
+            InitializedCheck();
 
-            if (_index is null)
-            {
-                set = new HashSet<TValue>(values);
-                _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, ISet<TValue>>(key, set)});
-                return set.Count;
-            }
-
-            if (_index.TryGetValue(key, out set))
+            if (_index.TryGetValue(key, out var set))
             {
                 var c = set.Count;
 
@@ -76,7 +70,7 @@ namespace Robust.Shared.Utility
                 return set.Count - c;
             }
 
-            _index = _index.Add(key, set = new HashSet<TValue>(values));
+            _index.Add(key, set = new HashSet<TValue>(values));
 
             return set.Count;
         }
@@ -84,30 +78,23 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public bool Remove(TKey key)
         {
-            if (_index == null)
-            {
-                return false;
-            }
+            InitializedCheck();
 
-            var newIndex = _index.SetItem(key, new HashSet<TValue>());
+            var c = _index.Count;
 
-            if (_index != newIndex)
-            {
-                return false;
-            }
+            if (c == 0) return false;
 
-            _index = newIndex;
-            return true;
+            _index[key] = new HashSet<TValue>();
+
+            return c > _index.Count;
         }
 
         /// <inheritdoc />
         public bool Remove(TKey key, TValue value)
         {
-            // ReSharper disable once InvertIf
-            if (_index == null)
-            {
-                return false;
-            }
+            InitializedCheck();
+
+            if (_index.Count == 0) return false;
 
             return _index.TryGetValue(key, out var set)
                 && set.Remove(value);
@@ -116,15 +103,11 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public int RemoveRange(TKey key, IEnumerable<TValue> values)
         {
-            if (_index == null)
-            {
-                return 0;
-            }
+            InitializedCheck();
 
-            if (!_index.TryGetValue(key, out var set))
-            {
-                return 0;
-            }
+            if (_index.Count == 0) return 0;
+
+            if (!_index.TryGetValue(key, out var set)) return 0;
 
             var c = set.Count;
 
@@ -136,10 +119,9 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public bool Replace(TKey key, TValue oldValue, TValue newValue)
         {
-            if (_index == null)
-            {
-                return false;
-            }
+            InitializedCheck();
+
+            if (_index.Count == 0) return false;
 
             if (!_index.TryGetValue(key, out var set))
             {
@@ -153,11 +135,11 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public void Touch(TKey key)
         {
-            _index ??= ImmutableDictionary<TKey, ISet<TValue>>.Empty;
+            InitializedCheck();
 
             if (_index.ContainsKey(key)) return;
 
-            _index = _index.Add(key, new HashSet<TValue>());
+            _index.Add(key, new HashSet<TValue>());
         }
 
         /// <inheritdoc />
@@ -167,9 +149,14 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public void Initialize(IEnumerable<KeyValuePair<TKey, ISet<TValue>>> index)
         {
-            if (_index != null) throw new InvalidOperationException("Already initialized.");
+            InitializedCheck();
 
-            _index = ImmutableDictionary.CreateRange(index);
+            if (_index.Count != 0) throw new InvalidOperationException("Already initialized.");
+
+            foreach (var (key, set) in index)
+            {
+                _index.Add(key, set);
+            }
         }
 
         /// <inheritdoc />
@@ -177,21 +164,11 @@ namespace Robust.Shared.Utility
         {
             get
             {
-                ISet<TValue> set;
+                InitializedCheck();
 
-                if (_index is null)
-                {
-                    _index = ImmutableDictionary<TKey, ISet<TValue>>.Empty;
-                }
-                else
-                {
-                    if (_index.TryGetValue(key, out set))
-                    {
-                        return set;
-                    }
-                }
+                if (_index.TryGetValue(key, out var set)) return set;
 
-                _index = _index.Add(key, set = new HashSet<TValue>());
+                _index.Add(key, set = new HashSet<TValue>());
 
                 return set;
             }
@@ -199,10 +176,22 @@ namespace Robust.Shared.Utility
 
         /// <inheritdoc cref="IEnumerable{T}"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator() => _index.GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator()
+        {
+            InitializedCheck();
+
+            return _index.GetEnumerator();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public void Clear()
+        {
+            InitializedCheck();
+
+            _index.Clear();
+        }
 
     }
 

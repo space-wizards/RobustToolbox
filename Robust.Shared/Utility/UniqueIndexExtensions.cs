@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿#nullable enable
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Utility
 {
@@ -16,7 +17,7 @@ namespace Robust.Shared.Utility
         /// <typeparam name="TValue">The type of value.</typeparam>
         /// <seealso cref="UniqueIndex{TKey,TValue}"/>
         [SuppressMessage("ReSharper", "RedundantAssignment")]
-        public static void Clear<TKey, TValue>(ref this UniqueIndex<TKey, TValue> index) => index = default;
+        public static void Clear<TKey, TValue>(ref this UniqueIndex<TKey, TValue> index) where TKey: notnull => index = default;
 
     }
 

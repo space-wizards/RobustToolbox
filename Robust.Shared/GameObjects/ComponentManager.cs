@@ -22,19 +22,22 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
-        private const int HighCapacity = 32 * 1024; // starting capacity for entities per component types
+        private const int TypeCapacity = 32;
+        private const int ComponentCollectionCapacity = 1024;
+        private const int NetIdComponentsCapacity = (TypeCapacity/2) * ComponentCollectionCapacity;
+        private const int TotalComponentsCapacity = TypeCapacity * ComponentCollectionCapacity;
 
-        private readonly Dictionary<(EntityUid, uint), Component> _entNetIdDict = new Dictionary<(EntityUid, uint), Component>(HighCapacity / 2);
+        private readonly Dictionary<(EntityUid, uint), Component> _entNetIdDict = new Dictionary<(EntityUid, uint), Component>(NetIdComponentsCapacity);
 
-        private readonly Dictionary<(EntityUid, Type), Component> _entTraitDict = new Dictionary<(EntityUid, Type), Component>(HighCapacity);
+        private readonly Dictionary<(EntityUid, Type), Component> _entTraitDict = new Dictionary<(EntityUid, Type), Component>(TotalComponentsCapacity);
 
-        private readonly HashSet<Component> _deleteList = new HashSet<Component>();
+        private readonly HashSet<Component> _deleteList = new HashSet<Component>(TypeCapacity);
 
         private UniqueIndex<Type, Component> _traitCompIndex;
 
         private UniqueIndex<uint, Component> _netIdCompIndex;
 
-        private UniqueIndex<EntityUid, Component> _entCompIndex;
+        private UniqueIndexHkm<EntityUid, Component> _entCompIndex = new UniqueIndexHkm<EntityUid, Component>(ComponentCollectionCapacity);
 
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentAdded;

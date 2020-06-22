@@ -149,7 +149,7 @@ namespace Robust.Shared.GameObjects
                     ITransformComponent _ => 0,
                     ICollidableComponent _ => 1,
                     _ => int.MaxValue
-                }).ToList();
+                });
 
             foreach (var comp in components)
             {
@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
                     ITransformComponent _ => 0,
                     ICollidableComponent _ => 1,
                     _ => int.MaxValue
-                }).ToList();
+                });
 
             foreach (var comp in remainingComps)
             {

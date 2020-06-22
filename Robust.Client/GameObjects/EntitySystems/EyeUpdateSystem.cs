@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
@@ -40,8 +41,9 @@ namespace Robust.Client.GameObjects.EntitySystems
                 .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
                 .Register<EyeUpdateSystem>();
 
-            // Make sure this runs *after* transforms are interpolated.
+            // Make sure this runs *after* entities have been moved by interpolation and movement.
             UpdatesAfter.Add(typeof(TransformSystem));
+            UpdatesAfter.Add(typeof(PhysicsSystem));
         }
 
         /// <inheritdoc />

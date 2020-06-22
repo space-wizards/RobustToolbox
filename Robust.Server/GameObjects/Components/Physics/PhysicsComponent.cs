@@ -117,7 +117,7 @@ namespace Robust.Server.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _anchored;
-        public bool Anchored
+        public override bool Anchored
         {
             get => _anchored;
             set
@@ -148,7 +148,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, _linVelocity, _angVelocity);
+            return new PhysicsComponentState(_mass);
         }
 
         public void RemoveController()

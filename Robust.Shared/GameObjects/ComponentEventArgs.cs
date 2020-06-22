@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects
@@ -32,7 +33,7 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="AddedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public AddedComponentEventArgs([JetBrains.Annotations.NotNull] IComponent component) : base(component) { }
+        public AddedComponentEventArgs(IComponent component) : base(component) { }
     }
 
     /// <summary>
@@ -44,7 +45,7 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="RemovedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public RemovedComponentEventArgs([JetBrains.Annotations.NotNull] IComponent component) : base(component) { }
+        public RemovedComponentEventArgs(IComponent component) : base(component) { }
     }
 
     /// <summary>
@@ -56,7 +57,7 @@ namespace Robust.Shared.GameObjects
         /// Constructs a new instance of <see cref="DeletedComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        public DeletedComponentEventArgs([JetBrains.Annotations.NotNull] IComponent component) : base(component) { }
+        public DeletedComponentEventArgs(IComponent component) : base(component) { }
     }
 
 }

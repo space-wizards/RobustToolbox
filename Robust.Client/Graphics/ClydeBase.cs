@@ -37,6 +37,7 @@ namespace Robust.Client.Graphics
             _configurationManager.RegisterCVar("display.height", 720);
             _configurationManager.RegisterCVar("display.highreslights", false, onValueChanged: HighResLightsChanged);
             _configurationManager.RegisterCVar("audio.device", "");
+            _configurationManager.RegisterCVar("outline.enabled", true);
         }
 
         public abstract Vector2i ScreenSize { get; }

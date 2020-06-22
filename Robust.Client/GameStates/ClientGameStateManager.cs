@@ -121,8 +121,8 @@ namespace Robust.Client.GameStates
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            //Logger.DebugS("State",
-            //    $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            Logger.DebugS("net.predict",
+                $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
 
@@ -234,9 +234,9 @@ namespace Robust.Client.GameStates
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                              (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
 
-            // Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+            // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
-            for (var t = _lastProcessedTick.Value; t <= targetTick; t++)
+            for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
             {
                 var tick = new GameTick(t);
                 _timing.CurTick = tick;
@@ -248,7 +248,7 @@ namespace Robust.Client.GameStates
                     inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
                     Logger.DebugS("net.predict",
-                        $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
 
 
@@ -288,7 +288,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                // Logger.DebugS("State", $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS("net.predict", $"Entity {entity.Uid} was made dirty.");
 
                 var last = _processor.GetLastServerStates(entity.Uid);
 
@@ -302,7 +302,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    // Logger.DebugS("State", $"  And also its component {comp.Name}");
+                    Logger.DebugS("net.predict", $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
                     comp.HandleComponentState(compState, null);
                 }

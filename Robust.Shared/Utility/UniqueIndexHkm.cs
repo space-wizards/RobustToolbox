@@ -11,7 +11,7 @@ namespace Robust.Shared.Utility
 {
 
     /// <summary>
-    /// An immutable dictionary of mutable sets for use as an index of unique values related to another collection.
+    /// A mutable dictionary of mutable sets for use as an index of unique values related to another collection.
     /// Imitates the behavior of a write-focused index in a RDBMS.
     /// </summary>
     /// <remarks>

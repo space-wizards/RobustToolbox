@@ -11,7 +11,7 @@ namespace Robust.Shared.Utility
 {
 
     /// <summary>
-    /// Represents a language to that handles basic mathematics in-game.
+    /// Represents a language that handles basic mathematics in-game.
     /// </summary>
     public sealed class InGameFloatMathDsl : FloatMathDslBase
     {

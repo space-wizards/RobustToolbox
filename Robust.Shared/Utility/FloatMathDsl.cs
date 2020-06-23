@@ -15,7 +15,7 @@ namespace Robust.Shared.Utility
 {
 
     /// <summary>
-    /// Represents a language to that handles basic mathematics out-of-game.
+    /// Represents a language that handles basic mathematics out-of-game.
     /// </summary>
     public sealed class FloatMathDsl
         : FloatMathDslBase

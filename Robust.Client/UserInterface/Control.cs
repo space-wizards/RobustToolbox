@@ -476,7 +476,7 @@ namespace Robust.Client.UserInterface
 
 
         /// <summary>
-        ///     Make the provided control a parent of this control.
+        ///     Make the provided control a child of this control.
         /// </summary>
         /// <param name="index">The index to insert at.</param>
         /// <param name="child">The control to make a child of this control.</param>

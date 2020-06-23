@@ -335,7 +335,7 @@ namespace Robust.Server.GameObjects
             = new ThreadLocal<PlayerSeenEntityStatesResources>(() => new PlayerSeenEntityStatesResources());
 
         /// <inheritdoc />
-        public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range, bool inParallel = false)
+        public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)

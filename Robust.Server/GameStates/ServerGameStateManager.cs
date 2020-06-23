@@ -175,6 +175,7 @@ namespace Robust.Server.GameStates
 
             foreach (var (msg, chan) in mailBag)
             {
+                // see session.Status != SessionStatus.InGame above
                 if (chan == null) continue;
                 _networkManager.ServerSendMessage(msg, chan);
             }

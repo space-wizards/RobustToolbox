@@ -80,6 +80,13 @@ namespace Lidgren.Network
 		}
 
 		private static IPAddress s_broadcastAddress;
+
+#if NON_IEC_UNITS
+		private static readonly string[] ByteStringSuffixes = { "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+#else
+		private static readonly string[] ByteStringSuffixes = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+#endif
+		
 		public static IPAddress GetCachedBroadcastAddress()
 		{
 			if (s_broadcastAddress == null)
@@ -313,10 +320,20 @@ namespace Lidgren.Network
 		[CLSCompliant(false)]
 		public static int BitsToHoldUInt(uint value)
 		{
-			int bits = 1;
-			while ((value >>= 1) != 0)
-				bits++;
-			return bits;
+#if NETCOREAPP3_1
+			return 32 - System.Numerics.BitOperations.LeadingZeroCount(value);
+#else
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			value -= ((value >> 1) & 0x55555555U);
+			value = (value & 0x33333333U) + ((value >> 2) & 0x33333333U);
+			value = (value + (value >> 4)) & 0x0F0F0F0FU;
+			value = (value * 0x01010101U) >> 24;
+			return (int)(value & 127);
+#endif
 		}
 
 		/// <summary>
@@ -325,10 +342,22 @@ namespace Lidgren.Network
 		[CLSCompliant(false)]
 		public static int BitsToHoldUInt64(ulong value)
 		{
-			int bits = 1;
-			while ((value >>= 1) != 0)
-				bits++;
-			return bits;
+#if NETCOREAPP3_1
+			return 64 - System.Numerics.BitOperations.LeadingZeroCount(value);
+#else
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			value |= value >> 32;
+			value -= ((value >> 1) & 0x5555555555555555U);
+			value = (value & 0x3333333333333333U)
+				+ ((value >> 2) & 0x3333333333333333U);
+			value = (value + (value >> 4)) & 0x0F0F0F0F0F0F0F0FU;
+			value = (value * 0x0101010101010101U) >> 56;
+			return (int)(value & 127);
+#endif
 		}
 
 		/// <summary>
@@ -378,11 +407,10 @@ namespace Lidgren.Network
 		/// </summary>
 		public static string ToHumanReadable(long bytes)
 		{
-			if (bytes < 4000) // 1-4 kb is printed in bytes
-				return bytes + " bytes";
-			if (bytes < 1000 * 1000) // 4-999 kb is printed in kb
-				return Math.Round(((double)bytes / 1000.0), 2) + " kilobytes";
-			return Math.Round(((double)bytes / (1000.0 * 1000.0)), 2) + " megabytes"; // else megabytes
+			var index = (long)Math.Round(Math.Max(0,Math.Log(bytes, 1024) - 2/3d), MidpointRounding.AwayFromZero);
+			var denominator = Math.Pow(1024, index);
+
+			return $"{bytes / denominator:0.##} {ByteStringSuffixes[index]}";
 		}
 
 		internal static int RelativeSequenceNumber(int nr, int expected)

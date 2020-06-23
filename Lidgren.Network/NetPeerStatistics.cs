@@ -66,32 +66,37 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Gets the number of sent packets since the NetPeer was initialized
 		/// </summary>
-		public int SentPackets { get { return m_sentPackets; } }
+		public int SentPackets => m_sentPackets;
 
 		/// <summary>
 		/// Gets the number of received packets since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedPackets { get { return m_receivedPackets; } }
+		public int ReceivedPackets => m_receivedPackets;
 
 		/// <summary>
 		/// Gets the number of sent messages since the NetPeer was initialized
 		/// </summary>
-		public int SentMessages { get { return m_sentMessages; } }
+		public int SentMessages => m_sentMessages;
 
 		/// <summary>
 		/// Gets the number of received messages since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedMessages { get { return m_receivedMessages; } }
+		public int ReceivedMessages => m_receivedMessages;
+
+		/// <summary>
+		/// Gets the number of received fragments since the NetPeer was initialized
+		/// </summary>
+		public int ReceivedFragments => m_receivedFragments;
 
 		/// <summary>
 		/// Gets the number of sent bytes since the NetPeer was initialized
 		/// </summary>
-		public int SentBytes { get { return m_sentBytes; } }
+		public int SentBytes => m_sentBytes;
 
 		/// <summary>
 		/// Gets the number of received bytes since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedBytes { get { return m_receivedBytes; } }
+		public int ReceivedBytes => m_receivedBytes;
 
 #if !USE_RELEASE_STATISTICS
 		[Conditional("DEBUG")]

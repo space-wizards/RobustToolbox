@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Exceptions;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Serialization;
@@ -31,7 +33,7 @@ namespace Robust.Shared.GameObjects
 
         private readonly Dictionary<(EntityUid, Type), Component> _entTraitDict = new Dictionary<(EntityUid, Type), Component>(TotalComponentsCapacity);
 
-        private readonly HashSet<Component> _deleteList = new HashSet<Component>(TypeCapacity);
+        private readonly HashSet<Component> _deleteSet = new HashSet<Component>(TypeCapacity);
 
         private UniqueIndex<Type, Component> _traitCompIndex;
 
@@ -61,7 +63,7 @@ namespace Robust.Shared.GameObjects
             _traitCompIndex.Clear();
             _netIdCompIndex.Clear();
             _entCompIndex.Clear();
-            _deleteList.Clear();
+            _deleteSet.Clear();
             FillComponentDict();
         }
 
@@ -182,12 +184,28 @@ namespace Robust.Shared.GameObjects
             RemoveComponentDeferred((Component) component, false);
         }
 
+        private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
+        {
+            static int Sequence(IComponent x)
+                => x switch
+                {
+                    ITransformComponent _ => 0,
+                    IMetaDataComponent _ => 1,
+                    ICollidableComponent _ => 2,
+                    _ => int.MaxValue
+                };
+
+            return forCreation
+                ? comps.OrderBy(Sequence)
+                : comps.OrderByDescending(Sequence);
+        }
+
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
             _entCompIndex.Remove(uid);
 
-            foreach (var comp in _entCompIndex[uid])
+            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
                 RemoveComponentDeferred(comp, false);
             }
@@ -196,7 +214,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void DisposeComponents(EntityUid uid)
         {
-            foreach (var comp in _entCompIndex[uid])
+            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
                 RemoveComponentDeferred(comp, true);
             }
@@ -219,7 +237,7 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                if (!_deleteList.Add(component))
+                if (!_deleteSet.Add(component))
                 {
                     // already deferred deletion
                     return;
@@ -261,12 +279,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void CullRemovedComponents()
         {
-            foreach (var component in _deleteList)
+            foreach (var component in InSafeOrder(_deleteSet))
             {
                 DeleteComponent(component);
             }
 
-            _deleteList.Clear();
+            _deleteSet.Clear();
         }
 
         private void DeleteComponent(Component component)

@@ -44,8 +44,6 @@ namespace Lidgren.Network
 		internal int m_sentBytes;
 		internal int m_receivedBytes;
 
-		internal long m_bytesAllocated;
-
 		internal NetPeerStatistics(NetPeer peer)
 		{
 			m_peer = peer;
@@ -63,8 +61,6 @@ namespace Lidgren.Network
 
 			m_sentBytes = 0;
 			m_receivedBytes = 0;
-
-			m_bytesAllocated = 0;
 		}
 
 		/// <summary>
@@ -123,17 +119,15 @@ namespace Lidgren.Network
 		/// </summary>
 		public override string ToString()
 		{
-			StringBuilder bdr = new StringBuilder();
-			bdr.AppendLine(m_peer.ConnectionsCount.ToString() + " connections");
 #if DEBUG || USE_RELEASE_STATISTICS
-			bdr.AppendLine("Sent " + m_sentBytes + " bytes in " + m_sentMessages + " messages in " + m_sentPackets + " packets");
-			bdr.AppendLine("Received " + m_receivedBytes + " bytes in " + m_receivedMessages + " messages (of which " + m_receivedFragments + " fragments) in " + m_receivedPackets + " packets");
+			return @$"{m_peer.ConnectionsCount} connections
+Sent {m_sentBytes} bytes in {m_sentMessages} messages in {m_sentPackets} packets
+Received {m_receivedBytes} bytes in {m_receivedMessages} messages (of which {m_receivedFragments} fragments) in {m_receivedPackets} packets";
 #else
-			bdr.AppendLine("Sent (n/a) bytes in (n/a) messages in (n/a) packets");
-			bdr.AppendLine("Received (n/a) bytes in (n/a) messages in (n/a) packets");
+			return @$"{m_peer.ConnectionsCount} connections
+Sent (n/a) bytes in (n/a) messages in (n/a) packets
+Received (n/a) bytes in (n/a) messages in (n/a) packets";
 #endif
-			bdr.AppendLine("Storage allocated " + m_bytesAllocated + " bytes");
-			return bdr.ToString();
 		}
 	}
 }

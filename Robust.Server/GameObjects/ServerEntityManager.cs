@@ -353,7 +353,7 @@ namespace Robust.Server.GameObjects
 
             var seenMovers = GetSeenMovers(player);
 
-            var pseStateRes = _playerSeenEntityStatesResources.Value;
+            var pseStateRes = _playerSeenEntityStatesResources.Value!;
             var checkedEnts = pseStateRes.IncludedEnts;
             var entityStates = pseStateRes.EntityStates;
             var neededEnts = pseStateRes.NeededEnts;

@@ -121,6 +121,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 _canCollide = value;
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+                Dirty();
             }
         }
 
@@ -158,7 +159,11 @@ namespace Robust.Shared.GameObjects.Components
         public BodyStatus Status
         {
             get => _status;
-            set => _status = value;
+            set
+            {
+                _status = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -169,7 +174,7 @@ namespace Robust.Shared.GameObjects.Components
             // normally ExposeData would create this
             if (_physShapes == null)
                 _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
-            
+
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
         }
 

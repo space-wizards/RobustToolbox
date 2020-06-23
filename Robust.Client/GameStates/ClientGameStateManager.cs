@@ -290,7 +290,11 @@ namespace Robust.Client.GameStates
 
                 Logger.DebugS("net.predict", $"Entity {entity.Uid} was made dirty.");
 
-                var last = _processor.GetLastServerStates(entity.Uid);
+                if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
+                {
+                    // Entity was probably deleted on the server so do nothing.
+                    continue;
+                }
 
                 // TODO: handle component deletions/creations.
                 foreach (var comp in _componentManager.GetNetComponents(entity.Uid))

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#nullable enable
+using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -16,7 +16,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _ignoreEvents;
 
-        public event Action OnValueChanged;
+        public event Action? OnValueChanged;
 
         public byte ColorValue
         {

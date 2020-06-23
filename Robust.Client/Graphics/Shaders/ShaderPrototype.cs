@@ -176,7 +176,7 @@ namespace Robust.Client.Graphics.Shaders
             }
         }
 
-        public static void ParseMapping(ShaderPrototype prototype, YamlMappingNode paramMapping, IDictionary<string, object> shaderParams, string shaderName = null)
+        public static void ParseMapping(ShaderPrototype prototype, YamlMappingNode paramMapping, IDictionary<string, object> shaderParams, string? shaderName = null)
         {
             if (prototype.Source == null)
             {

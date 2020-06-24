@@ -220,7 +220,7 @@ namespace Robust.Shared.Physics
             }
 
             if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner.Uid}");
         }
 
         /// <inheritdoc />

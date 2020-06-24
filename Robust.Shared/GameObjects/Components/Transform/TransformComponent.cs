@@ -306,19 +306,23 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables] public int ChildCount => _children.Count;
 
         /// <inheritdoc />
+        [ViewVariables]
         public Vector2? LerpDestination
         {
             get { return _nextPosition; }
             set => _nextPosition = value;
         }
 
+        [ViewVariables]
         public Angle? LerpAngle
         {
             get { return _nextRotation; }
             set => _nextRotation = value;
         }
 
+        [ViewVariables]
         public Vector2 LerpSource => _prevPosition;
+        [ViewVariables]
         public Angle LerpSourceAngle => _prevRotation;
 
         /// <inheritdoc />

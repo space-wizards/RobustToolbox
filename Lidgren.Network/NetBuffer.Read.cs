@@ -77,14 +77,27 @@ namespace Lidgren.Network
 			return retval;
 		}
 
+		/// <summary>
+		/// Creates a stream out of a constrained region of the buffer for reading.
+		/// </summary>
+		/// <param name="byteLength">The length of the constrained region in bytes.</param>
+		/// <returns>A readable constrained buffer region wrapped by a stream.</returns>
 		public Stream ReadAsStream(int byteLength)
 		{
 			var bitLength = byteLength*8;
-			var stream = new ReadOnlyStreamWrapper(this, m_readPosition, bitLength);
+			var stream = new ReadOnlyWrapperStream(this, m_readPosition, bitLength);
 			m_readPosition += bitLength;
 			return stream;
 		}
 		
+		/// <summary>
+		/// Prefer using <see cref="NetBuffer.ReadBytes(Span{byte})" /> instead.
+		/// Reads the specified number of bytes into a allocated array.
+		/// </summary>
+		/// <param name="into">The destination array</param>
+		/// <param name="offset">The offset where to start writing in the destination array</param>
+		/// <param name="numberOfBytes">The number of bytes to read</param>
+		/// <returns>The same as <paramref name="into"/></returns>
 		//[Obsolete("Use the Span parameter version of ReadBytes instead")]
 		public byte[] ReadBytes(int length)
 		{
@@ -94,6 +107,11 @@ namespace Lidgren.Network
 			return into;
 		}
 
+		/// <summary>
+		/// Reads the specified number of bytes into a pre-allocated array.
+		/// </summary>
+		/// <param name="into">The destination</param>
+		/// <returns>The same as <paramref name="into"/></returns>
 		public Span<byte> ReadBytes(Span<byte> into)
 		{
 			var bytes = PeekBytes(into);
@@ -102,11 +120,12 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
-		/// Reads the specified number of bytes into a preallocated array
+		/// Reads the specified number of bytes into a pre-allocated array.
 		/// </summary>
 		/// <param name="into">The destination array</param>
 		/// <param name="offset">The offset where to start writing in the destination array</param>
 		/// <param name="numberOfBytes">The number of bytes to read</param>
+		/// <returns>The same as <paramref name="into"/></returns>
 		//[Obsolete("Use Span alternative instead with slicing.")]
 		public Span<byte> ReadBytes(Span<byte> into, int offset, int numberOfBytes)
 		{
@@ -116,7 +135,7 @@ namespace Lidgren.Network
 		}
 
 		/// <summary>
-		/// Reads the specified number of bits into a preallocated array
+		/// Reads the specified number of bits into a pre-allocated array.
 		/// </summary>
 		/// <param name="into">The destination array</param>
 		/// <param name="offset">The offset where to start writing in the destination array</param>
@@ -136,7 +155,7 @@ namespace Lidgren.Network
 			if (extraBits > 0)
 				into[offset + numberOfWholeBytes] = ReadByte(extraBits);
 
-			return into.Slice(offset,numberOfBits >> 3);
+			return into.Slice(offset,(numberOfBits+extraBits) >> 3);
 		}
 
 		/// <summary>

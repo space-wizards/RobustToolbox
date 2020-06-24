@@ -162,17 +162,31 @@ namespace Lidgren.Network
 		}
 		
 
+		/// <summary>
+		/// Creates a stream out of a constrained region of the buffer for writing.
+		/// </summary>
+		/// <param name="byteLength">The length of the constrained region in bytes.</param>
+		/// <returns>A writable constrained buffer region wrapped by a stream.</returns>
 		public Stream WriteAsStream(int byteLength)
 		{
 			var bitLength = byteLength*8;
 			EnsureBufferSize(m_bitLength + byteLength);
-			var stream = new WriteOnlyStreamWrapper(this, m_bitLength, bitLength);
+			var stream = new WriteOnlyWrapperStream(this, m_bitLength, bitLength);
 			m_bitLength += bitLength;
 			return stream;
 		}
+
+		/// <summary>
+		/// Creates a stream for appending to the end of the buffer.
+		/// </summary>
+		/// <returns>A writable stream that appends to the buffer.</returns>
+		public Stream AppendViaStream()
+		{
+			return new AppenderStream(this);
+		}
 		
 		/// <summary>
-		/// Writes all bytes in an array
+		/// Writes all bytes in an array.
 		/// </summary>
 		public void Write(ReadOnlySpan<byte> source)
 		{

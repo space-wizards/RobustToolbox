@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
@@ -301,6 +302,21 @@ namespace Robust.Server.Console
                 var groupName = groupController.GetGroupName(groupIndex);
 
                 shell.SendText(player, $"Current group: {groupName}");
+            }
+        }
+
+        private class SudoCommand : IClientCommand
+        {
+            public string Command => "sudo";
+            public string Description => "sudo make me a sandwich";
+            public string Help => "sudo";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                var command = args[0];
+                var cArgs = args[1..].Select(CommandParsing.Escape);
+
+                shell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
             }
         }
     }

@@ -92,6 +92,8 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)] public bool Predict { get; set; }
+
         /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
@@ -122,13 +124,13 @@ namespace Robust.Client.GameObjects
             var newState = (PhysicsComponentState)curState;
             Mass = newState.Mass / 1000f; // gram to kilogram
 
-            // Client doesn't run physics for most server objects.
-            // Only things like the player that you're actively controlling.
-            // That said, we *do* want to reset movement parameters to be able to reconcile correctly.
-            // So we do that here.
-            LinearVelocity = Vector2.Zero;
-            AngularVelocity = 0;
-            _controller = null;
+            LinearVelocity = newState.LinearVelocity;
+            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
+            AngularVelocity = newState.AngularVelocity;
+            // TODO: Does it make sense to reset controllers here?
+            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
+            // Look man the CM test is in 5 hours cut me some slack.
+            //_controller = null;
         }
     }
 }

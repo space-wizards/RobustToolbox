@@ -148,7 +148,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass);
+            return new PhysicsComponentState(_mass, LinearVelocity, AngularVelocity);
         }
 
         public void RemoveController()

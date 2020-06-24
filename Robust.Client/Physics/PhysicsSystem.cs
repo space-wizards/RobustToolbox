@@ -26,7 +26,8 @@ namespace Robust.Client.Physics
         public override void Update(float frameTime)
         {
             _lastRem = _gameTiming.CurTime;
-            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted).ToList());
+            SimulateWorld(frameTime,
+                RelevantEntities.Where(e => !e.Deleted && e.GetComponent<PhysicsComponent>().Predict).ToList());
         }
 
         public override void FrameUpdate(float frameTime)

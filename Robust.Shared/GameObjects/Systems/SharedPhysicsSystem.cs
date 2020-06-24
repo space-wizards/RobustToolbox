@@ -246,15 +246,12 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void ProcessFriction(IEntity entity, float frameTime)
         {
-            // A constant that scales frictional force to work with the rest of the engine
-            const float frictionScalingConstant = 60.0f;
-
             var physics = entity.GetComponent<SharedPhysicsComponent>();
 
             if (physics.LinearVelocity == Vector2.Zero) return;
 
             // Calculate frictional force
-            var friction = GetFriction(entity) * frameTime * frictionScalingConstant;
+            var friction = GetFriction(entity);
 
             // Clamp friction because friction can't make you accelerate backwards
             friction = Math.Min(friction, physics.LinearVelocity.Length);

@@ -63,6 +63,10 @@ namespace Robust.Server.Console
                 _configMan.RegisterCVar("console.password", string.Empty,
                     CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
 
+            if (!_configMan.IsCVarRegistered("console.hostpassword"))
+                _configMan.RegisterCVar("console.hostpassword", string.Empty,
+                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
+
             if (!_configMan.IsCVarRegistered("console.adminGroup"))
                 _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
 
@@ -220,6 +224,57 @@ namespace Robust.Server.Console
                 Logger.WarningS(
                     "con.auth",
                     $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
+
+                var net = IoCManager.Resolve<IServerNetManager>();
+                net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
+            }
+        }
+
+        public bool ElevateShellHost(IPlayerSession session, string password)
+        {
+            if (session == null)
+                throw new ArgumentNullException(nameof(session));
+
+            var realPass = _configMan.GetCVar<string>("console.hostpassword");
+
+            // password disabled
+            if (string.IsNullOrWhiteSpace(realPass))
+                return false;
+
+            // wrong password
+            if (password != realPass)
+                return false;
+
+            // success!
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.hostGroup")));
+
+            return true;
+        }
+
+        private class HostLoginCommand : IClientCommand
+        {
+            public string Command => "hostlogin";
+            public string Description => "Elevates client to host permission group.";
+            public string Help => "hostlogin";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                // system console can't log in to itself, and is pointless anyways
+                if (player == null)
+                    return;
+
+                // If the password is null/empty/whitespace in the config, this effectively disables the command
+                if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+                    return;
+
+                // WE ARE AT THE BRIDGE OF DEATH
+                if (shell.ElevateShellHost(player, args[0]))
+                    return;
+
+                // CAST INTO THE GORGE OF ETERNAL PERIL
+                Logger.WarningS(
+                    "con.auth",
+                    $"Failed console hostlogin authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
 
                 var net = IoCManager.Resolve<IServerNetManager>();
                 net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");

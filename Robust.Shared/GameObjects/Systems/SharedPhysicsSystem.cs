@@ -69,15 +69,30 @@ namespace Robust.Shared.GameObjects.Systems
                 entities.Remove(entity);
             }
 
-            const float solveIterations = 3.0f;
+            const int solveIterationsAt60 = 4;
 
-            for (var i = 0; i < solveIterations; i++)
+            var multiplier = frameTime / (1f / 60);
+
+            var divisions = Math.Clamp(
+                MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
+                1,
+                60
+            );
+
+            for (var i = 0; i < divisions; i++)
             {
                 foreach (var entity in entities)
                 {
-                    UpdatePosition(entity, frameTime / solveIterations);
+                    UpdatePosition(entity, frameTime / divisions);
                 }
-                FixClipping(_collisionCache);
+
+                for (var j = 0; j < divisions; ++j)
+                {
+                    if (FixClipping(_collisionCache, divisions))
+                    {
+                        break;
+                    }
+                }
             }
         }
 
@@ -269,15 +284,17 @@ namespace Robust.Shared.GameObjects.Systems
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
-        private void FixClipping(List<Manifold> collisions)
+        private bool FixClipping(List<Manifold> collisions, float divisions)
         {
             const float allowance = 0.05f;
-            const float percent = 0.4f;
+            var percent = Math.Clamp(1f / divisions, 0.01f, 1f);
+            var done = true;
             foreach (var collision in collisions)
             {
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
                 if (penetration > allowance)
                 {
+                    done = false;
                     var correction = collision.Normal * Math.Abs(penetration) * percent;
                     if (collision.APhysics != null && !((SharedPhysicsComponent)collision.APhysics).Anchored && !collision.APhysics.Deleted)
                         collision.APhysics.Owner.Transform.WorldPosition -= correction;
@@ -285,6 +302,8 @@ namespace Robust.Shared.GameObjects.Systems
                         collision.BPhysics.Owner.Transform.WorldPosition += correction;
                 }
             }
+
+            return done;
         }
 
         private float GetFriction(IEntity entity)

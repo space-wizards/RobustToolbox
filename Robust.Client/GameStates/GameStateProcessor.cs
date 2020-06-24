@@ -377,6 +377,12 @@ namespace Robust.Client.GameStates
             return _lastStateFullRep[entity];
         }
 
+        public bool TryGetLastServerStates(EntityUid entity,
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary)
+        {
+            return _lastStateFullRep.TryGetValue(entity, out dictionary);
+        }
+
         public int CalculateBufferSize(GameTick fromTick)
         {
             return _stateBuffer.Count(s => s.ToSequence >= fromTick);

@@ -3,6 +3,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -18,6 +19,7 @@ namespace Robust.Client.GameObjects
         private float _angVel;
         private float _mass;
         private BodyStatus _status;
+        private VirtualController? _controller;
 
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
@@ -29,7 +31,11 @@ namespace Robust.Client.GameObjects
         public override float Mass
         {
             get => _mass;
-            set => _mass = value;
+            set
+            {
+                _mass = value;
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -39,7 +45,11 @@ namespace Robust.Client.GameObjects
         public override Vector2 LinearVelocity
         {
             get => _linVel;
-            set => _linVel = value;
+            set
+            {
+                _linVel = value;
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -49,7 +59,11 @@ namespace Robust.Client.GameObjects
         public override float AngularVelocity
         {
             get => _angVel;
-            set => _angVel = value;
+            set
+            {
+                _angVel = value;
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -59,7 +73,10 @@ namespace Robust.Client.GameObjects
         public override Vector2 Momentum
         {
             get => LinearVelocity * Mass;
-            set => _linVel = value / Mass;
+            set
+            {
+                LinearVelocity = value / Mass;
+            }
         }
 
         /// <summary>
@@ -68,8 +85,14 @@ namespace Robust.Client.GameObjects
         public override BodyStatus Status
         {
             get => _status;
-            set => _status = value;
+            set
+            {
+                _status = value;
+                Dirty();
+            }
         }
+
+        [ViewVariables(VVAccess.ReadWrite)] public bool Predict { get; set; }
 
         /// <summary>
         ///     Whether this component is on the ground
@@ -81,7 +104,16 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController? Controller => null;
+        public override VirtualController? Controller => _controller;
+
+        public void SetController<T>() where T: VirtualController, new()
+        {
+            _controller = new T {ControlledComponent = this};
+            Dirty();
+        }
+
+        [ViewVariables]
+        public override bool Anchored { get; set; }
 
         /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
@@ -91,8 +123,24 @@ namespace Robust.Client.GameObjects
 
             var newState = (PhysicsComponentState)curState;
             Mass = newState.Mass / 1000f; // gram to kilogram
+
             LinearVelocity = newState.LinearVelocity;
+            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
             AngularVelocity = newState.AngularVelocity;
+            // TODO: Does it make sense to reset controllers here?
+            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
+            // Look man the CM test is in 5 hours cut me some slack.
+            //_controller = null;
+            // Reset predict flag to false to avoid predicting stuff too long.
+            // Another possibly bad hack for content at the moment.
+            Predict = false;
+        }
+
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _mass, "mass", 1);
         }
     }
 }

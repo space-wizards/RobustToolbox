@@ -103,5 +103,8 @@ namespace Robust.Client.GameStates
         /// </summary>
         /// <param name="fromTick">The tick to calculate from.</param>
         int CalculateBufferSize(GameTick fromTick);
+
+        bool TryGetLastServerStates(EntityUid entity,
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary);
     }
 }

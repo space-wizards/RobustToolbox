@@ -173,7 +173,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> Match(IEntityManager entityMan)
         {
-            return entityMan.GetEntities().Where(entity => Match(entity));
+            return entityMan.GetEntities(new TypeEntityQuery(ComponentTypes.First())).Where(entity => Match(entity));
         }
     }
 

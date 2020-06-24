@@ -29,6 +29,7 @@ namespace Robust.Client.Graphics.Overlays
                 throw new InvalidOperationException($"We already have an overlay with ID '{overlay.ID}'");
             }
 
+            overlay.BeforeDraw();
             _overlays.Add(overlay.ID, overlay);
         }
 

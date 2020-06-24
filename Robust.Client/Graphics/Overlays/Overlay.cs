@@ -69,6 +69,10 @@ namespace Robust.Client.Graphics.Overlays
         {
         }
 
+        public virtual void BeforeDraw()
+        {
+        }
+
         protected abstract void Draw(DrawingHandleBase handle);
 
         public void Dirty()

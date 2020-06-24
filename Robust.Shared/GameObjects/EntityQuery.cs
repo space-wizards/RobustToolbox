@@ -134,4 +134,47 @@ namespace Robust.Shared.GameObjects
             return entityMan.GetEntities().Where(entity => Match(entity));
         }
     }
+
+    /// <summary>
+    ///     An entity query that will match entities that have all of the provided components.
+    /// </summary>
+    [PublicAPI]
+    public class MultipleTypeEntityQuery : IEntityQuery
+    {
+        private readonly List<Type> ComponentTypes;
+
+        /// <summary>
+        ///     Constructs a new instance of <c>MultipleTypeEntityQuery</c>.
+        /// </summary>
+        /// <param name="componentTypes">List of component types to match.</param>
+        public MultipleTypeEntityQuery(List<Type> componentTypes)
+        {
+            foreach (var componentType in componentTypes)
+            {
+                DebugTools.Assert(typeof(IComponent).IsAssignableFrom(componentType), "componentType must inherit IComponent");
+            }
+
+            ComponentTypes = componentTypes;
+        }
+
+        /// <inheritdoc />
+        public bool Match(IEntity entity)
+        {
+            foreach (var componentType in ComponentTypes)
+            {
+                if (!entity.HasComponent(componentType))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> Match(IEntityManager entityMan)
+        {
+            return entityMan.GetEntities(new TypeEntityQuery(ComponentTypes.First())).Where(entity => Match(entity));
+        }
+    }
+
 }

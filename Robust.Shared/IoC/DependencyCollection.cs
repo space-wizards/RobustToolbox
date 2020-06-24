@@ -122,6 +122,11 @@ namespace Robust.Shared.IoC
                     $"Attempted to resolve type {type} before the object graph for it has been populated.");
             }
 
+            if (type == typeof(IDependencyCollection))
+            {
+                return this;
+            }
+
             throw new UnregisteredTypeException(type);
         }
 

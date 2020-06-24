@@ -118,6 +118,8 @@ namespace Robust.Server.GameStates
 
             var oldestAck = GameTick.MaxValue;
 
+            var oldDeps = IoCManager.Resolve<IDependencyCollection>();
+
             var deps = new DependencyCollection();
             deps.RegisterInstance<ILogManager>(IoCManager.Resolve<ILogManager>());
             deps.BuildGraph();
@@ -172,6 +174,13 @@ namespace Robust.Server.GameStates
 
             var mailBag = _playerManager.GetAllPlayers()
                 .AsParallel().Select(GenerateMail).ToList();
+
+            // TODO: oh god oh fuck kill it with fire.
+            // PLINQ *seems* to be scheduling to the main thread partially (I guess that makes sense?)
+            // Which causes that IoC "hack" up there to override IoC in the main thread, nuking the game.
+            // At least, that's our running theory. I reproduced it once locally and can't reproduce it again.
+            // Throwing shit at the wall to hope it fixes it.
+            IoCManager.InitThread(oldDeps, true);
 
             foreach (var (msg, chan) in mailBag)
             {

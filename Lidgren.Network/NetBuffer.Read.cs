@@ -84,6 +84,15 @@ namespace Lidgren.Network
 			m_readPosition += bitLength;
 			return stream;
 		}
+		
+		//[Obsolete("Use the Span parameter version of ReadBytes instead")]
+		public byte[] ReadBytes(int length)
+		{
+			var into = new byte[length];
+			PeekBytes(into);
+			m_readPosition += 8 * into.Length;
+			return into;
+		}
 
 		public Span<byte> ReadBytes(Span<byte> into)
 		{
@@ -98,7 +107,7 @@ namespace Lidgren.Network
 		/// <param name="into">The destination array</param>
 		/// <param name="offset">The offset where to start writing in the destination array</param>
 		/// <param name="numberOfBytes">The number of bytes to read</param>
-		[Obsolete("Use Span alternative instead with slicing.")]
+		//[Obsolete("Use Span alternative instead with slicing.")]
 		public Span<byte> ReadBytes(Span<byte> into, int offset, int numberOfBytes)
 		{
 			var bytes = PeekBytes(into, offset, numberOfBytes);
@@ -112,7 +121,7 @@ namespace Lidgren.Network
 		/// <param name="into">The destination array</param>
 		/// <param name="offset">The offset where to start writing in the destination array</param>
 		/// <param name="numberOfBits">The number of bits to read</param>
-		[Obsolete("Use Span alternative instead with slicing.")]
+		//[Obsolete("Use Span alternative instead with slicing.")]
 		public Span<byte> ReadBits(Span<byte> into, int offset, int numberOfBits)
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= numberOfBits, c_readOverflowError);

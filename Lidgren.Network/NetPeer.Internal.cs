@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Buffers;
 using System.Net;
 using System.Threading;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Collections.Generic;
-
+using System.Runtime.InteropServices;
 #if !__NOIPENDPOINT__
 using NetEndPoint = System.Net.IPEndPoint;
 #endif
@@ -152,7 +153,7 @@ namespace Lidgren.Network
 						const uint IOC_IN = 0x80000000;
 						const uint IOC_VENDOR = 0x18000000;
 						uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
-						m_socket.IOControl((int)SIO_UDP_CONNRESET, new byte[] { Convert.ToByte(false) }, null);
+						m_socket.IOControl((int)SIO_UDP_CONNRESET, new[] { Convert.ToByte(false) }, null);
 					}
 					catch
 					{
@@ -191,19 +192,25 @@ namespace Lidgren.Network
 				// bind to socket
 				BindSocket(false);
 
-				m_receiveBuffer = new byte[m_configuration.ReceiveBufferSize];
-				m_sendBuffer = new byte[m_configuration.SendBufferSize];
-				m_readHelperMessage = new NetIncomingMessage(NetIncomingMessageType.Error);
-				m_readHelperMessage.m_data = m_receiveBuffer;
+				m_receiveBuffer = ArrayPool<byte>.Shared.Rent(m_configuration.ReceiveBufferSize);
+				m_sendBuffer = ArrayPool<byte>.Shared.Rent(m_configuration.SendBufferSize);
+				m_readHelperMessage = new NetIncomingMessage(NetIncomingMessageType.Error)
+				{
+					m_buf = m_receiveBuffer
+				};
 
-				byte[] macBytes = NetUtility.GetMacAddressBytes();
+				var macBytes = NetUtility.GetMacAddressBytes();
 
 				var boundEp = m_socket.LocalEndPoint as NetEndPoint;
-				byte[] epBytes = BitConverter.GetBytes(boundEp.GetHashCode());
-				byte[] combined = new byte[epBytes.Length + macBytes.Length];
-				Array.Copy(epBytes, 0, combined, 0, epBytes.Length);
-				Array.Copy(macBytes, 0, combined, epBytes.Length, macBytes.Length);
-				m_uniqueIdentifier = BitConverter.ToInt64(NetUtility.ComputeSHAHash(combined), 0);
+				var hashCode = boundEp!.GetHashCode();
+				var epBytes = MemoryMarshal.AsBytes(MemoryMarshal.CreateReadOnlySpan(ref hashCode,1));
+				// ReSharper disable once SuggestVarOrType_Elsewhere
+				Span<byte> combined = stackalloc byte[epBytes.Length + macBytes.Length];
+				//Array.Copy(epBytes, 0, combined, 0, epBytes.Length);
+				epBytes.CopyTo(combined.Slice(0,epBytes.Length));
+				//Array.Copy(macBytes, 0, combined, epBytes.Length, macBytes.Length);
+				macBytes.CopyTo(combined.Slice(epBytes.Length, macBytes.Length));
+				m_uniqueIdentifier = MemoryMarshal.Cast<byte,long>(NetUtility.ComputeSHAHash(combined, stackalloc byte[32]))[0];
 
 				m_status = NetPeerStatus.Running;
 			}
@@ -556,7 +563,9 @@ namespace Lidgren.Network
 						msg.m_senderEndPoint = ipsender;
 						msg.m_bitLength = payloadBitLength;
 
-						Buffer.BlockCopy(m_receiveBuffer, ptr, msg.m_data, 0, payloadByteLength);
+						//Buffer.BlockCopy(m_receiveBuffer, ptr, msg.m_data, 0, payloadByteLength);
+						new Memory<byte>(m_receiveBuffer,ptr,payloadByteLength).Span
+							.CopyTo(msg.m_data.Slice(0, payloadByteLength));
 						if (sender != null)
 						{
 							if (tp == NetMessageType.Unconnected)
@@ -606,7 +615,12 @@ namespace Lidgren.Network
 			{
 				NetIncomingMessage dm = CreateIncomingMessage(NetIncomingMessageType.DiscoveryRequest, payloadByteLength);
 				if (payloadByteLength > 0)
-					Buffer.BlockCopy(m_receiveBuffer, ptr, dm.m_data, 0, payloadByteLength);
+				{
+					//Buffer.BlockCopy(m_receiveBuffer, ptr, dm.m_data, 0, payloadByteLength);
+					new Memory<byte>(m_receiveBuffer, ptr, payloadByteLength).Span
+						.CopyTo(dm.m_data.Slice(0, payloadByteLength));
+				}
+
 				dm.m_receiveTime = now;
 				dm.m_bitLength = payloadByteLength * 8;
 				dm.m_senderEndPoint = senderEndPoint;
@@ -620,7 +634,11 @@ namespace Lidgren.Network
 			{
 				NetIncomingMessage dr = CreateIncomingMessage(NetIncomingMessageType.DiscoveryResponse, payloadByteLength);
 				if (payloadByteLength > 0)
-					Buffer.BlockCopy(m_receiveBuffer, ptr, dr.m_data, 0, payloadByteLength);
+				{
+					//Buffer.BlockCopy(m_receiveBuffer, ptr, dr.m_data, 0, payloadByteLength);
+					new Memory<byte>(m_receiveBuffer, ptr, payloadByteLength).Span
+						.CopyTo(dr.m_data.Slice(0, payloadByteLength));
+				}
 				dr.m_receiveTime = now;
 				dr.m_bitLength = payloadByteLength * 8;
 				dr.m_senderEndPoint = senderEndPoint;

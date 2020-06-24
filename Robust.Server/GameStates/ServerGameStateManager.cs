@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
@@ -9,10 +12,12 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -113,13 +118,17 @@ namespace Robust.Server.GameStates
 
             var oldestAck = GameTick.MaxValue;
 
+            var deps = new DependencyCollection();
+            deps.RegisterInstance<ILogManager>(IoCManager.Resolve<ILogManager>());
+            deps.BuildGraph();
 
-
-            foreach (var session in _playerManager.GetAllPlayers())
+            (MsgState, INetChannel) GenerateMail(IPlayerSession session)
             {
+                IoCManager.InitThread(deps, true);
+
                 if (session.Status != SessionStatus.InGame)
                 {
-                    continue;
+                    return default;
                 }
 
                 var channel = session.ConnectedClient;
@@ -136,12 +145,10 @@ namespace Robust.Server.GameStates
                 var deletions = _entityManager.GetDeletedEntities(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
-
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick,
-                    Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
+                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
                 if (lastAck < oldestAck)
                 {
                     oldestAck = lastAck;
@@ -150,7 +157,6 @@ namespace Robust.Server.GameStates
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
-                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
                 // If the state is too big we let Lidgren send it reliably.
                 // This is to avoid a situation where a state is so large that it consistently gets dropped
@@ -160,6 +166,18 @@ namespace Robust.Server.GameStates
                 {
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
                 }
+
+                return (stateUpdateMessage, channel);
+            }
+
+            var mailBag = _playerManager.GetAllPlayers()
+                .AsParallel().Select(GenerateMail);
+
+            foreach (var (msg, chan) in mailBag)
+            {
+                // see session.Status != SessionStatus.InGame above
+                if (chan == null) continue;
+                _networkManager.ServerSendMessage(msg, chan);
             }
 
             // keep the deletion history buffers clean

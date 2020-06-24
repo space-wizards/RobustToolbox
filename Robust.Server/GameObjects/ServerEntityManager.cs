@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Prometheus;
 using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
@@ -172,13 +173,17 @@ namespace Robust.Server.GameObjects
 
         private ISet<EntityUid> GetSeenMovers(IPlayerSession player)
         {
-            if (!_seenMovers.TryGetValue(player, out var movers))
+            lock (_seenMovers)
             {
-                movers = new SortedSet<EntityUid>();
-                _seenMovers.Add(player, movers);
-            }
+                if (!_seenMovers.TryGetValue(player, out var movers))
+                {
+                    movers = new SortedSet<EntityUid>();
+                    _seenMovers.Add(player, movers);
+                }
 
-            return movers;
+
+                return movers;
+            }
         }
 
         private readonly Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>> _playerLastSeen
@@ -265,14 +270,17 @@ namespace Robust.Server.GameObjects
 
         public void DropPlayerState(IPlayerSession player)
         {
-            _playerLastSeen.Remove(player);
+            lock (_playerLastSeen)
+            {
+                _playerLastSeen.Remove(player);
+            }
         }
 
         private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
             foreach (var child in children)
             {
-                var ent = child;
+                var ent = child!;
 
                 do
                 {
@@ -280,7 +288,7 @@ namespace Robust.Server.GameObjects
                     {
                         AddContainedRecursive(ent, set);
 
-                        ent = ent.Transform.Parent?.Owner;
+                        ent = ent.Transform.Parent?.Owner!;
                     }
                     else
                     {
@@ -309,29 +317,22 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private readonly struct PlayerSeenEntityStatesResources
+        private class PlayerSeenEntityStatesResources
         {
 
-            public readonly HashSet<EntityUid> IncludedEnts;
+            public readonly HashSet<EntityUid> IncludedEnts = new HashSet<EntityUid>();
 
-            public readonly List<EntityState> EntityStates;
+            public readonly List<EntityState> EntityStates = new List<EntityState>();
 
-            public readonly HashSet<EntityUid> NeededEnts;
+            public readonly HashSet<EntityUid> NeededEnts = new HashSet<EntityUid>();
 
-            public readonly HashSet<IEntity> Relatives;
+            public readonly HashSet<IEntity> Relatives = new HashSet<IEntity>();
 
-            public PlayerSeenEntityStatesResources(bool memes = false)
-            {
-                IncludedEnts = new HashSet<EntityUid>();
-                EntityStates = new List<EntityState>();
-                NeededEnts = new HashSet<EntityUid>();
-                Relatives = new HashSet<IEntity>();
-            }
 
         }
 
-        private readonly PlayerSeenEntityStatesResources _playerSeenEntityStatesResources
-            = new PlayerSeenEntityStatesResources(false);
+        private readonly ThreadLocal<PlayerSeenEntityStatesResources> _playerSeenEntityStatesResources
+            = new ThreadLocal<PlayerSeenEntityStatesResources>(() => new PlayerSeenEntityStatesResources());
 
         /// <inheritdoc />
         public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
@@ -352,10 +353,11 @@ namespace Robust.Server.GameObjects
 
             var seenMovers = GetSeenMovers(player);
 
-            var checkedEnts = _playerSeenEntityStatesResources.IncludedEnts;
-            var entityStates = _playerSeenEntityStatesResources.EntityStates;
-            var neededEnts = _playerSeenEntityStatesResources.NeededEnts;
-            var relatives = _playerSeenEntityStatesResources.Relatives;
+            var pseStateRes = _playerSeenEntityStatesResources.Value!;
+            var checkedEnts = pseStateRes.IncludedEnts;
+            var entityStates = pseStateRes.EntityStates;
+            var neededEnts = pseStateRes.NeededEnts;
+            var relatives = pseStateRes.Relatives;
             checkedEnts.Clear();
             entityStates.Clear();
             neededEnts.Clear();

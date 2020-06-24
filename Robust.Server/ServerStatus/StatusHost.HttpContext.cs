@@ -53,7 +53,14 @@ namespace Robust.Server.ServerStatus
             IoCManager.InitThread();
             if (logMgr != null)
             {
-                IoCManager.RegisterInstance<ILogManager>(logMgr);
+                try
+                {
+                    IoCManager.RegisterInstance<ILogManager>(logMgr);
+                }
+                catch (Exception ex)
+                {
+                    logMgr.GetSawmill("http").Error("Can't register log manager instance on thread.\n" + ex);
+                }
             }
 
             IoCManager.BuildGraph();

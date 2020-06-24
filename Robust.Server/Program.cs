@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Server.Interfaces;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Log;
@@ -11,8 +14,10 @@ using Robust.Shared;
 
 namespace Robust.Server
 {
+
     internal static class Program
     {
+
         private static bool _hasStarted;
 
         internal static void Main(string[] args)
@@ -20,7 +25,9 @@ namespace Robust.Server
             Start(args);
         }
 
-        internal static void Start(string[] args, bool contentStart=false)
+        private static Thread _offMainThread;
+
+        internal static void Start(string[] args, bool contentStart = false)
         {
             if (_hasStarted)
             {
@@ -29,10 +36,22 @@ namespace Robust.Server
 
             _hasStarted = true;
 
-            if (CommandLineArgs.TryParse(args, out var parsed))
+            if (!CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed, contentStart);
+                return;
             }
+
+            _offMainThread = new Thread(() => ParsedMain(parsed, contentStart))
+            {
+                IsBackground = false,
+                Name = "Server",
+                Priority = ThreadPriority.Highest,
+                CurrentCulture = CultureInfo.InvariantCulture,
+                CurrentUICulture = CultureInfo.InvariantCulture
+            };
+
+            _offMainThread.Start();
+            //_offMainThread.Join();
         }
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart)
@@ -91,6 +110,37 @@ namespace Robust.Server
             mgr.RootSawmill.AddHandler(handler);
             mgr.GetSawmill("res.typecheck").Level = LogLevel.Info;
             mgr.GetSawmill("go.sys").Level = LogLevel.Info;
+
+#if DEBUG_ONLY_FCE_INFO
+#if DEBUG_ONLY_FCE_LOG
+            var fce = mgr.GetSawmill("fce");
+#endif
+            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+            {
+                // TODO: record FCE stats
+#if DEBUG_ONLY_FCE_LOG
+                fce.Fatal(message);
+#endif
+            }
+#endif
+
+            var uh = mgr.GetSawmill("unhandled");
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var message = ((Exception) args.ExceptionObject).ToString();
+                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+            };
+
+            var uo = mgr.GetSawmill("unobserved");
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                uo.Error(args.Exception!.ToString());
+#if EXCEPTION_TOLERANCE
+                args.SetObserved(); // don't crash
+#endif
+            };
         }
+
     }
+
 }

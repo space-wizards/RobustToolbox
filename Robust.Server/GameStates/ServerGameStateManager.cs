@@ -171,7 +171,7 @@ namespace Robust.Server.GameStates
             }
 
             var mailBag = _playerManager.GetAllPlayers()
-                .AsParallel().Select(GenerateMail);
+                .AsParallel().Select(GenerateMail).ToList();
 
             foreach (var (msg, chan) in mailBag)
             {

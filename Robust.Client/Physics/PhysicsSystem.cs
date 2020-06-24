@@ -39,7 +39,7 @@ namespace Robust.Client.Physics
 
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
-            SimulateWorld((float) diff.TotalSeconds, RelevantEntities.Where(e => !e.Deleted).ToList());
+            SimulateWorld((float) diff.TotalSeconds, RelevantEntities.Where(e => !e.Deleted && e.GetComponent<PhysicsComponent>().Predict).ToList());
         }
     }
 }

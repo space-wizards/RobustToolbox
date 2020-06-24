@@ -37,6 +37,7 @@ namespace Robust.Client.Console
 
             var mainVBox = new VBoxContainer
             {
+                CustomMinimumSize = (500, 300),
                 Children =
                 {
                     (_watchesVBox = new VBoxContainer
@@ -47,7 +48,7 @@ namespace Robust.Client.Console
                     {
                         Children =
                         {
-                            (_addWatchEdit = new LineEdit
+                            (_addWatchEdit = new HistoryLineEdit
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                                 PlaceHolder = Loc.GetString("Add watch (C# interactive)")

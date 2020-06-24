@@ -3,6 +3,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
@@ -74,8 +75,7 @@ namespace Robust.Client.GameObjects
             get => LinearVelocity * Mass;
             set
             {
-                _linVel = value / Mass;
-                Dirty();
+                LinearVelocity = value / Mass;
             }
         }
 
@@ -131,6 +131,13 @@ namespace Robust.Client.GameObjects
             // This caused space movement to break in content and I'm not 100% sure this is a good fix.
             // Look man the CM test is in 5 hours cut me some slack.
             //_controller = null;
+        }
+
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+
+            serializer.DataField(ref _mass, "mass", 1);
         }
     }
 }

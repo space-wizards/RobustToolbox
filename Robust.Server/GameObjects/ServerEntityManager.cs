@@ -272,7 +272,7 @@ namespace Robust.Server.GameObjects
         {
             foreach (var child in children)
             {
-                var ent = child;
+                var ent = child!;
 
                 do
                 {
@@ -280,7 +280,7 @@ namespace Robust.Server.GameObjects
                     {
                         AddContainedRecursive(ent, set);
 
-                        ent = ent.Transform.Parent?.Owner;
+                        ent = ent.Transform.Parent?.Owner!;
                     }
                     else
                     {

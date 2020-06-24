@@ -57,7 +57,7 @@ namespace Lidgren.Network
 			m_fragmentGroup = 0;
 		}
 
-		internal int Encode(byte[] intoBuffer, int ptr, int sequenceNumber)
+		internal int Encode(Span<byte> intoBuffer, int ptr, int sequenceNumber)
 		{
 			//  8 bits - NetMessageType
 			//  1 bit  - Fragment?
@@ -78,7 +78,9 @@ namespace Lidgren.Network
 				int byteLen = NetUtility.BytesToHoldBits(m_bitLength);
 				if (byteLen > 0)
 				{
-					Buffer.BlockCopy(m_data, 0, intoBuffer, ptr, byteLen);
+					m_data.Slice(0,byteLen)
+						.CopyTo(intoBuffer.Slice(ptr,byteLen));
+					//Buffer.BlockCopy(m_data, 0, intoBuffer, ptr, byteLen);
 					ptr += byteLen;
 				}
 			}
@@ -102,7 +104,9 @@ namespace Lidgren.Network
 				int byteLen = NetUtility.BytesToHoldBits(m_bitLength);
 				if (byteLen > 0)
 				{
-					Buffer.BlockCopy(m_data, (int)(m_fragmentChunkNumber * m_fragmentChunkByteSize), intoBuffer, ptr, byteLen);
+					m_data.Slice(m_fragmentChunkNumber * m_fragmentChunkByteSize,byteLen)
+						.CopyTo(intoBuffer.Slice(ptr, byteLen));
+					//Buffer.BlockCopy(m_data, (int)(m_fragmentChunkNumber * m_fragmentChunkByteSize), intoBuffer, ptr, byteLen);
 					ptr += byteLen;
 				}
 			}

@@ -24,9 +24,9 @@ namespace Lidgren.Network
 			string two = NetUtility.ToHexString(g.ToByteArrayUnsigned());
 
 			string ccstr = one + two.PadLeft(one.Length, '0');
-			byte[] cc = NetUtility.ToByteArray(ccstr);
+			var cc = NetUtility.HexToBytes(ccstr, stackalloc byte[ccstr.Length*2]);
 
-			var ccHashed = NetUtility.ComputeSHAHash(cc);
+			var ccHashed = NetUtility.ComputeSHAHash(cc, stackalloc byte[NetUtility.SHAHashSize]);
 			return new NetBigInteger(NetUtility.ToHexString(ccHashed), 16);
 		}
 
@@ -53,23 +53,29 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Computer private key (x)
 		/// </summary>
-		public static byte[] ComputePrivateKey(string username, string password, byte[] salt)
+		public static byte[] ComputePrivateKey(string username, string password, ReadOnlySpan<byte> salt)
 		{
-			byte[] tmp = Encoding.UTF8.GetBytes(username + ":" + password);
-			byte[] innerHash = NetUtility.ComputeSHAHash(tmp);
+			var tmpStr = username + ":" + password;
+			// ReSharper disable once SuggestVarOrType_Elsewhere
+			Span<byte> tmp = stackalloc byte[Encoding.UTF8.GetByteCount(tmpStr)];
+			Encoding.UTF8.GetBytes(tmpStr, tmp);
+			var innerHash = NetUtility.ComputeSHAHash(tmp, stackalloc byte[32]);
 
-			byte[] total = new byte[innerHash.Length + salt.Length];
-			Buffer.BlockCopy(salt, 0, total, 0, salt.Length);
-			Buffer.BlockCopy(innerHash, 0, total, salt.Length, innerHash.Length);
+			// ReSharper disable once SuggestVarOrType_Elsewhere
+			Span<byte> total = stackalloc byte[innerHash.Length + salt.Length];
+			//Buffer.BlockCopy(salt, 0, total, 0, salt.Length);
+			salt.CopyTo(total);
+			//Buffer.BlockCopy(innerHash, 0, total, salt.Length, innerHash.Length);
+			innerHash.CopyTo(total.Slice(salt.Length, innerHash.Length));
 
 			// x   ie. H(salt || H(username || ":" || password))
-			return new NetBigInteger(NetUtility.ToHexString(NetUtility.ComputeSHAHash(total)), 16).ToByteArrayUnsigned();
+			return new NetBigInteger(NetUtility.ToHexString(NetUtility.ComputeSHAHash(total, stackalloc byte[32])), 16).ToByteArrayUnsigned();
 		}
 
 		/// <summary>
 		/// Creates a verifier that the server can later use to authenticate users later on (v)
 		/// </summary>
-		public static byte[] ComputeServerVerifier(byte[] privateKey)
+		public static byte[] ComputeServerVerifier(ReadOnlySpan<byte> privateKey)
 		{
 			NetBigInteger x = new NetBigInteger(NetUtility.ToHexString(privateKey), 16);
 
@@ -82,7 +88,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Compute client public ephemeral value (A)
 		/// </summary>
-		public static byte[] ComputeClientEphemeral(byte[] clientPrivateEphemeral) // a
+		public static byte[] ComputeClientEphemeral(ReadOnlySpan<byte> clientPrivateEphemeral) // a
 		{
 			// A= g^a (mod N) 
 			NetBigInteger a = new NetBigInteger(NetUtility.ToHexString(clientPrivateEphemeral), 16);
@@ -94,7 +100,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Compute server ephemeral value (B)
 		/// </summary>
-		public static byte[] ComputeServerEphemeral(byte[] serverPrivateEphemeral, byte[] verifier) // b
+		public static byte[] ComputeServerEphemeral(ReadOnlySpan<byte> serverPrivateEphemeral, ReadOnlySpan<byte> verifier) // b
 		{
 			var b = new NetBigInteger(NetUtility.ToHexString(serverPrivateEphemeral), 16);
 			var v = new NetBigInteger(NetUtility.ToHexString(verifier), 16);
@@ -110,7 +116,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Compute intermediate value (u)
 		/// </summary>
-		public static byte[] ComputeU(byte[] clientPublicEphemeral, byte[] serverPublicEphemeral)
+		public static byte[] ComputeU(ReadOnlySpan<byte> clientPublicEphemeral, ReadOnlySpan<byte> serverPublicEphemeral)
 		{
 			// u = SHA-1(A || B)
 			string one = NetUtility.ToHexString(clientPublicEphemeral);
@@ -119,9 +125,9 @@ namespace Lidgren.Network
 			int len = 66; //  Math.Max(one.Length, two.Length);
 			string ccstr = one.PadLeft(len, '0') + two.PadLeft(len, '0');
 
-			byte[] cc = NetUtility.ToByteArray(ccstr);
+			var cc = NetUtility.HexToBytes(ccstr, stackalloc byte[ccstr.Length*2]);
 
-			var ccHashed = NetUtility.ComputeSHAHash(cc);
+			var ccHashed = NetUtility.ComputeSHAHash(cc, stackalloc byte[32]);
 
 			return new NetBigInteger(NetUtility.ToHexString(ccHashed), 16).ToByteArrayUnsigned();
 		}
@@ -129,7 +135,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Computes the server session value
 		/// </summary>
-		public static byte[] ComputeServerSessionValue(byte[] clientPublicEphemeral, byte[] verifier, byte[] udata, byte[] serverPrivateEphemeral)
+		public static byte[] ComputeServerSessionValue(ReadOnlySpan<byte> clientPublicEphemeral, ReadOnlySpan<byte> verifier, ReadOnlySpan<byte> udata, ReadOnlySpan<byte> serverPrivateEphemeral)
 		{
 			// S = (Av^u) ^ b (mod N)
 			var A = new NetBigInteger(NetUtility.ToHexString(clientPublicEphemeral), 16);
@@ -161,9 +167,9 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Create XTEA symmetrical encryption object from sessionValue
 		/// </summary>
-		public static NetXtea CreateEncryption(NetPeer peer, byte[] sessionValue)
+		public static NetXtea CreateEncryption(NetPeer peer, ReadOnlySpan<byte> sessionValue)
 		{
-			var hash = NetUtility.ComputeSHAHash(sessionValue);
+			var hash = NetUtility.ComputeSHAHash(sessionValue, stackalloc byte[32]);
 			
 			var key = new byte[16];
 			for(int i=0;i<16;i++)

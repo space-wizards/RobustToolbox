@@ -37,12 +37,9 @@ namespace Robust.Shared.Network.Messages
         {
             MsgSize = buffer.LengthBytes;
             var length = buffer.ReadVariableInt32();
-            var stateData = buffer.ReadBytes(length);
-            using (var stateStream = new MemoryStream(stateData))
-            {
-                var serializer = IoCManager.Resolve<IRobustSerializer>();
-                State = serializer.Deserialize<GameState>(stateStream);
-            }
+            using var stream = buffer.ReadAsStream(length);
+            var serializer = IoCManager.Resolve<IRobustSerializer>();
+            State = serializer.Deserialize<GameState>(stream);
 
             State.PayloadSize = length;
         }

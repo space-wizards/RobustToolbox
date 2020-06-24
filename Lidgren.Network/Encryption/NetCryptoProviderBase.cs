@@ -4,8 +4,10 @@ using System.Security.Cryptography;
 
 namespace Lidgren.Network
 {
+
 	public abstract class NetCryptoProviderBase : NetEncryption
 	{
+
 		protected SymmetricAlgorithm m_algorithm;
 
 		public NetCryptoProviderBase(NetPeer peer, SymmetricAlgorithm algo)
@@ -16,9 +18,10 @@ namespace Lidgren.Network
 			m_algorithm.GenerateIV();
 		}
 
-		public override void SetKey(byte[] data, int offset, int count)
+		public override void SetKey(ReadOnlySpan<byte> data, int offset, int count)
 		{
 			int len = m_algorithm.Key.Length;
+			// ReSharper disable once SuggestVarOrType_Elsewhere
 			var key = new byte[len];
 			for (int i = 0; i < len; i++)
 				key[i] = data[offset + (i % count)];
@@ -35,9 +38,9 @@ namespace Lidgren.Network
 		{
 			int unEncLenBits = msg.LengthBits;
 
-			var ms = new MemoryStream();
+			using var ms = new MemoryStream(msg.LengthBytes);
 			var cs = new CryptoStream(ms, m_algorithm.CreateEncryptor(), CryptoStreamMode.Write);
-			cs.Write(msg.m_data, 0, msg.LengthBytes);
+			cs.Write(msg.m_data.Slice(0, msg.LengthBytes));
 			cs.Close();
 
 			// get results
@@ -46,7 +49,7 @@ namespace Lidgren.Network
 
 			msg.EnsureBufferSize((arr.Length + 4) * 8);
 			msg.LengthBits = 0; // reset write pointer
-			msg.Write((uint)unEncLenBits);
+			msg.Write((uint) unEncLenBits);
 			msg.Write(arr);
 			msg.LengthBits = (arr.Length + 4) * 8;
 
@@ -55,23 +58,26 @@ namespace Lidgren.Network
 
 		public override bool Decrypt(NetIncomingMessage msg)
 		{
-			int unEncLenBits = (int)msg.ReadUInt32();
+			int unEncLenBits = (int) msg.ReadUInt32();
 
-			var ms = new MemoryStream(msg.m_data, 4, msg.LengthBytes - 4);
+			byte[] result;
+			using var ms = new MemoryStream(msg.m_buf, 4, msg.LengthBytes - 4);
 			var cs = new CryptoStream(ms, m_algorithm.CreateDecryptor(), CryptoStreamMode.Read);
 
 			var byteLen = NetUtility.BytesToHoldBits(unEncLenBits);
-			var result = m_peer.GetStorage(byteLen);
+			result = m_peer.GetStorage(byteLen);
 			cs.Read(result, 0, byteLen);
 			cs.Close();
 
 			// TODO: recycle existing msg
 
-			msg.m_data = result;
+			msg.m_buf = result;
 			msg.m_bitLength = unEncLenBits;
 			msg.m_readPosition = 0;
 
 			return true;
 		}
+
 	}
+
 }

@@ -1,11 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <IsPackable>false</IsPackable>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
     <SonarQubeExclude>true</SonarQubeExclude>
-    <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS</DefineConstants>
+    <DefineConstants>$(DefineConstants);USE_RELEASE_STATISTICS;UNSAFE</DefineConstants>
+    <LangVersion>8</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 </Project>

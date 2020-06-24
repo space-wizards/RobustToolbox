@@ -21,5 +21,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --no-restore /p:WarningsAsErrors=nullable
-    - name: Test
+    - name: Test Engine
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -v n
+    - name: Test Lidgren
+      run: dotnet test --no-build Lidgren.Network.UnitTests/Lidgren.Network.UnitTests.csproj -v n

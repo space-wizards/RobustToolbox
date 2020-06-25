@@ -1,3 +1,4 @@
+using System;
 using JetBrains.Annotations;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
@@ -29,16 +30,39 @@ namespace Robust.Shared.Serialization
         }
 
         /// <value>
+        /// The hash of the types held by the server.
+        /// </value>
+        public byte[]? TypesHash { get; set; }
+
+        /// <value>
         /// <c>true</c> if the client needs a new copy of the mapping,
         /// <c>false</c> otherwise.
         /// </value>
         public bool NeedsStrings { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
-            => NeedsStrings = buffer.ReadBoolean();
+        {
+            var len = buffer.ReadVariableInt32();
+            if (len > 64)
+            {
+                throw new InvalidOperationException("TypesHash too long.");
+            }
+
+            buffer.ReadBytes(TypesHash = new byte[len]);
+            NeedsStrings = buffer.ReadBoolean();
+        }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
-            => buffer.Write(NeedsStrings);
+        {
+
+            if (TypesHash == null)
+            {
+                throw new InvalidOperationException("TypesHash has not been specified.");
+            }
+            buffer.WriteVariableInt32(TypesHash.Length);
+            buffer.Write(TypesHash);
+            buffer.Write(NeedsStrings);
+        }
 
     }
 

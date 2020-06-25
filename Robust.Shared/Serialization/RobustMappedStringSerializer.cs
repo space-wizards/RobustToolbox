@@ -16,6 +16,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lidgren.Network;
 using NetSerializer;
 using Newtonsoft.Json.Linq;
 using Robust.Shared.ContentPack;
@@ -88,6 +89,7 @@ namespace Robust.Shared.Serialization
 
             var message = net.CreateNetMessage<MsgRobustMappedStringsSerializerServerHandshake>();
             message.Hash = MappedStringsHash;
+            message.TypesHash = TypesHash;
             net.ServerSendMessage(message, channel);
 
             while (_incompleteHandshakes.Contains(channel))
@@ -254,7 +256,7 @@ namespace Robust.Shared.Serialization
         /// NOTE: Verification failure flow is currently not implemented.
         /// </summary>
         /// <seealso cref="NetworkInitialize"/>
-        private void HandleClientHandshake(INetManager net, MsgRobustMappedStringsSerializerClientHandshake msgRobustMappedStringsSerializer)
+        private void HandleClientHandshake(INetManager net, MsgRobustMappedStringsSerializerClientHandshake msg)
         {
             if (net.IsClient)
             {
@@ -262,27 +264,34 @@ namespace Robust.Shared.Serialization
                 return;
             }
 
-            LogSzr.Debug($"Received handshake from {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
+            LogSzr.Debug($"Received handshake from {msg.MsgChannel.RemoteEndPoint.Address}.");
 
-            if (!msgRobustMappedStringsSerializer.NeedsStrings)
+            if (!msg.NeedsStrings)
             {
-                LogSzr.Debug($"Completing handshake with {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
-                _incompleteHandshakes.Remove(msgRobustMappedStringsSerializer.MsgChannel);
+                LogSzr.Debug($"Client reports serializer types hash {NetUtility.ToHexString(msg.TypesHash)}");
+                if (!msg.TypesHash.AsSpan().SequenceEqual(TypesHash))
+                {
+                    LogSzr.Error($"Client's serializer types hash does not match!\nClient: {NetUtility.ToHexString(msg.TypesHash)}\nServer: {NetUtility.ToHexString(TypesHash)}");
+                    msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
+                    return;
+                }
+                LogSzr.Debug($"Completing handshake with {msg.MsgChannel.RemoteEndPoint.Address}.");
+                _incompleteHandshakes.Remove(msg.MsgChannel);
                 return;
             }
 
             // TODO: count and limit number of requests to send strings during handshake
 
-            var strings = msgRobustMappedStringsSerializer.MsgChannel.NetPeer.CreateNetMessage<MsgRobustMappedStringsSerializerStrings>();
+            var strings = msg.MsgChannel.NetPeer.CreateNetMessage<MsgRobustMappedStringsSerializerStrings>();
             using (var ms = new MemoryStream())
             {
                 WriteStringPackage(ms);
                 ms.Position = 0;
                 strings.Package = ms.ToArray();
-                LogSzr.Debug($"Sending {ms.Length} bytes sized mapped strings package to {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
+                LogSzr.Debug($"Sending {ms.Length} bytes sized mapped strings package to {msg.MsgChannel.RemoteEndPoint.Address}.");
             }
 
-            msgRobustMappedStringsSerializer.MsgChannel.SendMessage(strings);
+            msg.MsgChannel.SendMessage(strings);
         }
 
         /// <summary>
@@ -318,15 +327,23 @@ namespace Robust.Shared.Serialization
         /// </summary>
         /// <exception cref="InvalidOperationException">Mapped strings are locked.</exception>
         /// <seealso cref="NetworkInitialize"/>
-        private void HandleServerHandshake(INetManager net, MsgRobustMappedStringsSerializerServerHandshake msgRobustMappedStringsSerializer)
+        private void HandleServerHandshake(INetManager net, MsgRobustMappedStringsSerializerServerHandshake msg)
         {
             if (net.IsServer)
             {
                 LogSzr.Error("Received server handshake on server.");
+                msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
                 return;
             }
 
-            ServerHash = msgRobustMappedStringsSerializer.Hash;
+            if (!TypesHash.AsSpan().SequenceEqual(msg.TypesHash))
+            {
+                LogSzr.Error($"Server's serializer types hash does not match!\nServer: {NetUtility.ToHexString(msg.TypesHash)}\nClient: {NetUtility.ToHexString(TypesHash)}");
+                msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
+                return;
+            }
+
+            ServerHash = msg.Hash;
             LockMappedStrings = false;
 
             if (LockMappedStrings)
@@ -336,7 +353,7 @@ namespace Robust.Shared.Serialization
 
             ClearStrings();
 
-            var hashStr = ConvertToBase64Url(Convert.ToBase64String(msgRobustMappedStringsSerializer.Hash!));
+            var hashStr = ConvertToBase64Url(Convert.ToBase64String(msg.Hash!));
 
             LogSzr.Debug($"Received server handshake with hash {hashStr}.");
 
@@ -347,7 +364,8 @@ namespace Robust.Shared.Serialization
                 var handshake = net.CreateNetMessage<MsgRobustMappedStringsSerializerClientHandshake>();
                 LogSzr.Debug("Asking server to send mapped strings.");
                 handshake.NeedsStrings = true;
-                msgRobustMappedStringsSerializer.MsgChannel.SendMessage(handshake);
+                handshake.TypesHash = TypesHash;
+                msg.MsgChannel.SendMessage(handshake);
             }
             else
             {
@@ -355,12 +373,12 @@ namespace Robust.Shared.Serialization
                 using var file = File.OpenRead(fileName);
                 var added = LoadStrings(file);
 
-                _stringMapHash = msgRobustMappedStringsSerializer.Hash!;
+                _stringMapHash = msg.Hash!;
                 LogSzr.Debug($"Read {added} strings from cache {hashStr}.");
                 LockMappedStrings = true;
                 LogSzr.Debug($"Locked in at {_mappedStrings.Count} mapped strings.");
                 // ok we're good now
-                var channel = msgRobustMappedStringsSerializer.MsgChannel;
+                var channel = msg.MsgChannel;
                 OnClientCompleteHandshake(net, channel);
             }
         }
@@ -376,6 +394,7 @@ namespace Robust.Shared.Serialization
             LogSzr.Debug("Letting server know we're good to go.");
             var handshake = net.CreateNetMessage<MsgRobustMappedStringsSerializerClientHandshake>();
             handshake.NeedsStrings = false;
+            handshake.TypesHash = TypesHash;
             channel.SendMessage(handshake);
 
             if (ClientHandshakeComplete == null)
@@ -1020,6 +1039,8 @@ namespace Robust.Shared.Serialization
         /// Thrown if the mapping is not locked.
         /// </exception>
         public byte[] MappedStringsHash => _stringMapHash ??= CalculateMappedStringsHash();
+
+        public byte[] TypesHash { get; set; }
 
         private byte[] CalculateMappedStringsHash()
         {

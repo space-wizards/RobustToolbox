@@ -79,7 +79,9 @@ namespace Robust.Shared.Serialization
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
-            LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
+            var typesHash = _serializer.GetSHA256();
+            LogSzr.Info($"Serializer Types Hash: {typesHash}");
+            NetUtility.HexToBytes(typesHash, _mappedStringSerializer.TypesHash = new byte[typesHash.Length / 2]);
 
             if (_netManager.IsClient)
             {

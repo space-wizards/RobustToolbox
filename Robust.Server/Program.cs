@@ -42,6 +42,8 @@ namespace Robust.Server
 
             ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
 
+            // this sets up TaskScheduler.Current for new tasks to be scheduled off the main thread
+            // the LongRunning option causes it to not be scheduled on the thread pool, so it's just a plain thread with a task context
             new TaskFactory(
                     CancellationToken.None,
                     TaskCreationOptions.LongRunning,

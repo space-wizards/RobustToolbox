@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared;
+using Robust.Shared.Asynchronous;
 
 namespace Robust.Server
 {
@@ -41,17 +42,15 @@ namespace Robust.Server
                 return;
             }
 
-            _offMainThread = new Thread(() => ParsedMain(parsed, contentStart))
-            {
-                IsBackground = false,
-                Name = "Server",
-                Priority = ThreadPriority.Highest,
-                CurrentCulture = CultureInfo.InvariantCulture,
-                CurrentUICulture = CultureInfo.InvariantCulture
-            };
+            ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
 
-            _offMainThread.Start();
-            //_offMainThread.Join();
+            new TaskFactory(
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskContinuationOptions.None,
+                    RobustTaskScheduler.Instance
+                ).StartNew(() => ParsedMain(parsed, contentStart))
+                .GetAwaiter().GetResult();
         }
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart)

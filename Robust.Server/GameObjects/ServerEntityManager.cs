@@ -419,16 +419,15 @@ namespace Robust.Server.GameObjects
                                 checkedEnts.Add(uid);
 
                                 var needed = oldState.ParentID;
-                                if (needed == null || checkedEnts.Contains(needed.Value))
+                                if (!needed.IsValid() || checkedEnts.Contains(needed))
                                 {
                                     // either no parent attached or parent already included
                                     continue;
                                 }
 
-                                var neededUid = needed.Value;
-                                if (GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                                if (GetLastSeenTick(player, needed) == GameTick.Zero)
                                 {
-                                    neededEnts.Add(needed.Value);
+                                    neededEnts.Add(needed);
                                 }
                             }
                         }
@@ -456,16 +455,15 @@ namespace Robust.Server.GameObjects
                         checkedEnts.Add(uid);
 
                         var needed = oldState.ParentID;
-                        if (needed == null || checkedEnts.Contains(needed.Value))
+                        if (!needed.IsValid() || checkedEnts.Contains(needed))
                         {
                             // either no parent attached or parent already included
                             continue;
                         }
 
-                        var neededUid = needed.Value;
-                        if (GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                        if (GetLastSeenTick(player, needed) == GameTick.Zero)
                         {
-                            neededEnts.Add(needed.Value);
+                            neededEnts.Add(needed);
                         }
                     }
                 }
@@ -603,16 +601,15 @@ namespace Robust.Server.GameObjects
 
 
                 var needed = oldState.ParentID;
-                if (needed == null || checkedEnts.Contains(needed.Value))
+                if (!needed.IsValid() || checkedEnts.Contains(needed))
                 {
                     // don't need to include parent or already included
                     continue;
                 }
 
-                var neededUid = needed.Value;
-                if (GetLastSeenTick(player, neededUid) == GameTick.First)
+                if (GetLastSeenTick(player, needed) == GameTick.First)
                 {
-                    neededEnts.Add(needed.Value);
+                    neededEnts.Add(needed);
                 }
             }
 
@@ -656,17 +653,16 @@ namespace Robust.Server.GameObjects
                     ClearLastSeenTick(player, uid);
                     var needed = oldState.ParentID;
 
-                    if (needed == null || checkedEnts.Contains(needed.Value))
+                    if (!needed.IsValid() || checkedEnts.Contains(needed))
                     {
                         // done here
                         continue;
                     }
 
                     // check if further needed
-                    var neededUid = needed.Value;
-                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(player, needed) == GameTick.Zero)
                     {
-                        moreNeededEnts.Add(needed.Value);
+                        moreNeededEnts.Add(needed);
                     }
                 }
 

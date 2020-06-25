@@ -81,7 +81,7 @@ namespace Robust.Shared.Serialization
             if (!LockMappedStrings)
             {
                 LockMappedStrings = true;
-                LogSzr.Info($"Locked in at {_mappedStrings.Count} mapped strings.");
+                LogSzr.Debug($"Locked in at {_mappedStrings.Count} mapped strings.");
             }
 
             _incompleteHandshakes.Add(channel);
@@ -95,7 +95,7 @@ namespace Robust.Shared.Serialization
                 await Task.Delay(1);
             }
 
-            LogSzr.Info($"Completed handshake with {channel.RemoteEndPoint.Address}.");
+            LogSzr.Debug($"Completed handshake with {channel.RemoteEndPoint.Address}.");
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace Robust.Shared.Serialization
             _stringMapHash = ServerHash;
             LockMappedStrings = true;
 
-            LogSzr.Info($"Locked in at {_mappedStrings.Count} mapped strings.");
+            LogSzr.Debug($"Locked in at {_mappedStrings.Count} mapped strings.");
 
             WriteStringCache();
 
@@ -262,11 +262,11 @@ namespace Robust.Shared.Serialization
                 return;
             }
 
-            LogSzr.Info($"Received handshake from {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
+            LogSzr.Debug($"Received handshake from {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
 
             if (!msgRobustMappedStringsSerializer.NeedsStrings)
             {
-                LogSzr.Info($"Completing handshake with {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
+                LogSzr.Debug($"Completing handshake with {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
                 _incompleteHandshakes.Remove(msgRobustMappedStringsSerializer.MsgChannel);
                 return;
             }
@@ -279,7 +279,7 @@ namespace Robust.Shared.Serialization
                 WriteStringPackage(ms);
                 ms.Position = 0;
                 strings.Package = ms.ToArray();
-                LogSzr.Info($"Sending {ms.Length} bytes sized mapped strings package to {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
+                LogSzr.Debug($"Sending {ms.Length} bytes sized mapped strings package to {msgRobustMappedStringsSerializer.MsgChannel.RemoteEndPoint.Address}.");
             }
 
             msgRobustMappedStringsSerializer.MsgChannel.SendMessage(strings);
@@ -338,27 +338,27 @@ namespace Robust.Shared.Serialization
 
             var hashStr = ConvertToBase64Url(Convert.ToBase64String(msgRobustMappedStringsSerializer.Hash!));
 
-            LogSzr.Info($"Received server handshake with hash {hashStr}.");
+            LogSzr.Debug($"Received server handshake with hash {hashStr}.");
 
             var fileName = CacheForHash(hashStr);
             if (!File.Exists(fileName))
             {
-                LogSzr.Info($"No string cache for {hashStr}.");
+                LogSzr.Debug($"No string cache for {hashStr}.");
                 var handshake = net.CreateNetMessage<MsgRobustMappedStringsSerializerClientHandshake>();
-                LogSzr.Info("Asking server to send mapped strings.");
+                LogSzr.Debug("Asking server to send mapped strings.");
                 handshake.NeedsStrings = true;
                 msgRobustMappedStringsSerializer.MsgChannel.SendMessage(handshake);
             }
             else
             {
-                LogSzr.Info($"We had a cached string map that matches {hashStr}.");
+                LogSzr.Debug($"We had a cached string map that matches {hashStr}.");
                 using var file = File.OpenRead(fileName);
                 var added = LoadStrings(file);
 
                 _stringMapHash = msgRobustMappedStringsSerializer.Hash!;
-                LogSzr.Info($"Read {added} strings from cache {hashStr}.");
+                LogSzr.Debug($"Read {added} strings from cache {hashStr}.");
                 LockMappedStrings = true;
-                LogSzr.Info($"Locked in at {_mappedStrings.Count} mapped strings.");
+                LogSzr.Debug($"Locked in at {_mappedStrings.Count} mapped strings.");
                 // ok we're good now
                 var channel = msgRobustMappedStringsSerializer.MsgChannel;
                 OnClientCompleteHandshake(net, channel);
@@ -373,7 +373,7 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="NetworkInitialize"/>
         private void OnClientCompleteHandshake(INetManager net, INetChannel channel)
         {
-            LogSzr.Info("Letting server know we're good to go.");
+            LogSzr.Debug("Letting server know we're good to go.");
             var handshake = net.CreateNetMessage<MsgRobustMappedStringsSerializerClientHandshake>();
             handshake.NeedsStrings = false;
             channel.SendMessage(handshake);
@@ -410,7 +410,7 @@ namespace Robust.Shared.Serialization
             using var file = File.OpenWrite(fileName);
             WriteStringPackage(file);
 
-            LogSzr.Info($"Wrote string cache {hashStr}.");
+            LogSzr.Debug($"Wrote string cache {hashStr}.");
         }
 
         private byte[]? _mappedStringsPackage;
@@ -474,7 +474,7 @@ namespace Robust.Shared.Serialization
                 zs.Flush();
             }
 
-            LogSzr.Info($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Wrote {MappedStrings.Count} strings to package in {sw.ElapsedMilliseconds}ms.");
         }
 
         /// <summary>
@@ -552,7 +552,7 @@ namespace Robust.Shared.Serialization
                 throw new InvalidDataException("Could not verify package was read correctly.");
             }
 
-            LogSzr.Info($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Read package of {c} strings in {sw.ElapsedMilliseconds}ms.");
         }
 
         /// <summary>
@@ -656,12 +656,12 @@ namespace Robust.Shared.Serialization
             {
                 if (_net!.IsClient)
                 {
-                    //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                    //LogSzr.Debug("On client and mapped strings are locked, will not add.");
                     return false;
                 }
 
                 //throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                LogSzr.Info("On server and mapped strings are locked, will not add.");
+                LogSzr.Debug("On server and mapped strings are locked, will not add.");
                 return false;
             }
 
@@ -793,12 +793,12 @@ namespace Robust.Shared.Serialization
             {
                 if (_net!.IsClient)
                 {
-                    //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                    //LogSzr.Debug("On client and mapped strings are locked, will not add.");
                     return;
                 }
 
                 //throw new InvalidOperationException("Mapped strings are locked, will not add .");
-                LogSzr.Info("On server and mapped strings are locked, will not add.");
+                LogSzr.Debug("On server and mapped strings are locked, will not add.");
                 return;
             }
 
@@ -833,7 +833,7 @@ namespace Robust.Shared.Serialization
             }
 
             var added = MappedStrings.Count - started;
-            LogSzr.Info($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
         }
 
         /// <summary>
@@ -851,12 +851,12 @@ namespace Robust.Shared.Serialization
             {
                 if (_net!.IsClient)
                 {
-                    //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                    //LogSzr.Debug("On client and mapped strings are locked, will not add.");
                     return;
                 }
 
                 //throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                LogSzr.Info("On server and mapped strings are locked, will not add.");
+                LogSzr.Debug("On server and mapped strings are locked, will not add.");
                 return;
             }
 
@@ -896,7 +896,7 @@ namespace Robust.Shared.Serialization
             }
 
             var added = MappedStrings.Count - started;
-            LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
         }
 
         /// <summary>
@@ -913,12 +913,12 @@ namespace Robust.Shared.Serialization
             {
                 if (_net!.IsClient)
                 {
-                    //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                    //LogSzr.Debug("On client and mapped strings are locked, will not add.");
                     return;
                 }
 
                 //throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                LogSzr.Info("On server and mapped strings are locked, will not add.");
+                LogSzr.Debug("On server and mapped strings are locked, will not add.");
                 return;
             }
 
@@ -959,7 +959,7 @@ namespace Robust.Shared.Serialization
             }
 
             var added = MappedStrings.Count - started;
-            LogSzr.Info($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
         }
 
         /// <summary>
@@ -992,12 +992,12 @@ namespace Robust.Shared.Serialization
             {
                 if (_net!.IsClient)
                 {
-                    //LogSzr.Info("On client and mapped strings are locked, will not add.");
+                    //LogSzr.Debug("On client and mapped strings are locked, will not add.");
                     return;
                 }
 
                 //throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                LogSzr.Info("On server and mapped strings are locked, will not add.");
+                LogSzr.Debug("On server and mapped strings are locked, will not add.");
                 return;
             }
 
@@ -1008,7 +1008,7 @@ namespace Robust.Shared.Serialization
             }
 
             var added = MappedStrings.Count - started;
-            LogSzr.Info($"Mapping {added} strings from {providerName}.");
+            LogSzr.Debug($"Mapping {added} strings from {providerName}.");
         }
 
         private byte[]? _stringMapHash;
@@ -1032,8 +1032,8 @@ namespace Robust.Shared.Serialization
 
             var hash = CalculateHash(MappedStringsPackage);
 
-            LogSzr.Info($"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
-            LogSzr.Info($"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
+            LogSzr.Debug($"Hashing {MappedStrings.Count} strings took {sw.ElapsedMilliseconds}ms.");
+            LogSzr.Debug($"Size: {MappedStringsPackage.Length} bytes, Hash: {ConvertToBase64Url(hash)}");
             return hash;
         }
 

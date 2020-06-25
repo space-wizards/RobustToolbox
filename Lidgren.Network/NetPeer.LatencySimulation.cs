@@ -41,6 +41,7 @@ namespace Lidgren.Network
 		private class DelayedPacket
 		{
 			public byte[] Data;
+			public int Length;
 			public double DelayedUntil;
 			public NetEndPoint Target;
 		}
@@ -91,9 +92,10 @@ namespace Lidgren.Network
 				DelayedPacket p = new DelayedPacket();
 				p.Target = target;
 				p.Data = ArrayPool<byte>.Shared.Rent(numBytes);
-				//Buffer.BlockCopy(m_sendBuffer, 0, p.Data, 0, numBytes);
-				new Memory<byte>(m_sendBuffer, 0, numBytes)
-					.CopyTo(p.Data);
+				p.Length = numBytes;
+				Buffer.BlockCopy(m_sendBuffer, 0, p.Data, 0, numBytes);
+				//new Memory<byte>(m_sendBuffer, 0, numBytes)
+				//	.CopyTo(p.Data);
 				p.DelayedUntil = NetTime.Now + delay;
 
 				m_delayedPackets.Add(p);
@@ -116,7 +118,7 @@ namespace Lidgren.Network
 			{
 				if (now > p.DelayedUntil)
 				{
-					ActuallySendPacket(new Span<byte>(p.Data), p.Data.Length, p.Target, out connectionReset);
+					ActuallySendPacket(p.Data, p.Length, p.Target, out connectionReset);
 					m_delayedPackets.Remove(p);
 					ArrayPool<byte>.Shared.Return(p.Data);
 					goto RestartDelaySending;
@@ -131,7 +133,7 @@ namespace Lidgren.Network
 				bool connectionReset;
 				foreach (DelayedPacket p in m_delayedPackets)
 				{
-					ActuallySendPacket(new Span<byte>(p.Data), p.Data.Length, p.Target, out connectionReset);
+					ActuallySendPacket(p.Data, p.Length, p.Target, out connectionReset);
 					ArrayPool<byte>.Shared.Return(p.Data);
 				}
 				m_delayedPackets.Clear();

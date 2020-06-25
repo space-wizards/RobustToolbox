@@ -26,8 +26,6 @@ namespace Robust.Server
             Start(args);
         }
 
-        private static Thread? _offMainThread;
-
         internal static void Start(string[] args, bool contentStart = false)
         {
             if (_hasStarted)

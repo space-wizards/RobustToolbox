@@ -1043,7 +1043,7 @@ namespace Robust.Shared.Serialization
         /// </exception>
         public byte[] MappedStringsHash => _stringMapHash ??= CalculateMappedStringsHash();
 
-        public byte[] TypesHash { get; set; }
+        public byte[]? TypesHash { get; set; }
 
         private byte[] CalculateMappedStringsHash()
         {

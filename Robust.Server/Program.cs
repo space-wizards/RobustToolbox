@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Robust.Server.Interfaces;
@@ -105,6 +107,15 @@ namespace Robust.Server
 
         internal static void SetupLogging()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+#if WINDOWS_USE_UTF8_CONSOLE
+                System.Console.OutputEncoding = Encoding.UTF8;
+#else
+                System.Console.OutputEncoding = Encoding.Unicode;
+#endif
+            }
+
             var mgr = IoCManager.Resolve<ILogManager>();
             var handler = new ConsoleLogHandler();
             mgr.RootSawmill.AddHandler(handler);

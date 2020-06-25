@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Unicode;
 using System.Timers;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Log
 {
@@ -39,19 +41,21 @@ namespace Robust.Shared.Log
         private const string LogBeforeLevel = AnsiFgDefault + "[";
         private const string LogAfterLevel = AnsiFgDefault + "] ";
 
-        private readonly Stream _writer = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
+        private readonly Stream _stream = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
 
-        private readonly StreamWriter _textWriter;
-
-        private readonly StringBuilder _line = new StringBuilder(4096);
+        private readonly StringBuilder _line = new StringBuilder(1024);
 
         private readonly Timer _timer = new Timer(0.1);
+
+        private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
+
+        private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         static ConsoleLogHandler()
         {
             WriteAnsiColors = !System.Console.IsOutputRedirected;
 
-            if (WriteAnsiColors && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (WriteAnsiColors && IsWindows)
             {
                 WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
             }
@@ -59,34 +63,35 @@ namespace Robust.Shared.Log
 
         public ConsoleLogHandler()
         {
-            _textWriter = new StreamWriter(_writer, System.Console.OutputEncoding);
-
             _timer.Start();
             _timer.Elapsed += (sender, args) =>
             {
-                lock (_textWriter)
+                lock (_stream)
                 {
                     if (IsConsoleActive)
                     {
-                        _textWriter.Flush();
+                        _stream.Flush();
                     }
                 }
             };
         }
 
+#if DEBUG
+        [UsedImplicitly]
+#endif
         public static void TryDetachFromConsoleWindow()
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (IsWindows)
             {
                 WindowsConsole.TryDetachFromConsoleWindow();
             }
         }
 
-        private bool IsConsoleActive => !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || WindowsConsole.IsConsoleActive;
+        private bool IsConsoleActive => !IsWindows || WindowsConsole.IsConsoleActive;
 
         public void Log(in LogMessage message)
         {
-            lock (_textWriter)
+            lock (_stream)
             {
                 _line
                     .Clear()
@@ -96,16 +101,43 @@ namespace Robust.Shared.Log
                     .Append(message.Message)
                     .AppendLine();
 
-                foreach (var chunk in _line.GetChunks())
+                // ReSharper disable once SuggestVarOrType_Elsewhere
+                if (!_isUtf16Out)
                 {
-                    _textWriter.Write(chunk.Span);
+                    Span<byte> buf = stackalloc byte[1024];
+                    var totalChars = _line.Length;
+                    foreach (var chunk in _line.GetChunks())
+                    {
+                        var chunkSize = chunk.Length;
+                        var totalRead = 0;
+                        var span = chunk.Span;
+                        for (;;)
+                        {
+                            var finalChunk = totalRead + chunkSize >= totalChars;
+                            Utf8.FromUtf16(span, buf, out var read, out var wrote, isFinalBlock: finalChunk);
+                            _stream.Write(buf.Slice(0, wrote));
+                            totalRead += read;
+                            if (read >= chunkSize)
+                            {
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var chunk in _line.GetChunks())
+                    {
+                        _stream.Write(MemoryMarshal.AsBytes(chunk.Span));
+                    }
                 }
 
+                // ReSharper disable once InvertIf
                 if (message.Level >= LogLevel.Error)
                 {
                     if (IsConsoleActive)
                     {
-                        _textWriter.Flush();
+                        _stream.Flush();
                     }
                 }
             }

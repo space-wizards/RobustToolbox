@@ -57,7 +57,6 @@ namespace Robust.Shared.Asynchronous
                 var wantsToBeFair = (task.CreationOptions & TaskCreationOptions.PreferFairness) != 0;
                 new Thread(Execute)
                 {
-                    Name = "Long Running Task",
                     Priority = wantsToBeFair ? ThreadPriority.BelowNormal : ThreadPriority.AboveNormal,
                     IsBackground = true
                 }.Start(task);

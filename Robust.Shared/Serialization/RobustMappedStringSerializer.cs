@@ -272,6 +272,7 @@ namespace Robust.Shared.Serialization
                 if (!msg.TypesHash.AsSpan().SequenceEqual(TypesHash))
                 {
                     LogSzr.Error($"Client's serializer types hash does not match!\nClient: {NetUtility.ToHexString(msg.TypesHash)}\nServer: {NetUtility.ToHexString(TypesHash)}");
+                    _incompleteHandshakes.Remove(msg.MsgChannel);
                     msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
                     return;
                 }
@@ -332,6 +333,7 @@ namespace Robust.Shared.Serialization
             if (net.IsServer)
             {
                 LogSzr.Error("Received server handshake on server.");
+                _incompleteHandshakes.Remove(msg.MsgChannel);
                 msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
                 return;
             }
@@ -339,6 +341,7 @@ namespace Robust.Shared.Serialization
             if (!TypesHash.AsSpan().SequenceEqual(msg.TypesHash))
             {
                 LogSzr.Error($"Server's serializer types hash does not match!\nServer: {NetUtility.ToHexString(msg.TypesHash)}\nClient: {NetUtility.ToHexString(TypesHash)}");
+                _incompleteHandshakes.Remove(msg.MsgChannel);
                 msg.MsgChannel.Disconnect("Incompatible serializer: types hash must match.");
                 return;
             }

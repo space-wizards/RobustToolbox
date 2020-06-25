@@ -115,7 +115,7 @@ namespace Robust.Shared.Log
                         {
                             var finalChunk = totalRead + chunkSize >= totalChars;
                             Utf8.FromUtf16(span, buf, out var read, out var wrote, isFinalBlock: finalChunk);
-                            _stream.Write(MemoryMarshal.AsBytes(buf.Slice(0, wrote)));
+                            _stream.Write(buf.Slice(0, wrote));
                             totalRead += read;
                             if (read >= chunkSize)
                             {

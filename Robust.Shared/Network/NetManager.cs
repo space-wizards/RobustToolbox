@@ -65,6 +65,27 @@ namespace Robust.Shared.Network
             "robust_net_recv_bytes",
             "Number of bytes sent since server startup.");
 
+        private static readonly Counter MessagesResentDelayMetrics = Metrics.CreateCounter(
+            "robust_net_resent_delay",
+            "Number of messages that had to be re-sent due to delay.");
+
+        private static readonly Counter MessagesResentHoleMetrics = Metrics.CreateCounter(
+            "robust_net_resent_hole",
+            "Number of messages that had to be re-sent due to holes.");
+
+        private static readonly Counter MessagesDroppedMetrics = Metrics.CreateCounter(
+            "robust_net_dropped",
+            "Number of incoming messages that have been dropped.");
+
+        private static readonly Gauge MessagesStoredMetrics = Metrics.CreateGauge(
+            "robust_net_stored",
+            "Number of stores messages for reliable resending (if necessary).");
+
+        private static readonly Gauge MessagesUnsentMetrics = Metrics.CreateGauge(
+            "robust_net_unsent",
+            "Number of queued (unsent) messages that have yet to be sent.");
+
+
 
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -228,6 +249,7 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT, _fakeLossChanged);
             _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT, _fakeLagMinChanged);
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
+            _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
 #endif
 
             _strings.Initialize(this, () =>
@@ -336,6 +358,11 @@ namespace Robust.Shared.Network
             var recvBytes = 0L;
             var sentPackets = 0L;
             var recvPackets = 0L;
+            var resentDelays = 0L;
+            var resentHoles = 0L;
+            var dropped = 0L;
+            var unsent = 0L;
+            var stored = 0L;
 
             foreach (var peer in _netPeers)
             {
@@ -394,6 +421,13 @@ namespace Robust.Shared.Network
                 recvBytes += peer.Statistics.ReceivedBytes;
                 sentPackets += peer.Statistics.SentPackets;
                 recvPackets += peer.Statistics.ReceivedPackets;
+                resentDelays += peer.Statistics.ResentMessagesDueToDelays;
+                resentHoles += peer.Statistics.ResentMessagesDueToHoles;
+                dropped += peer.Statistics.DroppedMessages;
+
+                peer.Statistics.GetUnsentAndStoredMessages(out var pUnsent, out var pStored);
+                unsent += pUnsent;
+                stored += pStored;
             }
 
             if (_toCleanNetPeers.Count != 0)
@@ -410,6 +444,12 @@ namespace Robust.Shared.Network
             RecvBytesMetrics.IncTo(recvBytes);
             SentPacketsMetrics.IncTo(sentPackets);
             RecvPacketsMetrics.IncTo(recvPackets);
+            MessagesResentDelayMetrics.IncTo(resentDelays);
+            MessagesResentHoleMetrics.IncTo(resentHoles);
+            MessagesDroppedMetrics.IncTo(dropped);
+
+            MessagesUnsentMetrics.Set(unsent);
+            MessagesStoredMetrics.Set(stored);
         }
 
         /// <inheritdoc />
@@ -447,6 +487,7 @@ namespace Robust.Shared.Network
             netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
             netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
             netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
+            netConfig.SimulatedDuplicatesChance = _config.GetCVar<float>("net.fakeduplicates");
 
             netConfig.ConnectionTimeout = 30000f;
 #endif
@@ -475,6 +516,14 @@ namespace Robust.Shared.Network
             foreach (var peer in _netPeers)
             {
                 peer.Configuration.SimulatedRandomLatency = newValue;
+            }
+        }
+
+        private void FakeDuplicatesChanged(float newValue)
+        {
+            foreach (var peer in _netPeers)
+            {
+                peer.Configuration.SimulatedDuplicatesChance = newValue;
             }
         }
 #endif

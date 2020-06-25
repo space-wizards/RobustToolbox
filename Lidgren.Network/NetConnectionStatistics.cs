@@ -159,7 +159,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Gets the number of unsent and stored messages for this connection
 		/// </summary>
-		private void GetUnsentAndStoredMessages(out int numUnsent, out int numStored)
+		internal void GetUnsentAndStoredMessages(out int numUnsent, out int numStored)
 		{
 			numUnsent = 0;
 			numStored = 0;
@@ -211,6 +211,7 @@ namespace Lidgren.Network
 #endif
 		internal void MessageResent(MessageResendReason reason)
 		{
+			m_connection.m_peer.Statistics.MessageResent(reason);
 			if (reason == MessageResendReason.Delay)
 				m_resentMessagesDueToDelay++;
 			else
@@ -222,6 +223,7 @@ namespace Lidgren.Network
 #endif
 		internal void MessageDropped()
 		{
+			m_connection.m_peer.Statistics.MessageDropped();
 			m_droppedMessages++;
 		}
 

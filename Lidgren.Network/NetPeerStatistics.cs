@@ -98,6 +98,29 @@ namespace Lidgren.Network
 		/// </summary>
 		public int ReceivedBytes => m_receivedBytes;
 
+		public int ResentMessages => ResentMessagesDueToDelays + ResentMessagesDueToHoles;
+		public int ResentMessagesDueToHoles { get; private set; }
+		public int ResentMessagesDueToDelays { get; private set; }
+		public int DroppedMessages { get; private set; }
+
+		/// <summary>
+		/// Gets the number of unsent and stored messages for this peer
+		/// </summary>
+		public void GetUnsentAndStoredMessages(out int numUnsent, out int numStored)
+		{
+			numUnsent = 0;
+			numStored = 0;
+			lock (m_peer.m_connections)
+			{
+				foreach (var connection in m_peer.m_connections)
+				{
+					connection.Statistics.GetUnsentAndStoredMessages(out var cUnsent, out var cStored);
+					numUnsent += cUnsent;
+					numStored += cStored;
+				}
+			}
+		}
+
 #if !USE_RELEASE_STATISTICS
 		[Conditional("DEBUG")]
 #endif
@@ -117,6 +140,25 @@ namespace Lidgren.Network
 			m_receivedBytes += numBytes;
 			m_receivedMessages += numMessages;
 			m_receivedFragments += numFragments;
+		}
+
+#if !USE_RELEASE_STATISTICS
+		[Conditional("DEBUG")]
+#endif
+		internal void MessageResent(MessageResendReason reason)
+		{
+			if (reason == MessageResendReason.Delay)
+				ResentMessagesDueToDelays++;
+			else
+				ResentMessagesDueToHoles++;
+		}
+
+#if !USE_RELEASE_STATISTICS
+		[Conditional("DEBUG")]
+#endif
+		internal void MessageDropped()
+		{
+			DroppedMessages++;
 		}
 
 		/// <summary>

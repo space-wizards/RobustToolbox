@@ -53,6 +53,7 @@ namespace Robust.Server
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
+            Thread.CurrentThread.Name = "Main Thread";
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();

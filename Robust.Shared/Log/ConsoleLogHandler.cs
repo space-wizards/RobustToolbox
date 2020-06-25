@@ -15,8 +15,6 @@ namespace Robust.Shared.Log
     public sealed class ConsoleLogHandler : ILogHandler
     {
 
-        private object locker => _writer;
-
         private readonly Stream _writer = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
 
         private readonly StringBuilder _line = new StringBuilder(4096);
@@ -26,7 +24,13 @@ namespace Robust.Shared.Log
         public ConsoleLogHandler()
         {
             _timer.Start();
-            _timer.Elapsed += (sender, args) => _writer.Flush();
+            _timer.Elapsed += (sender, args) =>
+            {
+                lock (_writer)
+                {
+                    _writer.Flush();
+                }
+            };
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -38,7 +42,7 @@ namespace Robust.Shared.Log
         {
             var name = LogMessage.LogLevelToName(message.Level);
             var color = LogLevelToConsoleColor(message.Level);
-            lock (locker)
+            lock (_writer)
             {
                 _line
                     .Clear()

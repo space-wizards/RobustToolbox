@@ -331,6 +331,10 @@ namespace Robust.Client
                 args.SetObserved(); // don't crash
 #endif
             };
+
+#if !DEBUG
+            ConsoleLogHandler.TryDetachFromConsoleWindow();
+#endif
         }
 
         private string GetUserDataDir()

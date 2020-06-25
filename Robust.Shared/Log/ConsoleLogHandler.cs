@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.Interfaces.Log;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -15,8 +16,6 @@ namespace Robust.Shared.Log
     public sealed class ConsoleLogHandler : ILogHandler
     {
 
-        private object locker => _writer;
-
         private readonly Stream _writer = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
 
         private readonly StringBuilder _line = new StringBuilder(4096);
@@ -26,7 +25,16 @@ namespace Robust.Shared.Log
         public ConsoleLogHandler()
         {
             _timer.Start();
-            _timer.Elapsed += (sender, args) => _writer.Flush();
+            _timer.Elapsed += (sender, args) =>
+            {
+                lock (_writer)
+                {
+                    if (IsConsoleActive)
+                    {
+                        _writer.Flush();
+                    }
+                }
+            };
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -34,11 +42,21 @@ namespace Robust.Shared.Log
             }
         }
 
+        public static void TryDetachFromConsoleWindow()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                WindowsConsole.TryDetachFromConsoleWindow();
+            }
+        }
+
+        private bool IsConsoleActive => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && WindowsConsole.IsConsoleActive;
+
         public void Log(in LogMessage message)
         {
             var name = LogMessage.LogLevelToName(message.Level);
             var color = LogLevelToConsoleColor(message.Level);
-            lock (locker)
+            lock (_writer)
             {
                 _line
                     .Clear()
@@ -65,7 +83,10 @@ namespace Robust.Shared.Log
 
                 if (message.Level >= LogLevel.Error)
                 {
-                    _writer.Flush();
+                    if (IsConsoleActive)
+                    {
+                        _writer.Flush();
+                    }
                 }
             }
         }
@@ -119,6 +140,24 @@ namespace Robust.Shared.Log
             }
         }
 
+        private static bool _freedConsole;
+
+        public static bool IsConsoleActive => !_freedConsole;
+
+        public static void TryDetachFromConsoleWindow()
+        {
+            if (NativeMethods.GetConsoleWindow() == default
+                || Debugger.IsAttached
+                || System.Console.IsOutputRedirected
+                || System.Console.IsErrorRedirected
+                || System.Console.IsInputRedirected)
+            {
+                return;
+            }
+
+            _freedConsole = NativeMethods.FreeConsole();
+        }
+
         internal static class NativeMethods
         {
 
@@ -130,6 +169,12 @@ namespace Robust.Shared.Log
 
             [DllImport("kernel32", SetLastError = true)]
             internal static extern IntPtr GetStdHandle(int handle);
+
+            [DllImport("kernel32", SetLastError = true)]
+            internal static extern bool FreeConsole();
+
+            [DllImport("kernel32", SetLastError = true)]
+            internal static extern IntPtr GetConsoleWindow();
 
         }
 

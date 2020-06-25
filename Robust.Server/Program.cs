@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared;
+using Robust.Shared.Asynchronous;
 
 namespace Robust.Server
 {
@@ -24,8 +25,6 @@ namespace Robust.Server
         {
             Start(args);
         }
-
-        private static Thread? _offMainThread;
 
         internal static void Start(string[] args, bool contentStart = false)
         {
@@ -41,21 +40,22 @@ namespace Robust.Server
                 return;
             }
 
-            _offMainThread = new Thread(() => ParsedMain(parsed, contentStart))
-            {
-                IsBackground = false,
-                Name = "Server",
-                Priority = ThreadPriority.Highest,
-                CurrentCulture = CultureInfo.InvariantCulture,
-                CurrentUICulture = CultureInfo.InvariantCulture
-            };
+            ThreadPool.SetMinThreads(Environment.ProcessorCount * 2, Environment.ProcessorCount);
 
-            _offMainThread.Start();
-            //_offMainThread.Join();
+            // this sets up TaskScheduler.Current for new tasks to be scheduled off the main thread
+            // the LongRunning option causes it to not be scheduled on the thread pool, so it's just a plain thread with a task context
+            new TaskFactory(
+                    CancellationToken.None,
+                    TaskCreationOptions.LongRunning,
+                    TaskContinuationOptions.None,
+                    RobustTaskScheduler.Instance
+                ).StartNew(() => ParsedMain(parsed, contentStart))
+                .GetAwaiter().GetResult();
         }
 
         private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
+            Thread.CurrentThread.Name = "Main Thread";
             IoCManager.InitThread();
             ServerIoC.RegisterIoC();
             IoCManager.BuildGraph();

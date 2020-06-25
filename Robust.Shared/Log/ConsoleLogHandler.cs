@@ -5,7 +5,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Timers;
-using Robust.Shared.Maths;
 
 namespace Robust.Shared.Log
 {
@@ -15,31 +14,64 @@ namespace Robust.Shared.Log
     /// </summary>
     public sealed class ConsoleLogHandler : ILogHandler
     {
+        private static readonly bool WriteAnsiColors;
+
+        // ReSharper disable UnusedMember.Local
+        private const string AnsiCsi = "\x1B[";
+        private const string AnsiFgDefault = AnsiCsi + "39m";
+        private const string AnsiFgBlack = AnsiCsi + "30m";
+        private const string AnsiFgRed = AnsiCsi + "31m";
+        private const string AnsiFgBrightRed = AnsiCsi + "91m";
+        private const string AnsiFgGreen = AnsiCsi + "32m";
+        private const string AnsiFgBrightGreen = AnsiCsi + "92m";
+        private const string AnsiFgYellow = AnsiCsi + "33m";
+        private const string AnsiFgBrightYellow = AnsiCsi + "93m";
+        private const string AnsiFgBlue = AnsiCsi + "34m";
+        private const string AnsiFgBrightBlue = AnsiCsi + "94m";
+        private const string AnsiFgMagenta = AnsiCsi + "35m";
+        private const string AnsiFgBrightMagenta = AnsiCsi + "95m";
+        private const string AnsiFgCyan = AnsiCsi + "36m";
+        private const string AnsiFgBrightCyan = AnsiCsi + "96m";
+        private const string AnsiFgWhite = AnsiCsi + "37m";
+        private const string AnsiFgBrightWhite = AnsiCsi + "97m";
+        // ReSharper restore UnusedMember.Local
+
+        private const string LogBeforeLevel = AnsiFgDefault + "[";
+        private const string LogAfterLevel = AnsiFgDefault + "] ";
 
         private readonly Stream _writer = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
+
+        private readonly StreamWriter _textWriter;
 
         private readonly StringBuilder _line = new StringBuilder(4096);
 
         private readonly Timer _timer = new Timer(0.1);
 
+        static ConsoleLogHandler()
+        {
+            WriteAnsiColors = !System.Console.IsOutputRedirected;
+
+            if (WriteAnsiColors && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
+            }
+        }
+
         public ConsoleLogHandler()
         {
+            _textWriter = new StreamWriter(_writer, System.Console.OutputEncoding);
+
             _timer.Start();
             _timer.Elapsed += (sender, args) =>
             {
-                lock (_writer)
+                lock (_textWriter)
                 {
                     if (IsConsoleActive)
                     {
-                        _writer.Flush();
+                        _textWriter.Flush();
                     }
                 }
             };
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                WindowsConsole.TryEnableVirtualTerminalProcessing();
-            }
         }
 
         public static void TryDetachFromConsoleWindow()
@@ -50,74 +82,63 @@ namespace Robust.Shared.Log
             }
         }
 
-        private bool IsConsoleActive => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && WindowsConsole.IsConsoleActive;
+        private bool IsConsoleActive => !RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || WindowsConsole.IsConsoleActive;
 
         public void Log(in LogMessage message)
         {
-            var name = LogMessage.LogLevelToName(message.Level);
-            var color = LogLevelToConsoleColor(message.Level);
-            lock (_writer)
+            lock (_textWriter)
             {
                 _line
                     .Clear()
-                    .Append("\x1B[39m")
-                    .Append("[")
-                    .Append("\x1B[38;2;")
-                    .Append(color.RByte)
-                    .Append(';')
-                    .Append(color.GByte)
-                    .Append(';')
-                    .Append(color.BByte)
-                    .Append('m')
-                    .Append(name)
-                    .Append("\x1B[39m")
-                    .Append("] ")
+                    .Append(LogLevelToString(message.Level))
                     .Append(message.SawmillName)
                     .Append(": ")
                     .Append(message.Message)
                     .AppendLine();
+
                 foreach (var chunk in _line.GetChunks())
                 {
-                    _writer.Write(MemoryMarshal.AsBytes(chunk.Span));
+                    _textWriter.Write(chunk.Span);
                 }
 
                 if (message.Level >= LogLevel.Error)
                 {
                     if (IsConsoleActive)
                     {
-                        _writer.Flush();
+                        _textWriter.Flush();
                     }
                 }
             }
         }
 
-        private static Color LogLevelToConsoleColor(LogLevel level)
+        private static string LogLevelToString(LogLevel level)
         {
-            switch (level)
+            if (WriteAnsiColors)
             {
-                case LogLevel.Debug:
-                    return Color.Navy;
-
-                case LogLevel.Info:
-                    return Color.Cyan;
-
-                case LogLevel.Warning:
-                    return Color.Yellow;
-
-                case LogLevel.Error:
-                    return Color.DarkRed;
-
-                case LogLevel.Fatal:
-                    return Color.Magenta;
-
-                default:
-                    return Color.White;
+                return level switch
+                {
+                    LogLevel.Debug => LogBeforeLevel + AnsiFgBlue + LogMessage.LogNameDebug + LogAfterLevel,
+                    LogLevel.Info => LogBeforeLevel + AnsiFgBrightCyan + LogMessage.LogNameInfo + LogAfterLevel,
+                    LogLevel.Warning => LogBeforeLevel + AnsiFgBrightYellow + LogMessage.LogNameWarning + LogAfterLevel,
+                    LogLevel.Error => LogBeforeLevel + AnsiFgBrightRed + LogMessage.LogNameError + LogAfterLevel,
+                    LogLevel.Fatal => LogBeforeLevel + AnsiFgBrightMagenta + LogMessage.LogNameFatal + LogAfterLevel,
+                    _ => LogBeforeLevel + AnsiFgWhite + LogMessage.LogNameUnknown + LogAfterLevel
+                };
             }
-        }
 
+            return level switch
+            {
+                LogLevel.Debug => "[" + LogMessage.LogNameDebug + "] ",
+                LogLevel.Info => "[" + LogMessage.LogNameInfo + "] ",
+                LogLevel.Warning => "[" + LogMessage.LogNameWarning + "] ",
+                LogLevel.Error => "[" + LogMessage.LogNameError + "] ",
+                LogLevel.Fatal => "[" + LogMessage.LogNameFatal + "] ",
+                _ => "[" + LogMessage.LogNameUnknown +"] "
+            };
+        }
     }
 
-    public static class WindowsConsole
+    internal static class WindowsConsole
     {
 
         public static bool TryEnableVirtualTerminalProcessing()

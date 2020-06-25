@@ -249,7 +249,7 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT, _fakeLossChanged);
             _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT, _fakeLagMinChanged);
             _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
-            _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
+            _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, FakeDuplicatesChanged);
 #endif
 
             _strings.Initialize(this, () =>

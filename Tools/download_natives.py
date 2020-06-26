@@ -236,8 +236,8 @@ def main():
 
     args = parser.parse_args()
 
-    if args.platform != "x64":
-        return
+    #if args.platform != "x64":
+    #    return
 
     print("Copying dependencies")
     print(args.targetOS, args.outputDir)

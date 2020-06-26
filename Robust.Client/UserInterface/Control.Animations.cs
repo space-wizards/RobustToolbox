@@ -10,11 +10,9 @@ namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
-        [CanBeNull]
-        private Dictionary<string, AnimationPlayback> _playingAnimations
-            = new Dictionary<string, AnimationPlayback>();
+        private Dictionary<string, AnimationPlayback>? _playingAnimations;
 
-        public Action<string> AnimationCompleted;
+        public Action<string>? AnimationCompleted;
 
         /// <summary>
         ///     Start playing an animation.

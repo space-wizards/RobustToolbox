@@ -17,7 +17,7 @@ namespace Robust.Shared.Network
             Username = name;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is NetSessionId && Equals((NetSessionId)obj);
         }

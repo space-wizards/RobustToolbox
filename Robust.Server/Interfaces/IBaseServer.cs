@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Server.Player;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.Interfaces
@@ -23,7 +24,7 @@ namespace Robust.Server.Interfaces
         ///     Sets up the server, loads the game, gets ready for client connections.
         /// </summary>
         /// <returns></returns>
-        bool Start();
+        bool Start(Func<ILogHandler>? logHandler = null);
 
         /// <summary>
         ///     Hard restarts the server, shutting it down, kicking all players, and starting the server again.
@@ -34,7 +35,7 @@ namespace Robust.Server.Interfaces
         ///     Shuts down the server, and ends the process.
         /// </summary>
         /// <param name="reason">Reason why the server was shut down.</param>
-        void Shutdown(string reason);
+        void Shutdown(string? reason);
 
         /// <summary>
         ///     Enters the main loop of the server. This functions blocks until the server is shut down.

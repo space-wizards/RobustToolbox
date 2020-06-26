@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Robust.Shared.Maths;
 
+#nullable disable
+
 namespace Robust.Shared.Utility
 {
     public class QuadTree<T> where T : class, IQuadObject

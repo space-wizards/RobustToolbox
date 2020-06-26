@@ -19,7 +19,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Gracefully restarts the server (not just the round).";
         public string Help => "restart";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Restart();
         }
@@ -31,7 +31,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Gracefully shuts down the server.";
         public string Help => "shutdown";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             IoCManager.Resolve<IBaseServer>().Shutdown(null);
         }
@@ -43,7 +43,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Saves the server configuration to the config file";
         public string Help => "saveconfig";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             IoCManager.Resolve<IConfigurationManager>().SaveToFile();
         }
@@ -55,7 +55,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Prints into about NetMsg security.";
         public string Help => "netaudit";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var network = (NetManager) IoCManager.Resolve<INetManager>();
 
@@ -84,7 +84,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "Help";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             switch (args.Length)
             {
@@ -117,7 +117,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Shows the server time.";
         public string Help => "showtime";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var timing = IoCManager.Resolve<IGameTiming>();
             shell.SendText(player,
@@ -131,7 +131,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Run the GC.";
         public string Help => "gc [generation]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length == 0)
             {
@@ -156,14 +156,14 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "gc_mode [type]";
 
-        public void Execute(IConsoleShell console, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell console, IPlayerSession? player, string[] args)
         {
             var prevMode = GCSettings.LatencyMode;
             if (args.Length == 0)
             {
                 console.SendText(player,$"current gc latency mode: {(int) prevMode} ({prevMode})");
                 console.SendText(player,"possible modes:");
-                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                foreach (var mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
                 {
                     console.SendText(player,$" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
                 }
@@ -200,7 +200,7 @@ namespace Robust.Server.Console.Commands
 
         public string Help => "szr_stats";
 
-        public void Execute(IConsoleShell console, IPlayerSession player, params string[] args)
+        public void Execute(IConsoleShell console, IPlayerSession? player, string[] args)
         {
 
             console.SendText(player,$"serialized: {RobustSerializer.BytesSerialized} bytes, {RobustSerializer.ObjectsSerialized} objects");
@@ -217,7 +217,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "prints memory info";
         public string Help => "mem";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
 #if !NETCOREAPP
             shell.SendText(player, "Memory info is only available on .NET Core");

@@ -35,7 +35,7 @@ namespace Robust.Client.Graphics.Drawing
 
         public abstract void SetTransform(in Matrix3 matrix);
 
-        public abstract void UseShader(ShaderInstance shader);
+        public abstract void UseShader(ShaderInstance? shader);
 
         /// <summary>
         ///     Draws arbitrary geometry primitives with a flat color.

@@ -2,6 +2,7 @@
 using Robust.Shared.Interfaces.GameObjects;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -15,12 +16,10 @@ namespace Robust.Server.GameObjects.Components.Container
 {
     public sealed class ContainerManagerComponent : SharedContainerManagerComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
-        private Dictionary<string, List<EntityUid>> _entitiesWaitingResolve;
+        private Dictionary<string, List<EntityUid>>? _entitiesWaitingResolve;
 
         [ViewVariables]
         private IEnumerable<IContainer> _allContainers => EntityContainers.Values;
@@ -82,7 +81,7 @@ namespace Robust.Server.GameObjects.Components.Container
             {
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
             }
-            var container = (IContainer)Activator.CreateInstance(type, id, this);
+            var container = (IContainer)Activator.CreateInstance(type, id, this)!;
             EntityContainers[id] = container;
             Dirty();
             return container;
@@ -105,7 +104,7 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public override bool TryGetContainer(string id, out IContainer container)
+        public override bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container)
         {
             if (!HasContainer(id))
             {
@@ -116,7 +115,7 @@ namespace Robust.Server.GameObjects.Components.Container
             return true;
         }
 
-        public override bool TryGetContainer(IEntity entity, out IContainer container)
+        public override bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
             foreach (var contain in EntityContainers.Values)
             {
@@ -198,6 +197,11 @@ namespace Robust.Server.GameObjects.Components.Container
                     _entitiesWaitingResolve = new Dictionary<string, List<EntityUid>>();
                     foreach (var (key, datum) in data)
                     {
+                        if (datum.Type == null)
+                        {
+                            throw new InvalidOperationException("Container does not have type set.");
+                        }
+
                         var type = _reflectionManager.LooseGetType(datum.Type);
                         MakeContainer(key, type);
 
@@ -216,11 +220,12 @@ namespace Robust.Server.GameObjects.Components.Container
                 foreach (var (key, container) in EntityContainers)
                 {
                     var list = new List<EntityUid>(container.ContainedEntities.Select(e => e.Uid));
-                    var data = new ContainerPrototypeData(list, container.GetType().FullName);
+                    var data = new ContainerPrototypeData(list, container.GetType().FullName!);
                     dict.Add(key, data);
                 }
 
-                serializer.DataWriteFunction("containers", null, () => dict);
+                // ReSharper disable once RedundantTypeArgumentsOfMethod
+                serializer.DataWriteFunction<Dictionary<string, ContainerPrototypeData>?>("containers", null, () => dict);
             }
         }
 
@@ -256,7 +261,7 @@ namespace Robust.Server.GameObjects.Components.Container
         private struct ContainerPrototypeData : IExposeData
         {
             public List<EntityUid> Entities;
-            public string Type;
+            public string? Type;
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
@@ -266,7 +271,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
             public void ExposeData(ObjectSerializer serializer)
             {
-                serializer.DataField(ref Entities, "entities", null);
+                serializer.DataField(ref Entities, "entities", new List<EntityUid>());
                 serializer.DataField(ref Type, "type", null);
             }
         }

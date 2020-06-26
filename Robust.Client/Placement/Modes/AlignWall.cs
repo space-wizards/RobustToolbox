@@ -14,14 +14,14 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
             CurrentTile = pManager.MapManager.GetGrid(MouseCoords.GridID).GetTileRef(MouseCoords);
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return;
             }
 
             var nodes = new List<Vector2>();
 
-            if (pManager?.CurrentPrototype.MountingPoints != null)
+            if (pManager.CurrentPrototype!.MountingPoints != null)
             {
                 nodes.AddRange(
                     pManager.CurrentPrototype.MountingPoints.Select(
@@ -45,7 +45,7 @@ namespace Robust.Client.Placement.Modes
 
         public override bool IsValidPosition(GridCoordinates position)
         {
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 return false;
             }

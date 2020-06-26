@@ -36,7 +36,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner { get; set; }
+        public IEntity Owner { get; set; } = default!;
 
         /// <summary>
         ///     True if this entity is a client-only entity.
@@ -188,16 +188,16 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="message">Message to send.</param>
         /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel channel = null)
+        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
             Owner.SendNetworkMessage(this, message, channel);
         }
 
         /// <inheritdoc />
-        public virtual void HandleMessage(ComponentMessage message, IComponent component) { }
+        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
 
         /// <inheritdoc />
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession session = null) { }
+        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
         /// <inheritdoc />
         public virtual ComponentState GetComponentState()
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual void HandleComponentState(ComponentState curState, ComponentState nextState) { }
+        public virtual void HandleComponentState(ComponentState? curState, ComponentState? nextState) { }
 
         // these two methods clear the LastModifiedTick/CreationTick to mark it as "not different from prototype load".
         // This is used as optimization in the game state system to avoid sending redundant component data.

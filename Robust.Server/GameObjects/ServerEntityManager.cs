@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Prometheus;
 using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
@@ -27,18 +29,17 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
+        private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
+            "robust_entities_count",
+            "Amount of alive entities.");
 
         private const float MinimumMotionForMovers = 1 / 128f;
 
         #region IEntityManager Members
 
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-
-        [Dependency] private readonly IPauseManager _pauseManager;
-
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private float? _maxUpdateRangeCache;
 
@@ -56,15 +57,15 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName)
+        public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
-            return CreateEntity(prototypeName);
+            return CreateEntityServer(prototypeName);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntityServer(prototypeName);
             if (coordinates.GridID != GridId.Invalid)
             {
                 var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntityId;
@@ -76,28 +77,43 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
-            if (prototypeName != null)
-            {
-                // At this point in time, all data configure on the entity *should* be purely from the prototype.
-                // As such, we can reset the modified ticks to Zero,
-                // which indicates "not different from client's own deserialization".
-                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(newEntity.Uid))
-                {
-                    ((Component) component).ClearTicks();
-                }
-            }
-
+            var newEntity = CreateEntityServer(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
             newEntity.Transform.WorldPosition = coordinates.Position;
             return newEntity;
         }
 
+        private Entity CreateEntityServer(string? prototypeName)
+        {
+            var entity = CreateEntity(prototypeName);
+
+            if (prototypeName != null)
+            {
+                var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+
+                // At this point in time, all data configure on the entity *should* be purely from the prototype.
+                // As such, we can reset the modified ticks to Zero,
+                // which indicates "not different from client's own deserialization".
+                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
+                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
+                {
+                    // Make sure to ONLY get components that are defined in the prototype.
+                    // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
+                    // And those aren't guaranteed to exist on the client, so don't clear them.
+                    if (prototype.Components.ContainsKey(component.Name))
+                    {
+                        ((Component) component).ClearTicks();
+                    }
+                }
+            }
+
+            return entity;
+        }
+
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
         {
             if (coordinates.GridID == GridId.Invalid)
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} onto invalid grid.");
@@ -114,7 +130,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
@@ -122,7 +138,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
@@ -130,7 +146,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates(GameTick fromTick)
+        public List<EntityState>? GetEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -157,13 +173,17 @@ namespace Robust.Server.GameObjects
 
         private ISet<EntityUid> GetSeenMovers(IPlayerSession player)
         {
-            if (!_seenMovers.TryGetValue(player, out var movers))
+            lock (_seenMovers)
             {
-                movers = new SortedSet<EntityUid>();
-                _seenMovers.Add(player, movers);
-            }
+                if (!_seenMovers.TryGetValue(player, out var movers))
+                {
+                    movers = new SortedSet<EntityUid>();
+                    _seenMovers.Add(player, movers);
+                }
 
-            return movers;
+
+                return movers;
+            }
         }
 
         private readonly Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>> _playerLastSeen
@@ -250,14 +270,17 @@ namespace Robust.Server.GameObjects
 
         public void DropPlayerState(IPlayerSession player)
         {
-            _playerLastSeen.Remove(player);
+            lock (_playerLastSeen)
+            {
+                _playerLastSeen.Remove(player);
+            }
         }
 
         private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
             foreach (var child in children)
             {
-                var ent = child;
+                var ent = child!;
 
                 do
                 {
@@ -265,7 +288,7 @@ namespace Robust.Server.GameObjects
                     {
                         AddContainedRecursive(ent, set);
 
-                        ent = ent.Transform.Parent?.Owner;
+                        ent = ent.Transform.Parent?.Owner!;
                     }
                     else
                     {
@@ -294,32 +317,25 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private readonly struct PlayerSeenEntityStatesResources
+        private class PlayerSeenEntityStatesResources
         {
 
-            public readonly HashSet<EntityUid> IncludedEnts;
+            public readonly HashSet<EntityUid> IncludedEnts = new HashSet<EntityUid>();
 
-            public readonly List<EntityState> EntityStates;
+            public readonly List<EntityState> EntityStates = new List<EntityState>();
 
-            public readonly HashSet<EntityUid> NeededEnts;
+            public readonly HashSet<EntityUid> NeededEnts = new HashSet<EntityUid>();
 
-            public readonly HashSet<IEntity> Relatives;
+            public readonly HashSet<IEntity> Relatives = new HashSet<IEntity>();
 
-            public PlayerSeenEntityStatesResources(bool memes = false)
-            {
-                IncludedEnts = new HashSet<EntityUid>();
-                EntityStates = new List<EntityState>();
-                NeededEnts = new HashSet<EntityUid>();
-                Relatives = new HashSet<IEntity>();
-            }
 
         }
 
-        private readonly PlayerSeenEntityStatesResources _playerSeenEntityStatesResources
-            = new PlayerSeenEntityStatesResources(false);
+        private readonly ThreadLocal<PlayerSeenEntityStatesResources> _playerSeenEntityStatesResources
+            = new ThreadLocal<PlayerSeenEntityStatesResources>(() => new PlayerSeenEntityStatesResources());
 
         /// <inheritdoc />
-        public List<EntityState> UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
+        public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
@@ -337,10 +353,11 @@ namespace Robust.Server.GameObjects
 
             var seenMovers = GetSeenMovers(player);
 
-            var checkedEnts = _playerSeenEntityStatesResources.IncludedEnts;
-            var entityStates = _playerSeenEntityStatesResources.EntityStates;
-            var neededEnts = _playerSeenEntityStatesResources.NeededEnts;
-            var relatives = _playerSeenEntityStatesResources.Relatives;
+            var pseStateRes = _playerSeenEntityStatesResources.Value!;
+            var checkedEnts = pseStateRes.IncludedEnts;
+            var entityStates = pseStateRes.EntityStates;
+            var neededEnts = pseStateRes.NeededEnts;
+            var relatives = pseStateRes.Relatives;
             checkedEnts.Clear();
             entityStates.Clear();
             neededEnts.Clear();
@@ -679,7 +696,7 @@ namespace Robust.Server.GameObjects
             _deletionHistory.Add((CurrentTick, e.Uid));
         }
 
-        public List<EntityUid> GetDeletedEntities(GameTick fromTick)
+        public List<EntityUid>? GetDeletedEntities(GameTick fromTick)
         {
             var list = new List<EntityUid>();
             foreach (var (tick, id) in _deletionHistory)
@@ -815,7 +832,7 @@ namespace Robust.Server.GameObjects
 
         #endregion IEntityManager Members
 
-        IEntity IServerEntityManagerInternal.AllocEntity(string prototypeName, EntityUid? uid)
+        IEntity IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
         {
             return AllocEntity(prototypeName, uid);
         }
@@ -825,7 +842,7 @@ namespace Robust.Server.GameObjects
             return new EntityUid(_nextServerEntityUid++);
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext context)
+        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
         {
             LoadEntity((Entity) entity, context);
         }
@@ -878,13 +895,13 @@ namespace Robust.Server.GameObjects
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID.Value, comp.Name));
+                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
                 }
                 else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(comp.NetID.Value));
+                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
                 }
             }
 
@@ -921,6 +938,13 @@ namespace Robust.Server.GameObjects
                 if ((visibilityMask & visibility.Layer) == 0)
                     set.Remove(entity);
             }
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            EntitiesCount.Set(AllEntities.Count);
         }
     }
 }

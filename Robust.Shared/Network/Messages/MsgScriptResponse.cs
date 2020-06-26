@@ -5,6 +5,8 @@ using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgScriptResponse : NetMessage
@@ -37,11 +39,9 @@ namespace Robust.Shared.Network.Messages
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
 
                 var length = buffer.ReadVariableInt32();
-                var stateData = buffer.ReadBytes(length);
-
-                using var memoryStream = new MemoryStream(stateData);
-                Echo = serializer.Deserialize<FormattedMessage>(memoryStream);
-                Response = serializer.Deserialize<FormattedMessage>(memoryStream);
+                using var stream = buffer.ReadAsStream(length);
+                Echo = serializer.Deserialize<FormattedMessage>(stream);
+                Response = serializer.Deserialize<FormattedMessage>(stream);
             }
         }
 

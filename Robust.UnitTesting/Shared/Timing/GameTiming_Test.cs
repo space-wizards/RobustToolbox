@@ -80,7 +80,7 @@ namespace Robust.UnitTesting.Shared.Timing
             //NOTE: TickRate can cause a slight rounding error in TickPeriod reciprocal calculation from repeating decimals depending
             // on the value chosen.
             gameTiming.TickRate = 20;
-            gameTiming.CurTick = new GameTick(60);
+            gameTiming.CurTick = new GameTick(61); // 1 + 60, because 1 is the first tick
 
             // Act
             gameTiming.StartFrame();
@@ -107,7 +107,7 @@ namespace Robust.UnitTesting.Shared.Timing
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.InSimulation = false;
             gameTiming.TickRate = 20;
-            gameTiming.CurTick = new GameTick(60);
+            gameTiming.CurTick = new GameTick(61); // 1 + 60, because 1 is the first tick
             gameTiming.TickRemainder = TimeSpan.FromTicks(TimeSpan.TicksPerSecond / 2); // half a second
 
             // Act
@@ -150,7 +150,7 @@ namespace Robust.UnitTesting.Shared.Timing
         ///     Checks that IGameTiming.FrameTime returns the real delta time between the two most recent calls to IGameTiming.StartFrame().
         /// </summary>
         /// <remarks>
-        ///     When outside the simulation, FrameTime returns the same value as RealFrameTime. This allows rendering code to also use 
+        ///     When outside the simulation, FrameTime returns the same value as RealFrameTime. This allows rendering code to also use
         ///     the FrameTime property instead of RealFrameTime.
         /// </remarks>
         [Test]
@@ -200,13 +200,15 @@ namespace Robust.UnitTesting.Shared.Timing
             // Assert
             Assert.That(result, Is.EqualTo(TimeSpan.Zero)); // But simulation time never increases.
         }
-        
+
         private static IGameTiming GameTimingFactory(IStopwatch stopwatch)
         {
             var timing = new GameTiming();
 
-            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.NonPublic | BindingFlags.Instance);
+            var field = typeof(GameTiming).GetField("_realTimer", BindingFlags.NonPublic | BindingFlags.Instance)!;
             field.SetValue(timing, stopwatch);
+
+            Assert.That(timing.CurTime, Is.EqualTo(TimeSpan.Zero));
 
             return timing;
         }

@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private LineEdit SearchBar;
         private Button ClearButton;
 
-        private List<ITileDefinition> _shownItems;
+        private readonly List<ITileDefinition> _shownItems = new List<ITileDefinition>();
 
         private bool _clearingSelections;
 
@@ -38,13 +38,6 @@ namespace Robust.Client.UserInterface.CustomControls
             _placementManager = placementManager;
             _resourceCache = resourceCache;
 
-            PerformLayout();
-
-            Title = "Place Tiles";
-        }
-
-        private void PerformLayout()
-        {
             var vBox = new VBoxContainer();
             Contents.AddChild(vBox);
             var hBox = new HBoxContainer();
@@ -64,7 +57,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildTileList();
 
-            _placementManager.PlacementCanceled += OnPlacementCanceled;
+            _placementManager.PlacementChanged += OnPlacementCanceled;
+
+            Title = "Place Tiles";
         }
 
         protected override void Dispose(bool disposing)
@@ -73,7 +68,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                _placementManager.PlacementCanceled -= OnPlacementCanceled;
+                _placementManager.PlacementChanged -= OnPlacementCanceled;
             }
         }
 
@@ -90,7 +85,7 @@ namespace Robust.Client.UserInterface.CustomControls
             ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
 
-        private void BuildTileList(string searchStr = null)
+        private void BuildTileList(string? searchStr = null)
         {
             TileList.Clear();
 
@@ -105,11 +100,12 @@ namespace Robust.Client.UserInterface.CustomControls
 
             tileDefs = tileDefs.OrderBy(d => d.DisplayName);
 
-            _shownItems = tileDefs.ToList();
+            _shownItems.Clear();
+            _shownItems.AddRange(tileDefs);
 
             foreach (var entry in _shownItems)
             {
-                Texture texture = null;
+                Texture? texture = null;
                 if (!string.IsNullOrEmpty(entry.SpriteName))
                 {
                     texture = _resourceCache.GetResource<TextureResource>($"/Textures/Constructible/Tiles/{entry.SpriteName}.png");
@@ -118,7 +114,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void OnPlacementCanceled(object sender, EventArgs e)
+        private void OnPlacementCanceled(object? sender, EventArgs e)
         {
             _clearingSelections = true;
             TileList.ClearSelected();

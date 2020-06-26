@@ -14,11 +14,9 @@ namespace Robust.Shared.Map
 {
     internal partial class MapManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly INetManager _netManager;
-#pragma warning restore 649
+        [Dependency] private readonly INetManager _netManager = default!;
 
-        public GameStateMapData GetStateData(GameTick fromTick)
+        public GameStateMapData? GetStateData(GameTick fromTick)
         {
             var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
             foreach (var grid in _grids.Values)
@@ -86,7 +84,7 @@ namespace Robust.Shared.Map
             _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
         }
 
-        public void ApplyGameStatePre(GameStateMapData data)
+        public void ApplyGameStatePre(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
@@ -111,7 +109,7 @@ namespace Robust.Shared.Map
                         continue;
                     }
 
-                    var gridCreation = createdGrids[gridId];
+                    var gridCreation = createdGrids![gridId];
                     DebugTools.Assert(gridCreation.IsTheDefault);
 
                     CreateMap(mapId, gridId);
@@ -134,7 +132,7 @@ namespace Robust.Shared.Map
                         continue;
                     }
 
-                    CreateGrid(gridData[gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
+                    CreateGrid(gridData![gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
                         creationDatum.SnapSize);
                 }
             }
@@ -185,7 +183,7 @@ namespace Robust.Shared.Map
             }
         }
 
-        public void ApplyGameStatePost(GameStateMapData data)
+        public void ApplyGameStatePost(GameStateMapData? data)
         {
             DebugTools.Assert(_netManager.IsClient, "Only the client should call this.");
 
@@ -210,7 +208,7 @@ namespace Robust.Shared.Map
                     var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
 
                     // locate the entity that represents this map that was just sent to us
-                    IEntity sharedMapEntity = null;
+                    IEntity? sharedMapEntity = null;
                     var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
                     foreach (var mapComp in mapComps)
                     {
@@ -231,7 +229,7 @@ namespace Robust.Shared.Map
                     // so they are not deleted
                     foreach (var childGridTrans in cEntity.Transform.Children.ToList())
                     {
-                        childGridTrans.AttachParent(sharedMapEntity);
+                        childGridTrans.AttachParent(sharedMapEntity!);
                     }
 
                     // remove client entity

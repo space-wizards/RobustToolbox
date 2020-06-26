@@ -11,7 +11,7 @@ namespace Robust.Client.ViewVariables
     /// </summary>
     internal abstract class ViewVariablesTrait
     {
-        protected ViewVariablesInstanceObject Instance { get; private set; }
+        protected ViewVariablesInstanceObject Instance { get; private set; } = default!;
 
         public virtual void Initialize(ViewVariablesInstanceObject instance)
         {

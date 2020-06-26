@@ -32,7 +32,7 @@ namespace Robust.Client.Console.Commands
             {
                 // Read CVar
                 var value = configManager.GetCVar<object>(name);
-                console.AddLine(value.ToString());
+                console.AddLine(value.ToString() ?? "");
             }
             else
             {

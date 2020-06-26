@@ -29,6 +29,8 @@
 // Uncomment the line below to swap all the inputs/outputs/calculations of FastNoise to doubles instead of floats
 //#define FN_USE_DOUBLES
 
+#nullable disable
+
 #if FN_USE_DOUBLES
 using FN_DECIMAL = System.Double;
 #else
@@ -36,6 +38,8 @@ using FN_DECIMAL = System.Single;
 #endif
 using System;
 using System.Runtime.CompilerServices;
+using MathI = CannyFastMath.Math;
+using Math = CannyFastMath.MathF;
 
 namespace Robust.Shared.Noise
 {
@@ -216,11 +220,11 @@ namespace Robust.Shared.Noise
         // Both indicies must be >= 0, index1 must be < 4
         public void SetCellularDistance2Indicies(int cellularDistanceIndex0, int cellularDistanceIndex1)
         {
-            m_cellularDistanceIndex0 = Math.Min(cellularDistanceIndex0, cellularDistanceIndex1);
-            m_cellularDistanceIndex1 = Math.Max(cellularDistanceIndex0, cellularDistanceIndex1);
+            m_cellularDistanceIndex0 = MathI.Min(cellularDistanceIndex0, cellularDistanceIndex1);
+            m_cellularDistanceIndex1 = MathI.Max(cellularDistanceIndex0, cellularDistanceIndex1);
 
-            m_cellularDistanceIndex0 = Math.Min(Math.Max(m_cellularDistanceIndex0, 0), FN_CELLULAR_INDEX_MAX);
-            m_cellularDistanceIndex1 = Math.Min(Math.Max(m_cellularDistanceIndex1, 0), FN_CELLULAR_INDEX_MAX);
+            m_cellularDistanceIndex0 = MathI.Min(MathI.Max(m_cellularDistanceIndex0, 0), FN_CELLULAR_INDEX_MAX);
+            m_cellularDistanceIndex1 = MathI.Min(MathI.Max(m_cellularDistanceIndex1, 0), FN_CELLULAR_INDEX_MAX);
         }
 
         // Sets the maximum distance a cellular point can move from it's grid position

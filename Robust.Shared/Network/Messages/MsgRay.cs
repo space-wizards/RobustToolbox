@@ -2,6 +2,8 @@
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Maths;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgRay : NetMessage

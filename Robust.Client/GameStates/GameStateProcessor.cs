@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
@@ -15,7 +17,7 @@ namespace Robust.Client.GameStates
         private readonly IGameTiming _timing;
 
         private readonly List<GameState> _stateBuffer = new List<GameState>();
-        private GameState _lastFullState;
+        private GameState? _lastFullState;
         private bool _waitingForFull = true;
         private int _interpRatio;
         private GameTick _lastProcessedRealState;
@@ -109,7 +111,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        public bool ProcessTickStates(GameTick curTick, out GameState curState, out GameState nextState)
+        public bool ProcessTickStates(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             bool applyNextState;
             if (_waitingForFull)
@@ -121,7 +123,7 @@ namespace Robust.Client.GameStates
                 applyNextState = CalculateDeltaState(curTick, out curState, out nextState);
             }
 
-            if (applyNextState && !curState.Extrapolated)
+            if (applyNextState && !curState!.Extrapolated)
                 _lastProcessedRealState = curState.ToSequence;
 
             if (!_waitingForFull)
@@ -143,14 +145,17 @@ namespace Robust.Client.GameStates
             {
                 if (Logging)
                 {
-                    Logger.DebugS("net.state", $"Applying State:  ext={curState.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
+                    Logger.DebugS("net.state", $"Applying State:  ext={curState!.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 }
 
-                if (!curState.Extrapolated)
+                if (!curState!.Extrapolated)
                 {
                     UpdateFullRep(curState);
                 }
             }
+
+            var cState = curState!;
+            curState = cState;
 
             return applyNextState;
         }
@@ -205,7 +210,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private bool CalculateFullState(out GameState curState, out GameState nextState, int targetBufferSize)
+        private bool CalculateFullState([NotNullWhen(true)] out GameState? curState, out GameState? nextState, int targetBufferSize)
         {
             if (_lastFullState != null)
             {
@@ -261,7 +266,7 @@ namespace Robust.Client.GameStates
             return false;
         }
 
-        private bool CalculateDeltaState(GameTick curTick, out GameState curState, out GameState nextState)
+        private bool CalculateDeltaState(GameTick curTick, [NotNullWhen(true)] out GameState? curState, out GameState? nextState)
         {
             var lastTick = new GameTick(curTick.Value - 1);
             var nextTick = new GameTick(curTick.Value + 1);
@@ -269,7 +274,7 @@ namespace Robust.Client.GameStates
             curState = null;
             nextState = null;
 
-            GameState futureState = null;
+            GameState? futureState = null;
             uint lastStateInput = 0;
 
             for (var i = 0; i < _stateBuffer.Count; i++)
@@ -370,6 +375,12 @@ namespace Robust.Client.GameStates
         public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
         {
             return _lastStateFullRep[entity];
+        }
+
+        public bool TryGetLastServerStates(EntityUid entity,
+            [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary)
+        {
+            return _lastStateFullRep.TryGetValue(entity, out dictionary);
         }
 
         public int CalculateBufferSize(GameTick fromTick)

@@ -9,11 +9,11 @@ namespace Robust.UnitTesting
     {
         private sealed class ModLoader : Robust.Shared.ContentPack.ModLoader, IModLoader
         {
-            public Assembly ClientContentAssembly { get; set; }
-            public Assembly ServerContentAssembly { get; set; }
-            public Assembly SharedContentAssembly { get; set; }
+            public Assembly? ClientContentAssembly { get; set; }
+            public Assembly? ServerContentAssembly { get; set; }
+            public Assembly? SharedContentAssembly { get; set; }
 
-            public override void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
+            public override void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
             {
                 if (TryLoadPreset<T>())
                 {

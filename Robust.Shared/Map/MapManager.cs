@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
@@ -18,10 +19,8 @@ namespace Robust.Shared.Map
     /// <inheritdoc cref="IMapManager"/>
     internal partial class MapManager : IMapManagerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public IGameTiming GameTiming => _gameTiming;
 
@@ -31,24 +30,24 @@ namespace Robust.Shared.Map
         public MapId DefaultMap => MapId.Nullspace;
 
         /// <inheritdoc />
-        public event EventHandler<TileChangedEventArgs> TileChanged;
+        public event EventHandler<TileChangedEventArgs>? TileChanged;
 
-        public event GridEventHandler OnGridCreated;
+        public event GridEventHandler? OnGridCreated;
 
-        public event GridEventHandler OnGridRemoved;
+        public event GridEventHandler? OnGridRemoved;
 
         /// <summary>
         ///     Should the OnTileChanged event be suppressed? This is useful for initially loading the map
         ///     so that you don't spam an event for each of the million station tiles.
         /// </summary>
         /// <inheritdoc />
-        public event EventHandler<GridChangedEventArgs> GridChanged;
+        public event EventHandler<GridChangedEventArgs>? GridChanged;
 
         /// <inheritdoc />
-        public event EventHandler<MapEventArgs> MapCreated;
+        public event EventHandler<MapEventArgs>? MapCreated;
 
         /// <inheritdoc />
-        public event EventHandler<MapEventArgs> MapDestroyed;
+        public event EventHandler<MapEventArgs>? MapDestroyed;
 
         /// <inheritdoc />
         public bool SuppressOnTileChanged { get; set; }
@@ -248,7 +247,7 @@ namespace Robust.Shared.Map
             {
                 var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
 
-                IMapComponent result = null;
+                IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
                 {
                     if (mapComp.WorldMap != actualID)
@@ -278,6 +277,7 @@ namespace Robust.Shared.Map
 
             MapCreated?.Invoke(this, new MapEventArgs(actualID));
             var newDefaultGrid = CreateGrid(actualID, defaultGridID);
+            Logger.DebugS("map", $"Grid {newDefaultGrid.Index} is the default grid for map {actualID}");
             _defaultGrids.Add(actualID, newDefaultGrid.Index);
 
             return actualID;
@@ -443,7 +443,7 @@ namespace Robust.Shared.Map
             if (actualID != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
             {
                 // the entity may already exist from map deserialization
-                IMapGridComponent result = null;
+                IMapGridComponent? result = null;
                 foreach (var comp in _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>())
                 {
                     if (comp.GridIndex != actualID)
@@ -496,7 +496,7 @@ namespace Robust.Shared.Map
             return _grids[gridID];
         }
 
-        public bool TryGetGrid(GridId gridId, out IMapGrid grid)
+        public bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid)
         {
             if (_grids.TryGetValue(gridId, out var gridinterface))
             {
@@ -519,7 +519,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, out IMapGrid grid)
+        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
             foreach (var mapGrid in _grids.Values)
             {
@@ -538,7 +538,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public bool TryFindGridAt(MapCoordinates mapCoordinates, out IMapGrid grid)
+        public bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid)
         {
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }

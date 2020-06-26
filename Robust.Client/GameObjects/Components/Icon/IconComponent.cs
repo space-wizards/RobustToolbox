@@ -12,12 +12,9 @@ namespace Robust.Client.GameObjects
     public class IconComponent : Component
     {
         public override string Name => "Icon";
-        public IDirectionalTextureProvider Icon => _icon;
-        private IDirectionalTextureProvider _icon;
+        public IDirectionalTextureProvider? Icon { get; private set; }
 
-#pragma warning disable 649
-        [Dependency] private readonly IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
@@ -29,7 +26,7 @@ namespace Robust.Client.GameObjects
             // TODO: Does this need writing?
             if (serializer.Reading)
             {
-                _icon = TextureForConfig(serializer, _resourceCache);
+                Icon = TextureForConfig(serializer, _resourceCache);
             }
         }
 
@@ -42,7 +39,7 @@ namespace Robust.Client.GameObjects
                 return dirTex;
             }
 
-            var tex = serializer.ReadDataField<string>("texture", null);
+            var tex = serializer.ReadDataField<string?>("texture", null);
             if (!string.IsNullOrWhiteSpace(tex))
             {
                 dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
@@ -52,7 +49,7 @@ namespace Robust.Client.GameObjects
 
             RSI rsi;
 
-            var rsiPath = serializer.ReadDataField<string>("sprite", null);
+            var rsiPath = serializer.ReadDataField<string?>("sprite", null);
 
             if (string.IsNullOrWhiteSpace(rsiPath))
             {
@@ -74,7 +71,7 @@ namespace Robust.Client.GameObjects
                 return dirTex;
             }
 
-            var stateId = serializer.ReadDataField<string>("state", null);
+            var stateId = serializer.ReadDataField<string?>("state", null);
             if (string.IsNullOrWhiteSpace(stateId))
             {
                 Logger.ErrorS(LogCategory, "No state specified.");

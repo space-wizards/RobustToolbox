@@ -19,6 +19,20 @@ namespace Robust.Client.Console.Commands
             return false;
         }
     }
+
+    internal sealed class WatchCommand : IConsoleCommand
+    {
+        public string Command => "watch";
+        public string Description => "Opens a variable watch window.";
+        public string Help => "watch";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            new WatchWindow().OpenCenteredMinSize();
+
+            return false;
+        }
+    }
 #endif
 
     internal sealed class ServerScriptConsoleCommand : IConsoleCommand

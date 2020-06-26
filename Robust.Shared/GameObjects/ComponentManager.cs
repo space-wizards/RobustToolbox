@@ -1,43 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Exceptions;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.IoC;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects
 {
+
     /// <inheritdoc />
     public class ComponentManager : IComponentManager
     {
-        private const int EntityCapacity = 1024; // starting capacity for entities
-        private const int CompTypeCapacity = 32; // starting capacity for component types
 
-        private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _dictComponents
-            = new Dictionary<Type, Dictionary<EntityUid, Component>>(CompTypeCapacity);
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
 
-        private readonly Dictionary<EntityUid, Dictionary<uint, Component>> _netComponents
-            = new Dictionary<EntityUid, Dictionary<uint, Component>>(EntityCapacity);
-
-        private readonly List<Component> _deleteList = new List<Component>();
-
-#pragma warning disable 649
-        [Dependency] private readonly IComponentFactory _componentFactory;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
-#pragma warning restore 649
+
+        private const int TypeCapacity = 32;
+        private const int ComponentCollectionCapacity = 1024;
+        private const int NetIdComponentsCapacity = (TypeCapacity/2) * ComponentCollectionCapacity;
+        private const int TotalComponentsCapacity = TypeCapacity * ComponentCollectionCapacity;
+
+        private readonly Dictionary<(EntityUid, uint), Component> _entNetIdDict = new Dictionary<(EntityUid, uint), Component>(NetIdComponentsCapacity);
+
+        private readonly Dictionary<(EntityUid, Type), Component> _entTraitDict = new Dictionary<(EntityUid, Type), Component>(TotalComponentsCapacity);
+
+        private readonly HashSet<Component> _deleteSet = new HashSet<Component>(TypeCapacity);
+
+        private UniqueIndex<Type, Component> _traitCompIndex;
+
+        private UniqueIndex<uint, Component> _netIdCompIndex;
+
+        private UniqueIndexHkm<EntityUid, Component> _entCompIndex = new UniqueIndexHkm<EntityUid, Component>(ComponentCollectionCapacity);
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentAdded;
+        public event EventHandler<ComponentEventArgs>? ComponentAdded;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentRemoved;
+        public event EventHandler<ComponentEventArgs>? ComponentRemoved;
 
         /// <inheritdoc />
-        public event EventHandler<ComponentEventArgs> ComponentDeleted;
+        public event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
         public void Initialize()
         {
@@ -47,40 +58,41 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Clear()
         {
-            _dictComponents.Clear();
-            _netComponents.Clear();
-            _deleteList.Clear();
+            _entNetIdDict.Clear();
+            _entTraitDict.Clear();
+            _traitCompIndex.Clear();
+            _netIdCompIndex.Clear();
+            _entCompIndex.Clear();
+            _deleteSet.Clear();
             FillComponentDict();
         }
 
         #region Component Management
 
         /// <inheritdoc />
-        public T AddComponent<T>(IEntity entity)
-            where T : Component, new()
+        public T AddComponent<T>(IEntity entity) where T : Component, new()
         {
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
+            if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-            var newComponent = (Component) _componentFactory.GetComponent<T>();
+            var newComponent = _componentFactory.GetComponent<T>();
 
             newComponent.Owner = entity;
+
             AddComponent(entity, newComponent);
 
-            return (T) newComponent;
+            return newComponent;
         }
 
         /// <inheritdoc />
-        public void AddComponent(IEntity entity, Component component, bool overwrite = false)
+        public void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component
         {
-            if (entity == null || !entity.IsValid())
-                throw new ArgumentException("Entity is not valid.", nameof(entity));
+            if (entity == null || !entity.IsValid()) throw new ArgumentException("Entity is not valid.", nameof(entity));
 
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
+            if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner != entity)
-                throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner != entity) throw new InvalidOperationException("Component is not owned by entity.");
+
+            var uid = entity.Uid;
 
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
@@ -88,12 +100,9 @@ namespace Robust.Shared.GameObjects
             // Check that there are no overlapping references.
             foreach (var type in reg.References)
             {
-                if (!TryGetComponent(entity.Uid, type, out var duplicate))
-                    continue;
+                if (!TryGetComponent(uid, type, out var duplicate)) continue;
 
-                if (!overwrite)
-                    throw new InvalidOperationException(
-                        $"Component reference type {type} already occupied by {duplicate}");
+                if (!overwrite) throw new InvalidOperationException($"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
                 if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
@@ -107,128 +116,115 @@ namespace Robust.Shared.GameObjects
             // add the component to the grid
             foreach (var type in reg.References)
             {
-                _dictComponents[type].Add(entity.Uid, component);
+                _entTraitDict.Add((uid, type), component);
+                _traitCompIndex.Add(type, component);
+                _entCompIndex.Add(uid, component);
             }
 
             // add the component to the netId grid
             if (component.NetID != null)
             {
                 // the main comp grid keeps this in sync
-                if (!_netComponents.TryGetValue(entity.Uid, out var netDict))
-                {
-                    netDict = new Dictionary<uint, Component>(CompTypeCapacity);
-                    _netComponents.Add(entity.Uid, netDict);
-                }
 
-                netDict.Add(component.NetID.Value, component);
+                var netId = component.NetID.Value;
+                if (_entNetIdDict.TryAdd((uid, netId), component))
+                {
+                    _netIdCompIndex.Add(netId, component);
+                }
 
                 // mark the component as dirty for networking
                 component.Dirty();
 
-                ComponentAdded?.Invoke(this, new ComponentEventArgs(component));
+                ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
+
+            component.ExposeData(DefaultValueSerializer.Reader());
 
             component.OnAdd();
 
-            if (entity.Initialized || entity.Initializing)
-            {
-                component.Initialize();
+            if (!entity.Initialized && !entity.Initializing) return;
 
-                if (entity.Initialized)
-                {
-                    component.Running = true;
-                }
+            component.Initialize();
+
+            if (entity.Initialized)
+            {
+                component.Running = true;
             }
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
             RemoveComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            var component = GetComponent(uid, type);
-            RemoveComponentDeferred(component as Component, false);
+            RemoveComponentDeferred((Component) GetComponent(uid, type), false);
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, uint netId)
         {
-            var comp = GetComponent(uid, netId);
-            RemoveComponentDeferred(comp as Component, false);
+            RemoveComponentDeferred((Component) GetComponent(uid, netId), false);
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
+            if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner.Uid != uid)
-                throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner == null || component.Owner.Uid != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred(component as Component, false);
+            RemoveComponentDeferred((Component) component, false);
+        }
+
+        private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
+        {
+            static int Sequence(IComponent x)
+                => x switch
+                {
+                    ITransformComponent _ => 0,
+                    IMetaDataComponent _ => 1,
+                    ICollidableComponent _ => 2,
+                    _ => int.MaxValue
+                };
+
+            return forCreation
+                ? comps.OrderBy(Sequence)
+                : comps.OrderByDescending(Sequence);
         }
 
         /// <inheritdoc />
         public void RemoveComponents(EntityUid uid)
         {
-            foreach (var kvTypeDict in _dictComponents)
+            _entCompIndex.Remove(uid);
+
+            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                // because we are iterating over references instead of instances, and a comp instance
-                // can have multiple references, we filter out already deleted instances.
-                if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)
-                {
-                    RemoveComponentDeferred(comp, false);
-                }
+                RemoveComponentDeferred(comp, false);
             }
         }
 
         /// <inheritdoc />
         public void DisposeComponents(EntityUid uid)
         {
-            foreach (var kvTypeDict in _dictComponents)
+            foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                if (kvTypeDict.Value.TryGetValue(uid, out var comp))
-                {
-                    #if EXCEPTION_TOLERANCE
-                    try
-                    {
-#endif
-
-                        comp.Running = false;
-#if EXCEPTION_TOLERANCE
-                    }
-                    catch (Exception e)
-                    {
-                        _runtimeLog.LogException(e,
-                            $"DisposeComponents comp.Running=false, owner={uid}, type={comp.GetType()}");
-                    }
-#endif
-                }
-            }
-
-            foreach (var kvTypeDict in _dictComponents)
-            {
-                // because we are iterating over references instead of instances, and a comp instance
-                // can have multiple references, we filter out already deleted instances.
-                if (kvTypeDict.Value.TryGetValue(uid, out var comp) && !comp.Deleted)
-                {
-                    RemoveComponentDeferred(comp, true);
-                }
+                RemoveComponentDeferred(comp, true);
             }
         }
 
         private void RemoveComponentDeferred(Component component, bool removeProtected)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
+            if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Deleted)
-                return;
+            if (component.Deleted) return;
 
 #if EXCEPTION_TOLERANCE
             try
@@ -241,11 +237,15 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                _deleteList.Add(component);
+                if (!_deleteSet.Add(component))
+                {
+                    // already deferred deletion
+                    return;
+                }
 
                 component.Running = false;
                 component.OnRemove();
-                ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
 #if EXCEPTION_TOLERANCE
             }
             catch (Exception e)
@@ -258,11 +258,9 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponentImmediate(Component component)
         {
-            if (component == null)
-                throw new ArgumentNullException(nameof(component));
+            if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Deleted)
-                return;
+            if (component.Deleted) return;
 
             // these two components are required on all entities and cannot be removed.
             if (component is ITransformComponent || component is IMetaDataComponent)
@@ -273,7 +271,7 @@ namespace Robust.Shared.GameObjects
 
             component.Running = false;
             component.OnRemove();
-            ComponentRemoved?.Invoke(this, new ComponentEventArgs(component));
+            ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
 
             DeleteComponent(component);
         }
@@ -281,12 +279,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void CullRemovedComponents()
         {
-            foreach (var component in _deleteList)
+            foreach (var component in InSafeOrder(_deleteSet))
             {
                 DeleteComponent(component);
             }
 
-            _deleteList.Clear();
+            _deleteSet.Clear();
         }
 
         private void DeleteComponent(Component component)
@@ -297,49 +295,46 @@ namespace Robust.Shared.GameObjects
 
             foreach (var refType in reg.References)
             {
-                var typeDict = _dictComponents[refType];
-                typeDict.Remove(entityUid);
+                _entTraitDict.Remove((entityUid, refType));
+                _traitCompIndex.Remove(refType, component);
             }
 
-            if (component.NetID == null)
-                return;
+            if (component.NetID == null) return;
 
-            var netDict = _netComponents[entityUid];
-            netDict.Remove(component.NetID.Value);
+            var netId = component.NetID.Value;
+            _entNetIdDict.Remove((entityUid, netId));
+            _netIdCompIndex.Remove(netId, component);
 
             // mark the owning entity as dirty for networking
             component.Owner.Dirty();
 
-            ComponentDeleted?.Invoke(this, new ComponentEventArgs(component));
+            ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component));
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
             return HasComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
-            if (!_dictComponents.TryGetValue(type, out var typeDict))
-                return false;
-
-            return typeDict.ContainsKey(uid);
+            return _entTraitDict.TryGetValue((uid, type), out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, uint netId)
         {
-            if (!_netComponents.TryGetValue(uid, out var comp))
-                return false;
-
-            return comp.ContainsKey(netId);
+            return _entNetIdDict.TryGetValue((uid, netId), out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
-            where T : Component
         {
             return (T) GetComponent(uid, typeof(T));
         }
@@ -347,43 +342,55 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, Type type)
         {
-            var typeDict = _dictComponents[type];
-            try
+            // ReSharper disable once InvertIf
+            if (_entTraitDict.TryGetValue((uid, type), out var comp))
             {
-                return typeDict[uid];
+                if (!comp.Deleted)
+                {
+                    return comp;
+                }
             }
-            catch (KeyNotFoundException)
-            {
-                throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
-            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
         }
 
         /// <inheritdoc />
         public IComponent GetComponent(EntityUid uid, uint netId)
         {
-            var netDict = _netComponents[uid];
-            return netDict[netId];
+            // ReSharper disable once InvertIf
+            if (_entNetIdDict.TryGetValue((uid, netId), out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    return comp;
+                }
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of NetID {netId}");
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>(EntityUid uid, out T component)
+        public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
             if (TryGetComponent(uid, typeof(T), out var comp))
             {
-                component = (T) comp;
-                return true;
+                if (!comp.Deleted)
+                {
+                    component = (T) comp;
+                    return true;
+                }
             }
 
-            component = default;
+            component = default!;
             return false;
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, Type type, out IComponent component)
+        public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_dictComponents.TryGetValue(type, out var typeDict))
+            if (_entTraitDict.TryGetValue((uid, type), out var comp))
             {
-                if (typeDict != null && typeDict.TryGetValue(uid, out var comp))
+                if (!comp.Deleted)
                 {
                     component = comp;
                     return true;
@@ -395,11 +402,11 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent(EntityUid uid, uint netId, out IComponent component)
+        public bool TryGetComponent(EntityUid uid, uint netId, [NotNullWhen(true)] out IComponent? component)
         {
-            if (_netComponents.TryGetValue(uid, out var netDict))
+            if (_entNetIdDict.TryGetValue((uid, netId), out var comp))
             {
-                if (netDict != null && netDict.TryGetValue(netId, out var comp))
+                if (!comp.Deleted)
                 {
                     component = comp;
                     return true;
@@ -413,106 +420,75 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
-            foreach (var (type, kvTypeDict) in _dictComponents)
+            // ReSharper disable once LoopCanBeConvertedToQuery
+            foreach (Component comp in _entCompIndex[uid])
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp) && type == comp.GetType() && !comp.Deleted)
-                {
-                    yield return comp;
-                }
+                if (comp.Deleted) continue;
+
+                yield return comp;
             }
+
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            foreach (var (type, kvTypeDict) in _dictComponents)
+            var comps = _entCompIndex[uid];
+            foreach (var comp in comps)
             {
-                if (kvTypeDict.TryGetValue(uid, out var comp) && comp is T t && type == comp.GetType() && !comp.Deleted)
-                {
-                    yield return t;
-                }
+                if (comp.Deleted || !(comp is T tComp)) continue;
+
+                yield return tComp;
             }
         }
 
         /// <inheritdoc />
         public IEnumerable<IComponent> GetNetComponents(EntityUid uid)
         {
-            return _netComponents[uid].Values;
+            var comps = _entCompIndex[uid];
+            foreach (var comp in comps)
+            {
+                if (comp.Deleted || comp.NetID == null) continue;
+
+                yield return comp;
+            }
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetAllComponents<T>()
-            where T : IComponent
         {
-            if (!_dictComponents.TryGetValue(typeof(T), out var typeDict))
+            var comps = _traitCompIndex[typeof(T)];
+            foreach (var comp in comps)
             {
-                return Enumerable.Empty<T>();
-            }
+                if (comp.Deleted) continue;
 
-            var list = new List<T>(typeDict.Count);
-            foreach (var comp in typeDict.Values)
-            {
-                if (comp.Deleted)
+                if (comp is T typedComp)
                 {
-                    continue;
+                    yield return typedComp;
                 }
-
-                list.Add((T) (object) comp);
             }
-
-            return list;
         }
 
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents(Type type)
         {
-            if (!_dictComponents.TryGetValue(type, out var typeDict))
+            var comps = _traitCompIndex[type];
+            foreach (var comp in comps)
             {
-                return Enumerable.Empty<IComponent>();
+                if (comp.Deleted) continue;
+
+                yield return comp;
             }
-
-            var list = new List<IComponent>(typeDict.Count);
-            foreach (var comp in typeDict.Values)
-            {
-                if (comp.Deleted)
-                {
-                    continue;
-                }
-
-                list.Add(comp);
-            }
-
-            return list;
         }
 
         #endregion
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillComponentDict()
         {
-            foreach (var refType in _componentFactory.GetAllRefTypes())
-            {
-                _dictComponents.Add(refType, new Dictionary<EntityUid, Component>());
-            }
+            _traitCompIndex.Initialize(_componentFactory.GetAllRefTypes());
         }
+
     }
 
-    /// <summary>
-    ///
-    /// </summary>
-    public class ComponentEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Component that this event relates to.
-        /// </summary>
-        public IComponent Component { get; }
-
-        /// <summary>
-        /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
-        /// </summary>
-        /// <param name="component"></param>
-        public ComponentEventArgs(IComponent component)
-        {
-            Component = component;
-        }
-    }
 }

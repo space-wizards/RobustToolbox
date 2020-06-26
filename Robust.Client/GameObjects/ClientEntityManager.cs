@@ -18,13 +18,11 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IComponentFactory _compFactory;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IComponentFactory _compFactory = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
-#pragma warning restore 649
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
 
@@ -41,10 +39,10 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
-        public List<EntityUid> ApplyEntityStates(EntityState[] curEntStates, IEnumerable<EntityUid> deletions,
-            EntityState[] nextEntStates)
+        public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
+            EntityState[]? nextEntStates)
         {
-            var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
+            var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
             var toInitialize = new List<Entity>();
             var created = new List<EntityUid>();
             deletions ??= new EntityUid[0];
@@ -172,13 +170,13 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName)
+        public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
             if (coordinates.GridID != GridId.Invalid)
@@ -192,7 +190,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
@@ -201,7 +199,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
@@ -210,7 +208,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
@@ -219,7 +217,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
         {
             return SpawnEntity(protoName, coordinates);
         }
@@ -230,10 +228,10 @@ namespace Robust.Client.GameObjects
             return new EntityUid(_nextClientEntityUid++);
         }
 
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
-            EntityState nextState)
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,
+            EntityState? nextState)
         {
-            var compStateWork = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
+            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
             var entityUid = entity.Uid;
 
             if (curState?.ComponentChanges != null)
@@ -252,7 +250,7 @@ namespace Robust.Client.GameObjects
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName);
+                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
                     }

@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.PixelFormats;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 
@@ -21,7 +23,7 @@ namespace Robust.Client.Graphics.Clyde
             new Dictionary<StandardCursorShape, CursorImpl>();
 
         // Keep current active cursor around so it doesn't get garbage collected.
-        private CursorImpl _currentCursor;
+        private CursorImpl? _currentCursor;
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
         {
@@ -40,7 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        public unsafe void SetCursor(ICursor cursor)
+        public unsafe void SetCursor(ICursor? cursor)
         {
             if (_currentCursor == cursor)
             {

@@ -37,6 +37,11 @@ namespace Robust.Client.Graphics.ClientEye
             set => _currentEye = value;
         }
 
+        public void ClearCurrentEye()
+        {
+            _currentEye = _defaultEye;
+        }
+
         /// <inheritdoc />
         public MapId CurrentMap => CurrentEye.Position.MapId;
 
@@ -119,6 +124,12 @@ namespace Robust.Client.Graphics.ClientEye
             }
 
             return new GridCoordinates(grid.WorldToLocal(mapCoords.Position), grid.Index);
+        }
+
+        /// <inheritdoc />
+        public MapCoordinates ScreenToMap(ScreenCoordinates point)
+        {
+            return ScreenToMap(point.Position);
         }
 
         /// <inheritdoc />

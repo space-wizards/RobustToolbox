@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Animations;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -60,9 +60,9 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         ///     The RSI that is currently used as "base".
         ///     Layers will fall back to this RSI if they do not have their own RSI set.
         /// </summary>
-        RSI BaseRSI { get; set; }
+        RSI? BaseRSI { get; set; }
 
-        ShaderInstance PostShader { get; set; }
+        ShaderInstance? PostShader { get; set; }
         uint RenderOrder { get; set; }
         bool IsInert { get; }
 
@@ -174,7 +174,9 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         void LayerSetVisible(int layer, bool visible);
         void LayerSetVisible(object layerKey, bool visible);
         void LayerSetColor(int layer, Color color);
+
         void LayerSetColor(object layerKey, Color color);
+
         // Yes, I realize how silly it is to reference an enum in the concrete implementation.
         // I don't care.
         void LayerSetDirOffset(int layer, SpriteComponent.DirectionOffset offset);
@@ -190,11 +192,42 @@ namespace Robust.Client.Interfaces.GameObjects.Components
         /// <summary>
         ///     Get the RSI used by a layer.
         /// </summary>
-        RSI LayerGetActualRSI(int layer);
+        RSI? LayerGetActualRSI(int layer);
 
         /// <summary>
         ///     Get the RSI used by a layer.
         /// </summary>
-        RSI LayerGetActualRSI(object layerKey);
+        RSI? LayerGetActualRSI(object layerKey);
+
+        ISpriteLayer this[int layer] { get; }
+        ISpriteLayer this[Index layer] { get; }
+        ISpriteLayer this[object layerKey] { get; }
+
+        IEnumerable<ISpriteLayer> AllLayers { get; }
+    }
+
+    public interface ISpriteLayer
+    {
+        SpriteComponent.DirectionOffset DirOffset { get; set; }
+
+        RSI? Rsi { get; set; }
+        RSI.StateId RsiState { get; set; }
+        RSI? ActualRsi { get; }
+
+        Texture? Texture { get; set; }
+
+        Angle Rotation { get; set; }
+        Vector2 Scale { get; set; }
+
+        bool Visible { get; set; }
+        Color Color { get; set; }
+
+        float AnimationTime { get; set; }
+        int AnimationFrame { get; }
+        bool AutoAnimated { get; set; }
+
+        RSI.State.Direction EffectiveDirection(Angle worldRotation);
+
+        Vector2 LocalToLayer(Vector2 localPos);
     }
 }

@@ -19,8 +19,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var subscriber = new TestEventSubscriber();
 
             // Act
-            void Code() => bus.SubscribeEvent(EventSource.Local, subscriber, (EntityEventHandler<TestEventArgs>) null);
-            
+            void Code() => bus.SubscribeEvent(EventSource.Local, subscriber, (EntityEventHandler<TestEventArgs>) null!);
+
             //Assert
             Assert.Throws<ArgumentNullException>(Code);
         }
@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = new EntityEventBus();
 
             // Act
-            void Code() => bus.SubscribeEvent<TestEventArgs>(EventSource.Local, null, ev => {});
+            void Code() => bus.SubscribeEvent<TestEventArgs>(EventSource.Local, null!, ev => {});
 
             //Assert: this should do nothing
             Assert.Throws<ArgumentNullException>(Code);
@@ -131,7 +131,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var subscriber = new TestEventSubscriber();
 
             // Act
-            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null);
+            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null!);
 
             //Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);
@@ -184,7 +184,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = new EntityEventBus();
 
             // Act
-            void Code() => bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, null);
+            void Code() => bus.UnsubscribeEvent<TestEventArgs>(EventSource.Local, null!);
 
             // Assert
             Assert.Throws<ArgumentNullException>(Code);
@@ -218,7 +218,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = new EntityEventBus();
 
             // Act
-            void Code() => bus.RaiseEvent(EventSource.Local, null);
+            void Code() => bus.RaiseEvent(EventSource.Local, null!);
 
             // Assert
             Assert.Throws<ArgumentNullException>(Code);
@@ -294,7 +294,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = new EntityEventBus();
 
             // Act
-            void Code() => bus.UnsubscribeEvents(null);
+            void Code() => bus.UnsubscribeEvents(null!);
 
             // Assert
             Assert.Throws<ArgumentNullException>(Code);
@@ -349,7 +349,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = new EntityEventBus();
 
             // Act
-            void Code() => bus.QueueEvent(EventSource.Local, null);
+            void Code() => bus.QueueEvent(EventSource.Local, null!);
 
             // Assert
             Assert.Throws<ArgumentNullException>(Code);

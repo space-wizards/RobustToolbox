@@ -42,11 +42,9 @@ namespace Robust.Server.ServerStatus
 
         private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
 
-#pragma warning disable 649
-        [Dependency] private IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        private KestrelServer _server;
+        private KestrelServer _server = default!;
 
         public Task ProcessRequestAsync(HttpContext context)
         {
@@ -84,9 +82,9 @@ namespace Robust.Server.ServerStatus
             return Task.CompletedTask;
         }
 
-        public event Action<JObject> OnStatusRequest;
+        public event Action<JObject>? OnStatusRequest;
 
-        public event Action<JObject> OnInfoRequest;
+        public event Action<JObject>? OnInfoRequest;
 
         public void AddHandler(StatusHostHandler handler) => _handlers.Add(handler);
 
@@ -123,7 +121,7 @@ namespace Robust.Server.ServerStatus
 
             _server.StartAsync(this, ApplicationStopping);
 
-            _syncCtx = SynchronizationContext.Current;
+            _syncCtx = SynchronizationContext.Current!;
 
             if (_syncCtx == null)
             {
@@ -161,7 +159,7 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            BuildInfo info = null;
+            BuildInfo? info = null;
             try
             {
                 var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
@@ -173,7 +171,7 @@ namespace Robust.Server.ServerStatus
 
             _configurationManager.RegisterCVar("status.enabled", true, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("status.bind", "*:1212", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar<string>("status.connectaddress", null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar<string?>("status.connectaddress", null, CVar.ARCHIVE);
 
             _configurationManager.RegisterCVar("build.fork_id", info?.ForkId, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("build.version", info?.Version, CVar.ARCHIVE);
@@ -185,20 +183,21 @@ namespace Robust.Server.ServerStatus
             _configurationManager.RegisterCVar("build.hash_linux", info?.Hashes.Linux, CVar.ARCHIVE);
         }
 
-
+        [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
-            [JsonProperty("hashes")] public PlatformData Hashes { get; set; }
-            [JsonProperty("downloads")] public PlatformData Downloads { get; set; }
-            [JsonProperty("fork_id")] public string ForkId { get; set; }
-            [JsonProperty("version")] public string Version { get; set; }
+            [JsonProperty("hashes")] public PlatformData Hashes { get; set; } = default!;
+            [JsonProperty("downloads")] public PlatformData Downloads { get; set; } = default!;
+            [JsonProperty("fork_id")] public string ForkId { get; set; } = default!;
+            [JsonProperty("version")] public string Version { get; set; } = default!;
         }
 
+        [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class PlatformData
         {
-            [JsonProperty("windows")] public string Windows { get; set; }
-            [JsonProperty("linux")] public string Linux { get; set; }
-            [JsonProperty("macos")] public string MacOS { get; set; }
+            [JsonProperty("windows")] public string Windows { get; set; } = default!;
+            [JsonProperty("linux")] public string Linux { get; set; } = default!;
+            [JsonProperty("macos")] public string MacOS { get; set; } = default!;
         }
     }
 

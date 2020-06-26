@@ -8,12 +8,10 @@ namespace Robust.Shared.GameObjects
     public sealed class EntityState
     {
         public EntityUid Uid { get; }
-        [CanBeNull]
-        public ComponentChanged[] ComponentChanges { get; }
-        [CanBeNull]
-        public ComponentState[] ComponentStates { get; }
+        public ComponentChanged[]? ComponentChanges { get; }
+        public ComponentState[]? ComponentStates { get; }
 
-        public EntityState(EntityUid uid, ComponentChanged[] changedComponents, ComponentState[] componentStates)
+        public EntityState(EntityUid uid, ComponentChanged[]? changedComponents, ComponentState[]? componentStates)
         {
             Uid = uid;
 
@@ -41,9 +39,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The prototype name of the component to add.
         /// </summary>
-        public readonly string ComponentName;
+        public readonly string? ComponentName;
 
-        public ComponentChanged(bool deleted, uint netId, string componentName)
+        public ComponentChanged(bool deleted, uint netId, string? componentName)
         {
             Deleted = deleted;
             NetID = netId;

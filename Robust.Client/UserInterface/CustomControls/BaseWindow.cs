@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.CustomControls
         /// <summary>
         ///     Invoked when the close button of this window is pressed.
         /// </summary>
-        public event Action OnClose;
+        public event Action? OnClose;
 
         public virtual void Close()
         {
@@ -211,13 +211,13 @@ namespace Robust.Client.UserInterface.CustomControls
         public void OpenCentered()
         {
             Open();
-            LayoutContainer.SetPosition(this, (Parent.Size - Size) / 2);
+            LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
         }
 
         public void OpenToLeft()
         {
             Open();
-            LayoutContainer.SetPosition(this, (0, (Parent.Size.Y - Size.Y) / 2));
+            LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - Size.Y) / 2));
         }
 
         protected virtual void Opened()

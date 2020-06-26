@@ -30,7 +30,7 @@ namespace Robust.Client.Graphics.Overlays
 
         protected IOverlayManager OverlayManager { get; }
 
-        public ShaderInstance Shader { get; set; }
+        public ShaderInstance? Shader { get; set; }
 
         public int? ZIndex { get; set; }
 

@@ -17,7 +17,7 @@ namespace Robust.Client.Utility
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
-                    return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex.TexturePath);
+                    return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex.TexturePath).Texture;
 
                 case SpriteSpecifier.Rsi rsi:
                     if (resc.TryGetResource<RSIResource>(SpriteComponent.TextureRoot / rsi.RsiPath, out var theRsi))
@@ -28,7 +28,7 @@ namespace Robust.Client.Utility
                         }
                     }
                     Logger.Error("Failed to load RSI {0}", rsi.RsiPath);
-                    return resc.GetFallback<TextureResource>();
+                    return resc.GetFallback<TextureResource>().Texture;
 
                 default:
                     throw new NotImplementedException();
@@ -41,7 +41,7 @@ namespace Robust.Client.Utility
             switch (specifier)
             {
                 case SpriteSpecifier.Texture tex:
-                    return (Texture)resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex.TexturePath);
+                    return resc.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex.TexturePath).Texture;
 
                 case SpriteSpecifier.Rsi rsi:
                     if (resc.TryGetResource<RSIResource>(SpriteComponent.TextureRoot / rsi.RsiPath, out var theRsi))
@@ -51,7 +51,7 @@ namespace Robust.Client.Utility
                             return state;
                         }
                     }
-                    return (Texture)resc.GetFallback<TextureResource>();
+                    return resc.GetFallback<TextureResource>().Texture;
 
                 default:
                     throw new NotImplementedException();

@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -15,24 +16,24 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private ClydeTexture _stockTextureWhite;
-        private ClydeTexture _stockTextureBlack;
-        private ClydeTexture _stockTextureTransparent;
+        private ClydeTexture _stockTextureWhite = default!;
+        private ClydeTexture _stockTextureBlack = default!;
+        private ClydeTexture _stockTextureTransparent = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
 
-        public Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+        public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
 
             // Load using Rgba32.
-            using var image = Image.Load(stream);
+            using var image = Image.Load<Rgba32>(stream);
 
             return LoadTextureFromImage(image, name, loadParams);
         }
 
-        public Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+        public Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>
         {
             DebugTools.Assert(_mainThread == Thread.CurrentThread);
@@ -57,7 +58,7 @@ namespace Robust.Client.Graphics.Clyde
                 pixelDataFormat = PixelFormat.Rgba;
                 pixelDataType = PixelType.UnsignedByte;
             }
-            else if (pixelType == typeof(Alpha8))
+            else if (pixelType == typeof(A8))
             {
                 if (image.Width % 4 != 0 || image.Height % 4 != 0)
                 {
@@ -72,14 +73,14 @@ namespace Robust.Client.Graphics.Clyde
                 var swizzle = new[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
             }
-            else if (pixelType == typeof(Gray8) && !actualParams.Srgb)
+            else if (pixelType == typeof(L8) && !actualParams.Srgb)
             {
-                // Can only use R8 for Gray8 if sRGB is OFF.
+                // Can only use R8 for L8 if sRGB is OFF.
                 // Because OpenGL doesn't provide non-sRGB single/dual channel image formats.
                 // Vulkan when?
                 if (copy.Width % 4 != 0 || copy.Height % 4 != 0)
                 {
-                    throw new ArgumentException("Gray8 non-sRGB images must have multiple of 4 sizes.");
+                    throw new ArgumentException("L8 non-sRGB images must have multiple of 4 sizes.");
                 }
 
                 internalFormat = PixelInternalFormat.R8;
@@ -150,7 +151,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string name)
+        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name)
         {
             if (name != null)
             {
@@ -188,22 +189,22 @@ namespace Robust.Client.Graphics.Clyde
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
-            white[0, 0] = Rgba32.White;
+            white[0, 0] = new Rgba32(255,255,255,255);
             _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
 
             var black = new Image<Rgba32>(1, 1);
-            black[0, 0] = Rgba32.Black;
+            black[0, 0] = new Rgba32(0,0,0,255);
             _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
 
             var blank = new Image<Rgba32>(1, 1);
-            blank[0, 0] = Rgba32.Transparent;
+            blank[0, 0] = new Rgba32(0,0,0,0);
             _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
         }
 
         /// <summary>
         ///     Makes a clone of the image that is also flipped.
         /// </summary>
-        private static Image<T> FlipClone<T>(Image<T> source) where T : struct, IPixel<T>
+        private static Image<T> FlipClone<T>(Image<T> source) where T : unmanaged, IPixel<T>
         {
             var w = source.Width;
             var h = source.Height;
@@ -237,7 +238,7 @@ namespace Robust.Client.Graphics.Clyde
             public GLHandle OpenGLObject;
             public int Width;
             public int Height;
-            public string Name;
+            public string? Name;
             public Vector2i Size => (Width, Height);
         }
 
@@ -256,6 +257,15 @@ namespace Robust.Client.Graphics.Clyde
             {
                 TextureId = id;
                 _clyde = clyde;
+            }
+
+            public override string ToString()
+            {
+                if (_clyde._loadedTextures.TryGetValue(TextureId, out var loaded) && loaded.Name != null)
+                {
+                    return $"ClydeTexture: {loaded.Name} ({TextureId})";
+                }
+                return $"ClydeTexture: ({TextureId})";
             }
         }
 

@@ -8,9 +8,9 @@ namespace Robust.Client.Graphics.Shaders
 {
     internal partial class ShaderParser
     {
-        private TextParser _currentParser;
-        private string _currentFileName;
-        private readonly Stack<(TextParser parser, string fileName)> _parserStack = new Stack<(TextParser, string)>();
+        private TextParser? _currentParser;
+        private string? _currentFileName;
+        private readonly Stack<(TextParser? parser, string? fileName)> _parserStack = new Stack<(TextParser?, string?)>();
 
         private void PushTokenize(TextReader reader, string fileName)
         {
@@ -37,7 +37,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private void Tokenize()
         {
-            while (!_currentParser.IsEOF())
+            while (!_currentParser!.IsEOF())
             {
                 if (_currentParser.IsEOL())
                 {
@@ -102,7 +102,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private void HandleProcessor()
         {
-            _currentParser.EatWhitespace();
+            _currentParser!.EatWhitespace();
             var word = _parseWord();
 
             if (word.Word != "include")
@@ -115,7 +115,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private void HandleInclude()
         {
-            _currentParser.EatWhitespace();
+            _currentParser!.EatWhitespace();
 
             var quote = _currentParser.Take();
 
@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private TokenSymbol _parseSymbol(char chr)
         {
-            var startPos = _currentParser.CurrentIndex - 1;
+            var startPos = _currentParser!.CurrentIndex - 1;
             var line = _currentParser.CurrentLine;
             var next = _currentParser.Peek();
 
@@ -396,13 +396,13 @@ namespace Robust.Client.Graphics.Shaders
             }
 
             var endPos = _currentParser.CurrentIndex;
-            return new TokenSymbol(symbol, new TextFileRange(_currentFileName, line, startPos, endPos));
+            return new TokenSymbol(symbol, new TextFileRange(_currentFileName!, line, startPos, endPos));
         }
 
         private void _eatBlockComment()
         {
             var startLine =
-                new TextFileRange(_currentFileName, _currentParser.CurrentLine, _currentParser.CurrentIndex);
+                new TextFileRange(_currentFileName!, _currentParser!.CurrentLine, _currentParser.CurrentIndex);
 
             // Handle nested /* nicely.
             var depth = 1;
@@ -442,7 +442,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private void _eatLineComment()
         {
-            while (!_currentParser.IsEOL())
+            while (!_currentParser!.IsEOL())
             {
                 _currentParser.Take();
             }
@@ -450,7 +450,7 @@ namespace Robust.Client.Graphics.Shaders
 
         private TokenWord _parseWord()
         {
-            var start = _currentParser.CurrentIndex;
+            var start = _currentParser!.CurrentIndex;
 
             var chars = new List<char>();
             while (_isWordChar(_currentParser.Peek()))
@@ -459,13 +459,13 @@ namespace Robust.Client.Graphics.Shaders
             }
 
             var end = _currentParser.CurrentIndex;
-            return new TokenWord(new string(chars.ToArray()), new TextFileRange(_currentFileName,
+            return new TokenWord(new string(chars.ToArray()), new TextFileRange(_currentFileName!,
                 _currentParser.CurrentLine, start, end));
         }
 
         private TokenNumber _parseDigit()
         {
-            var start = _currentParser.CurrentIndex;
+            var start = _currentParser!.CurrentIndex;
             var end = _currentParser.CurrentIndex;
 
             var chars = new List<char>();
@@ -474,7 +474,7 @@ namespace Robust.Client.Graphics.Shaders
                 chars.Add(_currentParser.Take());
             }
 
-            return new TokenNumber(new string(chars.ToArray()), new TextFileRange(_currentFileName,
+            return new TokenNumber(new string(chars.ToArray()), new TextFileRange(_currentFileName!,
                 _currentParser.CurrentLine,
                 start, end));
         }

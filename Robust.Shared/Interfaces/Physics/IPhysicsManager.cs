@@ -59,8 +59,18 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
-        IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true);
+        IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true);
 
+
+        /// <summary>
+        ///     Casts a ray in the world and returns the distance the ray traveled while colliding with entities
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="ray">Ray to cast in the world.</param>
+        /// <param name="maxLength">Maximum length of the ray in meters.</param>
+        /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
+        /// <returns>The distance the ray traveled while colliding with entities</returns>
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null);
 
         /// <summary>
         ///     Calculates the normal vector for two colliding bodies
@@ -89,7 +99,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true);
+        IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, float maxLength = 50, Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true);
 
         event Action<DebugRayData> DebugDrawRay;
 
@@ -113,7 +123,6 @@ namespace Robust.Shared.Interfaces.Physics
             get;
         }
 
-        [CanBeNull]
         public RayCastResults? Results { get; }
         public float MaxLength { get; }
     }
@@ -149,15 +158,15 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly Vector2 Normal;
         public readonly ICollidableComponent A;
         public readonly ICollidableComponent B;
-        [CanBeNull] public SharedPhysicsComponent APhysics;
-        [CanBeNull] public SharedPhysicsComponent BPhysics;
+        public SharedPhysicsComponent? APhysics;
+        public SharedPhysicsComponent? BPhysics;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
 
-        public Manifold(ICollidableComponent A, ICollidableComponent B, [CanBeNull] SharedPhysicsComponent aPhysics, [CanBeNull] SharedPhysicsComponent bPhysics)
+        public Manifold(ICollidableComponent A, ICollidableComponent B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics)
         {
             var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
@@ -21,15 +22,13 @@ namespace Robust.Server.Console
     {
         private const string SawmillName = "con";
 
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IPlayerManager _players;
-        [Dependency] private readonly IServerNetManager _net;
-        [Dependency] private readonly ISystemConsoleManager _systemConsole;
-        [Dependency] private readonly ILogManager _logMan;
-        [Dependency] private readonly IConfigurationManager _configMan;
-        [Dependency] private readonly IConGroupController _groupController;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IPlayerManager _players = default!;
+        [Dependency] private readonly IServerNetManager _net = default!;
+        [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
+        [Dependency] private readonly ILogManager _logMan = default!;
+        [Dependency] private readonly IConfigurationManager _configMan = default!;
+        [Dependency] private readonly IConGroupController _groupController = default!;
 
         private readonly Dictionary<string, IClientCommand> _availableCommands =
             new Dictionary<string, IClientCommand>();
@@ -65,6 +64,10 @@ namespace Robust.Server.Console
                 _configMan.RegisterCVar("console.password", string.Empty,
                     CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
 
+            if (!_configMan.IsCVarRegistered("console.hostpassword"))
+                _configMan.RegisterCVar("console.hostpassword", string.Empty,
+                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
+
             if (!_configMan.IsCVarRegistered("console.adminGroup"))
                 _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
 
@@ -87,7 +90,7 @@ namespace Robust.Server.Console
             _availableCommands.Clear();
             foreach (var type in _reflectionManager.GetAllChildren<IClientCommand>())
             {
-                var instance = (IClientCommand) Activator.CreateInstance(type, null);
+                var instance = (IClientCommand) Activator.CreateInstance(type, null)!;
                 if (AvailableCommands.TryGetValue(instance.Command, out var duplicate))
                     throw new InvalidImplementationException(instance.GetType(), typeof(IClientCommand),
                         $"Command name already registered: {instance.Command}, previous: {duplicate.GetType()}");
@@ -114,7 +117,7 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void ExecuteCommand(IPlayerSession session, string command)
+        public void ExecuteCommand(IPlayerSession? session, string command)
         {
             try
             {
@@ -156,7 +159,7 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void SendText(IPlayerSession session, string text)
+        public void SendText(IPlayerSession? session, string? text)
         {
             if (session != null)
                 SendText(session.ConnectedClient, text);
@@ -165,14 +168,14 @@ namespace Robust.Server.Console
         }
 
         /// <inheritdoc />
-        public void SendText(INetChannel target, string text)
+        public void SendText(INetChannel target, string? text)
         {
             var replyMsg = _net.CreateNetMessage<MsgConCmdAck>();
             replyMsg.Text = text;
             _net.ServerSendMessage(replyMsg, target);
         }
 
-        private static string FormatPlayerString(IPlayerSession session)
+        private static string FormatPlayerString(IPlayerSession? session)
         {
             return session != null ? $"{session.Name}" : "[HOST]";
         }
@@ -204,7 +207,7 @@ namespace Robust.Server.Console
             public string Description => "Elevates client to admin permission group.";
             public string Help => "login";
 
-            public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
                 // system console can't log in to itself, and is pointless anyways
                 if (player == null)
@@ -228,19 +231,92 @@ namespace Robust.Server.Console
             }
         }
 
+        public bool ElevateShellHost(IPlayerSession session, string password)
+        {
+            if (session == null)
+                throw new ArgumentNullException(nameof(session));
+
+            var realPass = _configMan.GetCVar<string>("console.hostpassword");
+
+            // password disabled
+            if (string.IsNullOrWhiteSpace(realPass))
+                return false;
+
+            // wrong password
+            if (password != realPass)
+                return false;
+
+            // success!
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.hostGroup")));
+
+            return true;
+        }
+
+        private class HostLoginCommand : IClientCommand
+        {
+            public string Command => "hostlogin";
+            public string Description => "Elevates client to host permission group.";
+            public string Help => "hostlogin";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                // system console can't log in to itself, and is pointless anyways
+                if (player == null)
+                    return;
+
+                // If the password is null/empty/whitespace in the config, this effectively disables the command
+                if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+                    return;
+
+                // WE ARE AT THE BRIDGE OF DEATH
+                if (shell.ElevateShellHost(player, args[0]))
+                    return;
+
+                // CAST INTO THE GORGE OF ETERNAL PERIL
+                Logger.WarningS(
+                    "con.auth",
+                    $"Failed console hostlogin authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
+
+                var net = IoCManager.Resolve<IServerNetManager>();
+                net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
+            }
+        }
+
         private class GroupCommand : IClientCommand
         {
             public string Command => "group";
             public string Description => "Prints your current permission group.";
             public string Help => "group";
 
-            public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
                 // only the local server console bypasses permissions
                 if (player == null)
-                    shell.SendText(player, "LOCAL_CONSOLE");
+                {
+                    shell.SendText((IPlayerSession?) null, "LOCAL_CONSOLE");
+                    return;
+                }
 
-                //TODO: Turn console commands into delegates so that this can actually work.
+                var groupController = IoCManager.Resolve<IConGroupController>();
+                var groupIndex = groupController.GetGroupIndex(player);
+                var groupName = groupController.GetGroupName(groupIndex);
+
+                shell.SendText(player, $"Current group: {groupName}");
+            }
+        }
+
+        private class SudoCommand : IClientCommand
+        {
+            public string Command => "sudo";
+            public string Description => "sudo make me a sandwich";
+            public string Help => "sudo";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                var command = args[0];
+                var cArgs = args[1..].Select(CommandParsing.Escape);
+
+                shell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
             }
         }
     }

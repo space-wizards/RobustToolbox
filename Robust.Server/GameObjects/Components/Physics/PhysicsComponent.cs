@@ -19,7 +19,7 @@ namespace Robust.Server.GameObjects
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController _controller = null;
+        private VirtualController? _controller = null;
         private BodyStatus _status;
 
         /// <inheritdoc />
@@ -99,7 +99,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController Controller
+        public override VirtualController? Controller
         {
             get => _controller;
         }
@@ -117,7 +117,7 @@ namespace Robust.Server.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _anchored;
-        public bool Anchored
+        public override bool Anchored
         {
             get => _anchored;
             set
@@ -148,7 +148,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, _linVelocity, _angVelocity);
+            return new PhysicsComponentState(_mass, LinearVelocity, AngularVelocity);
         }
 
         public void RemoveController()

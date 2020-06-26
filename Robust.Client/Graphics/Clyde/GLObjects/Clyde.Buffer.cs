@@ -17,9 +17,9 @@ namespace Robust.Client.Graphics.Clyde
             public BufferTarget Type { get; }
             public uint ObjectHandle { get; private set; }
             public BufferUsageHint UsageHint { get; }
-            public string Name { get; }
+            public string? Name { get; }
 
-            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, string name = null)
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, string? name = null)
             {
                 _clyde = clyde;
                 Type = type;
@@ -34,14 +34,14 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Buffer, ObjectHandle, name);
             }
 
-            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string name = null)
+            public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, int size, string? name = null)
                 : this(clyde, type, usage, name)
             {
                 Reallocate(size);
             }
 
             public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<byte> initialize,
-                string name = null)
+                string? name = null)
                 : this(clyde, type, usage, name)
             {
                 Reallocate(initialize);
@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
         private class GLBuffer<T> : GLBuffer where T : unmanaged
         {
             public GLBuffer(Clyde clyde, BufferTarget type, BufferUsageHint usage, Span<T> initialize,
-                string name = null)
+                string? name = null)
                 : base(clyde, type, usage, MemoryMarshal.AsBytes(initialize), name)
             {
             }

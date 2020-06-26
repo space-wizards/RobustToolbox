@@ -18,13 +18,11 @@ namespace Robust.Server.Placement
 {
     public class PlacementManager : IPlacementManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IServerEntityManager _entityManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
@@ -32,7 +30,7 @@ namespace Robust.Server.Placement
 
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 
-        public Func<MsgPlacement, bool> AllowPlacementFunc { get; set; }
+        public Func<MsgPlacement, bool>? AllowPlacementFunc { get; set; }
 
         #region IPlacementManager Members
 
@@ -46,7 +44,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void HandleNetMessage(MsgPlacement msg)
         {
-            if (!AllowPlacementFunc(msg))
+            if (AllowPlacementFunc != null && !AllowPlacementFunc(msg))
             {
                 return;
             }
@@ -134,7 +132,7 @@ namespace Robust.Server.Placement
 
             var gridsInArea = _mapManager.FindGridsIntersecting(mapId, gridSearchBox);
 
-            IMapGrid closest = null;
+            IMapGrid? closest = null;
             float distance = float.PositiveInfinity;
             Box2 intersect = new Box2();
             foreach (var grid in gridsInArea)
@@ -353,7 +351,7 @@ namespace Robust.Server.Placement
 
         #endregion IPlacementManager Members
 
-        private PlacementInformation GetPermission(EntityUid uid, string alignOpt)
+        private PlacementInformation? GetPermission(EntityUid uid, string alignOpt)
         {
             foreach (var buildPermission in BuildPermissions)
             {

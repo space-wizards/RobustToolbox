@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Determines whether the SpinBox value gets changed by the input text.
         /// </summary>
-        public Func<int, bool> IsValid { get; set; }
+        public Func<int, bool>? IsValid { get; set; }
 
         public int Value
         {

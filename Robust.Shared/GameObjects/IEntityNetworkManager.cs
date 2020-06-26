@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="entity">Entity sending the message (also entity to send to).</param>
         /// <param name="component">Component that sent the message.</param>
         /// <param name="message">Message to send.</param>
-        void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
+        void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
             ComponentMessage message);
 
         /// <summary>

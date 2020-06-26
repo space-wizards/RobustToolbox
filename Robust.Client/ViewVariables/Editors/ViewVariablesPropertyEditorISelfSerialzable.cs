@@ -7,11 +7,11 @@ namespace Robust.Client.ViewVariables.Editors
 {
     internal sealed class ViewVariablesPropertyEditorISelfSerialzable<T> : ViewVariablesPropertyEditor where T : ISelfSerialize
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var lineEdit = new LineEdit
             {
-                Text = ((ISelfSerialize)value).Serialize(),
+                Text = ((ISelfSerialize)value!).Serialize(),
                 Editable = !ReadOnly,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
             };
@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 lineEdit.OnTextEntered += e =>
                 {
-                    var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T));
+                    var instance = (ISelfSerialize)Activator.CreateInstance(typeof(T))!;
                     instance.Deserialize(e.Text);
                     ValueChanged(instance);
                 };

@@ -4,6 +4,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -17,9 +18,9 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Default style sheet that applies to all controls
         ///     that do not have a more specific style sheet via <see cref="Control.Stylesheet"/>.
         /// </summary>
-        Stylesheet Stylesheet { get; set; }
+        Stylesheet? Stylesheet { get; set; }
 
-        Control KeyboardFocused { get; }
+        Control? KeyboardFocused { get; }
 
         LayoutContainer StateRoot { get; }
 
@@ -29,7 +30,7 @@ namespace Robust.Client.Interfaces.UserInterface
 
         PopupContainer ModalRoot { get; }
 
-        Control CurrentlyHovered { get; }
+        Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
 
@@ -43,7 +44,15 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void Popup(string contents, string title = "Alert!");
 
-        Control MouseGetControl(Vector2 coordinates);
+        Control? MouseGetControl(Vector2 coordinates);
+
+        /// <summary>
+        ///     Gets the mouse position in UI space, accounting for <see cref="UIScale"/>.
+        /// </summary>
+        Vector2 MousePositionScaled { get; }
+
+        Vector2 ScreenToUIPosition(Vector2 position);
+        Vector2 ScreenToUIPosition(ScreenCoordinates coordinates);
 
         /// <summary>
         ///     Give a control keyboard focus, releasing focus on the currently focused control (if any).
@@ -72,7 +81,7 @@ namespace Robust.Client.Interfaces.UserInterface
         /// <summary>
         ///     Cursor automatically used when the mouse is not over any UI control.
         /// </summary>
-        ICursor WorldCursor { get; set; }
+        ICursor? WorldCursor { get; set; }
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager

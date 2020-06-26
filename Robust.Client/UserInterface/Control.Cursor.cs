@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface
     public partial class Control
     {
         private CursorShape _cursorShape;
-        private ICursor _customCursor;
+        private ICursor? _customCursor;
 
         /// <summary>
         ///     Default common cursor shapes available in the UI.
@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Custom cursor shape to use.
         /// </summary>
-        public ICursor CustomCursorShape
+        public ICursor? CustomCursorShape
         {
             get => _customCursor;
             set

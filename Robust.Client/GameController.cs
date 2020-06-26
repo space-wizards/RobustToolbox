@@ -20,6 +20,7 @@ using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
@@ -39,40 +40,38 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly IResourceCacheInternal _resourceCache;
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly IRobustSerializer _serializer;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-        [Dependency] private readonly IClientNetManager _networkManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IStateManager _stateManager;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-        [Dependency] private readonly IBaseClient _client;
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IClientConsole _console;
-        [Dependency] private readonly ITimerManager _timerManager;
-        [Dependency] private readonly IClientEntityManager _entityManager;
-        [Dependency] private readonly IPlacementManager _placementManager;
-        [Dependency] private readonly IClientGameStateManager _gameStateManager;
-        [Dependency] private readonly IOverlayManagerInternal _overlayManager;
-        [Dependency] private readonly ILogManager _logManager;
-        [Dependency] private readonly ITaskManager _taskManager;
-        [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager;
-        [Dependency] private readonly IDiscordRichPresence _discord;
-        [Dependency] private readonly IClydeInternal _clyde;
-        [Dependency] private readonly IFontManagerInternal _fontManager;
-        [Dependency] private readonly IModLoader _modLoader;
-        [Dependency] private readonly ISignalHandler _signalHandler;
-        [Dependency] private readonly IClientConGroupController _conGroupController;
-        [Dependency] private readonly IScriptClient _scriptClient;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IRobustSerializer _serializer = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IClientNetManager _networkManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IStateManager _stateManager = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private readonly IBaseClient _client = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly ITimerManager _timerManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IPlacementManager _placementManager = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+        [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager = default!;
+        [Dependency] private readonly IDiscordRichPresence _discord = default!;
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private readonly IFontManagerInternal _fontManager = default!;
+        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly ISignalHandler _signalHandler = default!;
+        [Dependency] private readonly IClientConGroupController _conGroupController = default!;
+        [Dependency] private readonly IScriptClient _scriptClient = default!;
 
-        private CommandLineArgs _commandLineArgs;
+        private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
 
-        public InitialLaunchState LaunchState { get; private set; }
+        public InitialLaunchState LaunchState { get; private set; } = default!;
 
         public bool LoadConfigAndUserData { get; set; } = true;
 
@@ -81,11 +80,11 @@ namespace Robust.Client
             _commandLineArgs = args;
         }
 
-        public bool Startup()
+        public bool Startup(Func<ILogHandler>? logHandlerFactory = null)
         {
             ReadInitialLaunchState();
 
-            SetupLogging(_logManager);
+            SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
 
             _taskManager.Initialize();
 
@@ -106,6 +105,8 @@ namespace Robust.Client
                     _configurationManager.SetSaveFile(configFile);
                 }
             }
+
+            _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
             {
@@ -157,9 +158,9 @@ namespace Robust.Client
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
 
-            _serializer.Initialize();
             _userInterfaceManager.Initialize();
             _networkManager.Initialize(false);
+            _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
@@ -183,7 +184,8 @@ namespace Robust.Client
 
             _clyde.Ready();
 
-            if (_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+            if ((_commandLineArgs?.Connect == true || _commandLineArgs?.Launcher == true)
+                && LaunchState.ConnectEndpoint != null)
             {
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
             }
@@ -237,7 +239,7 @@ namespace Robust.Client
         }
 
 
-        public void Shutdown(string reason = null)
+        public void Shutdown(string? reason = null)
         {
             // Already got shut down I assume,
             if (!_mainLoop.Running)
@@ -284,9 +286,9 @@ namespace Robust.Client
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
         }
 
-        internal static void SetupLogging(ILogManager logManager)
+        internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
         {
-            logManager.RootSawmill.AddHandler(new ConsoleLogHandler());
+            logManager.RootSawmill.AddHandler(logHandlerFactory());
 
             logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;
@@ -297,6 +299,7 @@ namespace Robust.Client
             logManager.GetSawmill("ogl.debug.other").Level = LogLevel.Warning;
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
+            logManager.GetSawmill("net.predict").Level = LogLevel.Info;
         }
 
         private string GetUserDataDir()

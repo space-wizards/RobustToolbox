@@ -71,6 +71,7 @@ namespace Robust.Client.ViewVariables
                 if (obj == null)
                 {
                     console.AddLine("Not currently hovering any control.");
+                    return false;
                 }
                 vvm.OpenVV(obj);
                 return false;

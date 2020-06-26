@@ -21,14 +21,12 @@ namespace Robust.Client.Utility
             }
         };
 
-        private RichPresence _activePresence;
+        private RichPresence? _activePresence;
 
-        private DiscordRpcClient _client;
+        private DiscordRpcClient? _client;
 
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly ILogManager _logManager;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
         private bool _initialized;
 

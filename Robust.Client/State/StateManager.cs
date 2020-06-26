@@ -8,12 +8,15 @@ namespace Robust.Client.State
 {
     internal sealed class StateManager : IStateManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory;
-#pragma warning restore 649
+        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
 
-        public event Action<StateChangedEventArgs> OnStateChanged;
+        public event Action<StateChangedEventArgs>? OnStateChanged;
         public State CurrentState { get; private set; }
+
+        public StateManager()
+        {
+            CurrentState = new DefaultState();
+        }
 
         public void Update(FrameEventArgs e)
         {

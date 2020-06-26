@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.GameObjects;
@@ -100,7 +101,7 @@ namespace Robust.Shared.Interfaces.Map
 
         IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
         IMapGrid GetGrid(GridId gridID);
-        bool TryGetGrid(GridId gridId, out IMapGrid grid);
+        bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(GridId gridID);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
@@ -114,7 +115,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="worldPos">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapId mapId, Vector2 worldPos, out IMapGrid grid);
+        bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid);
 
         /// <summary>
         /// Attempts to find the map grid under the map location.
@@ -125,7 +126,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
         /// <param name="grid">Grid that was found, if any.</param>
         /// <returns>Returns true when a grid was found under the location.</returns>
-        bool TryFindGridAt(MapCoordinates mapCoordinates, out IMapGrid grid);
+        bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
         void DeleteGrid(GridId gridID);
@@ -154,13 +155,13 @@ namespace Robust.Shared.Interfaces.Map
         /// </summary>
         event EventHandler<MapEventArgs> MapDestroyed;
 
-        GameStateMapData GetStateData(GameTick fromTick);
+        GameStateMapData? GetStateData(GameTick fromTick);
         void CullDeletionHistory(GameTick uptoTick);
 
         // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
         // but old ones can be deleted after.
-        void ApplyGameStatePre(GameStateMapData data);
-        void ApplyGameStatePost(GameStateMapData data);
+        void ApplyGameStatePre(GameStateMapData? data);
+        void ApplyGameStatePost(GameStateMapData? data);
         bool HasMapEntity(MapId mapId);
     }
 }

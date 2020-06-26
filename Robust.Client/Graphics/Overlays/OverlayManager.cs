@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -57,12 +58,12 @@ namespace Robust.Client.Graphics.Overlays
             _overlays.Remove(id);
         }
 
-        public bool TryGetOverlay(string id, out Overlay overlay)
+        public bool TryGetOverlay(string id, [NotNullWhen(true)] out Overlay? overlay)
         {
             return _overlays.TryGetValue(id, out overlay);
         }
 
-        public bool TryGetOverlay<T>(string id, out T overlay) where T : Overlay
+        public bool TryGetOverlay<T>(string id, [NotNullWhen(true)] out T? overlay) where T : Overlay
         {
             if (_overlays.TryGetValue(id, out var value))
             {

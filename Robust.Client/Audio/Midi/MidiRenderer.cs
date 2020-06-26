@@ -132,7 +132,7 @@ namespace Robust.Client.Audio.Midi
         ///     The entity whose position will be used for positional audio.
         ///     This is only used if <see cref="Mono"/> is set to True.
         /// </summary>
-        IEntity TrackingEntity { get; set; }
+        IEntity? TrackingEntity { get; set; }
 
         /// <summary>
         ///     The position that will be used for positional audio.
@@ -159,11 +159,9 @@ namespace Robust.Client.Audio.Midi
 
     public class MidiRenderer : IMidiRenderer
     {
-#pragma warning disable 649
-        [Dependency] private IClydeAudio _clydeAudio;
-        [Dependency] private ITaskManager _taskManager;
-        [Dependency] private ILogManager _logger;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeAudio _clydeAudio = default!;
+        [Dependency] private readonly ITaskManager _taskManager = default!;
+        [Dependency] private readonly ILogManager _logger = default!;
 
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
@@ -177,8 +175,8 @@ namespace Robust.Client.Audio.Midi
         private readonly SoundFontLoader _soundFontLoader;
         private Synth _synth;
         private Sequencer _sequencer;
-        private NFluidsynth.Player _player;
-        private MidiDriver _driver;
+        private NFluidsynth.Player? _player;
+        private MidiDriver? _driver;
         private byte _midiProgram = 1;
         private byte _midiBank = 1;
         private uint _midiSoundfont = 0;
@@ -251,7 +249,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public IEntity TrackingEntity { get; set; } = null;
+        public IEntity? TrackingEntity { get; set; } = null;
         public GridCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal bool Free { get; set; } = false;
@@ -343,6 +341,7 @@ namespace Robust.Client.Audio.Midi
             {
                 if (_player == null) return false;
                 _player?.Stop();
+                _player?.Join();
                 _player?.Dispose();
                 _player = null;
             }
@@ -368,8 +367,8 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public event Action<Shared.Audio.Midi.MidiEvent> OnMidiEvent;
-        public event Action OnMidiPlayerFinished;
+        public event Action<Shared.Audio.Midi.MidiEvent>? OnMidiEvent;
+        public event Action? OnMidiPlayerFinished;
 
         internal void Render(int length = SampleRate / 250)
         {
@@ -479,6 +478,7 @@ namespace Robust.Client.Audio.Midi
                     {
                         // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
                         case 1:
+                        case 5:
                         case 81:
                             break;
 
@@ -564,13 +564,6 @@ namespace Robust.Client.Audio.Midi
             _player?.Dispose();
             _driver?.Dispose();
             _sequencer?.Dispose();
-
-            _settings = null;
-            Source = null;
-            _synth = null;
-            _player = null;
-            _driver = null;
-            _sequencer = null;
         }
     }
 }

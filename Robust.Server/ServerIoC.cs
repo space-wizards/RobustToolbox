@@ -1,4 +1,5 @@
 ﻿using Robust.Server.Console;
+using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -73,6 +74,7 @@ namespace Robust.Server
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<IWatchdogApi, WatchdogApi>();
             IoCManager.Register<IScriptHost, ScriptHost>();
+            IoCManager.Register<IMetricsManager, MetricsManager>();
         }
     }
 }

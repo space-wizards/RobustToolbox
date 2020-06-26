@@ -12,7 +12,7 @@ namespace Robust.Client.Player
         IEnumerable<IPlayerSession> Sessions { get; }
         IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict { get; }
 
-        LocalPlayer LocalPlayer { get; }
+        LocalPlayer? LocalPlayer { get; }
 
         int PlayerCount { get; }
         int MaxPlayers { get; }
@@ -23,6 +23,6 @@ namespace Robust.Client.Player
         void Update(float frameTime);
         void Shutdown();
 
-        void ApplyPlayerStates(IEnumerable<PlayerState> list);
+        void ApplyPlayerStates(IEnumerable<PlayerState>? list);
     }
 }

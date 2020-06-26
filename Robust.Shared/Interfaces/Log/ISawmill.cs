@@ -36,7 +36,7 @@ namespace Robust.Shared.Interfaces.Log
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
         [StringFormatMethod("message")]
-        void Log(LogLevel level, string message, params object[] args);
+        void Log(LogLevel level, string message, params object?[] args);
 
         /// <summary>
         ///     Log a message.
@@ -48,7 +48,7 @@ namespace Robust.Shared.Interfaces.Log
         /// </summary>
         /// <seealso cref="Log" />
         [StringFormatMethod("message")]
-        void Debug(string message, params object[] args);
+        void Debug(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as debug.
@@ -61,7 +61,7 @@ namespace Robust.Shared.Interfaces.Log
         /// </summary>
         /// <seealso cref="Log" />
         [StringFormatMethod("message")]
-        void Info(string message, params object[] args);
+        void Info(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as info.
@@ -74,7 +74,7 @@ namespace Robust.Shared.Interfaces.Log
         /// </summary>
         /// <seealso cref="Log" />
         [StringFormatMethod("message")]
-        void Warning(string message, params object[] args);
+        void Warning(string message, params object?[] args);
         /// <summary>
         ///     Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
@@ -86,7 +86,7 @@ namespace Robust.Shared.Interfaces.Log
         /// </summary>
         /// <seealso cref="Log" />
         [StringFormatMethod("message")]
-        void Error(string message, params object[] args);
+        void Error(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as error.
@@ -99,7 +99,7 @@ namespace Robust.Shared.Interfaces.Log
         /// </summary>
         /// <seealso cref="Log" />
         [StringFormatMethod("message")]
-        void Fatal(string message, params object[] args);
+        void Fatal(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as fatal.

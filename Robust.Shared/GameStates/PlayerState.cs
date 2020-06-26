@@ -5,6 +5,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Players;
 using Robust.Shared.Network;
 
+#nullable disable
+
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]

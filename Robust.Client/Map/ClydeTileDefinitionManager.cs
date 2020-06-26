@@ -16,11 +16,9 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-#pragma warning disable 649
-        [Dependency] private IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public Texture TileTextureAtlas { get; private set; }
+        public Texture TileTextureAtlas { get; private set; } = default!;
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
 
@@ -60,7 +58,7 @@ namespace Robust.Client.Map
                 Image<Rgba32> image;
                 using (var stream = _resourceCache.ContentFileRead($"/Textures/Constructible/Tiles/{def.SpriteName}.png"))
                 {
-                    image = Image.Load(stream);
+                    image = Image.Load<Rgba32>(stream);
                 }
 
                 if (image.Width != tileSize || image.Height != tileSize)

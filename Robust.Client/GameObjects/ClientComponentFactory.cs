@@ -39,16 +39,12 @@ namespace Robust.Client.GameObjects
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, SharedPhysicsComponent>();
 
             Register<InputComponent>();
 
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
-            RegisterReference<SpriteComponent, IClickTargetComponent>();
-
-            Register<ClickableComponent>();
-            RegisterReference<ClickableComponent, IClientClickableComponent>();
-            RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();

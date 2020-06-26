@@ -14,9 +14,7 @@ namespace Robust.Shared.GameObjects.Components
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPhysicsManager _physicsManager;
-#pragma warning restore 649
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private bool _canCollide;
         private BodyStatus _status;
@@ -53,7 +51,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;
@@ -119,7 +117,12 @@ namespace Robust.Shared.GameObjects.Components
         public bool CanCollide
         {
             get => _canCollide;
-            set => _canCollide = value;
+            set
+            {
+                _canCollide = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -156,7 +159,11 @@ namespace Robust.Shared.GameObjects.Components
         public BodyStatus Status
         {
             get => _status;
-            set => _status = value;
+            set
+            {
+                _status = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -167,6 +174,8 @@ namespace Robust.Shared.GameObjects.Components
             // normally ExposeData would create this
             if (_physShapes == null)
                 _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
+
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
         }
 
         /// <inheritdoc />

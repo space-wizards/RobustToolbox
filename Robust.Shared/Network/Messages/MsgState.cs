@@ -7,6 +7,8 @@ using Robust.Shared.IoC;
 using System.IO;
 using Robust.Shared.Utility;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     public class MsgState : NetMessage
@@ -35,12 +37,9 @@ namespace Robust.Shared.Network.Messages
         {
             MsgSize = buffer.LengthBytes;
             var length = buffer.ReadVariableInt32();
-            var stateData = buffer.ReadBytes(length);
-            using (var stateStream = new MemoryStream(stateData))
-            {
-                var serializer = IoCManager.Resolve<IRobustSerializer>();
-                State = serializer.Deserialize<GameState>(stateStream);
-            }
+            using var stream = buffer.ReadAsStream(length);
+            var serializer = IoCManager.Resolve<IRobustSerializer>();
+            State = serializer.Deserialize<GameState>(stream);
 
             State.PayloadSize = length;
         }
@@ -85,7 +84,7 @@ namespace Robust.Shared.Network.Messages
                     return NetDeliveryMethod.ReliableUnordered;
                 }
 
-                return NetDeliveryMethod.Unreliable;
+                return base.DeliveryMethod;
             }
         }
     }

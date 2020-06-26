@@ -6,7 +6,7 @@ namespace Robust.Shared.Physics
     /// </summary>
     public abstract class VirtualController
     {
-        public abstract SharedPhysicsComponent ControlledComponent { set; }
+        public abstract SharedPhysicsComponent? ControlledComponent { set; }
 
         /// <summary>
         ///     Modify a physics component before processing impulses

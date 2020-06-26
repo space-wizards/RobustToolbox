@@ -256,13 +256,13 @@ namespace Lidgren.Network
 		}
 
 		public NetBigInteger(
-			byte[] bytes)
+			ReadOnlySpan<byte> bytes)
 			: this(bytes, 0, bytes.Length)
 		{
 		}
 
 		public NetBigInteger(
-			byte[] bytes,
+			ReadOnlySpan<byte> bytes,
 			int offset,
 			int length)
 		{
@@ -287,7 +287,7 @@ namespace Lidgren.Network
 				else
 				{
 					int numBytes = end - iBval;
-					byte[] inverse = new byte[numBytes];
+					Span<byte> inverse = stackalloc byte[numBytes];
 
 					int index = 0;
 					while (index < numBytes)
@@ -316,7 +316,7 @@ namespace Lidgren.Network
 		}
 
 		private static int[] MakeMagnitude(
-			byte[] bytes,
+			ReadOnlySpan<byte> bytes,
 			int offset,
 			int length)
 		{
@@ -374,14 +374,14 @@ namespace Lidgren.Network
 
 		public NetBigInteger(
 			int sign,
-			byte[] bytes)
+			ReadOnlySpan<byte> bytes)
 			: this(sign, bytes, 0, bytes.Length)
 		{
 		}
 
 		public NetBigInteger(
 			int sign,
-			byte[] bytes,
+			ReadOnlySpan<byte> bytes,
 			int offset,
 			int length)
 		{

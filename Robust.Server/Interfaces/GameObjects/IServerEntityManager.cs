@@ -12,18 +12,18 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        [CanBeNull] List<EntityState> GetEntityStates(GameTick fromTick);
+        List<EntityState>? GetEntityStates(GameTick fromTick);
 
         /// <summary>
         ///     Gets all entity states within an AABB that have been modified after and including the provided tick.
         /// </summary>
-        [CanBeNull] List<EntityState> UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range);
+        List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range);
 
         // Keep track of deleted entities so we can sync deletions with the client.
         /// <summary>
         ///     Gets a list of all entity UIDs that were deleted between <paramref name="fromTick" /> and now.
         /// </summary>
-        [CanBeNull] List<EntityUid> GetDeletedEntities(GameTick fromTick);
+        List<EntityUid>? GetDeletedEntities(GameTick fromTick);
 
         /// <summary>
         ///     Remove deletion history.

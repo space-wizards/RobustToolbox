@@ -16,11 +16,9 @@ namespace Robust.Client.GameStates
 {
     internal class NetInterpOverlay : Overlay
     {
-#pragma warning disable 0649
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-#pragma warning restore 0649
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -43,7 +41,7 @@ namespace Robust.Client.GameStates
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it
-                if(transform.LocalPosition == transform.LerpDestination)
+                if(transform.LerpDestination == null)
                     continue;
 
                 var aabb = ((IPhysBody)boundingBox).AABB;
@@ -55,7 +53,7 @@ namespace Robust.Client.GameStates
                 var timing = IoCManager.Resolve<IGameTiming>();
                 timing.InSimulation = true;
 
-                var boxOffset = transform.LerpDestination - transform.LocalPosition;
+                var boxOffset = transform.LerpDestination.Value - transform.LocalPosition;
                 var boxPosWorld = transform.WorldPosition + boxOffset;
 
                 timing.InSimulation = false;

@@ -10,11 +10,9 @@ namespace Robust.Client
 {
     internal partial class GameController
     {
-        private IGameLoop _mainLoop;
+        private IGameLoop _mainLoop = default!;
 
-#pragma warning disable 649
-        [Dependency] private IGameTiming _gameTiming;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private static bool _hasStarted;
 

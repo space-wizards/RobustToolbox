@@ -10,7 +10,7 @@ namespace Robust.Client.ResourceManagement
 {
     public class AudioResource : BaseResource
     {
-        public AudioStream AudioStream { get; private set; }
+        public AudioStream AudioStream { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {

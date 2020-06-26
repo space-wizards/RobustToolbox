@@ -50,7 +50,7 @@ namespace Robust.Shared.Asynchronous
             var options = task.CreationOptions;
             if ((options & TaskCreationOptions.LongRunning) == 0)
             {
-                ThreadPool.UnsafeQueueUserWorkItem((IThreadPoolWorkItem) task, false);
+                ThreadPool.UnsafeQueueUserWorkItem(Execute, task, false);
             }
             else
             {

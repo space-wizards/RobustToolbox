@@ -23,12 +23,14 @@ using NetAddress = System.Net.IPAddress;
 #endif
 
 using System;
+using System.Buffers.Binary;
 using System.Net;
 
 using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Lidgren.Network
@@ -78,6 +80,13 @@ namespace Lidgren.Network
 		}
 
 		private static IPAddress s_broadcastAddress;
+
+#if NON_IEC_UNITS
+		private static readonly string[] ByteStringSuffixes = { "B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
+#else
+		private static readonly string[] ByteStringSuffixes = { "B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB" };
+#endif
+		
 		public static IPAddress GetCachedBroadcastAddress()
 		{
 			if (s_broadcastAddress == null)
@@ -219,27 +228,62 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Create a hex string from an array of bytes
 		/// </summary>
-		public static string ToHexString(byte[] data)
+		public static string ToHexString(ReadOnlySpan<byte> data, int offset, int length)
 		{
-			return ToHexString(data, 0, data.Length);
+			return ToHexString(data.Slice(offset, length));
 		}
 
 		/// <summary>
 		/// Create a hex string from an array of bytes
 		/// </summary>
-		public static string ToHexString(byte[] data, int offset, int length)
+#if UNSAFE
+		public static unsafe string ToHexString(ReadOnlySpan<byte> data)
 		{
-			char[] c = new char[length * 2];
-			byte b;
-			for (int i = 0; i < length; ++i)
+			var l = data.Length;
+			fixed (void* p = data)
 			{
-				b = ((byte)(data[offset + i] >> 4));
-				c[i * 2] = (char)(b > 9 ? b + 0x37 : b + 0x30);
-				b = ((byte)(data[offset + i] & 0xF));
-				c[i * 2 + 1] = (char)(b > 9 ? b + 0x37 : b + 0x30);
+				return string.Create(data.Length * 2, (p: (IntPtr) p, l), (c, d) =>
+				{
+					var s = new ReadOnlySpan<byte>((void*) d.p, d.l);
+					var u = MemoryMarshal.Cast<char,int>(c);
+					for (var i = 0; i < l; ++i)
+					{
+						var b = s[i];
+						var nibLo = b >> 4;
+						var isDigLo = (nibLo - 10) >> 31;
+						var chLo = 55 + nibLo + (isDigLo & -7);
+						var nibHi = b & 0xF;
+						var isDigHi = (nibHi - 10) >> 31;
+						var chHi = 55 + nibHi + (isDigHi & -7);
+						u[i] = (chHi << 16) | chLo;
+					}
+				});
 			}
+		}
+#else
+
+		public static string ToHexString(ReadOnlySpan<byte> data)
+		{
+			var l = data.Length;
+			// ReSharper disable once SuggestVarOrType_Elsewhere
+			Span<char> c = stackalloc char[l*2];
+			var u = MemoryMarshal.Cast<char,int>(c);
+
+			for (var i = 0; i < l; ++i)
+			{
+				var b = data[i];
+				var nibLo = b >> 4;
+				var isDigLo = (nibLo - 10) >> 31;
+				var chLo = 55 + nibLo + (isDigLo & -7);
+				var nibHi = b & 0xF;
+				var isDigHi = (nibHi - 10) >> 31;
+				var chHi = 55 + nibHi + (isDigHi & -7);
+				u[i] = (chHi << 16) | chLo;
+			}
+
 			return new string(c);
 		}
+#endif
 
 		/// <summary>
 		/// Returns true if the endpoint supplied is on the same subnet as this host
@@ -276,10 +320,20 @@ namespace Lidgren.Network
 		[CLSCompliant(false)]
 		public static int BitsToHoldUInt(uint value)
 		{
-			int bits = 1;
-			while ((value >>= 1) != 0)
-				bits++;
-			return bits;
+#if NETCOREAPP3_1
+			return 32 - System.Numerics.BitOperations.LeadingZeroCount(value);
+#else
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			value -= ((value >> 1) & 0x55555555U);
+			value = (value & 0x33333333U) + ((value >> 2) & 0x33333333U);
+			value = (value + (value >> 4)) & 0x0F0F0F0FU;
+			value = (value * 0x01010101U) >> 24;
+			return (int)(value & 127);
+#endif
 		}
 
 		/// <summary>
@@ -288,10 +342,22 @@ namespace Lidgren.Network
 		[CLSCompliant(false)]
 		public static int BitsToHoldUInt64(ulong value)
 		{
-			int bits = 1;
-			while ((value >>= 1) != 0)
-				bits++;
-			return bits;
+#if NETCOREAPP3_1
+			return 64 - System.Numerics.BitOperations.LeadingZeroCount(value);
+#else
+			value |= value >> 1;
+			value |= value >> 2;
+			value |= value >> 4;
+			value |= value >> 8;
+			value |= value >> 16;
+			value |= value >> 32;
+			value -= ((value >> 1) & 0x5555555555555555U);
+			value = (value & 0x3333333333333333U)
+				+ ((value >> 2) & 0x3333333333333333U);
+			value = (value + (value >> 4)) & 0x0F0F0F0F0F0F0F0FU;
+			value = (value * 0x0101010101010101U) >> 56;
+			return (int)(value & 127);
+#endif
 		}
 
 		/// <summary>
@@ -300,28 +366,6 @@ namespace Lidgren.Network
 		public static int BytesToHoldBits(int numBits)
 		{
 			return (numBits + 7) / 8;
-		}
-
-		internal static UInt32 SwapByteOrder(UInt32 value)
-		{
-			return
-				((value & 0xff000000) >> 24) |
-				((value & 0x00ff0000) >> 8) |
-				((value & 0x0000ff00) << 8) |
-				((value & 0x000000ff) << 24);
-		}
-
-		internal static UInt64 SwapByteOrder(UInt64 value)
-		{
-			return
-				((value & 0xff00000000000000L) >> 56) |
-				((value & 0x00ff000000000000L) >> 40) |
-				((value & 0x0000ff0000000000L) >> 24) |
-				((value & 0x000000ff00000000L) >> 8) |
-				((value & 0x00000000ff000000L) << 8) |
-				((value & 0x0000000000ff0000L) << 24) |
-				((value & 0x000000000000ff00L) << 40) |
-				((value & 0x00000000000000ffL) << 56);
 		}
 
 		internal static bool CompareElements(byte[] one, byte[] two)
@@ -337,12 +381,25 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Convert a hexadecimal string to a byte array
 		/// </summary>
-		public static byte[] ToByteArray(String hexString)
+		public static Span<byte> HexToBytes(String hexString, Span<byte> buffer)
 		{
-			byte[] retval = new byte[hexString.Length / 2];
-			for (int i = 0; i < hexString.Length; i += 2)
-				retval[i / 2] = Convert.ToByte(hexString.Substring(i, 2), 16);
-			return retval;
+			if (buffer.Length < hexString.Length/2)
+				throw new ArgumentOutOfRangeException(nameof(buffer), buffer.Length,"Buffer too small");
+
+			var hexStrEnum = hexString.GetEnumerator();
+			for (var i = 0; i+1 < hexString.Length; i += 2)
+			{
+				hexStrEnum.MoveNext();
+				var chHi = hexStrEnum.Current;
+				hexStrEnum.MoveNext();
+				var chLo = hexStrEnum.Current;
+				buffer[i / 2] = (byte)(
+					(((chHi & 0xF) << 4) + ((chHi & 0x40)>>2) * 9)
+					|((chLo & 0xF) + ((chLo & 0x40)>>6) * 9)
+				);
+			}
+
+			return buffer;
 		}
 
 		/// <summary>
@@ -350,11 +407,10 @@ namespace Lidgren.Network
 		/// </summary>
 		public static string ToHumanReadable(long bytes)
 		{
-			if (bytes < 4000) // 1-4 kb is printed in bytes
-				return bytes + " bytes";
-			if (bytes < 1000 * 1000) // 4-999 kb is printed in kb
-				return Math.Round(((double)bytes / 1000.0), 2) + " kilobytes";
-			return Math.Round(((double)bytes / (1000.0 * 1000.0)), 2) + " megabytes"; // else megabytes
+			var index = (long)Math.Round(Math.Max(0,Math.Log(bytes, 1024) - 2/3d), MidpointRounding.AwayFromZero);
+			var denominator = Math.Pow(1024, index);
+
+			return $"{bytes / denominator:0.##} {ByteStringSuffixes[index]}";
 		}
 
 		internal static int RelativeSequenceNumber(int nr, int expected)
@@ -460,13 +516,7 @@ namespace Lidgren.Network
 			return bdr.ToString();
 		}
 
-		public static byte[] ComputeSHAHash(byte[] bytes)
-		{
-			// this is defined in the platform specific files
-			return ComputeSHAHash(bytes, 0, bytes.Length);
-		}
-
-        /// <summary>
+		/// <summary>
         /// Copies from <paramref name="src"/> to <paramref name="dst"/>. Maps to an IPv6 address
         /// </summary>
         /// <param name="src">Source.</param>

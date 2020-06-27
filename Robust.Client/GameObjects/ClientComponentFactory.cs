@@ -39,6 +39,7 @@ namespace Robust.Client.GameObjects
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
             Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, SharedPhysicsComponent>();
 
             Register<InputComponent>();
 

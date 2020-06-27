@@ -177,7 +177,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private sealed class MessageSequenceComparer : IComparer<MsgEntity>
+        internal sealed class MessageSequenceComparer : IComparer<MsgEntity>
         {
             public int Compare(MsgEntity? x, MsgEntity? y)
             {

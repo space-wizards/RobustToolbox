@@ -42,11 +42,9 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int messageLength = buffer.ReadInt32();
-                    using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
-                    {
-                        SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
-                    }
+                    int length = buffer.ReadInt32();
+                    using var stream = buffer.ReadAsStream(length);
+                    SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
                 }
                     break;
 
@@ -56,11 +54,9 @@ namespace Robust.Shared.Network.Messages
                     NetId = buffer.ReadUInt32();
 
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int messageLength = buffer.ReadInt32();
-                    using (var stream = new MemoryStream(buffer.ReadBytes(messageLength)))
-                    {
-                        ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
-                    }
+                    int length = buffer.ReadInt32();
+                    using var stream = buffer.ReadAsStream(length);
+                    ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
                 }
                     break;
             }
@@ -188,6 +184,7 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
+#if false
         private List<object> UnPackParams(NetIncomingMessage message)
         {
             var messageParams = new List<object>();
@@ -236,12 +233,15 @@ namespace Robust.Shared.Network.Messages
                         break;
                     case NetworkDataType.d_byteArray:
                         int length = message.ReadInt32();
-                        messageParams.Add(message.ReadBytes(length));
+                        var buf = new byte[length];
+                        message.ReadBytes(buf);
+                        messageParams.Add(buf)
                         break;
                 }
             }
             return messageParams;
         }
+#endif
 
         #endregion Parameter Packing
 

@@ -58,8 +58,12 @@ namespace Robust.Client.GameObjects
                     }
                     else //Unknown entities
                     {
-                        var metaState =
-                            (MetaDataComponentState) es.ComponentStates.First(c => c.NetID == NetIDs.META_DATA);
+                        var metaState = (MetaDataComponentState) es.ComponentStates
+                            .FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        if (metaState == null)
+                        {
+                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
+                        }
                         var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);

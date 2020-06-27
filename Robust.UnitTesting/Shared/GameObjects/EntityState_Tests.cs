@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     },
                     new []
                     {
-                        new MapGridComponentState(new GridId(0)),
+                        new MapGridComponentState(new GridId(0), true),
                     });
 
                 serializer.Serialize(stream, payload);

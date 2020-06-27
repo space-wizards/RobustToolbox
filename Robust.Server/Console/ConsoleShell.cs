@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
@@ -61,6 +62,10 @@ namespace Robust.Server.Console
             // register console admin global password. DO NOT ADD THE REPLICATED FLAG
             if (!_configMan.IsCVarRegistered("console.password"))
                 _configMan.RegisterCVar("console.password", string.Empty,
+                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
+
+            if (!_configMan.IsCVarRegistered("console.hostpassword"))
+                _configMan.RegisterCVar("console.hostpassword", string.Empty,
                     CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
 
             if (!_configMan.IsCVarRegistered("console.adminGroup"))
@@ -226,6 +231,57 @@ namespace Robust.Server.Console
             }
         }
 
+        public bool ElevateShellHost(IPlayerSession session, string password)
+        {
+            if (session == null)
+                throw new ArgumentNullException(nameof(session));
+
+            var realPass = _configMan.GetCVar<string>("console.hostpassword");
+
+            // password disabled
+            if (string.IsNullOrWhiteSpace(realPass))
+                return false;
+
+            // wrong password
+            if (password != realPass)
+                return false;
+
+            // success!
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.hostGroup")));
+
+            return true;
+        }
+
+        private class HostLoginCommand : IClientCommand
+        {
+            public string Command => "hostlogin";
+            public string Description => "Elevates client to host permission group.";
+            public string Help => "hostlogin";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                // system console can't log in to itself, and is pointless anyways
+                if (player == null)
+                    return;
+
+                // If the password is null/empty/whitespace in the config, this effectively disables the command
+                if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
+                    return;
+
+                // WE ARE AT THE BRIDGE OF DEATH
+                if (shell.ElevateShellHost(player, args[0]))
+                    return;
+
+                // CAST INTO THE GORGE OF ETERNAL PERIL
+                Logger.WarningS(
+                    "con.auth",
+                    $"Failed console hostlogin authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
+
+                var net = IoCManager.Resolve<IServerNetManager>();
+                net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
+            }
+        }
+
         private class GroupCommand : IClientCommand
         {
             public string Command => "group";
@@ -246,6 +302,21 @@ namespace Robust.Server.Console
                 var groupName = groupController.GetGroupName(groupIndex);
 
                 shell.SendText(player, $"Current group: {groupName}");
+            }
+        }
+
+        private class SudoCommand : IClientCommand
+        {
+            public string Command => "sudo";
+            public string Description => "sudo make me a sandwich";
+            public string Help => "sudo";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                var command = args[0];
+                var cArgs = args[1..].Select(CommandParsing.Escape);
+
+                shell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
             }
         }
     }

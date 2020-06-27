@@ -50,7 +50,7 @@ namespace Robust.Server.GameObjects
                 return true;
             }
 
-            data = default;
+            data = default!;
             return false;
         }
 

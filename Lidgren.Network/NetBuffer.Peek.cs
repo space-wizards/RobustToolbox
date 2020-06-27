@@ -28,7 +28,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Gets the internal data buffer
 		/// </summary>
-		public byte[] PeekDataBuffer() { return m_data; }
+		public Span<byte> PeekDataBuffer() { return m_data; }
 
 		//
 		// 1 bit
@@ -79,25 +79,25 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Reads the specified number of bytes without advancing the read pointer
 		/// </summary>
-		public byte[] PeekBytes(int numberOfBytes)
+		public Span<byte> PeekBytes(Span<byte> bytes)
 		{
+			var numberOfBytes = bytes.Length;
 			NetException.Assert(m_bitLength - m_readPosition >= (numberOfBytes * 8), c_readOverflowError);
 
-			byte[] retval = new byte[numberOfBytes];
-			NetBitWriter.ReadBytes(m_data, numberOfBytes, m_readPosition, retval, 0);
-			return retval;
+			NetBitWriter.ReadBytes(m_data, numberOfBytes, m_readPosition, bytes, 0);
+			return bytes;
 		}
 
 		/// <summary>
 		/// Reads the specified number of bytes without advancing the read pointer
 		/// </summary>
-		public void PeekBytes(byte[] into, int offset, int numberOfBytes)
+		public Span<byte> PeekBytes(Span<byte> into, int offset, int numberOfBytes)
 		{
 			NetException.Assert(m_bitLength - m_readPosition >= (numberOfBytes * 8), c_readOverflowError);
 			NetException.Assert(offset + numberOfBytes <= into.Length);
 
 			NetBitWriter.ReadBytes(m_data, numberOfBytes, m_readPosition, into, offset);
-			return;
+			return into;
 		}
 
 		//
@@ -271,12 +271,12 @@ namespace Lidgren.Network
 
 			if ((m_readPosition & 7) == 0) // read directly
 			{
-				float retval = BitConverter.ToSingle(m_data, m_readPosition >> 3);
+				float retval = BitConverter.ToSingle(m_data.Slice( m_readPosition >> 3));
 				return retval;
 			}
 
-			byte[] bytes = PeekBytes(4);
-			return BitConverter.ToSingle(bytes, 0);
+			var bytes = PeekBytes(stackalloc byte[4]);
+			return BitConverter.ToSingle(bytes);
 		}
 
 		/// <summary>
@@ -289,12 +289,12 @@ namespace Lidgren.Network
 			if ((m_readPosition & 7) == 0) // read directly
 			{
 				// read directly
-				double retval = BitConverter.ToDouble(m_data, m_readPosition >> 3);
+				double retval = BitConverter.ToDouble(m_data.Slice( m_readPosition >> 3));
 				return retval;
 			}
 
-			byte[] bytes = PeekBytes(8);
-			return BitConverter.ToDouble(bytes, 0);
+			var bytes = PeekBytes(stackalloc byte[8]);
+			return BitConverter.ToDouble(bytes);
 		}
 
 		/// <summary>

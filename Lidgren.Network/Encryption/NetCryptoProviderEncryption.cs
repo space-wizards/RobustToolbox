@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 namespace Lidgren.Network
@@ -11,17 +12,18 @@ namespace Lidgren.Network
 		{
 		}
 
-		protected abstract CryptoStream GetEncryptStream(MemoryStream ms);
+		protected abstract CryptoStream GetEncryptStream(Stream ms);
 
-		protected abstract CryptoStream GetDecryptStream(MemoryStream ms);
+		protected abstract CryptoStream GetDecryptStream(Stream ms);
 
 		public override bool Encrypt(NetOutgoingMessage msg)
 		{
 			int unEncLenBits = msg.LengthBits;
 
-			var ms = new MemoryStream();
+			using var ms = new MemoryStream(msg.LengthBytes);
 			var cs = GetEncryptStream(ms);
-			cs.Write(msg.m_data, 0, msg.LengthBytes);
+			var dataSpan = msg.m_data;
+			cs.Write(dataSpan.Slice(0,msg.LengthBytes));
 			cs.Close();
 
 			// get results
@@ -41,8 +43,8 @@ namespace Lidgren.Network
 		{
 			int unEncLenBits = (int)msg.ReadUInt32();
 
-			var ms = new MemoryStream(msg.m_data, 4, msg.LengthBytes - 4);
-			var cs = GetDecryptStream(ms);
+			using var ums = new MemoryStream(msg.m_buf, 4, msg.LengthBytes - 4);
+			var cs = GetDecryptStream(ums);
 
 			var result = m_peer.GetStorage(unEncLenBits);
 			cs.Read(result, 0, NetUtility.BytesToHoldBits(unEncLenBits));
@@ -50,7 +52,7 @@ namespace Lidgren.Network
 
 			// TODO: recycle existing msg
 
-			msg.m_data = result;
+			msg.m_buf = result;
 			msg.m_bitLength = unEncLenBits;
 
 			return true;

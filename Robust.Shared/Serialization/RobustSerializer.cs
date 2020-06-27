@@ -7,7 +7,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
+using Lidgren.Network;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Log;
 
 namespace Robust.Shared.Serialization
 {
@@ -17,6 +20,10 @@ namespace Robust.Shared.Serialization
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly INetManager _netManager = default!;
+
+        private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
+
+        private ISawmill LogSzr => _lazyLogSzr.Value;
 
 
         private Serializer _serializer = default!;
@@ -72,6 +79,7 @@ namespace Robust.Shared.Serialization
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
+            LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
 
             if (_netManager.IsClient)
             {

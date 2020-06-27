@@ -25,7 +25,7 @@ namespace Lidgren.Network
 			SetKey(key);
 		}
 
-		public NetAESEncryption(NetPeer peer, byte[] data, int offset, int count)
+		public NetAESEncryption(NetPeer peer, ReadOnlySpan<byte> data, int offset, int count)
 #if UNITY
 			: base(peer, new RijndaelManaged())
 #else

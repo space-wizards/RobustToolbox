@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new MapGridComponentState(_gridIndex);
+            return new MapGridComponentState(_gridIndex, Grid.HasGravity);
         }
 
         /// <inheritdoc />
@@ -77,6 +77,7 @@ namespace Robust.Shared.GameObjects.Components.Map
                 return;
 
             _gridIndex = state.GridIndex;
+            Grid.HasGravity = state.HasGravity;
         }
 
         /// <inheritdoc />
@@ -99,14 +100,17 @@ namespace Robust.Shared.GameObjects.Components.Map
         /// </summary>
         public GridId GridIndex { get; }
 
+        public bool HasGravity { get; }
+
         /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
-        public MapGridComponentState(GridId gridIndex)
+        public MapGridComponentState(GridId gridIndex, bool hasGravity)
             : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
+            HasGravity = hasGravity;
         }
     }
 }

@@ -363,7 +363,6 @@ namespace Robust.Client.UserInterface
             }
 
             Dispose(true);
-            GC.SuppressFinalize(this);
             Disposed = true;
         }
 
@@ -378,11 +377,6 @@ namespace Robust.Client.UserInterface
             Parent?.RemoveChild(this);
 
             OnKeyBindDown = null;
-        }
-
-        ~Control()
-        {
-            Dispose(false);
         }
 
         /// <summary>

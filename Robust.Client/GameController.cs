@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
@@ -300,6 +301,40 @@ namespace Robust.Client
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
+            logManager.GetSawmill("szr").Level = LogLevel.Info;
+
+#if DEBUG_ONLY_FCE_INFO
+#if DEBUG_ONLY_FCE_LOG
+            var fce = logManager.GetSawmill("fce");
+#endif
+            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+            {
+                // TODO: record FCE stats
+#if DEBUG_ONLY_FCE_LOG
+                fce.Fatal(message);
+#endif
+            }
+#endif
+
+            var uh = logManager.GetSawmill("unhandled");
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var message = ((Exception) args.ExceptionObject).ToString();
+                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+            };
+
+            var uo = logManager.GetSawmill("unobserved");
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                uo.Error(args.Exception!.ToString());
+#if EXCEPTION_TOLERANCE
+                args.SetObserved(); // don't crash
+#endif
+            };
+
+#if !DEBUG
+            ConsoleLogHandler.TryDetachFromConsoleWindow();
+#endif
         }
 
         private string GetUserDataDir()

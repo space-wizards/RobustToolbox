@@ -590,7 +590,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new TransformComponentState(_localPosition, LocalRotation, Parent?.Owner?.Uid);
+            return new TransformComponentState(_localPosition, LocalRotation, _parent);
         }
 
         /// <inheritdoc />
@@ -604,10 +604,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var rebuildMatrices = false;
                 if (Parent?.Owner?.Uid != newParentId)
                 {
-                    if (newParentId.HasValue && newParentId.Value.IsValid())
+                    if (newParentId != _parent)
                     {
-                        var newParent = Owner.EntityManager.GetEntity(newParentId.Value);
-                        AttachParent(newParent.Transform);
+                        if (!newParentId.IsValid())
+                        {
+                            DetachParentToNull();
+                        }
+                        else
+                        {
+                            var newParent = Owner.EntityManager.GetEntity(newParentId);
+                            AttachParent(newParent.Transform);
+                        }
                     }
 
                     rebuildMatrices = true;
@@ -721,7 +728,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             /// <summary>
             ///     Current parent entity of this entity.
             /// </summary>
-            public readonly EntityUid? ParentID;
+            public readonly EntityUid ParentID;
 
             /// <summary>
             ///     Current position offset of the entity.
@@ -739,7 +746,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             /// <param name="localPosition">Current position offset of this entity.</param>
             /// <param name="rotation">Current direction offset of this entity.</param>
             /// <param name="parentId">Current parent transform of this entity.</param>
-            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid? parentId)
+            public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId)
                 : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;

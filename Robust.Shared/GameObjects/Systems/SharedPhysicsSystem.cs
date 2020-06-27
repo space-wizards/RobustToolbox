@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -20,6 +21,7 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private const float Epsilon = 1.0e-6f;
 
@@ -76,8 +78,10 @@ namespace Robust.Shared.GameObjects.Systems
             var divisions = Math.Clamp(
                 MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
                 1,
-                60
+                20
             );
+
+            if (_timing.InSimulation) divisions = 1;
 
             for (var i = 0; i < divisions; i++)
             {

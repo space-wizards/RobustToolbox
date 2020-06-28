@@ -1,10 +1,13 @@
+using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -16,11 +19,21 @@ namespace Robust.Client.GameObjects.EntitySystems
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
+        // Only keep track of transforms actively lerping.
+        // Much faster than iterating 3000+ transforms every frame.
+        [ViewVariables]
+        private readonly List<TransformComponent> _lerpingTransforms = new List<TransformComponent>();
+
         public override void Initialize()
         {
             base.Initialize();
 
-            EntityQuery = new TypeEntityQuery<TransformComponent>();
+            SubscribeLocalEvent<TransformStartLerpMessage>(TransformStartLerpHandler);
+        }
+
+        private void TransformStartLerpHandler(TransformStartLerpMessage ev)
+        {
+            _lerpingTransforms.Add(ev.Transform);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -29,15 +42,17 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             var step = (float) (_gameTiming.TickRemainder.TotalSeconds / _gameTiming.TickPeriod.TotalSeconds);
 
-            foreach (var entity in RelevantEntities)
+            for (var i = 0; i < _lerpingTransforms.Count; i++)
             {
-                var transform = (TransformComponent) entity.Transform;
+                var transform = _lerpingTransforms[i];
+                var found = false;
 
                 if (transform.LerpDestination != null)
                 {
                     var oldNext = transform.LerpDestination.Value;
                     transform.LocalPosition = Vector2.Lerp(transform.LerpSource, oldNext, step);
                     transform.LerpDestination = oldNext;
+                    found = true;
                 }
 
                 if (transform.LerpAngle != null)
@@ -45,6 +60,17 @@ namespace Robust.Client.GameObjects.EntitySystems
                     var oldNext = transform.LerpAngle.Value;
                     transform.LocalRotation = Angle.Lerp(transform.LerpSourceAngle, oldNext, step);
                     transform.LerpAngle = oldNext;
+                    found = true;
+                }
+
+                // Transforms only get removed from the lerp list if they no longer are in here.
+                // This is much easier than having the transform itself tell us to remove it.
+                if (!found)
+                {
+                    // Transform is no longer lerping, remove.
+                    transform.ActivelyLerping = false;
+                    _lerpingTransforms.RemoveSwap(i);
+                    i -= 1;
                 }
             }
         }

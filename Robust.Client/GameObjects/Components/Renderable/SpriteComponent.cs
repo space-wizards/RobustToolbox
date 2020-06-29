@@ -149,6 +149,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [ViewVariables]
+        public bool ContainerOccluded { get; set; }
+
+        [ViewVariables]
+        public bool TreeUpdateQueued { get; set; }
+
         public ShaderInstance? PostShader { get; set; }
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();

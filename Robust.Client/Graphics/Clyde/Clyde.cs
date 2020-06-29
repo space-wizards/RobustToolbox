@@ -40,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 

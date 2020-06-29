@@ -13,7 +13,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -502,8 +501,8 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private readonly ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
+        private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
+            new Dictionary<MapId, DynamicTree<IEntity>>();
 
         public virtual bool UpdateEntityTree(IEntity entity)
         {
@@ -528,7 +527,11 @@ namespace Robust.Shared.GameObjects
 
             var mapId = transform.MapID;
 
-            var entTree = _entityTreesPerMap.GetOrAdd(mapId, EntityTreeFactory);
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
+            {
+                entTree = EntityTreeFactory();
+                _entityTreesPerMap.Add(mapId, entTree);
+            }
 
             // for debugging
             var necessary = 0;
@@ -570,7 +573,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static DynamicTree<IEntity> EntityTreeFactory(MapId _) =>
+        private static DynamicTree<IEntity> EntityTreeFactory() =>
             new DynamicTree<IEntity>(
                 GetWorldAabbFromEntity,
                 capacity: 16,

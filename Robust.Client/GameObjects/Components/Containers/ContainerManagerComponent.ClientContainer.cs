@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Robust.Client.GameObjects.EntitySystems;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.ViewVariables;
@@ -60,11 +62,15 @@ namespace Robust.Client.GameObjects.Components.Containers
             public void DoInsert(IEntity entity)
             {
                 Entities.Add(entity);
+
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(Owner));
             }
 
             public void DoRemove(IEntity entity)
             {
                 Entities.Remove(entity);
+
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(Owner));
             }
 
             public void Shutdown()

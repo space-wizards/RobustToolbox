@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Buffers;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.Components.Containers;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -154,10 +154,7 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Make this check more accurate.
             var widerBounds = worldBounds.Enlarged(5);
 
-            var mapEntity = _mapManager.GetMapEntity(_eyeManager.CurrentMap);
-
-            var identity = Matrix3.Identity;
-            ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
 
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
@@ -217,9 +214,34 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderQueue();
         }
 
-        private void ProcessSpriteEntities(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
-            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle, float yWorldPos)> list)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ProcessSpriteEntities(MapId map, Box2 worldBounds, RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
+            var spriteSystem = _entitySystemManager.GetEntitySystem<SpriteSystem>();
+
+            var tree = spriteSystem.GetTreeForMap(map);
+
+            var sprites = tree.Query(worldBounds, true);
+
+            foreach (var sprite in sprites)
+            {
+                if (sprite.ContainerOccluded || !sprite.Visible)
+                {
+                    continue;
+                }
+
+                var entity = sprite.Owner;
+                var transform = entity.Transform;
+
+                ref var entry = ref list.AllocAdd();
+                entry.sprite = sprite;
+                entry.worldRot = transform.WorldRotation;
+                entry.matrix = transform.WorldMatrix;
+                var worldPos = entry.matrix.Transform(transform.LocalPosition);
+                entry.yWorldPos = worldPos.Y;
+            }
+
+            /*
             entity.TryGetComponent(out ContainerManagerComponent containerManager);
 
             var localMatrix = entity.Transform.GetLocalMatrix();
@@ -260,7 +282,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list);
                 }
-            }
+            }*/
         }
 
         private void DrawSplash(IRenderHandle handle)

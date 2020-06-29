@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -8,10 +9,9 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
 {
@@ -34,7 +34,8 @@ namespace Robust.Shared.GameObjects.Systems
         }
 
 
-        protected void SimulateWorld(float frameTime, ICollection<IEntity> entities)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        protected void SimulateWorld(float frameTime, List<IEntity> entities)
         {
             foreach (var entity in entities)
             {
@@ -47,10 +48,7 @@ namespace Robust.Shared.GameObjects.Systems
             ProcessCollisions();
 
             // Remove all entities that were deleted during collision handling
-            foreach (var entity in entities.Where(e => e.Deleted).ToList())
-            {
-                entities.Remove(entity);
-            }
+            entities.RemoveAll(p => p.Deleted);
 
             // Process frictional forces
             foreach (var entity in entities)
@@ -66,10 +64,7 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // Remove all entities that were deleted due to the controller
-            foreach (var entity in entities.Where(e => e.Deleted).ToList())
-            {
-                entities.Remove(entity);
-            }
+            entities.RemoveAll(p => p.Deleted);
 
             const int solveIterationsAt60 = 4;
 

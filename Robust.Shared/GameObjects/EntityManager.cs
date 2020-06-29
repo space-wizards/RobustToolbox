@@ -46,11 +46,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
+        protected readonly Dictionary<EntityUid, Entity> Entities = new Dictionary<EntityUid, Entity>();
 
-        protected readonly List<IEntity> AllEntities = new List<IEntity>();
+        protected readonly List<Entity> AllEntities = new List<Entity>();
 
-        private readonly IEntityEventBus _eventBus = new EntityEventBus();
+        private readonly EntityEventBus _eventBus = new EntityEventBus();
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -130,8 +130,9 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
-            if (Entities.TryGetValue(uid, out entity) && !entity.Deleted)
+            if (Entities.TryGetValue(uid, out var cEntity) && !cEntity.Deleted)
             {
+                entity = cEntity;
                 return true;
             }
 

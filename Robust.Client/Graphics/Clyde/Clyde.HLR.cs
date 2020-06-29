@@ -240,49 +240,6 @@ namespace Robust.Client.Graphics.Clyde
                 var worldPos = entry.matrix.Transform(transform.LocalPosition);
                 entry.yWorldPos = worldPos.Y;
             }
-
-            /*
-            entity.TryGetComponent(out ContainerManagerComponent containerManager);
-
-            var localMatrix = entity.Transform.GetLocalMatrix();
-            Matrix3.Multiply(ref localMatrix, ref parentTransform, out var matrix);
-            var rotation = parentRotation + entity.Transform.LocalRotation;
-
-            foreach (var child in entity.Transform.ChildEntityUids)
-            {
-                var childEntity = _entityManager.GetEntity(child);
-
-                if (containerManager != null && containerManager.TryGetContainer(childEntity, out var container) &&
-                    !container.ShowContents)
-                {
-                    continue;
-                }
-
-                var childTransform = childEntity.Transform;
-
-                var worldPosition = Matrix3.Transform(matrix, childTransform.LocalPosition);
-
-                if (worldBounds.Contains(worldPosition))
-                {
-                    if (childEntity.TryGetComponent(out SpriteComponent sprite) && sprite.Visible)
-                    {
-                        ref var entry = ref list.AllocAdd();
-
-                        var childLocalMatrix = childTransform.GetLocalMatrix();
-                        Matrix3.Multiply(ref childLocalMatrix, ref matrix, out entry.Item2);
-                        var childWorldRotation = rotation + childTransform.LocalRotation;
-
-                        entry.Item1 = sprite;
-                        entry.Item3 = childWorldRotation;
-                        entry.yWorldPos = worldPosition.Y;
-                    }
-                }
-
-                if (childTransform.ChildCount > 0)
-                {
-                    ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list);
-                }
-            }*/
         }
 
         private void DrawSplash(IRenderHandle handle)

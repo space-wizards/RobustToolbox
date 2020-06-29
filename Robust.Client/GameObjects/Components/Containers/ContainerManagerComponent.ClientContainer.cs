@@ -63,14 +63,14 @@ namespace Robust.Client.GameObjects.Components.Containers
             {
                 Entities.Add(entity);
 
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(Owner));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(entity));
             }
 
             public void DoRemove(IEntity entity)
             {
                 Entities.Remove(entity);
 
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(Owner));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(entity));
             }
 
             public void Shutdown()

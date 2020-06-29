@@ -4,10 +4,8 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -17,6 +15,8 @@ namespace Robust.Client.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
+
+        internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
@@ -114,7 +114,11 @@ namespace Robust.Client.GameObjects
         public float Radius
         {
             get => _radius;
-            set => _radius = value;
+            set
+            {
+                _radius = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedMessage(this));
+            }
         }
 
         /// <inheritdoc />
@@ -173,6 +177,16 @@ namespace Robust.Client.GameObjects
             Radius = newState.Radius;
             Offset = newState.Offset;
             Color = newState.Color;
+        }
+    }
+
+    public struct PointLightRadiusChangedMessage
+    {
+        public PointLightComponent PointLightComponent { get; }
+
+        public PointLightRadiusChangedMessage(PointLightComponent pointLightComponent)
+        {
+            PointLightComponent = pointLightComponent;
         }
     }
 }

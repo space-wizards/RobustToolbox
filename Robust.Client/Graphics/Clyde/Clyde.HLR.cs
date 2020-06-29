@@ -84,26 +84,29 @@ namespace Robust.Client.Graphics.Clyde
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
                 _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
-            using (DebugGroup("Lights"))
+            if (_eyeManager.CurrentMap != MapId.Nullspace)
             {
-                DrawLightsAndFov(worldBounds, eye);
-            }
+                using (DebugGroup("Lights"))
+                {
+                    DrawLightsAndFov(worldBounds, eye);
+                }
 
-            using (DebugGroup("Grids"))
-            {
-                _drawGrids(worldBounds);
-            }
+                using (DebugGroup("Grids"))
+                {
+                    _drawGrids(worldBounds);
+                }
 
-            using (DebugGroup("Entities"))
-            {
-                DrawEntities(worldBounds);
-            }
+                using (DebugGroup("Entities"))
+                {
+                    DrawEntities(worldBounds);
+                }
 
-            RenderOverlays(OverlaySpace.WorldSpace);
+                RenderOverlays(OverlaySpace.WorldSpace);
 
-            if (_lightManager.Enabled && eye.DrawFov)
-            {
-                ApplyFovToBuffer(eye);
+                if (_lightManager.Enabled && eye.DrawFov)
+                {
+                    ApplyFovToBuffer(eye);
+                }
             }
 
             _lightingReady = false;
@@ -217,9 +220,9 @@ namespace Robust.Client.Graphics.Clyde
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ProcessSpriteEntities(MapId map, Box2 worldBounds, RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            var spriteSystem = _entitySystemManager.GetEntitySystem<SpriteSystem>();
+            var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
 
-            var tree = spriteSystem.GetTreeForMap(map);
+            var tree = spriteSystem.GetSpriteTreeForMap(map);
 
             var sprites = tree.Query(worldBounds, true);
 

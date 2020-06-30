@@ -78,7 +78,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source);
+        Vector2 CalculateNormal(IPhysBody target, IPhysBody source);
 
         /// <summary>
         ///     Calculates the penetration depth of the axis-of-least-penetration for a
@@ -86,7 +86,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        float CalculatePenetration(ICollidableComponent target, ICollidableComponent source);
+        float CalculatePenetration(IPhysBody target, IPhysBody source);
 
         Vector2 SolveCollisionImpulse(Manifold manifold);
 
@@ -156,8 +156,8 @@ namespace Robust.Shared.Interfaces.Physics
             }
         }
         public readonly Vector2 Normal;
-        public readonly ICollidableComponent A;
-        public readonly ICollidableComponent B;
+        public readonly IPhysBody A;
+        public readonly IPhysBody B;
         public SharedPhysicsComponent? APhysics;
         public SharedPhysicsComponent? BPhysics;
 
@@ -166,9 +166,8 @@ namespace Robust.Shared.Interfaces.Physics
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
 
-        public Manifold(ICollidableComponent A, ICollidableComponent B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics)
+        public Manifold(IPhysBody A, IPhysBody B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics, IPhysicsManager physicsManager)
         {
-            var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;
             this.B = B;
             Normal = physicsManager.CalculateNormal(A, B);

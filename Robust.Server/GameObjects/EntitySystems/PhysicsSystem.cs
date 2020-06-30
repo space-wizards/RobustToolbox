@@ -3,6 +3,7 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
 using System.Linq;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -14,7 +15,9 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            SimulateWorld(frameTime, RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e)).ToList());
+            SimulateWorld(frameTime,
+                RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e))
+                    .Select(p => p.GetComponent<SharedPhysicsComponent>()).ToList());
         }
     }
 }

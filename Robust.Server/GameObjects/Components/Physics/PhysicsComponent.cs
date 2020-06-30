@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using System;
 
 namespace Robust.Server.GameObjects
 {
@@ -115,6 +116,8 @@ namespace Robust.Server.GameObjects
         public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
         private bool edgeSlide = true;
 
+        public Action? AnchoredChanged;
+
         [ViewVariables(VVAccess.ReadWrite)]
         private bool _anchored;
         public override bool Anchored
@@ -123,6 +126,7 @@ namespace Robust.Server.GameObjects
             set
             {
                 _anchored = value;
+                AnchoredChanged?.Invoke();
             }
         }
 

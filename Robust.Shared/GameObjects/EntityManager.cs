@@ -518,13 +518,9 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var transform = entity.TryGetComponent(out ITransformComponent tx) ? tx : null;
+            var transform = entity.Transform;
 
-            if (transform == null || !transform.Initialized)
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
+            DebugTools.Assert(transform.Initialized);
 
             var mapId = transform.MapID;
 

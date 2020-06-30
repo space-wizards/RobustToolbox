@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Robust.Client.Input;
 using System.Threading;
 using Robust.Client.Interfaces;
@@ -292,33 +293,62 @@ namespace Robust.Client.Console.Commands
     internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x,y.";
+        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            string gridId = args[0];
+            string indices = args[1];
+            string offset = args.Length == 3 ? args[2] : "Center";
+
             if (args.Length != 2 && args.Length != 3)
             {
                 console.AddLine("Must pass exactly 2 or 3 arguments", Color.Red);
                 return false;
             }
 
-            var gridID = new GridId(int.Parse(args[0], CultureInfo.InvariantCulture));
-            var indexSplit = args[1].Split(',');
-            var x = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
-            var y = int.Parse(indexSplit[1], CultureInfo.InvariantCulture);
-            var indices = new MapIndices(x, y);
-            var offset = SnapGridOffset.Center;
-            if (args.Length == 3)
+            if (!new Regex(@"^[0-9]+$").IsMatch(gridId))
             {
-                offset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), args[2]);
+                console.AddLine("gridId must be a whole number", Color.Red);
+                return false;
+            }
+
+            if (!new Regex(@"^-?[0-9]+,-?[0-9]+$").IsMatch(indices))
+            {
+                console.AddLine("mapIndicies must be of form x<int>,y<int>", Color.Red);
+                return false;
+            }
+
+            SnapGridOffset selectedOffset;
+            if (Enum.IsDefined(typeof(SnapGridOffset), offset))
+            {
+                    selectedOffset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), offset);
+            }
+            else
+            {
+                console.AddLine("given offset type is not defined", Color.Red);
+                return false;
             }
 
             var mapMan = IoCManager.Resolve<IMapManager>();
-            var grid = mapMan.GetGrid(gridID);
-            foreach (var entity in grid.GetSnapGridCell(indices, offset))
+
+            if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
             {
-                console.AddLine(entity.Owner.Uid.ToString());
+                foreach (var entity in
+                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
+                        new MapIndices(
+                            int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
+                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
+                        selectedOffset))
+                {
+                    console.AddLine(entity.Owner.Uid.ToString());
+                }
+            }
+            else
+            {
+                console.AddLine("grid does not exist", Color.Red);
+                return false;
             }
 
             return false;

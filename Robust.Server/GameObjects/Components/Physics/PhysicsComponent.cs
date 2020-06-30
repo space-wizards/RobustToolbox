@@ -144,7 +144,7 @@ namespace Robust.Server.GameObjects
             serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
             serializer.DataField(ref edgeSlide, "edgeslide", true);
-            serializer.DataField(ref _anchored, "Anchored", false);
+            serializer.DataField(ref _anchored, "anchored", false);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _controller, "Controller", null);
         }

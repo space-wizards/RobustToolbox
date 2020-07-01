@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
@@ -11,7 +12,7 @@ namespace Robust.Shared.Utility
 {
 
     /// <summary>
-    /// A mutable dictionary of mutable sets for use as an index of unique values related to another collection.
+    /// A mutable dictionary of mutable and immutable sets for use as an index of unique values related to another collection.
     /// Imitates the behavior of a write-focused index in a RDBMS.
     /// </summary>
     /// <remarks>
@@ -140,6 +141,21 @@ namespace Robust.Shared.Utility
             if (_index.ContainsKey(key)) return;
 
             _index.Add(key, new HashSet<TValue>());
+        }
+
+        /// <inheritdoc />
+        public bool Freeze(TKey key)
+        {
+            InitializedCheck();
+
+            if (!_index.TryGetValue(key, out var set)
+                || set is ImmutableHashSet<TValue>)
+            {
+                return false;
+            }
+
+            _index[key] = ImmutableHashSet.CreateRange(set);
+            return true;
         }
 
         /// <inheritdoc />

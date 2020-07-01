@@ -18,6 +18,13 @@ namespace Robust.Client.GameObjects.EntitySystems
     [UsedImplicitly]
     public sealed class RenderingTreeSystem : EntitySystem
     {
+        // TODO: Bug with nullspace map.
+        // The nullspace map doesn't seem to get re-created when the client reconnects.
+        // So it ends up missing from the map tree list.
+        // This isn't *too* big of a problem, it *is* nullspace after all.
+        // But it's an icky inconsistency and it's why there's checks for nullspace
+        // and that GetValueOrDefault in EntMapIdChanged.
+
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
         private readonly Dictionary<MapId, MapTrees> _mapTrees = new Dictionary<MapId, MapTrees>();
@@ -48,7 +55,6 @@ namespace Robust.Client.GameObjects.EntitySystems
             UpdatesBefore.Add(typeof(SpriteSystem));
             UpdatesAfter.Add(typeof(TransformSystem));
             UpdatesAfter.Add(typeof(PhysicsSystem));
-
 
             _mapManager.MapCreated += MapManagerOnMapCreated;
             _mapManager.MapDestroyed += MapManagerOnMapDestroyed;
@@ -130,28 +136,28 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void EntMapIdChanged(EntMapIdChangedMessage ev)
         {
-            var oldMapTrees = _mapTrees[ev.OldMapId];
-            var newMapTrees = _mapTrees[ev.Entity.Transform.MapID];
+            var oldMapTrees = _mapTrees.GetValueOrDefault(ev.OldMapId);
+            var newMapTrees = _mapTrees.GetValueOrDefault(ev.Entity.Transform.MapID);
 
             if (ev.Entity.TryGetComponent(out SpriteComponent sprite))
             {
-                oldMapTrees.SpriteTree.Remove(sprite);
+                oldMapTrees?.SpriteTree.Remove(sprite);
 
-                newMapTrees.SpriteTree.AddOrUpdate(sprite);
+                newMapTrees?.SpriteTree.AddOrUpdate(sprite);
             }
 
             if (ev.Entity.TryGetComponent(out ClientOccluderComponent occluder))
             {
-                oldMapTrees.OccluderTree.Remove(occluder);
+                oldMapTrees?.OccluderTree.Remove(occluder);
 
-                newMapTrees.OccluderTree.AddOrUpdate(occluder);
+                newMapTrees?.OccluderTree.AddOrUpdate(occluder);
             }
 
             if (ev.Entity.TryGetComponent(out PointLightComponent light))
             {
-                oldMapTrees.LightTree.Remove(light);
+                oldMapTrees?.LightTree.Remove(light);
 
-                newMapTrees.LightTree.AddOrUpdate(light);
+                newMapTrees?.LightTree.AddOrUpdate(light);
             }
         }
 
@@ -171,6 +177,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 var transform = queuedUpdateSprite.Owner.Transform;
                 var map = transform.MapID;
+                if (map == MapId.Nullspace)
+                {
+                    continue;
+                }
                 var updateMapTree = _mapTrees[map].SpriteTree;
 
                 updateMapTree.AddOrUpdate(queuedUpdateSprite);
@@ -181,6 +191,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 var transform = queuedUpdateLight.Owner.Transform;
                 var map = transform.MapID;
+                if (map == MapId.Nullspace)
+                {
+                    continue;
+                }
                 var updateMapTree = _mapTrees[map].LightTree;
 
                 updateMapTree.AddOrUpdate(queuedUpdateLight);
@@ -191,6 +205,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             {
                 var transform = queuedUpdateOccluder.Owner.Transform;
                 var map = transform.MapID;
+                if (map == MapId.Nullspace)
+                {
+                    continue;
+                }
                 var updateMapTree = _mapTrees[map].OccluderTree;
 
                 updateMapTree.AddOrUpdate(queuedUpdateOccluder);

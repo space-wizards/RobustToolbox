@@ -559,14 +559,14 @@ namespace Robust.Shared.Map
 
             var grid = _grids[gridID];
 
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
+                gridEnt.Delete();
+
             grid.Dispose();
             _grids.Remove(grid.Index);
 
             if (_defaultGrids.TryGetValue(grid.ParentMapId, out var defaultGrid) && defaultGrid == gridID)
                 _defaultGrids.Remove(grid.ParentMapId);
-
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
-                gridEnt.Delete();
 
             OnGridRemoved?.Invoke(gridID);
 

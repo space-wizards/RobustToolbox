@@ -1,3 +1,4 @@
+﻿using Robust.Shared.GameObjects.Components;
 
 namespace Robust.Shared.Physics
 {
@@ -6,7 +7,7 @@ namespace Robust.Shared.Physics
     /// </summary>
     public abstract class VirtualController
     {
-        public abstract SharedPhysicsComponent? ControlledComponent { set; }
+        public abstract PhysicsComponent? ControlledComponent { set; }
 
         /// <summary>
         ///     Modify a physics component before processing impulses

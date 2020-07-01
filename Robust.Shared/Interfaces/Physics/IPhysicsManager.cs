@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -158,15 +157,15 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly Vector2 Normal;
         public readonly IPhysBody A;
         public readonly IPhysBody B;
-        public SharedPhysicsComponent? APhysics;
-        public SharedPhysicsComponent? BPhysics;
+        public PhysicsComponent? APhysics;
+        public PhysicsComponent? BPhysics;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
 
-        public Manifold(IPhysBody A, IPhysBody B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics, IPhysicsManager physicsManager)
+        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, IPhysicsManager physicsManager)
         {
             this.A = A;
             this.B = B;

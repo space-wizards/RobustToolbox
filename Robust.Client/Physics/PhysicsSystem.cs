@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
-using Robust.Shared.Physics;
 
 namespace Robust.Client.Physics
 {
@@ -37,10 +36,10 @@ namespace Robust.Client.Physics
             SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant());
         }
 
-        private List<SharedPhysicsComponent> ActuallyRelevant()
+        private List<PhysicsComponent> ActuallyRelevant()
         {
             return _componentManager.GetAllComponents<PhysicsComponent>().Where(p => p.Predict)
-                .ToList<SharedPhysicsComponent>();
+                .ToList();
         }
     }
 }

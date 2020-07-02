@@ -49,7 +49,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState.Extrapolated, Is.False);
+            Assert.That(curState!.Extrapolated, Is.False);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(1));
             Assert.That(nextState, Is.Null);
         }
@@ -148,7 +148,7 @@ namespace Robust.UnitTesting.Client.GameStates
 
             Assert.That(result, Is.True);
             Assert.That(curState, Is.Not.Null);
-            Assert.That(curState.Extrapolated, Is.True);
+            Assert.That(curState!.Extrapolated, Is.True);
             Assert.That(curState.ToSequence.Value, Is.EqualTo(5));
             Assert.That(nextState, Is.Null);
         }
@@ -181,7 +181,7 @@ namespace Robust.UnitTesting.Client.GameStates
             // calculate states for first tick
             timing.CurTick = new GameTick(1);
             processor.ProcessTickStates(timing.CurTick, out _, out _);
-            
+
             return (timing, processor);
         }
     }

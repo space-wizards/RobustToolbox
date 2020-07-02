@@ -37,7 +37,7 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
 
         [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
@@ -79,7 +79,7 @@ namespace Robust.Server.Player
         [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
-        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+        public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
         public void AttachToEntity(IEntity a)

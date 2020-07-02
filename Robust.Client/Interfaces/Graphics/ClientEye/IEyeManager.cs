@@ -89,6 +89,19 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// </remarks>
         /// <param name="point">Point on screen to transform.</param>
         /// <returns>Corresponding point in the world.</returns>
+        MapCoordinates ScreenToMap(ScreenCoordinates point);
+
+        /// <summary>
+        /// Unprojects a point from UI screen space to world space using the current camera.
+        /// </summary>
+        /// <remarks>
+        /// The game exists on the 2D X/Y plane, so this function returns a point o the plane
+        /// instead of a line segment.
+        /// </remarks>
+        /// <param name="point">Point on screen to transform.</param>
+        /// <returns>Corresponding point in the world.</returns>
         MapCoordinates ScreenToMap(Vector2 point);
+
+        void ClearCurrentEye();
     }
 }

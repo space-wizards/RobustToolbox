@@ -16,7 +16,7 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction MoveDown = "MoveDown";
         public static readonly BoundKeyFunction MoveLeft = "MoveLeft";
         public static readonly BoundKeyFunction MoveRight = "MoveRight";
-        public static readonly BoundKeyFunction Run = "Run";
+        public static readonly BoundKeyFunction Walk = "Walk";
 
         public static readonly BoundKeyFunction CameraRotateRight = "CameraRotateRight";
         public static readonly BoundKeyFunction CameraRotateLeft = "CameraRotateLeft";
@@ -35,6 +35,10 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorPlaceObject = "EditorPlaceObject";
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
+
+        // Buttons to navigate between UI controls.
+        public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
+        public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
 
         // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
@@ -88,9 +92,13 @@ namespace Robust.Shared.Input
 
         #region Code for easy equality and sorting.
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
-            return CompareTo((BoundKeyFunction) obj);
+            if (!(obj is BoundKeyFunction func))
+            {
+                return 1;
+            }
+            return CompareTo(func);
         }
 
         public int CompareTo(BoundKeyFunction other)
@@ -99,9 +107,9 @@ namespace Robust.Shared.Input
         }
 
         // Could maybe go dirty and optimize these on the assumption that they're singletons.
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return Equals((BoundKeyFunction) obj);
+            return obj is BoundKeyFunction func && Equals(func);
         }
 
         public bool Equals(BoundKeyFunction other)

@@ -17,15 +17,13 @@ namespace Robust.Server.ViewVariables
 {
     internal class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
     {
-#pragma warning disable 649
-        [Dependency] private readonly INetManager _netManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IConGroupController _groupController;
-        [Dependency] private readonly IRobustSerializer _robustSerializer;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IConGroupController _groupController = default!;
+        [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private readonly Dictionary<uint, ViewVariablesSession>
             _sessions = new Dictionary<uint, ViewVariablesSession>();
@@ -145,7 +143,7 @@ namespace Robust.Server.ViewVariables
                         return;
                     }
 
-                    object value;
+                    object? value;
                     try
                     {
                         if (!relSession.TryGetRelativeObject(sessionRelativeSelector.PropertyIndex, out value))

@@ -100,13 +100,7 @@ namespace Robust.Client
                     IoCManager.Register<IClydeInternal, Clyde>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
                     IoCManager.Register<IFileDialogManager, FileDialogManager>();
-#if LINUX
-                    IoCManager.Register<IUriOpener, UriOpenerLinux>();
-#elif MACOS
-                    IoCManager.Register<IUriOpener, UriOpenerMacOS>();
-#elif WINDOWS
-                    IoCManager.Register<IUriOpener, UriOpenerWindows>();
-#endif
+                    IoCManager.Register<IUriOpener, UriOpener>();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

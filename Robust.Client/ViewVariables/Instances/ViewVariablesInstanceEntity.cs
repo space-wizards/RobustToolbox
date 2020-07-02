@@ -32,15 +32,15 @@ namespace Robust.Client.ViewVariables.Instances
         private const int TabServerVars = 2;
         private const int TabServerComponents = 3;
 
-        private TabContainer _tabs;
-        private IEntity _entity;
+        private TabContainer _tabs = default!;
+        private IEntity _entity = default!;
 
-        private ViewVariablesRemoteSession _entitySession;
+        private ViewVariablesRemoteSession? _entitySession;
 
-        private ViewVariablesBlobMembers _membersBlob;
+        private ViewVariablesBlobMembers? _membersBlob;
 
-        private VBoxContainer _serverVariables;
-        private VBoxContainer _serverComponents;
+        private VBoxContainer _serverVariables = default!;
+        private VBoxContainer _serverComponents = default!;
 
         private bool _serverLoaded;
 
@@ -196,7 +196,7 @@ namespace Robust.Client.ViewVariables.Instances
             }
 
             var otherStyle = false;
-            foreach (var propertyData in _membersBlob.Members)
+            foreach (var propertyData in _membersBlob!.Members)
             {
                 var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
                 propertyEdit.SetStyle(otherStyle = !otherStyle);

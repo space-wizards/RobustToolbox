@@ -41,7 +41,7 @@ namespace Robust.UnitTesting
             /// <summary>
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
             /// </summary>
-            public ChannelWriter<object> NextConnectChannel { get; set; }
+            public ChannelWriter<object>? NextConnectChannel { get; set; }
 
             private int _genConnectionUid()
             {
@@ -119,7 +119,7 @@ namespace Robust.UnitTesting
 
                         case DataMessage data:
                         {
-                            IntegrationNetChannel channel;
+                            IntegrationNetChannel? channel;
                             if (IsServer)
                             {
                                 if (!_channels.TryGetValue(data.Connection, out channel))
@@ -178,7 +178,7 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsClient);
 
-                            var channel = new IntegrationNetChannel(this, NextConnectChannel, _clientConnectingUid,
+                            var channel = new IntegrationNetChannel(this, NextConnectChannel!, _clientConnectingUid,
                                 confirm.SessionId, confirm.AssignedUid);
 
                             _channels.Add(channel.ConnectionUid, channel);
@@ -221,11 +221,11 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public event EventHandler<NetConnectingArgs> Connecting;
-            public event EventHandler<NetChannelArgs> Connected;
-            public event EventHandler<NetDisconnectedArgs> Disconnect;
+            public event EventHandler<NetConnectingArgs>? Connecting;
+            public event EventHandler<NetChannelArgs>? Connected;
+            public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
-            public void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null) where T : NetMessage
+            public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null) where T : NetMessage
             {
                 if (rxCallback != null)
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
@@ -233,7 +233,7 @@ namespace Robust.UnitTesting
 
             public T CreateNetMessage<T>() where T : NetMessage
             {
-                return (T) Activator.CreateInstance(typeof(T), (INetChannel) null);
+                return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
             }
 
             public void DisconnectChannel(INetChannel channel, string reason)
@@ -243,7 +243,11 @@ namespace Robust.UnitTesting
 
             INetChannel IClientNetManager.ServerChannel => ServerChannel;
             public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
-            public event Action<ClientConnectionState> ClientConnectStateChanged;
+            public event Action<ClientConnectionState>? ClientConnectStateChanged
+            {
+                add { }
+                remove { }
+            }
 
             private IntegrationNetChannel ServerChannel
             {
@@ -255,7 +259,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public event EventHandler<NetConnectFailArgs> ConnectFailed;
+            public event EventHandler<NetConnectFailArgs>? ConnectFailed;
 
             public void ClientConnect(string host, int port, string userNameRequest)
             {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
 using C = System.Console;
 
@@ -10,23 +11,23 @@ namespace Robust.Client
         public bool SelfContained { get; }
         public bool Connect { get; }
         public string ConnectAddress { get; }
-        public string Ss14Address { get; }
+        public string? Ss14Address { get; }
         public bool Launcher { get; }
-        public string Username { get; }
+        public string? Username { get; }
         public IReadOnlyCollection<(string key, string value)> CVars { get; }
 
         // Manual parser because C# has no good command line parsing libraries. Also dependencies bad.
         // Also I don't like spending 100ms parsing command line args. Do you?
-        public static bool TryParse(IReadOnlyList<string> args, out CommandLineArgs parsed)
+        public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
         {
             parsed = null;
             var headless = false;
             var selfContained = false;
             var connect = false;
             var connectAddress = "localhost";
-            string ss14Address = null;
+            string? ss14Address = null;
             var launcher = false;
-            string username = null;
+            string? username = null;
             var cvars = new List<(string, string)>();
 
             using var enumerator = args.GetEnumerator();
@@ -137,9 +138,9 @@ Options:
             bool selfContained,
             bool connect,
             bool launcher,
-            string username,
+            string? username,
             IReadOnlyCollection<(string key, string value)> cVars,
-            string connectAddress, string ss14Address)
+            string connectAddress, string? ss14Address)
         {
             Headless = headless;
             SelfContained = selfContained;

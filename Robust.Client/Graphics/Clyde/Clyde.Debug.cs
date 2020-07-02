@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private ClydeDebugStats _debugStats;
+        private readonly ClydeDebugStats _debugStats = new ClydeDebugStats();
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {

@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
     [TestFixture]
     public class PrototypeManager_Test : RobustUnitTest
     {
-        private IPrototypeManager manager;
+        private IPrototypeManager manager = default!;
         [OneTimeSetUp]
         public void Setup()
         {
@@ -45,7 +45,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
                 Assert.That(prototype.Name, Is.EqualTo("Wall Light"));
                 Assert.That(prototype.ID, Is.EqualTo(id));
                 Assert.That(prototype.Components, Contains.Key("Transform"));
-                Assert.That(prototype.Components, Contains.Key("Clickable"));
                 Assert.That(prototype.Components, Contains.Key("Sprite"));
                 Assert.That(prototype.Components, Contains.Key("PointLight"));
             });
@@ -91,6 +90,14 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.PlacementOffset, Is.EqualTo(new Vector2i(30, 45)));
         }
 
+        [Test]
+        public void TestPlacementInheritance()
+        {
+            var prototype = manager.Index<EntityPrototype>("PlaceInheritTester");
+
+            Assert.AreEqual(prototype.PlacementMode, "SnapgridCenter");
+        }
+
         private enum YamlTestEnum
         {
             Foo,
@@ -110,7 +117,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: Wall Light
   components:
   - type: Transform
-  - type: Clickable
   - type: Sprite
   - type: PointLight
     startState: Off
@@ -147,6 +153,12 @@ namespace Robust.UnitTesting.Shared.Prototypes
     - 1
     - 2
     - 3
+
+- type: entity
+  id: PlaceInheritTester
+  parent: mounttester
+  placement:
+    mode: SnapgridCenter
 ";
     }
 

@@ -14,7 +14,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Adds a component to an entity";
         public string Help => "addcomp <uid> <componentName>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length != 2)
             {

@@ -1,5 +1,4 @@
 ﻿using Robust.Client.Graphics;
-using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -24,14 +23,12 @@ namespace Robust.Client.GameObjects
 {
     public class EffectSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameTiming gameTiming;
-        [Dependency] private readonly IResourceCache resourceCache;
-        [Dependency] private readonly IEyeManager eyeManager;
-        [Dependency] private readonly IOverlayManager overlayManager;
-        [Dependency] private readonly IPrototypeManager prototypeManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming gameTiming = default!;
+        [Dependency] private readonly IResourceCache resourceCache = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IOverlayManager overlayManager = default!;
+        [Dependency] private readonly IPrototypeManager prototypeManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly List<Effect> _Effects = new List<Effect>();
 
@@ -99,7 +96,7 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public Texture EffectSprite { get; set; }
 
-            public RSI.State RsiState { get; set; }
+            public RSI.State? RsiState { get; set; }
 
             public int AnimationIndex { get; set; }
 
@@ -335,7 +332,7 @@ namespace Robust.Client.GameObjects
                 var map = _owner.eyeManager.CurrentMap;
 
                 var worldHandle = (DrawingHandleWorld) handle;
-                ShaderInstance currentShader = null;
+                ShaderInstance? currentShader = null;
 
                 foreach (var effect in _owner._Effects)
                 {
@@ -352,12 +349,13 @@ namespace Robust.Client.GameObjects
                         currentShader = newShader;
                     }
 
-                    worldHandle.SetTransform(
-                        effect.Coordinates.ToMapPos(_mapManager),
-                        new Angle(-effect.Rotation), effect.Size);
                     var effectSprite = effect.EffectSprite;
-                    worldHandle.DrawTexture(effectSprite,
-                        -((Vector2) effectSprite.Size / EyeManager.PixelsPerMeter) / 2, ToColor(effect.Color));
+                    var effectOrigin = effect.Coordinates.ToMapPos(_mapManager);
+                    var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
+
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);
+
+                    worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }
             }
         }

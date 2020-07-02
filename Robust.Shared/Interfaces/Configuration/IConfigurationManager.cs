@@ -34,7 +34,7 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
         /// <param name="onValueChanged">Invoked whenever the CVar value changes.</param>
-        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T> onValueChanged=null);
+        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged=null);
 
         /// <summary>
         /// Is the named CVar already registered?
@@ -64,6 +64,6 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar</param>
         Type GetCVarType(string name);
 
-        void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars);
+        void OverrideConVars(IEnumerable<(string key, string value)> cVars);
     }
 }

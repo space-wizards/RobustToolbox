@@ -13,15 +13,14 @@ namespace Robust.Shared.Configuration
     public class ConfigurationManager : IConfigurationManager
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars;
-        private string _configFile;
+        private readonly Dictionary<string, ConfigVar> _configVars = new Dictionary<string, ConfigVar>();
+        private string? _configFile;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
         /// </summary>
         public ConfigurationManager()
         {
-            _configVars = new Dictionary<string, ConfigVar>();
         }
 
         /// <inheritdoc />
@@ -71,7 +70,7 @@ namespace Robust.Shared.Configuration
             else // this is a key, add CVar
             {
                 // if the CVar has already been registered
-                if (_configVars.TryGetValue(tablePath, out ConfigVar cfgVar))
+                if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
                     // overwrite the value with the saved one
                     cfgVar.Value = TypeConvert(obj);
@@ -170,14 +169,14 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T> onValueChanged = null)
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
         {
-            Action<object> valueChangedDelegate = null;
+            Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
             {
                 valueChangedDelegate = v => onValueChanged((T) v);
             }
-            if (_configVars.TryGetValue(name, out ConfigVar cVar))
+            if (_configVars.TryGetValue(name, out var cVar))
             {
                 if (cVar.Registered)
                     Logger.ErrorS("cfg", $"The variable '{name}' has already been registered.");
@@ -206,21 +205,24 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public bool IsCVarRegistered(string name)
         {
-            return _configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered;
+            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered;
         }
 
         /// <inheritdoc />
         public void SetCVar(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
             {
-                cVar.Value = value;
-                cVar.ValueChanged?.Invoke(value);
+                if (!Equals(cVar.Value, value))
+                {
+                    cVar.Value = value;
+                    cVar.ValueChanged?.Invoke(value);
 
-                // Setting an override value just turns off the override, basically.
-                cVar.OverrideValue = null;
-                cVar.OverrideValueParsed = null;
+                    // Setting an override value just turns off the override, basically.
+                    cVar.OverrideValue = null;
+                    cVar.OverrideValueParsed = null;
+                }
             }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
@@ -229,9 +231,9 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
-            if (_configVars.TryGetValue(name, out ConfigVar cVar) && cVar.Registered)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue);
+                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -244,7 +246,7 @@ namespace Robust.Shared.Configuration
             return cVar.Value?.GetType() ?? typeof(string);
         }
 
-        public void OverrideConVars(IReadOnlyCollection<(string key, string value)> cVars)
+        public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
         {
             foreach (var (key, value) in cVars)
             {
@@ -263,7 +265,7 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        private object ParseOverrideValue(string value, Type type)
+        private object ParseOverrideValue(string value, Type? type)
         {
             if (type == typeof(int))
             {
@@ -324,7 +326,7 @@ namespace Robust.Shared.Configuration
             /// everything after is the CVar name in the TOML document.</param>
             /// <param name="defaultValue">The default value of this CVar.</param>
             /// <param name="flags">Optional flags to modify the behavior of this CVar.</param>
-            public ConfigVar(string name, object defaultValue, CVar flags)
+            public ConfigVar(string name, object? defaultValue, CVar flags)
             {
                 Name = name;
                 DefaultValue = defaultValue;
@@ -339,7 +341,7 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The default value of this CVar.
             /// </summary>
-            public object DefaultValue { get; set; }
+            public object? DefaultValue { get; set; }
 
             /// <summary>
             ///     Optional flags to modify the behavior of this CVar.
@@ -349,7 +351,7 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     The current value of this CVar.
             /// </summary>
-            public object Value { get; set; }
+            public object? Value { get; set; }
 
             /// <summary>
             ///     Has this CVar been registered in code?
@@ -359,13 +361,13 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     Invoked when the value of this CVar is changed.
             /// </summary>
-            public Action<object> ValueChanged { get; set; }
+            public Action<object>? ValueChanged { get; set; }
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.
             // So we keep the raw string around.
-            public string OverrideValue { get; set; }
-            public object OverrideValueParsed { get; set; }
+            public string? OverrideValue { get; set; }
+            public object? OverrideValueParsed { get; set; }
         }
     }
 

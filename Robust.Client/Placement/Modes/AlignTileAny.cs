@@ -31,7 +31,7 @@ namespace Robust.Client.Placement.Modes
                 var gridsInArea = pManager.MapManager.FindGridsIntersecting(mapGrid.ParentMapId, gridSearchBox);
 
                 // find closest grid intersecting our search box.
-                IMapGrid closest = null;
+                IMapGrid? closest = null;
                 var distance = float.PositiveInfinity;
                 var intersect = new Box2();
                 foreach (var grid in gridsInArea)
@@ -59,7 +59,7 @@ namespace Robust.Client.Placement.Modes
 
                     // move mouse one tile out along normal
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;
-                    MouseCoords = new GridCoordinates(closest.WorldToLocal(newTilePos), closest.Index); 
+                    MouseCoords = new GridCoordinates(closest.WorldToLocal(newTilePos), closest.Index);
                 }
                 //else free place
             }
@@ -69,7 +69,7 @@ namespace Robust.Client.Placement.Modes
             float tileSize = mapGrid.TileSize; //convert from ushort to float
             GridDistancing = tileSize;
 
-            if (pManager.CurrentPermission.IsTile)
+            if (pManager.CurrentPermission!.IsTile)
             {
                 if(!mapGrid.IsDefaultGrid)
                 {

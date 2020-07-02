@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
+using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -28,6 +30,9 @@ namespace Robust.Shared.Serialization
 
         public delegate void ReadFunctionDelegate<in T>(T value);
         public delegate T WriteFunctionDelegate<out T>();
+
+        public delegate TSource WriteConvertFunc<in TTarget, out TSource>(TTarget target) where TSource : notnull;
+        public delegate TTarget ReadConvertFunc<out TTarget, in TSource>(TSource source) where TSource : notnull;
 
         /// <summary>
         ///     True if this serializer is reading, false if it is writing.
@@ -74,7 +79,43 @@ namespace Robust.Shared.Serialization
         ///     szr.DataField(this, x => x.SomeProperty, "some-property", SomeDefaultValue);
         /// </example>
         /// </remarks>
-        public abstract void DataField<TRoot, T>(TRoot root, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false);
+        public virtual void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
+        {
+            if (o == null)
+            {
+                throw new ArgumentNullException(nameof(o));
+            }
+
+            if (expr == null)
+            {
+                throw new ArgumentNullException(nameof(expr));
+            }
+
+            if (!(expr.Body is MemberExpression mExpr))
+            {
+                throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
+            }
+
+
+            WriteFunctionDelegate<T> getter;
+            ReadFunctionDelegate<T> setter;
+            switch (mExpr.Member)
+            {
+                case FieldInfo fi:
+                    getter = () => (T) fi.GetValue(o)!;
+                    setter = v => fi.SetValue(o, v);
+                    break;
+                case PropertyInfo pi:
+                    getter = () => (T) pi.GetValue(o)!;
+                    setter = v => pi.SetValue(o, v);
+                    break;
+                default:
+                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
+            }
+
+            DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
+        }
+
 
         /// <summary>
         ///     Writes or reads a simple field by reference.
@@ -89,7 +130,24 @@ namespace Robust.Shared.Serialization
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
         public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
         {
-            DataField(ref value, name, defaultValue, alwaysWrite);
+            DataField(ref value, name, defaultValue, WithFormat<T>.NoFormat, alwaysWrite);
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        ///     This method can cache results and share them with other objects.
+        ///     As such, when reading, your value may NOT be private. Do not modify it as if it's purely your own.
+        ///     This can cut out parsing steps and memory cost for commonly used objects such as walls.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
+        /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat, bool alwaysWrite = false)
+        {
+            DataField(ref value, name, defaultValue, withFormat, alwaysWrite);
         }
 
         /// <summary>
@@ -114,10 +172,10 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false
-        );
+        ) where TSource : notnull;
 
         /// <summary>
         ///     Writes or reads a simple field by reference.
@@ -146,10 +204,10 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false
-        )
+        ) where TSource : notnull
         {
             DataField(ref value, name, defaultValue, ReadConvertFunc, WriteConvertFunc, alwaysWrite);
         }
@@ -209,16 +267,25 @@ namespace Robust.Shared.Serialization
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataField" />.
         /// </summary>
-        public abstract bool TryReadDataField<T>(string name, out T value);
+        public virtual bool TryReadDataField<T>(string name, [MaybeNullWhen(false)] out T value)
+        {
+            return TryReadDataField(name, WithFormat<T>.NoFormat, out value);
+        }
+
+        public abstract bool TryReadDataField<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value);
 
         /// <summary>
         ///     Try- pattern version of <see cref="ReadDataFieldCached" />.
         /// </summary>
-        public virtual bool TryReadDataFieldCached<T>(string name, out T value)
+        public virtual bool TryReadDataFieldCached<T>(string name, [MaybeNullWhen(false)] out T value)
         {
-            return TryReadDataField(name, out value);
+            return TryReadDataFieldCached(name, WithFormat<T>.NoFormat, out value);
         }
 
+        public virtual bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
+        {
+            return TryReadDataField(name, format, out value);
+        }
 
         /// <summary>
         ///     Sets a cached field for this serialization context.
@@ -245,7 +312,7 @@ namespace Robust.Shared.Serialization
         /// <summary>
         ///     Try- pattern version of <see cref="GetCacheData" />.
         /// </summary>
-        public virtual bool TryGetCacheData<T>(string key, out T data)
+        public virtual bool TryGetCacheData<T>(string key, [MaybeNullWhen(false)] out T data)
         {
             data = default;
             return false;

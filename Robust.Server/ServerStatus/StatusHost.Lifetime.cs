@@ -15,7 +15,7 @@ namespace Robust.Server.ServerStatus
         public void StopApplication() => Dispose();
 
 
-        private static CancellationTokenSource _cancelled;
+        private static CancellationTokenSource? _cancelled;
         private static CancellationToken GetCancelledToken()
         {
             if (_cancelled == null)

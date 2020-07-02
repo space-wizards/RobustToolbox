@@ -3,6 +3,9 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -24,9 +27,11 @@ namespace Robust.Client.Placement.Modes
             {
                 const int ppm = EyeManager.PixelsPerMeter;
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
-                var position = pManager.eyeManager.ScreenToWorld(Vector2.Zero);
-                var gridstartx = (float) Math.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
-                var gridstarty = (float) Math.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+
+                var position = pManager.eyeManager.ScreenToMap(Vector2.Zero);
+
+                var gridstartx = (float) MathF.Round(position.X / snapSize, MidpointRounding.AwayFromZero) * snapSize;
+                var gridstarty = (float) MathF.Round(position.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize;
                 var gridstart = pManager.eyeManager.WorldToScreen(
                     new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                         gridstartx,
@@ -61,8 +66,8 @@ namespace Robust.Client.Placement.Modes
             onGrid = true;
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
-                (float) Math.Round(MouseCoords.X / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize,
-                (float) Math.Round(MouseCoords.Y / (double) snapSize, MidpointRounding.AwayFromZero) * snapSize);
+                (float) MathF.Round(MouseCoords.X / snapSize, MidpointRounding.AwayFromZero) * snapSize,
+                (float) MathF.Round(MouseCoords.Y / snapSize, MidpointRounding.AwayFromZero) * snapSize);
 
             //Convert back to original world and screen coordinates after applying offset
             MouseCoords =

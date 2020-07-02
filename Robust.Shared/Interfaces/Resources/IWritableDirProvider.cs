@@ -16,7 +16,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// The root path of this provider.
         /// Can be null if it's a virtual provider.
         /// </summary>
-        string RootDir { get; }
+        string? RootDir { get; }
 
         /// <summary>
         /// Creates a directory. If the directory exists, does nothing.

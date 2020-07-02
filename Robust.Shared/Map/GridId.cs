@@ -30,7 +30,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GridId id && Equals(id);

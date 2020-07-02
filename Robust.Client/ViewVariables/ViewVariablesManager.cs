@@ -22,11 +22,9 @@ namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -128,7 +126,7 @@ namespace Robust.Client.ViewVariables
 
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerialzable<>).MakeGenericType(type));
+                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerialzable<>).MakeGenericType(type))!;
             }
 
             if (type.IsEnum)
@@ -311,7 +309,7 @@ namespace Robust.Client.ViewVariables
             _netManager.ClientSendMessage(closeMsg);
         }
 
-        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object value)
+        public void ModifyRemote(ViewVariablesRemoteSession session, object[] propertyIndex, object? value)
         {
             if (!_sessions.ContainsKey(session.SessionId))
             {

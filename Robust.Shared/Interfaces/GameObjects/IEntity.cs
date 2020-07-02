@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
@@ -44,7 +45,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     The prototype that was used to create this entity.
         /// </summary>
-        EntityPrototype Prototype { get; }
+        EntityPrototype? Prototype { get; }
 
         /// <summary>
         /// The string that describes this entity via examine
@@ -135,7 +136,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent<T>(out T component);
+        bool TryGetComponent<T>([NotNullWhen(true)] out T component);
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
@@ -144,7 +145,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="type">The component reference type to attempt to fetch.</param>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent(Type type, out IComponent component);
+        bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Attempt to retrieve the component with specified network ID,
@@ -153,7 +154,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="type">The component net ID to attempt to fetch.</param>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified net ID was found.</returns>
-        bool TryGetComponent(uint netID, out IComponent component);
+        bool TryGetComponent(uint netID, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Used by the entity manager to delete the entity.
@@ -186,14 +187,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="owner">Object that sent the event.</param>
         /// <param name="message">Message to send.</param>
-        void SendMessage(IComponent owner, ComponentMessage message);
+        void SendMessage(IComponent? owner, ComponentMessage message);
 
         /// <summary>
         ///     Sends a message over the network to the counterpart component. This works both ways.
         /// </summary>
         /// <param name="owner"></param>
         /// <param name="message">Message to send.</param>
-        void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel channel = null);
+        void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null);
 
         void Dirty();
     }

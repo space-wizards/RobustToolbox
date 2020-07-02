@@ -1,44 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Prometheus;
 using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects
 {
-
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
+        private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
+            "robust_entities_count",
+            "Amount of alive entities.");
 
         private const float MinimumMotionForMovers = 1 / 128f;
 
         #region IEntityManager Members
 
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-
-        [Dependency] private readonly IPauseManager _pauseManager;
-
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private float? _maxUpdateRangeCache;
 
@@ -56,15 +57,15 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName)
+        public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
-            return CreateEntity(prototypeName);
+            return CreateEntityServer(prototypeName);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
+            var newEntity = CreateEntityServer(prototypeName);
             if (coordinates.GridID != GridId.Invalid)
             {
                 var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntityId;
@@ -76,28 +77,43 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
-            var newEntity = CreateEntity(prototypeName);
-            if (prototypeName != null)
-            {
-                // At this point in time, all data configure on the entity *should* be purely from the prototype.
-                // As such, we can reset the modified ticks to Zero,
-                // which indicates "not different from client's own deserialization".
-                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(newEntity.Uid))
-                {
-                    ((Component) component).ClearTicks();
-                }
-            }
-
+            var newEntity = CreateEntityServer(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
             newEntity.Transform.WorldPosition = coordinates.Position;
             return newEntity;
         }
 
+        private Entity CreateEntityServer(string? prototypeName)
+        {
+            var entity = CreateEntity(prototypeName);
+
+            if (prototypeName != null)
+            {
+                var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
+
+                // At this point in time, all data configure on the entity *should* be purely from the prototype.
+                // As such, we can reset the modified ticks to Zero,
+                // which indicates "not different from client's own deserialization".
+                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
+                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
+                {
+                    // Make sure to ONLY get components that are defined in the prototype.
+                    // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
+                    // And those aren't guaranteed to exist on the client, so don't clear them.
+                    if (prototype.Components.ContainsKey(component.Name))
+                    {
+                        ((Component) component).ClearTicks();
+                    }
+                }
+            }
+
+            return entity;
+        }
+
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
         {
             if (coordinates.GridID == GridId.Invalid)
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} onto invalid grid.");
@@ -114,7 +130,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
@@ -122,7 +138,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
@@ -130,7 +146,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState> GetEntityStates(GameTick fromTick)
+        public List<EntityState>? GetEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -152,10 +168,19 @@ namespace Robust.Server.GameObjects
             return stateEntities.Count == 0 ? default : stateEntities;
         }
 
-        private readonly Dictionary<IPlayerSession, ISet<EntityUid>> _seenMovers
-            = new Dictionary<IPlayerSession, ISet<EntityUid>>();
+        private readonly Dictionary<IPlayerSession, SortedSet<EntityUid>> _seenMovers
+            = new Dictionary<IPlayerSession, SortedSet<EntityUid>>();
 
-        private ISet<EntityUid> GetSeenMovers(IPlayerSession player)
+        // Is thread safe.
+        private SortedSet<EntityUid> GetSeenMovers(IPlayerSession player)
+        {
+            lock (_seenMovers)
+            {
+                return GetSeenMoversUnlocked(player);
+            }
+        }
+
+        private SortedSet<EntityUid> GetSeenMoversUnlocked(IPlayerSession player)
         {
             if (!_seenMovers.TryGetValue(player, out var movers))
             {
@@ -164,6 +189,13 @@ namespace Robust.Server.GameObjects
             }
 
             return movers;
+        }
+
+        private void AddToSeenMovers(IPlayerSession player, EntityUid entityUid)
+        {
+            var movers = GetSeenMoversUnlocked(player);
+
+            movers.Add(entityUid);
         }
 
         private readonly Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>> _playerLastSeen
@@ -250,14 +282,17 @@ namespace Robust.Server.GameObjects
 
         public void DropPlayerState(IPlayerSession player)
         {
-            _playerLastSeen.Remove(player);
+            lock (_playerLastSeen)
+            {
+                _playerLastSeen.Remove(player);
+            }
         }
 
         private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
             foreach (var child in children)
             {
-                var ent = child;
+                var ent = child!;
 
                 do
                 {
@@ -265,14 +300,13 @@ namespace Robust.Server.GameObjects
                     {
                         AddContainedRecursive(ent, set);
 
-                        ent = ent.Transform.Parent?.Owner;
+                        ent = ent.Transform.Parent?.Owner!;
                     }
                     else
                     {
                         // Already processed this entity once.
                         break;
                     }
-
                 } while (ent != null && !ent.Deleted);
             }
         }
@@ -294,32 +328,22 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private readonly struct PlayerSeenEntityStatesResources
+        private class PlayerSeenEntityStatesResources
         {
+            public readonly HashSet<EntityUid> IncludedEnts = new HashSet<EntityUid>();
 
-            public readonly HashSet<EntityUid> IncludedEnts;
+            public readonly List<EntityState> EntityStates = new List<EntityState>();
 
-            public readonly List<EntityState> EntityStates;
+            public readonly HashSet<EntityUid> NeededEnts = new HashSet<EntityUid>();
 
-            public readonly HashSet<EntityUid> NeededEnts;
-
-            public readonly HashSet<IEntity> Relatives;
-
-            public PlayerSeenEntityStatesResources(bool memes = false)
-            {
-                IncludedEnts = new HashSet<EntityUid>();
-                EntityStates = new List<EntityState>();
-                NeededEnts = new HashSet<EntityUid>();
-                Relatives = new HashSet<IEntity>();
-            }
-
+            public readonly HashSet<IEntity> Relatives = new HashSet<IEntity>();
         }
 
-        private readonly PlayerSeenEntityStatesResources _playerSeenEntityStatesResources
-            = new PlayerSeenEntityStatesResources(false);
+        private readonly ThreadLocal<PlayerSeenEntityStatesResources> _playerSeenEntityStatesResources
+            = new ThreadLocal<PlayerSeenEntityStatesResources>(() => new PlayerSeenEntityStatesResources());
 
         /// <inheritdoc />
-        public List<EntityState> UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
+        public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
         {
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
@@ -337,10 +361,11 @@ namespace Robust.Server.GameObjects
 
             var seenMovers = GetSeenMovers(player);
 
-            var checkedEnts = _playerSeenEntityStatesResources.IncludedEnts;
-            var entityStates = _playerSeenEntityStatesResources.EntityStates;
-            var neededEnts = _playerSeenEntityStatesResources.NeededEnts;
-            var relatives = _playerSeenEntityStatesResources.Relatives;
+            var pseStateRes = _playerSeenEntityStatesResources.Value!;
+            var checkedEnts = pseStateRes.IncludedEnts;
+            var entityStates = pseStateRes.EntityStates;
+            var neededEnts = pseStateRes.NeededEnts;
+            var relatives = pseStateRes.Relatives;
             checkedEnts.Clear();
             entityStates.Clear();
             neededEnts.Clear();
@@ -363,14 +388,16 @@ namespace Robust.Server.GameObjects
                             // parent is moving
                             continue;
                         }
+
                         if (MathF.Abs(body.AngularVelocity) > 0)
                         {
-                            if (entity.TryGetComponent(out TransformComponent txf) && txf.ChildCount > 0 )
+                            if (entity.TryGetComponent(out TransformComponent txf) && txf.ChildCount > 0)
                             {
                                 // has children spinning
                                 continue;
                             }
                         }
+
                         seenMovers.Remove(uid);
                     }
                 }
@@ -388,13 +415,16 @@ namespace Robust.Server.GameObjects
                         if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                         {
                             // mover changed and can't be seen
-                            var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
+                            var idx = Array.FindIndex(state.ComponentStates,
+                                x => x is TransformComponent.TransformComponentState);
 
                             if (idx != -1)
                             {
                                 // mover changed positional data and can't be seen
-                                var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                                var newState = new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                                var oldState =
+                                    (TransformComponent.TransformComponentState) state.ComponentStates[idx];
+                                var newState = new TransformComponent.TransformComponentState(Vector2NaN,
+                                    oldState.Rotation, oldState.ParentID);
                                 state.ComponentStates[idx] = newState;
                                 seenMovers.Remove(uid);
                                 ClearLastSeenTick(player, uid);
@@ -402,16 +432,15 @@ namespace Robust.Server.GameObjects
                                 checkedEnts.Add(uid);
 
                                 var needed = oldState.ParentID;
-                                if (needed == null || checkedEnts.Contains(needed.Value))
+                                if (!needed.IsValid() || checkedEnts.Contains(needed))
                                 {
                                     // either no parent attached or parent already included
                                     continue;
                                 }
 
-                                var neededUid = needed.Value;
-                                if (GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                                if (GetLastSeenTick(player, needed) == GameTick.Zero)
                                 {
-                                    neededEnts.Add(needed.Value);
+                                    neededEnts.Add(needed);
                                 }
                             }
                         }
@@ -423,7 +452,8 @@ namespace Robust.Server.GameObjects
                     if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                     {
                         // mover can't be seen
-                        var oldState = (TransformComponent.TransformComponentState) entity.Transform.GetComponentState();
+                        var oldState =
+                            (TransformComponent.TransformComponentState) entity.Transform.GetComponentState();
                         entityStates.Add(new EntityState(uid,
                             new ComponentChanged[]
                             {
@@ -431,7 +461,8 @@ namespace Robust.Server.GameObjects
                             },
                             new ComponentState[]
                             {
-                                new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID)
+                                new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
+                                    oldState.ParentID)
                             }));
 
                         seenMovers.Remove(uid);
@@ -439,16 +470,15 @@ namespace Robust.Server.GameObjects
                         checkedEnts.Add(uid);
 
                         var needed = oldState.ParentID;
-                        if (needed == null || checkedEnts.Contains(needed.Value))
+                        if (!needed.IsValid() || checkedEnts.Contains(needed))
                         {
                             // either no parent attached or parent already included
                             continue;
                         }
 
-                        var neededUid = needed.Value;
-                        if (GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                        if (GetLastSeenTick(player, needed) == GameTick.Zero)
                         {
-                            neededEnts.Add(needed.Value);
+                            neededEnts.Add(needed);
                         }
                     }
                 }
@@ -535,7 +565,6 @@ namespace Robust.Server.GameObjects
             var priorTick = new GameTick(fromTick.Value - 1);
             foreach (var uid in GetLastSeenOn(player, priorTick))
             {
-
                 if (checkedEnts.Contains(uid))
                 {
                     continue;
@@ -570,7 +599,7 @@ namespace Robust.Server.GameObjects
                 entityStates.Add(state);
 
                 seenMovers.Remove(uid);
-                ClearLastSeenTick(player,uid);
+                ClearLastSeenTick(player, uid);
 
                 var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
 
@@ -581,21 +610,21 @@ namespace Robust.Server.GameObjects
                 }
 
                 var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                var newState = new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                var newState =
+                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
                 state.ComponentStates[idx] = newState;
 
 
                 var needed = oldState.ParentID;
-                if (needed == null || checkedEnts.Contains(needed.Value))
+                if (!needed.IsValid() || checkedEnts.Contains(needed))
                 {
                     // don't need to include parent or already included
                     continue;
                 }
 
-                var neededUid = needed.Value;
-                if (GetLastSeenTick(player, neededUid) == GameTick.First)
+                if (GetLastSeenTick(player, needed) == GameTick.First)
                 {
-                    neededEnts.Add(needed.Value);
+                    neededEnts.Add(needed);
                 }
             }
 
@@ -623,7 +652,8 @@ namespace Robust.Server.GameObjects
                     checkedEnts.Add(uid);
                     entityStates.Add(state);
 
-                    var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
+                    var idx = Array.FindIndex(state.ComponentStates,
+                        x => x is TransformComponent.TransformComponentState);
 
                     if (idx == -1)
                     {
@@ -632,24 +662,25 @@ namespace Robust.Server.GameObjects
                     }
 
                     var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                    var newState = new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                    var newState =
+                        new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
+                            oldState.ParentID);
                     state.ComponentStates[idx] = newState;
                     seenMovers.Remove(uid);
 
                     ClearLastSeenTick(player, uid);
                     var needed = oldState.ParentID;
 
-                    if (needed == null || checkedEnts.Contains(needed.Value))
+                    if (!needed.IsValid() || checkedEnts.Contains(needed))
                     {
                         // done here
                         continue;
                     }
 
                     // check if further needed
-                    var neededUid = needed.Value;
-                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(player, neededUid) == GameTick.Zero)
+                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(player, needed) == GameTick.Zero)
                     {
-                        moreNeededEnts.Add(needed.Value);
+                        moreNeededEnts.Add(needed);
                     }
                 }
 
@@ -657,16 +688,16 @@ namespace Robust.Server.GameObjects
             } while (neededEnts.Count > 0);
 
             // help the client out
-            entityStates.Sort((a,b) => a.Uid.CompareTo(b.Uid));
+            entityStates.Sort((a, b) => a.Uid.CompareTo(b.Uid));
 
-            #if DEBUG_NULL_ENTITY_STATES
+#if DEBUG_NULL_ENTITY_STATES
             foreach ( var state in entityStates ) {
                 if (state.ComponentStates == null)
                 {
                     throw new NotImplementedException("Shouldn't send null states.");
                 }
             }
-            #endif
+#endif
 
             // no point sending an empty collection
             return entityStates.Count == 0 ? default : entityStates;
@@ -679,7 +710,7 @@ namespace Robust.Server.GameObjects
             _deletionHistory.Add((CurrentTick, e.Uid));
         }
 
-        public List<EntityUid> GetDeletedEntities(GameTick fromTick)
+        public List<EntityUid>? GetDeletedEntities(GameTick fromTick)
         {
             var list = new List<EntityUid>();
             foreach (var (tick, id) in _deletionHistory)
@@ -706,12 +737,12 @@ namespace Robust.Server.GameObjects
 
             if (entity.Deleted
                 || !entity.Initialized
-                || !Entities.ContainsKey(entity.Uid)
-                || !entity.TryGetComponent(out ITransformComponent txf)
-                || !txf.Initialized)
+                || !Entities.ContainsKey(entity.Uid))
             {
                 return updated;
             }
+
+            DebugTools.Assert(entity.Transform.Initialized);
 
             // note: updated can be false even if something moved a bit
 
@@ -739,13 +770,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (!playerEnt.TryGetComponent(out ITransformComponent playerTxf))
-                {
-                    // not in world
-                    continue;
-                }
-
-                var playerPos = playerTxf.WorldPosition;
+                var playerPos = playerEnt.Transform.WorldPosition;
 
                 var viewbox = new Box2(playerPos, playerPos).Enlarged(MaxUpdateRange);
 
@@ -768,11 +793,20 @@ namespace Robust.Server.GameObjects
                 // player can't see it now
                 if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
                 {
-                    var changes = GetEntityState(ComponentManager, entityUid, currentTick);
-                    if (changes.ComponentStates != null && changes.ComponentStates
-                        .Any(x => x is TransformComponent.TransformComponentState || x is PhysicsComponentState))
+                    var addToMovers = false;
+                    if (entity.Transform.LastModifiedTick >= currentTick)
                     {
-                        GetSeenMovers(player).Add(entityUid);
+                        addToMovers = true;
+                    }
+                    else if (entity.TryGetComponent(out PhysicsComponent physics)
+                             && physics.LastModifiedTick >= currentTick)
+                    {
+                        addToMovers = true;
+                    }
+
+                    if (addToMovers)
+                    {
+                        AddToSeenMovers(player, entityUid);
                     }
                 }
             }
@@ -781,9 +815,17 @@ namespace Robust.Server.GameObjects
         }
 
         private bool AnyParentMoving(IPlayerSession player, EntityUid entityUid)
-            => AnyParentInSet(entityUid, GetSeenMovers(player));
+        {
+            var seenMovers = GetSeenMoversUnlocked(player);
+            if (seenMovers == null)
+            {
+                return false;
+            }
 
-        private bool AnyParentInSet(EntityUid entityUid, ISet<EntityUid> set)
+            return AnyParentInSet(entityUid, seenMovers);
+        }
+
+        private bool AnyParentInSet(EntityUid entityUid, SortedSet<EntityUid> set)
         {
             for (;;)
             {
@@ -792,10 +834,7 @@ namespace Robust.Server.GameObjects
                     return false;
                 }
 
-                if (!ent.TryGetComponent(out TransformComponent txf))
-                {
-                    return false;
-                }
+                var txf = ent.Transform;
 
                 entityUid = txf.ParentUid;
 
@@ -808,14 +847,12 @@ namespace Robust.Server.GameObjects
                 {
                     return true;
                 }
-
             }
-
         }
 
         #endregion IEntityManager Members
 
-        IEntity IServerEntityManagerInternal.AllocEntity(string prototypeName, EntityUid? uid)
+        IEntity IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
         {
             return AllocEntity(prototypeName, uid);
         }
@@ -825,7 +862,7 @@ namespace Robust.Server.GameObjects
             return new EntityUid(_nextServerEntityUid++);
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext context)
+        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
         {
             LoadEntity((Entity) entity, context);
         }
@@ -878,13 +915,13 @@ namespace Robust.Server.GameObjects
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID.Value, comp.Name));
+                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
                 }
                 else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(comp.NetID.Value));
+                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
                 }
             }
 
@@ -921,6 +958,13 @@ namespace Robust.Server.GameObjects
                 if ((visibilityMask & visibility.Layer) == 0)
                     set.Remove(entity);
             }
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            EntitiesCount.Set(AllEntities.Count);
         }
     }
 }

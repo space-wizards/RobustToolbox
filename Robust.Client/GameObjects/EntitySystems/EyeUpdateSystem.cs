@@ -1,11 +1,11 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.ViewVariables;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects.Systems;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
@@ -36,19 +36,21 @@ namespace Robust.Client.GameObjects.EntitySystems
             EntityQuery = new TypeEntityQuery(typeof(EyeComponent));
 
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and  is initialized
-            var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
-            inputSystem.BindMap.BindFunction(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler());
-            inputSystem.BindMap.BindFunction(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler());
+            CommandBinds.Builder
+                .Bind(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler())
+                .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
+                .Register<EyeUpdateSystem>();
+
+            // Make sure this runs *after* entities have been moved by interpolation and movement.
+            UpdatesAfter.Add(typeof(TransformSystem));
+            UpdatesAfter.Add(typeof(PhysicsSystem));
         }
 
         /// <inheritdoc />
         public override void Shutdown()
         {
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and is initialized
-            var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
-            inputSystem.BindMap.UnbindFunction(EngineKeyFunctions.CameraRotateRight);
-            inputSystem.BindMap.UnbindFunction(EngineKeyFunctions.CameraRotateLeft);
-
+            CommandBinds.Unregister<EyeUpdateSystem>();
             base.Shutdown();
         }
 

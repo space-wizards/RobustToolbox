@@ -41,12 +41,7 @@ namespace Robust.Server.GameObjects
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
-
-            Register<PhysicsComponent>();
             Register<SpriteComponent>();
-
-            Register<ClickableComponent>();
-            RegisterReference<ClickableComponent, IClickableComponent>();
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();

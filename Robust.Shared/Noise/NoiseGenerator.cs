@@ -1,6 +1,8 @@
 using System;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Noise
 {
@@ -91,7 +93,7 @@ namespace Robust.Shared.Noise
             const float dx = x2 - x1;
             const float dy = y2 - y1;
 
-            const float tau = (float)Math.PI * 2;
+            const float tau = (float) Math.TAU; //(float)Math.PI * 2;
 
             const float dxTau = dx / tau;
             const float dyTau = dy / tau;

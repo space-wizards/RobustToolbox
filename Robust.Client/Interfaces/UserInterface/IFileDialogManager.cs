@@ -16,19 +16,19 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Open a file dialog used for opening a single file.
         /// </summary>
         /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
-        Task<string> OpenFile(FileDialogFilters filters = null);
+        Task<string?> OpenFile(FileDialogFilters? filters = null);
 
         /// <summary>
         ///     Open a file dialog used for saving a single file.
         /// </summary>
         /// <returns>The path the user selected to save to. Null if the user cancelled the action.</returns>
-        Task<string> SaveFile();
+        Task<string?> SaveFile();
 
         /// <summary>
         ///     Open a file dialog used for opening a single folder.
         /// </summary>
         /// <returns>The path the user selected to open. Null if the user cancelled the action.</returns>
-        Task<string> OpenFolder();
+        Task<string?> OpenFolder();
     }
 
     public class FileDialogFilters

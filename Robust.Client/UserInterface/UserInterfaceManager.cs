@@ -26,23 +26,21 @@ namespace Robust.Client.UserInterface
 {
     internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IClyde _displayManager;
-        [Dependency] private readonly IClientConsole _console;
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IStateManager _stateManager;
-        [Dependency] private readonly IClientNetManager _netManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IClientConsole _console = default!;
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IStateManager _stateManager = default!;
+        [Dependency] private readonly IClientNetManager _netManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        public UITheme ThemeDefaults { get; private set; }
+        public UITheme ThemeDefaults { get; private set; } = default!;
 
-        public Stylesheet Stylesheet
+        public Stylesheet? Stylesheet
         {
             get => _stylesheet;
             set
@@ -56,34 +54,34 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public Control KeyboardFocused { get; private set; }
+        public Control? KeyboardFocused { get; private set; }
 
         // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
         // So we keep track of which control is "focused" by the mouse.
-        private Control _controlFocused;
+        private Control? _controlFocused;
 
-        public LayoutContainer StateRoot { get; private set; }
-        public PopupContainer ModalRoot { get; private set; }
-        public Control CurrentlyHovered { get; private set; }
+        public LayoutContainer StateRoot { get; private set; } = default!;
+        public PopupContainer ModalRoot { get; private set; } = default!;
+        public Control? CurrentlyHovered { get; private set; } = default!;
         public float UIScale { get; private set; } = 1;
-        public Control RootControl { get; private set; }
-        public LayoutContainer WindowRoot { get; private set; }
-        public LayoutContainer PopupRoot { get; private set; }
-        public DebugConsole DebugConsole { get; private set; }
+        public Control RootControl { get; private set; } = default!;
+        public LayoutContainer WindowRoot { get; private set; } = default!;
+        public LayoutContainer PopupRoot { get; private set; } = default!;
+        public DebugConsole DebugConsole { get; private set; } = default!;
         public IDebugMonitors DebugMonitors => _debugMonitors;
-        private DebugMonitors _debugMonitors;
+        private DebugMonitors _debugMonitors = default!;
 
         private readonly List<Control> _modalStack = new List<Control>();
 
         private bool _rendering = true;
         private float _tooltipTimer;
-        private Tooltip _tooltip;
+        private Tooltip _tooltip = default!;
         private const float TooltipDelay = 1;
 
         private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
         private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
-        private Stylesheet _stylesheet;
-        private ICursor _worldCursor;
+        private Stylesheet? _stylesheet;
+        private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
 
         public void Initialize()
@@ -254,6 +252,11 @@ namespace Robust.Client.UserInterface
             return true;
         }
 
+        public void HandleCanFocusUp()
+        {
+            _controlFocused = null;
+        }
+
         public void KeyBindDown(BoundKeyEventArgs args)
         {
             if (args.Function == EngineKeyFunctions.CloseModals && _modalStack.Count != 0)
@@ -300,7 +303,6 @@ namespace Robust.Client.UserInterface
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));
-            _controlFocused = null;
 
             // Always mark this as handled.
             // The only case it should not be is if we do not have a control to click on,
@@ -411,9 +413,20 @@ namespace Robust.Client.UserInterface
             popup.OpenCenteredMinSize();
         }
 
-        public Control MouseGetControl(Vector2 coordinates)
+        public Control? MouseGetControl(Vector2 coordinates)
         {
             return _mouseFindControlAtPos(RootControl, coordinates);
+        }
+
+        public Vector2 MousePositionScaled => ScreenToUIPosition(_inputManager.MouseScreenPosition);
+        public Vector2 ScreenToUIPosition(Vector2 position)
+        {
+            return position / UIScale;
+        }
+
+        public Vector2 ScreenToUIPosition(ScreenCoordinates coordinates)
+        {
+            return ScreenToUIPosition(coordinates.Position);
         }
 
         /// <inheritdoc />
@@ -461,7 +474,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public ICursor WorldCursor
+        public ICursor? WorldCursor
         {
             get => _worldCursor;
             set
@@ -584,6 +597,8 @@ namespace Robust.Client.UserInterface
             }
 
             control.DrawInternal(renderHandle);
+            handle.UseShader(null);
+
             foreach (var child in control.Children)
             {
                 _render(renderHandle, child, position + child.PixelPosition, modulate, scissorRegion);
@@ -595,7 +610,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private Control _mouseFindControlAtPos(Control control, Vector2 position)
+        private Control? _mouseFindControlAtPos(Control control, Vector2 position)
         {
             for (var i = control.ChildCount - 1; i >= 0; i--)
             {
@@ -620,12 +635,13 @@ namespace Robust.Client.UserInterface
             return null;
         }
 
-        private static void _doMouseGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+        private static void _doMouseGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
             bool ignoreStop = false)
             where T : GUIMouseEventArgs
         {
             while (control != null)
             {
+                guiEvent.SourceControl = control;
                 if (control.MouseFilter != Control.MouseFilterMode.Ignore)
                 {
                     action(control, guiEvent);
@@ -639,11 +655,10 @@ namespace Robust.Client.UserInterface
                 guiEvent.RelativePosition += control.Position;
                 guiEvent.RelativePixelPosition += control.PixelPosition;
                 control = control.Parent;
-                guiEvent.SourceControl = control;
             }
         }
 
-        private static void _doGuiInput<T>(Control control, T guiEvent, Action<Control, T> action,
+        private static void _doGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
             bool ignoreStop = false)
             where T : GUIBoundKeyEventArgs
         {
@@ -686,8 +701,7 @@ namespace Robust.Client.UserInterface
 
             _tooltip.Visible = true;
             _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, _inputManager.MouseScreenPosition);
-            LayoutContainer.SetSize(_tooltip, _tooltip.CustomMinimumSize);
+            LayoutContainer.SetPosition(_tooltip, MousePositionScaled);
 
             var (right, bottom) = _tooltip.Position + _tooltip.Size;
 

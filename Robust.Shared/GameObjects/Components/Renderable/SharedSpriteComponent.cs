@@ -21,25 +21,25 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         protected class SpriteComponentState : ComponentState
         {
             public readonly bool Visible;
-            public readonly DrawDepth DrawDepth;
+            public readonly int DrawDepth;
             public readonly Vector2 Scale;
             public readonly Angle Rotation;
             public readonly Vector2 Offset;
             public readonly Color Color;
             public readonly bool Directional;
-            public readonly string BaseRsiPath;
+            public readonly string? BaseRsiPath;
             public readonly List<PrototypeLayerData> Layers;
             public readonly uint RenderOrder;
 
             public SpriteComponentState(
                 bool visible,
-                DrawDepth drawDepth,
+                int drawDepth,
                 Vector2 scale,
                 Angle rotation,
                 Vector2 offset,
                 Color color,
                 bool directional,
-                string baseRsiPath,
+                string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
                 : base(NetIDs.SPRITE)
@@ -60,15 +60,15 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         [Serializable, NetSerializable]
         protected struct PrototypeLayerData : IExposeData
         {
-            public string Shader;
-            public string TexturePath;
-            public string RsiPath;
-            public string State;
+            public string? Shader;
+            public string? TexturePath;
+            public string? RsiPath;
+            public string? State;
             public Vector2 Scale;
             public Angle Rotation;
             public bool Visible;
             public Color Color;
-            public List<string> MapKeys;
+            public List<string>? MapKeys;
 
             public static PrototypeLayerData New()
             {

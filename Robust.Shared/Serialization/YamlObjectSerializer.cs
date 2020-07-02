@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -27,9 +28,9 @@ namespace Robust.Shared.Serialization
         public static IReadOnlyDictionary<Type, TypeSerializer> TypeSerializers => _typeSerializers;
         private static readonly StructSerializer _structSerializer;
 
-        private YamlMappingNode WriteMap;
-        private List<YamlMappingNode> ReadMaps;
-        private Context _context;
+        private YamlMappingNode? WriteMap;
+        private List<YamlMappingNode>? ReadMaps;
+        private Context? _context;
 
         static YamlObjectSerializer()
         {
@@ -64,7 +65,7 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context context = null)
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context? context = null)
         {
             return NewReader(new List<YamlMappingNode>(1) { readMap }, context);
         }
@@ -79,7 +80,7 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabilities such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context context = null)
+        public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context? context = null)
         {
             return new YamlObjectSerializer
             {
@@ -99,7 +100,7 @@ namespace Robust.Shared.Serialization
         /// <param name="context">
         ///     An optional context that can provide additional capabitilies such as caching and custom type serializers.
         /// </param>
-        public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context context = null)
+        public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context? context = null)
         {
             return new YamlObjectSerializer
             {
@@ -116,7 +117,7 @@ namespace Robust.Shared.Serialization
         {
             if (Reading) // read
             {
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
@@ -131,64 +132,28 @@ namespace Robust.Shared.Serialization
             else // write
             {
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, format))
                     return;
 
+                // if value AND defaultValue are null then IsValueDefault above will abort.
                 var customFormatter = format.GetYamlSerializer();
                 var key = name;
-                var val = value == null ? customFormatter.TypeToNode(defaultValue, this) : customFormatter.TypeToNode(value, this);
+                var val = value == null ? customFormatter.TypeToNode(defaultValue!, this) : customFormatter.TypeToNode(value, this);
 
                 // write the concrete type tag
                 if (typeof(T).IsAbstract || typeof(T).IsInterface)
                 {
-                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                    var concreteType = value == null ? defaultValue!.GetType() : value.GetType();
                     val.Tag = $"!type:{concreteType.Name}";
                 }
 
-                WriteMap.Add(key, val);
+                WriteMap!.Add(key, val);
             }
         }
 
-
-        public override void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
-        {
-            if (o == null)
-            {
-                throw new ArgumentNullException(nameof(o));
-            }
-
-            if (expr == null)
-            {
-                throw new ArgumentNullException(nameof(expr));
-            }
-
-            if (!(expr.Body is MemberExpression mExpr))
-            {
-                throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
-            }
-
-
-            WriteFunctionDelegate<T> getter;
-            ReadFunctionDelegate<T> setter;
-            switch (mExpr.Member)
-            {
-                case FieldInfo fi:
-                    getter = () => (T) fi.GetValue(o);
-                    setter = v => fi.SetValue(o, v);
-                    break;
-                case PropertyInfo pi:
-                    getter = () => (T) pi.GetValue(o);
-                    setter = v => pi.SetValue(o, v);
-                    break;
-                default:
-                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
-            }
-
-            DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
-        }
 
         /// <inheritdoc />
-        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, bool alwaysWrite = false)
+        public override void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> format, bool alwaysWrite = false)
         {
             if (Reading) // read
             {
@@ -198,11 +163,12 @@ namespace Robust.Shared.Serialization
                     value = theValue;
                     return;
                 }
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
-                        value = (T)NodeToType(typeof(T), node);
+                        var customFormatter = format.GetYamlSerializer();
+                        value = (T)customFormatter.NodeToType(typeof(T), node, this);
                         _context?.SetCachedField(name, value);
                         return;
                     }
@@ -213,7 +179,7 @@ namespace Robust.Shared.Serialization
             }
             else // write
             {
-                DataField(ref value, name, defaultValue, alwaysWrite);
+                DataField(ref value, name, defaultValue, format, alwaysWrite);
             }
         }
 
@@ -222,13 +188,13 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false)
         {
             if (Reading)
             {
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
@@ -248,22 +214,22 @@ namespace Robust.Shared.Serialization
                 }
 
                 // don't write if value is null or default
-                if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+                if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<TTarget>.NoFormat))
                 {
                     return;
                 }
 
                 var key = name;
-                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue)) : TypeToNode(WriteConvertFunc(value));
+                var val = value == null ? TypeToNode(WriteConvertFunc(defaultValue!)) : TypeToNode(WriteConvertFunc(value!));
 
                 // write the concrete type tag
                 if (typeof(TTarget).IsAbstract || typeof(TTarget).IsInterface)
                 {
-                    var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                    var concreteType = value == null ? defaultValue!.GetType() : value.GetType();
                     val.Tag = $"!type:{concreteType.Name}";
                 }
 
-                WriteMap.Add(key, val);
+                WriteMap!.Add(key, val);
             }
         }
 
@@ -272,8 +238,8 @@ namespace Robust.Shared.Serialization
             ref TTarget value,
             string name,
             TTarget defaultValue,
-            Func<TSource, TTarget> ReadConvertFunc,
-            Func<TTarget, TSource> WriteConvertFunc = null,
+            ReadConvertFunc<TTarget, TSource> ReadConvertFunc,
+            WriteConvertFunc<TTarget, TSource>? WriteConvertFunc = null,
             bool alwaysWrite = false)
         {
             if (Reading)
@@ -284,7 +250,7 @@ namespace Robust.Shared.Serialization
                     value = theValue;
                     return;
                 }
-                foreach (var map in ReadMaps)
+                foreach (var map in ReadMaps!)
                 {
                     if (map.TryGetNode(name, out var node))
                     {
@@ -310,7 +276,7 @@ namespace Robust.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -334,7 +300,7 @@ namespace Robust.Shared.Serialization
                 return val;
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -348,18 +314,19 @@ namespace Robust.Shared.Serialization
         }
 
         /// <inheritdoc />
-        public override bool TryReadDataField<T>(string name, out T value)
+        public override bool TryReadDataField<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
         {
             if (!Reading)
             {
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     return true;
                 }
             }
@@ -367,8 +334,7 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        /// <inheritdoc />
-        public override bool TryReadDataFieldCached<T>(string name, out T value)
+        public override bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
         {
             if (!Reading)
             {
@@ -380,11 +346,12 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
-                    value = (T)NodeToType(typeof(T), node);
+                    var customFormatter = format.GetYamlSerializer();
+                    value = (T)customFormatter.NodeToType(typeof(T), node, this);
                     _context?.SetCachedField(name, value);
                     return true;
                 }
@@ -393,12 +360,13 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
+
         /// <inheritdoc />
         public override void DataReadFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> func)
         {
             if (!Reading) return;
 
-            foreach (var map in ReadMaps)
+            foreach (var map in ReadMaps!)
             {
                 if (map.TryGetNode(name, out var node))
                 {
@@ -418,20 +386,20 @@ namespace Robust.Shared.Serialization
             var value = func.Invoke();
 
             // don't write if value is null or default
-            if (!alwaysWrite && IsValueDefault(name, value, defaultValue))
+            if (!alwaysWrite && IsValueDefault(name, value, defaultValue, WithFormat<T>.NoFormat))
                 return;
 
             var key = name;
-            var val = value == null ? TypeToNode(defaultValue) : TypeToNode(value);
+            var val = value == null ? TypeToNode(defaultValue!) : TypeToNode(value);
 
             // write the concrete type tag
             if (typeof(T).IsAbstract || typeof(T).IsInterface)
             {
-                var concreteType = value == null ? defaultValue.GetType() : value.GetType();
+                var concreteType = value == null ? defaultValue!.GetType() : value.GetType();
                 val.Tag = $"!type:{concreteType.Name}";
             }
 
-            WriteMap.Add(key, val);
+            WriteMap!.Add(key, val);
         }
 
         /// <inheritdoc />
@@ -445,17 +413,17 @@ namespace Robust.Shared.Serialization
         {
             if (_context != null && _context.TryGetDataCache(key, out var value))
             {
-                return (T)value;
+                return (T) value!;
             }
             throw new KeyNotFoundException();
         }
 
         /// <inheritdoc />
-        public override bool TryGetCacheData<T>(string key, out T data)
+        public override bool TryGetCacheData<T>(string key, [MaybeNullWhen(false)] out T data)
         {
             if (_context != null && _context.TryGetDataCache(key, out var value))
             {
-                data = (T)value;
+                data = (T) value!;
                 return true;
             }
 
@@ -483,7 +451,7 @@ namespace Robust.Shared.Serialization
             if (TryGenericListType(type, out var listType))
             {
                 var listNode = (YamlSequenceNode)node;
-                var newList = (IList)Activator.CreateInstance(type);
+                var newList = (IList)Activator.CreateInstance(type)!;
 
                 foreach (var entryNode in listNode)
                 {
@@ -498,7 +466,7 @@ namespace Robust.Shared.Serialization
             if (TryGenericDictType(type, out var keyType, out var valType))
             {
                 var dictNode = (YamlMappingNode)node;
-                var newDict = (IDictionary)Activator.CreateInstance(type);
+                var newDict = (IDictionary)Activator.CreateInstance(type)!;
 
                 foreach (var kvEntry in dictNode.Children)
                 {
@@ -543,11 +511,11 @@ namespace Robust.Shared.Serialization
                     }
                     else
                     {
-                        throw new YamlException($"Malformed type tag.");
+                        throw new YamlException("Malformed type tag.");
                     }
                 }
 
-                var instance = (IExposeData)Activator.CreateInstance(concreteType);
+                var instance = (IExposeData)Activator.CreateInstance(concreteType)!;
                 // TODO: Might be worth it to cut down on allocations here by using ourselves instead of creating a fork.
                 // Seems doable.
                 if (_context != null)
@@ -566,7 +534,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
                 instance.Deserialize(node.ToString());
                 return instance;
             }
@@ -617,6 +585,11 @@ namespace Robust.Shared.Serialization
 
                 foreach (var entry in (IEnumerable)obj)
                 {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside list.");
+                    }
+
                     var entryNode = TypeToNode(entry);
 
                     // write the concrete type tag
@@ -637,9 +610,15 @@ namespace Robust.Shared.Serialization
             {
                 var node = new YamlMappingNode();
 
-                foreach (DictionaryEntry entry in (IDictionary)obj)
+                foreach (var oEntry in (IDictionary)obj)
                 {
+                    var entry = (DictionaryEntry) oEntry!;
                     var keyNode = TypeToNode(entry.Key);
+                    if (entry.Value == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside dictionary.");
+                    }
+
                     var valNode = TypeToNode(entry.Value);
 
                     // write the concrete type tag
@@ -685,7 +664,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type);
+                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
                 return instance.Serialize();
             }
 
@@ -697,7 +676,7 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
         }
 
-        bool IsValueDefault<T>(string field, T value, T providedDefault)
+        bool IsValueDefault<T>(string field, T value, T providedDefault, WithFormat<T> format)
         {
             if ((value != null || providedDefault == null) && (value == null || IsSerializedEqual(value, providedDefault)))
             {
@@ -706,14 +685,14 @@ namespace Robust.Shared.Serialization
 
             if (_context != null)
             {
-                return _context.IsValueDefault(field, value);
+                return _context.IsValueDefault(field, value, format);
             }
 
             return false;
 
         }
 
-        internal static bool IsSerializedEqual(object a, object b)
+        internal static bool IsSerializedEqual(object? a, object? b)
         {
             var type = a?.GetType();
             if (type != b?.GetType())
@@ -726,10 +705,10 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericListType(type, out _))
+            if (TryGenericListType(type!, out _))
             {
                 var listA = (IList) a;
-                var listB = (IList) b;
+                var listB = (IList) b!;
 
                 if (listA.Count != listB.Count)
                 {
@@ -759,7 +738,7 @@ namespace Robust.Shared.Serialization
                 var serB = NewWriter(testB);
 
                 var expA = (IExposeData) a;
-                var expB = (IExposeData) b;
+                var expB = (IExposeData) b!;
 
                 expA.ExposeData(serA);
                 expB.ExposeData(serB);
@@ -784,7 +763,7 @@ namespace Robust.Shared.Serialization
                 _typeSerializers.Add(type, serializer);
         }
 
-        private static bool TryGenericListType(Type type, out Type listType)
+        private static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
         {
             var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
 
@@ -798,7 +777,7 @@ namespace Robust.Shared.Serialization
             return false;
         }
 
-        private static bool TryGenericDictType(Type type, out Type keyType, out Type valType)
+        private static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
         {
             var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
 
@@ -835,24 +814,24 @@ namespace Robust.Shared.Serialization
             /// </summary>
             public int StackDepth { get; protected internal set; } = 0;
 
-            public virtual bool TryTypeToNode(object obj, out YamlNode node)
+            public virtual bool TryTypeToNode(object obj, [NotNullWhen(true)] out YamlNode? node)
             {
                 node = null;
                 return false;
             }
 
-            public virtual bool TryNodeToType(YamlNode node, Type type, out object obj)
+            public virtual bool TryNodeToType(YamlNode node, Type type, [NotNullWhen(true)] out object? obj)
             {
                 obj = default;
                 return false;
             }
 
-            public virtual bool IsValueDefault<T>(string field, T value)
+            public virtual bool IsValueDefault<T>(string field, T value, WithFormat<T> format)
             {
                 return false;
             }
 
-            public virtual bool TryGetCachedField<T>(string field, out T value)
+            public virtual bool TryGetCachedField<T>(string field, [MaybeNullWhen(false)] out T value)
             {
                 value = default;
                 return false;
@@ -862,7 +841,7 @@ namespace Robust.Shared.Serialization
             {
             }
 
-            public virtual bool TryGetDataCache(string field, out object value)
+            public virtual bool TryGetDataCache(string field, out object? value)
             {
                 value = null;
                 return false;
@@ -877,10 +856,10 @@ namespace Robust.Shared.Serialization
         {
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
-                var mapNode = node as YamlMappingNode;
+                var mapNode = (YamlMappingNode)node;
 
                 var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                var instance = Activator.CreateInstance(type);
+                var instance = Activator.CreateInstance(type)!;
                 var scalarNode = new YamlScalarNode();
 
                 foreach (var field in fields)
@@ -915,6 +894,11 @@ namespace Robust.Shared.Serialization
                         continue;
 
                     var fVal = field.GetValue(obj);
+
+                    if (fVal == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside struct field.");
+                    }
 
                     // Potential recursive infinite loop?
                     var fTypeNode = serializer.TypeToNode(fVal);

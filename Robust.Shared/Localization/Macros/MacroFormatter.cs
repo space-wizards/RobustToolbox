@@ -12,9 +12,9 @@ namespace Robust.Shared.Localization.Macros
             Macros = macros;
         }
 
-        public string Format(string format, object arg, IFormatProvider formatProvider)
+        public string Format(string? format, object? arg, IFormatProvider? formatProvider)
         {
-            IFormatProvider fallbackProvider = GetFallbackFormatProvider(formatProvider);
+            IFormatProvider? fallbackProvider = GetFallbackFormatProvider(formatProvider);
 
             if (format == null || format == "")
                 return string.Format(fallbackProvider, "{0}", arg);
@@ -30,7 +30,7 @@ namespace Robust.Shared.Localization.Macros
                 : grammarFunction.Format(arg);
         }
 
-        private static IFormatProvider GetFallbackFormatProvider(IFormatProvider formatProvider)
+        private static IFormatProvider? GetFallbackFormatProvider(IFormatProvider? formatProvider)
         {
             if (formatProvider is MacroFormatProvider macroFormatProvider)
                 return macroFormatProvider.CultureInfo;

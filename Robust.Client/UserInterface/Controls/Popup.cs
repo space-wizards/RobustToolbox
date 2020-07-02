@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface.Controls
             Visible = false;
         }
 
-        public event Action OnPopupHide;
+        public event Action? OnPopupHide;
 
         private Vector2 _desiredSize;
 

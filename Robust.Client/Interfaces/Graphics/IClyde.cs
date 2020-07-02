@@ -14,14 +14,14 @@ namespace Robust.Client.Interfaces.Graphics
         void SetWindowTitle(string title);
         event Action<WindowResizedEventArgs> OnWindowResized;
 
-        Texture LoadTextureFromPNGStream(Stream stream, string name = null,
+        Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null);
 
-        Texture LoadTextureFromImage<T>(Image<T> image, string name = null,
+        Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
 
         IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
-            TextureSampleParameters? sampleParameters = null, string name = null);
+            TextureSampleParameters? sampleParameters = null, string? name = null);
 
         void CalcWorldProjectionMatrix(out Matrix3 projMatrix);
 
@@ -47,7 +47,7 @@ namespace Robust.Client.Interfaces.Graphics
         /// </summary>
         /// <param name="cursor">The cursor to set to, or <see langword="null"/> to reset to the default cursor.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the cursor object passed has been disposed.</exception>
-        void SetCursor(ICursor cursor);
+        void SetCursor(ICursor? cursor);
 
         /// <summary>
         ///     Make a screenshot of the game, next render frame.

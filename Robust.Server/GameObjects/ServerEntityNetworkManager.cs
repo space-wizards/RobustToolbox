@@ -5,6 +5,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
@@ -18,24 +19,25 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// The server implementation of the Entity Network Manager.
     /// </summary>
-    public class ServerEntityNetworkManager : IServerEntityNetworkManager
+    public class ServerEntityNetworkManager : IServerEntityNetworkManager, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage> ReceivedComponentMessage;
+        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
-        public event EventHandler<object> ReceivedSystemMessage;
+        public event EventHandler<object>? ReceivedSystemMessage;
 
         private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageSequenceComparer());
 
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
             new Dictionary<IPlayerSession, uint>();
+
+        private bool _logLateMsgs;
 
         /// <inheritdoc />
         public void SetupNetworking()
@@ -43,6 +45,8 @@ namespace Robust.Server.GameObjects
             _networkManager.RegisterNetMessage<MsgEntity>(MsgEntity.NAME, HandleEntityNetworkMessage);
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+
+            _logLateMsgs = _configurationManager.GetCVar<bool>("net.log_late_msg");
         }
 
         public void Update()
@@ -59,7 +63,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
+        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
             ComponentMessage message)
         {
             if (_networkManager.IsClient)
@@ -74,6 +78,8 @@ namespace Robust.Server.GameObjects
             msg.NetId = component.NetID.Value;
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
+
+            // Logger.DebugS("net.ent", "Sending: {0}", msg);
 
             //Send the message
             if (channel == null)
@@ -111,7 +117,7 @@ namespace Robust.Server.GameObjects
 
             if (msgT <= cT)
             {
-                if (msgT < cT)
+                if (msgT < cT && _logLateMsgs)
                 {
                     Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
                         (int) msgT.Value - (int) cT.Value, message.MsgChannel.SessionId, msgT, cT);
@@ -151,13 +157,13 @@ namespace Robust.Server.GameObjects
                 case EntityMessageType.SystemMessage:
                     var msg = message.SystemMessage;
                     var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg);
+                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
                     ReceivedSystemMessage?.Invoke(this, sessionMsg);
                     return;
             }
         }
 
-        private void OnPlayerStatusChanged(object sender, SessionStatusEventArgs args)
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
         {
             switch (args.NewStatus)
             {
@@ -171,15 +177,26 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private sealed class MessageSequenceComparer : IComparer<MsgEntity>
+        internal sealed class MessageSequenceComparer : IComparer<MsgEntity>
         {
-            public int Compare(MsgEntity x, MsgEntity y)
+            public int Compare(MsgEntity? x, MsgEntity? y)
             {
                 DebugTools.AssertNotNull(x);
                 DebugTools.AssertNotNull(y);
 
+                var cmp = y!.SourceTick.CompareTo(x!.SourceTick);
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
                 return y.Sequence.CompareTo(x.Sequence);
             }
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _configurationManager.RegisterCVar("net.log_late_msg", true, onValueChanged: b => _logLateMsgs = b);
         }
     }
 }

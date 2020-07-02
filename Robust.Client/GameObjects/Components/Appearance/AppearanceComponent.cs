@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Appearance;
@@ -10,7 +11,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -18,9 +18,8 @@ namespace Robust.Client.GameObjects
     {
         private Dictionary<object, object> data = new Dictionary<object, object>();
         internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private static bool _didRegisterSerializer;
 
@@ -51,17 +50,17 @@ namespace Robust.Client.GameObjects
             return (T) data[key];
         }
 
-        public override bool TryGetData<T>(Enum key, out T data)
+        public override bool TryGetData<T>(Enum key, [MaybeNullWhen(false)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        public override bool TryGetData<T>(string key, out T data)
+        public override bool TryGetData<T>(string key, [MaybeNullWhen(false)] out T data)
         {
             return TryGetData(key, out data);
         }
 
-        internal bool TryGetData<T>(object key, out T data)
+        internal bool TryGetData<T>(object key, [MaybeNullWhen(false)] out T data)
         {
             if (this.data.TryGetValue(key, out var dat))
             {
@@ -80,7 +79,7 @@ namespace Robust.Client.GameObjects
             MarkDirty();
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;
@@ -168,7 +167,7 @@ namespace Robust.Client.GameObjects
                             throw new InvalidOperationException();
                         }
 
-                        var vis = (AppearanceVisualizer) Activator.CreateInstance(visType);
+                        var vis = (AppearanceVisualizer) Activator.CreateInstance(visType)!;
                         vis.LoadData(mapping);
                         return vis;
                 }

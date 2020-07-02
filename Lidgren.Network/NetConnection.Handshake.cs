@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -200,12 +201,12 @@ namespace Lidgren.Network
 		{
 			if (m_localHailMessage != null)
 			{
-				byte[] hi = m_localHailMessage.Data;
+				var hi = m_localHailMessage.Buffer;
 				if (hi != null && hi.Length >= m_localHailMessage.LengthBytes)
 				{
 					if (om.LengthBytes + m_localHailMessage.LengthBytes > m_peerConfiguration.m_maximumTransmissionUnit - 10)
 						m_peer.ThrowOrLog("Hail message too large; can maximally be " + (m_peerConfiguration.m_maximumTransmissionUnit - 10 - om.LengthBytes));
-					om.Write(m_localHailMessage.Data, 0, m_localHailMessage.LengthBytes);
+					om.Write(m_localHailMessage.Buffer, 0, m_localHailMessage.LengthBytes);
 				}
 			}
 		}
@@ -283,20 +284,19 @@ namespace Lidgren.Network
 		{
 			m_peer.VerifyNetworkThread();
 
-			byte[] hail;
 			switch (tp)
 			{
 				case NetMessageType.Connect:
 					if (m_status == NetConnectionStatus.ReceivedInitiation)
 					{
 						// Whee! Server full has already been checked
-						bool ok = ValidateHandshakeData(ptr, payloadLength, out hail);
+						bool ok = ValidateHandshakeData(ptr, payloadLength, out var hail);
 						if (ok)
 						{
 							if (hail != null)
 							{
 								m_remoteHailMessage = m_peer.CreateIncomingMessage(NetIncomingMessageType.Data, hail);
-								m_remoteHailMessage.LengthBits = (hail.Length * 8);
+								m_remoteHailMessage.LengthBits = (hail.Count * 8);
 							}
 							else
 							{
@@ -402,18 +402,17 @@ namespace Lidgren.Network
 
 		private void HandleConnectResponse(double now, NetMessageType tp, int ptr, int payloadLength)
 		{
-			byte[] hail;
 			switch (m_status)
 			{
 				case NetConnectionStatus.InitiatedConnect:
 					// awesome
-					bool ok = ValidateHandshakeData(ptr, payloadLength, out hail);
+					bool ok = ValidateHandshakeData(ptr, payloadLength, out var hail);
 					if (ok)
 					{
 						if (hail != null)
 						{
 							m_remoteHailMessage = m_peer.CreateIncomingMessage(NetIncomingMessageType.Data, hail);
-							m_remoteHailMessage.LengthBits = (hail.Length * 8);
+							m_remoteHailMessage.LengthBits = (hail.Count * 8);
 						}
 						else
 						{
@@ -441,7 +440,7 @@ namespace Lidgren.Network
 			}
 		}
 
-		private bool ValidateHandshakeData(int ptr, int payloadLength, out byte[] hail)
+		private bool ValidateHandshakeData(int ptr, int payloadLength, out ArraySegment<byte> hail)
 		{
 			hail = null;
 
@@ -455,7 +454,7 @@ namespace Lidgren.Network
 
 				int remainingBytes = payloadLength - (msg.PositionInBytes - ptr);
 				if (remainingBytes > 0)
-					hail = msg.ReadBytes(remainingBytes);
+					msg.ReadBytes(hail = new ArraySegment<byte>(ArrayPool<byte>.Shared.Rent(remainingBytes),0, remainingBytes));
 
 				if (remoteAppIdentifier != m_peer.m_configuration.AppIdentifier)
 				{

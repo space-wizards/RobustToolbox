@@ -18,7 +18,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
         public string Help => "addmap <mapID> [initialize]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -48,7 +48,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "rmmap";
         public string Description => "Removes a map from the world. You cannot remove nullspace.";
         public string Help => "rmmap <mapId>";
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length != 1)
             {
@@ -76,7 +76,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Serializes a grid to disk.";
         public string Help => "savebp <gridID> <Path>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 2)
             {
@@ -118,7 +118,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Loads a blueprint from disk into the game.";
         public string Help => "loadbp <MapID> <Path>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 2)
             {
@@ -157,7 +157,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Serializes a map to disk.";
         public string Help => "savemap <MapID> <Path>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -186,7 +186,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Loads a map from disk into the game.";
         public string Help => "loadmap <MapID> <Path>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1)
                 return;
@@ -198,14 +198,22 @@ namespace Robust.Server.Console.Commands
 
             // no loading null space
             if (mapID == MapId.Nullspace)
+            {
+                shell.SendText(player, "You cannot load into map 0.");
                 return;
+            }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
             if (mapManager.MapExists(mapID))
+            {
+                shell.SendText(player, $"Map {mapID} already exists.");
                 return;
+            }
 
             // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, "Maps/Demo/DemoMap.yaml");
+            var mapPath = "Maps/Demo/DemoMap.yaml";
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, mapPath);
+            shell.SendText(player, $"Map {mapID} has been loaded from {mapPath}.");
         }
     }
 
@@ -215,9 +223,9 @@ namespace Robust.Server.Console.Commands
         public string Description => "Prints the absolute location of the player's entity to console.";
         public string Help => "loc";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
-            if(player.AttachedEntity == null)
+            if(player?.AttachedEntity == null)
                 return;
 
             var pos = player.AttachedEntity.Transform.GridPosition;
@@ -231,7 +239,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "pausemap";
         public string Description => "Pauses a map, pausing all simulation processing on it.";
         public string Help => "Usage: pausemap <map ID>";
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
@@ -252,7 +260,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "unpausemap";
         public string Description => "unpauses a map, resuming all simulation processing on it.";
         public string Help => "Usage: unpausemap <map ID>";
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
@@ -273,7 +281,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "querymappaused";
         public string Description => "Check whether a map is paused or not.";
         public string Help => "Usage: querymappaused <map ID>";
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
@@ -295,7 +303,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Teleports a grid to a new location.";
         public string Help => "tpgrid <gridId> <X> <Y> [<MapId>]";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 3 || args.Length > 4)
             {
@@ -325,7 +333,7 @@ namespace Robust.Server.Console.Commands
         public string Command => "rmgrid";
         public string Description => "Removes a grid from a map. You cannot remove the default grid.";
         public string Help => "rmgrid <gridId>";
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length != 1)
             {
@@ -350,10 +358,10 @@ namespace Robust.Server.Console.Commands
     internal sealed class RunMapInitCommand : IClientCommand
     {
         public string Command => "mapinit";
-        public string Description => default;
+        public string Description => "Runs map init on a map";
         public string Help => "mapinit <mapID>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length != 1)
             {
@@ -386,10 +394,10 @@ namespace Robust.Server.Console.Commands
     internal sealed class ListMapsCommand : IClientCommand
     {
         public string Command => "lsmap";
-        public string Description => default;
+        public string Description => "Lists maps";
         public string Help => "lsmap";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
             var pauseManager = IoCManager.Resolve<IPauseManager>();
@@ -412,10 +420,10 @@ namespace Robust.Server.Console.Commands
     internal sealed class ListGridsCommand : IClientCommand
     {
         public string Command => "lsgrid";
-        public string Description => default;
+        public string Description => "List grids";
         public string Help => "lsgrid";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
 

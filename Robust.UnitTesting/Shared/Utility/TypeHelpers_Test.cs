@@ -13,10 +13,10 @@ namespace Robust.UnitTesting.Shared.Utility
         public void TestIsBasePropertyDefinition()
         {
             // Easy, the definition of the virtual property.
-            Assert.That(typeof(Parent).GetProperty("X").IsBasePropertyDefinition(), Is.True);
-            Assert.That(typeof(Child).GetProperty("X").IsBasePropertyDefinition(), Is.False);
-            Assert.That(typeof(SealedChild).GetProperty("X").IsBasePropertyDefinition(), Is.False);
-            Assert.That(typeof(Hidden).GetProperty("X").IsBasePropertyDefinition(), Is.True);
+            Assert.That(typeof(Parent).GetProperty("X")!.IsBasePropertyDefinition(), Is.True);
+            Assert.That(typeof(Child).GetProperty("X")!.IsBasePropertyDefinition(), Is.False);
+            Assert.That(typeof(SealedChild).GetProperty("X")!.IsBasePropertyDefinition(), Is.False);
+            Assert.That(typeof(Hidden).GetProperty("X")!.IsBasePropertyDefinition(), Is.True);
         }
 
         private class Parent

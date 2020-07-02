@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
@@ -14,9 +12,7 @@ namespace Robust.Shared.GameObjects.Components
 {
     public class CollidableComponent : Component, ICollidableComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPhysicsManager _physicsManager;
-#pragma warning restore 649
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private bool _canCollide;
         private bool _isHard;
@@ -55,7 +51,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;
@@ -121,9 +117,21 @@ namespace Robust.Shared.GameObjects.Components
         public bool CanCollide
         {
             get => _canCollide;
-            set => _canCollide = value;
+            set
+            {
+                _canCollide = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+                Dirty();
+            }
         }
 
+        /// <summary>
+        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     while still raising collision events.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful for triggers or such to detect collision without actually causing a blockage.
+        /// </remarks>
         public bool Hard
         {
             get => _isHard;
@@ -164,7 +172,11 @@ namespace Robust.Shared.GameObjects.Components
         public BodyStatus Status
         {
             get => _status;
-            set => _status = value;
+            set
+            {
+                _status = value;
+                Dirty();
+            }
         }
 
         /// <inheritdoc />
@@ -175,6 +187,8 @@ namespace Robust.Shared.GameObjects.Components
             // normally ExposeData would create this
             if (_physShapes == null)
                 _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
+
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
         }
 
         /// <inheritdoc />

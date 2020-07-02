@@ -18,7 +18,7 @@ namespace Robust.Client.GameObjects.Components
         ///     The context that will be made active for a client that attaches to this entity.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public string ContextName { get; set; }
+        public string ContextName { get; set; } = default!;
 
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)

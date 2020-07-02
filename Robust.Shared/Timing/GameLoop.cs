@@ -5,6 +5,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Prometheus;
 
 namespace Robust.Shared.Timing
 {
@@ -48,14 +49,22 @@ namespace Robust.Shared.Timing
     /// </summary>
     public class GameLoop : IGameLoop
     {
+        private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
+            "robust_game_loop_frametime",
+            "Histogram of frametimes in ms",
+            new HistogramConfiguration
+            {
+                Buckets = Histogram.ExponentialBuckets(.0003, 1.5, 10)
+            });
+
         private readonly IGameTiming _timing;
         private TimeSpan _lastTick; // last wall time tick
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
 
-        public event EventHandler<FrameEventArgs> Input;
-        public event EventHandler<FrameEventArgs> Tick;
-        public event EventHandler<FrameEventArgs> Update;
-        public event EventHandler<FrameEventArgs> Render;
+        public event EventHandler<FrameEventArgs>? Input;
+        public event EventHandler<FrameEventArgs>? Tick;
+        public event EventHandler<FrameEventArgs>? Update;
+        public event EventHandler<FrameEventArgs>? Render;
 
         /// <summary>
         ///     Enables single step mode. If this is enabled, after every tick the GameTime will pause.
@@ -177,7 +186,10 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
-                    Tick?.Invoke(this, simFrameEvent);
+                        using (_frameTimeHistogram.NewTimer())
+                        {
+                            Tick?.Invoke(this, simFrameEvent);
+                        }
 #if EXCEPTION_TOLERANCE
                     }
                     catch (Exception exp)

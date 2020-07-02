@@ -15,13 +15,16 @@ namespace Robust.UnitTesting.Client.UserInterface
     public class ControlTest : RobustUnitTest
     {
         private static readonly AttachedProperty _refTypeAttachedProperty
-            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string) v != "bar");
+            = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");
 
         private static readonly AttachedProperty _valueTypeAttachedProperty
             = AttachedProperty.Create("_valueType", typeof(ControlTest), typeof(float));
 
         private static readonly AttachedProperty _nullableAttachedProperty
             = AttachedProperty.Create("_nullable", typeof(ControlTest), typeof(float?));
+
+        private static readonly AttachedProperty<int> _genericProperty =
+            AttachedProperty<int>.Create("generic", typeof(ControlTest), 5, i => i % 2 == 1);
 
         public override UnitTestProject Project => UnitTestProject.Client;
 
@@ -127,6 +130,20 @@ namespace Robust.UnitTesting.Client.UserInterface
             var control = new Control();
 
             control.SetValue(_nullableAttachedProperty, null);
+        }
+
+        [Test]
+        public void TestAttachedPropertiesGeneric()
+        {
+            var control = new Control();
+
+            Assert.AreEqual(5, control.GetValue(_genericProperty));
+
+            control.SetValue(_genericProperty, 11);
+
+            Assert.AreEqual(11, control.GetValue(_genericProperty));
+
+            Assert.That(() => control.SetValue(_genericProperty, 10), Throws.ArgumentException);
         }
 
         [Test]

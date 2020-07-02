@@ -6,13 +6,13 @@ namespace Robust.Client.ViewVariables.Editors
 {
     internal sealed class ViewVariablesPropertyEditorBoolean : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var box = new CheckBox
             {
-                Pressed = (bool)value,
+                Pressed = (bool)value!,
                 Disabled = ReadOnly,
-                Text = value.ToString(),
+                Text = value!.ToString()!,
                 CustomMinimumSize = new Vector2(70, 0)
             };
             if (!ReadOnly)

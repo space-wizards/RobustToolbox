@@ -16,7 +16,7 @@ namespace Robust.Client.ResourceManagement.ResourceTypes
     internal class ShaderSourceResource : BaseResource
     {
         internal ClydeHandle ClydeHandle { get; private set; }
-        internal ParsedShader ParsedShader { get; private set; }
+        internal ParsedShader ParsedShader { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {

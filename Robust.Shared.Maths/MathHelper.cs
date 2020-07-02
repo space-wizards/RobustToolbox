@@ -12,6 +12,9 @@
 
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -83,6 +86,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long NextPowerOfTwo(long n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
@@ -94,6 +98,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextPowerOfTwo(int n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
@@ -105,6 +110,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float NextPowerOfTwo(float n)
         {
             if (float.IsNaN(n) || float.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
@@ -117,6 +123,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The specified number.</param>
         /// <returns>The next power of two.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NextPowerOfTwo(double n)
         {
             if (double.IsNaN(n) || double.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
@@ -136,6 +143,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="n">The number.</param>
         /// <returns>n!</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long Factorial(int n)
         {
             long result = 1;
@@ -156,6 +164,7 @@ namespace Robust.Shared.Maths
         /// <param name="n">The n.</param>
         /// <param name="k">The k.</param>
         /// <returns>n! / (k! * (n - k)!)</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long BinomialCoefficient(int n, int k)
         {
             return Factorial(n) / (Factorial(k) * Factorial(n - k));
@@ -170,6 +179,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="degrees">An angle in degrees</param>
         /// <returns>The angle expressed in radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float DegreesToRadians(float degrees)
         {
             const float degToRad = (float) Math.PI / 180.0f;
@@ -181,6 +191,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="radians">An angle in radians</param>
         /// <returns>The angle expressed in degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float RadiansToDegrees(float radians)
         {
             const float radToDeg = 180.0f / (float) Math.PI;
@@ -192,6 +203,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="degrees">An angle in degrees</param>
         /// <returns>The angle expressed in radians</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double DegreesToRadians(double degrees)
         {
             const double degToRad = Math.PI / 180.0;
@@ -203,6 +215,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="radians">An angle in radians</param>
         /// <returns>The angle expressed in degrees</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double RadiansToDegrees(double radians)
         {
             const double radToDeg = 180.0 / Math.PI;
@@ -218,6 +231,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="a">The first value.</param>
         /// <param name="b">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Swap(ref double a, ref double b)
         {
             var temp = a;
@@ -230,6 +244,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="a">The first value.</param>
         /// <param name="b">The second value.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Swap(ref float a, ref float b)
         {
             var temp = a;
@@ -241,23 +256,26 @@ namespace Robust.Shared.Maths
 
         #region MinMax
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Min(float a, float b, float c, float d)
         {
-            return Math.Min(a, Math.Min(b, Math.Min(c, d)));
+            return MathF.Min(a, MathF.Min(b, MathF.Min(c, d)));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Max(float a, float b, float c, float d)
         {
-            return Math.Max(a, Math.Max(b, Math.Max(c, d)));
+            return MathF.Max(a, MathF.Max(b, MathF.Max(c, d)));
         }
 
         /// <summary>
         /// Returns the median value out of a, b and c.
         /// </summary>
         /// <returns>THe median.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Median(float a, float b, float c)
         {
-            return Math.Max(Math.Min(a, b), Math.Min(Math.Max(a, b), c));
+            return MathF.Max(MathF.Min(a, b), MathF.Min(MathF.Max(a, b), c));
         }
 
         #endregion MinMax
@@ -270,6 +288,7 @@ namespace Robust.Shared.Maths
         /// <param name="d">The divisor.</param>
         /// <returns>The remainder.</returns>
         [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Mod(double n, double d)
         {
             return n - Math.Floor(n / d) * d;
@@ -283,6 +302,7 @@ namespace Robust.Shared.Maths
         /// <param name="d">The divisor.</param>
         /// <returns>The remainder.</returns>
         [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Mod(int n, int d)
         {
             var r = n % d;

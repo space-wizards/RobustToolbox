@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -17,9 +16,7 @@ namespace Robust.Shared.Physics
     /// <inheritdoc />
     public class PhysicsManager : IPhysicsManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
@@ -53,7 +50,7 @@ namespace Robust.Shared.Physics
             return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
         }
 
-        public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
+        public Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
@@ -73,7 +70,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public float CalculatePenetration(ICollidableComponent target, ICollidableComponent source)
+        public float CalculatePenetration(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return 0.0f;
@@ -90,7 +87,7 @@ namespace Robust.Shared.Physics
             var normal = CalculateNormal(manifold.A, manifold.B);
             var rV = aP != null
                 ? bP != null ? bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity
-                : bP.LinearVelocity;
+                : bP!.LinearVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)
@@ -223,13 +220,13 @@ namespace Robust.Shared.Physics
             }
 
             if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner.Uid}");
         }
 
         /// <inheritdoc />
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
-            Func<IEntity, bool> predicate = null, bool returnOnFirstHit = true)
+            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new List<RayCastResults>();
 
@@ -243,17 +240,17 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (predicate != null && predicate.Invoke(body.Owner))
-                {
-                    return true;
-                }
-
                 if (!body.CanCollide)
                 {
                     return true;
                 }
 
                 if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (predicate != null && predicate.Invoke(body.Owner))
                 {
                     return true;
                 }
@@ -273,10 +270,43 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity ignoredEnt = null, bool returnOnFirstHit = true)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
-        public event Action<DebugRayData> DebugDrawRay;
+        /// <inheritdoc />
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
+        {
+            var penetration = 0f;
+
+            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            {
+                if (distFromOrigin > maxLength)
+                {
+                    return true;
+                }
+
+                if (!body.CanCollide)
+                {
+                    return true;
+                }
+
+                if ((body.CollisionLayer & ray.CollisionMask) == 0x0)
+                {
+                    return true;
+                }
+
+                if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
+                    body.WorldAABB, out _, out var exitPoint))
+                {
+                    penetration += (point - exitPoint).Length;
+                }
+                return true;
+            }, ray.Position, ray.Direction);
+
+            return penetration;
+        }
+
+        public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
             => this[collider.MapID].Update(collider);

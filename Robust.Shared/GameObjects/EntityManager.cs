@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -12,7 +13,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -24,15 +24,13 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-#pragma warning disable 649
-        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager;
-        [Dependency] private readonly IPrototypeManager PrototypeManager;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager;
-        [Dependency] private readonly IComponentFactory ComponentFactory;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
+        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
         #endregion Dependencies
 
@@ -48,11 +46,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
+        protected readonly Dictionary<EntityUid, Entity> Entities = new Dictionary<EntityUid, Entity>();
 
-        protected readonly List<IEntity> AllEntities = new List<IEntity>();
+        protected readonly List<Entity> AllEntities = new List<Entity>();
 
-        private readonly IEntityEventBus _eventBus = new EntityEventBus();
+        private readonly EntityEventBus _eventBus = new EntityEventBus();
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -97,28 +95,28 @@ namespace Robust.Shared.GameObjects
         #region Entity Management
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntity(string? protoName, GridCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string protoName, MapCoordinates coordinates);
+        public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
         /// </summary>
         /// <param name="uid"></param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
+        /// <returns>Entity or throws if the entity doesn't exist</returns>
         public IEntity GetEntity(EntityUid uid)
         {
             return Entities[uid];
@@ -130,10 +128,11 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(EntityUid uid, out IEntity entity)
+        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
-            if (Entities.TryGetValue(uid, out entity) && !entity.Deleted)
+            if (Entities.TryGetValue(uid, out var cEntity) && !cEntity.Deleted)
             {
+                entity = cEntity;
                 return true;
             }
 
@@ -217,9 +216,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(string prototypeName, EntityUid? uid = null)
+        private protected Entity AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
-            EntityPrototype prototype = null;
+            EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
             {
                 // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
@@ -268,7 +267,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected Entity CreateEntity(string prototypeName, EntityUid? uid = null)
+        private protected Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -288,7 +287,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(Entity entity, IEntityLoadContext context)
+        private protected void LoadEntity(Entity entity, IEntityLoadContext? context)
         {
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
@@ -503,8 +502,8 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private readonly ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
+        private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
+            new Dictionary<MapId, DynamicTree<IEntity>>();
 
         public virtual bool UpdateEntityTree(IEntity entity)
         {
@@ -519,17 +518,17 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var transform = entity.TryGetComponent(out ITransformComponent tx) ? tx : null;
+            var transform = entity.Transform;
 
-            if (transform == null || !transform.Initialized)
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
+            DebugTools.Assert(transform.Initialized);
 
             var mapId = transform.MapID;
 
-            var entTree = _entityTreesPerMap.GetOrAdd(mapId, EntityTreeFactory);
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
+            {
+                entTree = EntityTreeFactory();
+                _entityTreesPerMap.Add(mapId, entTree);
+            }
 
             // for debugging
             var necessary = 0;
@@ -571,7 +570,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static DynamicTree<IEntity> EntityTreeFactory(MapId _) =>
+        private static DynamicTree<IEntity> EntityTreeFactory() =>
             new DynamicTree<IEntity>(
                 GetWorldAabbFromEntity,
                 capacity: 16,

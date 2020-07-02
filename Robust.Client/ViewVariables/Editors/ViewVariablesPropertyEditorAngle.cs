@@ -7,13 +7,13 @@ namespace Robust.Client.ViewVariables.Editors
 {
     public class ViewVariablesPropertyEditorAngle : ViewVariablesPropertyEditor
     {
-        protected override Control MakeUI(object value)
+        protected override Control MakeUI(object? value)
         {
             var hBox = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(200, 0)
             };
-            var angle = (Angle) value;
+            var angle = (Angle) value!;
             var lineEdit = new LineEdit
             {
                 Text = angle.Degrees.ToString(CultureInfo.InvariantCulture),

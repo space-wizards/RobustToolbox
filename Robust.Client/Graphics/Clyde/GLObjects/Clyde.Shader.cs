@@ -1,4 +1,4 @@
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
 
-            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string name=null)
+            public GLShader(Clyde clyde, ShaderType type, string shaderSource, string? name=null)
             {
                 _clyde = clyde;
                 Compile(type, shaderSource);

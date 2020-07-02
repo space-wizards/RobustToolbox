@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.Serialization;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace Robust.Shared.Interfaces.Serialization
@@ -21,6 +22,18 @@ namespace Robust.Shared.Interfaces.Serialization
         /// A custom serialization format for int values, chosen by the tag type.
         /// </returns>
         public WithFormat<int> FlagFormat<T>();
+
+        /// <summary>
+        /// Get a custom <c>int</c> format in terms of enum constants, chosen by a tag type.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The tag type to select the representation with. To understand more about how
+        /// tag types are used, see the <see cref="ConstantsForAttribute"/>.
+        /// </typeparam>
+        /// <returns>
+        /// A custom serialization format for int values, chosen by the tag type.
+        /// </returns>
+        public WithFormat<int> ConstantFormat<T>();
     }
 
 
@@ -34,8 +47,9 @@ namespace Robust.Shared.Interfaces.Serialization
         /// </summary>
         public abstract Type Format { get; }
 
+        [return: NotNull]
         public abstract T FromCustomFormat(object obj);
-        public abstract object ToCustomFormat(T t);
+        public abstract object ToCustomFormat(T t); // t is never null here. Promise.
 
         /// <summary>
         /// Get the corresponding YAML serializer for the custom representation.
@@ -45,18 +59,18 @@ namespace Robust.Shared.Interfaces.Serialization
             return new YamlCustomFormatSerializer<T>(this);
         }
 
-        private class DoNothing<T> : WithFormat<T>
+        private class DoNothing : WithFormat<T>
         {
             public override Type Format => typeof(T);
+            [return: NotNull]
             public override T FromCustomFormat(object obj) { return (T)obj; }
-            public override object ToCustomFormat(T t) { return t; }
+            public override object ToCustomFormat(T t) { return t!; }
 
-            private static YamlCustomFormatSerializer<T> _serializer;
+            private readonly YamlCustomFormatSerializer<T> _serializer;
 
             internal DoNothing()
             {
-                if (_serializer == null)
-                    _serializer = new YamlCustomFormatSerializer<T>(this);
+                _serializer = new YamlCustomFormatSerializer<T>(this);
             }
 
             public override YamlObjectSerializer.TypeSerializer GetYamlSerializer()
@@ -68,6 +82,6 @@ namespace Robust.Shared.Interfaces.Serialization
         /// <summary>
         /// The identity format i.e. the format which represents a value as itself.
         /// </summary>
-        public static readonly WithFormat<T> NoFormat = new DoNothing<T>();
+        public static readonly WithFormat<T> NoFormat = new DoNothing();
     }
 }

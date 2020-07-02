@@ -5,7 +5,7 @@ namespace Lidgren.Network
 	internal static class NetFragmentationHelper
 	{
 		internal static int WriteHeader(
-			byte[] destination,
+			Span<byte> destination,
 			int ptr,
 			int group,
 			int totalBits,
@@ -50,7 +50,7 @@ namespace Lidgren.Network
 			return ptr;
 		}
 
-		internal static int ReadHeader(byte[] buffer, int ptr, out int group, out int totalBits, out int chunkByteSize, out int chunkNumber)
+		internal static int ReadHeader(Span<byte> buffer, int ptr, out int group, out int totalBits, out int chunkByteSize, out int chunkNumber)
 		{
 			int num1 = 0;
 			int num2 = 0;

@@ -96,7 +96,7 @@ namespace Robust.Client.UserInterface
                                 "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
                             // We ran into a word boundary and the word is too big to fit the previous line.
                             // So we insert the line break BEFORE the last word.
-                            LineBreaks.Add(wordStartBreakIndex.Value.index);
+                            LineBreaks.Add(wordStartBreakIndex!.Value.index);
                             Height += font.GetLineHeight(uiScale);
                             maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
                             posX = wordSizePixels;
@@ -174,7 +174,7 @@ namespace Robust.Client.UserInterface
             {
                 DebugTools.Assert(wordStartBreakIndex.HasValue,
                     "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
-                LineBreaks.Add(wordStartBreakIndex.Value.index);
+                LineBreaks.Add(wordStartBreakIndex!.Value.index);
                 Height += font.GetLineHeight(uiScale);
                 maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);
             }

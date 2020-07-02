@@ -8,7 +8,6 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Shared.Maths</OutputPath>
     <Configurations>Debug;Release</Configurations>
-    <Platforms>x64</Platforms>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -18,6 +17,7 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.5.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.5.0" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.5.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -13,13 +13,13 @@ namespace Robust.Client.Graphics.Clyde
             new Dictionary<ClydeHandle, RenderTarget>();
 
         IRenderTarget IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
-            TextureSampleParameters? sampleParameters, string name)
+            TextureSampleParameters? sampleParameters, string? name)
         {
             return CreateRenderTarget(size, format, sampleParameters, name);
         }
 
         private RenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
-            TextureSampleParameters? sampleParameters = null, string name = null)
+            TextureSampleParameters? sampleParameters = null, string? name = null)
         {
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.

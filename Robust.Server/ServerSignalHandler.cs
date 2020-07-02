@@ -6,9 +6,7 @@ namespace Robust.Server
 {
     internal sealed class ServerSignalHandler : SignalHandler
     {
-#pragma warning disable 649
-        [Dependency] private readonly IBaseServer _baseServer;
-#pragma warning restore 649
+        [Dependency] private readonly IBaseServer _baseServer = default!;
 
         protected override void OnReceiveTerminationSignal(string signal)
         {

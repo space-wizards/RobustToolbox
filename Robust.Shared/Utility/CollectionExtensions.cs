@@ -26,6 +26,7 @@ namespace Robust.Shared.Utility
         }
 
         public static Dictionary<TKey, TValue> ShallowClone<TKey, TValue>(this Dictionary<TKey, TValue> self)
+            where TKey : notnull
         {
             var dict = new Dictionary<TKey, TValue>(self.Count);
             foreach (var item in self)
@@ -108,6 +109,7 @@ namespace Robust.Shared.Utility
         }
 
         public static TValue GetOrNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()
+            where TKey : notnull
         {
             if (!dict.TryGetValue(key, out var value))
             {
@@ -120,6 +122,7 @@ namespace Robust.Shared.Utility
 
         // More efficient than LINQ.
         public static KeyValuePair<TKey, TValue>[] ToArray<TKey, TValue>(this Dictionary<TKey, TValue> dict)
+            where TKey : notnull
         {
             var array = new KeyValuePair<TKey, TValue>[dict.Count];
 

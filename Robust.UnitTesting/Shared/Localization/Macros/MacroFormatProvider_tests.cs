@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
     [TestFixture, Parallelizable, TestOf(typeof(MacroFormatProvider))]
     internal class MacroFormatProvider_tests
     {
-        private MacroFormatProvider sut;
+        private MacroFormatProvider sut = default!;
 
         private class GenderedPerson : IGenderable
         {
@@ -43,6 +43,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
                 { "theirs", new Theirs() },
                 { "them", new Them() },
                 { "themself", new Themself() },
+                { "theyre", new Theyre() }
             };
             sut = new MacroFormatProvider(new MacroFormatter(macros), CultureInfo.CurrentCulture);
         }
@@ -103,6 +104,15 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
             Assert.AreEqual("Robust himself", string.Format(sut, "Robust {0:themself}", male));
             Assert.AreEqual("Robust itself", string.Format(sut, "Robust {0:themself}", neuter));
             Assert.AreEqual("Robust themself", string.Format(sut, "Robust {0:themself}", epicene));
+        }
+
+        [Test]
+        public void TestInsertTheyre()
+        {
+            Assert.AreEqual("She's robust", string.Format(sut, "{0:Theyre} robust", female));
+            Assert.AreEqual("He's robust", string.Format(sut, "{0:Theyre} robust", male));
+            Assert.AreEqual("It's robust", string.Format(sut, "{0:Theyre} robust", neuter));
+            Assert.AreEqual("They're robust", string.Format(sut, "{0:Theyre} robust", epicene));
         }
 
         [Test]

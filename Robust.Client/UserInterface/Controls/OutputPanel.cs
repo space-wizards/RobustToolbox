@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private int _totalContentHeight;
         private bool _firstLine = true;
-        private StyleBox _styleBoxOverride;
+        private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
 
         public bool ScrollFollowing { get; set; } = true;
@@ -40,7 +40,7 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.OnValueChanged += _ => _isAtBottom = _scrollBar.IsAtEnd;
         }
 
-        public StyleBox StyleBoxOverride
+        public StyleBox? StyleBoxOverride
         {
             get => _styleBoxOverride;
             set
@@ -198,7 +198,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }
@@ -207,15 +207,14 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        [CanBeNull]
-        private StyleBox _getStyleBox()
+        private StyleBox? _getStyleBox()
         {
             if (StyleBoxOverride != null)
             {
                 return StyleBoxOverride;
             }
 
-            TryGetStyleProperty(StylePropertyStyleBox, out StyleBox box);
+            TryGetStyleProperty<StyleBox>(StylePropertyStyleBox, out var box);
             return box;
         }
 

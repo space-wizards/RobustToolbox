@@ -44,8 +44,6 @@ namespace Lidgren.Network
 		internal int m_sentBytes;
 		internal int m_receivedBytes;
 
-		internal long m_bytesAllocated;
-
 		internal NetPeerStatistics(NetPeer peer)
 		{
 			m_peer = peer;
@@ -63,54 +61,63 @@ namespace Lidgren.Network
 
 			m_sentBytes = 0;
 			m_receivedBytes = 0;
-
-			m_bytesAllocated = 0;
 		}
 
 		/// <summary>
 		/// Gets the number of sent packets since the NetPeer was initialized
 		/// </summary>
-		public int SentPackets { get { return m_sentPackets; } }
+		public int SentPackets => m_sentPackets;
 
 		/// <summary>
 		/// Gets the number of received packets since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedPackets { get { return m_receivedPackets; } }
+		public int ReceivedPackets => m_receivedPackets;
 
 		/// <summary>
 		/// Gets the number of sent messages since the NetPeer was initialized
 		/// </summary>
-		public int SentMessages { get { return m_sentMessages; } }
+		public int SentMessages => m_sentMessages;
 
 		/// <summary>
 		/// Gets the number of received messages since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedMessages { get { return m_receivedMessages; } }
+		public int ReceivedMessages => m_receivedMessages;
+
+		/// <summary>
+		/// Gets the number of received fragments since the NetPeer was initialized
+		/// </summary>
+		public int ReceivedFragments => m_receivedFragments;
 
 		/// <summary>
 		/// Gets the number of sent bytes since the NetPeer was initialized
 		/// </summary>
-		public int SentBytes { get { return m_sentBytes; } }
+		public int SentBytes => m_sentBytes;
 
 		/// <summary>
 		/// Gets the number of received bytes since the NetPeer was initialized
 		/// </summary>
-		public int ReceivedBytes { get { return m_receivedBytes; } }
+		public int ReceivedBytes => m_receivedBytes;
+
+		public int ResentMessages => ResentMessagesDueToDelays + ResentMessagesDueToHoles;
+		public int ResentMessagesDueToHoles { get; private set; }
+		public int ResentMessagesDueToDelays { get; private set; }
+		public int DroppedMessages { get; private set; }
 
 		/// <summary>
-		/// Gets the number of bytes allocated (and possibly garbage collected) for message storage
+		/// Gets the number of unsent and stored messages for this peer
 		/// </summary>
-		public long StorageBytesAllocated { get { return m_bytesAllocated; } }
-
-		/// <summary>
-		/// Gets the number of bytes in the recycled pool
-		/// </summary>
-		public int BytesInRecyclePool
+		public void GetUnsentAndStoredMessages(out int numUnsent, out int numStored)
 		{
-			get
+			numUnsent = 0;
+			numStored = 0;
+			lock (m_peer.m_connections)
 			{
-				lock (m_peer.m_storagePool)
-					return m_peer.m_storagePoolBytes;
+				foreach (var connection in m_peer.m_connections)
+				{
+					connection.Statistics.GetUnsentAndStoredMessages(out var cUnsent, out var cStored);
+					numUnsent += cUnsent;
+					numStored += cStored;
+				}
 			}
 		}
 
@@ -135,24 +142,39 @@ namespace Lidgren.Network
 			m_receivedFragments += numFragments;
 		}
 
+#if !USE_RELEASE_STATISTICS
+		[Conditional("DEBUG")]
+#endif
+		internal void MessageResent(MessageResendReason reason)
+		{
+			if (reason == MessageResendReason.Delay)
+				ResentMessagesDueToDelays++;
+			else
+				ResentMessagesDueToHoles++;
+		}
+
+#if !USE_RELEASE_STATISTICS
+		[Conditional("DEBUG")]
+#endif
+		internal void MessageDropped()
+		{
+			DroppedMessages++;
+		}
+
 		/// <summary>
 		/// Returns a string that represents this object
 		/// </summary>
 		public override string ToString()
 		{
-			StringBuilder bdr = new StringBuilder();
-			bdr.AppendLine(m_peer.ConnectionsCount.ToString() + " connections");
 #if DEBUG || USE_RELEASE_STATISTICS
-			bdr.AppendLine("Sent " + m_sentBytes + " bytes in " + m_sentMessages + " messages in " + m_sentPackets + " packets");
-			bdr.AppendLine("Received " + m_receivedBytes + " bytes in " + m_receivedMessages + " messages (of which " + m_receivedFragments + " fragments) in " + m_receivedPackets + " packets");
+			return @$"{m_peer.ConnectionsCount} connections
+Sent {m_sentBytes} bytes in {m_sentMessages} messages in {m_sentPackets} packets
+Received {m_receivedBytes} bytes in {m_receivedMessages} messages (of which {m_receivedFragments} fragments) in {m_receivedPackets} packets";
 #else
-			bdr.AppendLine("Sent (n/a) bytes in (n/a) messages in (n/a) packets");
-			bdr.AppendLine("Received (n/a) bytes in (n/a) messages in (n/a) packets");
+			return @$"{m_peer.ConnectionsCount} connections
+Sent (n/a) bytes in (n/a) messages in (n/a) packets
+Received (n/a) bytes in (n/a) messages in (n/a) packets";
 #endif
-			bdr.AppendLine("Storage allocated " + m_bytesAllocated + " bytes");
-			if (m_peer.m_storagePool != null)
-				bdr.AppendLine("Recycled pool " + m_peer.m_storagePoolBytes + " bytes (" + m_peer.m_storageSlotsUsedCount + " entries)");
-			return bdr.ToString();
 		}
 	}
 }

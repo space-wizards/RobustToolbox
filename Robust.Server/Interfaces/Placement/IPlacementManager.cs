@@ -63,6 +63,6 @@ namespace Robust.Server.Interfaces.Placement
         /// </summary>
         void RevokeAllBuildPermissions(IEntity mob);
 
-        Func<MsgPlacement, bool> AllowPlacementFunc { get; set; }
+        Func<MsgPlacement, bool>? AllowPlacementFunc { get; set; }
     }
 }

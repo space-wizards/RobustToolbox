@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -15,7 +16,7 @@ namespace Robust.Server.ViewVariables.Traits
         {
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest messageRequestMeta)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest messageRequestMeta)
         {
             if (!(messageRequestMeta is ViewVariablesRequestMembers))
             {
@@ -83,7 +84,7 @@ namespace Robust.Server.ViewVariables.Traits
             return blob;
         }
 
-        public override bool TryGetRelativeObject(object property, out object value)
+        public override bool TryGetRelativeObject(object property, out object? value)
         {
             if (!(property is ViewVariablesMemberSelector selector))
             {
@@ -150,7 +151,7 @@ namespace Robust.Server.ViewVariables.Traits
                 case PropertyInfo propertyInfo:
                     try
                     {
-                        propertyInfo.GetSetMethod(true).Invoke(Session.Object, new[] {value});
+                        propertyInfo.GetSetMethod(true)!.Invoke(Session.Object, new[] {value});
                         return true;
                     }
                     catch (Exception e)

@@ -11,13 +11,13 @@ namespace Robust.Client.ViewVariables.Instances
 {
     internal class ViewVariablesInstanceObject : ViewVariablesInstance
     {
-        private TabContainer _tabs;
+        private TabContainer _tabs = default!;
         private int _tabCount;
 
         private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
 
-        public ViewVariablesRemoteSession Session { get; private set; }
-        public object Object { get; private set; }
+        public ViewVariablesRemoteSession? Session { get; private set; }
+        public object? Object { get; private set; }
 
         public ViewVariablesInstanceObject(IViewVariablesManagerInternal vvm, IResourceCache resCache)
             : base(vvm, resCache) { }

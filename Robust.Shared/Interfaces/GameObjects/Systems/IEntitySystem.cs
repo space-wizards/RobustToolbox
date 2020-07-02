@@ -1,4 +1,6 @@
-﻿using Robust.Shared.GameObjects;
+﻿using System;
+using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Interfaces.GameObjects.Systems
 {
@@ -10,6 +12,9 @@ namespace Robust.Shared.Interfaces.GameObjects.Systems
     /// </summary>
     public interface IEntitySystem : IEntityEventSubscriber
     {
+        IEnumerable<Type> UpdatesAfter { get; }
+        IEnumerable<Type> UpdatesBefore { get; }
+
         /// <summary>
         ///     Called once when the system is created to initialize its state.
         /// </summary>

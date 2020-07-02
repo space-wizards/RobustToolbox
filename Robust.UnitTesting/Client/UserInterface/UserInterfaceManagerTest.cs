@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Client.UserInterface
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IUserInterfaceManagerInternal _userInterfaceManager;
+        private IUserInterfaceManagerInternal _userInterfaceManager = default!;
 
         [OneTimeSetUp]
         public void Setup()
@@ -192,8 +192,8 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestGrabKeyboardFocusNull()
         {
-            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null), Throws.ArgumentNullException);
-            Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null), Throws.ArgumentNullException);
+            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null!), Throws.ArgumentNullException);
+            Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null!), Throws.ArgumentNullException);
         }
 
         [Test]

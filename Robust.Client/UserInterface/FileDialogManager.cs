@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface
             DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
         }
 
-        public async Task<string> OpenFile(FileDialogFilters filters = null)
+        public async Task<string?> OpenFile(FileDialogFilters? filters = null)
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -50,7 +50,7 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<string> SaveFile()
+        public async Task<string?> SaveFile()
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface
             return await SaveFileNfd();
         }
 
-        public async Task<string> OpenFolder()
+        public async Task<string?> OpenFolder()
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -72,7 +72,7 @@ namespace Robust.Client.UserInterface
             return await OpenFolderNfd();
         }
 
-        private unsafe Task<string> OpenFileNfd(FileDialogFilters filters)
+        private unsafe Task<string?> OpenFileNfd(FileDialogFilters? filters)
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
@@ -105,7 +105,7 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private unsafe Task<string> SaveFileNfd()
+        private unsafe Task<string?> SaveFileNfd()
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
@@ -118,7 +118,7 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private unsafe Task<string> OpenFolderNfd()
+        private unsafe Task<string?> OpenFolderNfd()
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
@@ -132,7 +132,7 @@ namespace Robust.Client.UserInterface
         }
 
         // ReSharper disable once MemberCanBeMadeStatic.Local
-        private Task<string> RunAsyncMaybe(Func<string> action)
+        private Task<string?> RunAsyncMaybe(Func<string?> action)
         {
 #if MACOS
             // macOS seems pretty annoying about having the file dialog opened from the main thread.
@@ -149,7 +149,7 @@ namespace Robust.Client.UserInterface
 #endif
         }
 
-        private static unsafe string HandleNfdResult(sw_nfdresult result, byte* outPath)
+        private static unsafe string? HandleNfdResult(sw_nfdresult result, byte* outPath)
         {
             switch (result)
             {
@@ -158,7 +158,7 @@ namespace Robust.Client.UserInterface
                     throw new Exception(MarshalHelper.PtrToStringUTF8(errPtr));
 
                 case sw_nfdresult.SW_NFD_OKAY:
-                    var str = MarshalHelper.PtrToStringUTF8(outPath);
+                    var str = MarshalHelper.PtrToStringUTF8(outPath)!;
 
                     sw_NFD_Free(outPath);
                     return str;
@@ -212,7 +212,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static Task<string> OpenFileKDialog(FileDialogFilters filters)
+        private static Task<string?> OpenFileKDialog(FileDialogFilters? filters)
         {
             var sb = new StringBuilder();
 
@@ -246,20 +246,20 @@ namespace Robust.Client.UserInterface
                 sb.Append("| All Files (*)");
             }
 
-            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME"), sb.ToString());
+            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, sb.ToString());
         }
 
-        private static Task<string> SaveFileKDialog()
+        private static Task<string?> SaveFileKDialog()
         {
             return RunKDialog("--getsavefilename");
         }
 
-        private static Task<string> OpenFolderKDialog()
+        private static Task<string?> OpenFolderKDialog()
         {
             return RunKDialog("--getexistingdirectory");
         }
 
-        private static async Task<string> RunKDialog(params string[] options)
+        private static async Task<string?> RunKDialog(params string[] options)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -286,7 +286,7 @@ namespace Robust.Client.UserInterface
                 return null;
             }
 
-            return (await process.StandardOutput.ReadLineAsync()).Trim();
+            return (await process.StandardOutput.ReadLineAsync())?.Trim();
         }
 
         private async Task<bool> IsKDialogAvailable()

@@ -26,9 +26,12 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.MoveDown);
             common.AddFunction(EngineKeyFunctions.MoveLeft);
             common.AddFunction(EngineKeyFunctions.MoveRight);
-            common.AddFunction(EngineKeyFunctions.Run);
+            common.AddFunction(EngineKeyFunctions.Walk);
             common.AddFunction(EngineKeyFunctions.CameraRotateRight);
             common.AddFunction(EngineKeyFunctions.CameraRotateLeft);
+
+            common.AddFunction(EngineKeyFunctions.GuiTabNavigateNext);
+            common.AddFunction(EngineKeyFunctions.GuiTabNavigatePrev);
 
             common.AddFunction(EngineKeyFunctions.TextCursorLeft);
             common.AddFunction(EngineKeyFunctions.TextCursorRight);

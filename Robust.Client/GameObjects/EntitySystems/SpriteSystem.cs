@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
@@ -12,26 +11,27 @@ namespace Robust.Client.GameObjects.EntitySystems
     [UsedImplicitly]
     public class SpriteSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         /// <inheritdoc />
         public override void FrameUpdate(float frameTime)
         {
+            var renderTreeSystem = EntitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+
             // So we could calculate the correct size of the entities based on the contents of their sprite...
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
             var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);
 
-            var pvsEntities = EntityManager.GetEntitiesIntersecting(_eyeManager.CurrentMap, pvsBounds, true);
+            var mapTree = renderTreeSystem.GetSpriteTreeForMap(_eyeManager.CurrentMap);
 
-            foreach (var entity in pvsEntities)
+            var pvsEntities = mapTree.Query(pvsBounds, true);
+
+            foreach (var sprite in pvsEntities)
             {
-                if (!entity.TryGetComponent(out ISpriteComponent sprite))
-                    continue;
-
                 if (sprite.IsInert)
+                {
                     continue;
+                }
 
                 sprite.FrameUpdate(frameTime);
             }

@@ -7,6 +7,7 @@ using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -18,26 +19,18 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IClientGameStateManager _stateManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IClientGameStateManager _stateManager = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
-        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
         /// <summary>
         ///     Current states for all of the keyFunctions.
         /// </summary>
         public IPlayerCommandStates CmdStates => _cmdStates;
-
-        /// <summary>
-        ///     Holds the keyFunction -> handler bindings for the simulation.
-        /// </summary>
-        public ICommandBindMapping BindMap => _bindMap;
 
         /// <summary>
         /// If the input system is currently predicting input.
@@ -68,11 +61,10 @@ namespace Robust.Client.GameObjects.EntitySystems
             _cmdStates.SetState(function, message.State);
 
             // handle local binds before sending off
-            if (_bindMap.TryGetHandler(function, out var handler))
+            foreach (var handler in BindRegistry.GetHandlers(function))
             {
                 // local handlers can block sending over the network.
-                if (handler.HandleCmdMessage(session, message))
-                    return;
+                if (handler.HandleCmdMessage(session, message)) return;
             }
 
             // send it off to the client
@@ -85,23 +77,24 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="inputCmd">Input command to handle as predicted.</param>
         public void PredictInputCommand(FullInputCmdMessage inputCmd)
         {
+            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
+
             var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
 
-            if (!_bindMap.TryGetHandler(keyFunc, out var handler))
-                return;
-
             Predicted = true;
-
-            var session = _playerManager.LocalPlayer.Session;
-            handler.HandleCmdMessage(session, inputCmd);
-
+            var session = _playerManager.LocalPlayer!.Session;
+            foreach (var handler in BindRegistry.GetHandlers(keyFunc))
+            {
+                if (handler.HandleCmdMessage(session, inputCmd)) break;
+            }
             Predicted = false;
+
         }
 
         private void DispatchInputCommand(FullInputCmdMessage message)
         {
             _stateManager.InputCommandDispatched(message);
-            RaiseNetworkEvent(message);
+            EntityNetworkManager.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()
@@ -147,7 +140,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer.ControlledEntity == null)
+            if (_playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 return;
             }
@@ -164,13 +157,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public IEntity AttachedEntity { get; }
+        public IEntity? AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(IEntity attachedEntity)
+        public PlayerAttachSysMessage(IEntity? attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

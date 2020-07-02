@@ -35,13 +35,13 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// If the message is from the client, the client's session.
         /// </summary>
-        public readonly ICommonSession Session;
+        public readonly ICommonSession? Session;
 
         /// <summary>
         /// Constructs a new instance of <see cref="NetworkComponentMessage"/>.
         /// </summary>
         /// <param name="netMsg">Raw network message containing the component message.</param>
-        public NetworkComponentMessage(MsgEntity netMsg, ICommonSession session = null)
+        public NetworkComponentMessage(MsgEntity netMsg, ICommonSession? session = null)
         {
             DebugTools.Assert(netMsg.Type == EntityMessageType.ComponentMessage);
 

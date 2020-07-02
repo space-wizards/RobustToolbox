@@ -21,16 +21,23 @@ namespace Robust.Client.Animations
         /// <summary>
         ///     The layer key of the layer to flick on.
         /// </summary>
-        public object LayerKey { get; set; }
+        public object? LayerKey { get; set; }
 
         public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
         {
+            if (LayerKey == null)
+            {
+                throw new InvalidOperationException("Must set LayerKey.");
+            }
+
             return (-1, 0);
         }
 
         public override (int KeyFrameIndex, float FramePlayingTime)
             AdvancePlayback(object context, int prevKeyFrameIndex, float prevPlayingTime, float frameTime)
         {
+            DebugTools.AssertNotNull(LayerKey);
+
             var entity = (IEntity) context;
             var sprite = entity.GetComponent<ISpriteComponent>();
 
@@ -47,15 +54,15 @@ namespace Robust.Client.Animations
             {
                 var keyFrame = KeyFrames[keyFrameIndex];
                 // Advance animation on current key frame.
-                var rsi = sprite.LayerGetActualRSI(LayerKey);
-                if (rsi.TryGetState(keyFrame.State, out var state))
+                var rsi = sprite.LayerGetActualRSI(LayerKey!);
+                if (rsi != null && rsi.TryGetState(keyFrame.State, out var state))
                 {
                     var animationTime = Math.Min(state.AnimationLength - 0.01f, playingTime);
-                    sprite.LayerSetAutoAnimated(LayerKey, false);
+                    sprite.LayerSetAutoAnimated(LayerKey!, false);
                     // TODO: Doesn't setting the state explicitly reset the animation
                     // so it's slightly more inefficient?
-                    sprite.LayerSetState(LayerKey, keyFrame.State);
-                    sprite.LayerSetAnimationTime(LayerKey, animationTime);
+                    sprite.LayerSetState(LayerKey!, keyFrame.State);
+                    sprite.LayerSetAnimationTime(LayerKey!, animationTime);
                 }
             }
 

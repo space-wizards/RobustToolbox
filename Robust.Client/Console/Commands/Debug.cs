@@ -24,6 +24,7 @@ using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -265,11 +266,11 @@ namespace Robust.Client.Console.Commands
                 return false;
             }
 
-            console.AddLine($"{entity.Uid}: {entity.Prototype.ID}/{entity.Name}");
+            console.AddLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
             console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {
-                console.AddLine(component.ToString());
+                console.AddLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)
                 {
                     foreach (var line in debug.GetDebugString().Split('\n'))
@@ -356,7 +357,7 @@ namespace Robust.Client.Console.Commands
             var getResourceMethod =
                 resourceCache.GetType().GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
-            var generic = getResourceMethod.MakeGenericMethod(type);
+            var generic = getResourceMethod!.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] { args[0], true });
             return false;
         }
@@ -376,7 +377,7 @@ namespace Robust.Client.Console.Commands
             var type = reflection.LooseGetType(args[1]);
             var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
-            var generic = getResourceMethod.MakeGenericMethod(type);
+            var generic = getResourceMethod!.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] { args[0] });
             return false;
         }
@@ -541,7 +542,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var group = new ButtonGroup();
-            var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
+            var vBoxRadioButtons = new VBoxContainer();
             for (var i = 0; i < 10; i++)
             {
                 vBoxRadioButtons.AddChild(new Button
@@ -554,6 +555,8 @@ namespace Robust.Client.Console.Commands
             }
 
             tabContainer.AddChild(vBoxRadioButtons);
+
+            TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
 
             tabContainer.AddChild(new VBoxContainer
             {
@@ -665,7 +668,7 @@ namespace Robust.Client.Console.Commands
             {
                 console.AddLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
                 console.AddLine("possible modes:");
-                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                foreach (int mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
                 {
                     console.AddLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
                 }
@@ -727,12 +730,18 @@ namespace Robust.Client.Console.Commands
             var inputMan = IoCManager.Resolve<IInputManager>();
             var eyeMan = IoCManager.Resolve<IEyeManager>();
 
-            var mousePos = eyeMan.ScreenToWorld(inputMan.MouseScreenPosition);
+            var mousePos = eyeMan.ScreenToMap(inputMan.MouseScreenPosition);
 
-            var grid = (IMapGridInternal)mapMan.GetGrid(mousePos.GridID);
+            if (!mapMan.TryFindGridAt(mousePos, out var grid))
+            {
+                console.AddLine("No grid under your mouse cursor.");
+                return false;
+            }
 
-            var chunkIndex = grid.LocalToChunkIndices(mousePos);
-            var chunk = grid.GetChunk(chunkIndex);
+            var internalGrid = (IMapGridInternal)grid;
+
+            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
+            var chunk = internalGrid.GetChunk(chunkIndex);
 
             console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
             return false;
@@ -748,9 +757,9 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "rldshader";
 
-        public static Dictionary<string, FileSystemWatcher> _watchers;
+        public static Dictionary<string, FileSystemWatcher>? _watchers;
 
-        public static ConcurrentDictionary<string, bool> _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
+        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -773,7 +782,7 @@ namespace Robust.Client.Console.Commands
 
                     var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
 
-                    var syncCtx = SynchronizationContext.Current;
+                    var taskManager = IoCManager.Resolve<ITaskManager>();
 
                     var shaderCount = 0;
                     var created = 0;
@@ -787,7 +796,7 @@ namespace Robust.Client.Console.Commands
 
                         reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResourcePath>()).Add(path);
 
-                        var dir = Path.GetDirectoryName(fullPath);
+                        var dir = Path.GetDirectoryName(fullPath)!;
                         var fileName = Path.GetFileName(fullPath);
                         dirs.GetOrAdd(dir, _ => new SortedSet<string>(stringComparer))
                             .Add(fileName);
@@ -801,7 +810,7 @@ namespace Robust.Client.Console.Commands
 
                             reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResourcePath>()).Add(path);
 
-                            var incDir = Path.GetDirectoryName(incFullPath);
+                            var incDir = Path.GetDirectoryName(incFullPath)!;
                             var incFileName = Path.GetFileName(incFullPath);
                             dirs.GetOrAdd(incDir, _ => new SortedSet<string>(stringComparer))
                                 .Add(incFileName);
@@ -820,12 +829,11 @@ namespace Robust.Client.Console.Commands
                         watcher = new FileSystemWatcher(dir);
                         watcher.Changed += (_, ev) =>
                         {
-                            if (_reloadShadersQueued.TryAdd(ev.FullPath, true))
+                            if (_reloadShadersQueued!.TryAdd(ev.FullPath, true))
                             {
-                                syncCtx.Post(o =>
+                                taskManager.RunOnMainThread(() =>
                                 {
-                                    var changed = (FileSystemEventArgs) o;
-                                    var resPaths = reversePathResolution[changed.FullPath];
+                                    var resPaths = reversePathResolution[ev.FullPath];
                                     foreach (var resPath in resPaths)
                                     {
                                         try
@@ -839,9 +847,9 @@ namespace Robust.Client.Console.Commands
                                             console.AddLine($"Failed to reload shader: {resPath}");
                                         }
 
-                                        _reloadShadersQueued.TryRemove(changed.FullPath, out var _);
+                                        _reloadShadersQueued.TryRemove(ev.FullPath, out var _);
                                     }
-                                }, ev);
+                                });
                             }
                         };
 
@@ -943,7 +951,7 @@ namespace Robust.Client.Console.Commands
     internal class GetKeyInfoCommand : IConsoleCommand
     {
         public string Command => "keyinfo";
-        public string Description { get; }
+        public string Description => "Keys key info for a key";
         public string Help => "keyinfo <Key>";
 
         public bool Execute(IDebugConsole console, params string[] args)
@@ -958,7 +966,7 @@ namespace Robust.Client.Console.Commands
 
             if (Enum.TryParse(typeof(Keyboard.Key), args[0], true, out var parsed))
             {
-                var key = (Keyboard.Key) parsed;
+                var key = (Keyboard.Key) parsed!;
 
                 var name = clyde.GetKeyName(key);
                 var scanCode = clyde.GetKeyScanCode(key);

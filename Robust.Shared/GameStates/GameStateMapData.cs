@@ -9,13 +9,13 @@ namespace Robust.Shared.GameStates
     public class GameStateMapData
     {
         // Dict of the new maps along with which grids are their defaults.
-        public readonly KeyValuePair<MapId, GridId>[] CreatedMaps;
-        public readonly KeyValuePair<GridId, GridCreationDatum>[] CreatedGrids;
-        public readonly KeyValuePair<GridId, GridDatum>[] GridData;
-        public readonly GridId[] DeletedGrids;
-        public readonly MapId[] DeletedMaps;
+        public readonly KeyValuePair<MapId, GridId>[]? CreatedMaps;
+        public readonly KeyValuePair<GridId, GridCreationDatum>[]? CreatedGrids;
+        public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
+        public readonly GridId[]? DeletedGrids;
+        public readonly MapId[]? DeletedMaps;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[] gridData, GridId[] deletedGrids, MapId[] deletedMaps, KeyValuePair<MapId, GridId>[] createdMaps, KeyValuePair<GridId, GridCreationDatum>[] createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? deletedGrids, MapId[]? deletedMaps, KeyValuePair<MapId, GridId>[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
         {
             GridData = gridData;
             DeletedGrids = deletedGrids;

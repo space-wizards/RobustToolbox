@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Serialization
     [TestFixture]
     class NetSerializableAttribute_Test : RobustUnitTest
     {
-        private IReflectionManager _reflection;
+        private IReflectionManager _reflection = default!;
 
         [OneTimeSetUp]
         public void TestFixtureSetup()

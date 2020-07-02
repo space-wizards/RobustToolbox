@@ -427,9 +427,16 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
-        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
+        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler? cmdHandler)
         {
-            _commands[function] = cmdHandler;
+            if (cmdHandler == null)
+            {
+                _commands.Remove(function);
+            }
+            else
+            {
+                _commands[function] = cmdHandler;
+            }
         }
 
         [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]

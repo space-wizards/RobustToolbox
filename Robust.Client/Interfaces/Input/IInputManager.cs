@@ -54,7 +54,7 @@ namespace Robust.Client.Interfaces.Input
         /// <returns>An input command, if any. Null if no command is set.</returns>
         InputCmdHandler? GetInputCommand(BoundKeyFunction function);
 
-        void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
+        void SetInputCommand(BoundKeyFunction function, InputCmdHandler? cmdHandler);
 
         /// <summary>
         ///     UIKeyBindStateChanged is called when a keybind is found.

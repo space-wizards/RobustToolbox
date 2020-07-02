@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -45,7 +44,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="body"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        bool IsColliding(IPhysBody body, Vector2 offset);
+        bool IsColliding(IPhysBody body, Vector2 offset, bool approx);
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
@@ -78,7 +77,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source);
+        Vector2 CalculateNormal(IPhysBody target, IPhysBody source);
 
         /// <summary>
         ///     Calculates the penetration depth of the axis-of-least-penetration for a
@@ -86,7 +85,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        float CalculatePenetration(ICollidableComponent target, ICollidableComponent source);
+        float CalculatePenetration(IPhysBody target, IPhysBody source);
 
         Vector2 SolveCollisionImpulse(Manifold manifold);
 
@@ -156,24 +155,25 @@ namespace Robust.Shared.Interfaces.Physics
             }
         }
         public readonly Vector2 Normal;
-        public readonly ICollidableComponent A;
-        public readonly ICollidableComponent B;
-        public SharedPhysicsComponent? APhysics;
-        public SharedPhysicsComponent? BPhysics;
+        public readonly IPhysBody A;
+        public readonly IPhysBody B;
+        public PhysicsComponent? APhysics;
+        public PhysicsComponent? BPhysics;
+        public readonly bool Hard;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(ICollidableComponent A, ICollidableComponent B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics)
+        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, bool hard, IPhysicsManager physicsManager)
         {
-            var physicsManager = IoCManager.Resolve<IPhysicsManager>();
             this.A = A;
             this.B = B;
             Normal = physicsManager.CalculateNormal(A, B);
             APhysics = aPhysics;
             BPhysics = bPhysics;
+            Hard = hard;
         }
     }
 }

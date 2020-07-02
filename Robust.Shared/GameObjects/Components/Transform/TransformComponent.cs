@@ -8,7 +8,6 @@ using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -35,6 +34,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private Vector2 _prevPosition;
         private Angle _prevRotation;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool ActivelyLerping { get; set; }
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
 
@@ -309,15 +311,23 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables]
         public Vector2? LerpDestination
         {
-            get { return _nextPosition; }
-            set => _nextPosition = value;
+            get => _nextPosition;
+            set
+            {
+                _nextPosition = value;
+                ActivelyLerping = true;
+            }
         }
 
         [ViewVariables]
         public Angle? LerpAngle
         {
-            get { return _nextRotation; }
-            set => _nextRotation = value;
+            get => _nextRotation;
+            set
+            {
+                _nextRotation = value;
+                ActivelyLerping = true;
+            }
         }
 
         [ViewVariables]
@@ -534,6 +544,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 collider.AddedToPhysicsTree(MapID);
             }
+
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -653,6 +665,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 _nextPosition = nextTransform.LocalPosition;
                 _nextRotation = nextTransform.Rotation;
+                ActivateLerp();
             }
             else
             {
@@ -717,6 +730,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public string GetDebugString()
         {
             return $"pos/rot/wpos/wrot: {GridPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+        }
+
+        private void ActivateLerp()
+        {
+            if (ActivelyLerping)
+            {
+                return;
+            }
+
+            ActivelyLerping = true;
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new TransformStartLerpMessage(this));
         }
 
         /// <summary>

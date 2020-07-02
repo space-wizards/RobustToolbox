@@ -12,7 +12,7 @@ namespace Robust.Shared.Utility
 {
 
     /// <summary>
-    /// An immutable dictionary of mutable sets for use as an index of unique values related to another collection.
+    /// An immutable dictionary of mutable and immutable sets for use as an index of unique values related to another collection.
     /// Imitates the behavior of a read-focused index in a RDBMS.
     /// </summary>
     /// <remarks>
@@ -41,7 +41,7 @@ namespace Robust.Shared.Utility
 
             if (_index is null)
             {
-                set = new HashSet<TValue> { value };
+                set = new HashSet<TValue> {value};
                 _index = ImmutableDictionary.CreateRange(new[] {new KeyValuePair<TKey, ISet<TValue>>(key, set)});
                 return true;
             }
@@ -158,6 +158,24 @@ namespace Robust.Shared.Utility
             if (_index.ContainsKey(key)) return;
 
             _index = _index.Add(key, new HashSet<TValue>());
+        }
+
+        /// <inheritdoc />
+        public bool Freeze(TKey key)
+        {
+            if (_index is null)
+            {
+                return false;
+            }
+
+            if (!_index.TryGetValue(key, out var set)
+                || set is ImmutableHashSet<TValue>)
+            {
+                return false;
+            }
+
+            _index = _index.SetItem(key, ImmutableHashSet.CreateRange(set));
+            return true;
         }
 
         /// <inheritdoc />

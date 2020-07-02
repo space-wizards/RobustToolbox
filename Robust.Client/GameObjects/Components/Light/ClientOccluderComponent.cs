@@ -59,6 +59,18 @@ namespace Robust.Client.GameObjects
             SendDirty();
         }
 
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveOccluderMessage(this, map));
+            }
+        }
+
         private void SendDirty()
         {
             if (SnapGrid != null)

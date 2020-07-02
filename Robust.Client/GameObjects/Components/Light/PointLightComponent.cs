@@ -1,10 +1,12 @@
-﻿using Robust.Client.Graphics;
+﻿using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -163,6 +165,18 @@ namespace Robust.Client.GameObjects
             if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
             {
                 Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
+            }
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveLightMessage(this, map));
             }
         }
 

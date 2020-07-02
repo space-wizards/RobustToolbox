@@ -18,12 +18,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     [UsedImplicitly]
     public sealed class RenderingTreeSystem : EntitySystem
     {
-        // TODO: Bug with nullspace map.
-        // The nullspace map doesn't seem to get re-created when the client reconnects.
-        // So it ends up missing from the map tree list.
-        // This isn't *too* big of a problem, it *is* nullspace after all.
-        // But it's an icky inconsistency and it's why there's checks for nullspace
-        // and that GetValueOrDefault in EntMapIdChanged.
+        // Nullspace is not indexed. Keep that in mind.
 
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
@@ -64,6 +59,28 @@ namespace Robust.Client.GameObjects.EntitySystems
             SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
             SubscribeLocalEvent<OccluderBoundingBoxChangedMessage>(OccluderBoundingBoxChanged);
             SubscribeLocalEvent<PointLightRadiusChangedMessage>(PointLightRadiusChanged);
+            SubscribeLocalEvent<RenderTreeRemoveSpriteMessage>(RemoveSprite);
+            SubscribeLocalEvent<RenderTreeRemoveLightMessage>(RemoveLight);
+            SubscribeLocalEvent<RenderTreeRemoveOccluderMessage>(RemoveOccluder);
+        }
+
+        // For these next 3 methods (the Remove* ones):
+        // If the Transform is removed BEFORE the Sprite/Light/Occluder,
+        // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
+        // Otherwise these will still have their past MapId and that's all we need..
+        private void RemoveOccluder(RenderTreeRemoveOccluderMessage ev)
+        {
+            _mapTrees[ev.Map].OccluderTree.Remove(ev.Occluder);
+        }
+
+        private void RemoveLight(RenderTreeRemoveLightMessage ev)
+        {
+            _mapTrees[ev.Map].LightTree.Remove(ev.Light);
+        }
+
+        private void RemoveSprite(RenderTreeRemoveSpriteMessage ev)
+        {
+            _mapTrees[ev.Map].SpriteTree.Remove(ev.Sprite);
         }
 
         private void PointLightRadiusChanged(PointLightRadiusChangedMessage ev)
@@ -136,6 +153,8 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void EntMapIdChanged(EntMapIdChangedMessage ev)
         {
+            // Nullspace is a valid map ID for stuff to have but we also aren't gonna bother indexing it.
+            // So that's why there's a GetValueOrDefault.
             var oldMapTrees = _mapTrees.GetValueOrDefault(ev.OldMapId);
             var newMapTrees = _mapTrees.GetValueOrDefault(ev.Entity.Transform.MapID);
 
@@ -168,6 +187,11 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void MapManagerOnMapCreated(object? sender, MapEventArgs e)
         {
+            if (e.Map == MapId.Nullspace)
+            {
+                return;
+            }
+
             _mapTrees.Add(e.Map, new MapTrees());
         }
 
@@ -255,5 +279,41 @@ namespace Robust.Client.GameObjects.EntitySystems
                 return value.BoundingBox.Translated(worldPos);
             }
         }
+    }
+
+    internal struct RenderTreeRemoveSpriteMessage
+    {
+        public RenderTreeRemoveSpriteMessage(SpriteComponent sprite, MapId map)
+        {
+            Sprite = sprite;
+            Map = map;
+        }
+
+        public SpriteComponent Sprite { get; }
+        public MapId Map { get; }
+    }
+
+    internal struct RenderTreeRemoveLightMessage
+    {
+        public RenderTreeRemoveLightMessage(PointLightComponent light, MapId map)
+        {
+            Light = light;
+            Map = map;
+        }
+
+        public PointLightComponent Light { get; }
+        public MapId Map { get; }
+    }
+
+    internal struct RenderTreeRemoveOccluderMessage
+    {
+        public RenderTreeRemoveOccluderMessage(ClientOccluderComponent occluder, MapId map)
+        {
+            Occluder = occluder;
+            Map = map;
+        }
+
+        public ClientOccluderComponent Occluder { get; }
+        public MapId Map { get; }
     }
 }

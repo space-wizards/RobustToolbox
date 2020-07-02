@@ -185,7 +185,7 @@ namespace Robust.Client.GameObjects
         public void CopyFrom(SpriteComponent other)
         {
             //deep copying things to avoid entanglement
-            this._baseRsi = other._baseRsi == null ? null : new RSI(other._baseRsi);
+            this._baseRsi = other._baseRsi;
             this._directional = other._directional;
             this._visible = other._visible;
             this._layerMapShared = other._layerMapShared;
@@ -194,11 +194,24 @@ namespace Robust.Client.GameObjects
             this.rotation = other.rotation;
             this.scale = other.scale;
             this.drawDepth = other.drawDepth;
-            this.Layers = new List<Layer>(other.Layers);
+            this.Layers = new List<Layer>(other.Layers.Count);
+            foreach (var otherLayer in other.Layers)
+            {
+                this.Layers.Add(new Layer(otherLayer));
+            }
             this.IsInert = other.IsInert;
             this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
                 entry => entry.Value);
-            this.PostShader = other.PostShader?.Duplicate();
+            if (other.PostShader != null)
+            {
+                // only need to copy the shader if it's mutable
+                this.PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
+            }
+            else
+            {
+                this.PostShader = null;
+            }
+
             this.RenderOrder = other.RenderOrder;
         }
 

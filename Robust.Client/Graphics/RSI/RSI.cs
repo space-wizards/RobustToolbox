@@ -42,18 +42,6 @@ namespace Robust.Client.Graphics
         {
             Size = size;
         }
-
-        /// <summary>
-        /// Deep copy constructor
-        /// </summary>
-        public RSI(RSI toCopy)
-        {
-            Size = toCopy.Size;
-            // should be fine to just reuse the values of the other dictionary because they seem to be immutable
-            States = toCopy.States.ToDictionary(entry => entry.Key,
-                entry => entry.Value);
-        }
-
         public IEnumerator<State> GetEnumerator()
         {
             return States.Values.GetEnumerator();

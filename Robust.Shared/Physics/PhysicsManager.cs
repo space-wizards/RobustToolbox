@@ -50,7 +50,7 @@ namespace Robust.Shared.Physics
             return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
         }
 
-        public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
+        public Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
@@ -70,7 +70,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public float CalculatePenetration(ICollidableComponent target, ICollidableComponent source)
+        public float CalculatePenetration(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return 0.0f;
@@ -132,9 +132,9 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public bool IsColliding(IPhysBody body, Vector2 offset)
+        public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
         {
-            return GetCollidingEntities(body, offset).Any();
+            return GetCollidingEntities(body, offset, approximate).Any();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)

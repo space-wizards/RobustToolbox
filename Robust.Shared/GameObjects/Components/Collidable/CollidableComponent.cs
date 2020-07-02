@@ -1,6 +1,5 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
@@ -17,6 +16,7 @@ namespace Robust.Shared.GameObjects.Components
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private bool _canCollide;
+        private bool _isHard;
         private BodyStatus _status;
         private BodyType _bodyType;
         private List<IPhysShape> _physShapes = new List<IPhysShape>();
@@ -33,12 +33,18 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public int ProxyId { get; set; }
 
+        public CollidableComponent()
+        {
+            PhysicsShapes = new PhysShapeList(this);
+        }
+
         /// <inheritdoc />
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 
             serializer.DataField(ref _canCollide, "on", true);
+            serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
@@ -108,7 +114,7 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables]
-        public List<IPhysShape> PhysicsShapes => _physShapes;
+        public IList<IPhysShape> PhysicsShapes { get; }
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -123,6 +129,19 @@ namespace Robust.Shared.GameObjects.Components
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
                 Dirty();
             }
+        }
+
+        /// <summary>
+        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     while still raising collision events.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful for triggers or such to detect collision without actually causing a blockage.
+        /// </remarks>
+        public bool Hard
+        {
+            get => _isHard;
+            set => _isHard = value;
         }
 
         /// <summary>
@@ -173,9 +192,39 @@ namespace Robust.Shared.GameObjects.Components
 
             // normally ExposeData would create this
             if (_physShapes == null)
+            {
                 _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
+            }
+            else
+            {
+                foreach (var shape in _physShapes)
+                {
+                    ShapeAdded(shape);
+                }
+            }
 
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            // In case somebody starts sharing shapes across multiple components I guess?
+            foreach (var shape in _physShapes)
+            {
+                ShapeRemoved(shape);
+            }
+        }
+
+        private void ShapeAdded(IPhysShape shape)
+        {
+            shape.OnDataChanged += ShapeDataChanged;
+        }
+
+        private void ShapeRemoved(IPhysShape item)
+        {
+            item.OnDataChanged -= ShapeDataChanged;
         }
 
         /// <inheritdoc />
@@ -192,9 +241,9 @@ namespace Robust.Shared.GameObjects.Components
             base.Shutdown();
         }
 
-        public bool IsColliding(Vector2 offset)
+        public bool IsColliding(Vector2 offset, bool approx = true)
         {
-            return _physicsManager.IsColliding(this, offset);
+            return _physicsManager.IsColliding(this, offset, approx);
         }
 
         public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset)
@@ -225,6 +274,116 @@ namespace Robust.Shared.GameObjects.Components
         public bool IsInAir()
         {
             return Status == BodyStatus.InAir;
+        }
+
+        private void ShapeDataChanged()
+        {
+            Dirty();
+        }
+
+        // Custom IList<> implementation so that we can hook addition/removal of shapes.
+        // To hook into their OnDataChanged event correctly.
+        private sealed class PhysShapeList : IList<IPhysShape>
+        {
+            private readonly CollidableComponent _owner;
+
+            public PhysShapeList(CollidableComponent owner)
+            {
+                _owner = owner;
+            }
+
+            public IEnumerator<IPhysShape> GetEnumerator()
+            {
+                return _owner._physShapes.GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            public void Add(IPhysShape item)
+            {
+                _owner._physShapes.Add(item);
+
+                ItemAdded(item);
+            }
+
+            public void Clear()
+            {
+                foreach (var item in _owner._physShapes)
+                {
+                    ItemRemoved(item);
+                }
+
+                _owner._physShapes.Clear();
+            }
+
+            public bool Contains(IPhysShape item)
+            {
+                return _owner._physShapes.Contains(item);
+            }
+
+            public void CopyTo(IPhysShape[] array, int arrayIndex)
+            {
+                _owner._physShapes.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(IPhysShape item)
+            {
+                var found = _owner._physShapes.Remove(item);
+                if (found)
+                {
+                    ItemRemoved(item);
+                }
+
+                return found;
+            }
+
+            public int Count => _owner._physShapes.Count;
+            public bool IsReadOnly => false;
+
+            public int IndexOf(IPhysShape item)
+            {
+                return _owner._physShapes.IndexOf(item);
+            }
+
+            public void Insert(int index, IPhysShape item)
+            {
+                _owner._physShapes.Insert(index, item);
+                ItemAdded(item);
+            }
+
+            public void RemoveAt(int index)
+            {
+                var item = _owner._physShapes[index];
+                ItemRemoved(item);
+
+                _owner._physShapes.RemoveAt(index);
+            }
+
+            public IPhysShape this[int index]
+            {
+                get => _owner._physShapes[index];
+                set
+                {
+                    var oldItem = _owner._physShapes[index];
+                    ItemRemoved(oldItem);
+
+                    _owner._physShapes[index] = value;
+                    ItemAdded(value);
+                }
+            }
+
+            private void ItemAdded(IPhysShape item)
+            {
+                _owner.ShapeAdded(item);
+            }
+
+            public void ItemRemoved(IPhysShape item)
+            {
+                _owner.ShapeRemoved(item);
+            }
         }
     }
 }

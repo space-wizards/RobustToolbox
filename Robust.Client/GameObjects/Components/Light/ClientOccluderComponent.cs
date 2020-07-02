@@ -15,6 +15,8 @@ namespace Robust.Client.GameObjects
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 
+        public bool TreeUpdateQueued { get; set; }
+
         public override bool Enabled
         {
             get => base.Enabled;
@@ -57,6 +59,18 @@ namespace Robust.Client.GameObjects
             SendDirty();
         }
 
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveOccluderMessage(this, map));
+            }
+        }
+
         private void SendDirty()
         {
             if (SnapGrid != null)
@@ -93,6 +107,11 @@ namespace Robust.Client.GameObjects
             CheckDir(Direction.West, OccluderDir.West);
         }
 
+        protected override void BoundingBoxChanged()
+        {
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new OccluderBoundingBoxChangedMessage(this));
+        }
+
         [Flags]
         internal enum OccluderDir : byte
         {
@@ -102,5 +121,15 @@ namespace Robust.Client.GameObjects
             South = 1 << 2,
             West = 1 << 3,
         }
+    }
+
+    internal struct OccluderBoundingBoxChangedMessage
+    {
+        public OccluderBoundingBoxChangedMessage(ClientOccluderComponent occluder)
+        {
+            Occluder = occluder;
+        }
+
+        public ClientOccluderComponent Occluder { get; }
     }
 }

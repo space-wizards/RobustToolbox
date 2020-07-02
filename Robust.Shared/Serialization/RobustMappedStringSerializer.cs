@@ -600,9 +600,9 @@ namespace Robust.Shared.Serialization
 
         public byte[]? ServerHash;
 
-        private readonly IList<string> _mappedStrings = new List<string>();
+        private readonly List<string> _mappedStrings = new List<string>();
 
-        private readonly IDictionary<string, int> _stringMapping = new Dictionary<string, int>();
+        private readonly Dictionary<string, int> _stringMapping = new Dictionary<string, int>();
 
         public IReadOnlyList<String> MappedStrings => new ReadOnlyCollection<string>(_mappedStrings);
 

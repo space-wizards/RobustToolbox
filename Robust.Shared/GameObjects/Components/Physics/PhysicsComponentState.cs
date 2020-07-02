@@ -2,7 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects.Components
 {
     /// <summary>
     ///     Serialized state of a PhysicsComponent.

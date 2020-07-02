@@ -544,6 +544,8 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 collider.AddedToPhysicsTree(MapID);
             }
+
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)

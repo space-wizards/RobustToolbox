@@ -1,9 +1,10 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.GameObjects;
-using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 
@@ -13,21 +14,14 @@ namespace Robust.Client.Physics
     public class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
 
         private TimeSpan _lastRem;
-
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            EntityQuery = new TypeEntityQuery<PhysicsComponent>();
-        }
 
         public override void Update(float frameTime)
         {
             _lastRem = _gameTiming.CurTime;
-            SimulateWorld(frameTime,
-                RelevantEntities.Where(e => !e.Deleted && e.GetComponent<PhysicsComponent>().Predict).ToList());
+            SimulateWorld(frameTime, ActuallyRelevant());
         }
 
         public override void FrameUpdate(float frameTime)
@@ -39,7 +33,13 @@ namespace Robust.Client.Physics
 
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
-            SimulateWorld((float) diff.TotalSeconds, RelevantEntities.Where(e => !e.Deleted && e.GetComponent<PhysicsComponent>().Predict).ToList());
+            SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant());
+        }
+
+        private List<PhysicsComponent> ActuallyRelevant()
+        {
+            return _componentManager.GetAllComponents<PhysicsComponent>().Where(p => p.Predict)
+                .ToList();
         }
     }
 }

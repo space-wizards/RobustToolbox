@@ -13,7 +13,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -47,11 +46,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, IEntity> Entities = new Dictionary<EntityUid, IEntity>();
+        protected readonly Dictionary<EntityUid, Entity> Entities = new Dictionary<EntityUid, Entity>();
 
-        protected readonly List<IEntity> AllEntities = new List<IEntity>();
+        protected readonly List<Entity> AllEntities = new List<Entity>();
 
-        private readonly IEntityEventBus _eventBus = new EntityEventBus();
+        private readonly EntityEventBus _eventBus = new EntityEventBus();
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -131,8 +130,9 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
-            if (Entities.TryGetValue(uid, out entity) && !entity.Deleted)
+            if (Entities.TryGetValue(uid, out var cEntity) && !cEntity.Deleted)
             {
+                entity = cEntity;
                 return true;
             }
 
@@ -502,8 +502,8 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private readonly ConcurrentDictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new ConcurrentDictionary<MapId, DynamicTree<IEntity>>();
+        private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
+            new Dictionary<MapId, DynamicTree<IEntity>>();
 
         public virtual bool UpdateEntityTree(IEntity entity)
         {
@@ -518,17 +518,17 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            var transform = entity.TryGetComponent(out ITransformComponent tx) ? tx : null;
+            var transform = entity.Transform;
 
-            if (transform == null || !transform.Initialized)
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
+            DebugTools.Assert(transform.Initialized);
 
             var mapId = transform.MapID;
 
-            var entTree = _entityTreesPerMap.GetOrAdd(mapId, EntityTreeFactory);
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
+            {
+                entTree = EntityTreeFactory();
+                _entityTreesPerMap.Add(mapId, entTree);
+            }
 
             // for debugging
             var necessary = 0;
@@ -570,7 +570,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static DynamicTree<IEntity> EntityTreeFactory(MapId _) =>
+        private static DynamicTree<IEntity> EntityTreeFactory() =>
             new DynamicTree<IEntity>(
                 GetWorldAabbFromEntity,
                 capacity: 16,

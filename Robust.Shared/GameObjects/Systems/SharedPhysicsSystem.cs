@@ -198,11 +198,11 @@ namespace Robust.Shared.GameObjects.Systems
                 var bCollidable = b.GetComponent<CollidableComponent>();
                 if (b.TryGetComponent<PhysicsComponent>(out var bPhysics))
                 {
-                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, bPhysics, _physicsManager));
+                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, bPhysics, a.Hard && bCollidable.Hard, _physicsManager));
                 }
                 else
                 {
-                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, null, _physicsManager));
+                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, null, a.Hard && bCollidable.Hard, _physicsManager));
                 }
             }
         }
@@ -276,6 +276,11 @@ namespace Robust.Shared.GameObjects.Systems
             var done = true;
             foreach (var collision in collisions)
             {
+                if (!collision.Hard)
+                {
+                    continue;
+                }
+
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
                 if (penetration > allowance)
                 {

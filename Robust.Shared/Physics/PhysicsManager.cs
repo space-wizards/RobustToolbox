@@ -132,9 +132,9 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public bool IsColliding(IPhysBody body, Vector2 offset)
+        public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
         {
-            return GetCollidingEntities(body, offset).Any();
+            return GetCollidingEntities(body, offset, approximate).Any();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)

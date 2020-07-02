@@ -44,7 +44,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="body"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        bool IsColliding(IPhysBody body, Vector2 offset);
+        bool IsColliding(IPhysBody body, Vector2 offset, bool approx);
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
@@ -159,19 +159,21 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly IPhysBody B;
         public PhysicsComponent? APhysics;
         public PhysicsComponent? BPhysics;
+        public readonly bool Hard;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
         public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, IPhysicsManager physicsManager)
+        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, bool hard, IPhysicsManager physicsManager)
         {
             this.A = A;
             this.B = B;
             Normal = physicsManager.CalculateNormal(A, B);
             APhysics = aPhysics;
             BPhysics = bPhysics;
+            Hard = hard;
         }
     }
 }

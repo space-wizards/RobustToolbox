@@ -3,7 +3,7 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
 using System.Linq;
-using Robust.Shared.Physics;
+using Robust.Shared.GameObjects.Components;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -17,7 +17,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             SimulateWorld(frameTime,
                 RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e))
-                    .Select(p => p.GetComponent<SharedPhysicsComponent>()).ToList());
+                    .Select(p => p.GetComponent<PhysicsComponent>()).ToList());
         }
     }
 }

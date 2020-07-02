@@ -1,27 +1,25 @@
-﻿using JetBrains.Annotations;
-using Robust.Shared.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
-using System;
 
-namespace Robust.Server.GameObjects
+namespace Robust.Shared.GameObjects.Components
 {
-    /// <summary>
-    ///     Contains physical properties of the entity. This component registers the entity
-    ///     in the physics system as a dynamic ridged body object that has physics. This behavior overrides
-    ///     the BoundingBoxComponent behavior of making the entity static.
-    /// </summary>
-    public class PhysicsComponent : SharedPhysicsComponent
+    [RegisterComponent]
+    public class PhysicsComponent: Component, IComponent
     {
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController? _controller = null;
+        private VirtualController? _controller;
         private BodyStatus _status;
+        private bool _anchored;
+
+        public Action? AnchoredChanged;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -33,7 +31,7 @@ namespace Robust.Server.GameObjects
         ///     Current mass of the entity in kilograms.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public override float Mass
+        public float Mass
         {
             get => _mass;
             set
@@ -47,7 +45,7 @@ namespace Robust.Server.GameObjects
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public override Vector2 LinearVelocity
+        public Vector2 LinearVelocity
         {
             get => _linVelocity;
             set
@@ -64,7 +62,7 @@ namespace Robust.Server.GameObjects
         ///     Current angular velocity of the entity in radians per sec.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public override float AngularVelocity
+        public float AngularVelocity
         {
             get => _angVelocity;
             set
@@ -81,7 +79,7 @@ namespace Robust.Server.GameObjects
         ///     Current momentum of the entity in kilogram meters per second
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public override Vector2 Momentum
+        public Vector2 Momentum
         {
             get => LinearVelocity * Mass;
             set => LinearVelocity = value / Mass;
@@ -90,17 +88,20 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     The current status of the object
         /// </summary>
-        public override BodyStatus Status
+        public BodyStatus Status
         {
             get => _status;
-            set => _status = value;
+            set
+            {
+                _status = value;
+                Dirty();
+            }
         }
-
 
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public override VirtualController? Controller
+        public VirtualController? Controller
         {
             get => _controller;
         }
@@ -108,19 +109,12 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
-        public override bool OnGround => Status == BodyStatus.OnGround &&
-                                         !IoCManager.Resolve<IPhysicsManager>()
-                                             .IsWeightless(Owner.Transform.GridPosition);
+        public bool OnGround => Status == BodyStatus.OnGround &&
+                                !IoCManager.Resolve<IPhysicsManager>()
+                                    .IsWeightless(Owner.Transform.GridPosition);
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool EdgeSlide { get => edgeSlide; set => edgeSlide = value; }
-        private bool edgeSlide = true;
-
-        public Action? AnchoredChanged;
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        private bool _anchored;
-        public override bool Anchored
+        public bool Anchored
         {
             get => _anchored;
             set
@@ -130,9 +124,13 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool Predict { get; set; }
+
         public void SetController<T>() where T: VirtualController, new()
         {
             _controller = new T {ControlledComponent = this};
+            Dirty();
         }
 
         /// <inheritdoc />
@@ -140,10 +138,9 @@ namespace Robust.Server.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataField(ref _mass, "mass", 1);
+            serializer.DataField<float>(ref _mass, "mass", 1);
             serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
             serializer.DataField(ref _angVelocity, "avel", 0.0f);
-            serializer.DataField(ref edgeSlide, "edgeslide", true);
             serializer.DataField(ref _anchored, "Anchored", false);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
             serializer.DataField(ref _controller, "Controller", null);
@@ -170,5 +167,33 @@ namespace Robust.Server.GameObjects
 
             RemoveController();
         }
+
+        /// <inheritdoc />
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
+        {
+            if (curState == null)
+                return;
+
+            var newState = (PhysicsComponentState)curState;
+            Mass = newState.Mass / 1000f; // gram to kilogram
+
+            LinearVelocity = newState.LinearVelocity;
+            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
+            AngularVelocity = newState.AngularVelocity;
+            // TODO: Does it make sense to reset controllers here?
+            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
+            // Look man the CM test is in 5 hours cut me some slack.
+            //_controller = null;
+            // Reset predict flag to false to avoid predicting stuff too long.
+            // Another possibly bad hack for content at the moment.
+            Predict = false;
+        }
+    }
+
+    [Serializable, NetSerializable]
+    public enum BodyStatus
+    {
+        OnGround,
+        InAir
     }
 }

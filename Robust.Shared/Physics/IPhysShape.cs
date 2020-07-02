@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.Serialization;
+﻿using System;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -9,6 +10,11 @@ namespace Robust.Shared.Physics
     /// </summary>
     public interface IPhysShape : IExposeData
     {
+        /// <summary>
+        ///     Raised when any of the parameters on this physics shape change.
+        /// </summary>
+        event Action OnDataChanged;
+
         /// <summary>
         /// Calculates the AABB of the shape.
         /// </summary>

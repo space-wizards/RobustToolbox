@@ -84,9 +84,11 @@ namespace Robust.Server.GameObjects.Components.Container
         public bool Deleted { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool ShowContents { get; set; }
 
         /// <summary>

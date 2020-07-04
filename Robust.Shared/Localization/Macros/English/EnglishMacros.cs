@@ -93,11 +93,14 @@
     [RegisterTextMacro("theName", "en")]
     public class TheName : ITextMacro
     {
+        private readonly NameMacro _nameMacro = new NameMacro();
+
         public string Format(object argument)
         {
+            var name = _nameMacro.Format(argument);
             return IPropernamable.GetProperOrFalse(argument)
-                ? argument.ToString()
-                : "the " + argument.ToString();
+                ? name
+                : "the " + name;
         }
     }
 }

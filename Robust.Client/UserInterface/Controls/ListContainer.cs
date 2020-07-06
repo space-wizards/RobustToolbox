@@ -1,10 +1,8 @@
 ﻿using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using System.Text;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -13,7 +11,6 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertySeparation = "separation";
 
         private const int DefaultSeparation = 0;
-        private protected bool Vertical { get; }
 
         private readonly VScrollBar _vScrollBar;
         private readonly List<Control> _list;
@@ -40,9 +37,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public int? SeparationOverride { get; set; }
 
-        public ListContainer(OrientationMode orientation) : base()
+        public ListContainer() : base()
         {
-            Vertical = orientation == OrientationMode.Vertical;
             MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
@@ -79,8 +75,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var start = _startIndex;
             var scroll = _getScrollValue();
-            while (start < _heights.Count - 1
-                && scroll.Y >= _heights[start + 1] + (separation * start))
+            while (start < _heights.Count - 1 && scroll.Y >= _heights[start + 1] + (separation * start))
             {
                 start += 1;
             }
@@ -134,7 +129,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var cHeight = (_heights.Count > 0 ? _heights[_heights.Count - 1] : 0) + (separation * _heights.Count);
-            var vBarSize = _vScrollBar.CombinedMinimumSize.X;
 
             var (sWidth, sHeight) = Size;
 
@@ -142,11 +136,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 // Suppress events to avoid weird recursion.
                 _suppressScrollValueChanged = true;
-
-                //if (Height < cHeight)
-                //{
-                //    cHeight -= vBarSize;
-                //}
 
                 if (sHeight < cHeight)
                 {
@@ -168,10 +157,8 @@ namespace Robust.Client.UserInterface.Controls
             FitChildInPixelBox(_vScrollBar, PixelSizeBox);
 
             var sSize = (sWidth, sHeight);
-
             var offset = new Vector2(0, _heights[_startIndex] + (separation * _startIndex)) - scroll;
 
-            int s = 0;
             foreach (var child in Children)
             {
                 if (child == _vScrollBar)
@@ -303,12 +290,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             UpdateLayout();
-        }
-     
-        public enum OrientationMode
-        {
-            Horizontal,
-            Vertical
         }
     }
 }

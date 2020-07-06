@@ -23,6 +23,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using System.Linq;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -182,6 +183,44 @@ namespace Robust.Client.GameObjects
         const string LayerMapSerializationCache = "spritelayermap";
 
         [ViewVariables(VVAccess.ReadWrite)] public bool IsInert { get; private set; }
+
+        /// <summary>
+        /// Update this sprite component to visibly match the current state of other at the time
+        /// this is called. Does not keep them perpetually in sync.
+        /// This does some deep copying thus exerts some gc pressure, so avoid this for hot code paths.
+        /// </summary>
+        public void CopyFrom(SpriteComponent other)
+        {
+            //deep copying things to avoid entanglement
+            this._baseRsi = other._baseRsi;
+            this._directional = other._directional;
+            this._visible = other._visible;
+            this._layerMapShared = other._layerMapShared;
+            this.color = other.color;
+            this.offset = other.offset;
+            this.rotation = other.rotation;
+            this.scale = other.scale;
+            this.drawDepth = other.drawDepth;
+            this.Layers = new List<Layer>(other.Layers.Count);
+            foreach (var otherLayer in other.Layers)
+            {
+                this.Layers.Add(new Layer(otherLayer));
+            }
+            this.IsInert = other.IsInert;
+            this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
+                entry => entry.Value);
+            if (other.PostShader != null)
+            {
+                // only need to copy the shader if it's mutable
+                this.PostShader = other.PostShader.Mutable ? other.PostShader.Duplicate() : other.PostShader;
+            }
+            else
+            {
+                this.PostShader = null;
+            }
+
+            this.RenderOrder = other.RenderOrder;
+        }
 
         /// <inheritdoc />
         public void LayerMapSet(object key, int layer)
@@ -1495,7 +1534,10 @@ namespace Robust.Client.GameObjects
             public Layer(Layer toClone)
             {
                 _parent = toClone._parent;
-                Shader = toClone.Shader;
+                if (toClone.Shader != null)
+                {
+                    Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                }
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;

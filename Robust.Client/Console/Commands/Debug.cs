@@ -65,14 +65,14 @@ namespace Robust.Client.Console.Commands
     internal class GetComponentRegistrationCommand : IConsoleCommand
     {
         public string Command => "getcomponentregistration";
-        public string Help => "";
-        public string Description => "";
+        public string Help => "Usage: getcomponentregistration <componentName>";
+        public string Description => "Gets component registration information";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length < 1)
             {
-                console.AddLine("Not enough arguments.", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
 
@@ -125,7 +125,7 @@ namespace Robust.Client.Console.Commands
 
             if (args.Length != 1)
             {
-                console.AddLine($"Must provide exactly 1 argument!");
+                console.AddLine(Help);
                 return false;
             }
 
@@ -210,21 +210,27 @@ namespace Robust.Client.Console.Commands
     internal class ShowRayCommand : IConsoleCommand
     {
         public string Command => "showrays";
-        public string Help => "showrays <raylifetime>";
-        public string Description => "Toggles debug drawing of physics rays.";
+        public string Help => "Usage: showrays <raylifetime>";
+        public string Description => "Toggles debug drawing of physics rays. An integer for <raylifetime> must be provided";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine("Must specify ray lifetime.", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
+
+            if (!new Regex(@"^[0-9]+$").IsMatch(args[0]))
+            {
+                console.AddLine("<raylifetime> must be a whole number",Color.Red);
+                return false;
+            }
+
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
-            var indexSplit = args[0].Split(',');
-            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(indexSplit[0], CultureInfo.InvariantCulture));
+            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
             return false;
         }
     }
@@ -255,7 +261,13 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 1)
             {
-                console.AddLine("Must pass exactly 1 argument", Color.Red);
+                console.AddLine(Help);
+                return false;
+            }
+
+            if ((!new Regex(@"^c?[0-9]+$").IsMatch(args[0])))
+            {
+                console.AddLine("Malformed UID", Color.Red);
                 return false;
             }
 
@@ -298,15 +310,15 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length != 2 && args.Length != 3)
+            {
+                console.AddLine(Help);
+                return false;
+            }
+
             string gridId = args[0];
             string indices = args[1];
             string offset = args.Length == 3 ? args[2] : "Center";
-
-            if (args.Length != 2 && args.Length != 3)
-            {
-                console.AddLine("Must pass exactly 2 or 3 arguments", Color.Red);
-                return false;
-            }
 
             if (!new Regex(@"^[0-9]+$").IsMatch(gridId))
             {
@@ -363,6 +375,11 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 1)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var client = IoCManager.Resolve<IBaseClient>();
             client.PlayerNameOverride = args[0];
 
@@ -380,12 +397,29 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 2)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
+            Type type = null;
 
-            var type = reflection.LooseGetType(args[1]);
+            try
+            {
+                type = reflection.LooseGetType(args[1]);
+            }
+            catch(ArgumentException)
+            {
+                console.AddLine("Unable to find type", Color.Red);
+                return false;
+            }
+
             var getResourceMethod =
-                resourceCache.GetType().GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
+                resourceCache
+                    .GetType()
+                    .GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] { args[0], true });
@@ -401,10 +435,25 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 2)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
-            var type = reflection.LooseGetType(args[1]);
+            Type type = null;
+            try
+            {
+                type = reflection.LooseGetType(args[1]);
+            }
+            catch(ArgumentException)
+            {
+                console.AddLine("Unable to find type", Color.Red);
+                return false;
+            }
+
             var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
             var generic = getResourceMethod!.MakeGenericMethod(type);
@@ -421,11 +470,30 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var gridId = new GridId(int.Parse(args[0]));
-            var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+            if (args.Length != 1)
+            {
+                console.AddLine(Help);
+                return false;
+            }
+            if (!new Regex(@"^[0-9]+$").IsMatch(args[0]))
+            {
+                console.AddLine("<gridId> must be a whole number",Color.Red);
+                return false;
+            }
 
-            console.AddLine(grid.GetAllTiles().Count().ToString());
-            return false;
+            var gridId = new GridId(int.Parse(args[0]));
+            var mapMan = IoCManager.Resolve<IMapManager>();
+
+            if (mapMan.GridExists(gridId))
+            {
+                console.AddLine(mapMan.GetGrid(gridId).GetAllTiles().Count().ToString());
+                return false;
+            }
+            else
+            {
+                console.AddLine("grid does not exist", Color.Red);
+                return false;
+            }
         }
     }
 
@@ -617,6 +685,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    //TODO: make this put the text in terminal
     internal class GetClipboardCommand : IConsoleCommand
     {
         public string Command => "getclipboard";
@@ -675,7 +744,7 @@ namespace Robust.Client.Console.Commands
                 if (int.TryParse(args[0], out int result))
                     GC.Collect(result);
                 else
-                    console.AddLine("Failed to parse argument.");
+                    console.AddLine("Failed to parse argument.",Color.Red);
             }
 
             return false;
@@ -687,9 +756,9 @@ namespace Robust.Client.Console.Commands
 
         public string Command => "gc_mode";
 
-        public string Description => "Change the GC Latency mode.";
+        public string Description => "Change/Read the GC Latency mode.";
 
-        public string Help => "gc_mode [type]";
+        public string Help => "gc_mode\nSee current GC Latencymode\ngc_mode [type]\n Change GC Latency mode to [type]";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -954,8 +1023,8 @@ namespace Robust.Client.Console.Commands
     internal class ClydeDebugLayerCommand : IConsoleCommand
     {
         public string Command => "cldbglyr";
-        public string Description => "";
-        public string Help => "cldbglyr";
+        public string Description => "Toggle fov and light debug layers";
+        public string Help => "cldbglyr <layer>: Toggle <layer>\ncldbglyr: Turn all Layers off";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -988,7 +1057,7 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 1)
             {
-                console.AddLine("Expected one argument", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
 

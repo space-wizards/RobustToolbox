@@ -124,6 +124,9 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     Creates a new NetMessage to be sent.
         /// </summary>
+        /// <remarks>
+        ///     This function is thread safe.
+        /// </remarks>
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;

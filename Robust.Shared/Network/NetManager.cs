@@ -867,18 +867,18 @@ namespace Robust.Shared.Network
 
             if (rxCallback != null)
                 _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
+
+            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
+            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
+            // so it no thread safety crap.
+            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            if (!_blankNetMsgFunctions.TryGetValue(typeof(T), out var func))
-            {
-                CacheBlankFunction(typeof(T));
-                func = _blankNetMsgFunctions[typeof(T)];
-            }
-            return (T) func();
+            return (T) _blankNetMsgFunctions[typeof(T)]();
         }
 
         private void CacheBlankFunction(Type type)

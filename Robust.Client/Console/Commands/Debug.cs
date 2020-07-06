@@ -685,7 +685,6 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    //TODO: make this put the text in terminal
     internal class GetClipboardCommand : IConsoleCommand
     {
         public string Command => "getclipboard";
@@ -695,6 +694,7 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
+            console.AddLine(mgr.GetText());
             return false;
         }
     }

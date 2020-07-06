@@ -19,9 +19,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
-        // Max distance per tick how far an entity can move before it is considered teleporting.
-        private const float MaxInterpDistance = 2.0f;
-
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
@@ -334,6 +331,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public Vector2 LerpSource => _prevPosition;
         [ViewVariables]
         public Angle LerpSourceAngle => _prevRotation;
+
+        [ViewVariables]
+        public EntityUid LerpParent { get; private set; }
 
         /// <inheritdoc />
         public override void Initialize()
@@ -665,6 +665,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 _nextPosition = nextTransform.LocalPosition;
                 _nextRotation = nextTransform.Rotation;
+                LerpParent = nextTransform.ParentID;
                 ActivateLerp();
             }
             else
@@ -672,6 +673,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // this should cause the lerp to do nothing
                 _nextPosition = null;
                 _nextRotation = null;
+                LerpParent = EntityUid.Invalid;
             }
         }
 

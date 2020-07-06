@@ -2,6 +2,7 @@
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -22,7 +23,13 @@ namespace Robust.Client.GameObjects.EntitySystems
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
             var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);
 
-            var mapTree = renderTreeSystem.GetSpriteTreeForMap(_eyeManager.CurrentMap);
+            var currentMap = _eyeManager.CurrentMap;
+            if (currentMap == MapId.Nullspace)
+            {
+                return;
+            }
+
+            var mapTree = renderTreeSystem.GetSpriteTreeForMap(currentMap);
 
             var pvsEntities = mapTree.Query(pvsBounds, true);
 

@@ -53,6 +53,7 @@ namespace Robust.Client
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
             _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
+            _net.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;

@@ -387,12 +387,30 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";
-        public string Help => "gridtc <gridId>";
+        public string Help => "Usage: gridtc <gridId>";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length != 1)
+            {
+                console.AddLine(Help);
+                return false;
+            }
+
+            if (!int.TryParse(args[0], out var id))
+            {
+                console.AddLine($"{args[0]} is not a valid integer.");
+                return false;
+            }
+
             var gridId = new GridId(int.Parse(args[0]));
-            var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (!mapManager.TryGetGrid(gridId, out var grid))
+            {
+                console.AddLine($"No grid exists with id {id}");
+                return false;
+            }
 
             console.AddLine(grid.GetAllTiles().Count().ToString());
             return false;

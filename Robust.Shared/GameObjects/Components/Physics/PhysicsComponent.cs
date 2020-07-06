@@ -113,6 +113,9 @@ namespace Robust.Shared.GameObjects.Components
                                 !IoCManager.Resolve<IPhysicsManager>()
                                     .IsWeightless(Owner.Transform.GridPosition);
 
+        /// <summary>
+        ///     Whether or not the entity is anchored in place.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Anchored
         {
@@ -121,6 +124,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 _anchored = value;
                 AnchoredChanged?.Invoke();
+                Dirty();
             }
         }
 
@@ -149,7 +153,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_mass, LinearVelocity, AngularVelocity);
+            return new PhysicsComponentState(_mass, LinearVelocity, AngularVelocity, Anchored);
         }
 
         public void RemoveController()
@@ -180,6 +184,7 @@ namespace Robust.Shared.GameObjects.Components
             LinearVelocity = newState.LinearVelocity;
             // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
             AngularVelocity = newState.AngularVelocity;
+            Anchored = newState.Anchored;
             // TODO: Does it make sense to reset controllers here?
             // This caused space movement to break in content and I'm not 100% sure this is a good fix.
             // Look man the CM test is in 5 hours cut me some slack.

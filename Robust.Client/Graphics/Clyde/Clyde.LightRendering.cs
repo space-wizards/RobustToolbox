@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -464,23 +465,19 @@ namespace Robust.Client.Graphics.Clyde
             // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
             var expandedBounds = worldBounds;
 
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
+
+            foreach (var component in lightTree.Query(worldBounds))
             {
                 var transform = component.Owner.Transform;
 
-                if (!component.Enabled || transform.MapID != map)
+                if (!component.Enabled)
                 {
                     continue;
                 }
 
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
-
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
-
-                if (!lightBounds.Intersects(worldBounds))
-                {
-                    continue;
-                }
 
                 lights.Add((component, lightPos));
 
@@ -488,7 +485,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (lights.Count == MaxLightsPerScene)
                 {
-                    // TODO: Allow more than 64 lights.
+                    // TODO: Allow more than MaxLightsPerScene lights.
                     break;
                 }
             }
@@ -634,10 +631,6 @@ namespace Robust.Client.Graphics.Clyde
 
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            // TODO: More accurate bounds check.
-            // Yeah just enlarge it a wee bit to accomodate for large occluders maybe. Oh well.
-            expandedBounds.Enlarged(2);
-
             var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
             var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
 
@@ -646,28 +639,24 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
+                var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+                var occluderTree = renderingTreeSystem.GetOccluderTreeForMap(map);
+
                 var ai = 0;
                 var ami = 0;
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
+                foreach (var occluder in occluderTree.Query(expandedBounds))
                 {
                     var transform = occluder.Owner.Transform;
-                    if (!occluder.Enabled || transform.MapID != map)
+                    if (!occluder.Enabled)
                     {
                         continue;
                     }
 
                     var worldTransform = transform.WorldMatrix;
                     var box = occluder.BoundingBox;
-
-                    var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
-
-                    if (!expandedBounds.Contains(centerPos))
-                    {
-                        continue;
-                    }
 
                     // So uh, angle 0 = east... Apparently...
                     // We account for that here so I don't go insane.

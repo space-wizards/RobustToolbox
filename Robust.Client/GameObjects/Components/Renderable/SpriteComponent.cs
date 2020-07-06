@@ -1,29 +1,30 @@
-﻿using Robust.Client.Graphics;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
-using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
+using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
-using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Text;
-using Robust.Shared.Animations;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.ViewVariables;
+using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
@@ -148,6 +149,12 @@ namespace Robust.Client.GameObjects
                 }
             }
         }
+
+        [ViewVariables]
+        public bool ContainerOccluded { get; set; }
+
+        [ViewVariables]
+        public bool TreeUpdateQueued { get; set; }
 
         public ShaderInstance? PostShader { get; set; }
 
@@ -1191,6 +1198,18 @@ namespace Robust.Client.GameObjects
             serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
             UpdateIsInert();
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveSpriteMessage(this, map));
+            }
         }
 
         public void FrameUpdate(float delta)

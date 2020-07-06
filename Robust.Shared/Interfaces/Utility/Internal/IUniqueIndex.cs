@@ -7,7 +7,7 @@ namespace Robust.Shared.Utility.Internal
 {
 
     /// <summary>
-    /// A dictionary of mutable sets for use as an index of unique values related to another collection.
+    /// A dictionary of mutable and immutable sets for use as an index of unique values related to another collection.
     /// Imitates the behavior of an index in a RDBMS.
     /// </summary>
     /// <remarks>
@@ -82,11 +82,18 @@ namespace Robust.Shared.Utility.Internal
         bool Replace(TKey key, TValue oldValue, TValue newValue);
 
         /// <summary>
-        /// Creates ensures an empty mutable set for a given key.
+        /// Ensures an empty mutable set for a given key.
         /// </summary>
         /// <param name="key">A given key.</param>
         [CollectionAccess(CollectionAccessType.UpdatedContent)]
         void Touch(TKey key);
+
+        /// <summary>
+        /// Makes a given key's set immutable.
+        /// </summary>
+        /// <param name="key">A given key.</param>
+        [CollectionAccess(CollectionAccessType.UpdatedContent)]
+        bool Freeze(TKey key);
 
         /// <summary>
         /// Initializes the index from a collection of keys.

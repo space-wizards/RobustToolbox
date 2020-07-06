@@ -121,6 +121,9 @@ namespace Robust.Shared.Log
                             {
                                 break;
                             }
+
+                            span = span[read..];
+                            chunkSize -= read;
                         }
                     }
                 }

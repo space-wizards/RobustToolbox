@@ -78,7 +78,7 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
+            _config.RegisterCVar("net.interp", true, CVar.ARCHIVE, b => _processor.Interpolation = b);
             _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
             _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
             _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);

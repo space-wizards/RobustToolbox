@@ -25,7 +25,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         Box2 AABB { get; }
 
-        List<IPhysShape> PhysicsShapes { get; }
+        IList<IPhysShape> PhysicsShapes { get; }
 
         /// <summary>
         /// Whether or not this body can collide.

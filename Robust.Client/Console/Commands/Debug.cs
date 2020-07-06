@@ -221,9 +221,9 @@ namespace Robust.Client.Console.Commands
                 return false;
             }
 
-            if (!new Regex(@"^[0-9]+$").IsMatch(args[0]))
+            if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine("<raylifetime> must be a whole number",Color.Red);
+                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
                 return false;
             }
 
@@ -320,9 +320,9 @@ namespace Robust.Client.Console.Commands
             string indices = args[1];
             string offset = args.Length == 3 ? args[2] : "Center";
 
-            if (!new Regex(@"^[0-9]+$").IsMatch(gridId))
+            if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine("gridId must be a whole number", Color.Red);
+                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
                 return false;
             }
 
@@ -404,7 +404,7 @@ namespace Robust.Client.Console.Commands
             }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
-            Type type = null;
+            Type type;
 
             try
             {
@@ -443,7 +443,7 @@ namespace Robust.Client.Console.Commands
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
-            Type type = null;
+            Type type;
             try
             {
                 type = reflection.LooseGetType(args[1]);
@@ -466,7 +466,7 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";
-        public string Help => "gridtc <gridId>";
+        public string Help => "Usage: gridtc <gridId>";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -475,23 +475,24 @@ namespace Robust.Client.Console.Commands
                 console.AddLine(Help);
                 return false;
             }
-            if (!new Regex(@"^[0-9]+$").IsMatch(args[0]))
+
+            if (!int.TryParse(args[0], out var id))
             {
-                console.AddLine("<gridId> must be a whole number",Color.Red);
+                console.AddLine($"{args[0]} is not a valid integer.");
                 return false;
             }
 
             var gridId = new GridId(int.Parse(args[0]));
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
 
-            if (mapMan.GridExists(gridId))
+            if (mapManager.TryGetGrid(gridId, out var grid))
             {
-                console.AddLine(mapMan.GetGrid(gridId).GetAllTiles().Count().ToString());
+                console.AddLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
                 return false;
             }
             else
             {
-                console.AddLine("grid does not exist", Color.Red);
+                console.AddLine($"No grid exists with id {id}",Color.Red);
                 return false;
             }
         }

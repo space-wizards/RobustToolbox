@@ -21,7 +21,12 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
+                BoundingBoxChanged();
             }
+        }
+
+        protected virtual void BoundingBoxChanged()
+        {
         }
 
         [ViewVariables(VVAccess.ReadWrite)]

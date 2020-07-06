@@ -31,8 +31,6 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly ILightManager _lightManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -40,6 +38,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 

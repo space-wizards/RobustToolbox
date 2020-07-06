@@ -1,6 +1,6 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -8,10 +8,8 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
 {
@@ -22,6 +20,7 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
 
         private const float Epsilon = 1.0e-6f;
 
@@ -30,16 +29,15 @@ namespace Robust.Shared.GameObjects.Systems
 
         public SharedPhysicsSystem()
         {
-            EntityQuery = new TypeEntityQuery(typeof(SharedPhysicsComponent));
+            EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
         }
 
 
-        protected void SimulateWorld(float frameTime, ICollection<IEntity> entities)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        protected void SimulateWorld(float frameTime, List<PhysicsComponent> physicsComponents)
         {
-            foreach (var entity in entities)
+            foreach (var physics in physicsComponents)
             {
-                var physics = entity.GetComponent<SharedPhysicsComponent>();
-
                 physics.Controller?.UpdateBeforeProcessing();
             }
 
@@ -47,29 +45,21 @@ namespace Robust.Shared.GameObjects.Systems
             ProcessCollisions();
 
             // Remove all entities that were deleted during collision handling
-            foreach (var entity in entities.Where(e => e.Deleted).ToList())
-            {
-                entities.Remove(entity);
-            }
+            physicsComponents.RemoveAll(p => p.Deleted);
 
             // Process frictional forces
-            foreach (var entity in entities)
+            foreach (var physics in physicsComponents)
             {
-                ProcessFriction(entity, frameTime);
+                ProcessFriction(physics);
             }
 
-            foreach (var entity in entities)
+            foreach (var physics in physicsComponents)
             {
-                var physics = entity.GetComponent<SharedPhysicsComponent>();
-
                 physics.Controller?.UpdateAfterProcessing();
             }
 
             // Remove all entities that were deleted due to the controller
-            foreach (var entity in entities.Where(e => e.Deleted).ToList())
-            {
-                entities.Remove(entity);
-            }
+            physicsComponents.RemoveAll(p => p.Deleted);
 
             const int solveIterationsAt60 = 4;
 
@@ -85,9 +75,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             for (var i = 0; i < divisions; i++)
             {
-                foreach (var entity in entities)
+                foreach (var physics in physicsComponents)
                 {
-                    UpdatePosition(entity, frameTime / divisions);
+                    UpdatePosition(physics, frameTime / divisions);
                 }
 
                 for (var j = 0; j < divisions; ++j)
@@ -103,14 +93,9 @@ namespace Robust.Shared.GameObjects.Systems
         // Runs collision behavior and updates cache
         private void ProcessCollisions()
         {
-            _collisionCache.Clear();
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
-            var physicsComponents = new Dictionary<ICollidableComponent, SharedPhysicsComponent>();
 
-            foreach (var collision in FindCollisions(RelevantEntities, physicsComponents))
-            {
-                _collisionCache.Add(collision);
-            }
+            FindCollisions();
 
             var counter = 0;
 
@@ -118,24 +103,24 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 counter++;
                 var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                if (physicsComponents.ContainsKey(collision.A))
+                if (collision.APhysics != null)
                 {
-                    physicsComponents[collision.A].Momentum -= impulse;
+                    collision.APhysics.Momentum -= impulse;
                 }
 
-                if (physicsComponents.ContainsKey(collision.B))
+                if (collision.BPhysics != null)
                 {
-                    physicsComponents[collision.B].Momentum += impulse;
+                    collision.BPhysics.Momentum += impulse;
                 }
             }
 
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = ((CollidableComponent)collision.A).Owner.GetAllComponents<ICollideBehavior>();
+                var aBehaviors = collision.A.Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in aBehaviors)
                 {
-                    var entity = ((CollidableComponent)collision.B).Owner;
+                    var entity = collision.B.Owner;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -147,10 +132,10 @@ namespace Robust.Shared.GameObjects.Systems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = ((CollidableComponent)collision.B).Owner.GetAllComponents<ICollideBehavior>();
+                var bBehaviors = collision.B.Owner.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in bBehaviors)
                 {
-                    var entity = ((CollidableComponent)collision.A).Owner;
+                    var entity = collision.A.Owner;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -170,53 +155,54 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private IEnumerable<Manifold> FindCollisions(IEnumerable<IEntity> entities, Dictionary<ICollidableComponent, SharedPhysicsComponent> physicsComponents)
+        private void FindCollisions()
         {
-            var combinations = new List<(EntityUid, EntityUid)>();
-            foreach (var entity in entities)
+            _collisionCache.Clear();
+            var combinations = new HashSet<(EntityUid, EntityUid)>();
+            foreach (var physics in _componentManager.GetAllComponents<PhysicsComponent>())
             {
-                if (entity.Deleted)
+                if (physics.LinearVelocity == Vector2.Zero)
                 {
                     continue;
                 }
 
-                if (entity.GetComponent<SharedPhysicsComponent>().LinearVelocity == Vector2.Zero)
+                if (!physics.Owner.TryGetComponent<CollidableComponent>(out var aCollidable))
                 {
                     continue;
                 }
 
-                if (!entity.TryGetComponent<CollidableComponent>(out var a)) continue;
-
-                foreach (var collision in FindCollisionsFor(a, combinations, physicsComponents))
-                {
-                    yield return collision;
-                }
+                FindCollisionsFor(aCollidable, physics, combinations);
             }
         }
 
-        private IEnumerable<Manifold> FindCollisionsFor(CollidableComponent a,
-            List<(EntityUid, EntityUid)> combinations,
-            Dictionary<ICollidableComponent, SharedPhysicsComponent> physicsComponents)
+        private void FindCollisionsFor(CollidableComponent a, PhysicsComponent aPhysics,
+            HashSet<(EntityUid, EntityUid)> combinations)
         {
-            foreach (var b in a.GetCollidingEntities(Vector2.Zero).Select(e => e.GetComponent<CollidableComponent>()))
+            foreach (var b in a.GetCollidingEntities(Vector2.Zero))
             {
-                if (combinations.Contains((a.Owner.Uid, b.Owner.Uid)) ||
-                    combinations.Contains((b.Owner.Uid, a.Owner.Uid)))
+                var aUid = a.Owner.Uid;
+                var bUid = b.Uid;
+
+                if (bUid.CompareTo(aUid) > 0)
+                {
+                    var tmpUid = bUid;
+                    bUid = aUid;
+                    aUid = tmpUid;
+                }
+
+                if (!combinations.Add((aUid, bUid)))
                 {
                     continue;
                 }
 
-                combinations.Add((a.Owner.Uid, b.Owner.Uid));
-                var aPhysics = a.Owner.GetComponent<SharedPhysicsComponent>();
-                physicsComponents[a] = aPhysics;
-                if (b.Owner.TryGetComponent<SharedPhysicsComponent>(out var bPhysics))
+                var bCollidable = b.GetComponent<CollidableComponent>();
+                if (b.TryGetComponent<PhysicsComponent>(out var bPhysics))
                 {
-                    physicsComponents[b] = bPhysics;
-                    yield return new Manifold(a, b, aPhysics, bPhysics);
+                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, bPhysics, a.Hard && bCollidable.Hard, _physicsManager));
                 }
                 else
                 {
-                    yield return new Manifold(a, b, aPhysics, null);
+                    _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, null, a.Hard && bCollidable.Hard, _physicsManager));
                 }
             }
         }
@@ -248,14 +234,12 @@ namespace Robust.Shared.GameObjects.Systems
             return false;
         }
 
-        private void ProcessFriction(IEntity entity, float frameTime)
+        private void ProcessFriction(PhysicsComponent physics)
         {
-            var physics = entity.GetComponent<SharedPhysicsComponent>();
-
             if (physics.LinearVelocity == Vector2.Zero) return;
 
             // Calculate frictional force
-            var friction = GetFriction(entity);
+            var friction = GetFriction(physics);
 
             // Clamp friction because friction can't make you accelerate backwards
             friction = Math.Min(friction, physics.LinearVelocity.Length);
@@ -266,16 +250,16 @@ namespace Robust.Shared.GameObjects.Systems
             physics.LinearVelocity += frictionVelocityChange;
         }
 
-        private void UpdatePosition(IEntity entity, float frameTime)
+        private void UpdatePosition(PhysicsComponent physics, float frameTime)
         {
-            var physics = entity.GetComponent<SharedPhysicsComponent>();
+            var ent = physics.Owner;
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
             if (physics.Anchored ||
                 physics.LinearVelocity == Vector2.Zero && Math.Abs(physics.AngularVelocity) < Epsilon) return;
 
-            if (ContainerHelpers.IsInContainer(entity) && physics.LinearVelocity != Vector2.Zero)
+            if (ContainerHelpers.IsInContainer(ent) && physics.LinearVelocity != Vector2.Zero)
             {
-                entity.Transform.Parent!.Owner.SendMessage(entity.Transform, new RelayMovementEntityMessage(entity));
+                ent.Transform.Parent!.Owner.SendMessage(ent.Transform, new RelayMovementEntityMessage(ent));
                 // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
                 physics.LinearVelocity = Vector2.Zero;
             }
@@ -292,14 +276,19 @@ namespace Robust.Shared.GameObjects.Systems
             var done = true;
             foreach (var collision in collisions)
             {
+                if (!collision.Hard)
+                {
+                    continue;
+                }
+
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
                 if (penetration > allowance)
                 {
                     done = false;
                     var correction = collision.Normal * Math.Abs(penetration) * percent;
-                    if (collision.APhysics != null && !((SharedPhysicsComponent)collision.APhysics).Anchored && !collision.APhysics.Deleted)
+                    if (collision.APhysics != null && !collision.APhysics.Anchored && !collision.APhysics.Deleted)
                         collision.APhysics.Owner.Transform.WorldPosition -= correction;
-                    if (collision.BPhysics != null && !((SharedPhysicsComponent)collision.BPhysics).Anchored && !collision.BPhysics.Deleted)
+                    if (collision.BPhysics != null && !collision.BPhysics.Anchored && !collision.BPhysics.Deleted)
                         collision.BPhysics.Owner.Transform.WorldPosition += correction;
                 }
             }
@@ -307,11 +296,12 @@ namespace Robust.Shared.GameObjects.Systems
             return done;
         }
 
-        private float GetFriction(IEntity entity)
+        private float GetFriction(PhysicsComponent physics)
         {
-            if (entity.HasComponent<CollidableComponent>() && entity.TryGetComponent(out SharedPhysicsComponent physics) && physics.OnGround)
+            var ent = physics.Owner;
+            if (ent.HasComponent<CollidableComponent>() && physics.OnGround)
             {
-                var location = entity.Transform;
+                var location = ent.Transform;
                 var grid = _mapManager.GetGrid(location.GridPosition.GridID);
                 var tile = grid.GetTileRef(location.GridPosition);
                 var tileDef = _tileDefinitionManager[tile.Tile.TypeId];

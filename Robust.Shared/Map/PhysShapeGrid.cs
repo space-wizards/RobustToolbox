@@ -93,6 +93,8 @@ namespace Robust.Shared.Map
             }
         }
 
+        public event Action? OnDataChanged { add { } remove { } }
+
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {

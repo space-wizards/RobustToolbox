@@ -1534,7 +1534,10 @@ namespace Robust.Client.GameObjects
             public Layer(Layer toClone)
             {
                 _parent = toClone._parent;
-                Shader = toClone.Shader;
+                if (toClone.Shader != null)
+                {
+                    Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                }
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
                 State = toClone.State;

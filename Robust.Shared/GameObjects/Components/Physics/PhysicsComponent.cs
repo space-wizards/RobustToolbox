@@ -88,6 +88,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     The current status of the object
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public BodyStatus Status
         {
             get => _status;

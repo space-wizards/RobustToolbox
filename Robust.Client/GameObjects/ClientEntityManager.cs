@@ -284,30 +284,39 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            foreach (var kvStates in compStateWork)
+            foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
+                if (compMan.TryGetComponent(entityUid, netId, out var component))
                 {
-                    var eUid = entityUid;
-                    var eExpectedNetUid = kvStates.Key;
-                    var eRegisteredNetUidName = _compFactory.GetRegistration(eExpectedNetUid).Name;
-                    DebugTools.Assert($"Component does not exist for state: entUid={eUid}, expectedNetId={eExpectedNetUid}, expectedName={eRegisteredNetUidName}");
-                    continue;
-                }
-
-                try
-                {
-                    component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-                }
-                catch (Exception e)
-                {
-                    var wrapper = new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+                    try
+                    {
+                        component.HandleComponentState(cur, next);
+                    }
+                    catch (Exception e)
+                    {
+                        var wrapper = new ComponentStateApplyException(
+                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
 #if EXCEPTION_TOLERANCE
                     _runtimeLog.LogException(wrapper, "Component state apply");
 #else
-                    throw wrapper;
+                        throw wrapper;
 #endif
+                    }
+                }
+                else
+                {
+                    // The component can be null here due to interp.
+                    // Because the NEXT state will have a new component, but this one doesn't yet.
+                    // That's fine though.
+                    if (cur == null)
+                    {
+                        continue;
+                    }
+
+                    var eUid = entityUid;
+                    var eRegisteredNetUidName = _compFactory.GetRegistration(netId).Name;
+                    DebugTools.Assert(
+                        $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
                 }
             }
         }

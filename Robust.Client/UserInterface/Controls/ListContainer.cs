@@ -61,6 +61,29 @@ namespace Robust.Client.UserInterface.Controls
             _disableListCalc = false;
         }
 
+        public void RemoveItem(Control child)
+        {
+            if (!_list.Contains(child))
+            {
+                return;
+            }
+
+            var index = _list.IndexOf(child);
+            _list.Remove(child);
+
+            if (Children.Contains(child))
+            {
+                RemoveChild(child);
+            }
+
+            RecalculateListHeight(index);
+        }
+
+        public Control? GetLastItem()
+        {
+            return _list.Count > 0 ? _list[_list.Count - 1] : null;
+        }
+
         protected override void LayoutUpdateOverride()
         {
             if (_vScrollBar?.Parent == null)
@@ -181,11 +204,16 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            UpdateListHeight(_list.IndexOf(child));
+            RecalculateListHeight(_list.IndexOf(child));
         }
 
-        private void UpdateListHeight(int index)
+        private void RecalculateListHeight(int index)
         {
+            _heights.RemoveRange(_list.Count, _heights.Count - _list.Count);
+            if (_endIndex >= _heights.Count)
+            {
+                _endIndex = _heights.Count - 1;
+            }
             if (_disableListCalc || index < 0 || index >= _list.Count)
             {
                 return;
@@ -208,7 +236,6 @@ namespace Robust.Client.UserInterface.Controls
                 height += _list[i].CombinedMinimumSize.Y;
             }
 
-            _heights.RemoveRange(i, _heights.Count - i);
             _disableListCalc = false;
         }
 
@@ -267,7 +294,7 @@ namespace Robust.Client.UserInterface.Controls
 
             if (_list.Remove(child))
             {
-                UpdateListHeight(index);
+                RecalculateListHeight(index);
             }
         }
 

@@ -272,7 +272,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {

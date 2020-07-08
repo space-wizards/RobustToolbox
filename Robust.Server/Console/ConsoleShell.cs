@@ -210,7 +210,6 @@ namespace Robust.Server.Console
 
             public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
-                // system console can't log in to itself, and is pointless anyways
                 if (player == null)
                     return;
 

@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects.Components
             set
             {
                 _canCollide = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
                 Dirty();
             }
         }
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }
 
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
         }
 
         public override void OnRemove()
@@ -221,6 +221,9 @@ namespace Robust.Shared.GameObjects.Components
             {
                 ShapeRemoved(shape);
             }
+            
+            // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
         }
 
         private void ShapeAdded(IPhysShape shape)

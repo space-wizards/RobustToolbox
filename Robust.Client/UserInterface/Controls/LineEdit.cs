@@ -812,13 +812,18 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    // Glyph would be completely outside the bounding box and invisible, abort.
                     if (baseLine.X > contentBox.Right)
                     {
+                        // Past the right edge, not gonna render anything anymore.
                         break;
                     }
 
-                    font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    // Make sure we're not off the left edge of the box.
+                    if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
+                    {
+                        font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    }
+
                     baseLine += (metrics.Advance, 0);
                 }
 

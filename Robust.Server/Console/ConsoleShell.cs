@@ -219,9 +219,10 @@ namespace Robust.Server.Console
 
                 // WE ARE AT THE BRIDGE OF DEATH
                 if (shell.ElevateShell(player, args[0]))
+                {
                     shell.SendText(player, "Logged in.");
                     return;
-
+                }
                 // CAST INTO THE GORGE OF ETERNAL PERIL
                 Logger.WarningS(
                     "con.auth",
@@ -271,8 +272,10 @@ namespace Robust.Server.Console
 
                 // WE ARE AT THE BRIDGE OF DEATH
                 if (shell.ElevateShellHost(player, args[0]))
+                {
                     shell.SendText(player, "Logged in as host.");
                     return;
+                }
 
                 // CAST INTO THE GORGE OF ETERNAL PERIL
                 Logger.WarningS(

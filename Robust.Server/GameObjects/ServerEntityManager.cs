@@ -504,10 +504,12 @@ namespace Robust.Server.GameObjects
 
                 DebugTools.Assert(lastSeen != currentTick);
 
+                /*
                 if (uid != playerUid && entity.Prototype == playerEnt.Prototype && lastSeen < fromTick)
                 {
                     Logger.DebugS("pvs", $"Player {playerUid} is seeing player {uid}.");
                 }
+                */
 
                 if (checkedEnts.Contains(uid))
                 {

@@ -311,8 +311,11 @@ namespace Robust.Server.GameObjects
 
             foreach (var container in contMgr.GetAllContainers())
             {
-                foreach (var contEnt in container.ContainedEntities)
+                // Manual for loop to cut out allocations.
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (var i = 0; i < container.ContainedEntities.Count; i++)
                 {
+                    var contEnt = container.ContainedEntities[i];
                     set.Add(contEnt);
                     AddContainedRecursive(contEnt, set);
                 }

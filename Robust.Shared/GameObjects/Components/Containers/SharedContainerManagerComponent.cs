@@ -35,7 +35,9 @@ namespace Robust.Shared.GameObjects.Components.Containers
             }
         }
 
-        public abstract IEnumerable<IContainer> GetAllContainers();
+        public IEnumerable<IContainer> GetAllContainers() => GetAllContainersImpl();
 
+        // Separate impl method to facilitate method hiding in the subclasses.
+        protected abstract IEnumerable<IContainer> GetAllContainersImpl();
     }
 }

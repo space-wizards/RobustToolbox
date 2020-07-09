@@ -26,8 +26,10 @@ namespace Robust.Client.GameObjects.Components.Containers
             throw new NotSupportedException("Cannot modify containers on the client.");
         }
 
-        public override IEnumerable<IContainer> GetAllContainers() =>
-            _containers.Values.Where(c => !c.Deleted);
+        protected override IEnumerable<IContainer> GetAllContainersImpl()
+        {
+            return _containers.Values.Where(c => !c.Deleted);
+        }
 
         public override IContainer GetContainer(string id)
         {

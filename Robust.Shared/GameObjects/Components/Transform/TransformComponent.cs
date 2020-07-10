@@ -408,21 +408,26 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
 
             var mapPos = MapPosition;
-
-            IEntity newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
-                newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
-            else
-                newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
-
-            // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            var newParent = oldParent.Parent;
+            if (newParent == null)
             {
-                return;
+                IEntity newMapEntity;
+                if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+                    newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
+                else
+                    newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+
+                // this would be a no-op
+                var oldParentEnt = oldParent.Owner;
+                if (newMapEntity == oldParentEnt)
+                {
+                    return;
+                }
+
+                newParent = newMapEntity.Transform;
             }
 
-            AttachParent(newMapEntity);
+            AttachParent(newParent);
 
             WorldPosition = mapPos.Position;
 

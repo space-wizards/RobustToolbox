@@ -2,6 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using Serilog;
+using Serilog.Events;
+using SLogger = Serilog.Core.Logger;
 
 namespace Robust.Shared.Log
 {
@@ -9,6 +12,9 @@ namespace Robust.Shared.Log
     {
         private sealed class Sawmill : ISawmill
         {
+            // Need this to act as a proxy for some internal Serilog APIs related to message parsing.
+            private readonly SLogger _sLogger = new LoggerConfiguration().CreateLogger();
+
             public string Name { get; }
 
             public Sawmill? Parent { get; }
@@ -22,12 +28,14 @@ namespace Robust.Shared.Log
                     {
                         throw new ArgumentException("Cannot set root sawmill level to null.");
                     }
+
                     _level = value;
                 }
             }
+
             private LogLevel? _level = null;
 
-            private readonly List<ILogHandler> _handlers = new List<ILogHandler>();
+            public List<ILogHandler> Handlers { get; } = new List<ILogHandler>();
             private readonly ReaderWriterLockSlim _handlerLock = new ReaderWriterLockSlim();
 
             public Sawmill(Sawmill? parent, string name)
@@ -41,7 +49,7 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterWriteLock();
                 try
                 {
-                    _handlers.Add(handler);
+                    Handlers.Add(handler);
                 }
                 finally
                 {
@@ -54,7 +62,7 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterWriteLock();
                 try
                 {
-                    _handlers.Remove(handler);
+                    Handlers.Remove(handler);
                 }
                 finally
                 {
@@ -62,20 +70,33 @@ namespace Robust.Shared.Log
                 }
             }
 
+            public void Log(LogLevel level, Exception? exception, string message, params object?[] args)
+            {
+                _sLogger.BindMessageTemplate(message, args, out var parsedTemplate, out var properties);
+                var msg = new LogEvent(DateTimeOffset.Now, level.ToSerilog(), exception, parsedTemplate, properties);
+                LogInternal(Name, msg);
+            }
+
             public void Log(LogLevel level, string message, params object?[] args)
             {
-                Log(level, string.Format(message, args));
+                if (args.Length != 0 && message.Contains("{0"))
+                {
+                    // Fallback for logs that still use the string.Format approach.
+                    message = string.Format(message, args);
+                    args = Array.Empty<object>();
+                }
+
+                Log(level, null, message, args);
             }
 
             public void Log(LogLevel level, string message)
             {
-                var msg = new LogMessage(message, level, Name);
-                LogInternal(msg);
+                Log(level, message, Array.Empty<object>());
             }
 
-            private void LogInternal(in LogMessage message)
+            private void LogInternal(string sourceSawmill, LogEvent message)
             {
-                if (message.Level < GetPracticalLevel())
+                if (message.Level.ToRobust() < GetPracticalLevel())
                 {
                     return;
                 }
@@ -83,9 +104,9 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterReadLock();
                 try
                 {
-                    foreach (var handler in _handlers)
+                    foreach (var handler in Handlers)
                     {
-                        handler.Log(message);
+                        handler.Log(sourceSawmill, message);
                     }
                 }
                 finally
@@ -93,7 +114,7 @@ namespace Robust.Shared.Log
                     _handlerLock.ExitReadLock();
                 }
 
-                Parent?.LogInternal(message);
+                Parent?.LogInternal(sourceSawmill, message);
             }
 
             private LogLevel GetPracticalLevel()
@@ -102,6 +123,7 @@ namespace Robust.Shared.Log
                 {
                     return Level.Value;
                 }
+
                 return Parent?.GetPracticalLevel() ?? default;
             }
 

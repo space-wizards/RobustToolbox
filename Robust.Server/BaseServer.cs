@@ -269,7 +269,7 @@ namespace Robust.Server
             // TODO: solve this properly.
             _serializer.Initialize();
 
-            _loc.AddLoadedToStringSerializer();
+            _loc.AddLoadedToStringSerializer(_stringSerializer);
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;

@@ -421,7 +421,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
             // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (Component comp in _entCompIndex[uid])
+            foreach (Component comp in _entCompIndex[uid].ToArray())
             {
                 if (comp.Deleted) continue;
 

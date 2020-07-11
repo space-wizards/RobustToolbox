@@ -1,4 +1,4 @@
-﻿namespace Robust.Shared.Localization.Macros
+﻿namespace Robust.Shared.Localization.Macros.English
 {
     [RegisterTextMacro("they", "en")]
     public class They : ITextMacro
@@ -87,6 +87,20 @@
                 Gender.Neuter => "it's",
                 _ => "they're",
             };
+        }
+    }
+
+    [RegisterTextMacro("theName", "en")]
+    public class TheName : ITextMacro
+    {
+        private readonly NameMacro _nameMacro = new NameMacro();
+
+        public string Format(object? argument)
+        {
+            var name = _nameMacro.Format(argument);
+            return IProperNamable.GetProperOrFalse(argument)
+                ? name
+                : "the " + name;
         }
     }
 }

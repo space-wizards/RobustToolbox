@@ -12,6 +12,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -271,7 +272,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {

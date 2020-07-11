@@ -373,19 +373,23 @@ namespace Robust.Shared.Network
                     switch (msg.MessageType)
                     {
                         case NetIncomingMessageType.VerboseDebugMessage:
-                            Logger.DebugS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.DebugS("net", "{PeerAddress}: {Message}", peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.DebugMessage:
-                            Logger.InfoS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.InfoS("net", "{PeerAddress}: {Message}", peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.WarningMessage:
-                            Logger.WarningS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.WarningS("net", "{PeerAddress}: {Message}", peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.ErrorMessage:
-                            Logger.ErrorS("net", "{0}: {1}", peer.Configuration.LocalAddress, msg.ReadString());
+                            Logger.ErrorS("net", "{PeerAddress}: {Message}", peer.Configuration.LocalAddress,
+                                msg.ReadString());
                             break;
 
                         case NetIncomingMessageType.ConnectionApproval:
@@ -566,7 +570,9 @@ namespace Robust.Shared.Network
             var sender = msg.SenderConnection;
             msg.ReadByte();
             var reason = msg.ReadString();
-            Logger.DebugS("net", $"{sender.RemoteEndPoint}: Status changed to {sender.Status}, reason: {reason}");
+            Logger.DebugS("net",
+                "{ConnectionEndpoint}: Status changed to {ConnectionStatus}, reason: {ConnectionStatusReason}",
+                sender.RemoteEndPoint, sender.Status, reason);
 
             if (_awaitingStatusChange.TryGetValue(sender, out var resume))
             {
@@ -677,6 +683,9 @@ namespace Robust.Shared.Network
                 return;
             }
 
+            Logger.InfoS("net", "Approved {ConnectionEndpoint} with username {Username} into the server",
+                connection.RemoteEndPoint, session);
+
             // Handshake complete!
             HandleInitialHandshakeComplete(connection);
         }
@@ -692,7 +701,7 @@ namespace Robust.Shared.Network
 
             await _serializer.Handshake(channel);
 
-            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Connected");
+            Logger.InfoS("net", "{ConnectionEndpoint}: Connected", channel.RemoteEndPoint);
 
             OnConnected(channel);
         }
@@ -701,7 +710,7 @@ namespace Robust.Shared.Network
         {
             var channel = _channels[connection];
 
-            Logger.InfoS("net", $"{channel.RemoteEndPoint}: Disconnected ({reason})");
+            Logger.InfoS("net", "{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint, reason);
             _assignedSessions.Remove(connection);
 
             OnDisconnected(channel, reason);
@@ -729,19 +738,22 @@ namespace Robust.Shared.Network
             var peer = msg.SenderConnection.Peer;
             if (peer.Status == NetPeerStatus.ShutdownRequested)
             {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but shutdown is requested.");
                 return true;
             }
 
             if (peer.Status == NetPeerStatus.NotRunning)
             {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, peer is not running.");
                 return true;
             }
 
             if (!IsConnected)
             {
-                Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Received data message, but not connected.");
                 return true;
             }
 
@@ -766,7 +778,8 @@ namespace Robust.Shared.Network
             {
                 if (!CacheNetMsgFunction(id))
                 {
-                    Logger.WarningS("net", $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+                    Logger.WarningS("net",
+                        $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
                     return true;
                 }
             }
@@ -867,18 +880,18 @@ namespace Robust.Shared.Network
 
             if (rxCallback != null)
                 _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
+
+            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
+            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
+            // so it no thread safety crap.
+            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
             where T : NetMessage
         {
-            if (!_blankNetMsgFunctions.TryGetValue(typeof(T), out var func))
-            {
-                CacheBlankFunction(typeof(T));
-                func = _blankNetMsgFunctions[typeof(T)];
-            }
-            return (T) func();
+            return (T) _blankNetMsgFunctions[typeof(T)]();
         }
 
         private void CacheBlankFunction(Type type)

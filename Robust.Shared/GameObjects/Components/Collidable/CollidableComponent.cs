@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_canCollide, _status, _physShapes);
+            return new CollidableComponentState(_canCollide, _status, _physShapes, _isHard);
         }
 
         /// <inheritdoc />
@@ -66,6 +66,7 @@ namespace Robust.Shared.GameObjects.Components
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
+            _isHard = newState.Hard;
 
             //TODO: Is this always true?
             if (newState.PhysShapes != null)
@@ -126,7 +127,7 @@ namespace Robust.Shared.GameObjects.Components
             set
             {
                 _canCollide = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
                 Dirty();
             }
         }
@@ -138,10 +139,15 @@ namespace Robust.Shared.GameObjects.Components
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
+        [ViewVariables]
         public bool Hard
         {
             get => _isHard;
-            set => _isHard = value;
+            set
+            {
+                _isHard = value;
+                Dirty();
+            }
         }
 
         /// <summary>
@@ -203,7 +209,7 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }
 
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeEvent(Owner.Uid, _canCollide));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
         }
 
         public override void OnRemove()
@@ -215,6 +221,9 @@ namespace Robust.Shared.GameObjects.Components
             {
                 ShapeRemoved(shape);
             }
+            
+            // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
         }
 
         private void ShapeAdded(IPhysShape shape)

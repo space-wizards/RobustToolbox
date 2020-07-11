@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Log
+﻿using Serilog.Events;
+
+namespace Robust.Shared.Log
 {
     /// <remarks>
     ///     The value associated with the level determines the order in which they are filtered,
@@ -7,28 +9,33 @@
     public enum LogLevel
     {
         /// <summary>
+        ///     When you're *really* trying to track down that bug.
+        /// </summary>
+        Verbose = LogEventLevel.Verbose,
+
+        /// <summary>
         ///     Diagnostic information usually only necessary when something broke.
         /// </summary>
-        Debug = 1,
+        Debug = LogEventLevel.Debug,
 
         /// <summary>
         ///     General info that can confirm that something is working.
         /// </summary>
-        Info = 2,
+        Info = LogEventLevel.Information,
 
         /// <summary>
         ///     Issues that can easily be worked around but should still be fixed.
         /// </summary>
-        Warning = 3,
+        Warning = LogEventLevel.Warning,
 
         /// <summary>
         ///     Errors that need fixing and are probably gonna break something.
         /// </summary>
-        Error = 4,
+        Error = LogEventLevel.Error,
 
         /// <summary>
         ///     Errors that are REALLY BAD and break EVERYTHING.
         /// </summary>
-        Fatal = 5
+        Fatal = LogEventLevel.Fatal
     }
 }

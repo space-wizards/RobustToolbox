@@ -11,13 +11,15 @@ namespace Robust.Shared.GameObjects.Components
         public readonly bool CanCollide;
         public readonly BodyStatus Status;
         public readonly List<IPhysShape> PhysShapes;
+        public readonly bool Hard;
 
-        public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes)
+        public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard)
             : base(NetIDs.COLLIDABLE)
         {
             CanCollide = canCollide;
             Status = status;
             PhysShapes = physShapes;
+            Hard = hard;
         }
     }
 }

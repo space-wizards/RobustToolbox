@@ -29,7 +29,7 @@ namespace Robust.Server.GameObjects.Components.Container
         public Container(string id, IContainerManager manager) : base(id, manager) { }
 
         /// <inheritdoc />
-        public override IReadOnlyCollection<IEntity> ContainedEntities => _containerList.AsReadOnly();
+        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)
@@ -85,7 +85,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
         /// <inheritdoc />
         [ViewVariables]
-        public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
+        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

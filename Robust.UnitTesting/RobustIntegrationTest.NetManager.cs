@@ -37,6 +37,7 @@ namespace Robust.UnitTesting
             public IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; } = new Dictionary<Type, long>();
 
             private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
+            private readonly HashSet<Type> _registeredMessages = new HashSet<Type>();
 
             /// <summary>
             ///     The channel we will connect to when <see cref="ClientConnect"/> is called.
@@ -227,12 +228,18 @@ namespace Robust.UnitTesting
 
             public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null) where T : NetMessage
             {
+                _registeredMessages.Add(typeof(T));
                 if (rxCallback != null)
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
             }
 
             public T CreateNetMessage<T>() where T : NetMessage
             {
+                if (!_registeredMessages.Contains(typeof(T)))
+                {
+                    throw new ArgumentException("Net message type is not registered.");
+                }
+
                 return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
             }
 

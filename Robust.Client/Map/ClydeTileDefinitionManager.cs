@@ -56,7 +56,7 @@ namespace Robust.Client.Map
                 var row = i / dimensionX;
 
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead($"/Textures/Tiles/{def.SpriteName}.png"))
+                using (var stream = _resourceCache.ContentFileRead($"/Textures/Constructible/Tiles/{def.SpriteName}.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }

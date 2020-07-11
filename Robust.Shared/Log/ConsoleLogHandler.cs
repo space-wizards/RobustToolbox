@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Unicode;
 using System.Timers;
 using JetBrains.Annotations;
+using Serilog.Events;
 
 namespace Robust.Shared.Log
 {
@@ -14,7 +15,7 @@ namespace Robust.Shared.Log
     /// <summary>
     ///     Log handler that prints to console.
     /// </summary>
-    public sealed class ConsoleLogHandler : ILogHandler
+    public sealed class ConsoleLogHandler : ILogHandler, IDisposable
     {
         private static readonly bool WriteAnsiColors;
 
@@ -89,17 +90,22 @@ namespace Robust.Shared.Log
 
         private bool IsConsoleActive => !IsWindows || WindowsConsole.IsConsoleActive;
 
-        public void Log(in LogMessage message)
+        public void Log(string sawmillName, LogEvent message)
         {
+            var robustLevel = message.Level.ToRobust();
             lock (_stream)
             {
                 _line
                     .Clear()
-                    .Append(LogLevelToString(message.Level))
-                    .Append(message.SawmillName)
+                    .Append(LogLevelToString(robustLevel))
+                    .Append(sawmillName)
                     .Append(": ")
-                    .Append(message.Message)
-                    .AppendLine();
+                    .AppendLine(message.RenderMessage());
+
+                if (message.Exception != null)
+                {
+                    _line.AppendLine(message.Exception.ToString());
+                }
 
                 // ReSharper disable once SuggestVarOrType_Elsewhere
                 if (!_isUtf16Out)
@@ -136,7 +142,7 @@ namespace Robust.Shared.Log
                 }
 
                 // ReSharper disable once InvertIf
-                if (message.Level >= LogLevel.Error)
+                if (robustLevel >= LogLevel.Error)
                 {
                     if (IsConsoleActive)
                     {
@@ -152,6 +158,7 @@ namespace Robust.Shared.Log
             {
                 return level switch
                 {
+                    LogLevel.Verbose => LogBeforeLevel + AnsiFgGreen + LogMessage.LogNameDebug + LogAfterLevel,
                     LogLevel.Debug => LogBeforeLevel + AnsiFgBlue + LogMessage.LogNameDebug + LogAfterLevel,
                     LogLevel.Info => LogBeforeLevel + AnsiFgBrightCyan + LogMessage.LogNameInfo + LogAfterLevel,
                     LogLevel.Warning => LogBeforeLevel + AnsiFgBrightYellow + LogMessage.LogNameWarning + LogAfterLevel,
@@ -163,6 +170,7 @@ namespace Robust.Shared.Log
 
             return level switch
             {
+                LogLevel.Verbose => "[" + LogMessage.LogNameVerbose + "] ",
                 LogLevel.Debug => "[" + LogMessage.LogNameDebug + "] ",
                 LogLevel.Info => "[" + LogMessage.LogNameInfo + "] ",
                 LogLevel.Warning => "[" + LogMessage.LogNameWarning + "] ",
@@ -170,6 +178,15 @@ namespace Robust.Shared.Log
                 LogLevel.Fatal => "[" + LogMessage.LogNameFatal + "] ",
                 _ => "[" + LogMessage.LogNameUnknown +"] "
             };
+        }
+
+        public void Dispose()
+        {
+            lock (_stream)
+            {
+                _stream.Dispose();
+                _timer.Dispose();
+            }
         }
     }
 

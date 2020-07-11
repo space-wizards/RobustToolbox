@@ -84,6 +84,15 @@ namespace Robust.Client.UserInterface.CustomControls
             _console.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
+
+            CommandBar.OnKeyBindDown += args =>
+            {
+                if (args.Function == EngineKeyFunctions.ShowDebugConsole)
+                {
+                    Toggle();
+                    args.Handle();
+                }
+            };
         }
 
         protected override void FrameUpdate(FrameEventArgs args)

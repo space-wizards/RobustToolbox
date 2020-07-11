@@ -770,38 +770,6 @@ namespace Robust.Client.Graphics.Clyde
                         ii += 5;
                     }
 
-                    if (_quartResLights)
-                    {
-                        // On low-res lights we bias the occlusion mask inwards.
-                        // This avoids wall lighting going onto the tile next to them at certain tile alignments.
-                        // It's inwards to avoid seeing disconnected shadows on wall edges.
-                        const float bias = 0.5f / EyeManager.PixelsPerMeter;
-
-                        if (!no)
-                        {
-                            tlY -= bias;
-                            trY -= bias;
-                        }
-
-                        if (!eo)
-                        {
-                            trX -= bias;
-                            brX -= bias;
-                        }
-
-                        if (!so)
-                        {
-                            blY += bias;
-                            brY += bias;
-                        }
-
-                        if (!wo)
-                        {
-                            blX += bias;
-                            tlX += bias;
-                        }
-                    }
-
                     // Generate mask geometry.
                     arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
                     arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);

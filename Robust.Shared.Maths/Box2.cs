@@ -146,6 +146,17 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Returns how much two Boxes overlap from 0 to 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float IntersectPercentage(in Box2 other)
+        {
+            var surfaceIntersect = Area(Intersect(other));
+
+            return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
+        }
+
+        /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

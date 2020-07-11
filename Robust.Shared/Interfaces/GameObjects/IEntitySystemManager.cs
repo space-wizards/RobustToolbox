@@ -1,5 +1,5 @@
 ﻿using System;
-using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -20,6 +20,16 @@ namespace Robust.Shared.Interfaces.GameObjects
     /// <seealso cref="IEntitySystem"/>
     public interface IEntitySystemManager
     {
+        /// <summary>
+        /// A new entity system has been loaded into the manager.
+        /// </summary>
+        event EventHandler<SystemChangedArgs> SystemLoaded;
+
+        /// <summary>
+        /// An existing entity system has been unloaded from the manager.
+        /// </summary>
+        event EventHandler<SystemChangedArgs> SystemUnloaded;
+
         /// <summary>
         /// Get an entity system of the specified type.
         /// </summary>

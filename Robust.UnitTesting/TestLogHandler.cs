@@ -1,11 +1,13 @@
 ﻿using Robust.Shared.Interfaces.Log;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using Serilog.Events;
 
 namespace Robust.UnitTesting
 {
@@ -31,11 +33,12 @@ namespace Robust.UnitTesting
             _writer.Dispose();
         }
 
-        public void Log(in LogMessage message)
+        public void Log(string sawmillName, LogEvent message)
         {
-            var name = message.LogLevelToName();
+            var name = LogMessage.LogLevelToName(message.Level.ToRobust());
             var seconds = _sw.ElapsedMilliseconds/1000d;
-            _writer.WriteLine($"{_prefix}: {seconds:F3}s [{name}] {message.SawmillName}: {message.Message}");
+            var rendered = message.RenderMessage();
+            _writer.WriteLine($"{_prefix}: {seconds:F3}s [{name}] {sawmillName}: {rendered}");
         }
 
     }

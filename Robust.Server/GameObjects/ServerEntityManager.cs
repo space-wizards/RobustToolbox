@@ -14,11 +14,8 @@ using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -37,9 +34,9 @@ namespace Robust.Server.GameObjects
 
         #region IEntityManager Members
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IPauseManager _pauseManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [Shared.IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Shared.IoC.Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private float? _maxUpdateRangeCache;
 
@@ -205,19 +202,20 @@ namespace Robust.Server.GameObjects
 
         private Dictionary<EntityUid, GameTick> GetLastSeen(IPlayerSession player)
         {
-            if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
+            lock (_playerLastSeen)
             {
-                lastSeen = new Dictionary<EntityUid, GameTick>();
-                _playerLastSeen.Add(player, lastSeen);
-            }
+                if (!_playerLastSeen.TryGetValue(player, out var lastSeen))
+                {
+                    lastSeen = new Dictionary<EntityUid, GameTick>();
+                    _playerLastSeen.Add(player, lastSeen);
+                }
 
-            return lastSeen;
+                return lastSeen;
+            }
         }
 
-        private GameTick GetLastSeenTick(IPlayerSession player, EntityUid uid)
+        private static GameTick GetLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid)
         {
-            var lastSeen = GetLastSeen(player);
-
             if (!lastSeen.TryGetValue(uid, out var tick))
             {
                 tick = GameTick.First;
@@ -226,10 +224,8 @@ namespace Robust.Server.GameObjects
             return tick;
         }
 
-        private GameTick UpdateLastSeenTick(IPlayerSession player, EntityUid uid, GameTick newTick)
+        private static GameTick UpdateLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid, GameTick newTick)
         {
-            var lastSeen = GetLastSeen(player);
-
             if (!lastSeen.TryGetValue(uid, out var oldTick))
             {
                 oldTick = GameTick.First;
@@ -240,10 +236,8 @@ namespace Robust.Server.GameObjects
             return oldTick;
         }
 
-        private IEnumerable<EntityUid> GetLastSeenAfter(IPlayerSession player, GameTick fromTick)
+        private static IEnumerable<EntityUid> GetLastSeenAfter(Dictionary<EntityUid, GameTick> lastSeen, GameTick fromTick)
         {
-            var lastSeen = GetLastSeen(player);
-
             foreach (var (uid, tick) in lastSeen)
             {
                 if (tick > fromTick)
@@ -253,10 +247,8 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private IEnumerable<EntityUid> GetLastSeenOn(IPlayerSession player, GameTick fromTick)
+        private IEnumerable<EntityUid> GetLastSeenOn(Dictionary<EntityUid, GameTick> lastSeen, GameTick fromTick)
         {
-            var lastSeen = GetLastSeen(player);
-
             foreach (var (uid, tick) in lastSeen)
             {
                 if (tick == fromTick)
@@ -266,17 +258,13 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void SetLastSeenTick(IPlayerSession player, EntityUid uid, GameTick tick)
+        private static void SetLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid, GameTick tick)
         {
-            var lastSeen = GetLastSeen(player);
-
             lastSeen[uid] = tick;
         }
 
-        private void ClearLastSeenTick(IPlayerSession player, EntityUid uid)
+        private static void ClearLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid)
         {
-            var lastSeen = GetLastSeen(player);
-
             lastSeen.Remove(uid);
         }
 
@@ -320,8 +308,11 @@ namespace Robust.Server.GameObjects
 
             foreach (var container in contMgr.GetAllContainers())
             {
-                foreach (var contEnt in container.ContainedEntities)
+                // Manual for loop to cut out allocations.
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (var i = 0; i < container.ContainedEntities.Count; i++)
                 {
+                    var contEnt = container.ContainedEntities[i];
                     set.Add(contEnt);
                     AddContainedRecursive(contEnt, set);
                 }
@@ -360,6 +351,7 @@ namespace Robust.Server.GameObjects
             var viewbox = new Box2(position, position).Enlarged(MaxUpdateRange);
 
             var seenMovers = GetSeenMovers(player);
+            var lSeen = GetLastSeen(player);
 
             var pseStateRes = _playerSeenEntityStatesResources.Value!;
             var checkedEnts = pseStateRes.IncludedEnts;
@@ -427,7 +419,7 @@ namespace Robust.Server.GameObjects
                                     oldState.Rotation, oldState.ParentID);
                                 state.ComponentStates[idx] = newState;
                                 seenMovers.Remove(uid);
-                                ClearLastSeenTick(player, uid);
+                                ClearLastSeenTick(lSeen, uid);
 
                                 checkedEnts.Add(uid);
 
@@ -438,7 +430,7 @@ namespace Robust.Server.GameObjects
                                     continue;
                                 }
 
-                                if (GetLastSeenTick(player, needed) == GameTick.Zero)
+                                if (GetLastSeenTick(lSeen, needed) == GameTick.Zero)
                                 {
                                     neededEnts.Add(needed);
                                 }
@@ -466,7 +458,7 @@ namespace Robust.Server.GameObjects
                             }));
 
                         seenMovers.Remove(uid);
-                        ClearLastSeenTick(player, uid);
+                        ClearLastSeenTick(lSeen, uid);
                         checkedEnts.Add(uid);
 
                         var needed = oldState.ParentID;
@@ -476,7 +468,7 @@ namespace Robust.Server.GameObjects
                             continue;
                         }
 
-                        if (GetLastSeenTick(player, needed) == GameTick.Zero)
+                        if (GetLastSeenTick(lSeen, needed) == GameTick.Zero)
                         {
                             neededEnts.Add(needed);
                         }
@@ -505,14 +497,16 @@ namespace Robust.Server.GameObjects
 
                 var uid = entity.Uid;
 
-                var lastSeen = UpdateLastSeenTick(player, uid, currentTick);
+                var lastSeen = UpdateLastSeenTick(lSeen, uid, currentTick);
 
                 DebugTools.Assert(lastSeen != currentTick);
 
+                /*
                 if (uid != playerUid && entity.Prototype == playerEnt.Prototype && lastSeen < fromTick)
                 {
                     Logger.DebugS("pvs", $"Player {playerUid} is seeing player {uid}.");
                 }
+                */
 
                 if (checkedEnts.Contains(uid))
                 {
@@ -563,7 +557,7 @@ namespace Robust.Server.GameObjects
             }
 
             var priorTick = new GameTick(fromTick.Value - 1);
-            foreach (var uid in GetLastSeenOn(player, priorTick))
+            foreach (var uid in GetLastSeenOn(lSeen, priorTick))
             {
                 if (checkedEnts.Contains(uid))
                 {
@@ -599,7 +593,7 @@ namespace Robust.Server.GameObjects
                 entityStates.Add(state);
 
                 seenMovers.Remove(uid);
-                ClearLastSeenTick(player, uid);
+                ClearLastSeenTick(lSeen, uid);
 
                 var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
 
@@ -622,7 +616,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (GetLastSeenTick(player, needed) == GameTick.First)
+                if (GetLastSeenTick(lSeen, needed) == GameTick.First)
                 {
                     neededEnts.Add(needed);
                 }
@@ -668,7 +662,7 @@ namespace Robust.Server.GameObjects
                     state.ComponentStates[idx] = newState;
                     seenMovers.Remove(uid);
 
-                    ClearLastSeenTick(player, uid);
+                    ClearLastSeenTick(lSeen, uid);
                     var needed = oldState.ParentID;
 
                     if (!needed.IsValid() || checkedEnts.Contains(needed))
@@ -678,7 +672,7 @@ namespace Robust.Server.GameObjects
                     }
 
                     // check if further needed
-                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(player, needed) == GameTick.Zero)
+                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(lSeen, needed) == GameTick.Zero)
                     {
                         moreNeededEnts.Add(needed);
                     }

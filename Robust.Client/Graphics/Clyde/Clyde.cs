@@ -28,7 +28,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -400,7 +400,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.PopDebugGroup();
         }
 
-        public void Dispose()
+        public void Shutdown()
         {
             ShutdownWindowing();
             _shutdownAudio();

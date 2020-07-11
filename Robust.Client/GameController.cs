@@ -361,5 +361,11 @@ namespace Robust.Client
             Headless,
             Clyde,
         }
+
+        private void Cleanup()
+        {
+            _entityManager.Shutdown();
+            _clyde.Shutdown();
+        }
     }
 }

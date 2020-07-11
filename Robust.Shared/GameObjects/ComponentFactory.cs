@@ -299,6 +299,17 @@ namespace Robust.Shared.GameObjects
         {
             return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
+
+        public IEnumerable<uint> GetAllNetIds()
+        {
+            foreach (var registration in AllRegistrations)
+            {
+                if (registration.NetID != null)
+                {
+                    yield return registration.NetID.Value;
+                }
+            }
+        }
     }
 
     [Serializable]

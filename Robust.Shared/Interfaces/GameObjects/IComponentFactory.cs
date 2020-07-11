@@ -149,6 +149,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<Type> GetAllRefTypes();
+
+        IEnumerable<uint> GetAllNetIds();
     }
 
     /// <summary>

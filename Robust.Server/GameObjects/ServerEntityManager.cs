@@ -14,11 +14,8 @@ using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -37,9 +34,9 @@ namespace Robust.Server.GameObjects
 
         #region IEntityManager Members
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IPauseManager _pauseManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [Shared.IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Shared.IoC.Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private float? _maxUpdateRangeCache;
 

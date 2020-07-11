@@ -208,8 +208,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 if (value.GridID != GridID)
                 {
-                    var newGrid = _mapManager.GetGrid(value.GridID);
-                    AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
+                    if (value.GridID != GridId.Invalid)
+                    {
+                        var newGrid = _mapManager.GetGrid(value.GridID);
+                        AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
+                    }
+                    else
+                    {
+                        var map = _mapManager.GetMapEntity(MapID);
+                        AttachParent(map);
+                    }
                 }
 
                 // world coords to parent coords

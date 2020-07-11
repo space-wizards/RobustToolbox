@@ -39,6 +39,10 @@ namespace Robust.Client.Graphics.Clyde
         public string GetKeyName(Keyboard.Key key) => string.Empty;
         public string GetKeyNameScanCode(int scanCode) => string.Empty;
         public int GetKeyScanCode(Keyboard.Key key) => default;
+        public void Shutdown()
+        {
+            // Nada.
+        }
 
         public override void SetWindowTitle(string title)
         {

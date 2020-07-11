@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
+    public sealed class ClientEntityManager : EntityManager, IClientEntityManager
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IComponentFactory _compFactory = default!;
@@ -166,11 +166,6 @@ namespace Robust.Client.GameObjects
 #endif
 
             return created;
-        }
-
-        public void Dispose()
-        {
-            Shutdown();
         }
 
         /// <inheritdoc />

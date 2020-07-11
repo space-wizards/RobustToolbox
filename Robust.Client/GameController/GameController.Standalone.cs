@@ -111,6 +111,8 @@ namespace Robust.Client
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
+
+            Cleanup();
         }
     }
 }

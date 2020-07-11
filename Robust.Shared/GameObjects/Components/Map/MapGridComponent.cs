@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     /// <summary>
     ///     Represents a map grid inside the ECS system.
     /// </summary>
-    internal interface IMapGridComponent : IComponent
+    public interface IMapGridComponent : IComponent
     {
         GridId GridIndex { get; }
         IMapGrid Grid { get; }

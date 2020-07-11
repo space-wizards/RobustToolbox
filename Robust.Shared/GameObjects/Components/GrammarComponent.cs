@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects.Components
     /// Holds the necessary information to generate text related to the entity.
     /// </summary>
     [RegisterComponent, Serializable, NetSerializable]
-    public class GrammarComponent: Component, IPropernamable
+    public class GrammarComponent: Component, IProperNamable
     {
         public sealed override string Name => "Grammar";
 
@@ -38,7 +38,7 @@ namespace Robust.Shared.GameObjects.Components
             return new GrammarComponentState(Proper);
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (!(curState is GrammarComponentState cast))
                 return;

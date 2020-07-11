@@ -34,20 +34,20 @@ namespace Robust.Shared.Localization.Macros
         }
     }
 
-    public interface IPropernamable
+    public interface IProperNamable
     {
         public bool Proper => false;
 
-        public static bool GetProperOrFalse(object argument)
+        public static bool GetProperOrFalse(object? argument)
         {
             // FIXME The Entity special case is not really good
             if (argument is IEntity entity)
             {
                 // FIXME And this is not really better.
-                return Enumerable.FirstOrDefault(entity.GetAllComponents<IPropernamable>())?.Proper ?? false;
+                return entity.GetAllComponents<IProperNamable>().FirstOrDefault()?.Proper ?? false;
             }
 
-            return (argument as IPropernamable)?.Proper ?? false;
+            return (argument as IProperNamable)?.Proper ?? false;
         }
     }
 }

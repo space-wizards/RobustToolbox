@@ -95,10 +95,10 @@
     {
         private readonly NameMacro _nameMacro = new NameMacro();
 
-        public string Format(object argument)
+        public string Format(object? argument)
         {
             var name = _nameMacro.Format(argument);
-            return IPropernamable.GetProperOrFalse(argument)
+            return IProperNamable.GetProperOrFalse(argument)
                 ? name
                 : "the " + name;
         }

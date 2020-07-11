@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
     [TestFixture, Parallelizable]
     public class EnglishMacros_test
     {
-        private struct Subject : IGenderable, IPropernamable
+        private struct Subject : IGenderable, IProperNamable
         {
             public string Name;
 

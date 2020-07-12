@@ -79,13 +79,7 @@ namespace Robust.Shared.Log
         {
             foreach (Sawmill p in sawmills.Values)
             {
-                foreach (ILogHandler handler in p.Handlers)
-                {
-                    if (handler is IDisposable disposable)
-                    {
-                        disposable.Dispose();
-                    }
-                }
+                p.Dispose();
             }
         }
     }

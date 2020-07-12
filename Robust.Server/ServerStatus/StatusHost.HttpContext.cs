@@ -55,7 +55,7 @@ namespace Robust.Server.ServerStatus
             {
                 try
                 {
-                    IoCManager.RegisterInstance<ILogManager>(logMgr);
+                    IoCManager.RegisterInstance<ILogManager>(new ProxyLogManager(logMgr));
                 }
                 catch (Exception ex)
                 {

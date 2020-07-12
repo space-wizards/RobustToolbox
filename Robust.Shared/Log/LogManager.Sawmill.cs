@@ -10,7 +10,7 @@ namespace Robust.Shared.Log
 {
     public sealed partial class LogManager
     {
-        private sealed class Sawmill : ISawmill
+        private sealed class Sawmill : ISawmill, IDisposable
         {
             // Need this to act as a proxy for some internal Serilog APIs related to message parsing.
             private readonly SLogger _sLogger = new LoggerConfiguration().CreateLogger();
@@ -18,6 +18,8 @@ namespace Robust.Shared.Log
             public string Name { get; }
 
             public Sawmill? Parent { get; }
+
+            private bool _disposed;
 
             public LogLevel? Level
             {
@@ -104,6 +106,11 @@ namespace Robust.Shared.Log
                 _handlerLock.EnterReadLock();
                 try
                 {
+                    if (_disposed)
+                    {
+                        throw new ObjectDisposedException(nameof(Sawmill));
+                    }
+
                     foreach (var handler in Handlers)
                     {
                         handler.Log(sourceSawmill, message);
@@ -175,6 +182,27 @@ namespace Robust.Shared.Log
             public void Fatal(string message)
             {
                 Log(LogLevel.Fatal, message);
+            }
+
+            public void Dispose()
+            {
+                _handlerLock.EnterWriteLock();
+                try
+                {
+                    _disposed = true;
+
+                    foreach (ILogHandler handler in Handlers)
+                    {
+                        if (handler is IDisposable disposable)
+                        {
+                            disposable.Dispose();
+                        }
+                    }
+                }
+                finally
+                {
+                    _handlerLock.ExitWriteLock();
+                }
             }
         }
     }

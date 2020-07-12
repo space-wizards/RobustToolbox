@@ -9,9 +9,7 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     internal sealed class DebugClydePanel : PanelContainer
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClydeInternal _clydeInternal;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeInternal _clydeInternal = default!;
 
         private readonly Label _label;
 
@@ -43,7 +41,7 @@ namespace Robust.Client.UserInterface.CustomControls
 Vendor: {info.Vendor}
 Version: {info.VersionString}
 Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
-Batches: {stats.LastBatches}";
+Batches: {stats.LastBatches} Max size: {stats.LargestBatchSize}";
         }
     }
 }

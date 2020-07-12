@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -130,15 +131,21 @@ namespace Lidgren.Network
 			System.Threading.Thread.Sleep(milliseconds);
 		}
 
-		public static IPAddress CreateAddressFromBytes(byte[] bytes)
+		public static IPAddress CreateAddressFromBytes(ReadOnlySpan<byte> bytes)
 		{
 			return new IPAddress(bytes);
 		}
 		
 		private static readonly SHA256 s_sha = SHA256.Create();
-		public static byte[] ComputeSHAHash(byte[] bytes, int offset, int count)
+
+		public static readonly int SHAHashSize = 256;
+		
+		public static Span<byte> ComputeSHAHash(ReadOnlySpan<byte> src, Span<byte> dest)
 		{
-			return s_sha.ComputeHash(bytes, offset, count);
+			if (!s_sha.TryComputeHash(src, dest, out _))
+				throw new InvalidOperationException("Can't compute hash");
+
+			return dest;
 		}
 	}
 

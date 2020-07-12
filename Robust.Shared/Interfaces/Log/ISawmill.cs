@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+﻿using System;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.Interfaces.Log
@@ -35,8 +35,9 @@ namespace Robust.Shared.Interfaces.Log
         /// <summary>
         ///     Log a message, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        [StringFormatMethod("message")]
-        void Log(LogLevel level, string message, params object[] args);
+        void Log(LogLevel level, string message, params object?[] args);
+
+        void Log(LogLevel level, Exception? exception, string message, params object?[] args);
 
         /// <summary>
         ///     Log a message.
@@ -46,65 +47,60 @@ namespace Robust.Shared.Interfaces.Log
         /// <summary>
         ///     Log a message as debug, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        void Debug(string message, params object[] args);
+        /// <seealso cref="Serilog.Log" />
+        void Debug(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as debug.
         /// </summary>
-        /// <seealso cref="Log" />
+        /// <seealso cref="Serilog.Log" />
         void Debug(string message);
 
         /// <summary>
         ///     Log a message as info, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        void Info(string message, params object[] args);
+        /// <seealso cref="Serilog.Log" />
+        void Info(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as info.
         /// </summary>
-        /// <seealso cref="Log" />
+        /// <seealso cref="Serilog.Log" />
         void Info(string message);
 
         /// <summary>
         ///     Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        void Warning(string message, params object[] args);
+        /// <seealso cref="Serilog.Log" />
+        void Warning(string message, params object?[] args);
         /// <summary>
         ///     Log a message as warning, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
+        /// <seealso cref="Serilog.Log" />
         void Warning(string message);
 
         /// <summary>
         ///     Log a message as error, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        void Error(string message, params object[] args);
+        /// <seealso cref="Serilog.Log" />
+        void Error(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as error.
         /// </summary>
-        /// <seealso cref="Log" />
+        /// <seealso cref="Serilog.Log" />
         void Error(string message);
 
         /// <summary>
         ///     Log a message as fatal, taking in a format string and format list using the regular <see cref="Format" /> syntax.
         /// </summary>
-        /// <seealso cref="Log" />
-        [StringFormatMethod("message")]
-        void Fatal(string message, params object[] args);
+        /// <seealso cref="Serilog.Log" />
+        void Fatal(string message, params object?[] args);
 
         /// <summary>
         ///     Log a message as fatal.
         /// </summary>
-        /// <seealso cref="Log" />
+        /// <seealso cref="Serilog.Log" />
         void Fatal(string message);
     }
 }

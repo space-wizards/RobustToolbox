@@ -61,7 +61,7 @@ namespace Robust.Client.ViewVariables
             var styleOther = false;
             var type = obj.GetType();
 
-            var members = new List<(MemberInfo, VVAccess, object value, Action<object> onValueChanged, Type)>();
+            var members = new List<(MemberInfo, VVAccess, object? value, Action<object> onValueChanged, Type)>();
 
             foreach (var fieldInfo in type.GetAllFields())
             {
@@ -89,7 +89,7 @@ namespace Robust.Client.ViewVariables
                 }
 
                 members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
-                    v => propertyInfo.GetSetMethod(true).Invoke(obj, new[] {v}), propertyInfo.PropertyType));
+                    v => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }
 
             members.Sort((a, b) => string.Compare(a.Item1.Name, b.Item1.Name, StringComparison.Ordinal));
@@ -101,7 +101,7 @@ namespace Robust.Client.ViewVariables
                     Editable = access == VVAccess.ReadWrite,
                     Name = memberInfo.Name,
                     Type = memberType.AssemblyQualifiedName,
-                    TypePretty = memberType.ToString(),
+                    TypePretty = TypeAbbreviation.Abbreviate(memberType),
                     Value = value
                 };
 
@@ -112,7 +112,7 @@ namespace Robust.Client.ViewVariables
                 // TODO: should this maybe not be hardcoded?
                 if (editor is ViewVariablesPropertyEditorReference refEditor)
                 {
-                    refEditor.OnPressed += () => vvm.OpenVV(data.Value);
+                    refEditor.OnPressed += () => vvm.OpenVV(data.Value!);
                 }
 
                 yield return propertyEdit;

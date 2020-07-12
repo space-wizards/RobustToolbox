@@ -24,7 +24,11 @@ namespace Robust.Shared.Physics
         public Box2 LocalBounds
         {
             get => _localBounds;
-            set => _localBounds = value;
+            set
+            {
+                _localBounds = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -32,7 +36,11 @@ namespace Robust.Shared.Physics
         public int CollisionLayer
         {
             get => _collisionLayer;
-            set => _collisionLayer = value;
+            set
+            {
+                _collisionLayer = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -40,7 +48,11 @@ namespace Robust.Shared.Physics
         public int CollisionMask
         {
             get => _collisionMask;
-            set => _collisionMask = value;
+            set
+            {
+                _collisionMask = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -57,6 +69,9 @@ namespace Robust.Shared.Physics
             handle.SetTransform(Matrix3.Identity);
         }
 
+        [field: NonSerialized]
+        public event Action? OnDataChanged;
+
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
@@ -66,8 +81,8 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataField(ref _collisionLayer, "layer", 0);
-            serializer.DataField(ref _collisionMask, "mask", 0);
+            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionLayer>());
+            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _localBounds, "bounds", Box2.UnitCentered);
         }
     }

@@ -8,18 +8,18 @@ namespace Robust.Shared.GameObjects.Components
     [Serializable, NetSerializable]
     public class CollidableComponentState : ComponentState
     {
-        public readonly bool CollisionEnabled;
-        public readonly bool HardCollidable;
-        public readonly bool ScrapingFloor;
+        public readonly bool CanCollide;
+        public readonly BodyStatus Status;
         public readonly List<IPhysShape> PhysShapes;
+        public readonly bool Hard;
 
-        public CollidableComponentState(bool collisionEnabled, bool hardCollidable, bool scrapingFloor, List<IPhysShape> physShapes)
+        public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard)
             : base(NetIDs.COLLIDABLE)
         {
-            CollisionEnabled = collisionEnabled;
-            HardCollidable = hardCollidable;
-            ScrapingFloor = scrapingFloor;
+            CanCollide = canCollide;
+            Status = status;
             PhysShapes = physShapes;
+            Hard = hard;
         }
     }
 }

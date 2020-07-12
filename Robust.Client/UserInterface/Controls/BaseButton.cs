@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.Input;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
@@ -17,7 +18,7 @@ namespace Robust.Client.UserInterface.Controls
         private bool _disabled;
         private bool _pressed;
         private bool _enableAllKeybinds;
-        private ButtonGroup _group;
+        private ButtonGroup? _group;
         private bool _toggleMode;
 
         /// <summary>
@@ -26,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         ///     Of multiple buttons in the same group, only one can be pressed (radio buttons).
         /// </remarks>
-        public ButtonGroup Group
+        public ButtonGroup? Group
         {
             get => _group;
             set
@@ -36,12 +37,12 @@ namespace Robust.Client.UserInterface.Controls
 
                 _group = value;
 
-                if (_group == null)
+                if (value == null)
                 {
                     return;
                 }
 
-                _group.Buttons.Add(this);
+                value.Buttons.Add(this);
                 ToggleMode = true;
 
                 // Set us to pressed if we're the first button.
@@ -106,7 +107,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
-        ///     Whether a button enables Keybinds without GUIBoundKeyEventArgs.CanFocus to trigger the button.
+        ///     Whether key functions other than <see cref="EngineKeyFunctions.UIClick"/> trigger the button.
         /// </summary>
         public bool EnableAllKeybinds
         {
@@ -168,22 +169,27 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Fired when the button is pushed down by the mouse.
         /// </summary>
-        public event Action<ButtonEventArgs> OnButtonDown;
+        public event Action<ButtonEventArgs>? OnButtonDown;
 
         /// <summary>
         ///     Fired when the button is released by the mouse.
         /// </summary>
-        public event Action<ButtonEventArgs> OnButtonUp;
+        public event Action<ButtonEventArgs>? OnButtonUp;
 
         /// <summary>
         ///     Fired when the button is "pressed". When this happens depends on <see cref="Mode"/>.
         /// </summary>
-        public event Action<ButtonEventArgs> OnPressed;
+        public event Action<ButtonEventArgs>? OnPressed;
 
         /// <summary>
         ///     If <see cref="ToggleMode"/> is set, fired when the button is toggled up or down.
         /// </summary>
-        public event Action<ButtonToggledEventArgs> OnToggled;
+        public event Action<ButtonToggledEventArgs>? OnToggled;
+
+        protected BaseButton()
+        {
+            MouseFilter = MouseFilterMode.Stop;
+        }
 
         protected virtual void DrawModeChanged()
         {
@@ -193,7 +199,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
+            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }
@@ -236,7 +242,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (Disabled || (!_enableAllKeybinds && !args.CanFocus))
+            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }
@@ -245,8 +251,7 @@ namespace Robust.Client.UserInterface.Controls
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress &&
-                this == UserInterfaceManagerInternal.MouseGetControl(args.PointerLocation.Position))
+            if (Mode == ActionMode.Release && _attemptingPress && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
             {
                 // Can't un press a radio button directly.
                 if (Group == null || !Pressed)

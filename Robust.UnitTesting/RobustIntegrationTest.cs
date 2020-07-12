@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -14,6 +16,7 @@ using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -32,20 +35,34 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
+        private readonly List<IntegrationInstance> _integrationInstances = new List<IntegrationInstance>();
+
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
-        protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions options = null)
+        protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
-            return new ServerIntegrationInstance(options);
+            var instance = new ServerIntegrationInstance(options);
+            _integrationInstances.Add(instance);
+            return instance;
         }
 
         /// <summary>
         ///     Start a headless instance of the client and return an object that can be used to control it.
         /// </summary>
-        protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions options = null)
+        protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
-            return new ClientIntegrationInstance(options);
+            var instance = new ClientIntegrationInstance(options);
+            _integrationInstances.Add(instance);
+            return instance;
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            _integrationInstances.ForEach(p => p.Stop());
+            await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
+            _integrationInstances.Clear();
         }
 
         /// <summary>
@@ -59,10 +76,10 @@ namespace Robust.UnitTesting
         ///     This method must be used before trying to access any state like <see cref="ResolveDependency{T}"/>,
         ///     to prevent race conditions.
         /// </remarks>
-        public abstract class IntegrationInstance
+        public abstract class IntegrationInstance : IDisposable
         {
-            private protected Thread InstanceThread;
-            private protected IDependencyCollection DependencyCollection;
+            private protected Thread InstanceThread = default!;
+            private protected IDependencyCollection DependencyCollection = default!;
 
             private protected readonly ChannelReader<object> _toInstanceReader;
             private protected readonly ChannelWriter<object> _toInstanceWriter;
@@ -74,7 +91,7 @@ namespace Robust.UnitTesting
 
             private bool _isSurelyIdle;
             private bool _isAlive = true;
-            private Exception _unhandledException;
+            private Exception? _unhandledException;
 
             /// <summary>
             ///     Whether the instance is still alive.
@@ -103,7 +120,7 @@ namespace Robust.UnitTesting
             /// <exception cref="InvalidOperationException">
             ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
             /// </exception>
-            public Exception UnhandledException
+            public Exception? UnhandledException
             {
                 get
                 {
@@ -180,8 +197,8 @@ namespace Robust.UnitTesting
                             _unhandledException = shutDownMessage.UnhandledException;
                             if (throwOnUnhandled && _unhandledException != null)
                             {
-                                throw new Exception("Waiting instance shut down with unhandled exception",
-                                    _unhandledException);
+                                ExceptionDispatchInfo.Capture(_unhandledException).Throw();
+                                return;
                             }
 
                             break;
@@ -217,6 +234,15 @@ namespace Robust.UnitTesting
             }
 
             /// <summary>
+            ///     <see cref="RunTicks"/> followed by <see cref="WaitIdleAsync"/>
+            /// </summary>
+            public async Task WaitRunTicks(int ticks)
+            {
+                RunTicks(ticks);
+                await WaitIdleAsync();
+            }
+
+            /// <summary>
             ///     Queue for the server to be stopped.
             /// </summary>
             public void Stop()
@@ -240,6 +266,12 @@ namespace Robust.UnitTesting
                 _toInstanceWriter.TryWrite(new PostMessage(post, _currentTicksId));
             }
 
+            public async Task WaitPost(Action post)
+            {
+                Post(post);
+                await WaitIdleAsync();
+            }
+
             /// <summary>
             ///     Queue for a delegate to be ran inside the main loop of the instance,
             ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
@@ -255,13 +287,24 @@ namespace Robust.UnitTesting
                 _currentTicksId += 1;
                 _toInstanceWriter.TryWrite(new AssertMessage(assertion, _currentTicksId));
             }
+
+            public async Task WaitAssertion(Action assertion)
+            {
+                Assert(assertion);
+                await WaitIdleAsync();
+            }
+
+            public void Dispose()
+            {
+                Stop();
+            }
         }
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            private readonly ServerIntegrationOptions _options;
+            private readonly ServerIntegrationOptions? _options;
 
-            internal ServerIntegrationInstance(ServerIntegrationOptions options)
+            internal ServerIntegrationInstance(ServerIntegrationOptions? options)
             {
                 _options = options;
                 InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
@@ -284,7 +327,7 @@ namespace Robust.UnitTesting
                     IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
-                    ServerProgram.SetupLogging();
+                    //ServerProgram.SetupLogging();
                     ServerProgram.InitReflectionManager();
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
@@ -299,8 +342,14 @@ namespace Robust.UnitTesting
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
                     }
 
-                    _options?.BeforeStart?.Invoke();
-                    if (server.Start())
+                    if (_options != null)
+                    {
+                        _options.BeforeStart?.Invoke();
+                        IoCManager.Resolve<IConfigurationManager>()
+                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                    }
+
+                    if (server.Start(() => new TestLogHandler("SERVER")))
                     {
                         throw new Exception("Server failed to start.");
                     }
@@ -324,9 +373,9 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            private readonly ClientIntegrationOptions _options;
+            private readonly ClientIntegrationOptions? _options;
 
-            internal ClientIntegrationInstance(ClientIntegrationOptions options)
+            internal ClientIntegrationInstance(ClientIntegrationOptions? options)
             {
                 _options = options;
                 InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
@@ -379,8 +428,15 @@ namespace Robust.UnitTesting
                     }
 
                     client.LoadConfigAndUserData = false;
-                    _options?.BeforeStart?.Invoke();
-                    client.Startup();
+
+                    if (_options != null)
+                    {
+                        _options.BeforeStart?.Invoke();
+                        IoCManager.Resolve<IConfigurationManager>()
+                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                    };
+
+                    client.Startup(() => new TestLogHandler("CLIENT"));
 
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);
@@ -409,10 +465,10 @@ namespace Robust.UnitTesting
             private readonly ChannelReader<object> _channelReader;
 
 #pragma warning disable 67
-            public event EventHandler<FrameEventArgs> Input;
-            public event EventHandler<FrameEventArgs> Tick;
-            public event EventHandler<FrameEventArgs> Update;
-            public event EventHandler<FrameEventArgs> Render;
+            public event EventHandler<FrameEventArgs>? Input;
+            public event EventHandler<FrameEventArgs>? Tick;
+            public event EventHandler<FrameEventArgs>? Update;
+            public event EventHandler<FrameEventArgs>? Render;
 #pragma warning restore 67
 
             public bool SingleStep { get; set; }
@@ -449,8 +505,8 @@ namespace Robust.UnitTesting
                             var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
-                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                                 Tick?.Invoke(this, simFrameEvent);
+                                _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                             }
 
                             _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));
@@ -484,19 +540,21 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
-            public Assembly ServerContentAssembly { get; set; }
+            public Assembly? ServerContentAssembly { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
-            public Assembly ClientContentAssembly { get; set; }
+            public Assembly? ClientContentAssembly { get; set; }
         }
 
         public abstract class IntegrationOptions
         {
-            public Action InitIoC { get; set; }
-            public Action BeforeStart { get; set; }
-            public Assembly SharedContentAssembly { get; set; }
+            public Action? InitIoC { get; set; }
+            public Action? BeforeStart { get; set; }
+            public Assembly? SharedContentAssembly { get; set; }
+
+            public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -551,12 +609,12 @@ namespace Robust.UnitTesting
         /// </summary>
         private sealed class ShutDownMessage
         {
-            public ShutDownMessage(Exception unhandledException)
+            public ShutDownMessage(Exception? unhandledException)
             {
                 UnhandledException = unhandledException;
             }
 
-            public Exception UnhandledException { get; }
+            public Exception? UnhandledException { get; }
         }
 
         private sealed class PostMessage

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.GameObjects;
@@ -6,7 +7,6 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.State.States;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
@@ -24,37 +24,15 @@ namespace Robust.Client
     /// <inheritdoc />
     public class BaseClient : IBaseClient
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IClientNetManager _net;
-
-        [Dependency]
-        private readonly IPlayerManager _playMan;
-
-        [Dependency]
-        private readonly IStateManager _stateManager;
-
-        [Dependency]
-        private readonly IConfigurationManager _configManager;
-
-        [Dependency]
-        private readonly IClientEntityManager _entityManager;
-
-        [Dependency]
-        private readonly IMapManager _mapManager;
-
-        [Dependency]
-        private readonly IDiscordRichPresence _discord;
-
-        [Dependency]
-        private readonly IGameTiming _timing;
-
-        [Dependency]
-        private readonly IClientGameStateManager _gameStates;
-
-        [Dependency]
-        private readonly IDebugDrawingManager _debugDrawMan;
-#pragma warning restore 649
+        [Dependency] private readonly IClientNetManager _net = default!;
+        [Dependency] private readonly IPlayerManager _playMan = default!;
+        [Dependency] private readonly IConfigurationManager _configManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IDiscordRichPresence _discord = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IClientGameStateManager _gameStates = default!;
+        [Dependency] private readonly IDebugDrawingManager _debugDrawMan = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -63,15 +41,19 @@ namespace Robust.Client
         public ClientRunLevel RunLevel { get; private set; }
 
         /// <inheritdoc />
-        public ServerInfo GameInfo { get; private set; }
+        public ServerInfo? GameInfo { get; private set; }
 
         /// <inheritdoc />
-        public string PlayerNameOverride { get; set; }
+        public string? PlayerNameOverride { get; set; }
+
+        public string? LastDisconnectReason { get; private set; }
 
         /// <inheritdoc />
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
+            _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
+            _net.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
@@ -82,19 +64,20 @@ namespace Robust.Client
         }
 
         /// <inheritdoc />
-        public void ConnectToServer(string ip, ushort port)
+        public void ConnectToServer(DnsEndPoint endPoint)
         {
             if (RunLevel == ClientRunLevel.Connecting)
             {
                 _net.Shutdown("Client mashing that connect button.");
                 Reset();
             }
+
             DebugTools.Assert(RunLevel < ClientRunLevel.Connecting);
             DebugTools.Assert(!_net.IsConnected);
 
             OnRunLevelChanged(ClientRunLevel.Connecting);
-            _net.ClientConnect(ip, port, PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
-
+            _net.ClientConnect(endPoint.Host, endPoint.Port,
+                PlayerNameOverride ?? _configManager.GetCVar<string>("player.name"));
         }
 
         /// <inheritdoc />
@@ -108,13 +91,13 @@ namespace Robust.Client
         }
 
         /// <inheritdoc />
-        public event EventHandler<RunLevelChangedEventArgs> RunLevelChanged;
+        public event EventHandler<RunLevelChangedEventArgs>? RunLevelChanged;
 
-        public event EventHandler<PlayerEventArgs> PlayerJoinedServer;
-        public event EventHandler<PlayerEventArgs> PlayerJoinedGame;
-        public event EventHandler<PlayerEventArgs> PlayerLeaveServer;
+        public event EventHandler<PlayerEventArgs>? PlayerJoinedServer;
+        public event EventHandler<PlayerEventArgs>? PlayerJoinedGame;
+        public event EventHandler<PlayerEventArgs>? PlayerLeaveServer;
 
-        private void OnConnected(object sender, NetChannelArgs args)
+        private void OnConnected(object? sender, NetChannelArgs args)
         {
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
@@ -126,7 +109,7 @@ namespace Robust.Client
         ///     receiving states when they join the lobby.
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedServer(PlayerSession session)
+        private void OnPlayerJoinedServer(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel < ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.Connected);
@@ -141,7 +124,7 @@ namespace Robust.Client
         ///     Player is joining the game
         /// </summary>
         /// <param name="session">Session of the player.</param>
-        private void OnPlayerJoinedGame(PlayerSession session)
+        private void OnPlayerJoinedGame(IPlayerSession session)
         {
             DebugTools.Assert(RunLevel >= ClientRunLevel.Connected);
             OnRunLevelChanged(ClientRunLevel.InGame);
@@ -154,19 +137,19 @@ namespace Robust.Client
             OnRunLevelChanged(ClientRunLevel.Initialize);
         }
 
-        private void OnConnectFailed(object sender, NetConnectFailArgs args)
+        private void OnConnectFailed(object? sender, NetConnectFailArgs args)
         {
             DebugTools.Assert(RunLevel == ClientRunLevel.Connecting);
             Reset();
         }
 
-        private void OnNetDisconnect(object sender, NetChannelArgs args)
+        private void OnNetDisconnect(object? sender, NetDisconnectedArgs args)
         {
             DebugTools.Assert(RunLevel > ClientRunLevel.Initialize);
 
             PlayerLeaveServer?.Invoke(this, new PlayerEventArgs(_playMan.LocalPlayer?.Session));
 
-            _stateManager.RequestStateChange<MainScreen>();
+            LastDisconnectReason = args.Reason;
 
             _gameStates.Reset();
             _playMan.Shutdown();
@@ -178,12 +161,17 @@ namespace Robust.Client
 
         private void HandleServerInfo(MsgServerInfo msg)
         {
-            if (GameInfo == null)
-                GameInfo = new ServerInfo();
-
             var info = GameInfo;
 
-            info.ServerName = msg.ServerName;
+            if (info == null)
+            {
+                GameInfo = info = new ServerInfo(msg.ServerName);
+            }
+            else
+            {
+                info.ServerName = msg.ServerName;
+            }
+
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
             info.SessionId = msg.PlayerSessionId;
             info.TickRate = msg.TickRate;
@@ -192,25 +180,31 @@ namespace Robust.Client
 
             _discord.Update(info.ServerName, info.SessionId.Username, info.ServerMaxPlayers.ToString());
             // start up player management
-            _playMan.Startup(_net.ServerChannel);
+            _playMan.Startup(_net.ServerChannel!);
 
-            _playMan.LocalPlayer.SessionId = info.SessionId;
+            _playMan.LocalPlayer!.SessionId = info.SessionId;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
         }
 
-        private void OnLocalStatusChanged(object obj, StatusEventArgs eventArgs)
+        private void HandleSetTickRate(MsgSetTickRate message)
+        {
+            _timing.TickRate = message.NewTickRate;
+            Logger.InfoS("client", $"Tickrate changed to: {message.NewTickRate}");
+        }
+
+        private void OnLocalStatusChanged(object? obj, StatusEventArgs eventArgs)
         {
             // player finished fully connecting to the server.
             // OldStatus is used here because it can go from connecting-> connected or connecting-> ingame
             if (eventArgs.OldStatus == SessionStatus.Connecting)
             {
-                OnPlayerJoinedServer(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedServer(_playMan.LocalPlayer!.Session);
             }
 
             if (eventArgs.NewStatus == SessionStatus.InGame)
             {
-                OnPlayerJoinedGame(_playMan.LocalPlayer.Session);
+                OnPlayerJoinedGame(_playMan.LocalPlayer!.Session);
             }
         }
 
@@ -259,12 +253,12 @@ namespace Robust.Client
         /// <summary>
         ///     The session that triggered the event.
         /// </summary>
-        private PlayerSession Session { get; }
+        private IPlayerSession? Session { get; }
 
         /// <summary>
         ///     Constructs a new instance of the class.
         /// </summary>
-        public PlayerEventArgs(PlayerSession session)
+        public PlayerEventArgs(IPlayerSession? session)
         {
             Session = session;
         }
@@ -300,6 +294,11 @@ namespace Robust.Client
     /// </summary>
     public class ServerInfo
     {
+        public ServerInfo(string serverName)
+        {
+            ServerName = serverName;
+        }
+
         /// <summary>
         ///     Current name of the server.
         /// </summary>

@@ -10,11 +10,11 @@ namespace Robust.Client.UserInterface.Controls
             Visible = false;
         }
 
-        public event Action OnPopupHide;
+        public event Action? OnPopupHide;
 
         private Vector2 _desiredSize;
 
-        public void Open(UIBox2? box = null)
+        public void Open(UIBox2? box = null, Vector2? altPos = null)
         {
             if (Visible)
             {
@@ -24,6 +24,7 @@ namespace Robust.Client.UserInterface.Controls
             if (box != null && _desiredSize != box.Value.Size)
             {
                 PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
+                PopupContainer.SetAltOrigin(this, altPos);
 
                 _desiredSize = box.Value.Size;
                 MinimumSizeChanged();

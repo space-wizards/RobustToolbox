@@ -10,11 +10,9 @@ namespace Robust.Client
 {
     internal partial class GameController
     {
-        private IGameLoop _mainLoop;
+        private IGameLoop _mainLoop = default!;
 
-#pragma warning disable 649
-        [Dependency] private IGameTiming _gameTiming;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private static bool _hasStarted;
 
@@ -23,7 +21,7 @@ namespace Robust.Client
             Start(args);
         }
 
-        public static void Start(string[] args)
+        public static void Start(string[] args, bool contentStart = false)
         {
             if (_hasStarted)
             {
@@ -34,11 +32,11 @@ namespace Robust.Client
 
             if (CommandLineArgs.TryParse(args, out var parsed))
             {
-                ParsedMain(parsed);
+                ParsedMain(parsed, contentStart);
             }
         }
 
-        private static void ParsedMain(CommandLineArgs args)
+        private static void ParsedMain(CommandLineArgs args, bool contentStart)
         {
             IoCManager.InitThread();
 
@@ -48,6 +46,11 @@ namespace Robust.Client
 
             var gc = (GameController) IoCManager.Resolve<IGameController>();
             gc.SetCommandLineArgs(args);
+
+            // When the game is ran with the startup executable being content,
+            // we have to disable the separate load context.
+            // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
+            gc._disableAssemblyLoadContext = contentStart;
             if (!gc.Startup())
             {
                 Logger.Fatal("Failed to start game controller!");
@@ -108,6 +111,8 @@ namespace Robust.Client
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
+
+            Cleanup();
         }
     }
 }

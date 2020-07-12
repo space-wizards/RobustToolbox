@@ -28,6 +28,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Player;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -36,38 +37,21 @@ namespace Robust.Client.Placement
 {
     public partial class PlacementManager : IPlacementManager, IDisposable
     {
-#pragma warning disable 649
-        [Dependency]
-        public readonly IPhysicsManager PhysicsManager;
-        [Dependency]
-        private readonly IClientNetManager NetworkManager;
-        [Dependency]
-        public readonly IPlayerManager PlayerManager;
-        [Dependency]
-        public readonly IResourceCache ResourceCache;
-        [Dependency]
-        private readonly IReflectionManager ReflectionManager;
-        [Dependency]
-        public readonly IMapManager MapManager;
-        [Dependency]
-        private readonly IGameTiming _time;
-        [Dependency]
-        public readonly IEyeManager eyeManager;
-        [Dependency]
-        private readonly IInputManager _inputManager;
-        [Dependency]
-        private readonly IEntitySystemManager _entitySystemManager;
-        [Dependency]
-        private readonly IEntityManager _entityManager;
-        [Dependency]
-        private readonly IPrototypeManager _prototypeManager;
-        [Dependency]
-        private readonly IBaseClient _baseClient;
-        [Dependency]
-        private readonly IOverlayManager _overlayManager;
-        [Dependency]
-        public readonly IClyde _clyde;
-#pragma warning restore 649
+        [Dependency] public readonly IPhysicsManager PhysicsManager = default!;
+        [Dependency] private readonly IClientNetManager NetworkManager = default!;
+        [Dependency] public readonly IPlayerManager PlayerManager = default!;
+        [Dependency] public readonly IResourceCache ResourceCache = default!;
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] public readonly IMapManager MapManager = default!;
+        [Dependency] private readonly IGameTiming _time = default!;
+        [Dependency] public readonly IEyeManager eyeManager = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IBaseClient _baseClient = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] public readonly IClyde _clyde = default!;
 
         /// <summary>
         ///     How long before a pending tile change is dropped.
@@ -116,23 +100,23 @@ namespace Robust.Client.Placement
         /// <summary>
         /// The texture we use to show from our placement manager to represent the entity to place
         /// </summary>
-        public IDirectionalTextureProvider CurrentBaseSprite { get; set; }
+        public IDirectionalTextureProvider? CurrentBaseSprite { get; set; }
 
         /// <summary>
         /// Which of the placement orientations we are trying to place with
         /// </summary>
-        public PlacementMode CurrentMode { get; set; }
+        public PlacementMode? CurrentMode { get; set; }
 
-        public PlacementInformation CurrentPermission { get; set; }
+        public PlacementInformation? CurrentPermission { get; set; }
 
-        public PlacementHijack Hijack { get; private set; }
+        public PlacementHijack? Hijack { get; private set; }
 
-        private EntityPrototype _currentPrototype;
+        private EntityPrototype? _currentPrototype;
 
         /// <summary>
         /// The prototype of the entity we are going to spawn on click
         /// </summary>
-        public EntityPrototype CurrentPrototype
+        public EntityPrototype? CurrentPrototype
         {
             get => _currentPrototype;
             set
@@ -175,7 +159,7 @@ namespace Robust.Client.Placement
         /// </summary>
         public Direction Direction { get; set; } = Direction.South;
 
-        private PlacementOverlay _drawOverlay;
+        private PlacementOverlay _drawOverlay = default!;
         private bool _isActive;
 
         public void Initialize()
@@ -194,87 +178,80 @@ namespace Robust.Client.Placement
             _overlayManager.AddOverlay(_drawOverlay);
 
             // a bit ugly, oh well
-            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput(_entitySystemManager);
-            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput(_entitySystemManager);
+            _baseClient.PlayerJoinedServer += (sender, args) => SetupInput();
+            _baseClient.PlayerLeaveServer += (sender, args) => TearDownInput();
         }
 
-        private void SetupInput(IEntitySystemManager entSysMan)
+        private void SetupInput()
         {
-            var inputSys = entSysMan.GetEntitySystem<InputSystem>();
-
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) ActivateLineMode();
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) ActivateGridMode();
-                }));
-
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
-                (session, coords, uid) =>
-                {
-                    if (!IsActive)
-                        return false;
-
-                    if (Eraser)
+            CommandBinds.Builder
+                .Bind(EngineKeyFunctions.EditorLinePlace, InputCmdHandler.FromDelegate(
+                    session =>
                     {
-                        if (uid == EntityUid.Invalid)
-                        {
+                        if (IsActive && !Eraser) ActivateLineMode();
+                    }))
+                .Bind(EngineKeyFunctions.EditorGridPlace, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (IsActive && !Eraser) ActivateGridMode();
+                    }))
+                .Bind(EngineKeyFunctions.EditorPlaceObject, new PointerStateInputCmdHandler(
+                    (session, coords, uid) =>
+                    {
+                        if (!IsActive)
                             return false;
+
+                        if (Eraser)
+                        {
+                            if (uid == EntityUid.Invalid)
+                            {
+                                return false;
+                            }
+
+                            HandleDeletion(_entityManager.GetEntity(uid));
                         }
-                        HandleDeletion(_entityManager.GetEntity(uid));
-                    }
-                    else
+                        else
+                        {
+                            _placenextframe = true;
+                        }
+
+                        return true;
+                    },
+                    (session, coords, uid) =>
                     {
-                        _placenextframe = true;
-                    }
+                        if (!IsActive || Eraser || !_placenextframe)
+                            return false;
 
-                    return true;
-                },
-                (session, coords, uid) =>
-                {
-                    if (!IsActive || Eraser || !_placenextframe)
-                        return false;
+                        //Places objects for non-tile entities
+                        if (!CurrentPermission!.IsTile)
+                            HandlePlacement();
 
-                    //Places objects for non-tile entities
-                    if (!CurrentPermission.IsTile)
-                        HandlePlacement();
-
-                    _placenextframe = false;
-                    return true;
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (IsActive && !Eraser) Rotate();
-                }));
-            inputSys.BindMap.BindFunction(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
-                session =>
-                {
-                    if (!IsActive || Eraser)
-                        return;
-                    if (DeactivateSpecialPlacement())
-                        return;
-                    Clear();
-                }));
+                        _placenextframe = false;
+                        return true;
+                    }))
+                .Bind(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (IsActive && !Eraser) Rotate();
+                    }))
+                .Bind(EngineKeyFunctions.EditorCancelPlace, InputCmdHandler.FromDelegate(
+                    session =>
+                    {
+                        if (!IsActive)
+                            return;
+                        if (DeactivateSpecialPlacement())
+                            return;
+                        Clear();
+                    }))
+                .Register<PlacementManager>();
 
             var localPlayer = PlayerManager.LocalPlayer;
-            localPlayer.EntityAttached += OnEntityAttached;
+            localPlayer!.EntityAttached += OnEntityAttached;
         }
 
-        private void TearDownInput(IEntitySystemManager entSysMan)
+        private void TearDownInput()
         {
-            if (entSysMan.TryGetEntitySystem(out InputSystem inputSys))
-            {
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorLinePlace);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorGridPlace);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorPlaceObject);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorRotateObject);
-                inputSys.BindMap.UnbindFunction(EngineKeyFunctions.EditorCancelPlace);
-            }
+            CommandBinds.Unregister<PlacementManager>();
 
             if (PlayerManager.LocalPlayer != null)
             {
@@ -318,23 +295,24 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void HandleTileChanged(object sender, TileChangedEventArgs args)
+        private void HandleTileChanged(object? sender, TileChangedEventArgs args)
         {
             var coords = MapManager.GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
         }
 
-        public event EventHandler PlacementCanceled;
+        /// <inheritdoc />
+        public event EventHandler? PlacementChanged;
 
         public void Clear()
         {
+            PlacementChanged?.Invoke(this, EventArgs.Empty);
             Hijack = null;
             CurrentBaseSprite = null;
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
             DeactivateSpecialPlacement();
-            if (PlacementCanceled != null && IsActive && !Eraser) PlacementCanceled(this, null);
             _placenextframe = false;
             IsActive = false;
             Eraser = false;
@@ -370,10 +348,10 @@ namespace Robust.Client.Placement
             switch (PlacementType)
             {
                 case PlacementTypes.None:
-                    RequestPlacement(CurrentMode.MouseCoords);
+                    RequestPlacement(CurrentMode!.MouseCoords);
                     break;
                 case PlacementTypes.Line:
-                    foreach (var coordinate in CurrentMode.LineCoordinates())
+                    foreach (var coordinate in CurrentMode!.LineCoordinates())
                     {
                         RequestPlacement(coordinate);
                     }
@@ -381,7 +359,7 @@ namespace Robust.Client.Placement
                     DeactivateSpecialPlacement();
                     break;
                 case PlacementTypes.Grid:
-                    foreach (var coordinate in CurrentMode.GridCoordinates())
+                    foreach (var coordinate in CurrentMode!.GridCoordinates())
                     {
                         RequestPlacement(coordinate);
                     }
@@ -428,7 +406,7 @@ namespace Robust.Client.Placement
             BeginHijackedPlacing(info);
         }
 
-        public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack hijack = null)
+        public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack? hijack = null)
         {
             Clear();
 
@@ -441,7 +419,7 @@ namespace Robust.Client.Placement
             }
 
             var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
-            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this);
+            CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this)!;
 
             if (hijack != null)
             {
@@ -454,14 +432,14 @@ namespace Robust.Client.Placement
             if (info.IsTile)
                 PreparePlacementTile();
             else
-                PreparePlacement(info.EntityType);
+                PreparePlacement(info.EntityType!);
         }
 
         private bool CurrentMousePosition(out ScreenCoordinates coordinates)
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            var ent = PlayerManager.LocalPlayer.ControlledEntity;
+            var ent = PlayerManager.LocalPlayer!.ControlledEntity;
             if (ent != null)
             {
                 map = ent.Transform.MapID;
@@ -483,19 +461,19 @@ namespace Robust.Client.Placement
             if (!CurrentMousePosition(out var mouseScreen))
                 return;
 
-            CurrentMode.AlignPlacementMode(mouseScreen);
+            CurrentMode!.AlignPlacementMode(mouseScreen);
 
             // purge old unapproved tile changes
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
             // continues tile placement but placement of entities only occurs on mouseUp
-            if (_placenextframe && CurrentPermission.IsTile)
+            if (_placenextframe && CurrentPermission!.IsTile)
                 HandlePlacement();
         }
 
         private void ActivateLineMode()
         {
-            if (!CurrentMode.HasLineMode)
+            if (!CurrentMode!.HasLineMode)
                 return;
 
             if (!CurrentMousePosition(out var mouseScreen))
@@ -508,7 +486,7 @@ namespace Robust.Client.Placement
 
         private void ActivateGridMode()
         {
-            if (!CurrentMode.HasGridMode)
+            if (!CurrentMode!.HasGridMode)
                 return;
 
             if (!CurrentMousePosition(out var mouseScreen))
@@ -535,7 +513,8 @@ namespace Robust.Client.Placement
 
             CurrentMode.Render(handle);
 
-            if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired)
+            if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired
+                || PlayerManager.LocalPlayer?.ControlledEntity == null)
                 return;
 
             var worldPos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
@@ -579,7 +558,7 @@ namespace Robust.Client.Placement
         {
             if (MapManager.GetGrid(coordinates.GridID).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
-            if (!CurrentMode.IsValidPosition(coordinates)) return;
+            if (!CurrentMode!.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)

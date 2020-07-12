@@ -55,8 +55,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private const int TARGET_ICON_HEIGHT = 32;
 
-        private EntitySpawnButton SelectedButton;
-        private EntityPrototype SelectedPrototype;
+        private EntitySpawnButton? SelectedButton;
+        private EntityPrototype? SelectedPrototype;
 
         protected override Vector2? CustomSize => (250, 300);
 
@@ -83,7 +83,6 @@ namespace Robust.Client.UserInterface.CustomControls
                         {
                             (SearchBar = new LineEdit
                             {
-                                MouseFilter = MouseFilterMode.Stop,
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                                 PlaceHolder = _loc.GetString("Search")
                             }),
@@ -137,7 +136,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             BuildEntityList();
 
-            this.placementManager.PlacementCanceled += OnPlacementCanceled;
+            this.placementManager.PlacementChanged += OnPlacementCanceled;
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -154,7 +153,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (disposing)
             {
-                placementManager.PlacementCanceled -= OnPlacementCanceled;
+                placementManager.PlacementChanged -= OnPlacementCanceled;
             }
         }
 
@@ -173,7 +172,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 var newObjInfo = new PlacementInformation
                 {
                     PlacementOption = initOpts[args.Id],
-                    EntityType = placementManager.CurrentPermission.EntityType,
+                    EntityType = placementManager.CurrentPermission!.EntityType,
                     Range = 2,
                     IsTile = placementManager.CurrentPermission.IsTile
                 };
@@ -194,7 +193,7 @@ namespace Robust.Client.UserInterface.CustomControls
             placementManager.ToggleEraser();
         }
 
-        private void BuildEntityList(string searchStr = null)
+        private void BuildEntityList(string? searchStr = null)
         {
             _filteredPrototypes.Clear();
             PrototypeList.RemoveAllChildren();
@@ -240,7 +239,7 @@ namespace Robust.Client.UserInterface.CustomControls
             var endIndex = startIndex - 1;
             var spaceUsed = -height; // -height instead of 0 because else it cuts off the last button.
 
-            while (spaceUsed < PrototypeList.Parent.Height)
+            while (spaceUsed < PrototypeList.Parent!.Height)
             {
                 spaceUsed += height;
                 endIndex += 1;
@@ -294,7 +293,14 @@ namespace Robust.Client.UserInterface.CustomControls
                 Index = index // We track this index purely for debugging.
             };
             button.ActualButton.OnToggled += OnItemButtonToggled;
-            button.EntityLabel.Text = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
+            var entityLabelText = string.IsNullOrEmpty(prototype.Name) ? prototype.ID : prototype.Name;
+
+            if (!string.IsNullOrWhiteSpace(prototype.EditorSuffix))
+            {
+                entityLabelText += $" [{prototype.EditorSuffix}]";
+            }
+
+            button.EntityLabel.Text = entityLabelText;
 
             if (prototype == SelectedPrototype)
             {
@@ -327,6 +333,12 @@ namespace Robust.Client.UserInterface.CustomControls
                 return true;
             }
 
+            if (prototype.EditorSuffix != null &&
+                prototype.EditorSuffix.Contains(searchStr, StringComparison.CurrentCultureIgnoreCase))
+            {
+                return true;
+            }
+
             if (string.IsNullOrEmpty(prototype.Name))
             {
                 return false;
@@ -342,7 +354,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnItemButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
-            var item = (EntitySpawnButton) args.Button.Parent;
+            var item = (EntitySpawnButton) args.Button.Parent!;
             if (SelectedButton == item)
             {
                 SelectedButton = null;
@@ -409,11 +421,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             public const float Separation = 2;
 
-            public PrototypeListContainer()
-            {
-                MouseFilter = MouseFilterMode.Ignore;
-            }
-
             protected override Vector2 CalculateMinimumSize()
             {
                 if (ChildCount == 0)
@@ -452,7 +459,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
-            public EntityPrototype Prototype { get; set; }
+            public EntityPrototype Prototype { get; set; } = default!;
             public Button ActualButton { get; private set; }
             public Label EntityLabel { get; private set; }
             public TextureRect EntityTextureRect { get; private set; }
@@ -469,13 +476,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 AddChild(new HBoxContainer
                 {
-                    MouseFilter = MouseFilterMode.Ignore,
                     Children =
                     {
                         (EntityTextureRect = new TextureRect
                         {
                             CustomMinimumSize = (32, 32),
-                            MouseFilter = MouseFilterMode.Ignore,
                             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
                             SizeFlagsVertical = SizeFlags.ShrinkCenter,
                             Stretch = TextureRect.StretchMode.KeepAspectCentered,
@@ -493,7 +498,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private void OnPlacementCanceled(object sender, EventArgs e)
+        private void OnPlacementCanceled(object? sender, EventArgs e)
         {
             if (SelectedButton != null)
             {

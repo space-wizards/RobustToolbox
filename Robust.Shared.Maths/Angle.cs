@@ -1,5 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -138,6 +140,14 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Removes revolutions from a positive or negative angle to make it as small as possible.
         /// </summary>
+        public Angle Reduced()
+        {
+            return new Angle(Reduce(Theta));
+        }
+
+        /// <summary>
+        ///     Removes revolutions from a positive or negative angle to make it as small as possible.
+        /// </summary>
         private static double Reduce(double theta)
         {
             // int truncates value (round to 0)
@@ -174,6 +184,11 @@ namespace Robust.Shared.Maths
         public static bool operator !=(Angle a, Angle b)
         {
             return !(a == b);
+        }
+
+        public Angle FlipPositive()
+        {
+            return new Angle(FlipPositive(Theta));
         }
 
         /// <summary>

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 
 namespace Robust.Shared.Utility
@@ -40,6 +41,24 @@ namespace Robust.Shared.Utility
             }
 
             return buffer;
+        }
+
+        /// <exception cref="EndOfStreamException">
+        /// Thrown if not exactly <paramref name="amount"/> bytes could be read.
+        /// </exception>
+        public static void ReadExact(this Stream stream, Span<byte> buffer)
+        {
+            var read = 0;
+            while (read < buffer.Length)
+            {
+                var cRead = stream.Read(buffer);
+                if (cRead == 0)
+                {
+                    throw new EndOfStreamException();
+                }
+
+                read += cRead;
+            }
         }
     }
 }

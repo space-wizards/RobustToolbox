@@ -17,7 +17,7 @@ namespace Robust.Shared.Map
         private GridId _gridId;
 
         [NonSerialized]
-        private IMapGridInternal _mapGrid;
+        private IMapGridInternal _mapGrid = default!;
 
         /// <inheritdoc />
         /// <remarks>
@@ -92,6 +92,8 @@ namespace Robust.Shared.Map
                 _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
             }
         }
+
+        public event Action? OnDataChanged { add { } remove { } }
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)

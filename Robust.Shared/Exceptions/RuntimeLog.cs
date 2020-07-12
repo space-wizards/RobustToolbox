@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Robust.Shared.Exceptions
 
         public int ExceptionCount => exceptions.Values.Sum(l => l.Count);
 
-        public void LogException(Exception exception, string catcher=null)
+        public void LogException(Exception exception, string? catcher=null)
         {
             if (!exceptions.TryGetValue(exception.GetType(), out var list))
             {
@@ -27,11 +28,11 @@ namespace Robust.Shared.Exceptions
 
             if (catcher != null)
             {
-                Logger.ErrorS("runtime", "Caught exception in {0}: {1}", catcher, exception);
+                Logger.ErrorS("runtime", exception, "Caught exception in {Catcher}", catcher);
             }
             else
             {
-                Logger.ErrorS("runtime", "Caught exception: {0}", exception);
+                Logger.ErrorS("runtime", exception, "Caught exception");
             }
         }
 
@@ -52,9 +53,12 @@ namespace Robust.Shared.Exceptions
                     if (e.Data.Count > 0)
                     {
                         ret.AppendLine("Additional data:");
-                        foreach (var x in e.Data.Keys)
+                        foreach (var x in e.Data)
                         {
-                            ret.AppendLine($"{x}: {e.Data[x]}");
+                            if (x is DictionaryEntry entry)
+                            {
+                                ret.AppendLine($"{entry.Key}: {entry.Value}");
+                            }
                         }
                     }
                 }
@@ -66,9 +70,9 @@ namespace Robust.Shared.Exceptions
         {
             public Exception Exception { get; }
             public DateTime Time { get; }
-            public string Catcher { get; }
+            public string? Catcher { get; }
 
-            public LoggedException(Exception exception, DateTime time, string catcher)
+            public LoggedException(Exception exception, DateTime time, string? catcher)
             {
                 Exception = exception;
                 Time = time;
@@ -88,7 +92,7 @@ namespace Robust.Shared.Exceptions
     {
         int ExceptionCount { get; }
 
-        void LogException(Exception exception, string catcher=null);
+        void LogException(Exception exception, string? catcher=null);
 
         string Display();
     }

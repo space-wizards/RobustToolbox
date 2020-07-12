@@ -15,23 +15,21 @@ namespace Robust.Client.Graphics.Shaders
     [Prototype("shader")]
     public sealed class ShaderPrototype : IPrototype, IIndexedPrototype
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClydeInternal _clyde;
-        [Dependency] private readonly IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public string ID { get; private set; }
+        public string ID { get; private set; } = default!;
 
         private ShaderKind Kind;
 
         // Source shader variables.
-        private ShaderSourceResource Source;
-        private Dictionary<string, object> ShaderParams;
+        private ShaderSourceResource? Source;
+        private Dictionary<string, object>? ShaderParams;
 
         // Canvas shader variables.
         private ClydeHandle CompiledCanvasShader;
 
-        private ShaderInstance _cachedInstance;
+        private ShaderInstance? _cachedInstance;
 
         private bool _stencilEnabled;
         private int _stencilRef;
@@ -56,7 +54,7 @@ namespace Robust.Client.Graphics.Shaders
 
             DebugTools.AssertNotNull(_cachedInstance);
 
-            return _cachedInstance;
+            return _cachedInstance!;
         }
 
         private void _cacheInstance()
@@ -67,7 +65,7 @@ namespace Robust.Client.Graphics.Shaders
             switch (Kind)
             {
                 case ShaderKind.Source:
-                    instance = _clyde.InstanceShader(Source.ClydeHandle);
+                    instance = _clyde.InstanceShader(Source!.ClydeHandle);
                     _applyDefaultParameters(instance);
                     break;
 
@@ -120,7 +118,7 @@ namespace Robust.Client.Graphics.Shaders
             }
 
             // Load stencil data.
-            if (mapping.TryGetNode("stencil", out YamlMappingNode stencilData))
+            if (mapping.TryGetNode("stencil", out YamlMappingNode? stencilData))
             {
                 ReadStencilData(stencilData);
             }

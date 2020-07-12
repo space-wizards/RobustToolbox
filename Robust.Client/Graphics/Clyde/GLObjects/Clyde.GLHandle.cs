@@ -29,7 +29,7 @@ namespace Robust.Client.Graphics.Clyde
                 return Handle == other.Handle;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
                 return obj is GLHandle other && Equals(other);

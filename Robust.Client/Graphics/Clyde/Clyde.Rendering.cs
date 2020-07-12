@@ -1,22 +1,29 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using StencilOp = OpenTK.Graphics.OpenGL4.StencilOp;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Advanced;
+using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
+using StencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private RenderHandle _renderHandle;
+        private RenderHandle _renderHandle = default!;
 
         /// <summary>
         ///     Are we current rendering screen space or world space? Some code works differently between the two.
@@ -47,6 +54,7 @@ namespace Robust.Client.Graphics.Clyde
         // Contains information about the currently running batch.
         // So we can flush it if the next draw call is incompatible.
         private BatchMetaData? _batchMetaData;
+        private LoadedTexture? _batchLoadedTexture;
         private ClydeHandle _queuedShader;
 
         private ProjViewMatrices _currentMatrices;
@@ -85,22 +93,20 @@ namespace Robust.Client.Graphics.Clyde
         {
             var eye = _eyeManager.CurrentEye;
 
-            var toScreen = _eyeManager.WorldToScreen(eye.Position.Position);
-            // Round camera position to a screen pixel to avoid weird issues on odd screen sizes.
-            toScreen = ((float) Math.Floor(toScreen.X), (float) Math.Floor(toScreen.Y));
-            var cameraWorldAdjusted = _eyeManager.ScreenToMap(toScreen);
+            eye.GetViewMatrix(out var viewMatrixWorld);
 
-            var viewMatrixWorld = Matrix3.Identity;
-            viewMatrixWorld.R0C0 = 1 / eye.Zoom.X;
-            viewMatrixWorld.R1C1 = 1 / eye.Zoom.Y;
-            viewMatrixWorld.R0C2 = -cameraWorldAdjusted.X / eye.Zoom.X;
-            viewMatrixWorld.R1C2 = -cameraWorldAdjusted.Y / eye.Zoom.Y;
-
-            var projMatrixWorld = Matrix3.Identity;
-            projMatrixWorld.R0C0 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.X;
-            projMatrixWorld.R1C1 = EyeManager.PIXELSPERMETER * 2f / ScreenSize.Y;
+            CalcWorldProjectionMatrix(out var projMatrixWorld);
 
             return new ProjViewMatrices(projMatrixWorld, viewMatrixWorld);
+        }
+
+        /// <inheritdoc />
+        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
+        {
+            var projMatrixWorld = Matrix3.Identity;
+            projMatrixWorld.R0C0 = EyeManager.PixelsPerMeter * 2f / ScreenSize.X;
+            projMatrixWorld.R1C1 = EyeManager.PixelsPerMeter * 2f / ScreenSize.Y;
+            projMatrix = projMatrixWorld;
         }
 
         private void _setProjViewMatrices(in ProjViewMatrices matrices)
@@ -213,7 +219,7 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
 
             // Model matrix becomes identity since it's built into the batch mesh.
-            program.SetUniformMaybe(UniIModelMatrix, Matrix3.Identity);
+            program.SetUniformMaybe(UniIModelMatrix, command.ModelMatrix);
             // Reset ModUV to ensure it's identity and doesn't touch anything.
             program.SetUniformMaybe(UniIModUV, new Vector4(0, 0, 1, 1));
 
@@ -239,9 +245,12 @@ namespace Robust.Client.Graphics.Clyde
         {
             return type switch
             {
-                BatchPrimitiveType.Triangles => PrimitiveType.Triangles,
-                BatchPrimitiveType.TrianglesFan => PrimitiveType.TriangleFan,
-                BatchPrimitiveType.Line => PrimitiveType.Lines,
+                BatchPrimitiveType.TriangleList => PrimitiveType.Triangles,
+                BatchPrimitiveType.TriangleFan => PrimitiveType.TriangleFan,
+                BatchPrimitiveType.TriangleStrip => PrimitiveType.TriangleStrip,
+                BatchPrimitiveType.LineList => PrimitiveType.Lines,
+                BatchPrimitiveType.LineStrip => PrimitiveType.LineStrip,
+                BatchPrimitiveType.PointList => PrimitiveType.Points,
                 _ => PrimitiveType.Triangles
             };
         }
@@ -268,6 +277,9 @@ namespace Robust.Client.Graphics.Clyde
             BreakBatch();
 
             GL.BindVertexArray(BatchVAO.Handle);
+
+            _debugStats.LargestBatchVertices = Math.Max(BatchVertexIndex, _debugStats.LargestBatchVertices);
+            _debugStats.LargestBatchIndices = Math.Max(BatchIndexIndex, _debugStats.LargestBatchIndices);
 
             if (BatchVertexIndex != 0)
             {
@@ -447,17 +459,14 @@ namespace Robust.Client.Graphics.Clyde
             AllocRenderCommand(RenderCommandType.ResetViewMatrix);
         }
 
-        private void DrawTexture(ClydeHandle texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-            Angle angle)
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
         {
-            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TrianglesFan, _queuedShader);
-
-            var loadedTexture = _loadedTextures[texture];
+            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
 
             Box2 sr;
             if (subRegion.HasValue)
             {
-                var (w, h) = loadedTexture.Size;
+                var (w, h) = _batchLoadedTexture!.Size;
                 var csr = subRegion.Value;
                 if (_queuedSpace == CurrentSpace.WorldSpace)
                 {
@@ -480,24 +489,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            Vector2 bl;
-            Vector2 br;
-            Vector2 tr;
-            Vector2 tl;
-            if (angle == Angle.Zero)
-            {
-                bl = _currentModelMatrix.Transform(a);
-                br = _currentModelMatrix.Transform(new Vector2(b.X, a.Y));
-                tr = _currentModelMatrix.Transform(b);
-                tl = _currentModelMatrix.Transform(new Vector2(a.X, b.Y));
-            }
-            else
-            {
-                bl = _currentModelMatrix.Transform(angle.RotateVec(a));
-                br = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(b.X, a.Y)));
-                tr = _currentModelMatrix.Transform(angle.RotateVec(b));
-                tl = _currentModelMatrix.Transform(angle.RotateVec(new Vector2(a.X, b.Y)));
-            }
+            bl = _currentModelMatrix.Transform(bl);
+            br = _currentModelMatrix.Transform(br);
+            tr = _currentModelMatrix.Transform(tr);
+            tl = _currentModelMatrix.Transform(tl);
 
             // TODO: split batch if necessary.
             var vIdx = BatchVertexIndex;
@@ -518,9 +513,89 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.LastClydeDrawCalls += 1;
         }
 
+        private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
+            ReadOnlySpan<ushort> indices, ReadOnlySpan<Vertex2D> vertices, in Color color)
+        {
+            FinishBatch();
+            _batchMetaData = null;
+
+            vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
+
+            // We are weaving this into the batch buffers for performance (and simplicity).
+            // This means all indices have to be offset.
+            for (var i = 0; i < indices.Length; i++)
+            {
+                var o = BatchIndexIndex + i;
+                var index = indices[i];
+                if (index != ushort.MaxValue) // Don't offset primitive restart.
+                {
+                    index = (ushort) (index + BatchVertexIndex);
+                }
+
+                BatchIndexData[o] = index;
+            }
+
+            BatchVertexIndex += vertices.Length;
+
+            ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
+
+            command.DrawBatch.Indexed = true;
+            command.DrawBatch.StartIndex = BatchIndexIndex;
+            command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
+            command.DrawBatch.Modulate = color;
+            command.DrawBatch.TextureId = textureId;
+            command.DrawBatch.ShaderInstance = _queuedShader;
+
+            command.DrawBatch.Count = indices.Length;
+            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+
+            _debugStats.LastBatches += 1;
+            _debugStats.LastClydeDrawCalls += 1;
+            BatchIndexIndex += indices.Length;
+        }
+
+        private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
+            in ReadOnlySpan<Vertex2D> vertices, in Color color)
+        {
+            FinishBatch();
+            _batchMetaData = null;
+
+            vertices.CopyTo(BatchVertexData.AsSpan(BatchVertexIndex));
+
+            ref var command = ref AllocRenderCommand(RenderCommandType.DrawBatch);
+
+            command.DrawBatch.Indexed = false;
+            command.DrawBatch.StartIndex = BatchVertexIndex;
+            command.DrawBatch.PrimitiveType = MapDrawToBatchPrimitiveType(primitiveTopology);
+            command.DrawBatch.Modulate = color;
+            command.DrawBatch.TextureId = textureId;
+            command.DrawBatch.ShaderInstance = _queuedShader;
+
+            command.DrawBatch.Count = vertices.Length;
+            command.DrawBatch.ModelMatrix = _currentModelMatrix;
+
+            _debugStats.LastBatches += 1;
+            _debugStats.LastClydeDrawCalls += 1;
+            BatchVertexIndex += vertices.Length;
+        }
+
+        private BatchPrimitiveType MapDrawToBatchPrimitiveType(DrawPrimitiveTopology topology)
+        {
+            return topology switch
+            {
+                DrawPrimitiveTopology.TriangleList => BatchPrimitiveType.TriangleList,
+                DrawPrimitiveTopology.TriangleFan => BatchPrimitiveType.TriangleFan,
+                DrawPrimitiveTopology.TriangleStrip => BatchPrimitiveType.TriangleStrip,
+                DrawPrimitiveTopology.LineList => BatchPrimitiveType.LineList,
+                DrawPrimitiveTopology.LineStrip => BatchPrimitiveType.LineStrip,
+                DrawPrimitiveTopology.PointList => BatchPrimitiveType.PointList,
+                _ => BatchPrimitiveType.TriangleList
+            };
+        }
+
         private void DrawLine(Vector2 a, Vector2 b, Color color)
         {
-            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.Line, _queuedShader);
+            EnsureBatchState(_stockTextureWhite.TextureId, color, false, BatchPrimitiveType.LineList, _queuedShader);
 
             a = _currentModelMatrix.Transform(a);
             b = _currentModelMatrix.Transform(b);
@@ -617,6 +692,15 @@ namespace Robust.Client.Graphics.Clyde
             // ... and start another.
             _batchMetaData = new BatchMetaData(textureId, color, indexed, primitiveType,
                 indexed ? BatchIndexIndex : BatchVertexIndex, shaderInstance);
+
+            if (textureId != default)
+            {
+                _batchLoadedTexture = _loadedTextures[textureId];
+            }
+            else
+            {
+                _batchLoadedTexture = null;
+            }
         }
 
         private void FinishBatch()
@@ -641,6 +725,7 @@ namespace Robust.Client.Graphics.Clyde
             command.DrawBatch.ShaderInstance = metaData.ShaderInstance;
 
             command.DrawBatch.Count = currentIndex - metaData.StartIndex;
+            command.DrawBatch.ModelMatrix = Matrix3.Identity;
 
             _debugStats.LastBatches += 1;
         }
@@ -687,12 +772,75 @@ namespace Robust.Client.Graphics.Clyde
             _batchMetaData = null;
         }
 
-        // Use a tagged union to store all render commands.
-        // This significantly improves performance vs doing sum types via inheritance.
-        // Also means I don't have to declare a pool for every command type.
+        private unsafe void TakeScreenshot(ScreenshotType type)
+        {
+            if (_queuedScreenshots.Count == 0 || _queuedScreenshots.All(p => p.type != type))
+            {
+                return;
+            }
+
+            var delegates = _queuedScreenshots.Where(p => p.type == type).ToList();
+
+            _queuedScreenshots.RemoveAll(p => p.type == type);
+
+            GL.CreateBuffers(1, out uint pbo);
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+            GL.BufferData(BufferTarget.PixelPackBuffer, ScreenSize.X * ScreenSize.Y * sizeof(Rgb24), IntPtr.Zero,
+                BufferUsageHint.StreamRead);
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
+            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
+
+            GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+
+            _transferringScreenshots.Add((pbo, fence, ScreenSize, image => delegates.ForEach(p => p.callback(image))));
+        }
+
+        private unsafe void CheckTransferringScreenshots()
+        {
+            if (_transferringScreenshots.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var screenshot in _transferringScreenshots.ToList())
+            {
+                var (pbo, fence, (width, height), callback) = screenshot;
+
+                int status;
+                GL.GetSync(fence, SyncParameterName.SyncStatus, sizeof(int), null, &status);
+
+                if (status == (int) All.Signaled)
+                {
+                    GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+                    var ptr = GL.MapBuffer(BufferTarget.PixelPackBuffer, BufferAccess.ReadOnly);
+
+                    var packSpan = new ReadOnlySpan<Rgb24>((void*) ptr, width * height);
+
+                    var image = new Image<Rgb24>(width, height);
+                    var imageSpan = image.GetPixelSpan();
+
+                    FlipCopy(packSpan, imageSpan, width, height);
+
+                    GL.UnmapBuffer(BufferTarget.PixelPackBuffer);
+                    GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+                    GL.DeleteBuffer(pbo);
+                    GL.DeleteSync(fence);
+
+                    _transferringScreenshots.Remove(screenshot);
+
+                    // TODO: Don't do unnecessary copy here.
+                    callback(image);
+                }
+            }
+        }
+
         [StructLayout(LayoutKind.Explicit)]
         private struct RenderCommand
         {
+            // Use a tagged union to store all render commands.
+            // This significantly improves performance vs doing sum types via inheritance.
+            // Also means I don't have to declare a pool for every command type.
             [FieldOffset(0)] public RenderCommandType Type;
 
             [FieldOffset(4)] public RenderCommandDrawBatch DrawBatch;
@@ -714,6 +862,9 @@ namespace Robust.Client.Graphics.Clyde
             public int Count;
             public bool Indexed;
             public BatchPrimitiveType PrimitiveType;
+
+            // TODO: this makes the render commands so much more large please remove.
+            public Matrix3 ModelMatrix;
         }
 
         private struct RenderCommandViewMatrix
@@ -804,18 +955,21 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private enum BatchPrimitiveType
+        private enum BatchPrimitiveType : byte
         {
-            Triangles,
-            TrianglesFan,
-            Line
+            TriangleList,
+            TriangleFan,
+            TriangleStrip,
+            LineList,
+            LineStrip,
+            PointList,
         }
 
         private sealed class SpriteDrawingOrderComparer : IComparer<int>
         {
-            private readonly RefList<(SpriteComponent, Matrix3, Angle)> _drawList;
+            private readonly RefList<(SpriteComponent, Matrix3, Angle, float)> _drawList;
 
-            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle)> drawList)
+            public SpriteDrawingOrderComparer(RefList<(SpriteComponent, Matrix3, Angle, float)> drawList)
             {
                 _drawList = drawList;
             }
@@ -825,13 +979,20 @@ namespace Robust.Client.Graphics.Clyde
                 var a = _drawList[x].Item1;
                 var b = _drawList[y].Item1;
 
-                var cmp = ((int) a.DrawDepth).CompareTo((int) b.DrawDepth);
+                var cmp = (a.DrawDepth).CompareTo(b.DrawDepth);
                 if (cmp != 0)
                 {
                     return cmp;
                 }
 
                 cmp = a.RenderOrder.CompareTo(b.RenderOrder);
+
+                if (cmp != 0)
+                {
+                    return cmp;
+                }
+
+                cmp = _drawList[x].Item4.CompareTo(_drawList[y].Item4);
 
                 if (cmp != 0)
                 {

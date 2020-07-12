@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Client.UserInterface
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 
-        private IUserInterfaceManagerInternal _userInterfaceManager;
+        private IUserInterfaceManagerInternal _userInterfaceManager = default!;
 
         [OneTimeSetUp]
         public void Setup()
@@ -192,8 +192,8 @@ namespace Robust.UnitTesting.Client.UserInterface
         [Test]
         public void TestGrabKeyboardFocusNull()
         {
-            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null), Throws.ArgumentNullException);
-            Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null), Throws.ArgumentNullException);
+            Assert.That(() => _userInterfaceManager.GrabKeyboardFocus(null!), Throws.ArgumentNullException);
+            Assert.That(() => _userInterfaceManager.ReleaseKeyboardFocus(null!), Throws.ArgumentNullException);
         }
 
         [Test]
@@ -218,12 +218,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.ForceRunLayoutUpdate();
 
-            var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
-
-            var mouseEvent = new GUIBoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
-                pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
-
-            _userInterfaceManager.KeyBindDown(mouseEvent);
+            _userInterfaceManager.HandleCanFocusDown((30, 30));
 
             Assert.That(_userInterfaceManager.KeyboardFocused, Is.EqualTo(control));
             _userInterfaceManager.ReleaseKeyboardFocus();

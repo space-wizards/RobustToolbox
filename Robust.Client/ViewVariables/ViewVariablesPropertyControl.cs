@@ -6,6 +6,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.ViewVariables.Editors;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -14,27 +15,24 @@ namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesPropertyControl : PanelContainer
     {
-        public VBoxContainer VBox { get; private set; }
-        public HBoxContainer TopContainer { get; private set; }
-        public HBoxContainer BottomContainer { get; private set; }
-        public Label NameLabel { get; private set; }
+        public VBoxContainer VBox { get; }
+        public HBoxContainer TopContainer { get; }
+        public HBoxContainer BottomContainer { get; }
+        public Label NameLabel { get; }
 
-        private Label _bottomLabel;
+        private readonly Label _bottomLabel;
 
         private readonly IViewVariablesManagerInternal _viewVariablesManager;
         private readonly IResourceCache _resourceCache;
 
         public ViewVariablesPropertyControl(IViewVariablesManagerInternal viewVars, IResourceCache resourceCache)
         {
+            MouseFilter = MouseFilterMode.Pass;
+
             _viewVariablesManager = viewVars;
             _resourceCache = resourceCache;
 
-            PerformLayout();
-        }
-
-        private void PerformLayout()
-        {
-            MouseFilter = MouseFilterMode.Stop;
+            MouseFilter = MouseFilterMode.Pass;
             ToolTip = "Click to expand";
             CustomMinimumSize = new Vector2(0, 25);
 
@@ -54,7 +52,7 @@ namespace Robust.Client.ViewVariables
 
             _bottomLabel = new Label
             {
-            //    FontOverride = smallFont,
+                //    FontOverride = smallFont,
                 FontColorOverride = Color.DarkGray
             };
             BottomContainer.AddChild(_bottomLabel);
@@ -144,7 +142,7 @@ namespace Robust.Client.ViewVariables
         {
             base.KeyBindDown(args);
 
-            if (!args.CanFocus)
+            if (args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }

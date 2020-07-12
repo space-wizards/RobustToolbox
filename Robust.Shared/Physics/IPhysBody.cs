@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 namespace Robust.Shared.Physics
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public interface IPhysBody
     {
@@ -25,17 +25,12 @@ namespace Robust.Shared.Physics
         /// </summary>
         Box2 AABB { get; }
 
-        List<IPhysShape> PhysicsShapes { get; }
+        IList<IPhysShape> PhysicsShapes { get; }
 
         /// <summary>
-        /// Enables or disabled collision processing of this body.
+        /// Whether or not this body can collide.
         /// </summary>
-        bool CollisionEnabled { get; set; }
-
-        /// <summary>
-        /// True if collisions should prevent movement, or just trigger bumps.
-        /// </summary>
-        bool IsHardCollidable { get; set; }
+        bool CanCollide { get; set; }
 
         /// <summary>
         /// Bitmask of the collision layers this body is a part of. The layers are calculated from
@@ -48,18 +43,6 @@ namespace Robust.Shared.Physics
         /// all of the shapes of this body.
         /// </summary>
         int CollisionMask { get; }
-
-        /// <summary>
-        /// Called when the physBody is bumped into by someone/something
-        /// </summary>
-        /// <param name="bumpedby"></param>
-        void Bumped(IEntity bumpedby);
-
-        /// <summary>
-        /// Called when the physBody bumps into this entity
-        /// </summary>
-        /// <param name="bumpedinto"></param>
-        void Bump(List<IEntity> bumpedinto);
 
         /// <summary>
         ///     The map index this physBody is located upon

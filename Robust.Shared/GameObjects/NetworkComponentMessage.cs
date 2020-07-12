@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -32,10 +33,15 @@ namespace Robust.Shared.GameObjects
         public readonly ComponentMessage Message;
 
         /// <summary>
+        /// If the message is from the client, the client's session.
+        /// </summary>
+        public readonly ICommonSession? Session;
+
+        /// <summary>
         /// Constructs a new instance of <see cref="NetworkComponentMessage"/>.
         /// </summary>
         /// <param name="netMsg">Raw network message containing the component message.</param>
-        public NetworkComponentMessage(MsgEntity netMsg)
+        public NetworkComponentMessage(MsgEntity netMsg, ICommonSession? session = null)
         {
             DebugTools.Assert(netMsg.Type == EntityMessageType.ComponentMessage);
 
@@ -43,6 +49,7 @@ namespace Robust.Shared.GameObjects
             EntityUid = netMsg.EntityUid;
             NetId = netMsg.NetId;
             Message = netMsg.ComponentMessage;
+            Session = session;
         }
     }
 

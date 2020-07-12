@@ -16,21 +16,21 @@ namespace Robust.Client.ViewVariables.Traits
     internal class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
         private const int ElementsPerPage = 25;
-        private List<object> _cache;
+        private readonly List<object?> _cache = new List<object?>();
         private int _page;
-        private IEnumerator _enumerator;
+        private IEnumerator? _enumerator;
         private bool _ended;
         private bool _networked;
 
-        private Button _leftButton;
-        private Button _rightButton;
-        private LineEdit _pageLabel;
-        private HBoxContainer _controlsHBox;
-        private VBoxContainer _elementsVBox;
+        private Button _leftButton = default!;
+        private Button _rightButton = default!;
+        private LineEdit _pageLabel = default!;
+        private HBoxContainer _controlsHBox = default!;
+        private VBoxContainer _elementsVBox = default!;
 
         private int HighestKnownPage => Math.Max(0, ((_cache.Count + ElementsPerPage - 1) / ElementsPerPage) - 1);
 
-        private SemaphoreSlim _networkSemaphore;
+        private SemaphoreSlim? _networkSemaphore;
 
         public override void Initialize(ViewVariablesInstanceObject instance)
         {
@@ -56,7 +56,7 @@ namespace Robust.Client.ViewVariables.Traits
             {
                 // Page navigational controls.
                 _leftButton = new Button {Text = "<<", Disabled = true};
-                _pageLabel = new LineEdit {Text = "0"};
+                _pageLabel = new LineEdit {Text = "0", CustomMinimumSize = (60, 0)};
                 _rightButton = new Button {Text = ">>"};
 
                 _leftButton.OnPressed += _leftButtonPressed;
@@ -73,8 +73,6 @@ namespace Robust.Client.ViewVariables.Traits
             _elementsVBox = new VBoxContainer();
             outerVBox.AddChild(_elementsVBox);
 
-            _cache = new List<object>();
-
             instance.AddTab("IEnumerable", outerVBox);
         }
 
@@ -88,7 +86,7 @@ namespace Robust.Client.ViewVariables.Traits
             }
             else
             {
-                var enumerable = (IEnumerable) Instance.Object;
+                var enumerable = (IEnumerable) Instance.Object!;
                 _enumerator = enumerable.GetEnumerator();
             }
 
@@ -171,12 +169,12 @@ namespace Robust.Client.ViewVariables.Traits
                         var iSafe = i;
                         refEditor.OnPressed += () =>
                             Instance.ViewVariablesManager.OpenVV(
-                                new ViewVariablesSessionRelativeSelector(Instance.Session.SessionId,
+                                new ViewVariablesSessionRelativeSelector(Instance.Session!.SessionId,
                                     new object[] {new ViewVariablesEnumerableIndexSelector(iSafe), }));
                     }
                     else
                     {
-                        refEditor.OnPressed += () => Instance.ViewVariablesManager.OpenVV(element);
+                        refEditor.OnPressed += () => Instance.ViewVariablesManager.OpenVV(element!);
                     }
                 }
                 _elementsVBox.AddChild(control);
@@ -215,7 +213,7 @@ namespace Robust.Client.ViewVariables.Traits
             }
             if (_networked)
             {
-                await _networkSemaphore.WaitAsync();
+                await _networkSemaphore!.WaitAsync();
 
                 try
                 {
@@ -228,7 +226,7 @@ namespace Robust.Client.ViewVariables.Traits
                     // Would it maybe be a good idea to send this in chunks?
                     // Too lazy to code that right now.
                     // Oh well..
-                    var blob = await Instance.ViewVariablesManager.RequestData<ViewVariablesBlobEnumerable>(Instance.Session,
+                    var blob = await Instance.ViewVariablesManager.RequestData<ViewVariablesBlobEnumerable>(Instance.Session!,
                         new ViewVariablesRequestEnumerable(_cache.Count, index, netRefresh));
 
                     _cache.AddRange(blob.Objects);
@@ -245,15 +243,16 @@ namespace Robust.Client.ViewVariables.Traits
             }
             else
             {
+                DebugTools.AssertNotNull(_enumerator);
                 while (_cache.Count < index)
                 {
-                    if (!_enumerator.MoveNext())
+                    if (!_enumerator!.MoveNext())
                     {
                         _ended = true;
                         break;
                     }
 
-                    _cache.Add(_enumerator.Current);
+                    _cache.Add(_enumerator!.Current);
                 }
             }
         }

@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
@@ -15,10 +16,10 @@ namespace Robust.Client.GameObjects.Components.UserInterface
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new Dictionary<object, BoundUserInterface>();
 
-        private Dictionary<object, PrototypeData> _interfaceData;
+        private Dictionary<object, PrototypeData> _interfaceData = default!;
 #pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 #pragma warning restore 649
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -27,7 +28,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
 
             const string cache = "ui_cache";
 
-            if (serializer.TryGetCacheData(cache, out Dictionary<object, PrototypeData> interfaceData))
+            if (serializer.TryGetCacheData<Dictionary<object, PrototypeData>>(cache, out var interfaceData))
             {
                 _interfaceData = interfaceData;
                 return;
@@ -44,10 +45,10 @@ namespace Robust.Client.GameObjects.Components.UserInterface
             _interfaceData = interfaceData;
         }
 
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
-            IComponent component = null)
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
+            ICommonSession? session = null)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleNetworkMessage(message, netChannel, session);
 
             switch (message)
             {
@@ -120,7 +121,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
         /// <summary>
         ///     The last received state object sent from the server.
         /// </summary>
-        protected BoundUserInterfaceState State { get; private set; }
+        protected BoundUserInterfaceState? State { get; private set; }
 
         protected BoundUserInterface(ClientUserInterfaceComponent owner, object uiKey)
         {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -12,13 +14,8 @@ namespace Robust.Client.UserInterface.Controls
     {
         public const string StylePropertySeparation = "separation";
 
-        private const int DefaultSeparation = 1;
+        private const int DefaultSeparation = 0;
         private protected abstract bool Vertical { get; }
-
-        protected BoxContainer()
-        {
-            MouseFilter = MouseFilterMode.Pass;
-        }
 
         /// <summary>
         ///     Specifies "where" the controls should be laid out.
@@ -196,7 +193,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minWidth = Math.Max(minWidth, childWidth);
+                    minWidth = MathF.Max(minWidth, childWidth);
                 }
                 else
                 {
@@ -208,7 +205,7 @@ namespace Robust.Client.UserInterface.Controls
 
                     first = false;
 
-                    minHeight = Math.Max(minHeight, childHeight);
+                    minHeight = MathF.Max(minHeight, childHeight);
                 }
             }
 

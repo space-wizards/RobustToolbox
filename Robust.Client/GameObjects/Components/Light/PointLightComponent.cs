@@ -1,11 +1,12 @@
-﻿using Robust.Client.Graphics;
+﻿using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -16,6 +17,8 @@ namespace Robust.Client.GameObjects
     {
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
+
+        internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
@@ -71,7 +74,7 @@ namespace Robust.Client.GameObjects
         ///     The mask's red channel will be linearly multiplied.p
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Texture Mask { get; set; }
+        public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public float Energy
@@ -121,14 +124,17 @@ namespace Robust.Client.GameObjects
         public float Radius
         {
             get => _radius;
-            set => _radius = value;
+            set
+            {
+                _radius = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedMessage(this));
+            }
         }
 
         /// <inheritdoc />
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
-            IComponent component = null)
+        public override void HandleMessage(ComponentMessage message, IComponent? component)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleMessage(message, component);
 
             if ((message is ParentChangedMessage msg))
             {
@@ -164,14 +170,26 @@ namespace Robust.Client.GameObjects
             serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
             serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
 
-            if (serializer.Reading && serializer.TryReadDataField("mask", out string value))
+            if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
             {
                 Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
             }
         }
 
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveLightMessage(this, map));
+            }
+        }
+
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
                 return;
@@ -182,6 +200,16 @@ namespace Robust.Client.GameObjects
             Radius = newState.Radius;
             Offset = newState.Offset;
             Color = newState.Color;
+        }
+    }
+
+    public struct PointLightRadiusChangedMessage
+    {
+        public PointLightComponent PointLightComponent { get; }
+
+        public PointLightRadiusChangedMessage(PointLightComponent pointLightComponent)
+        {
+            PointLightComponent = pointLightComponent;
         }
     }
 }

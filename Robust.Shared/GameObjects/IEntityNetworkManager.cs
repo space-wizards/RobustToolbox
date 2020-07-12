@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// This event is raised when a component message comes in from the network.
         /// </summary>
-        event EventHandler<EntitySystemMessage> ReceivedSystemMessage;
+        event EventHandler<object> ReceivedSystemMessage;
 
         /// <summary>
         /// Initializes networking for this manager. This should only be called once.
@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="entity">Entity sending the message (also entity to send to).</param>
         /// <param name="component">Component that sent the message.</param>
         /// <param name="message">Message to send.</param>
-        void SendComponentNetworkMessage(INetChannel channel, IEntity entity, IComponent component,
+        void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
             ComponentMessage message);
 
         /// <summary>
@@ -47,6 +47,11 @@ namespace Robust.Shared.GameObjects
         /// <param name="message">Message that should be sent.</param>
         void SendSystemNetworkMessage(EntitySystemMessage message);
 
+        void SendSystemNetworkMessage(EntitySystemMessage message, uint sequence)
+        {
+            throw new NotSupportedException();
+        }
+
         /// <summary>
         /// Sends an Entity System Message to relevant System on a client.
         /// Server: Sends the message to the relevant systems of the client on <paramref name="channel"/>
@@ -57,5 +62,10 @@ namespace Robust.Shared.GameObjects
         ///    Thrown if called on the client.
         /// </exception>
         void SendSystemNetworkMessage(EntitySystemMessage message, INetChannel channel);
+
+        /// <summary>
+        ///     Sends out queued messages based on current tick.
+        /// </summary>
+        void Update();
     }
 }

@@ -35,7 +35,48 @@ namespace Robust.Client.Graphics.Drawing
 
         public abstract void SetTransform(in Matrix3 matrix);
 
-        public abstract void UseShader(ShaderInstance shader);
+        public abstract void UseShader(ShaderInstance? shader);
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
+            Color color);
+
+        /// <summary>
+        ///     Draws arbitrary indexed geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="indices">The indices into <paramref name="vertices"/> to render.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
+            ReadOnlySpan<Vector2> vertices, Color color);
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a texture.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="texture">The texture to render with.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+            ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null);
+
+        /// <summary>
+        ///     Draws arbitrary geometry primitives with a flat color.
+        /// </summary>
+        /// <param name="primitiveTopology">The topology of the primitives to draw.</param>
+        /// <param name="texture">The texture to render with.</param>
+        /// <param name="indices">The indices into <paramref name="vertices"/> to render.</param>
+        /// <param name="vertices">The set of vertices to render.</param>
+        /// <param name="color">The color to draw with.</param>
+        public abstract void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+            ReadOnlySpan<ushort> indices,
+            ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null);
 
         [DebuggerStepThrough]
         protected void CheckDisposed()
@@ -46,8 +87,23 @@ namespace Robust.Client.Graphics.Drawing
             }
         }
 
-        public abstract void DrawCircle(Vector2 position, float radius, Color color);
+        public abstract void DrawCircle(Vector2 position, float radius, Color color, bool filled = true);
 
         public abstract void DrawLine(Vector2 from, Vector2 to, Color color);
+    }
+
+    /// <summary>
+    ///     2D Vertex that contains both position and UV coordinates.
+    /// </summary>
+    public struct DrawVertexUV2D
+    {
+        public Vector2 Position;
+        public Vector2 UV;
+
+        public DrawVertexUV2D(Vector2 position, Vector2 uv)
+        {
+            Position = position;
+            UV = uv;
+        }
     }
 }

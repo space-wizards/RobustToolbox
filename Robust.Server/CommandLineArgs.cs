@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
 using C = System.Console;
 
@@ -6,17 +7,17 @@ namespace Robust.Server
 {
     internal sealed class CommandLineArgs
     {
-        public string ConfigFile { get; }
-        public string DataDir { get; }
+        public string? ConfigFile { get; }
+        public string? DataDir { get; }
         public IReadOnlyCollection<(string key, string value)> CVars { get; }
 
         // Manual parser because C# has no good command line parsing libraries. Also dependencies bad.
         // Also I don't like spending 100ms parsing command line args. Do you?
-        public static bool TryParse(IReadOnlyList<string> args, out CommandLineArgs parsed)
+        public static bool TryParse(IReadOnlyList<string> args, [NotNullWhen(true)] out CommandLineArgs? parsed)
         {
             parsed = null;
-            string configFile = null;
-            string dataDir = null;
+            string? configFile = null;
+            string? dataDir = null;
             var cvars = new List<(string, string)>();
 
             using var enumerator = args.GetEnumerator();
@@ -54,15 +55,15 @@ namespace Robust.Server
 
                     var cvar = enumerator.Current;
                     DebugTools.AssertNotNull(cvar);
-                    var split = cvar.Split("=");
+                    var pos = cvar.IndexOf('=');
 
-                    if (split.Length < 2)
+                    if (pos == -1)
                     {
                         C.WriteLine("Expected = in cvar.");
                         return false;
                     }
 
-                    cvars.Add((split[0], split[1]));
+                    cvars.Add((cvar[..pos], cvar[(pos + 1)..]));
                 }
                 else if (arg == "--help")
                 {
@@ -90,7 +91,7 @@ Options:
 ");
         }
 
-        private CommandLineArgs(string configFile, string dataDir, IReadOnlyCollection<(string, string)> cVars)
+        private CommandLineArgs(string? configFile, string? dataDir, IReadOnlyCollection<(string, string)> cVars)
         {
             ConfigFile = configFile;
             DataDir = dataDir;

@@ -21,7 +21,12 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
+                BoundingBoxChanged();
             }
+        }
+
+        protected virtual void BoundingBoxChanged()
+        {
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -48,7 +53,7 @@ namespace Robust.Shared.GameObjects
             return new OccluderComponentState(Enabled, BoundingBox);
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState == null)
             {

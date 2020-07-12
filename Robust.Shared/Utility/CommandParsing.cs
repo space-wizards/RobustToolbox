@@ -1,50 +1,72 @@
+using System;
 using System.Collections.Generic;
+
+#nullable enable
 
 namespace Robust.Shared.Utility
 {
-    public class CommandParsing
+    public static class CommandParsing
     {
         /// <summary>
-        /// Command parsing func
+        /// Parses a full console command into a list of arguments.
         /// </summary>
-        /// <param name="text">full input string</param>
-        /// <param name="args">List of arguments, including the command as #0</param>
-        static public void ParseArguments(string text, List<string> args)
+        /// <param name="text">Full input string.</param>
+        /// <param name="args">List of arguments to write into.</param>
+        public static void ParseArguments(ReadOnlySpan<char> text, List<string> args)
         {
-            string buf = "";
-            bool inquotes = false;
-            for (int i = 0; i < text.Length; i++)
+            var buf = "";
+            var inQuotes = false;
+
+            for (var i = 0; i < text.Length; i++)
             {
-                if (text[i] == '*')
-                    continue;
-                else if (inquotes && text[i] == '"')
+                var chr = text[i];
+                if (chr == '\\')
                 {
-                    inquotes = false;
-                    args.Add(buf);
-                    buf = "";
-                    i++; //skip the following space.
-                    continue;
-                }
-                else if (!inquotes && text[i] == '"')
-                {
-                    inquotes = true;
-                    continue;
-                }
-                else if (text[i] == ' ' && !inquotes)
-                {
-                    args.Add(buf);
-                    buf = "";
-                    continue;
-                }
-                else
-                {
+                    i += 1;
+                    if (i == text.Length)
+                    {
+                        buf += "\\";
+                        break;
+                    }
+
                     buf += text[i];
                     continue;
                 }
+
+                if (chr == '"')
+                {
+                    if (inQuotes)
+                    {
+                        args.Add(buf);
+                        buf = "";
+                    }
+
+                    inQuotes = !inQuotes;
+                    continue;
+                }
+
+                if (chr == ' ' && !inQuotes)
+                {
+                    if (buf != "")
+                    {
+                        args.Add(buf);
+                        buf = "";
+                    }
+                    continue;
+                }
+
+                buf += chr;
             }
 
             if (buf != "")
+            {
                 args.Add(buf);
+            }
+        }
+
+        public static string Escape(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
     }
 }

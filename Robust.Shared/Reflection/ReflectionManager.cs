@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Log;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Reflection
 {
@@ -20,8 +22,9 @@ namespace Robust.Shared.Reflection
 
         private readonly List<Assembly> assemblies = new List<Assembly>();
 
-        public event EventHandler<ReflectionUpdateEventArgs> OnAssemblyAdded;
+        public event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 
+        [ViewVariables]
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
         /// <inheritdoc />
@@ -47,9 +50,15 @@ namespace Robust.Shared.Reflection
             catch (ReflectionTypeLoadException e)
             {
                 Logger.Error("Caught ReflectionTypeLoadException! Dumping child exceptions:");
-                foreach (var inner in e.LoaderExceptions)
+                if (e.LoaderExceptions != null)
                 {
-                    Logger.Error(inner.ToString());
+                    foreach (var inner in e.LoaderExceptions)
+                    {
+                        if (inner != null)
+                        {
+                            Logger.Error(inner.ToString());
+                        }
+                    }
                 }
 
                 throw;
@@ -64,7 +73,7 @@ namespace Robust.Shared.Reflection
                         continue;
                     }
 
-                    var attribute = (ReflectAttribute) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
+                    var attribute = (ReflectAttribute?) Attribute.GetCustomAttribute(type, typeof(ReflectAttribute));
 
                     if (!(attribute?.Discoverable ?? ReflectAttribute.DEFAULT_DISCOVERABLE))
                     {
@@ -90,7 +99,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <seealso cref="TypePrefixes"/>
-        public Type GetType(string name)
+        public Type? GetType(string name)
         {
             // The priority in which types are retrieved is based on the TypePrefixes list.
             // This is an implementation detail. If you need it: make a better API.
@@ -121,13 +130,13 @@ namespace Robust.Shared.Reflection
             throw new ArgumentException("Unable to find type.");
         }
 
-        public bool TryLooseGetType(string name, out Type type)
+        public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
         {
             foreach (var assembly in assemblies)
             {
                 foreach (var tryType in assembly.DefinedTypes)
                 {
-                    if (tryType.FullName.EndsWith(name))
+                    if (tryType.FullName!.EndsWith(name))
                     {
                         type = tryType;
                         return true;
@@ -153,7 +162,7 @@ namespace Robust.Shared.Reflection
         }
 
         /// <inheritdoc />
-        public bool TryParseEnumReference(string reference, out Enum @enum)
+        public bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum)
         {
             if (!reference.StartsWith("enum."))
             {
@@ -170,7 +179,7 @@ namespace Robust.Shared.Reflection
             {
                 foreach (var type in assembly.DefinedTypes)
                 {
-                    if (!type.IsEnum || !type.FullName.EndsWith(typeName))
+                    if (!type.IsEnum || !type.FullName!.EndsWith(typeName))
                     {
                         continue;
                     }

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -11,7 +12,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using static Robust.Client.GameObjects.ClientOccluderComponent;
-using OGLTextureWrapMode = OpenTK.Graphics.OpenGL.TextureWrapMode;
+using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -28,9 +29,9 @@ namespace Robust.Client.Graphics.Clyde
         // Horizontal width, in pixels, of the shadow maps used to render FOV.
         // I figured this was more accuracy sensitive than lights so resolution is significantly higher.
         private const int FovMapSize = 2048;
-        private const int MaxLightsPerScene = 64;
+        private const int MaxLightsPerScene = 128;
 
-        private ClydeShaderInstance _fovDebugShaderInstance;
+        private ClydeShaderInstance _fovDebugShaderInstance = default!;
 
         // Various shaders used in the light rendering process.
         // We keep ClydeHandles into the _loadedShaders dict so they can be reloaded.
@@ -48,21 +49,21 @@ namespace Robust.Client.Graphics.Clyde
         // Various render targets used in the light rendering process.
 
         // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
-        private RenderTarget _lightRenderTarget;
+        private RenderTarget _lightRenderTarget = default!;
 
         // For depth calculation for FOV.
-        private RenderTarget _fovRenderTarget;
+        private RenderTarget _fovRenderTarget = default!;
 
         // For depth calculation of lighting shadows.
-        private RenderTarget _shadowRenderTarget;
+        private RenderTarget _shadowRenderTarget = default!;
 
         // Unused, to be removed.
-        private RenderTarget _wallMaskRenderTarget;
+        private RenderTarget _wallMaskRenderTarget = default!;
 
         // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
         // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
-        private RenderTarget _wallBleedIntermediateRenderTarget1;
-        private RenderTarget _wallBleedIntermediateRenderTarget2;
+        private RenderTarget _wallBleedIntermediateRenderTarget1 = default!;
+        private RenderTarget _wallBleedIntermediateRenderTarget2 = default!;
 
         // Proxies to textures of some of the above render targets.
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
@@ -75,7 +76,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // Shader program used to calculate depth for shadows/FOV.
         // Sadly not .swsl since it has a different vertex format and such.
-        private GLShaderProgram _fovCalculationProgram;
+        private GLShaderProgram _fovCalculationProgram = default!;
 
         // Occlusion geometry used to render shadows and FOV.
 
@@ -83,8 +84,8 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionVbo;
-        private GLBuffer _occlusionEbo;
+        private GLBuffer _occlusionVbo = default!;
+        private GLBuffer _occlusionEbo = default!;
         private GLHandle _occlusionVao;
 
 
@@ -95,8 +96,8 @@ namespace Robust.Client.Graphics.Clyde
         private int _occlusionMaskDataLength;
 
         // Actual GL objects used for rendering.
-        private GLBuffer _occlusionMaskVbo;
-        private GLBuffer _occlusionMaskEbo;
+        private GLBuffer _occlusionMaskVbo = default!;
+        private GLBuffer _occlusionMaskEbo = default!;
         private GLHandle _occlusionMaskVao;
 
         private unsafe void InitLighting()
@@ -202,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
             if (eye.DrawFov)
             {
                 // Calculate maximum distance for the projection based on screen size.
-                var screenSizeCut = ScreenSize / EyeManager.PIXELSPERMETER;
+                var screenSizeCut = ScreenSize / EyeManager.PixelsPerMeter;
                 var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
@@ -364,7 +365,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastRange = float.NaN;
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
-            Texture lastMask = null;
+            Texture? lastMask = null;
 
             for (var i = 0; i < lights.Count; i++)
             {
@@ -384,7 +385,7 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                Texture mask = null;
+                Texture? mask = null;
                 var rotation = Angle.Zero;
                 if (component.Mask != null)
                 {
@@ -470,23 +471,19 @@ namespace Robust.Client.Graphics.Clyde
             // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
             var expandedBounds = worldBounds;
 
-            foreach (var component in _componentManager.GetAllComponents<PointLightComponent>())
+            var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+            var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
+
+            foreach (var component in lightTree.Query(worldBounds))
             {
                 var transform = component.Owner.Transform;
 
-                if (!component.Enabled || transform.MapID != map)
+                if (!component.Enabled)
                 {
                     continue;
                 }
 
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
-
-                var lightBounds = Box2.CenteredAround(lightPos, Vector2.One * component.Radius * 2);
-
-                if (!lightBounds.Intersects(worldBounds))
-                {
-                    continue;
-                }
 
                 lights.Add((component, lightPos));
 
@@ -494,7 +491,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (lights.Count == MaxLightsPerScene)
                 {
-                    // TODO: Allow more than 64 lights.
+                    // TODO: Allow more than MaxLightsPerScene lights.
                     break;
                 }
             }
@@ -525,7 +522,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PIXELSPERMETER;
+            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -640,10 +637,6 @@ namespace Robust.Client.Graphics.Clyde
 
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            // TODO: More accurate bounds check.
-            // Yeah just enlarge it a wee bit to accomodate for large occluders maybe. Oh well.
-            expandedBounds.Enlarged(2);
-
             var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
             var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
 
@@ -652,28 +645,24 @@ namespace Robust.Client.Graphics.Clyde
 
             try
             {
+                var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
+                var occluderTree = renderingTreeSystem.GetOccluderTreeForMap(map);
+
                 var ai = 0;
                 var ami = 0;
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var occluder in _componentManager.GetAllComponents<ClientOccluderComponent>())
+                foreach (var occluder in occluderTree.Query(expandedBounds))
                 {
                     var transform = occluder.Owner.Transform;
-                    if (!occluder.Enabled || transform.MapID != map)
+                    if (!occluder.Enabled)
                     {
                         continue;
                     }
 
                     var worldTransform = transform.WorldMatrix;
                     var box = occluder.BoundingBox;
-
-                    var centerPos = (worldTransform.R0C2, worldTransform.R1C2);
-
-                    if (!expandedBounds.Contains(centerPos))
-                    {
-                        continue;
-                    }
 
                     // So uh, angle 0 = east... Apparently...
                     // We account for that here so I don't go insane.
@@ -785,38 +774,6 @@ namespace Robust.Client.Graphics.Clyde
                         indexBuffer[ii + 3] = (ushort) (ai + 1);
                         indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
                         ii += 5;
-                    }
-
-                    if (_quartResLights)
-                    {
-                        // On low-res lights we bias the occlusion mask inwards.
-                        // This avoids wall lighting going onto the tile next to them at certain tile alignments.
-                        // It's inwards to avoid seeing disconnected shadows on wall edges.
-                        const float bias = 0.5f / EyeManager.PIXELSPERMETER;
-
-                        if (!no)
-                        {
-                            tlY -= bias;
-                            trY -= bias;
-                        }
-
-                        if (!eo)
-                        {
-                            trX -= bias;
-                            brX -= bias;
-                        }
-
-                        if (!so)
-                        {
-                            blY += bias;
-                            brY += bias;
-                        }
-
-                        if (!wo)
-                        {
-                            blX += bias;
-                            tlX += bias;
-                        }
                     }
 
                     // Generate mask geometry.

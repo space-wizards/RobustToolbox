@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Buffers;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Client.GameObjects;
-using Robust.Client.GameObjects.Components.Containers;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -21,12 +21,14 @@ namespace Robust.Client.Graphics.Clyde
     {
         public ClydeDebugLayers DebugLayers { get; set; }
 
-        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation)> _drawingSpriteList
+        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)> _drawingSpriteList
             =
-            new RefList<(SpriteComponent, Matrix3, Angle)>();
+            new RefList<(SpriteComponent, Matrix3, Angle, float)>();
 
         public void Render()
         {
+            CheckTransferringScreenshots();
+
             var size = ScreenSize;
             if (size.X == 0 || size.Y == 0 || _isMinimized)
             {
@@ -80,28 +82,31 @@ namespace Robust.Client.Graphics.Clyde
             // Calculate world-space AABB for camera, to cull off-screen things.
             var eye = _eyeManager.CurrentEye;
             var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _framebufferSize / (float) EyeManager.PIXELSPERMETER * eye.Zoom);
+                _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
 
-            using (DebugGroup("Lights"))
+            if (_eyeManager.CurrentMap != MapId.Nullspace)
             {
-                DrawLightsAndFov(worldBounds, eye);
-            }
+                using (DebugGroup("Lights"))
+                {
+                    DrawLightsAndFov(worldBounds, eye);
+                }
 
-            using (DebugGroup("Grids"))
-            {
-                _drawGrids(worldBounds);
-            }
+                using (DebugGroup("Grids"))
+                {
+                    _drawGrids(worldBounds);
+                }
 
-            using (DebugGroup("Entities"))
-            {
-                DrawEntities(worldBounds);
-            }
+                using (DebugGroup("Entities"))
+                {
+                    DrawEntities(worldBounds);
+                }
 
-            RenderOverlays(OverlaySpace.WorldSpace);
+                RenderOverlays(OverlaySpace.WorldSpace);
 
-            if (_lightManager.Enabled && eye.DrawFov)
-            {
-                ApplyFovToBuffer(eye);
+                if (_lightManager.Enabled && eye.DrawFov)
+                {
+                    ApplyFovToBuffer(eye);
+                }
             }
 
             _lightingReady = false;
@@ -124,6 +129,7 @@ namespace Robust.Client.Graphics.Clyde
                 _renderHandle.DrawingHandleScreen.DrawTextureRect(_wallBleedIntermediateRenderTarget2.Texture, UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
             }
 
+            TakeScreenshot(ScreenshotType.BeforeUI);
 
             RenderOverlays(OverlaySpace.ScreenSpace);
 
@@ -132,6 +138,8 @@ namespace Robust.Client.Graphics.Clyde
                 _userInterfaceManager.Render(_renderHandle);
                 FlushRenderQueue();
             }
+
+            TakeScreenshot(ScreenshotType.AfterUI);
 
             // And finally, swap those buffers!
             SwapBuffers();
@@ -149,10 +157,7 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Make this check more accurate.
             var widerBounds = worldBounds.Enlarged(5);
 
-            var mapEntity = _mapManager.GetMapEntity(_eyeManager.CurrentMap);
-
-            var identity = Matrix3.Identity;
-            ProcessSpriteEntities(mapEntity, ref identity, Angle.Zero, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
 
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
@@ -198,8 +203,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     var box = Box2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
 
-                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture, box.BottomLeft,
-                        box.TopRight, Color.White, null, 0);
+                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture,
+                        box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
+                        Color.White, null);
 
                     _renderHandle.SetSpace(CurrentSpace.WorldSpace);
                     _renderHandle.UseShader(null);
@@ -211,48 +217,31 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderQueue();
         }
 
-        private void ProcessSpriteEntities(IEntity entity, ref Matrix3 parentTransform, Angle parentRotation,
-            Box2 worldBounds, RefList<(SpriteComponent, Matrix3, Angle)> list)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ProcessSpriteEntities(MapId map, Box2 worldBounds, RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            entity.TryGetComponent(out ContainerManagerComponent containerManager);
+            var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
 
-            var localMatrix = entity.Transform.GetLocalMatrix();
-            Matrix3.Multiply(ref localMatrix, ref parentTransform, out var matrix);
-            var rotation = parentRotation + entity.Transform.LocalRotation;
+            var tree = spriteSystem.GetSpriteTreeForMap(map);
 
-            foreach (var child in entity.Transform.ChildEntityUids)
+            var sprites = tree.Query(worldBounds, true);
+
+            foreach (var sprite in sprites)
             {
-                var childEntity = _entityManager.GetEntity(child);
-
-                if (containerManager != null && containerManager.TryGetContainer(childEntity, out var container) &&
-                    !container.ShowContents)
+                if (sprite.ContainerOccluded || !sprite.Visible)
                 {
                     continue;
                 }
 
-                var childTransform = childEntity.Transform;
+                var entity = sprite.Owner;
+                var transform = entity.Transform;
 
-                var worldPosition = Matrix3.Transform(matrix, childTransform.LocalPosition);
-
-                if (worldBounds.Contains(worldPosition))
-                {
-                    if (childEntity.TryGetComponent(out SpriteComponent sprite) && sprite.Visible)
-                    {
-                        ref var entry = ref list.AllocAdd();
-
-                        var childLocalMatrix = childTransform.GetLocalMatrix();
-                        Matrix3.Multiply(ref childLocalMatrix, ref matrix, out entry.Item2);
-                        var childWorldRotation = rotation + childTransform.LocalRotation;
-
-                        entry.Item1 = sprite;
-                        entry.Item3 = childWorldRotation;
-                    }
-                }
-
-                if (childTransform.ChildCount > 0)
-                {
-                    ProcessSpriteEntities(childEntity, ref matrix, rotation, worldBounds, list);
-                }
+                ref var entry = ref list.AllocAdd();
+                entry.sprite = sprite;
+                entry.worldRot = transform.WorldRotation;
+                entry.matrix = transform.WorldMatrix;
+                var worldPos = entry.matrix.Transform(transform.LocalPosition);
+                entry.yWorldPos = worldPos.Y;
             }
         }
 

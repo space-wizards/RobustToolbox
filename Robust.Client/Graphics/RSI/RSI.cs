@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections;
-
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
+using SixLabors.ImageSharp.Processing.Processors.Dithering;
 
 namespace Robust.Client.Graphics
 {
@@ -31,7 +33,7 @@ namespace Robust.Client.Graphics
             States.Remove(stateId);
         }
 
-        public bool TryGetState(StateId stateId, out State state)
+        public bool TryGetState(StateId stateId, [NotNullWhen(true)] out State? state)
         {
             return States.TryGetValue(stateId, out state);
         }
@@ -40,7 +42,6 @@ namespace Robust.Client.Graphics
         {
             Size = size;
         }
-
         public IEnumerator<State> GetEnumerator()
         {
             return States.Values.GetEnumerator();
@@ -57,9 +58,9 @@ namespace Robust.Client.Graphics
         /// </summary>
         public struct StateId : IEquatable<StateId>
         {
-            public readonly string Name;
+            public readonly string? Name;
 
-            public StateId(string name)
+            public StateId(string? name)
             {
                 Name = name;
             }
@@ -67,20 +68,20 @@ namespace Robust.Client.Graphics
             /// <summary>
             ///     Effectively the "null" of <c>StateId</c>, because you can't have a null for structs.
             /// </summary>
-            public static readonly StateId Invalid = new StateId(null);
+            public static readonly StateId Invalid = default;
             public bool IsValid => Name != null;
 
-            public override string ToString()
+            public override string? ToString()
             {
                 return Name;
             }
 
-            public static implicit operator StateId(string key)
+            public static implicit operator StateId(string? key)
             {
                 return new StateId(key);
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is StateId id && Equals(id);
             }
@@ -102,7 +103,7 @@ namespace Robust.Client.Graphics
 
             public override int GetHashCode()
             {
-                return Name.GetHashCode();
+                return Name?.GetHashCode() ?? 0;
             }
         }
     }

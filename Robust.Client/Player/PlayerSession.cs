@@ -1,13 +1,16 @@
 ﻿using Robust.Shared.Enums;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Network;
 
 namespace Robust.Client.Player
 {
 
-    public class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : IPlayerSession
     {
         /// <inheritdoc />
         public SessionStatus Status { get; set; } = SessionStatus.Connecting;
+
+        public IEntity? AttachedEntity { get; set; }
 
         /// <inheritdoc />
         public NetSessionId SessionId { get; }

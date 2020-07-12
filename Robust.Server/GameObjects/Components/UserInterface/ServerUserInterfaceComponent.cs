@@ -1,15 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.Player;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.UserInterface;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.Components.UserInterface
 {
@@ -20,10 +26,6 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// <seealso cref="BoundUserInterface"/>
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
-
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new Dictionary<object, BoundUserInterface>();
 
@@ -53,7 +55,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             return _interfaces[uiKey];
         }
 
-        public bool TryGetBoundUserInterface(object uiKey, out BoundUserInterface boundUserInterface)
+        public bool TryGetBoundUserInterface(object uiKey, [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
         {
             return _interfaces.TryGetValue(uiKey, out boundUserInterface);
         }
@@ -68,27 +70,27 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             SendNetworkMessage(new BoundInterfaceMessageWrapMessage(message, uiKey), session.ConnectedClient);
         }
 
-        public override void HandleMessage(ComponentMessage message, INetChannel netChannel = null,
-            IComponent component = null)
+        public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
+            ICommonSession? session = null)
         {
-            base.HandleMessage(message, netChannel, component);
+            base.HandleNetworkMessage(message, netChannel, session);
 
             switch (message)
             {
                 case BoundInterfaceMessageWrapMessage wrapped:
-                    if (netChannel == null)
+                    if (session == null)
                     {
-                        throw new ArgumentNullException(nameof(netChannel));
+                        throw new ArgumentNullException(nameof(session));
                     }
 
-                    var session = _playerManager.GetSessionById(netChannel.SessionId);
                     if (!_interfaces.TryGetValue(wrapped.UiKey, out var @interface))
                     {
                         Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}",
                             wrapped.UiKey);
                         return;
                     }
-                    @interface.ReceiveMessage(wrapped.Message, session);
+
+                    @interface.ReceiveMessage(wrapped.Message, (IPlayerSession)session);
                     break;
             }
         }
@@ -99,18 +101,25 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// </summary>
     public sealed class BoundUserInterface
     {
+        private bool _isActive;
+
         public object UiKey { get; }
         public ServerUserInterfaceComponent Owner { get; }
         private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
-        private BoundUserInterfaceState _lastState;
+        private BoundUserInterfaceState? _lastState;
+
+        private bool _stateDirty;
+
+        private readonly Dictionary<IPlayerSession, BoundUserInterfaceState> _playerStateOverrides =
+            new Dictionary<IPlayerSession, BoundUserInterfaceState>();
 
         /// <summary>
         ///     All of the sessions currently subscribed to this UserInterface.
         /// </summary>
         public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
-        public event Action<ServerBoundUserInterfaceMessage> OnReceiveMessage;
-        public event Action<ServerBoundUserInterfaceMessage> OnClosed;
+        public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
+        public event Action<IPlayerSession>? OnClosed;
 
         public BoundUserInterface(object uiKey, ServerUserInterfaceComponent owner)
         {
@@ -128,10 +137,22 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         ///     The state object that will be sent to all current and future client.
         ///     This can be null.
         /// </param>
-        public void SetState(BoundUserInterfaceState state)
+        /// <param name="session">
+        ///     The player session to send this new state to.
+        ///     Set to null for sending it to every subscribed player session.
+        /// </param>
+        public void SetState(BoundUserInterfaceState state, IPlayerSession? session = null)
         {
-            SendMessage(new UpdateBoundStateMessage(state));
-            _lastState = state;
+            if (session == null)
+            {
+                _lastState = state;
+                _playerStateOverrides.Clear();
+            }
+            else
+            {
+                _playerStateOverrides[session] = state;
+            }
+            _stateDirty = true;
         }
 
         /// <summary>
@@ -166,13 +187,23 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 SendMessage(new UpdateBoundStateMessage(_lastState));
             }
 
-            session.PlayerStatusChanged += (sender, args) =>
+            if (!_isActive)
             {
-                if (args.NewStatus == SessionStatus.Disconnected)
-                {
-                    _subscribedSessions.Remove(session);
-                }
-            };
+                _isActive = true;
+
+                EntitySystem.Get<UserInterfaceSystem>()
+                    .ActivateInterface(this);
+            }
+
+            session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
+        }
+
+        private void OnSessionOnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
+        {
+            if (args.NewStatus == SessionStatus.Disconnected)
+            {
+                CloseShared(args.Session);
+            }
         }
 
         /// <summary>
@@ -194,8 +225,22 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             var msg = new CloseBoundInterfaceMessage();
             SendMessage(msg, session);
-            OnClosed?.Invoke(new ServerBoundUserInterfaceMessage(msg, session));
+            CloseShared(session);
+        }
+
+        private void CloseShared(IPlayerSession session)
+        {
+            OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
+            _playerStateOverrides.Remove(session);
+
+            if (_subscribedSessions.Count == 0)
+            {
+                EntitySystem.Get<UserInterfaceSystem>()
+                    .DeactivateInterface(this);
+
+                _isActive = false;
+            }
         }
 
         /// <summary>
@@ -266,14 +311,13 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
             switch (wrappedMessage)
             {
-                case CloseBoundInterfaceMessage msg:
-                    var closeMsg = new ServerBoundUserInterfaceMessage(msg, session);
-                    _subscribedSessions.Remove(session);
-                    OnClosed?.Invoke(closeMsg);
+                case CloseBoundInterfaceMessage _:
+                    CloseShared(session);
+
                     break;
 
-                case BoundUserInterfaceMessage msg:
-                    var serverMsg = new ServerBoundUserInterfaceMessage(msg, session);
+                default:
+                    var serverMsg = new ServerBoundUserInterfaceMessage(wrappedMessage, session);
                     OnReceiveMessage?.Invoke(serverMsg);
                     break;
             }
@@ -286,12 +330,36 @@ namespace Robust.Server.GameObjects.Components.UserInterface
                 throw new ArgumentException("Player session does not have this UI open.");
             }
         }
+
+        public void DispatchPendingState()
+        {
+            if (!_stateDirty)
+            {
+                return;
+            }
+
+            foreach (var playerSession in _subscribedSessions)
+            {
+                if (!_playerStateOverrides.ContainsKey(playerSession) && _lastState != null)
+                {
+                    SendMessage(new UpdateBoundStateMessage(_lastState), playerSession);
+                }
+            }
+
+            foreach (var (player, state) in _playerStateOverrides)
+            {
+                SendMessage(new UpdateBoundStateMessage(state), player);
+            }
+
+            _stateDirty = false;
+        }
     }
 
     public class ServerBoundUserInterfaceMessage
     {
         public BoundUserInterfaceMessage Message { get; }
         public IPlayerSession Session { get; }
+
         public ServerBoundUserInterfaceMessage(BoundUserInterfaceMessage message, IPlayerSession session)
         {
             Message = message;

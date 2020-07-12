@@ -39,5 +39,5 @@ void fragment()
     // We actually "add" energy to the wall here while blurring with the * 1.2.
     // Keep in mind that the wall is pitch black right now
     // so it'd look like half brightness of the surroundings otherwise..
-    COLOR = sum * 1.2;
+    COLOR = sum * 1.1;
 }

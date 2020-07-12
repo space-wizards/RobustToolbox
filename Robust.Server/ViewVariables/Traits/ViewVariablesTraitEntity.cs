@@ -14,7 +14,7 @@ namespace Robust.Server.ViewVariables.Traits
             _entity = (IEntity) Session.Object;
         }
 
-        public override ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {
@@ -24,7 +24,7 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = TypeAbbreviation.Abbreviate(type.ToString()), FullName = type.FullName});
+                        {Stringified = TypeAbbreviation.Abbreviate(type), FullName = type.FullName});
                 }
 
                 return new ViewVariablesBlobEntityComponents

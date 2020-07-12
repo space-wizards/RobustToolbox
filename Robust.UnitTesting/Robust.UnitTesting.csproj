@@ -5,15 +5,15 @@
     <TargetFramework>$(TargetFramework)</TargetFramework>
     <LangVersion>8</LangVersion>
     <IsPackable>false</IsPackable>
-    <Platforms>x64</Platforms>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/UnitTesting</OutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.4.0" />
-    <PackageReference Include="JetBrains.Annotations" Version="2019.1.3" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Microsoft.CodeCoverage" Version="16.4.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
     <PackageReference Include="Moq" Version="4.13.1" />
@@ -24,7 +24,7 @@
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.2" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Threading.Channels" Version="4.5.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Threading.Tasks.Extensions" Version="4.5.3" />
-    <PackageReference Include="YamlDotNet" Version="8.1.0" />
+    <PackageReference Include="YamlDotNet" Version="8.1.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
@@ -32,6 +32,11 @@
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
     <ProjectReference Include="..\Robust.Client\Robust.Client.csproj" />
     <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Shared\ContentPack\ZipTest.zip">
+      <LogicalName>Robust.UnitTesting.Shared.ContentPack.ZipTest.zip</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />

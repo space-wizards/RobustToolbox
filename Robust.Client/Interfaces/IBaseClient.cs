@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace Robust.Client.Interfaces
 {
@@ -21,12 +22,14 @@ namespace Robust.Client.Interfaces
         ///     Various bits of config info received when setting up a session.
         /// </summary>
         //TODO: Move this to the CVar system?
-        ServerInfo GameInfo { get; }
+        ServerInfo? GameInfo { get; }
 
         /// <summary>
         /// A player name to use when connecting to the server instead of the one found in the configuration.
         /// </summary>
-        string PlayerNameOverride { get; set; }
+        string? PlayerNameOverride { get; set; }
+
+        string? LastDisconnectReason { get; }
 
         /// <summary>
         ///     Raised when the client RunLevel is changed.
@@ -56,7 +59,12 @@ namespace Robust.Client.Interfaces
         /// <summary>
         ///     Connects the Initialized BaseClient to a remote server.
         /// </summary>
-        void ConnectToServer(string ip, ushort port);
+        void ConnectToServer(string ip, ushort port)
+        {
+            ConnectToServer(new DnsEndPoint(ip, port));
+        }
+
+        void ConnectToServer(DnsEndPoint endPoint);
 
         /// <summary>
         ///     Disconnects the connected BaseClient from a remote server.

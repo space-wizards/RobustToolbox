@@ -34,7 +34,7 @@ namespace Robust.Shared.Input
             return _value == other._value;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return obj is KeyFunctionId other && Equals(other);
         }
@@ -87,7 +87,7 @@ namespace Robust.Shared.Input
                         continue;
                     }
 
-                    KeyFunctionsList.Add((BoundKeyFunction)field.GetValue(null));
+                    KeyFunctionsList.Add((BoundKeyFunction)field.GetValue(null)!);
                 }
             }
 
@@ -120,12 +120,6 @@ namespace Robust.Shared.Input
             var index = (int) funcId;
 
             if (0 > index || index >= list.Count)
-            {
-                func = default;
-                return false;
-            }
-
-            if (list[index] == null)
             {
                 func = default;
                 return false;

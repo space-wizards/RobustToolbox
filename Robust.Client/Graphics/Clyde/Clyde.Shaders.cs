@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.ResourceManagement.ResourceTypes;
 using Robust.Shared.Maths;
@@ -14,15 +14,13 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private ClydeShaderInstance _defaultShader;
+        private ClydeShaderInstance _defaultShader = default!;
 
-        private string _shaderWrapCodeDefaultFrag;
-        private string _shaderWrapCodeDefaultVert;
+        private string _shaderWrapCodeDefaultFrag = default!;
+        private string _shaderWrapCodeDefaultVert = default!;
 
-        private string _shaderWrapCodeRawFrag;
-        private string _shaderWrapCodeRawVert;
-
-
+        private string _shaderWrapCodeRawFrag = default!;
+        private string _shaderWrapCodeRawVert = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
             new Dictionary<ClydeHandle, LoadedShader>();
@@ -34,10 +32,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private class LoadedShader
         {
-            public GLShaderProgram Program;
+            public GLShaderProgram Program = default!;
             public bool HasLighting = true;
             public ShaderBlendMode BlendMode;
-            public string Name;
+            public string? Name;
         }
 
         private class LoadedShaderInstance
@@ -50,7 +48,7 @@ namespace Robust.Client.Graphics.Clyde
             public StencilParameters Stencil = StencilParameters.Default;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
@@ -121,16 +119,16 @@ namespace Robust.Client.Graphics.Clyde
         private string ReadEmbeddedShader(string fileName)
         {
             var assembly = typeof(Clyde).Assembly;
-            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}");
+            using var stream = assembly.GetManifestResourceStream($"Robust.Client.Graphics.Clyde.Shaders.{fileName}")!;
             DebugTools.AssertNotNull(stream);
             using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
             return reader.ReadToEnd();
         }
 
-        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string name = null)
+        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string? name = null)
         {
-            GLShader vertexShader = null;
-            GLShader fragmentShader = null;
+            GLShader? vertexShader = null;
+            GLShader? fragmentShader = null;
 
             try
             {
@@ -210,8 +208,8 @@ namespace Robust.Client.Graphics.Clyde
                 varyingsVertex.AppendFormat("out {0} {1};\n", varying.Type.GetNativeType(), name);
             }
 
-            ShaderFunctionDefinition fragmentMain = null;
-            ShaderFunctionDefinition vertexMain = null;
+            ShaderFunctionDefinition? fragmentMain = null;
+            ShaderFunctionDefinition? vertexMain = null;
 
             var functionsBuilder = new StringBuilder();
 

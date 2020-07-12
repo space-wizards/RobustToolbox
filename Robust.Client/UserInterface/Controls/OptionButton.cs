@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
-using static Robust.Client.UserInterface.Controls.Label;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -17,19 +16,17 @@ namespace Robust.Client.UserInterface.Controls
         private VBoxContainer _popupVBox;
         private Label _label;
 
-        public event Action<ItemSelectedEventArgs> OnItemSelected;
+        public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
         public string Prefix { get; set; }
 
-        public OptionButton()
+        public OptionButton() : base()
         {
+            AddStyleClass(StyleClassButton);
             Prefix = "";
             OnPressed += _onPressed;
 
-            var hBox = new HBoxContainer
-            {
-                MouseFilter = MouseFilterMode.Ignore
-            };
+            var hBox = new HBoxContainer();
             AddChild(hBox);
 
             _popup = new Popup();
@@ -41,7 +38,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 StyleClasses = { StyleClassOptionButton },
                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(_label);
 
@@ -49,7 +45,6 @@ namespace Robust.Client.UserInterface.Controls
             {
                 StyleClasses = { StyleClassOptionTriangle },
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
-                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(textureRect);
         }
@@ -77,11 +72,9 @@ namespace Robust.Client.UserInterface.Controls
                 ToggleMode = true
             };
             button.OnPressed += ButtonOnPressed;
-            var data = new ButtonData
+            var data = new ButtonData(label, button)
             {
-                Text = label,
                 Id = id.Value,
-                Button = button
             };
             _idMap.Add(id.Value, _buttonData.Count);
             _buttonData.Add(data);
@@ -124,14 +117,14 @@ namespace Robust.Client.UserInterface.Controls
             return _buttonData[idx].Id;
         }
 
-        public object GetItemMetadata(int idx)
+        public object? GetItemMetadata(int idx)
         {
             return _buttonData[idx].Metadata;
         }
 
         public int SelectedId { get; private set; }
 
-        public object SelectedMetadata => _buttonData[_idMap[SelectedId]].Metadata;
+        public object? SelectedMetadata => _buttonData[_idMap[SelectedId]].Metadata;
 
         public bool IsItemDisabled(int idx)
         {
@@ -244,9 +237,15 @@ namespace Robust.Client.UserInterface.Controls
         {
             public string Text;
             public bool Disabled;
-            public object Metadata;
+            public object? Metadata;
             public int Id;
             public Button Button;
+
+            public ButtonData(string text, Button button)
+            {
+                Text = text;
+                Button = button;
+            }
         }
     }
 }

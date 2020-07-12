@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Threading;
 using System.Collections.Generic;
 
@@ -53,7 +54,7 @@ namespace Lidgren.Network
 				NetOutgoingMessage chunk = CreateMessage(0);
 
 				chunk.m_bitLength = (bitsLeft > bitsPerChunk ? bitsPerChunk : bitsLeft);
-				chunk.m_data = msg.m_data;
+				chunk.m_buf = msg.m_buf;
 				chunk.m_fragmentGroup = group;
 				chunk.m_fragmentGroupTotalBits = totalBytes * 8;
 				chunk.m_fragmentChunkByteSize = bytesPerChunk;
@@ -127,9 +128,11 @@ namespace Lidgren.Network
 			ReceivedFragmentGroup info;
 			if (!groups.TryGetValue(group, out info))
 			{
-				info = new ReceivedFragmentGroup();
-				info.Data = new byte[totalBytes];
-				info.ReceivedChunks = new NetBitVector(totalNumChunks);
+				info = new ReceivedFragmentGroup
+				{
+					Data = ArrayPool<byte>.Shared.Rent(totalBytes),
+					ReceivedChunks = new NetBitVector(totalNumChunks)
+				};
 				groups[group] = info;
 			}
 
@@ -138,7 +141,9 @@ namespace Lidgren.Network
 
 			// copy to data
 			int offset = (chunkNumber * chunkByteSize);
-			Buffer.BlockCopy(im.m_data, ptr, info.Data, offset, im.LengthBytes - ptr);
+			//Buffer.BlockCopy(im.m_data, ptr, info.Data, offset, im.LengthBytes - ptr);
+			im.m_data.Slice(ptr,im.LengthBytes - ptr)
+				.CopyTo(new Span<byte>(info.Data,offset,im.LengthBytes - ptr));
 
 			int cnt = info.ReceivedChunks.Count();
 			//LogVerbose("Found fragment #" + chunkNumber + " in group " + group + " offset " + offset + " of total bits " + totalBits + " (total chunks done " + cnt + ")");
@@ -148,7 +153,7 @@ namespace Lidgren.Network
 			if (info.ReceivedChunks.Count() == totalNumChunks)
 			{
 				// Done! Transform this incoming message
-				im.m_data = info.Data;
+				im.m_buf = info.Data;
 				im.m_bitLength = (int)totalBits;
 				im.m_isFragment = false;
 

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
@@ -19,6 +19,8 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Client.Graphics.Clyde
@@ -26,49 +28,52 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio
     {
-#pragma warning disable 649
-        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly ILightManager _lightManager;
-        [Dependency] private readonly ILogManager _logManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IResourceCache _resourceCache;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager;
-#pragma warning restore 649
+        [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly ILightManager _lightManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
         private const int ProjViewBindingIndex = 0;
         private const int UniformConstantsBindingIndex = 1;
-        private GLBuffer ProjViewUBO;
-        private GLBuffer UniformConstantsUBO;
+        private GLBuffer ProjViewUBO = default!;
+        private GLBuffer UniformConstantsUBO = default!;
 
-        private RenderTarget EntityPostRenderTarget;
+        private RenderTarget EntityPostRenderTarget = default!;
 
-        private GLBuffer BatchVBO;
-        private GLBuffer BatchEBO;
+        private GLBuffer BatchVBO = default!;
+        private GLBuffer BatchEBO = default!;
         private GLHandle BatchVAO;
 
         // VBO to draw a single quad.
-        private GLBuffer QuadVBO;
+        private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
         private bool _drawingSplash = true;
 
-        private GLShaderProgram _currentProgram;
+        private GLShaderProgram? _currentProgram;
 
         private bool _quartResLights = true;
 
         private bool _hasKhrDebug;
 
+        private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
+            = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
+
+        private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
+            _transferringScreenshots
+                = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
+
         public override bool Initialize()
         {
-            _debugStats = new ClydeDebugStats();
             if (!InitWindowing())
             {
                 return false;
@@ -84,6 +89,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
+            FlushCursorDisposeQueue();
             ClearDeadShaderInstances();
         }
 
@@ -94,7 +100,7 @@ namespace Robust.Client.Graphics.Clyde
             InitLighting();
         }
 
-        public IClydeDebugInfo DebugInfo { get; private set; }
+        public IClydeDebugInfo DebugInfo { get; private set; } = default!;
         public IClydeDebugStats DebugStats => _debugStats;
 
         protected override void ReadConfig()
@@ -120,13 +126,18 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.GridChanged += _updateOnGridModified;
         }
 
-        public override event Action<WindowResizedEventArgs> OnWindowResized;
+        public override event Action<WindowResizedEventArgs>? OnWindowResized;
+
+        public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
+        {
+            _queuedScreenshots.Add((type, callback));
+        }
 
         private void InitOpenGL()
         {
             DetectOpenGLFeatures();
 
-            HijackDebugCallback();
+            SetupDebugCallback();
 
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
@@ -220,7 +231,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
                 UniformConstantsUBO.ObjectHandle);
 
-            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 4 * EyeManager.PIXELSPERMETER,
+            EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
         }
@@ -242,7 +253,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void HijackDebugCallback()
+        private void SetupDebugCallback()
         {
             if (!_hasKhrDebug)
             {
@@ -254,12 +265,8 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.DebugOutputSynchronous);
 
             GCHandle.Alloc(_debugMessageCallbackInstance);
-            // See https://github.com/opentk/opentk/issues/880
-            var type = typeof(GL);
-            // ReSharper disable once PossibleNullReferenceException
-            var entryPoints = (IntPtr[]) type.GetField("EntryPoints", BindingFlags.Static | BindingFlags.NonPublic)
-                .GetValue(null);
-            var ep = entryPoints[184];
+
+            var ep = _graphicsContext.GetProcAddress("glDebugMessageCallback");
             var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
             _debugMessageCallbackInstance = DebugMessageCallback;
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);
@@ -327,7 +334,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private static DebugProc _debugMessageCallbackInstance;
+        private static DebugProc? _debugMessageCallbackInstance;
 
         private static HashSet<string> GetGLExtensions()
         {
@@ -344,7 +351,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string label)
+        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string? label)
         {
             if (label == null)
             {
@@ -360,7 +367,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [Conditional("DEBUG")]
-        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, GLHandle name, string label)
+        private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, GLHandle name, string? label)
         {
             ObjectLabelMaybe(identifier, name.Handle, label);
         }
@@ -393,7 +400,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.PopDebugGroup();
         }
 
-        public void Dispose()
+        public void Shutdown()
         {
             ShutdownWindowing();
             _shutdownAudio();

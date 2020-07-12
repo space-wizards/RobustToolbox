@@ -37,7 +37,7 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity AttachedEntity { get; private set; }
+        [ViewVariables] public IEntity? AttachedEntity { get; private set; }
 
         [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
 
@@ -68,6 +68,10 @@ namespace Robust.Server.Player
         public DateTime ConnectedTime { get; private set; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public int VisibilityMask { get; set; } = 1;
+
+        /// <inheritdoc />
         [ViewVariables]
         public NetSessionId SessionId { get; }
 
@@ -75,7 +79,7 @@ namespace Robust.Server.Player
         [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
-        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+        public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
         public void AttachToEntity(IEntity a)
@@ -92,7 +96,6 @@ namespace Robust.Server.Player
             AttachedEntity = a;
             a.SendMessage(actorComponent, new PlayerAttachedMsg(this));
             a.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSystemMessage(a, this));
-            SetAttachedEntityName();
             UpdatePlayerState();
         }
 

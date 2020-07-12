@@ -13,15 +13,12 @@ using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 
 namespace Robust.Client.Graphics
 {
     internal sealed class FontManager : IFontManagerInternal, IPostInjectInit
     {
-#pragma warning disable 649
-        [Dependency] private readonly IConfigurationManager _configuration;
-#pragma warning restore 649
+        [Dependency] private readonly IConfigurationManager _configuration = default!;
 
         private uint BaseFontDPI;
 
@@ -122,11 +119,11 @@ namespace Robust.Client.Graphics
             var atlasEntriesVertical =
                 (int) Math.Ceiling(count / (float) atlasEntriesHorizontal);
             var atlasDimX =
-                (int) Math.Round(atlasEntriesHorizontal * maxGlyphSize.X / 4f, MidpointRounding.AwayFromZero) * 4;
+                (int) Math.Ceiling(atlasEntriesHorizontal * maxGlyphSize.X / 4f) * 4;
             var atlasDimY =
-                (int) Math.Round(atlasEntriesVertical * maxGlyphSize.Y / 4f, MidpointRounding.AwayFromZero) * 4;
+                (int) Math.Ceiling(atlasEntriesVertical * maxGlyphSize.Y / 4f) * 4;
 
-            using (var atlas = new Image<Alpha8>(atlasDimX, atlasDimY))
+            using (var atlas = new Image<A8>(atlasDimX, atlasDimY))
             {
                 var atlasRegions = new Dictionary<uint, UIBox2>();
                 count = 0;
@@ -169,10 +166,10 @@ namespace Robust.Client.Graphics
 
                         case PixelMode.Gray:
                         {
-                            ReadOnlySpan<Alpha8> span;
+                            ReadOnlySpan<A8> span;
                             unsafe
                             {
-                                span = new ReadOnlySpan<Alpha8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
+                                span = new ReadOnlySpan<A8>((void*) bitmap.Buffer, bitmap.Pitch * bitmap.Rows);
                             }
 
                             span.Blit(bitmap.Pitch, UIBox2i.FromDimensions(0, 0, bitmap.Pitch, bitmap.Rows), atlas,
@@ -203,7 +200,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        private static Image<Alpha8> MonoBitMapToImage(FTBitmap bitmap)
+        private static Image<A8> MonoBitMapToImage(FTBitmap bitmap)
         {
             DebugTools.Assert(bitmap.PixelMode == PixelMode.Mono);
             DebugTools.Assert(bitmap.Pitch > 0);
@@ -214,7 +211,7 @@ namespace Robust.Client.Graphics
                 span = new ReadOnlySpan<byte>((void*) bitmap.Buffer, bitmap.Rows * bitmap.Pitch);
             }
 
-            var bitmapImage = new Image<Alpha8>(bitmap.Width, bitmap.Rows);
+            var bitmapImage = new Image<A8>(bitmap.Width, bitmap.Rows);
             for (var y = 0; y < bitmap.Rows; y++)
             {
                 for (var x = 0; x < bitmap.Width; x++)
@@ -223,7 +220,7 @@ namespace Robust.Client.Graphics
                     var bitIndex = x % 8;
 
                     var bit = (span[byteIndex] & (1 << (7 - bitIndex))) != 0;
-                    bitmapImage[x, y] = new Alpha8(bit ? byte.MaxValue : byte.MinValue);
+                    bitmapImage[x, y] = new A8(bit ? byte.MaxValue : byte.MinValue);
                 }
             }
 
@@ -234,7 +231,7 @@ namespace Robust.Client.Graphics
         {
             var map = new Dictionary<char, uint>();
 
-            // TODO: Render more than extended ASCII + Cyrillic, somehow.
+            // TODO: Render more than extended ASCII, Cyrillic and Greek. somehow.
             // Does it make sense to just render every glyph in the font?
 
             // Render all the extended ASCII characters.
@@ -246,6 +243,12 @@ namespace Robust.Client.Graphics
 
             // Render basic cyrillic.
             for (var i = 0x0410u; i <= 0x044F; i++)
+            {
+                _addGlyph(i, face, map);
+            }
+
+            // Render greek.
+            for (var i = 0x03B1u; i <= 0x03C9; i++)
             {
                 _addGlyph(i, face, map);
             }
@@ -292,7 +295,7 @@ namespace Robust.Client.Graphics
                 FaceHandle = faceHandle;
             }
 
-            public Texture GetCharTexture(char chr, float scale)
+            public Texture? GetCharTexture(char chr, float scale)
             {
                 var glyph = _getGlyph(chr);
                 if (glyph == 0)

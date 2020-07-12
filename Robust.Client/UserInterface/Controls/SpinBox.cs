@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Determines whether the SpinBox value gets changed by the input text.
         /// </summary>
-        public Func<int, bool> IsValid { get; set; }
+        public Func<int, bool>? IsValid { get; set; }
 
         public int Value
         {
@@ -34,6 +34,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpinBox() : base()
         {
+            MouseFilter = MouseFilterMode.Pass;
+
             _lineEdit = new LineEdit
             {
                 CustomMinimumSize = new Vector2(40, 0),

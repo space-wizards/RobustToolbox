@@ -12,9 +12,7 @@ namespace Robust.Server.GameObjects.EntitySystems
     /// </summary>
     public class EffectSystem : EntitySystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IGameTiming _timing;
-#pragma warning restore 649
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up
@@ -44,8 +42,23 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// </summary>
         public class EffectMessageComparer : IComparer<EffectSystemMessage>
         {
-            public int Compare(EffectSystemMessage x, EffectSystemMessage y)
+            public int Compare(EffectSystemMessage? x, EffectSystemMessage? y)
             {
+                if (x == null && y == null)
+                {
+                    return 0;
+                }
+
+                if (y == null)
+                {
+                    return 1;
+                }
+
+                if (x == null)
+                {
+                    return -1;
+                }
+
                 return y.DeathTime.CompareTo(x.DeathTime);
             }
         }

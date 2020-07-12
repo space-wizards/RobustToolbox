@@ -1,4 +1,5 @@
-using System;
+﻿using System;
+using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
@@ -41,8 +42,7 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawResetViewTransform();
             }
 
-            public void DrawTexture(Texture texture, Vector2 a, Vector2 b, Color modulate, UIBox2? subRegion,
-                Angle angle)
+            public void DrawTexture(Texture texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
             {
                 if (texture is AtlasTexture atlas)
                 {
@@ -62,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var clydeTexture = (ClydeTexture) texture;
 
-                _clyde.DrawTexture(clydeTexture.TextureId, a, b, modulate, subRegion, angle);
+                _clyde.DrawTexture(clydeTexture.TextureId, bl, br, tl, tr, modulate, subRegion);
             }
 
             public void SetScissor(UIBox2i? scissorBox)
@@ -94,8 +94,8 @@ namespace Robust.Client.Graphics.Clyde
                     var viewMatrix = Matrix3.Identity;
                     viewMatrix.R0C0 = scale.X;
                     viewMatrix.R1C1 = scale.Y;
-                    viewMatrix.R0C2 = ofsX / EyeManager.PIXELSPERMETER;
-                    viewMatrix.R1C2 = -ofsY / EyeManager.PIXELSPERMETER;
+                    viewMatrix.R0C2 = ofsX / EyeManager.PixelsPerMeter;
+                    viewMatrix.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
 
                     SetViewTransform(viewMatrix);
                 }
@@ -117,14 +117,14 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawLine(a, b, color);
             }
 
-            public void UseShader(ShaderInstance shader)
+            public void UseShader(ShaderInstance? shader)
             {
                 if (shader != null && shader.Disposed)
                 {
                     throw new ArgumentException("Unable to use disposed shader instance.", nameof(shader));
                 }
 
-                var clydeShader = (ClydeShaderInstance) shader;
+                var clydeShader = (ClydeShaderInstance?) shader;
 
                 _clyde.DrawUseShader(clydeShader?.Handle ?? _clyde._defaultShader.Handle);
             }
@@ -134,9 +134,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawViewport(viewport);
             }
 
-            public void UseRenderTarget(IRenderTarget renderTarget)
+            public void UseRenderTarget(IRenderTarget? renderTarget)
             {
-                var target = (RenderTarget) renderTarget;
+                var target = (RenderTarget?) renderTarget;
 
                 _clyde.DrawRenderTarget(target?.Handle ?? default);
             }
@@ -144,6 +144,59 @@ namespace Robust.Client.Graphics.Clyde
             public void Clear(Color color)
             {
                 _clyde.DrawClear(color);
+            }
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices, Color color)
+            {
+                // TODO: Maybe don't stackalloc if the data is too large.
+                Span<DrawVertexUV2D> drawVertices = stackalloc DrawVertexUV2D[vertices.Length];
+                PadVertices(vertices, drawVertices);
+
+                DrawPrimitives(primitiveTopology, Texture.White, drawVertices, color);
+            }
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
+                ReadOnlySpan<Vector2> vertices, Color color)
+            {
+                // TODO: Maybe don't stackalloc if the data is too large.
+                Span<DrawVertexUV2D> drawVertices = stackalloc DrawVertexUV2D[vertices.Length];
+                PadVertices(vertices, drawVertices);
+
+                DrawPrimitives(primitiveTopology, Texture.White, indices, drawVertices, color);
+            }
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                ReadOnlySpan<DrawVertexUV2D> vertices, Color color)
+            {
+                if (!(texture is ClydeTexture clydeTexture))
+                {
+                    throw new ArgumentException("Texture must be a basic texture.");
+                }
+
+                var castSpan = MemoryMarshal.Cast<DrawVertexUV2D, Vertex2D>(vertices);
+
+                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, castSpan, color);
+            }
+
+            public void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture, ReadOnlySpan<ushort> indices,
+                ReadOnlySpan<DrawVertexUV2D> vertices, Color color)
+            {
+                if (!(texture is ClydeTexture clydeTexture))
+                {
+                    throw new ArgumentException("Texture must be a basic texture.");
+                }
+
+                var castSpan = MemoryMarshal.Cast<DrawVertexUV2D, Vertex2D>(vertices);
+
+                _clyde.DrawPrimitives(primitiveTopology, clydeTexture.TextureId, indices, castSpan, color);
+            }
+
+            private void PadVertices(ReadOnlySpan<Vector2> input, Span<DrawVertexUV2D> output)
+            {
+                for (var i = 0; i < output.Length; i++)
+                {
+                    output[i] = new DrawVertexUV2D(input[i], (0.5f, 0.5f));
+                }
             }
 
             private sealed class DrawingHandleScreenImpl : DrawingHandleScreen
@@ -160,14 +213,41 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override void UseShader(ShaderInstance shader)
+                public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
                 }
 
-                public override void DrawCircle(Vector2 position, float radius, Color color)
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
+                    Color color)
                 {
-                    // TODO: Implement this.
+                    var realColor = color * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
+                    ReadOnlySpan<Vector2> vertices, Color color)
+                {
+                    var realColor = color * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, indices, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                    ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null)
+                {
+                    var realColor = (color ?? Color.White) * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, texture, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                    ReadOnlySpan<ushort> indices, ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null)
+                {
+                    var realColor = (color ?? Color.White) * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, texture, indices, vertices, realColor);
                 }
 
                 public override void DrawLine(Vector2 from, Vector2 to, Color color)
@@ -194,8 +274,8 @@ namespace Robust.Client.Graphics.Clyde
                     Color? modulate = null)
                 {
                     var color = (modulate ?? Color.White) * Modulate;
-                    _renderHandle.DrawTexture(texture, rect.TopLeft, rect.BottomRight, color,
-                        subRegion, 0);
+                    _renderHandle.DrawTexture(texture, rect.TopLeft, rect.TopRight,
+                        rect.BottomLeft, rect.BottomRight, color, subRegion);
                 }
             }
 
@@ -213,12 +293,12 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.SetModelTransform(matrix);
                 }
 
-                public override void UseShader(ShaderInstance shader)
+                public override void UseShader(ShaderInstance? shader)
                 {
                     _renderHandle.UseShader(shader);
                 }
 
-                public override void DrawCircle(Vector2 position, float radius, Color color)
+                public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
                 {
                     // TODO: Implement this.
                 }
@@ -263,7 +343,8 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.TopRight, color, subRegion, 0);
+                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, subRegion);
                 }
 
                 public override void DrawTextureRectRegion(Texture texture, in Box2Rotated rect,
@@ -271,8 +352,40 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     var color = (modulate ?? Color.White) * Modulate;
 
-                    _renderHandle.DrawTexture(texture, rect.Box.BottomLeft, rect.Box.TopRight, color, subRegion,
-                        (float) rect.Rotation);
+                    _renderHandle.DrawTexture(texture, rect.BottomLeft, rect.BottomRight,
+                        rect.TopLeft, rect.TopRight, color, subRegion);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<Vector2> vertices,
+                    Color color)
+                {
+                    var realColor = color * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ReadOnlySpan<ushort> indices,
+                    ReadOnlySpan<Vector2> vertices, Color color)
+                {
+                    var realColor = color * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, indices, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                    ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null)
+                {
+                    var realColor = (color ?? Color.White) * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, texture, vertices, realColor);
+                }
+
+                public override void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, Texture texture,
+                    ReadOnlySpan<ushort> indices, ReadOnlySpan<DrawVertexUV2D> vertices, Color? color = null)
+                {
+                    var realColor = (color ?? Color.White) * Modulate;
+
+                    _renderHandle.DrawPrimitives(primitiveTopology, texture, indices, vertices, realColor);
                 }
             }
         }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
             if (!_mapManager.MapExists(mapId))
             {
                 // fall back to the default eye's map
-                _eyeManager.CurrentEye = null;
+                _eyeManager.ClearCurrentEye();
                 mapId = _eyeManager.CurrentMap;
             }
 
@@ -161,12 +161,9 @@ namespace Robust.Client.Graphics.Clyde
             vbo.Use();
             ebo.Use();
 
-            var datum = new MapChunkData
+            var datum = new MapChunkData(vao, vbo, ebo)
             {
-                Dirty = true,
-                EBO = ebo,
-                VAO = vao,
-                VBO = vbo
+                Dirty = true
             };
 
             _mapChunkData[grid.Index].Add(chunk.Indices, datum);
@@ -189,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
             // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
         }
 
-        private void _updateOnGridModified(object sender, GridChangedEventArgs args)
+        private void _updateOnGridModified(object? sender, GridChangedEventArgs args)
         {
             foreach (var (pos, _) in args.Modified)
             {
@@ -199,7 +196,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateTileMapOnUpdate(object sender, TileChangedEventArgs args)
+        private void _updateTileMapOnUpdate(object? sender, TileChangedEventArgs args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
             var chunk = grid.GridTileToChunkIndices(new MapIndices(args.NewTile.X, args.NewTile.Y));
@@ -227,10 +224,17 @@ namespace Robust.Client.Graphics.Clyde
         private class MapChunkData
         {
             public bool Dirty;
-            public uint VAO;
-            public GLBuffer VBO;
-            public GLBuffer EBO;
+            public readonly uint VAO;
+            public readonly GLBuffer VBO;
+            public readonly GLBuffer EBO;
             public int TileCount;
+
+            public MapChunkData(uint vao, GLBuffer vbo, GLBuffer ebo)
+            {
+                VAO = vao;
+                VBO = vbo;
+                EBO = ebo;
+            }
         }
     }
 }

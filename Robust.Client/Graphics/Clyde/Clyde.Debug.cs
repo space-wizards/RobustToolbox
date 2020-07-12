@@ -5,7 +5,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private ClydeDebugStats _debugStats;
+        private readonly ClydeDebugStats _debugStats = new ClydeDebugStats();
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {
@@ -31,12 +31,17 @@ namespace Robust.Client.Graphics.Clyde
             public int LastGLDrawCalls { get; set; }
             public int LastClydeDrawCalls { get; set; }
             public int LastBatches { get; set; }
+            public (int vertices, int indices) LargestBatchSize => (LargestBatchVertices, LargestBatchIndices);
+            public int LargestBatchVertices { get; set; }
+            public int LargestBatchIndices { get; set; }
 
             public void Reset()
             {
                 LastGLDrawCalls = 0;
                 LastClydeDrawCalls = 0;
                 LastBatches = 0;
+                LargestBatchVertices = 0;
+                LargestBatchIndices = 0;
             }
         }
     }

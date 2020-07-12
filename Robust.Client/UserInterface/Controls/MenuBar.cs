@@ -194,6 +194,7 @@ namespace Robust.Client.UserInterface.Controls
 
             public MenuBarTopButton(Menu menu)
             {
+                MouseFilter = MouseFilterMode.Pass;
                 Menu = menu;
                 AddChild(Label = new Label {Text = menu.Title});
             }
@@ -228,7 +229,7 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public sealed class Menu
         {
-            public string Title { get; set; }
+            public string? Title { get; set; }
 
             public List<MenuEntry> Entries { get; } = new List<MenuEntry>();
         }
@@ -238,9 +239,9 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public sealed class MenuButton : MenuEntry
         {
-            public string Text { get; set; }
+            public string? Text { get; set; }
             public bool Disabled { get; set; }
-            public Action OnPressed { get; set; }
+            public Action? OnPressed { get; set; }
         }
 
         public sealed class MenuSeparator : MenuEntry

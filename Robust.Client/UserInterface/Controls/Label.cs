@@ -21,13 +21,12 @@ namespace Robust.Client.UserInterface.Controls
         private int _cachedTextHeight;
         private readonly List<int> _cachedTextWidths = new List<int>();
         private bool _textDimensionCacheValid;
-        private string _text;
+        private string? _text;
         private bool _clipText;
         private AlignMode _align;
 
         public Label()
         {
-            MouseFilter = MouseFilterMode.Ignore;
             SizeFlagsVertical = SizeFlags.ShrinkCenter;
         }
 
@@ -35,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text to display.
         /// </summary>
         [ViewVariables]
-        public string Text
+        public string? Text
         {
             get => _text;
             set
@@ -73,7 +72,7 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables] public VAlignMode VAlign { get; set; }
 
-        public Font FontOverride { get; set; }
+        public Font? FontOverride { get; set; }
 
         private Font ActualFont
         {

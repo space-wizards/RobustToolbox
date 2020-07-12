@@ -16,10 +16,15 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction MoveDown = "MoveDown";
         public static readonly BoundKeyFunction MoveLeft = "MoveLeft";
         public static readonly BoundKeyFunction MoveRight = "MoveRight";
-        public static readonly BoundKeyFunction Run = "Run";
+        public static readonly BoundKeyFunction Walk = "Walk";
+
+        public static readonly BoundKeyFunction CameraRotateRight = "CameraRotateRight";
+        public static readonly BoundKeyFunction CameraRotateLeft = "CameraRotateLeft";
 
         public static readonly BoundKeyFunction Use = "Use";
+        public static readonly BoundKeyFunction UIClick = "UIClick";
 
+        public static readonly BoundKeyFunction CloseModals = "CloseModals";
         public static readonly BoundKeyFunction ShowDebugConsole = "ShowDebugConsole";
         public static readonly BoundKeyFunction ShowDebugMonitors = "ShowDebugMonitors";
         public static readonly BoundKeyFunction HideUI = "HideUI";
@@ -31,12 +36,32 @@ namespace Robust.Shared.Input
         public static readonly BoundKeyFunction EditorCancelPlace = "EditorCancelPlace";
         public static readonly BoundKeyFunction EditorRotateObject = "EditorRotateObject";
 
+        // Buttons to navigate between UI controls.
+        public static readonly BoundKeyFunction GuiTabNavigateNext = "GuiTabNavigateNext";
+        public static readonly BoundKeyFunction GuiTabNavigatePrev = "GuiTabNavigatePrev";
+
+        // Cursor keys in LineEdit and such.
         public static readonly BoundKeyFunction TextCursorLeft = "TextCursorLeft";
         public static readonly BoundKeyFunction TextCursorRight = "TextCursorRight";
+        public static readonly BoundKeyFunction TextCursorWordLeft = "TextCursorWordLeft";
+        public static readonly BoundKeyFunction TextCursorWordRight = "TextCursorWordRight";
         public static readonly BoundKeyFunction TextCursorBegin = "TextCursorBegin";
         public static readonly BoundKeyFunction TextCursorEnd = "TextCursorEnd";
+
+        // Cursor keys for also selecting text.
+        public static readonly BoundKeyFunction TextCursorSelect = "TextCursorSelect";
+        public static readonly BoundKeyFunction TextCursorSelectLeft = "TextCursorSelectLeft";
+        public static readonly BoundKeyFunction TextCursorSelectRight = "TextCursorSelectRight";
+        public static readonly BoundKeyFunction TextCursorSelectWordLeft = "TextCursorSelectWordLeft";
+        public static readonly BoundKeyFunction TextCursorSelectWordRight = "TextCursorSelectWordRight";
+        public static readonly BoundKeyFunction TextCursorSelectBegin = "TextCursorSelectBegin";
+        public static readonly BoundKeyFunction TextCursorSelectEnd = "TextCursorSelectEnd";
+
         public static readonly BoundKeyFunction TextBackspace = "TextBackspace";
         public static readonly BoundKeyFunction TextSubmit = "TextSubmit";
+        public static readonly BoundKeyFunction TextSelectAll = "TextSelectAll";
+        public static readonly BoundKeyFunction TextCopy = "TextCopy";
+        public static readonly BoundKeyFunction TextCut = "TextCut";
         public static readonly BoundKeyFunction TextPaste = "TextPaste";
         public static readonly BoundKeyFunction TextHistoryPrev = "TextHistoryPrev";
         public static readonly BoundKeyFunction TextHistoryNext = "TextHistoryNext";
@@ -67,9 +92,13 @@ namespace Robust.Shared.Input
 
         #region Code for easy equality and sorting.
 
-        public int CompareTo(object obj)
+        public int CompareTo(object? obj)
         {
-            return CompareTo((BoundKeyFunction) obj);
+            if (!(obj is BoundKeyFunction func))
+            {
+                return 1;
+            }
+            return CompareTo(func);
         }
 
         public int CompareTo(BoundKeyFunction other)
@@ -78,9 +107,9 @@ namespace Robust.Shared.Input
         }
 
         // Could maybe go dirty and optimize these on the assumption that they're singletons.
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            return Equals((BoundKeyFunction) obj);
+            return obj is BoundKeyFunction func && Equals(func);
         }
 
         public bool Equals(BoundKeyFunction other)

@@ -6,6 +6,8 @@ using System.Linq;
 using NGettext;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization.Macros;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -13,12 +15,11 @@ namespace Robust.Shared.Localization
 {
     internal sealed class LocalizationManager : ILocalizationManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceManager;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly ITextMacroFactory _textMacroFactory = default!;
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
-        private CultureInfo _defaultCulture;
+        private CultureInfo? _defaultCulture;
 
         public string GetString(string text)
         {
@@ -100,11 +101,16 @@ namespace Robust.Shared.Localization
             return catalog.GetParticularPluralString(context, text, pluralText, n, args);
         }
 
-        public CultureInfo DefaultCulture
+        public CultureInfo? DefaultCulture
         {
             get => _defaultCulture;
             set
             {
+                if (value == null)
+                {
+                    throw new ArgumentNullException(nameof(value));
+                }
+
                 if (!_catalogs.ContainsKey(value))
                 {
                     throw new ArgumentException("That culture is not yet loaded and cannot be used.", nameof(value));
@@ -118,10 +124,11 @@ namespace Robust.Shared.Localization
 
         public void LoadCulture(CultureInfo culture)
         {
-            var catalog = new Catalog(culture);
+            var catalog = new CustomFormatCatalog(culture);
             _catalogs.Add(culture, catalog);
 
             _loadData(culture, catalog);
+            _loadMacros(culture, catalog);
             if (DefaultCulture == null)
             {
                 DefaultCulture = culture;
@@ -157,6 +164,8 @@ namespace Robust.Shared.Localization
             {
                 _readEntry(entry, catalog);
             }
+            IoCManager.Resolve<IRobustMappedStringSerializer>()
+                .AddStrings(yamlStream, filePath.ToString());
         }
 
         private static void _readEntry(YamlMappingNode entry, Catalog catalog)
@@ -179,6 +188,12 @@ namespace Robust.Shared.Localization
             }
 
             catalog.Translations.Add(id, strings);
+        }
+
+        private void _loadMacros(CultureInfo culture, CustomFormatCatalog catalog)
+        {
+            var macros = _textMacroFactory.GetMacrosForLanguage(culture.IetfLanguageTag);
+            catalog.CustomFormatProvider = new MacroFormatProvider(new MacroFormatter(macros), culture);
         }
     }
 }

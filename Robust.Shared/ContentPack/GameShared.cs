@@ -8,11 +8,15 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     public abstract class GameShared : IDisposable
     {
-        protected ModuleTestingCallbacks TestingCallbacks { get; private set; }
+        protected ModuleTestingCallbacks? TestingCallbacks { get; private set; }
 
         public void SetTestingCallbacks(ModuleTestingCallbacks testingCallbacks)
         {
             TestingCallbacks = testingCallbacks;
+        }
+
+        public virtual void PreInit()
+        {
         }
 
         public virtual void Init()

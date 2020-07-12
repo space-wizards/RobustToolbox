@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
@@ -25,8 +26,10 @@ namespace Robust.Client.GameObjects.Components.Containers
             throw new NotSupportedException("Cannot modify containers on the client.");
         }
 
-        public override IEnumerable<IContainer> GetAllContainers() =>
-            _containers.Values.Where(c => !c.Deleted);
+        protected override IEnumerable<IContainer> GetAllContainersImpl()
+        {
+            return _containers.Values.Where(c => !c.Deleted);
+        }
 
         public override IContainer GetContainer(string id)
         {
@@ -38,15 +41,15 @@ namespace Robust.Client.GameObjects.Components.Containers
             return _containers.ContainsKey(id);
         }
 
-        public override bool TryGetContainer(string id, out IContainer container)
+        public override bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container)
         {
             var ret = _containers.TryGetValue(id, out var cont);
-            container = cont;
+            container = cont!;
             return ret;
         }
 
         /// <inheritdoc />
-        public override bool TryGetContainer(IEntity entity, out IContainer container)
+        public override bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
             foreach (var contain in _containers.Values)
             {
@@ -79,13 +82,13 @@ namespace Robust.Client.GameObjects.Components.Containers
             throw new NotSupportedException("Cannot modify containers on the client.");
         }
 
-        public override void HandleComponentState(ComponentState curState, ComponentState nextState)
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if(!(curState is ContainerManagerComponentState cast))
                 return;
 
             // Delete now-gone containers.
-            List<string> toDelete = null;
+            List<string>? toDelete = null;
             foreach (var (id, container) in _containers)
             {
                 if (!cast.Containers.ContainsKey(id))
@@ -119,7 +122,7 @@ namespace Robust.Client.GameObjects.Components.Containers
                 container.ShowContents = show;
 
                 // Remove gone entities.
-                List<IEntity> toRemove = null;
+                List<IEntity>? toRemove = null;
                 foreach (var entity in container.Entities)
                 {
                     if (!entities.Contains(entity.Uid))

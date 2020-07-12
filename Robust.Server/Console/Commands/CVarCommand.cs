@@ -1,3 +1,5 @@
+using System;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
@@ -6,9 +8,10 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Console.Commands
 {
+    [UsedImplicitly]
     internal sealed class CVarCommand : SharedCVarCommand, IClientCommand
     {
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length < 1 || args.Length > 2)
             {
@@ -36,8 +39,15 @@ namespace Robust.Server.Console.Commands
                 // Write CVar
                 var value = args[1];
                 var type = configManager.GetCVarType(name);
-                var parsed = ParseObject(type, value);
-                configManager.SetCVar(name, parsed);
+                try
+                {
+                    var parsed = ParseObject(type, value);
+                    configManager.SetCVar(name, parsed);
+                }
+                catch (FormatException)
+                {
+                    shell.SendText(player, $"Input value is in incorrect format for type {type}");
+                }
             }
         }
     }

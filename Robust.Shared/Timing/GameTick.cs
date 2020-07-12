@@ -31,7 +31,7 @@ namespace Robust.Shared.Timing
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GameTick other && Equals(other);
@@ -69,6 +69,16 @@ namespace Robust.Shared.Timing
         public static bool operator >=(GameTick a, GameTick b) => a.Value >= b.Value;
         public static bool operator <(GameTick a, GameTick b) => a.Value < b.Value;
         public static bool operator <=(GameTick a, GameTick b) => a.Value <= b.Value;
+
+        public static GameTick operator +(GameTick a, uint b)
+        {
+            return new GameTick(a.Value + b);
+        }
+
+        public static GameTick operator -(GameTick a, uint b)
+        {
+            return new GameTick(a.Value - b);
+        }
 
         /// <inheritdoc />
         public override string ToString()

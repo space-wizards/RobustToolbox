@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -13,21 +14,22 @@ namespace Robust.Client.UserInterface.Controls
 
         private readonly List<Item> _itemList = new List<Item>();
 
-        private Item _root;
+        private Item? _root;
         private int? _selectedIndex;
 
         private VScrollBar _scrollBar;
 
         public bool HideRoot { get; set; }
 
-        public Item Root => _root;
+        public Item? Root => _root;
 
-        public Item Selected => _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
+        public Item? Selected => _selectedIndex == null ? null : _itemList[_selectedIndex.Value];
 
-        public event Action OnItemSelected;
+        public event Action? OnItemSelected;
 
         public Tree()
         {
+            MouseFilter = MouseFilterMode.Pass;
             RectClipContent = true;
 
             _scrollBar = new VScrollBar
@@ -52,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
             _updateScrollbar();
         }
 
-        public Item CreateItem(Item parent = null, int idx = -1)
+        public Item CreateItem(Item? parent = null, int idx = -1)
         {
             if (parent != null)
             {
@@ -88,7 +90,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (!args.CanFocus)
+            if (args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }
@@ -99,10 +101,11 @@ namespace Robust.Client.UserInterface.Controls
             {
                 _selectedIndex = item.Index;
                 OnItemSelected?.Invoke();
+                args.Handle();
             }
         }
 
-        private Item _tryFindItemAtPosition(Vector2 position)
+        private Item? _tryFindItemAtPosition(Vector2 position)
         {
             var font = _getFont();
             if (font == null || _root == null)
@@ -117,7 +120,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             var vOffset = -_scrollBar.Value;
-            Item final = null;
+            Item? final = null;
 
             bool DoSearch(Item item, float hOffset)
             {
@@ -175,6 +178,12 @@ namespace Robust.Client.UserInterface.Controls
             var itemSelected = _getItemSelectedStyle();
             var vOffset = -_scrollBar.Value;
             var hOffset = 0f;
+
+            if (itemSelected == null)
+            {
+                return;
+            }
+
             if (background != null)
             {
                 background.Draw(handle, PixelSizeBox);
@@ -262,7 +271,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _updateScrollbar()
         {
             var internalHeight = _getInternalHeight();
-            _scrollBar.MaxValue = internalHeight;
+            _scrollBar.MaxValue = Math.Max(internalHeight, PixelHeight);
             _scrollBar.Page = PixelHeight;
             _scrollBar.Visible = internalHeight > PixelHeight;
         }
@@ -274,9 +283,9 @@ namespace Robust.Client.UserInterface.Controls
             _updateScrollbar();
         }
 
-        private Font _getFont()
+        private Font? _getFont()
         {
-            if (TryGetStyleProperty("font", out Font font))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
                 return font;
             }
@@ -284,9 +293,9 @@ namespace Robust.Client.UserInterface.Controls
             return null;
         }
 
-        private StyleBox _getBackground()
+        private StyleBox? _getBackground()
         {
-            if (TryGetStyleProperty(StylePropertyBackground, out StyleBox box))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyBackground, out var box))
             {
                 return box;
             }
@@ -294,14 +303,21 @@ namespace Robust.Client.UserInterface.Controls
             return null;
         }
 
-        private StyleBox _getItemSelectedStyle()
+        private StyleBox? _getItemSelectedStyle()
         {
-            if (TryGetStyleProperty(StylePropertyItemBoxSelected, out StyleBox box))
+            if (TryGetStyleProperty<StyleBox>(StylePropertyItemBoxSelected, out var box))
             {
                 return box;
             }
 
             return null;
+        }
+
+        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
+        {
+            base.MouseWheel(args);
+
+            _scrollBar.ValueTarget -= args.Delta.Y * 50;
         }
 
         public sealed class Item : IDisposable
@@ -309,10 +325,10 @@ namespace Robust.Client.UserInterface.Controls
             internal readonly List<Item> Children = new List<Item>();
             internal readonly int Index;
             public readonly Tree Parent;
-            public object Metadata { get; set; }
+            public object? Metadata { get; set; }
             public bool Disposed { get; private set; }
 
-            public string Text { get; set; }
+            public string? Text { get; set; }
 
             public bool Selectable { get; set; } = true;
 

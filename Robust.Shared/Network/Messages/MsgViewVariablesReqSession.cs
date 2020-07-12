@@ -9,6 +9,8 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
+#nullable disable
+
 namespace Robust.Shared.Network.Messages
 {
     /// <summary>
@@ -41,11 +43,8 @@ namespace Robust.Shared.Network.Messages
             RequestId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
-            var bytes = buffer.ReadBytes(length);
-            using (var stream = new MemoryStream(bytes))
-            {
-                Selector = serializer.Deserialize<ViewVariablesObjectSelector>(stream);
-            }
+            using var stream = buffer.ReadAsStream(length);
+            Selector = serializer.Deserialize<ViewVariablesObjectSelector>(stream);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

@@ -46,7 +46,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
-        IReadOnlyCollection<IEntity> ContainedEntities { get; }
+        IReadOnlyList<IEntity> ContainedEntities { get; }
 
         /// <summary>
         /// Should the contents of this container be shown? False for closed containers like lockers, true for

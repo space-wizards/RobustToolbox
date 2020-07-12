@@ -11,5 +11,6 @@ namespace Robust.Client.Interfaces.UserInterface
         bool ShowMemory { get; set; }
         bool ShowClyde { get; set; }
         bool ShowInput { get; set; }
+        bool ShowNetBandwidth { get; set; }
     }
 }

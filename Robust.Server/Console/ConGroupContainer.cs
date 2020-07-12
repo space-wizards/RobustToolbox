@@ -116,7 +116,7 @@ namespace Robust.Server.Console
         {
             if (_groups.TryGetValue(groupIndex, out var group))
             {
-                return group.Commands.Contains(cmdName);
+                return group.Commands!.Contains(cmdName);
             }
 
             _logger.Error($"Unknown groupIndex: {groupIndex}");
@@ -144,6 +144,17 @@ namespace Robust.Server.Console
             if (_groups.TryGetValue(groupIndex, out var group))
             {
                 return group.CanAdminPlace;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
+
+        public bool CanScript(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanScript;
             }
 
             _logger.Error($"Unknown groupIndex: {groupIndex}");

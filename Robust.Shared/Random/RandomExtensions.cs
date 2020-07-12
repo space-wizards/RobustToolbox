@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.Random;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Random
 {
@@ -27,6 +28,25 @@ namespace Robust.Shared.Random
         {
             var index = random.Next(list.Count);
             return list[index];
+        }
+
+        /// <summary>Picks a random element from a collection.</summary>
+        /// <remarks>
+        ///     This is O(n).
+        /// </remarks>
+        public static T Pick<T>(this IRobustRandom random, IReadOnlyCollection<T> collection)
+        {
+            var index = random.Next(collection.Count);
+            var i = 0;
+            foreach (var t in collection)
+            {
+                if (i++ == index)
+                {
+                    return t;
+                }
+            }
+
+            throw new InvalidOperationException("This should be unreachable!");
         }
 
         public static T PickAndTake<T>(this IRobustRandom random, IList<T> list)
@@ -57,6 +77,8 @@ namespace Robust.Shared.Random
         /// <param name="chance">The chance to pass, from 0 to 1.</param>
         public static bool Prob(this IRobustRandom random, float chance)
         {
+            DebugTools.Assert(chance <= 1 && chance >= 0, "Chance must be in the range 0-1");
+
             return random.NextDouble() <= chance;
         }
     }

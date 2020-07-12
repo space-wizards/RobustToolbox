@@ -30,7 +30,7 @@ namespace Lidgren.Network
 			SetKey(bytes, 0, bytes.Length);
 		}
 
-		public abstract void SetKey(byte[] data, int offset, int count);
+		public abstract void SetKey(ReadOnlySpan<byte> data, int offset, int count);
 
 		/// <summary>
 		/// Encrypt an outgoing message in place

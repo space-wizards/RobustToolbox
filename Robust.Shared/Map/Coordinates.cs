@@ -168,7 +168,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is GridCoordinates coords && Equals(coords);
@@ -256,7 +256,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
                 return false;
@@ -338,7 +338,23 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"({Position.X}, {Position.Y}, map: {MapId})";
+            return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}";
+        }
+
+        /// <summary>
+        ///     Checks that these coordinates are within a certain distance of another set.
+        /// </summary>
+        /// <param name="otherCoords">Other set of coordinates to use.</param>
+        /// <param name="range">maximum distance between the two sets of coordinates.</param>
+        /// <returns>True if the two points are within a given range.</returns>
+        public bool InRange(MapCoordinates otherCoords, float range)
+        {
+            if (otherCoords.MapId != MapId)
+            {
+                return false;
+            }
+
+            return ((otherCoords.Position - Position).LengthSquared < range * range);
         }
 
         /// <inheritdoc />
@@ -348,7 +364,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj))
                 return false;

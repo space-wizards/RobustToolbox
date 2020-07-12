@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using JetBrains.Annotations;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -68,6 +71,9 @@ namespace Robust.Shared.Prototypes
         ///     Registers a specific prototype name to be ignored.
         /// </summary>
         void RegisterIgnore(string name);
+
+        event Action<YamlStream, string>? LoadedData;
+
     }
 
     /// <summary>
@@ -89,14 +95,9 @@ namespace Robust.Shared.Prototypes
 
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
-        [Dependency]
-#pragma warning disable 649
-        private readonly IReflectionManager ReflectionManager;
-        [Dependency]
-        private readonly IDynamicTypeFactory _dynamicTypeFactory;
-        [Dependency]
-        private readonly IResourceManager _resources;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IResourceManager _resources = default!;
 
         private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
 
@@ -215,7 +216,11 @@ namespace Robust.Shared.Prototypes
                         var yamlStream = new YamlStream();
                         yamlStream.Load(reader);
 
-                        return (yamlStream, filePath);
+                        var result = ((YamlStream? yamlStream, ResourcePath?))(yamlStream, filePath);
+
+                        LoadedData?.Invoke(yamlStream, filePath.ToString());
+
+                        return result;
                     }
                     catch (YamlException e)
                     {
@@ -259,6 +264,8 @@ namespace Robust.Shared.Prototypes
                     throw new PrototypeLoadException(string.Format("Failed to load prototypes from document#{0}", i), e);
                 }
             }
+
+            LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
         }
 
         #endregion IPrototypeManager members
@@ -274,7 +281,7 @@ namespace Robust.Shared.Prototypes
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
-                var attribute = (PrototypeAttribute)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+                var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
                 if (attribute == null)
                 {
                     throw new InvalidImplementationException(type, typeof(IPrototype), "No " + nameof(PrototypeAttribute) + " to give it a type string.");
@@ -336,14 +343,14 @@ namespace Robust.Shared.Prototypes
             return index.ContainsKey(id);
         }
 
-        public bool TryIndex<T>(string id, out T prototype) where T : IIndexedPrototype
+        public bool TryIndex<T>(string id, [MaybeNullWhen(false)] out T prototype) where T : IIndexedPrototype
         {
             if (!indexedPrototypes.TryGetValue(typeof(T), out var index))
             {
                 throw new UnknownPrototypeException(id);
             }
             var returned = index.TryGetValue(id, out var uncast);
-            prototype = (T)uncast;
+            prototype = (T) uncast!;
             return returned;
         }
 
@@ -351,6 +358,9 @@ namespace Robust.Shared.Prototypes
         {
             IgnoredPrototypeTypes.Add(name);
         }
+
+        public event Action<YamlStream, string>? LoadedData;
+
     }
 
     [Serializable]
@@ -380,7 +390,7 @@ namespace Robust.Shared.Prototypes
     public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;
-        public readonly string Prototype;
+        public readonly string? Prototype;
         public UnknownPrototypeException(string prototype)
         {
             Prototype = prototype;
@@ -388,7 +398,7 @@ namespace Robust.Shared.Prototypes
 
         public UnknownPrototypeException(SerializationInfo info, StreamingContext context) : base(info, context)
         {
-            Prototype = (string)info.GetValue("prototype", typeof(string));
+            Prototype = (string?)info.GetValue("prototype", typeof(string));
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

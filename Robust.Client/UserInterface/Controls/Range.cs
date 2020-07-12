@@ -12,7 +12,7 @@ namespace Robust.Client.UserInterface.Controls
         private float _value;
         private float _page;
 
-        public event Action<Range> OnValueChanged;
+        public event Action<Range>? OnValueChanged;
 
         public float GetAsRatio()
         {

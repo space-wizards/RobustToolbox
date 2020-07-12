@@ -12,14 +12,13 @@ namespace Robust.Client.GameObjects
 {
     public class EyeComponent : Component
     {
-#pragma warning disable 649
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Eye";
 
-        private Eye _eye;
+        [ViewVariables]
+        private Eye _eye = default!;
 
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize;
@@ -42,7 +41,14 @@ namespace Robust.Client.GameObjects
                 if (_eyeManager.CurrentEye == _eye == value)
                     return;
 
-                _eyeManager.CurrentEye = value ? _eye : null;
+                if (value)
+                {
+                    _eyeManager.CurrentEye = _eye;
+                }
+                else
+                {
+                    _eyeManager.ClearCurrentEye();
+                }
             }
         }
 
@@ -60,6 +66,17 @@ namespace Robust.Client.GameObjects
                 {
                     _eye.Zoom = value;
                 }
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Angle Rotation
+        {
+            get => _eye.Rotation;
+            set
+            {
+                if (_eye != null)
+                    _eye.Rotation = value;
             }
         }
 
@@ -109,9 +126,16 @@ namespace Robust.Client.GameObjects
                 DrawFov = setDrawFovOnInitialize
             };
 
-            if (_eyeManager.CurrentEye == _eye != setCurrentOnInitialize)
+            if ((_eyeManager.CurrentEye == _eye) != setCurrentOnInitialize)
             {
-                _eyeManager.CurrentEye = setCurrentOnInitialize ? _eye : null;
+                if (setCurrentOnInitialize)
+                {
+                    _eyeManager.ClearCurrentEye();
+                }
+                else
+                {
+                    _eyeManager.CurrentEye = _eye;
+                }
             }
         }
 

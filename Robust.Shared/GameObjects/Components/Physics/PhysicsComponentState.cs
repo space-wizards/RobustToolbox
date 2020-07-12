@@ -2,7 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
-namespace Robust.Shared.GameObjects
+namespace Robust.Shared.GameObjects.Components
 {
     /// <summary>
     ///     Serialized state of a PhysicsComponent.
@@ -15,21 +15,24 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly int Mass;
 
-        /// <summary>
-        ///     Current velocity of the entity.
-        /// </summary>
-        public readonly Vector2 Velocity;
+        public readonly Vector2 LinearVelocity;
+        public readonly float AngularVelocity;
+        public readonly bool Anchored;
 
         /// <summary>
         ///     Constructs a new state snapshot of a PhysicsComponent.
         /// </summary>
         /// <param name="mass">Current Mass of the entity.</param>
-        /// <param name="velocity">Current Velocity of the entity.</param>
-        public PhysicsComponentState(float mass, Vector2 velocity)
+        /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
+        /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
+        /// <param name="anchored">Whether or not the entity is anchored in place.</param>
+        public PhysicsComponentState(float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
             : base(NetIDs.PHYSICS)
         {
+            LinearVelocity = linearVelocity;
+            AngularVelocity = angularVelocity;
             Mass = (int) Math.Round(mass *1000); // rounds kg to nearest gram
-            Velocity = velocity;
+            Anchored = anchored;
         }
     }
 }

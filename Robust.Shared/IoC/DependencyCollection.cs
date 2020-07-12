@@ -28,8 +28,8 @@ namespace Robust.Shared.IoC
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
-        private readonly Dictionary<Type, (InjectorDelegate @delegate, object[] services)> _injectorCache =
-            new Dictionary<Type, (InjectorDelegate @delegate, object[] services)>();
+        private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
+            new Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)>();
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
@@ -80,7 +80,7 @@ namespace Robust.Shared.IoC
             _resolveTypes[typeof(TInterface)] = implementation.GetType();
             _services[typeof(TInterface)] = implementation;
 
-            InjectDependencies(implementation);
+            InjectDependencies(implementation, true);
 
             if (implementation is IPostInjectInit init)
                 init.PostInject();
@@ -122,6 +122,11 @@ namespace Robust.Shared.IoC
                     $"Attempted to resolve type {type} before the object graph for it has been populated.");
             }
 
+            if (type == typeof(IDependencyCollection))
+            {
+                return this;
+            }
+
             throw new UnregisteredTypeException(type);
         }
 
@@ -151,7 +156,7 @@ namespace Robust.Shared.IoC
 
                 try
                 {
-                    var instance = Activator.CreateInstance(value);
+                    var instance = Activator.CreateInstance(value)!;
                     _services[key] = instance;
                     injectList.Add(instance);
                 }
@@ -196,7 +201,7 @@ namespace Robust.Shared.IoC
 
             // If @delegate is null then the type has no dependencies.
             // So running an initializer would be quite wasteful.
-            @delegate?.Invoke(obj, services);
+            @delegate?.Invoke(obj, services!);
         }
 
         private void InjectDependenciesReflection(object obj)

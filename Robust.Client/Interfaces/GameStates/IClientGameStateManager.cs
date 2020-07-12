@@ -1,5 +1,8 @@
 ﻿using System;
 using Robust.Client.GameStates;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Input;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Interfaces.GameStates
 {
@@ -29,6 +32,14 @@ namespace Robust.Client.Interfaces.GameStates
         int CurrentBufferSize { get; }
 
         /// <summary>
+        ///     The current tick of the last server game state applied.
+        /// </summary>
+        /// <remarks>
+        ///     Use this to synchronize server-sent simulation events with the client's game loop.
+        /// </remarks>
+        GameTick CurServerTick { get; }
+
+        /// <summary>
         ///     This is called after the game state has been applied for the current tick.
         /// </summary>
         event Action<GameStateAppliedArgs> GameStateApplied;
@@ -47,5 +58,13 @@ namespace Robust.Client.Interfaces.GameStates
         ///     Applies the game state for this tick.
         /// </summary>
         void ApplyGameState();
+
+        /// <summary>
+        ///     An input command has been dispatched.
+        /// </summary>
+        /// <param name="message">Message being dispatched.</param>
+        void InputCommandDispatched(FullInputCmdMessage message);
+
+        uint SystemMessageDispatched<T>(T message) where T : EntitySystemMessage;
     }
 }

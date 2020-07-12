@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -240,6 +241,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var dependencies = new DependencyCollection();
 
+            var runtimeLog = new Mock<IRuntimeLog>();
+            dependencies.RegisterInstance<IRuntimeLog>(runtimeLog.Object);
+
             // set up the registration
             var mockRegistration = new Mock<IComponentRegistration>();
             mockRegistration.SetupGet(x => x.References).Returns(new List<Type> { typeof(DummyComponent) });
@@ -250,6 +254,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
             mockFactory.Setup(x => x.GetAllRefTypes()).Returns(new[] { typeof(DummyComponent) });
+            mockFactory.Setup(x => x.GetAllNetIds()).Returns(new[] { CompNetId });
             dependencies.RegisterInstance<IComponentFactory>(mockFactory.Object);
 
             // set up the entity manager
@@ -266,7 +271,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class DummyComponent : Component, ICompType1, ICompType2
         {
-            public override string Name => null;
+            public override string Name => "Dummy";
             public override uint? NetID => CompNetId;
         }
 

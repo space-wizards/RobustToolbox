@@ -30,6 +30,7 @@ namespace Robust.Shared.Utility
             throw new InvalidOperationException();
         }
 
+        [Serializable, NetSerializable]
         public sealed class Rsi : SpriteSpecifier
         {
             public readonly ResourcePath RsiPath;
@@ -42,6 +43,7 @@ namespace Robust.Shared.Utility
             }
         }
 
+        [Serializable, NetSerializable]
         public sealed class Texture : SpriteSpecifier
         {
             public readonly ResourcePath TexturePath;

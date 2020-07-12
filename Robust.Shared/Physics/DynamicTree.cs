@@ -20,12 +20,14 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Physics
 {
@@ -42,7 +44,7 @@ namespace Robust.Shared.Physics
 
         protected readonly Func<int, int> GrowthFunc;
 
-        protected DynamicTree(float aabbExtendSize, Func<int, int> growthFunc)
+        protected DynamicTree(float aabbExtendSize, Func<int, int>? growthFunc)
         {
             AabbExtendSize = aabbExtendSize;
             GrowthFunc = growthFunc ?? DefaultGrowthFunc;
@@ -57,7 +59,7 @@ namespace Robust.Shared.Physics
     [PublicAPI]
     [DebuggerDisplay("{" + nameof(DebuggerDisplay) + "}")]
     public sealed partial class DynamicTree<T>
-        : DynamicTree, IBroadPhase<T> {
+        : DynamicTree, IBroadPhase<T> where T : notnull {
 
         public delegate Box2 ExtractAabbDelegate(in T value);
 
@@ -78,7 +80,7 @@ namespace Robust.Shared.Physics
 
         private Proxy _root;
 
-        public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T> comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int> growthFunc = null)
+        public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null)
             : base(aabbExtendSize, growthFunc)
         {
             _extractAabb = extractAabbFunc;
@@ -409,60 +411,15 @@ namespace Robust.Shared.Physics
             => ref _nodes[proxy].Aabb;
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
-        public IEnumerable<T> Query(Box2 aabb, bool approx = false)
+        public QueryEnumerable Query(Box2 aabb, bool approx = false)
         {
-            var stack = new Stack<Proxy>(256);
-
-            stack.Push(_root);
-
-            while (stack.Count > 0)
-            {
-                var proxy = stack.Pop();
-
-                if (proxy == Proxy.Free)
-                {
-                    continue;
-                }
-
-                // note: non-ref stack local copy here
-                var node = _nodes[proxy];
-
-                if (!node.Aabb.Intersects(aabb))
-                {
-                    continue;
-                }
-
-                if (!node.IsLeaf)
-                {
-                    if (node.Child1 != Proxy.Free)
-                    {
-                        stack.Push(node.Child1);
-                    }
-
-                    if (node.Child2 != Proxy.Free)
-                    {
-                        stack.Push(node.Child2);
-                    }
-
-                    continue;
-                }
-
-                var item = node.Item;
-
-                if (!approx)
-                {
-                    var preciseAabb = _extractAabb(item);
-
-                    if (!preciseAabb.Intersects(aabb))
-                    {
-                        continue;
-                    }
-                }
-
-                yield return node.Item;
-            }
+            return new QueryEnumerable(this, aabb, approx);
         }
 
+        IEnumerable<T> IBroadPhase<T>.Query(Box2 aabb, bool approx)
+        {
+            return Query(aabb, approx);
+        }
 
         public IEnumerable<(T A,T B)> GetCollisions(bool approx = false)
         {
@@ -839,7 +796,7 @@ namespace Robust.Shared.Physics
             node.Height = -1;
             node.Child1 = Proxy.Free;
             node.Child2 = Proxy.Free;
-            node.Item = default;
+            node.Item = default!;
             _freeNodes = proxy;
             --NodeCount;
         }
@@ -1317,7 +1274,7 @@ namespace Robust.Shared.Physics
         [Conditional("DEBUG_DYNAMIC_TREE_ASSERTS")]
         [DebuggerNonUserCode] [DebuggerHidden] [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Assert(bool assertion, [CallerMemberName] string member = default, [CallerFilePath] string file = default, [CallerLineNumber] int line = default)
+        public static void Assert(bool assertion, [CallerMemberName] string? member = default, [CallerFilePath] string? file = default, [CallerLineNumber] int line = default)
         {
             if (assertion) return;
 
@@ -1327,6 +1284,119 @@ namespace Robust.Shared.Physics
             throw new InvalidOperationException(msg);
         }
 
+        public readonly struct QueryEnumerable : IEnumerable<T>
+        {
+            private readonly DynamicTree<T> _dynamicTree;
+            private readonly Box2 _aabb;
+            private readonly bool _approx;
+
+            public QueryEnumerable(DynamicTree<T> dynamicTree, in Box2 aabb, bool approx)
+            {
+                _dynamicTree = dynamicTree;
+                _aabb = aabb;
+                _approx = approx;
+            }
+
+            public QueryEnumerator GetEnumerator()
+            {
+                return new QueryEnumerator(_dynamicTree, _aabb, _approx);
+            }
+
+            IEnumerator<T> IEnumerable<T>.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
+        public struct QueryEnumerator : IEnumerator<T>
+        {
+            private readonly Stack<Proxy> _stack;
+            private readonly DynamicTree<T> _tree;
+            private readonly Box2 _aabb;
+            private readonly bool _approx;
+
+            internal QueryEnumerator(DynamicTree<T> tree, Box2 aabb, bool approx)
+            {
+                _stack = new Stack<Proxy>(256);
+                _tree = tree;
+                _aabb = aabb;
+                _approx = approx;
+                Current = default!;
+
+                if (tree._root != Proxy.Free)
+                {
+                    _stack.Push(tree._root);
+                }
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public bool MoveNext()
+            {
+                while (_stack.Count > 0)
+                {
+                    var proxy = _stack.Pop();
+
+                    DebugTools.Assert(proxy != Proxy.Free, "Free proxies should never be getting into the stack.");
+
+                    ref var node = ref _tree._nodes[proxy];
+
+                    if (!node.Aabb.Intersects(_aabb))
+                    {
+                        continue;
+                    }
+
+                    if (!node.IsLeaf)
+                    {
+                        if (node.Child1 != Proxy.Free)
+                        {
+                            _stack.Push(node.Child1);
+                        }
+
+                        if (node.Child2 != Proxy.Free)
+                        {
+                            _stack.Push(node.Child2);
+                        }
+
+                        continue;
+                    }
+
+                    var item = node.Item;
+
+                    if (!_approx)
+                    {
+                        var preciseAabb = _tree._extractAabb(item);
+
+                        if (!preciseAabb.Intersects(_aabb))
+                        {
+                            continue;
+                        }
+                    }
+
+                    Current = item;
+                    return true;
+                }
+
+                return false;
+            }
+
+            public void Reset()
+            {
+                throw new NotSupportedException();
+            }
+
+            public T Current { get; private set; }
+
+            object IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
+            }
+        }
     }
 
 }

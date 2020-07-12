@@ -1,15 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -24,14 +32,14 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<long, GameTick> _ackedStates = new Dictionary<long, GameTick>();
         private GameTick _lastOldestAck = GameTick.Zero;
 
-#pragma warning disable 649
-        [Dependency] private readonly IServerEntityManager _entityManager;
-        [Dependency] private readonly IGameTiming _gameTiming;
-        [Dependency] private readonly IServerNetManager _networkManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-#pragma warning restore 649
+        [Dependency] private readonly IServerEntityManager _entityManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly IServerNetManager _networkManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+        [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public bool PvsEnabled => _configurationManager.GetCVar<bool>("net.pvs");
 
@@ -48,7 +56,7 @@ namespace Robust.Server.GameStates
             _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
 
-        private void HandleClientConnected(object sender, NetChannelArgs e)
+        private void HandleClientConnected(object? sender, NetChannelArgs e)
         {
             if (!_ackedStates.ContainsKey(e.Channel.ConnectionId))
                 _ackedStates.Add(e.Channel.ConnectionId, GameTick.Zero);
@@ -56,7 +64,7 @@ namespace Robust.Server.GameStates
                 _ackedStates[e.Channel.ConnectionId] = GameTick.Zero;
         }
 
-        private void HandleClientDisconnect(object sender, NetChannelArgs e)
+        private void HandleClientDisconnect(object? sender, NetChannelArgs e)
         {
             _entityManager.DropPlayerState(_playerManager.GetSessionById(e.Channel.SessionId));
 
@@ -106,17 +114,26 @@ namespace Robust.Server.GameStates
                 return;
             }
 
+            var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
+
             var oldestAck = GameTick.MaxValue;
 
+            var oldDeps = IoCManager.Resolve<IDependencyCollection>();
 
-            foreach (var channel in _networkManager.Channels)
+            var deps = new DependencyCollection();
+            deps.RegisterInstance<ILogManager>(IoCManager.Resolve<ILogManager>());
+            deps.BuildGraph();
+
+            (MsgState, INetChannel) GenerateMail(IPlayerSession session)
             {
-                var session = _playerManager.GetSessionByChannel(channel);
-                if (session == null || session.Status != SessionStatus.InGame)
+                IoCManager.InitThread(deps, true);
+
+                if (session.Status != SessionStatus.InGame)
                 {
-                    // client still joining, maybe iterate over sessions instead?
-                    continue;
+                    return default;
                 }
+
+                var channel = session.ConnectedClient;
 
                 if (!_ackedStates.TryGetValue(channel.ConnectionId, out var lastAck))
                 {
@@ -130,9 +147,10 @@ namespace Robust.Server.GameStates
                 var deletions = _entityManager.GetDeletedEntities(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
-
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
-                var state = new GameState(lastAck, _gameTiming.CurTick, entStates, playerStates, deletions, mapData);
+                var lastInputCommand = inputSystem.GetLastInputCommand(session);
+                var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
+                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
                 if (lastAck < oldestAck)
                 {
                     oldestAck = lastAck;
@@ -141,7 +159,6 @@ namespace Robust.Server.GameStates
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;
-                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
 
                 // If the state is too big we let Lidgren send it reliably.
                 // This is to avoid a situation where a state is so large that it consistently gets dropped
@@ -152,6 +169,24 @@ namespace Robust.Server.GameStates
                     _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
                 }
 
+                return (stateUpdateMessage, channel);
+            }
+
+            var mailBag = _playerManager.GetAllPlayers()
+                .AsParallel().Select(GenerateMail).ToList();
+
+            // TODO: oh god oh fuck kill it with fire.
+            // PLINQ *seems* to be scheduling to the main thread partially (I guess that makes sense?)
+            // Which causes that IoC "hack" up there to override IoC in the main thread, nuking the game.
+            // At least, that's our running theory. I reproduced it once locally and can't reproduce it again.
+            // Throwing shit at the wall to hope it fixes it.
+            IoCManager.InitThread(oldDeps, true);
+
+            foreach (var (msg, chan) in mailBag)
+            {
+                // see session.Status != SessionStatus.InGame above
+                if (chan == null) continue;
+                _networkManager.ServerSendMessage(msg, chan);
             }
 
             // keep the deletion history buffers clean
@@ -162,6 +197,5 @@ namespace Robust.Server.GameStates
                 _mapManager.CullDeletionHistory(oldestAck);
             }
         }
-
     }
 }

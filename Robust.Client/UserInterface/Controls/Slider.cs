@@ -1,4 +1,5 @@
-using Robust.Client.Graphics.Drawing;
+﻿using Robust.Client.Graphics.Drawing;
+using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.LayoutContainer;
 
@@ -18,12 +19,12 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _grabbed;
 
-        private StyleBox _backgroundStyleBoxOverride;
-        private StyleBox _foregroundStyleBoxOverride;
-        private StyleBox _fillStyleBoxOverride;
-        private StyleBox _grabberStyleBoxOverride;
+        private StyleBox? _backgroundStyleBoxOverride;
+        private StyleBox? _foregroundStyleBoxOverride;
+        private StyleBox? _fillStyleBoxOverride;
+        private StyleBox? _grabberStyleBoxOverride;
 
-        public StyleBox ForegroundStyleBoxOverride
+        public StyleBox? ForegroundStyleBoxOverride
         {
             get => _foregroundStyleBoxOverride;
             set
@@ -33,7 +34,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox BackgroundStyleBoxOverride
+        public StyleBox? BackgroundStyleBoxOverride
         {
             get => _backgroundStyleBoxOverride;
             set
@@ -43,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox FillStyleBoxOverride
+        public StyleBox? FillStyleBoxOverride
         {
             get => _fillStyleBoxOverride;
             set
@@ -53,7 +54,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public StyleBox GrabberStyleBoxOverride
+        public StyleBox? GrabberStyleBoxOverride
         {
             get => _grabberStyleBoxOverride;
             set
@@ -65,27 +66,16 @@ namespace Robust.Client.UserInterface.Controls
 
         public Slider()
         {
+            MouseFilter = MouseFilterMode.Stop;
+
             AddChild(new LayoutContainer
             {
-                MouseFilter = MouseFilterMode.Ignore,
                 Children =
                 {
-                    (_backgroundPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_fillPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_foregroundPanel = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    }),
-                    (_grabber = new PanelContainer
-                    {
-                        MouseFilter = MouseFilterMode.Ignore,
-                    })
+                    (_backgroundPanel = new PanelContainer()),
+                    (_fillPanel = new PanelContainer()),
+                    (_foregroundPanel = new PanelContainer()),
+                    (_grabber = new PanelContainer())
                 }
             });
 
@@ -128,7 +118,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (!args.CanFocus)
+            if (args.Function != EngineKeyFunctions.UIClick)
             {
                 return;
             }
@@ -141,7 +131,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (args.CanFocus)
+            if (args.Function == EngineKeyFunctions.UIClick)
             {
                 _grabbed = false;
             }
@@ -173,9 +163,9 @@ namespace Robust.Client.UserInterface.Controls
 
         private void UpdateStyleBoxes()
         {
-            StyleBox GetStyleBox(string name)
+            StyleBox? GetStyleBox(string name)
             {
-                if (TryGetStyleProperty(name, out StyleBox box))
+                if (TryGetStyleProperty<StyleBox>(name, out var box))
                 {
                     return box;
                 }

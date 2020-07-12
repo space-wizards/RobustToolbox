@@ -11,7 +11,10 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     The NetChannel of the server.
         /// </summary>
-        INetChannel ServerChannel { get; }
+        INetChannel? ServerChannel { get; }
+
+        ClientConnectionState ClientConnectState { get; }
+        event Action<ClientConnectionState> ClientConnectStateChanged;
 
         /// <summary>
         ///     The attempted connection by a client to a server failed.
@@ -44,5 +47,33 @@ namespace Robust.Shared.Interfaces.Network
         /// </summary>
         /// <param name="message"></param>
         void ClientSendMessage(NetMessage message);
+    }
+
+    public enum ClientConnectionState
+    {
+        /// <summary>
+        ///     We are not connected and not trying to get connected either. Quite lonely huh.
+        /// </summary>
+        NotConnecting,
+
+        /// <summary>
+        ///     Resolving the DNS query for the address of the server.
+        /// </summary>
+        ResolvingHost,
+
+        /// <summary>
+        ///     Attempting to establish a connection to the server.
+        /// </summary>
+        EstablishingConnection,
+
+        /// <summary>
+        ///     Connection established, going through regular handshake business.
+        /// </summary>
+        Handshake,
+
+        /// <summary>
+        ///     Connection is solid and handshake is done go wild.
+        /// </summary>
+        Connected
     }
 }

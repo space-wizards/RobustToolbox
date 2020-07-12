@@ -8,7 +8,7 @@ namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
-        public event Action<Control> OnMinimumSizeChanged;
+        public event Action<Control>? OnMinimumSizeChanged;
 
         private Vector2 _size;
 
@@ -246,7 +246,7 @@ namespace Robust.Client.UserInterface
                     DebugTools.Assert(_calculatedMinimumSize.HasValue);
                 }
 
-                return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize.Value);
+                return Vector2.ComponentMax(CustomMinimumSize, _calculatedMinimumSize!.Value);
             }
         }
 

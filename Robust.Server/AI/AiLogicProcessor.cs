@@ -15,12 +15,17 @@ namespace Robust.Server.AI
         /// <summary>
         ///     Entity this AI is controlling.
         /// </summary>
-        public IEntity SelfEntity { get; set; }
+        public IEntity SelfEntity { get; set; } = default!;
 
         /// <summary>
         ///     One-Time setup when the processor is created.
         /// </summary>
         public virtual void Setup() { }
+
+        /// <summary>
+        /// One-Time shutdown when processor is done
+        /// </summary>
+        public virtual void Shutdown() {}
 
         /// <summary>
         ///     Gives life to the AI.

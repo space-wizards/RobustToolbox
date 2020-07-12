@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
-using OpenTK;
-using OpenTK.Graphics;
-using OpenTK.Graphics.OpenGL4;
-using OpenToolkit.GraphicsLibraryFramework;
+using OpenToolkit;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.Utility;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -19,37 +19,49 @@ using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
+using GLFW = OpenToolkit.GraphicsLibraryFramework.GLFW;
+using GLFWCallbacks = OpenToolkit.GraphicsLibraryFramework.GLFWCallbacks;
 using Image = SixLabors.ImageSharp.Image;
 using Vector2 = Robust.Shared.Maths.Vector2;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
+using InputAction = OpenToolkit.GraphicsLibraryFramework.InputAction;
+using KeyModifiers = OpenToolkit.GraphicsLibraryFramework.KeyModifiers;
+using Keys = OpenToolkit.GraphicsLibraryFramework.Keys;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
+using MouseButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
+using OpenGlProfile = OpenToolkit.GraphicsLibraryFramework.OpenGlProfile;
+using Window = OpenToolkit.GraphicsLibraryFramework.Window;
+using WindowHintBool = OpenToolkit.GraphicsLibraryFramework.WindowHintBool;
+using WindowHintInt = OpenToolkit.GraphicsLibraryFramework.WindowHintInt;
+using WindowHintOpenGlProfile = OpenToolkit.GraphicsLibraryFramework.WindowHintOpenGlProfile;
+using WindowHintString = OpenToolkit.GraphicsLibraryFramework.WindowHintString;
 
 namespace Robust.Client.Graphics.Clyde
 {
     internal unsafe partial class Clyde
     {
         // Keep delegates around to prevent GC issues.
-        private GLFWCallbacks.ErrorCallback _errorCallback;
-        private GLFWCallbacks.CharCallback _charCallback;
-        private GLFWCallbacks.CursorPosCallback _cursorPosCallback;
-        private GLFWCallbacks.KeyCallback _keyCallback;
-        private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback;
-        private GLFWCallbacks.ScrollCallback _scrollCallback;
-        private GLFWCallbacks.WindowCloseCallback _windowCloseCallback;
-        private GLFWCallbacks.WindowSizeCallback _windowSizeCallback;
-        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback;
-        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback;
+        private GLFWCallbacks.ErrorCallback _errorCallback = default!;
+        private GLFWCallbacks.CharCallback _charCallback = default!;
+        private GLFWCallbacks.CursorPosCallback _cursorPosCallback = default!;
+        private GLFWCallbacks.KeyCallback _keyCallback = default!;
+        private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = default!;
+        private GLFWCallbacks.ScrollCallback _scrollCallback = default!;
+        private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = default!;
+        private GLFWCallbacks.WindowSizeCallback _windowSizeCallback = default!;
+        private GLFWCallbacks.WindowContentScaleCallback _windowContentScaleCallback = default!;
+        private GLFWCallbacks.WindowIconifyCallback _windowIconifyCallback = default!;
 
         private bool _glfwInitialized;
 
-        private GraphicsContext _graphicsContext;
+        private IBindingsContext _graphicsContext = default!;
         private Window* _glfwWindow;
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
-        private Thread _mainThread;
+        private Thread? _mainThread;
 
         private Vector2 _lastMousePos;
 
@@ -86,7 +98,7 @@ namespace Robust.Client.Graphics.Clyde
             return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
         }
 
-        private List<Exception> _glfwExceptionList;
+        private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
 
         private bool InitGlfw()
@@ -115,6 +127,7 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
+            InitCursors();
             InitWindow();
             return true;
         }
@@ -203,7 +216,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 using (var stream = _resourceCache.ContentFileRead(file))
                 {
-                    var image = Image.Load(stream);
+                    var image = Image.Load<Rgba32>(stream);
                     icons.Add(image);
                 }
             }
@@ -219,6 +232,7 @@ namespace Robust.Client.Graphics.Clyde
                 .Select(i => (MemoryMarshal.Cast<Rgba32, byte>(i.GetPixelSpan()).ToArray(), i.Width, i.Height))
                 .ToList();
 
+            // ReSharper disable once SuggestVarOrType_Elsewhere
             Span<GCHandle> handles = stackalloc GCHandle[images.Count];
             Span<GlfwImage> glfwImages = new GlfwImage[images.Count];
 
@@ -238,11 +252,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private class GLFWBindingsContext : IBindingsContext
+        {
+            public IntPtr GetProcAddress(string procName)
+            {
+                return GLFW.GetProcAddress(procName);
+            }
+        }
+
         private void InitGLContext()
         {
             // Initialize the OpenTK 3 GL context with GLFW.
-            _graphicsContext = new GraphicsContext(new ContextHandle((IntPtr) _glfwWindow), GLFW.GetProcAddress,
-                () => new ContextHandle((IntPtr) GLFW.GetCurrentContext()));
+            _graphicsContext = new GLFWBindingsContext();
+            GL.LoadBindings(_graphicsContext);
         }
 
         private void ShutdownWindowing()
@@ -466,6 +488,9 @@ namespace Robust.Client.Graphics.Clyde
             throw new AggregateException("Exceptions have been caught inside GLFW callbacks.", list);
         }
 
+        // Disabling inlining so that I can easily exclude it from profiles.
+        // Doesn't matter anyways, it's a few extra cycles per frame.
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void SwapBuffers()
         {
             GLFW.SwapBuffers(_glfwWindow);

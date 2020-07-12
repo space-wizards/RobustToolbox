@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
+using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
@@ -25,15 +28,16 @@ namespace Robust.Server.Player
     /// </summary>
     internal class PlayerManager : IPlayerManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IBaseServer _baseServer;
-        [Dependency] private readonly IGameTiming _timing;
-        [Dependency] private readonly IServerNetManager _network;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IMapManager _mapManager;
-#pragma warning restore 649
+        private static readonly Gauge PlayerCountMetric = Metrics
+            .CreateGauge("robust_player_count", "Number of players on the server.");
 
-        public BoundKeyMap KeyMap { get; private set; }
+        [Dependency] private readonly IBaseServer _baseServer = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IServerNetManager _network = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+
+        public BoundKeyMap KeyMap { get; private set; } = default!;
 
         private GameTick _lastStateUpdate;
 
@@ -42,9 +46,9 @@ namespace Robust.Server.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private Dictionary<NetSessionId, PlayerSession> _sessions;
+        private readonly Dictionary<NetSessionId, PlayerSession> _sessions = new Dictionary<NetSessionId, PlayerSession>();
 
-        private Dictionary<NetSessionId, PlayerData> _playerData;
+        private readonly Dictionary<NetSessionId, PlayerData> _playerData = new Dictionary<NetSessionId, PlayerData>();
 
         /// <inheritdoc />
         public int PlayerCount
@@ -67,7 +71,7 @@ namespace Robust.Server.Player
         public int MaxPlayers { get; private set; } = 32;
 
         /// <inheritdoc />
-        public event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
+        public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
         public void Initialize(int maxPlayers)
@@ -76,8 +80,6 @@ namespace Robust.Server.Player
             KeyMap.PopulateKeyFunctionsMap();
 
             MaxPlayers = maxPlayers;
-            _sessions = new Dictionary<NetSessionId, PlayerSession>(maxPlayers);
-            _playerData = new Dictionary<NetSessionId, PlayerData>(maxPlayers);
 
             _network.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME, HandleWelcomeMessageReq);
             _network.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME);
@@ -90,6 +92,27 @@ namespace Robust.Server.Player
         }
 
         IPlayerSession IPlayerManager.GetSessionByChannel(INetChannel channel) => GetSessionByChannel(channel);
+        public bool TryGetSessionByChannel(INetChannel channel, [NotNullWhen(true)] out IPlayerSession? session)
+        {
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                // Should only be one session per client. Returns that session, in theory.
+                if (_sessions.TryGetValue(channel.SessionId, out var concrete))
+                {
+                    session = concrete;
+                    return true;
+                }
+
+                session = null;
+                return false;
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
+        }
+
         private PlayerSession GetSessionByChannel(INetChannel channel)
         {
             _sessionsLock.EnterReadLock();
@@ -131,7 +154,7 @@ namespace Robust.Server.Player
             }
         }
 
-        public bool TryGetSessionById(NetSessionId sessionId, out IPlayerSession session)
+        public bool TryGetSessionById(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerSession? session)
         {
             _sessionsLock.EnterReadLock();
             try
@@ -213,6 +236,22 @@ namespace Robust.Server.Player
             }
         }
 
+        public List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate)
+        {
+            _sessionsLock.EnterReadLock();
+            try
+            {
+                return
+                    _sessions.Values.Where(predicate)
+                        .Cast<IPlayerSession>()
+                        .ToList();
+            }
+            finally
+            {
+                _sessionsLock.ExitReadLock();
+            }
+        }
+
         /// <summary>
         ///     Gets all players in the server.
         /// </summary>
@@ -235,7 +274,7 @@ namespace Robust.Server.Player
         /// </summary>
         /// <param name="fromTick"></param>
         /// <returns></returns>
-        public List<PlayerState> GetPlayerStates(GameTick fromTick)
+        public List<PlayerState>? GetPlayerStates(GameTick fromTick)
         {
             if (_lastStateUpdate < fromTick)
             {
@@ -255,7 +294,7 @@ namespace Robust.Server.Player
             }
         }
 
-        private void OnConnecting(object sender, NetConnectingArgs args)
+        private void OnConnecting(object? sender, NetConnectingArgs args)
         {
             if (PlayerCount >= _baseServer.MaxPlayers)
                 args.Deny = true;
@@ -266,7 +305,7 @@ namespace Robust.Server.Player
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="args"></param>
-        private void NewSession(object sender, NetChannelArgs args)
+        private void NewSession(object? sender, NetChannelArgs args)
         {
             if (!_playerData.TryGetValue(args.Channel.SessionId, out var data))
             {
@@ -286,6 +325,8 @@ namespace Robust.Server.Player
             {
                 _sessionsLock.ExitWriteLock();
             }
+
+            PlayerCountMetric.Set(PlayerCount);
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -296,7 +337,7 @@ namespace Robust.Server.Player
         /// <summary>
         ///     Ends a clients session, and disconnects them.
         /// </summary>
-        private void EndSession(object sender, NetChannelArgs args)
+        private void EndSession(object? sender, NetChannelArgs args)
         {
             var session = GetSessionByChannel(args.Channel);
 
@@ -315,21 +356,29 @@ namespace Robust.Server.Player
                 _sessionsLock.ExitWriteLock();
             }
 
+            PlayerCountMetric.Set(PlayerCount);
             Dirty();
         }
 
-        private void HandleWelcomeMessageReq(MsgServerInfoReq message)
+        private async void HandleWelcomeMessageReq(MsgServerInfoReq message)
         {
-            var session = GetSessionByChannel(message.MsgChannel);
-
-            var netMsg = message.MsgChannel.CreateNetMessage<MsgServerInfo>();
+            var channel = message.MsgChannel;
+            var netMsg = channel.CreateNetMessage<MsgServerInfo>();
 
             netMsg.ServerName = _baseServer.ServerName;
             netMsg.ServerMaxPlayers = _baseServer.MaxPlayers;
             netMsg.TickRate = _timing.TickRate;
+
+            IPlayerSession? session;
+            while (!TryGetSessionByChannel(channel, out session))
+            {
+                await Task.Delay(10);
+                if (!channel.IsConnected) return;
+            }
+
             netMsg.PlayerSessionId = session.SessionId;
 
-            message.MsgChannel.SendMessage(netMsg);
+            channel.SendMessage(netMsg);
         }
 
         private void HandlePlayerListReq(MsgPlayerListReq message)
@@ -375,7 +424,7 @@ namespace Robust.Server.Player
             return _playerData[sessionId];
         }
 
-        public bool TryGetPlayerData(NetSessionId sessionId, out IPlayerData data)
+        public bool TryGetPlayerData(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerData? data)
         {
             if (_playerData.TryGetValue(sessionId, out var _data))
             {

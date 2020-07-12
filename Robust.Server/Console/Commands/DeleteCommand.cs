@@ -12,7 +12,7 @@ namespace Robust.Server.Console.Commands
         public string Description => "Deletes the entity with the specified ID.";
         public string Help => "delete <entity UID>";
 
-        public void Execute(IConsoleShell shell, IPlayerSession player, string[] args)
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
         {
             if (args.Length != 1)
             {

@@ -1,10 +1,12 @@
 ﻿using System;
 using Robust.Client.GameObjects.Components;
+using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -16,15 +18,13 @@ namespace Robust.Client.GameObjects.EntitySystems
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : EntitySystem
+    public class InputSystem : SharedInputSystem
     {
-#pragma warning disable 649
-        [Dependency] private readonly IInputManager _inputManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-#pragma warning restore 649
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IClientGameStateManager _stateManager = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
-        private readonly CommandBindMapping _bindMap = new CommandBindMapping();
 
         /// <summary>
         ///     Current states for all of the keyFunctions.
@@ -32,9 +32,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         public IPlayerCommandStates CmdStates => _cmdStates;
 
         /// <summary>
-        ///     Holds the keyFunction -> handler bindings for the simulation.
+        /// If the input system is currently predicting input.
         /// </summary>
-        public ICommandBindMapping BindMap => _bindMap;
+        public bool Predicted { get; private set; }
 
         /// <summary>
         ///     Inserts an Input Command into the simulation.
@@ -42,7 +42,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <param name="session">Player session that raised the command. On client, this is always the LocalPlayer session.</param>
         /// <param name="function">Function that is being changed.</param>
         /// <param name="message">Arguments for this event.</param>
-        public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message)
+        /// <param name="replay">if true, current cmd state will not be checked or updated - use this for "replaying" an
+        /// old input that was saved or buffered until further processing could be done</param>
+        public void HandleInputCommand(ICommonSession session, BoundKeyFunction function, FullInputCmdMessage message, bool replay = false)
         {
             #if DEBUG
 
@@ -51,18 +53,51 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             #endif
 
-            // set state, state change is updated regardless if it is locally bound
-            _cmdStates.SetState(function, message.State);
-
-            // handle local binds before sending off
-            if (_bindMap.TryGetHandler(function, out var handler))
+            if (!replay)
             {
-                // local handlers can block sending over the network.
-                if (handler.HandleCmdMessage(session, message))
+                // set state, state change is updated regardless if it is locally bound
+                if (_cmdStates.GetState(function) == message.State)
+                {
                     return;
+                }
+                _cmdStates.SetState(function, message.State);
             }
 
-            RaiseNetworkEvent(message);
+            // handle local binds before sending off
+            foreach (var handler in BindRegistry.GetHandlers(function))
+            {
+                // local handlers can block sending over the network.
+                if (handler.HandleCmdMessage(session, message)) return;
+            }
+
+            // send it off to the server
+            DispatchInputCommand(message);
+        }
+
+        /// <summary>
+        /// Handle a predicted input command.
+        /// </summary>
+        /// <param name="inputCmd">Input command to handle as predicted.</param>
+        public void PredictInputCommand(FullInputCmdMessage inputCmd)
+        {
+            DebugTools.AssertNotNull(_playerManager.LocalPlayer);
+
+            var keyFunc = _inputManager.NetworkBindMap.KeyFunctionName(inputCmd.InputFunctionId);
+
+            Predicted = true;
+            var session = _playerManager.LocalPlayer!.Session;
+            foreach (var handler in BindRegistry.GetHandlers(keyFunc))
+            {
+                if (handler.HandleCmdMessage(session, inputCmd)) break;
+            }
+            Predicted = false;
+
+        }
+
+        private void DispatchInputCommand(FullInputCmdMessage message)
+        {
+            _stateManager.InputCommandDispatched(message);
+            EntityNetworkManager.SendSystemNetworkMessage(message, message.InputSequence);
         }
 
         public override void Initialize()
@@ -108,7 +143,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer.ControlledEntity == null)
+            if (_playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 return;
             }
@@ -125,13 +160,13 @@ namespace Robust.Client.GameObjects.EntitySystems
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public IEntity AttachedEntity { get; }
+        public IEntity? AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(IEntity attachedEntity)
+        public PlayerAttachSysMessage(IEntity? attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

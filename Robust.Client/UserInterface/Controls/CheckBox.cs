@@ -21,21 +21,16 @@ namespace Robust.Client.UserInterface.Controls
             var hBox = new HBoxContainer
             {
                 StyleClasses = { StyleClassCheckBox },
-                MouseFilter = MouseFilterMode.Ignore
             };
             AddChild(hBox);
 
             TextureRect = new TextureRect
             {
                 StyleClasses = { StyleClassCheckBox },
-                MouseFilter = MouseFilterMode.Ignore
             };
             hBox.AddChild(TextureRect);
 
-            Label = new Label
-            {
-                MouseFilter = MouseFilterMode.Ignore
-            };
+            Label = new Label();
             hBox.AddChild(Label);
         }
 
@@ -70,6 +65,6 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text displayed by the button.
         /// </summary>
         [ViewVariables]
-        public string Text { get => Label.Text; set => Label.Text = value; }
+        public string? Text { get => Label.Text; set => Label.Text = value; }
     }
 }

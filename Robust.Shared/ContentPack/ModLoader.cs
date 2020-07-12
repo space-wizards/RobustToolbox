@@ -24,6 +24,7 @@ namespace Robust.Shared.ContentPack
         Error = 0,
         Init = 1,
         PostInit = 2,
+        PreInit = 3,
     }
 
     /// <summary>
@@ -57,13 +58,11 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal class ModLoader : IModLoader, IDisposable
     {
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly ILogManager _logManager;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
 
-        private ModuleTestingCallbacks _testingCallbacks;
+        private ModuleTestingCallbacks? _testingCallbacks;
 
         /// <summary>
         ///     Loaded assemblies.
@@ -78,6 +77,8 @@ namespace Robust.Shared.ContentPack
 
         private static int _modLoaderId;
 
+        private bool _useLoadContext = true;
+
         public ModLoader()
         {
             var id = Interlocked.Increment(ref _modLoaderId);
@@ -88,7 +89,12 @@ namespace Robust.Shared.ContentPack
             _loadContext.Resolving += ResolvingAssembly;
         }
 
-        public virtual void LoadGameAssembly<T>(Stream assembly, Stream symbols = null)
+        public void SetUseLoadContext(bool useLoadContext)
+        {
+            _useLoadContext = useLoadContext;
+        }
+
+        public virtual void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
             where T : GameShared
         {
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
@@ -101,7 +107,15 @@ namespace Robust.Shared.ContentPack
 
             assembly.Position = 0;
 
-            var gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
+            Assembly gameAssembly;
+            if (_useLoadContext)
+            {
+                gameAssembly = _loadContext.LoadFromStream(assembly, symbols);
+            }
+            else
+            {
+                gameAssembly = Assembly.Load(assembly.CopyToArray(), symbols?.CopyToArray());
+            }
 
             InitMod<T>(gameAssembly);
         }
@@ -118,12 +132,21 @@ namespace Robust.Shared.ContentPack
             if (!AssemblyTypeChecker.CheckAssembly(diskPath))
                 return;
 
-            InitMod<T>(_loadContext.LoadFromAssemblyPath(diskPath));
+            Assembly assembly;
+            if (_useLoadContext)
+            {
+                assembly = _loadContext.LoadFromAssemblyPath(diskPath);
+            }
+            else
+            {
+                assembly = Assembly.LoadFrom(diskPath);
+            }
+            InitMod<T>(assembly);
         }
 
         protected void InitMod<T>(Assembly assembly) where T : GameShared
         {
-            var mod = new ModInfo {GameAssembly = assembly};
+            var mod = new ModInfo(assembly);
 
             _reflectionManager.LoadAssemblies(mod.GameAssembly);
 
@@ -134,8 +157,11 @@ namespace Robust.Shared.ContentPack
 
             foreach (var entryPoint in entryPoints)
             {
-                var entryPointInstance = (T) Activator.CreateInstance(entryPoint);
-                entryPointInstance.SetTestingCallbacks(_testingCallbacks);
+                var entryPointInstance = (T) Activator.CreateInstance(entryPoint)!;
+                if (_testingCallbacks != null)
+                {
+                    entryPointInstance.SetTestingCallbacks(_testingCallbacks);
+                }
                 mod.EntryPoints.Add(entryPointInstance);
             }
 
@@ -150,6 +176,9 @@ namespace Robust.Shared.ContentPack
                 {
                     switch (level)
                     {
+                        case ModRunLevel.PreInit:
+                            entry.PreInit();
+                            break;
                         case ModRunLevel.Init:
                             entry.Init();
                             break;
@@ -180,7 +209,7 @@ namespace Robust.Shared.ContentPack
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
-#if DEBUG
+#if !FULL_RELEASE
             if (resMan.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
@@ -200,7 +229,7 @@ namespace Robust.Shared.ContentPack
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
-#if DEBUG
+#if !FULL_RELEASE
                 // see if debug info is present
                 if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"), out var gamePdb))
                 {
@@ -240,7 +269,7 @@ namespace Robust.Shared.ContentPack
             _testingCallbacks = testingCallbacks;
         }
 
-        private Assembly ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
+        private Assembly? ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
         {
             try
             {
@@ -293,12 +322,13 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         private class ModInfo
         {
-            public ModInfo()
+            public ModInfo(Assembly gameAssembly)
             {
+                GameAssembly = gameAssembly;
                 EntryPoints = new List<GameShared>();
             }
 
-            public Assembly GameAssembly { get; set; }
+            public Assembly GameAssembly { get; }
             public List<GameShared> EntryPoints { get; }
         }
     }

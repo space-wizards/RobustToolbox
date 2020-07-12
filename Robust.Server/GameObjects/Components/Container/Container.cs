@@ -30,7 +30,7 @@ namespace Robust.Server.GameObjects.Components.Container
         public Container(string id, IContainerManager manager) : base(id, manager) { }
 
         /// <inheritdoc />
-        public override IReadOnlyCollection<IEntity> ContainedEntities => _containerList.AsReadOnly();
+        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)
@@ -78,16 +78,18 @@ namespace Robust.Server.GameObjects.Components.Container
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner => Manager?.Owner;
+        public IEntity Owner => Manager.Owner;
 
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
 
         /// <inheritdoc />
-        public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
+        [ViewVariables]
+        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool ShowContents { get; set; }
 
         public bool Occlusion { get; set; }
@@ -99,7 +101,7 @@ namespace Robust.Server.GameObjects.Components.Container
         protected BaseContainer(string id, IContainerManager manager)
         {
             DebugTools.Assert(!string.IsNullOrEmpty(id));
-            DebugTools.Assert(manager != null);
+            DebugTools.AssertNotNull(manager);
 
             ID = id;
             Manager = manager;
@@ -209,8 +211,9 @@ namespace Robust.Server.GameObjects.Components.Container
         protected virtual void InternalRemove(IEntity toremove)
         {
             DebugTools.Assert(!Deleted);
-            DebugTools.Assert(Manager != null);
-            DebugTools.Assert(toremove != null && toremove.IsValid());
+            DebugTools.AssertNotNull(Manager);
+            DebugTools.AssertNotNull(toremove);
+            DebugTools.Assert(toremove.IsValid());
 
             Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
 
@@ -233,7 +236,6 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             Manager.Dirty();
             Deleted = true;
-            Manager = null;
         }
     }
 

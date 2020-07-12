@@ -39,13 +39,13 @@ namespace Robust.Shared.Input
     internal class InputCmdContext : IInputCmdContext
     {
         private readonly List<BoundKeyFunction> _commands = new List<BoundKeyFunction>();
-        private readonly IInputCmdContext _parent;
+        private readonly IInputCmdContext? _parent;
 
         /// <summary>
         ///     Creates a new instance of <see cref="InputCmdContext"/>.
         /// </summary>
         /// <param name="parent">Parent context.</param>
-        internal InputCmdContext(IInputCmdContext parent)
+        internal InputCmdContext(IInputCmdContext? parent)
         {
             _parent = parent;
         }

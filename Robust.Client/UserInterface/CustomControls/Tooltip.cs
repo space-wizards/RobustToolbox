@@ -1,12 +1,12 @@
-using Robust.Client.UserInterface.Controls;
+﻿using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class Tooltip : PanelContainer
     {
-        private Label _label;
+        private readonly Label _label;
 
-        public string Text
+        public string? Text
         {
             get => _label.Text;
             set => _label.Text = value;
@@ -14,8 +14,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Tooltip()
         {
-            MouseFilter = MouseFilterMode.Ignore;
-
             AddChild(_label = new Label());
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using Robust.Client.Input;
 using System.Threading;
 using Robust.Client.Interfaces;
@@ -21,10 +22,10 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.ResourceManagement.ResourceTypes;
-using Robust.Client.State.States;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -64,14 +65,14 @@ namespace Robust.Client.Console.Commands
     internal class GetComponentRegistrationCommand : IConsoleCommand
     {
         public string Command => "getcomponentregistration";
-        public string Help => "";
-        public string Description => "";
+        public string Help => "Usage: getcomponentregistration <componentName>";
+        public string Description => "Gets component registration information";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length < 1)
             {
-                console.AddLine("Not enough arguments.", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
 
@@ -114,7 +115,7 @@ namespace Robust.Client.Console.Commands
         public string Command => "monitor";
 
         public string Help =>
-            "Usage: monitor <name>\nPossible monitors are: fps, net, coord, time, frames, mem, clyde, input";
+            "Usage: monitor <name>\nPossible monitors are: fps, net, bandwidth, coord, time, frames, mem, clyde, input";
 
         public string Description => "Toggles a debug monitor in the F3 menu.";
 
@@ -124,7 +125,7 @@ namespace Robust.Client.Console.Commands
 
             if (args.Length != 1)
             {
-                console.AddLine($"Must provide exactly 1 argument!");
+                console.AddLine(Help);
                 return false;
             }
 
@@ -135,6 +136,9 @@ namespace Robust.Client.Console.Commands
                     break;
                 case "net":
                     monitor.ShowNet ^= true;
+                    break;
+                case "bandwidth":
+                    monitor.ShowNetBandwidth ^= true;
                     break;
                 case "coord":
                     monitor.ShowCoords ^= true;
@@ -206,21 +210,27 @@ namespace Robust.Client.Console.Commands
     internal class ShowRayCommand : IConsoleCommand
     {
         public string Command => "showrays";
-        public string Help => "showrays <raylifetime>";
-        public string Description => "Toggles debug drawing of physics rays.";
+        public string Help => "Usage: showrays <raylifetime>";
+        public string Description => "Toggles debug drawing of physics rays. An integer for <raylifetime> must be provided";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine("Must specify ray lifetime.", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
+
+            if (!int.TryParse(args[0], out var id))
+            {
+                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
+                return false;
+            }
+
             var mgr = IoCManager.Resolve<IDebugDrawingManager>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
             console.AddLine("Toggled showing rays to:" + mgr.DebugDrawRays.ToString(), Color.Green);
-            var indexSplit = args[0].Split(',');
-            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(indexSplit[0], CultureInfo.InvariantCulture));
+            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
             return false;
         }
     }
@@ -234,7 +244,6 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             IoCManager.Resolve<IClientNetManager>().ClientDisconnect("Disconnect command used.");
-            IoCManager.Resolve<IStateManager>().RequestStateChange<MainScreen>();
             return false;
         }
     }
@@ -252,7 +261,13 @@ namespace Robust.Client.Console.Commands
         {
             if (args.Length != 1)
             {
-                console.AddLine("Must pass exactly 1 argument", Color.Red);
+                console.AddLine(Help);
+                return false;
+            }
+
+            if ((!new Regex(@"^c?[0-9]+$").IsMatch(args[0])))
+            {
+                console.AddLine("Malformed UID", Color.Red);
                 return false;
             }
 
@@ -264,11 +279,11 @@ namespace Robust.Client.Console.Commands
                 return false;
             }
 
-            console.AddLine($"{entity.Uid}: {entity.Prototype.ID}/{entity.Name}");
+            console.AddLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
             console.AddLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {
-                console.AddLine(component.ToString());
+                console.AddLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)
                 {
                     foreach (var line in debug.GetDebugString().Split('\n'))
@@ -290,33 +305,62 @@ namespace Robust.Client.Console.Commands
     internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x,y.";
+        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length != 2 && args.Length != 3)
             {
-                console.AddLine("Must pass exactly 2 or 3 arguments", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
 
-            var gridID = new GridId(int.Parse(args[0], CultureInfo.InvariantCulture));
-            var indexSplit = args[1].Split(',');
-            var x = int.Parse(indexSplit[0], CultureInfo.InvariantCulture);
-            var y = int.Parse(indexSplit[1], CultureInfo.InvariantCulture);
-            var indices = new MapIndices(x, y);
-            var offset = SnapGridOffset.Center;
-            if (args.Length == 3)
+            string gridId = args[0];
+            string indices = args[1];
+            string offset = args.Length == 3 ? args[2] : "Center";
+
+            if (!int.TryParse(args[0], out var id))
             {
-                offset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), args[2]);
+                console.AddLine($"{args[0]} is not a valid integer.",Color.Red);
+                return false;
+            }
+
+            if (!new Regex(@"^-?[0-9]+,-?[0-9]+$").IsMatch(indices))
+            {
+                console.AddLine("mapIndicies must be of form x<int>,y<int>", Color.Red);
+                return false;
+            }
+
+            SnapGridOffset selectedOffset;
+            if (Enum.IsDefined(typeof(SnapGridOffset), offset))
+            {
+                    selectedOffset = (SnapGridOffset)Enum.Parse(typeof(SnapGridOffset), offset);
+            }
+            else
+            {
+                console.AddLine("given offset type is not defined", Color.Red);
+                return false;
             }
 
             var mapMan = IoCManager.Resolve<IMapManager>();
-            var grid = mapMan.GetGrid(gridID);
-            foreach (var entity in grid.GetSnapGridCell(indices, offset))
+
+            if (mapMan.GridExists(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))))
             {
-                console.AddLine(entity.Owner.Uid.ToString());
+                foreach (var entity in
+                    mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
+                        new MapIndices(
+                            int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
+                            int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
+                        selectedOffset))
+                {
+                    console.AddLine(entity.Owner.Uid.ToString());
+                }
+            }
+            else
+            {
+                console.AddLine("grid does not exist", Color.Red);
+                return false;
             }
 
             return false;
@@ -331,6 +375,11 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 1)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var client = IoCManager.Resolve<IBaseClient>();
             client.PlayerNameOverride = args[0];
 
@@ -348,14 +397,31 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 2)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
+            Type type;
 
-            var type = reflection.LooseGetType(args[1]);
+            try
+            {
+                type = reflection.LooseGetType(args[1]);
+            }
+            catch(ArgumentException)
+            {
+                console.AddLine("Unable to find type", Color.Red);
+                return false;
+            }
+
             var getResourceMethod =
-                resourceCache.GetType().GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
+                resourceCache
+                    .GetType()
+                    .GetMethod("GetResource", new[] { typeof(string), typeof(bool) });
             DebugTools.Assert(getResourceMethod != null);
-            var generic = getResourceMethod.MakeGenericMethod(type);
+            var generic = getResourceMethod!.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] { args[0], true });
             return false;
         }
@@ -369,13 +435,28 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
+            if (args.Length < 2)
+            {
+                console.AddLine(Help);
+                return false;
+            }
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var reflection = IoCManager.Resolve<IReflectionManager>();
 
-            var type = reflection.LooseGetType(args[1]);
+            Type type;
+            try
+            {
+                type = reflection.LooseGetType(args[1]);
+            }
+            catch(ArgumentException)
+            {
+                console.AddLine("Unable to find type", Color.Red);
+                return false;
+            }
+
             var getResourceMethod = resourceCache.GetType().GetMethod("ReloadResource", new[] { typeof(string) });
             DebugTools.Assert(getResourceMethod != null);
-            var generic = getResourceMethod.MakeGenericMethod(type);
+            var generic = getResourceMethod!.MakeGenericMethod(type);
             generic.Invoke(resourceCache, new object[] { args[0] });
             return false;
         }
@@ -385,15 +466,35 @@ namespace Robust.Client.Console.Commands
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";
-        public string Help => "gridtc <gridId>";
+        public string Help => "Usage: gridtc <gridId>";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var gridId = new GridId(int.Parse(args[0]));
-            var grid = IoCManager.Resolve<IMapManager>().GetGrid(gridId);
+            if (args.Length != 1)
+            {
+                console.AddLine(Help);
+                return false;
+            }
 
-            console.AddLine(grid.GetAllTiles().Count().ToString());
-            return false;
+            if (!int.TryParse(args[0], out var id))
+            {
+                console.AddLine($"{args[0]} is not a valid integer.");
+                return false;
+            }
+
+            var gridId = new GridId(int.Parse(args[0]));
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            if (mapManager.TryGetGrid(gridId, out var grid))
+            {
+                console.AddLine(mapManager.GetGrid(gridId).GetAllTiles().Count().ToString());
+                return false;
+            }
+            else
+            {
+                console.AddLine($"No grid exists with id {id}",Color.Red);
+                return false;
+            }
         }
     }
 
@@ -476,7 +577,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var window = new SS14Window();
+            var window = new SS14Window { CustomMinimumSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
@@ -540,7 +641,7 @@ namespace Robust.Client.Console.Commands
             }
 
             var group = new ButtonGroup();
-            var vBoxRadioButtons = new VBoxContainer { Name = "Radio Buttons" };
+            var vBoxRadioButtons = new VBoxContainer();
             for (var i = 0; i < 10; i++)
             {
                 vBoxRadioButtons.AddChild(new Button
@@ -553,6 +654,8 @@ namespace Robust.Client.Console.Commands
             }
 
             tabContainer.AddChild(vBoxRadioButtons);
+
+            TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
 
             tabContainer.AddChild(new VBoxContainer
             {
@@ -592,6 +695,7 @@ namespace Robust.Client.Console.Commands
         public bool Execute(IDebugConsole console, params string[] args)
         {
             var mgr = IoCManager.Resolve<IClipboardManager>();
+            console.AddLine(mgr.GetText());
             return false;
         }
     }
@@ -641,7 +745,7 @@ namespace Robust.Client.Console.Commands
                 if (int.TryParse(args[0], out int result))
                     GC.Collect(result);
                 else
-                    console.AddLine("Failed to parse argument.");
+                    console.AddLine("Failed to parse argument.",Color.Red);
             }
 
             return false;
@@ -653,9 +757,9 @@ namespace Robust.Client.Console.Commands
 
         public string Command => "gc_mode";
 
-        public string Description => "Change the GC Latency mode.";
+        public string Description => "Change/Read the GC Latency mode.";
 
-        public string Help => "gc_mode [type]";
+        public string Help => "gc_mode\nSee current GC Latencymode\ngc_mode [type]\n Change GC Latency mode to [type]";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -664,7 +768,7 @@ namespace Robust.Client.Console.Commands
             {
                 console.AddLine($"current gc latency mode: {(int) prevMode} ({prevMode})");
                 console.AddLine("possible modes:");
-                foreach (int mode in Enum.GetValues(typeof(GCLatencyMode)))
+                foreach (int mode in (int[]) Enum.GetValues(typeof(GCLatencyMode)))
                 {
                     console.AddLine($" {mode}: {Enum.GetName(typeof(GCLatencyMode), mode)}");
                 }
@@ -726,12 +830,18 @@ namespace Robust.Client.Console.Commands
             var inputMan = IoCManager.Resolve<IInputManager>();
             var eyeMan = IoCManager.Resolve<IEyeManager>();
 
-            var mousePos = eyeMan.ScreenToWorld(inputMan.MouseScreenPosition);
+            var mousePos = eyeMan.ScreenToMap(inputMan.MouseScreenPosition);
 
-            var grid = (IMapGridInternal)mapMan.GetGrid(mousePos.GridID);
+            if (!mapMan.TryFindGridAt(mousePos, out var grid))
+            {
+                console.AddLine("No grid under your mouse cursor.");
+                return false;
+            }
 
-            var chunkIndex = grid.LocalToChunkIndices(mousePos);
-            var chunk = grid.GetChunk(chunkIndex);
+            var internalGrid = (IMapGridInternal)grid;
+
+            var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
+            var chunk = internalGrid.GetChunk(chunkIndex);
 
             console.AddLine($"worldBounds: {chunk.CalcWorldBounds()} localBounds: {chunk.CalcLocalBounds()}");
             return false;
@@ -747,9 +857,9 @@ namespace Robust.Client.Console.Commands
 
         public string Help => "rldshader";
 
-        public static Dictionary<string, FileSystemWatcher> _watchers;
+        public static Dictionary<string, FileSystemWatcher>? _watchers;
 
-        public static ConcurrentDictionary<string, bool> _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
+        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -772,7 +882,7 @@ namespace Robust.Client.Console.Commands
 
                     var reversePathResolution = new ConcurrentDictionary<string, HashSet<ResourcePath>>(stringComparer);
 
-                    var syncCtx = SynchronizationContext.Current;
+                    var taskManager = IoCManager.Resolve<ITaskManager>();
 
                     var shaderCount = 0;
                     var created = 0;
@@ -786,7 +896,7 @@ namespace Robust.Client.Console.Commands
 
                         reversePathResolution.GetOrAdd(fullPath, _ => new HashSet<ResourcePath>()).Add(path);
 
-                        var dir = Path.GetDirectoryName(fullPath);
+                        var dir = Path.GetDirectoryName(fullPath)!;
                         var fileName = Path.GetFileName(fullPath);
                         dirs.GetOrAdd(dir, _ => new SortedSet<string>(stringComparer))
                             .Add(fileName);
@@ -800,7 +910,7 @@ namespace Robust.Client.Console.Commands
 
                             reversePathResolution.GetOrAdd(incFullPath, _ => new HashSet<ResourcePath>()).Add(path);
 
-                            var incDir = Path.GetDirectoryName(incFullPath);
+                            var incDir = Path.GetDirectoryName(incFullPath)!;
                             var incFileName = Path.GetFileName(incFullPath);
                             dirs.GetOrAdd(incDir, _ => new SortedSet<string>(stringComparer))
                                 .Add(incFileName);
@@ -819,12 +929,11 @@ namespace Robust.Client.Console.Commands
                         watcher = new FileSystemWatcher(dir);
                         watcher.Changed += (_, ev) =>
                         {
-                            if (_reloadShadersQueued.TryAdd(ev.FullPath, true))
+                            if (_reloadShadersQueued!.TryAdd(ev.FullPath, true))
                             {
-                                syncCtx.Post(o =>
+                                taskManager.RunOnMainThread(() =>
                                 {
-                                    var changed = (FileSystemEventArgs) o;
-                                    var resPaths = reversePathResolution[changed.FullPath];
+                                    var resPaths = reversePathResolution[ev.FullPath];
                                     foreach (var resPath in resPaths)
                                     {
                                         try
@@ -838,9 +947,9 @@ namespace Robust.Client.Console.Commands
                                             console.AddLine($"Failed to reload shader: {resPath}");
                                         }
 
-                                        _reloadShadersQueued.TryRemove(changed.FullPath, out var _);
+                                        _reloadShadersQueued.TryRemove(ev.FullPath, out var _);
                                     }
-                                }, ev);
+                                });
                             }
                         };
 
@@ -915,8 +1024,8 @@ namespace Robust.Client.Console.Commands
     internal class ClydeDebugLayerCommand : IConsoleCommand
     {
         public string Command => "cldbglyr";
-        public string Description => "";
-        public string Help => "cldbglyr";
+        public string Description => "Toggle fov and light debug layers";
+        public string Help => "cldbglyr <layer>: Toggle <layer>\ncldbglyr: Turn all Layers off";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
@@ -942,14 +1051,14 @@ namespace Robust.Client.Console.Commands
     internal class GetKeyInfoCommand : IConsoleCommand
     {
         public string Command => "keyinfo";
-        public string Description { get; }
+        public string Description => "Keys key info for a key";
         public string Help => "keyinfo <Key>";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
             if (args.Length != 1)
             {
-                console.AddLine("Expected one argument", Color.Red);
+                console.AddLine(Help);
                 return false;
             }
 
@@ -957,7 +1066,7 @@ namespace Robust.Client.Console.Commands
 
             if (Enum.TryParse(typeof(Keyboard.Key), args[0], true, out var parsed))
             {
-                var key = (Keyboard.Key) parsed;
+                var key = (Keyboard.Key) parsed!;
 
                 var name = clyde.GetKeyName(key);
                 var scanCode = clyde.GetKeyScanCode(key);

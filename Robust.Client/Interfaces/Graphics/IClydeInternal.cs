@@ -19,7 +19,7 @@ namespace Robust.Client.Interfaces.Graphics
         bool Initialize();
         void Ready();
 
-        ClydeHandle LoadShader(ParsedShader shader, string name = null);
+        ClydeHandle LoadShader(ParsedShader shader, string? name = null);
 
         void ReloadShader(ClydeHandle handle, ParsedShader newShader);
 
@@ -46,5 +46,6 @@ namespace Robust.Client.Interfaces.Graphics
         string GetKeyNameScanCode(int scanCode);
 
         int GetKeyScanCode(Keyboard.Key key);
+        void Shutdown();
     }
 }

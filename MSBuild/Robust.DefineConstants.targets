@@ -23,4 +23,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <DefineConstants>$(DefineConstants);EXCEPTION_TOLERANCE</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(EnableClientScripting)' == 'True'">
+    <DefineConstants>$(DefineConstants);CLIENT_SCRIPTING</DefineConstants>
+  </PropertyGroup>
 </Project>

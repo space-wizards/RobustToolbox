@@ -1,7 +1,9 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -15,15 +17,12 @@ namespace Robust.Server.GameObjects.Components.Container
 {
     public sealed class ContainerManagerComponent : SharedContainerManagerComponent
     {
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
-        private Dictionary<string, List<EntityUid>> _entitiesWaitingResolve;
+        private Dictionary<string, List<EntityUid>>? _entitiesWaitingResolve;
 
-        [ViewVariables]
-        private IEnumerable<IContainer> _allContainers => EntityContainers.Values;
+        [ViewVariables] private IEnumerable<IContainer> _allContainers => EntityContainers.Values;
 
         /// <summary>
         /// Shortcut method to make creation of containers easier.
@@ -64,7 +63,8 @@ namespace Robust.Server.GameObjects.Components.Container
 
             if (!(existing is T container))
             {
-                throw new InvalidOperationException($"The container exists but is of a different type: {existing.GetType()}");
+                throw new InvalidOperationException(
+                    $"The container exists but is of a different type: {existing.GetType()}");
             }
 
             alreadyExisted = true;
@@ -82,15 +82,22 @@ namespace Robust.Server.GameObjects.Components.Container
             {
                 throw new ArgumentException($"Container with specified ID already exists: '{id}'");
             }
-            var container = (IContainer)Activator.CreateInstance(type, id, this);
+
+            var container = (IContainer) Activator.CreateInstance(type, id, this)!;
             EntityContainers[id] = container;
             Dirty();
             return container;
         }
 
-        /// <inheritdoc />
-        public override IEnumerable<IContainer> GetAllContainers() =>
-            EntityContainers.Values.Where(c => !c.Deleted);
+        public new AllContainersEnumerable GetAllContainers()
+        {
+            return new AllContainersEnumerable(this);
+        }
+
+        protected override IEnumerable<IContainer> GetAllContainersImpl()
+        {
+            return GetAllContainers();
+        }
 
         /// <inheritdoc />
         public override IContainer GetContainer(string id)
@@ -105,18 +112,19 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public override bool TryGetContainer(string id, out IContainer container)
+        public override bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container)
         {
             if (!HasContainer(id))
             {
                 container = null;
                 return false;
             }
+
             container = GetContainer(id);
             return true;
         }
 
-        public override bool TryGetContainer(IEntity entity, out IContainer container)
+        public override bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
             foreach (var contain in EntityContainers.Values)
             {
@@ -172,6 +180,7 @@ namespace Robust.Server.GameObjects.Components.Container
                     return containers.Remove(entity);
                 }
             }
+
             return true; // If we don't contain the entity, it will always be removed
         }
 
@@ -180,10 +189,11 @@ namespace Robust.Server.GameObjects.Components.Container
             base.OnRemove();
 
             // IContianer.Shutdown modifies the EntityContainers collection
-            foreach(var container in EntityContainers.Values.ToArray())
+            foreach (var container in EntityContainers.Values.ToArray())
             {
                 container.Shutdown();
             }
+
             EntityContainers.Clear();
         }
 
@@ -198,6 +208,11 @@ namespace Robust.Server.GameObjects.Components.Container
                     _entitiesWaitingResolve = new Dictionary<string, List<EntityUid>>();
                     foreach (var (key, datum) in data)
                     {
+                        if (datum.Type == null)
+                        {
+                            throw new InvalidOperationException("Container does not have type set.");
+                        }
+
                         var type = _reflectionManager.LooseGetType(datum.Type);
                         MakeContainer(key, type);
 
@@ -205,6 +220,7 @@ namespace Robust.Server.GameObjects.Components.Container
                         {
                             continue;
                         }
+
                         var list = new List<EntityUid>(datum.Entities.Where(u => u.IsValid()));
                         _entitiesWaitingResolve.Add(key, list);
                     }
@@ -216,11 +232,13 @@ namespace Robust.Server.GameObjects.Components.Container
                 foreach (var (key, container) in EntityContainers)
                 {
                     var list = new List<EntityUid>(container.ContainedEntities.Select(e => e.Uid));
-                    var data = new ContainerPrototypeData(list, container.GetType().FullName);
+                    var data = new ContainerPrototypeData(list, container.GetType().FullName!);
                     dict.Add(key, data);
                 }
 
-                serializer.DataWriteFunction("containers", null, () => dict);
+                // ReSharper disable once RedundantTypeArgumentsOfMethod
+                serializer.DataWriteFunction<Dictionary<string, ContainerPrototypeData>?>("containers", null,
+                    () => dict);
             }
         }
 
@@ -256,7 +274,7 @@ namespace Robust.Server.GameObjects.Components.Container
         private struct ContainerPrototypeData : IExposeData
         {
             public List<EntityUid> Entities;
-            public string Type;
+            public string? Type;
 
             public ContainerPrototypeData(List<EntityUid> entities, string type)
             {
@@ -266,8 +284,71 @@ namespace Robust.Server.GameObjects.Components.Container
 
             public void ExposeData(ObjectSerializer serializer)
             {
-                serializer.DataField(ref Entities, "entities", null);
+                serializer.DataField(ref Entities, "entities", new List<EntityUid>());
                 serializer.DataField(ref Type, "type", null);
+            }
+        }
+
+        public struct AllContainersEnumerable : IEnumerable<IContainer>
+        {
+            private readonly ContainerManagerComponent _manager;
+
+            public AllContainersEnumerable(ContainerManagerComponent manager)
+            {
+                _manager = manager;
+            }
+
+            public AllContainersEnumerator GetEnumerator()
+            {
+                return new AllContainersEnumerator(_manager);
+            }
+
+            IEnumerator<IContainer> IEnumerable<IContainer>.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                return GetEnumerator();
+            }
+        }
+
+        public struct AllContainersEnumerator : IEnumerator<IContainer>
+        {
+            private Dictionary<string, IContainer>.ValueCollection.Enumerator _enumerator;
+
+            public AllContainersEnumerator(ContainerManagerComponent manager)
+            {
+                _enumerator = manager.EntityContainers.Values.GetEnumerator();
+                Current = default;
+            }
+
+            public bool MoveNext()
+            {
+                while (_enumerator.MoveNext())
+                {
+                    if (!_enumerator.Current.Deleted)
+                    {
+                        Current = _enumerator.Current;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            void IEnumerator.Reset()
+            {
+                ((IEnumerator<IContainer>) _enumerator).Reset();
+            }
+
+            [AllowNull] public IContainer Current { get; private set; }
+
+            object? IEnumerator.Current => Current;
+
+            public void Dispose()
+            {
             }
         }
     }

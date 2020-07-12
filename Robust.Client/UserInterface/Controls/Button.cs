@@ -8,12 +8,11 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class Button : ContainerButton
     {
-        public const string StyleClassButton = "button";
-
         public Label Label { get; }
 
         public Button() : base()
         {
+            AddStyleClass(StyleClassButton);
             Label = new Label
             {
                 StyleClasses = { StyleClassButton }
@@ -39,6 +38,6 @@ namespace Robust.Client.UserInterface.Controls
         ///     The text displayed by the button.
         /// </summary>
         [ViewVariables]
-        public string Text { get => Label.Text; set => Label.Text = value; }
+        public string? Text { get => Label.Text; set => Label.Text = value; }
     }
 }

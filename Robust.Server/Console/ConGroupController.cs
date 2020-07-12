@@ -18,16 +18,14 @@ namespace Robust.Server.Console
     /// </summary>
     internal class ConGroupController : IConGroupController
     {
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceManager;
-        [Dependency] private readonly IConfigurationManager _configurationManager;
-        [Dependency] private readonly ILogManager _logManager;
-        [Dependency] private readonly IPlayerManager _playerManager;
-        [Dependency] private readonly INetManager _netManager;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly ILogManager _logManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly INetManager _netManager = default!;
 
-        private ConGroupContainer _groups;
-        private SessionGroupContainer _sessions;
+        private ConGroupContainer _groups = default!;
+        private SessionGroupContainer _sessions = default!;
 
         public void Initialize()
         {
@@ -49,7 +47,7 @@ namespace Robust.Server.Console
             UpdateAllClientData();
         }
 
-        private void _onClientStatusChanged(object sender, SessionStatusEventArgs e)
+        private void _onClientStatusChanged(object? sender, SessionStatusEventArgs e)
         {
             _sessions.OnClientStatusChanged(sender, e);
 
@@ -59,7 +57,7 @@ namespace Robust.Server.Console
                 var address = session.ConnectedClient.RemoteEndPoint.Address;
                 if (Equals(address, IPAddress.Loopback) || Equals(address, IPAddress.IPv6Loopback))
                 {
-                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.adminGroup")));
+                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.hostGroup")));
                     UpdateClientData(session);
                 }
             }
@@ -86,6 +84,13 @@ namespace Robust.Server.Console
             var group = _sessions.GetSessionGroup(session);
 
             return _groups.CanAdminPlace(group);
+        }
+
+        public bool CanScript(IPlayerSession session)
+        {
+            var group = _sessions.GetSessionGroup(session);
+
+            return _groups.CanScript(group);
         }
 
         /// <summary>
@@ -116,6 +121,18 @@ namespace Robust.Server.Console
 
             _sessions.SetSessionGroup(session, newGroup);
             UpdateClientData(session);
+        }
+
+        public ConGroupIndex GetGroupIndex(IPlayerSession session)
+        {
+            return _sessions.GetSessionGroup(session);
+        }
+
+        public string? GetGroupName(ConGroupIndex index)
+        {
+            var groupDict = _groups.Groups;
+
+            return groupDict.TryGetValue(index, out var group) ? group?.Name : null;
         }
 
         /// <summary>

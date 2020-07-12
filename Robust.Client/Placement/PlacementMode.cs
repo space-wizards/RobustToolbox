@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Drawing;
@@ -27,7 +28,7 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Texture resource to draw to represent the entity we are tryign to spawn
         /// </summary>
-        public Texture SpriteToDraw { get; set; }
+        public Texture? SpriteToDraw { get; set; }
 
         /// <summary>
         /// Color set to the ghost entity when it has a valid spawn position
@@ -85,6 +86,7 @@ namespace Robust.Client.Placement
             if (SpriteToDraw == null)
             {
                 SetSprite();
+                DebugTools.AssertNotNull(SpriteToDraw);
             }
 
             IEnumerable<GridCoordinates> locationcollection;
@@ -104,11 +106,11 @@ namespace Robust.Client.Placement
                     break;
             }
 
-            var size = SpriteToDraw.Size;
+            var size = SpriteToDraw!.Size;
             foreach (var coordinate in locationcollection)
             {
                 var worldPos = pManager.MapManager.GetGrid(coordinate.GridID).LocalToWorld(coordinate).Position;
-                var pos = worldPos - (size/(float)EyeManager.PIXELSPERMETER) / 2f;
+                var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 handle.DrawTexture(SpriteToDraw, pos, color);
             }
@@ -164,14 +166,14 @@ namespace Robust.Client.Placement
             return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
         }
 
-        public bool TryGetSprite(string key, out TextureResource sprite)
+        public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
             return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
         }
 
         public void SetSprite()
         {
-            SpriteToDraw = pManager.CurrentBaseSprite.TextureFor(pManager.Direction);
+            SpriteToDraw = pManager.CurrentBaseSprite!.TextureFor(pManager.Direction);
         }
 
         /// <summary>
@@ -182,7 +184,13 @@ namespace Robust.Client.Placement
         {
             if (!RangeRequired)
                 return true;
-            var range = pManager.CurrentPermission.Range;
+
+            if (pManager.PlayerManager.LocalPlayer?.ControlledEntity == null)
+            {
+                return false;
+            }
+
+            var range = pManager.CurrentPermission!.Range;
             if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.GridPosition.InRange(pManager.MapManager, coordinates, range))
                 return false;
             return true;
@@ -199,7 +207,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            if (pManager.PhysicsManager.IsColliding(collisionbox, pManager.MapManager.GetGrid(coordinates.GridID).ParentMapId))
+            if (pManager.PhysicsManager.TryCollideRect(collisionbox, pManager.MapManager.GetGrid(coordinates.GridID).ParentMapId))
                 return true;
 
             return false;
@@ -217,7 +225,12 @@ namespace Robust.Client.Placement
 
         protected GridCoordinates ScreenToCursorGrid(ScreenCoordinates coords)
         {
-            return pManager.eyeManager.ScreenToWorld(coords.Position);
+            var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
+            if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
+            {
+                grid = pManager.MapManager.GetDefaultGrid(mapCoords.MapId);
+            }
+            return grid.MapToGrid(mapCoords);
         }
     }
 }

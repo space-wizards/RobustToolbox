@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Interfaces.GameObjects.Components
 {
@@ -47,7 +48,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <param name="id">The ID to look up.</param>
         /// <param name="container">The container if it was found, <c>null</c> if not found.</param>
         /// <returns>True if the container was found, false otherwise.</returns>
-        bool TryGetContainer(string id, out IContainer container);
+        bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container);
 
         /// <summary>
         /// Attempt to retrieve a container that contains a specific entity.
@@ -56,7 +57,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <param name="container">The container if it was found, <c>null</c> if not found.</param>
         /// <returns>True if the container was found, false otherwise.</returns>
         /// <returns>True if the container was found, false otherwise.</returns>
-        bool TryGetContainer(IEntity entity, out IContainer container);
+        bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container);
 
         bool ContainsEntity(IEntity entity);
 

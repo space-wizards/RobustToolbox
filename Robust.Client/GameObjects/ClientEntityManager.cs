@@ -16,14 +16,13 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManager, IDisposable
+    public sealed class ClientEntityManager : EntityManager, IClientEntityManager
     {
-#pragma warning disable 649
-        [Dependency] private readonly IMapManager _mapManager;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IComponentFactory _compFactory = default!;
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
-#pragma warning restore 649
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
 
@@ -40,14 +39,15 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
-        public void ApplyEntityStates(List<EntityState> curEntStates, IEnumerable<EntityUid> deletions,
-            List<EntityState> nextEntStates)
+        public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
+            EntityState[]? nextEntStates)
         {
-            var toApply = new Dictionary<IEntity, (EntityState, EntityState)>();
+            var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
             var toInitialize = new List<Entity>();
+            var created = new List<EntityUid>();
             deletions ??= new EntityUid[0];
 
-            if (curEntStates != null && curEntStates.Count != 0)
+            if (curEntStates != null && curEntStates.Length != 0)
             {
                 foreach (var es in curEntStates)
                 {
@@ -58,16 +58,21 @@ namespace Robust.Client.GameObjects
                     }
                     else //Unknown entities
                     {
-                        var metaState =
-                            (MetaDataComponentState) es.ComponentStates.First(c => c.NetID == NetIDs.META_DATA);
+                        var metaState = (MetaDataComponentState) es.ComponentStates
+                            .FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        if (metaState == null)
+                        {
+                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
+                        }
                         var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
+                        created.Add(newEntity.Uid);
                     }
                 }
             }
 
-            if (nextEntStates != null && nextEntStates.Count != 0)
+            if (nextEntStates != null && nextEntStates.Length != 0)
             {
                 foreach (var es in nextEntStates)
                 {
@@ -159,21 +164,18 @@ namespace Robust.Client.GameObjects
                 entity.Delete();
             }
 #endif
-        }
 
-        public void Dispose()
-        {
-            Shutdown();
+            return created;
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName)
+        public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
             if (coordinates.GridID != GridId.Invalid)
@@ -187,7 +189,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
@@ -196,7 +198,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);
@@ -205,7 +207,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string protoName, MapCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
@@ -214,7 +216,7 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
         {
             return SpawnEntity(protoName, coordinates);
         }
@@ -225,10 +227,10 @@ namespace Robust.Client.GameObjects
             return new EntityUid(_nextClientEntityUid++);
         }
 
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState curState,
-            EntityState nextState)
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,
+            EntityState? nextState)
         {
-            var compStateWork = new Dictionary<uint, (ComponentState curState, ComponentState nextState)>();
+            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
             var entityUid = entity.Uid;
 
             if (curState?.ComponentChanges != null)
@@ -247,8 +249,7 @@ namespace Robust.Client.GameObjects
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) IoCManager.Resolve<IComponentFactory>()
-                            .GetComponent(compChange.ComponentName);
+                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
                     }
@@ -278,27 +279,39 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            foreach (var kvStates in compStateWork)
+            foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (!compMan.TryGetComponent(entityUid, kvStates.Key, out var component))
+                if (compMan.TryGetComponent(entityUid, netId, out var component))
                 {
-                    DebugTools.Assert("Component does not exist for state.");
-                    continue;
-                }
-
-                try
-                {
-                    component.HandleComponentState(kvStates.Value.curState, kvStates.Value.nextState);
-                }
-                catch (Exception e)
-                {
-                    var wrapper = new ComponentStateApplyException(
-                        $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+                    try
+                    {
+                        component.HandleComponentState(cur, next);
+                    }
+                    catch (Exception e)
+                    {
+                        var wrapper = new ComponentStateApplyException(
+                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
 #if EXCEPTION_TOLERANCE
                     _runtimeLog.LogException(wrapper, "Component state apply");
 #else
-                    throw wrapper;
+                        throw wrapper;
 #endif
+                    }
+                }
+                else
+                {
+                    // The component can be null here due to interp.
+                    // Because the NEXT state will have a new component, but this one doesn't yet.
+                    // That's fine though.
+                    if (cur == null)
+                    {
+                        continue;
+                    }
+
+                    var eUid = entityUid;
+                    var eRegisteredNetUidName = _compFactory.GetRegistration(netId).Name;
+                    DebugTools.Assert(
+                        $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
                 }
             }
         }

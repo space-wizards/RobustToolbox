@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OpenTK.Graphics.OpenGL4;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -19,12 +19,12 @@ namespace Robust.Client.Graphics.Clyde
             private readonly sbyte?[] _uniformIntCache = new sbyte?[Clyde.UniCount];
             private readonly Dictionary<string, int> _uniformCache = new Dictionary<string, int>();
             private uint _handle = 0;
-            private GLShader _fragmentShader;
-            private GLShader _vertexShader;
-            public string Name { get; }
+            private GLShader? _fragmentShader;
+            private GLShader? _vertexShader;
+            public string? Name { get; }
             private readonly Clyde _clyde;
 
-            public GLShaderProgram(Clyde clyde, string name = null)
+            public GLShaderProgram(Clyde clyde, string? name = null)
             {
                 _clyde = clyde;
                 Name = name;

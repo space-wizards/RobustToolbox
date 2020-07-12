@@ -25,6 +25,7 @@ welcomemsg = "Welcome to the server!"
 width = 120
 height = 60
 password = "honk"
+hostpassword = "blah"
 # If this is true, people connecting from this machine (loopback)
 # will automatically be elevated to full admin privileges.
 # This literally works by checking if address == 127.0.0.1 || address == ::1

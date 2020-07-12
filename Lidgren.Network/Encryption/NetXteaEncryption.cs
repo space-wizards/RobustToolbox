@@ -79,17 +79,11 @@ namespace Lidgren.Network
 		{
 		}
 
-		/// <summary>
-		/// String to hash for key
-		/// </summary>
-		public NetXtea(NetPeer peer, string key)
-			: this(peer, NetUtility.ComputeSHAHash(Encoding.UTF8.GetBytes(key)), 32)
+		public override void SetKey(ReadOnlySpan<byte> data, int offset, int length)
 		{
-		}
-
-		public override void SetKey(byte[] data, int offset, int length)
-		{
-			var key = NetUtility.ComputeSHAHash(data, offset, length);
+			// ReSharper disable once SuggestVarOrType_Elsewhere
+			Span<byte> key = stackalloc byte[32]; 
+			NetUtility.ComputeSHAHash(data.Slice( offset, length), key);
 			NetException.Assert(key.Length >= 16);
 			SetKey(key, 0, 16);
 		}
@@ -97,7 +91,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Encrypts a block of bytes
 		/// </summary>
-		protected override void EncryptBlock(byte[] source, int sourceOffset, byte[] destination)
+		protected override void EncryptBlock(ReadOnlySpan<byte> source, int sourceOffset, Span<byte> destination)
 		{
 			uint v0 = BytesToUInt(source, sourceOffset);
 			uint v1 = BytesToUInt(source, sourceOffset + 4);
@@ -117,7 +111,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Decrypts a block of bytes
 		/// </summary>
-		protected override void DecryptBlock(byte[] source, int sourceOffset, byte[] destination)
+		protected override void DecryptBlock(ReadOnlySpan<byte> source, int sourceOffset, Span<byte> destination)
 		{
 			// Pack bytes into integers
 			uint v0 = BytesToUInt(source, sourceOffset);
@@ -135,7 +129,7 @@ namespace Lidgren.Network
 			return;
 		}
 
-		private static uint BytesToUInt(byte[] bytes, int offset)
+		private static uint BytesToUInt(ReadOnlySpan<byte> bytes, int offset)
 		{
 			uint retval = (uint)(bytes[offset] << 24);
 			retval |= (uint)(bytes[++offset] << 16);
@@ -143,7 +137,7 @@ namespace Lidgren.Network
 			return (retval | bytes[++offset]);
 		}
 
-		private static void UIntToBytes(uint value, byte[] destination, int destinationOffset)
+		private static void UIntToBytes(uint value, Span<byte> destination, int destinationOffset)
 		{
 			destination[destinationOffset++] = (byte)(value >> 24);
 			destination[destinationOffset++] = (byte)(value >> 16);

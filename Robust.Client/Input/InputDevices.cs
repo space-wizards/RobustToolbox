@@ -205,7 +205,7 @@ namespace Robust.Client.Input
         ///     Gets a "nice" version of special unprintable keys such as <see cref="Key.Escape"/>.
         /// </summary>
         /// <returns><see langword="null"/> if there is no nice version of this special key.</returns>
-        internal static string GetSpecialKeyName(Key key)
+        internal static string? GetSpecialKeyName(Key key)
         {
             if (_keyNiceNameMap.TryGetValue(key, out var val))
             {

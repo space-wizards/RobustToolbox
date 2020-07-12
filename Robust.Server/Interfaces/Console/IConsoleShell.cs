@@ -30,14 +30,14 @@ namespace Robust.Server.Interfaces.Console
         /// </summary>
         /// <param name="session">Remote player to send the text message to. If this is null, the text is sent to the local console.</param>
         /// <param name="text">Text message to send.</param>
-        void SendText(IPlayerSession session, string text);
+        void SendText(IPlayerSession? session, string? text);
 
         /// <summary>
         /// Sends a text string to the remote console.
         /// </summary>
         /// <param name="target">Net channel to send the text string to.</param>
         /// <param name="text">Text message to send.</param>
-        void SendText(INetChannel target, string text);
+        void SendText(INetChannel target, string? text);
 
         /// <summary>
         /// Execute a command string on the local shell.
@@ -50,7 +50,7 @@ namespace Robust.Server.Interfaces.Console
         /// </summary>
         /// <param name="player">Session of the remote player. If this is null, the command is executed as the local console.</param>
         /// <param name="command">Command string to execute.</param>
-        void ExecuteCommand(IPlayerSession player, string command);
+        void ExecuteCommand(IPlayerSession? player, string command);
 
         /// <summary>
         /// Elevates a player shell from user group to administrator group.
@@ -59,5 +59,13 @@ namespace Robust.Server.Interfaces.Console
         /// <param name="password">super user password.</param>
         /// <returns></returns>
         bool ElevateShell(IPlayerSession session, string password);
+
+        /// <summary>
+        /// Elevates a player shell from user group to host group.
+        /// </summary>
+        /// <param name="session">Session shell to elevate.</param>
+        /// <param name="password">super user password.</param>
+        /// <returns></returns>
+        bool ElevateShellHost(IPlayerSession session, string password);
     }
 }

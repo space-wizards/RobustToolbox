@@ -16,11 +16,9 @@ namespace Robust.Client.Map
 {
     internal sealed class ClydeTileDefinitionManager : TileDefinitionManager, IClydeTileDefinitionManager
     {
-#pragma warning disable 649
-        [Dependency] private IResourceCache _resourceCache;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
 
-        public Texture TileTextureAtlas { get; private set; }
+        public Texture TileTextureAtlas { get; private set; } = default!;
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
 
@@ -44,7 +42,7 @@ namespace Robust.Client.Map
         private void _genTextureAtlas()
         {
             var defList = TileDefs.Where(t => !string.IsNullOrEmpty(t.SpriteName)).ToList();
-            const int tileSize = EyeManager.PIXELSPERMETER;
+            const int tileSize = EyeManager.PixelsPerMeter;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(defList.Count));
             var dimensionY = (int) Math.Ceiling((float) defList.Count / dimensionX);
@@ -58,9 +56,9 @@ namespace Robust.Client.Map
                 var row = i / dimensionX;
 
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead($"/Textures/Tiles/{def.SpriteName}.png"))
+                using (var stream = _resourceCache.ContentFileRead($"/Textures/Constructible/Tiles/{def.SpriteName}.png"))
                 {
-                    image = Image.Load(stream);
+                    image = Image.Load<Rgba32>(stream);
                 }
 
                 if (image.Width != tileSize || image.Height != tileSize)
@@ -77,7 +75,7 @@ namespace Robust.Client.Map
 
                 _tileRegions.Add(def.TileId,
                     Box2.FromDimensions(
-                        point.X / w, (h - point.Y - EyeManager.PIXELSPERMETER) / h,
+                        point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                         tileSize / w, tileSize / h));
             }
 

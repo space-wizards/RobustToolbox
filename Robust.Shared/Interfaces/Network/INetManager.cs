@@ -49,6 +49,10 @@ namespace Robust.Shared.Interfaces.Network
         /// </summary>
         int Port { get; }
 
+        IReadOnlyDictionary<Type, long> MessageBandwidthUsage { get; }
+
+        void ResetBandwidthMetrics();
+
         /// <summary>
         ///     Initializes the server, and starts listening for connections.
         /// </summary>
@@ -104,7 +108,7 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     A client has just disconnected from the server.
         /// </summary>
-        event EventHandler<NetChannelArgs> Disconnect;
+        event EventHandler<NetDisconnectedArgs> Disconnect;
 
         #region StringTable
 
@@ -114,12 +118,15 @@ namespace Robust.Shared.Interfaces.Network
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, ProcessMessage<T> rxCallback = null)
+        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
             where T : NetMessage;
 
         /// <summary>
         ///     Creates a new NetMessage to be sent.
         /// </summary>
+        /// <remarks>
+        ///     This function is thread safe.
+        /// </remarks>
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;

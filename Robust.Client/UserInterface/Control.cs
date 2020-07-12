@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -30,16 +31,14 @@ namespace Robust.Client.UserInterface
 
         private bool _canKeyboardFocus;
 
-        public event Action<Control> OnVisibilityChanged;
-
-        private bool _stylingDirty;
+        public event Action<Control>? OnVisibilityChanged;
 
         /// <summary>
         ///     The name of this control.
         ///     Names must be unique between the siblings of the control.
         /// </summary>
         [ViewVariables]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         ///     Our parent inside the control tree.
@@ -48,7 +47,7 @@ namespace Robust.Client.UserInterface
         ///     This cannot be changed directly. Use <see cref="AddChild" /> and such on the parent to change it.
         /// </remarks>
         [ViewVariables]
-        public Control Parent { get; private set; }
+        public Control? Parent { get; private set; }
 
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
 
@@ -98,6 +97,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="VisibleInTree"/>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public bool Visible
         {
             get => _visible;
@@ -197,13 +197,13 @@ namespace Robust.Client.UserInterface
         /// <remarks>
         ///     If empty or null, no tooltip is shown in the first place.
         /// </remarks>
-        public string ToolTip { get; set; }
+        public string? ToolTip { get; set; }
 
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Stop;
+        public MouseFilterMode MouseFilter { get; set; } = MouseFilterMode.Ignore;
 
         /// <summary>
         ///     Whether this control can take keyboard focus.
@@ -279,6 +279,7 @@ namespace Robust.Client.UserInterface
         ///     Modulation is multiplying or tinting the color basically.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color Modulate { get; set; } = Color.White;
 
         /// <summary>
@@ -362,7 +363,6 @@ namespace Robust.Client.UserInterface
             }
 
             Dispose(true);
-            GC.SuppressFinalize(this);
             Disposed = true;
         }
 
@@ -377,11 +377,6 @@ namespace Robust.Client.UserInterface
             Parent?.RemoveChild(this);
 
             OnKeyBindDown = null;
-        }
-
-        ~Control()
-        {
-            Dispose(false);
         }
 
         /// <summary>
@@ -411,7 +406,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Make this child an orphan. e.g. remove it from its parent if it has one.
+        ///     Make this child an orphan. i.e. remove it from its parent if it has one.
         /// </summary>
         public void Orphan()
         {
@@ -488,7 +483,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newParent">The new parent component.</param>
         protected virtual void Parented(Control newParent)
         {
-            Restyle();
+            StylesheetUpdateRecursive();
             UpdateLayout();
         }
 
@@ -629,6 +624,11 @@ namespace Robust.Client.UserInterface
         /// <exception cref="InvalidOperationException">This control has no parent.</exception>
         public void SetPositionLast()
         {
+            if (Parent == null)
+            {
+                throw new InvalidOperationException("No parent to change position in.");
+            }
+
             SetPositionInParent(Parent.ChildCount - 1);
         }
 
@@ -715,32 +715,8 @@ namespace Robust.Client.UserInterface
             ProcessAnimations(args);
         }
 
-        public enum CursorShape
-        {
-            Arrow = 0,
-            IBeam = 1,
-            PointingHand = 2,
-            Cross = 3,
-            Wait = 4,
-            Busy = 5,
-            Drag = 6,
-            CanDrop = 7,
-            Forbidden = 8,
-            VSize = 9,
-            HSize = 10,
-            BDiagSize = 11,
-            FDiagSize = 12,
-            Move = 13,
-            VSplit = 14,
-            HSplit = 15,
-            Help = 16,
-        }
-
-        public CursorShape DefaultCursorShape
-        {
-            get => default;
-            set { }
-        }
+        // These are separate from StandardCursorShape so that
+        // in the future we could have an API to override the styling.
 
         public override string ToString()
         {

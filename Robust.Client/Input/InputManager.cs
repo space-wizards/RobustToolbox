@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using JetBrains.Annotations;
+using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
+using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -25,10 +30,9 @@ namespace Robust.Client.Input
 
         public virtual Vector2 MouseScreenPosition => Vector2.Zero;
 
-#pragma warning disable 649
-        [Dependency] private readonly IResourceManager _resourceMan;
-        [Dependency] private readonly IReflectionManager _reflectionManager;
-#pragma warning restore 649
+        [Dependency] private readonly IResourceManager _resourceMan = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
             new Dictionary<BoundKeyFunction, InputCmdHandler>();
@@ -37,16 +41,16 @@ namespace Robust.Client.Input
         private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
-        public BoundKeyMap NetworkBindMap { get; private set; }
+        public BoundKeyMap NetworkBindMap { get; private set; } = default!;
 
         /// <inheritdoc />
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs> UIKeyBindStateChanged;
+        public event Action<BoundKeyEventArgs>? UIKeyBindStateChanged;
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs> KeyBindStateChanged;
+        public event Action<BoundKeyEventArgs>? KeyBindStateChanged;
 
         public IEnumerable<BoundKeyFunction> DownKeyFunctions => _bindings
             .Where(x => x.State == BoundKeyState.Down)
@@ -90,7 +94,7 @@ namespace Robust.Client.Input
             }
         }
 
-        private void OnContextChanged(object sender, ContextChangedEventArgs args)
+        private void OnContextChanged(object? sender, ContextChangedEventArgs args)
         {
             // keyup any commands that are not in the new contexts, because it will not exist in the new context and get filtered. Luckily
             // the diff does not have to be symmetrical, otherwise instead of 'A \ B' we allocate all the things with '(A \ B) ∪ (B \ A)'
@@ -120,6 +124,9 @@ namespace Robust.Client.Input
 
             PackedKeyCombo matchedCombo = default;
 
+            var bindsDown = new List<KeyBinding>();
+            var hasCanFocus = false;
+
             // bindings are ordered with larger combos before single key bindings so combos have priority.
             foreach (var binding in _bindings)
             {
@@ -136,14 +143,28 @@ namespace Robust.Client.Input
                     {
                         matchedCombo = binding.PackedKeyCombo;
 
-                        if (DownBind(binding))
-                            break;
+                        bindsDown.Add(binding);
+                        hasCanFocus |= binding.CanFocus;
                     }
                     else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
                     {
                         // kill any lower level matches
                         UpBind(binding);
                     }
+                }
+            }
+
+            var uiOnly = false;
+            if (hasCanFocus)
+            {
+                uiOnly = _userInterfaceManagerInternal.HandleCanFocusDown(MouseScreenPosition);
+            }
+
+            foreach (var binding in bindsDown)
+            {
+                if (DownBind(binding, uiOnly, args.IsRepeat))
+                {
+                    break;
                 }
             }
         }
@@ -156,6 +177,7 @@ namespace Robust.Client.Input
                 return;
             }
 
+            var hasCanFocus = false;
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
@@ -165,29 +187,41 @@ namespace Robust.Client.Input
                 if (PackedContainsKey(binding.PackedKeyCombo, args.Key) &&
                     PackedMatchesPressedState(binding.PackedKeyCombo))
                 {
+                    hasCanFocus |= binding.CanFocus;
                     UpBind(binding);
                 }
             }
 
             _keysPressed[(int) args.Key] = false;
+
+            if (hasCanFocus)
+            {
+                _userInterfaceManagerInternal.HandleCanFocusUp();
+            }
         }
 
-        private bool DownBind(KeyBinding binding)
+        private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
         {
             if (binding.State == BoundKeyState.Down)
             {
+                if (isRepeat)
+                {
+                    if (binding.CanRepeat)
+                    {
+                        return SetBindState(binding, BoundKeyState.Down, uiOnly);
+                    }
+
+                    return true;
+                }
+
                 if (binding.BindingType == KeyBindingType.Toggle)
                 {
                     return SetBindState(binding, BoundKeyState.Up);
                 }
-                else if (binding.CanRepeat)
-                {
-                    return SetBindState(binding, BoundKeyState.Down);
-                }
             }
             else
             {
-                return SetBindState(binding, BoundKeyState.Down);
+                return SetBindState(binding, BoundKeyState.Down, uiOnly);
             }
 
             return false;
@@ -203,7 +237,7 @@ namespace Robust.Client.Input
             SetBindState(binding, BoundKeyState.Up);
         }
 
-        private bool SetBindState(KeyBinding binding, BoundKeyState state)
+        private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly=false)
         {
             binding.State = state;
 
@@ -211,22 +245,28 @@ namespace Robust.Client.Input
                 new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (state == BoundKeyState.Up || !eventArgs.Handled)
+            if (state == BoundKeyState.Up || !eventArgs.Handled && !uiOnly)
             {
-                KeyBindStateChanged?.Invoke(eventArgs);
-
                 var cmd = GetInputCommand(binding.Function);
-                if (state == BoundKeyState.Up)
+                // TODO: Allow input commands to still get forwarded to server if necessary.
+                if (cmd != null)
                 {
-                    cmd?.Disabled(null);
+                    if (state == BoundKeyState.Up)
+                    {
+                        cmd.Disabled(null);
+                    }
+                    else
+                    {
+                        cmd.Enabled(null);
+                    }
                 }
                 else
                 {
-                    cmd?.Enabled(null);
+                    KeyBindStateChanged?.Invoke(eventArgs);
                 }
             }
 
-            return (eventArgs.Handled);
+            return eventArgs.Handled;
         }
 
         private bool PackedMatchesPressedState(PackedKeyCombo packed)
@@ -321,21 +361,41 @@ namespace Robust.Client.Input
                     mod3 = mod3Name.AsEnum<Key>();
                 }
 
+                var priority = 0;
+                if (keyMapping.TryGetNode("priority", out var priorityValue))
+                {
+                    priority = priorityValue.AsInt();
+                }
+
                 var type = keyMapping.GetNode("type").AsEnum<KeyBindingType>();
 
-                var binding = new KeyBinding(this, function, type, key, canFocus, canRepeat, mod1, mod2, mod3);
+                var binding = new KeyBinding(this, function, type, key, canFocus, canRepeat, priority, mod1, mod2,
+                    mod3);
                 RegisterBinding(binding);
             }
         }
 
+        /// <inheritdoc />
+        public void RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
+            Key baseKey, Key? mod1, Key? mod2, Key? mod3)
+        {
+            var binding = new KeyBinding(this, function, bindingType, baseKey, false, false,
+                0, mod1 ?? Key.Unknown, mod2 ?? Key.Unknown, mod3 ?? Key.Unknown);
+
+            RegisterBinding(binding);
+        }
+
         private void RegisterBinding(KeyBinding binding)
         {
-            //TODO: Assert there are no duplicate binding combos
-            _bindings.Add(binding);
+            // we sort larger combos first so they take priority over smaller (single key) combos,
+            // so they get processed first in KeyDown and such.
+            var pos = _bindings.BinarySearch(binding, KeyBinding.ProcessPriorityComparer);
+            if (pos < 0)
+            {
+                pos = ~pos;
+            }
 
-            // reversed a,b for descending order
-            // we sort larger combos first so they take priority over smaller (single key) combos
-            _bindings.Sort((a, b) => b.PackedKeyCombo.Packed.CompareTo(a.PackedKeyCombo.Packed));
+            _bindings.Insert(pos, binding);
         }
 
         /// <inheritdoc />
@@ -357,7 +417,7 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
-        public InputCmdHandler GetInputCommand(BoundKeyFunction function)
+        public InputCmdHandler? GetInputCommand(BoundKeyFunction function)
         {
             if (_commands.TryGetValue(function, out var val))
             {
@@ -368,11 +428,19 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
-        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
+        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler? cmdHandler)
         {
-            _commands[function] = cmdHandler;
+            if (cmdHandler == null)
+            {
+                _commands.Remove(function);
+            }
+            else
+            {
+                _commands[function] = cmdHandler;
+            }
         }
 
+        [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]
         private class KeyBinding : IKeyBinding
         {
             private readonly InputManager _inputManager;
@@ -392,10 +460,12 @@ namespace Robust.Client.Input
             /// </summary>
             public bool CanRepeat { get; internal set; }
 
+            public int Priority { get; internal set; }
+
             public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
                 Key baseKey,
-                bool canFocus, bool canRepeat, Key mod1 = Key.Unknown,
+                bool canFocus, bool canRepeat, int priority, Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
                 Key mod3 = Key.Unknown)
             {
@@ -403,6 +473,7 @@ namespace Robust.Client.Input
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
+                Priority = priority;
                 _inputManager = inputManager;
 
                 PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);
@@ -433,6 +504,21 @@ namespace Robust.Client.Input
 
                 return sb.ToString();
             }
+
+            private sealed class ProcessPriorityRelationalComparer : IComparer<KeyBinding>
+            {
+                public int Compare(KeyBinding? x, KeyBinding? y)
+                {
+                    if (ReferenceEquals(x, y)) return 0;
+                    if (ReferenceEquals(null, y)) return 1;
+                    if (ReferenceEquals(null, x)) return -1;
+                    var cmp = y.PackedKeyCombo.Packed.CompareTo(x.PackedKeyCombo.Packed);
+                    // Higher priority is first in the list so gets to go first.
+                    return cmp != 0 ? cmp : y.Priority.CompareTo(x.Priority);
+                }
+            }
+
+            public static IComparer<KeyBinding> ProcessPriorityComparer { get; } = new ProcessPriorityRelationalComparer();
         }
 
         [StructLayout(LayoutKind.Explicit)]
@@ -484,7 +570,7 @@ namespace Robust.Client.Input
                 return Packed == other.Packed;
             }
 
-            public override bool Equals(object obj)
+            public override bool Equals(object? obj)
             {
                 return obj is PackedKeyCombo other && Equals(other);
             }
@@ -518,5 +604,52 @@ namespace Robust.Client.Input
         Unknown = 0,
         Enabled,
         Disabled,
+    }
+
+    [UsedImplicitly]
+    internal class BindCommand : IConsoleCommand
+    {
+        public string Command => "bind";
+        public string Description => "Binds an input key to an input command.";
+        public string Help => "bind <KeyName> <BindMode> <InputCommand>";
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            if (args.Length < 3)
+            {
+                console.AddLine("Too few arguments.");
+                return false;
+            }
+
+            if (args.Length > 3)
+            {
+                console.AddLine("Too many arguments.");
+                return false;
+            }
+
+            var keyName = args[0];
+
+            if (!Enum.TryParse(typeof(Keyboard.Key), keyName, true, out var keyIdObj))
+            {
+                console.AddLine($"Key '{keyName}' is unrecognized.");
+                return false;
+            }
+
+            var keyId = (Keyboard.Key) keyIdObj!;
+
+            if (!Enum.TryParse(typeof(KeyBindingType), args[1], true, out var keyModeObj))
+            {
+                console.AddLine($"BindMode '{args[1]}' is unrecognized.");
+                return false;
+            }
+            var keyMode = (KeyBindingType)keyModeObj!;
+
+            var inputCommand = args[2];
+
+            var inputMan = IoCManager.Resolve<IInputManager>();
+
+            inputMan.RegisterBinding(new BoundKeyFunction(inputCommand), keyMode, keyId, null, null, null);
+
+            return false;
+        }
     }
 }

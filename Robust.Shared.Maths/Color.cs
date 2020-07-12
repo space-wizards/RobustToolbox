@@ -36,6 +36,8 @@ using SysVector4 = System.Numerics.Vector4;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
+using Math = CannyFastMath.Math;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -149,6 +151,31 @@ namespace Robust.Shared.Maths
         public static implicit operator Color(System.Drawing.Color color)
         {
             return new Color(color.R, color.G, color.B, color.A);
+        }
+
+        public static implicit operator Color((float r, float g, float b, float a) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b, tuple.a);
+        }
+
+        public static implicit operator Color((float r, float g, float b) tuple)
+        {
+            return new Color(tuple.r, tuple.g, tuple.b);
+        }
+
+        public void Deconstruct(out float r, out float g, out float b, out float a)
+        {
+            r = R;
+            g = G;
+            b = B;
+            a = A;
+        }
+
+        public void Deconstruct(out float r, out float g, out float b)
+        {
+            r = R;
+            g = G;
+            b = B;
         }
 
         /// <summary>
@@ -362,10 +389,10 @@ namespace Robust.Shared.Maths
             var saturation = hsl.Y;
             var lightness = hsl.Z;
 
-            var c = (1.0f - Math.Abs(2.0f * lightness - 1.0f)) * saturation;
+            var c = (1.0f - MathF.Abs(2.0f * lightness - 1.0f)) * saturation;
 
             var h = hue / 60.0f;
-            var X = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var X = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -427,8 +454,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsl(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -447,7 +474,7 @@ namespace Robust.Shared.Maths
 
             var saturation = 0.0f;
             if (0.0f != lightness && lightness != 1.0f)
-                saturation = c / (1.0f - Math.Abs(2.0f * lightness - 1.0f));
+                saturation = c / (1.0f - MathF.Abs(2.0f * lightness - 1.0f));
 
             return new Vector4(hue, saturation, lightness, rgb.A);
         }
@@ -473,7 +500,7 @@ namespace Robust.Shared.Maths
             var c = value * saturation;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -535,8 +562,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHsv(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -654,7 +681,7 @@ namespace Robust.Shared.Maths
             var luminance = hcy.Z;
 
             var h = hue / 60.0f;
-            var x = c * (1.0f - Math.Abs(h % 2.0f - 1.0f));
+            var x = c * (1.0f - MathF.Abs(h % 2.0f - 1.0f));
 
             float r, g, b;
             if (0.0f <= h && h < 1.0f)
@@ -716,8 +743,8 @@ namespace Robust.Shared.Maths
         /// <param name="rgb">Color value to convert.</param>
         public static Vector4 ToHcy(Color rgb)
         {
-            var max = Math.Max(rgb.R, Math.Max(rgb.G, rgb.B));
-            var min = Math.Min(rgb.R, Math.Min(rgb.G, rgb.B));
+            var max = MathF.Max(rgb.R, MathF.Max(rgb.G, rgb.B));
+            var min = MathF.Min(rgb.R, MathF.Min(rgb.G, rgb.B));
             var c = max - min;
 
             var h = 0.0f;
@@ -733,6 +760,28 @@ namespace Robust.Shared.Maths
             var luminance = 0.30f * rgb.R + 0.59f * rgb.G + 0.11f * rgb.B;
 
             return new Vector4(hue, c, luminance, rgb.A);
+        }
+
+
+        public static Vector4 ToCmyk(Color rgb)
+        {
+            var (r, g, b) = rgb;
+            var k = 1 - MathF.Max(r, MathF.Max(g, b));
+            var c = (1 - r - k) / (1 - k);
+            var m = (1 - g - k) / (1 - k);
+            var y = (1 - b - k) / (1 - k);
+
+            return (c, m, y, k);
+        }
+
+        public static Color FromCmyk(Vector4 cmyk)
+        {
+            var (c, m, y, k) = cmyk;
+            var r = (1 - c) * (1 - k);
+            var g = (1 - m) * (1 - k);
+            var b = (1 - y) * (1 - k);
+
+            return (r, g, b);
         }
 
         /// <summary>
@@ -912,7 +961,7 @@ namespace Robust.Shared.Maths
                     throw new NotImplementedException();
             }
 
-            return new Color(ret.X, ret.Y, ret.Z, Math.Min(1, dstColor.A + dstColor.A * srcColor.A));
+            return new Color(ret.X, ret.Y, ret.Z, MathF.Min(1, dstColor.A + dstColor.A * srcColor.A));
         }
 
         /// <summary>
@@ -928,7 +977,13 @@ namespace Robust.Shared.Maths
 
         public string ToHex()
         {
-            return $"#{RByte:X2}{GByte:X2}{BByte:X2}{AByte:X2}";
+            var hexColor = 0;
+            hexColor += RByte << 24;
+            hexColor += GByte << 16;
+            hexColor += BByte << 8;
+            hexColor += AByte;
+
+            return $"#{hexColor:X8}";
         }
 
         /// <summary>

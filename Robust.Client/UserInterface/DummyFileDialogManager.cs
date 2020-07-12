@@ -8,19 +8,19 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal sealed class DummyFileDialogManager : IFileDialogManager
     {
-        public Task<string> OpenFile()
+        public Task<string?> OpenFile(FileDialogFilters? filters = null)
         {
-            return Task.FromResult<string>(null);
+            return Task.FromResult<string?>(null);
         }
 
-        public Task<string> SaveFile()
+        public Task<string?> SaveFile()
         {
-            return Task.FromResult<string>(null);
+            return Task.FromResult<string?>(null);
         }
 
-        public Task<string> OpenFolder()
+        public Task<string?> OpenFolder()
         {
-            return Task.FromResult<string>(null);
+            return Task.FromResult<string?>(null);
         }
     }
 }

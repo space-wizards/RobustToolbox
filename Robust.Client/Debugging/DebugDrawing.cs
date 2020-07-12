@@ -16,13 +16,11 @@ namespace Robust.Client.Debugging
     /// <inheritdoc />
     public class DebugDrawing : IDebugDrawing
     {
-#pragma warning disable 649
-        [Dependency] private readonly IOverlayManager _overlayManager;
-        [Dependency] private readonly IComponentManager _componentManager;
-        [Dependency] private readonly IEyeManager _eyeManager;
-        [Dependency] private readonly IPrototypeManager _prototypeManager;
-        [Dependency] private readonly IEntityManager _entityManager;
-#pragma warning restore 649
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private bool _debugColliders;
         private bool _debugPositions;
@@ -174,7 +172,7 @@ namespace Robust.Client.Debugging
                     {
                         continue;
                     }
-                    
+
                     var center = transform.WorldPosition;
                     var xLine = transform.WorldRotation.RotateVec(Vector2.UnitX);
                     var yLine = transform.WorldRotation.RotateVec(Vector2.UnitY);

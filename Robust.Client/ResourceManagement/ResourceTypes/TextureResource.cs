@@ -1,18 +1,23 @@
-﻿using System.IO;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using Robust.Client.Graphics;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.ResourceManagement
 {
     public class TextureResource : BaseResource
     {
-        public override ResourcePath Fallback => new ResourcePath("/Textures/noSprite.png");
-        public Texture Texture { get; private set; }
+        public const float ClickThreshold = 0.25f;
+
+        public override ResourcePath? Fallback => new ResourcePath("/Textures/noSprite.png");
+        public Texture Texture { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
@@ -28,7 +33,14 @@ namespace Robust.Client.ResourceManagement
 
             var manager = IoCManager.Resolve<IClyde>();
 
-            Texture = manager.LoadTextureFromPNGStream(stream, path.ToString(), loadParameters);
+            using var image = Image.Load<Rgba32>(stream);
+
+            Texture = manager.LoadTextureFromImage(image, path.ToString(), loadParameters);
+
+            if (cache is IResourceCacheInternal cacheInternal)
+            {
+                cacheInternal.TextureLoaded(new TextureLoadedEventArgs(path, image, this));
+            }
         }
 
         private static TextureLoadParameters? _tryLoadTextureParameters(IResourceCache cache, ResourcePath path)
@@ -54,9 +66,12 @@ namespace Robust.Client.ResourceManagement
             return null;
         }
 
+        // TODO: Due to a bug in Roslyn, NotNullIfNotNullAttribute doesn't work.
+        // So this can't work with both nullables and non-nullables at the same time.
+        // I decided to only have it work with non-nullables as such.
         public static implicit operator Texture(TextureResource res)
         {
-            return res?.Texture;
+            return res.Texture;
         }
     }
 }

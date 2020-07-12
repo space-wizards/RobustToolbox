@@ -9,7 +9,7 @@ namespace Robust.Client.ResourceManagement
 {
     public class FontResource : BaseResource
     {
-        internal IFontFaceHandle FontFaceHandle { get; private set; }
+        internal IFontFaceHandle FontFaceHandle { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {

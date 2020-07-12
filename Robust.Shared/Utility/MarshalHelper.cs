@@ -21,7 +21,7 @@ namespace Robust.Shared.Utility
             return i;
         }
 
-        public static unsafe string PtrToStringUTF8(byte* ptr)
+        public static unsafe string? PtrToStringUTF8(byte* ptr)
         {
 #if NETCOREAPP
             return Marshal.PtrToStringUTF8((IntPtr) ptr);
@@ -37,7 +37,7 @@ namespace Robust.Shared.Utility
 #endif
         }
 
-        public static unsafe IntPtr StringToCoTaskMemUTF8(string str)
+        public static unsafe IntPtr StringToCoTaskMemUTF8(string? str)
         {
 #if NETCOREAPP
 

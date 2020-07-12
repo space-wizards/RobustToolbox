@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
@@ -9,9 +10,9 @@ namespace Robust.Client.UserInterface
 {
     public partial class Control
     {
-        [CanBeNull]
-        private Dictionary<string, AnimationPlayback> _playingAnimations
-            = new Dictionary<string, AnimationPlayback>();
+        private Dictionary<string, AnimationPlayback>? _playingAnimations;
+
+        public Action<string>? AnimationCompleted;
 
         /// <summary>
         ///     Start playing an animation.
@@ -52,6 +53,7 @@ namespace Robust.Client.UserInterface
                 if (!keep)
                 {
                     _playingAnimations.Remove(key);
+                    AnimationCompleted?.Invoke(key);
                 }
             }
         }

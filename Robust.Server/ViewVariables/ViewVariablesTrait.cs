@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -31,7 +32,7 @@ namespace Robust.Server.ViewVariables
         ///     <see langword="null"/>If this trait doesn't care about this request, a meaningful blob otherwise.
         ///     No, not the game mode, the other kind of blob.
         /// </returns>
-        public virtual ViewVariablesBlob DataRequest(ViewVariablesRequest viewVariablesRequest)
+        public virtual ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
             return null;
         }
@@ -55,7 +56,7 @@ namespace Robust.Server.ViewVariables
         /// </param>
         /// <param name="value">The to-be value of the object if this trait managed to retrieve it.</param>
         /// <returns>True if we retrieved a value, false otherwise.</returns>
-        public virtual bool TryGetRelativeObject(object property, out object value)
+        public virtual bool TryGetRelativeObject(object property, out object? value)
         {
             value = default;
             return false;
@@ -81,7 +82,7 @@ namespace Robust.Server.ViewVariables
         /// <summary>
         ///     Swaps values like references over to reference tokens to prevent issues.
         /// </summary>
-        protected object MakeValueNetSafe(object value)
+        protected object? MakeValueNetSafe(object? value)
         {
             if (value == null)
             {
@@ -96,7 +97,7 @@ namespace Robust.Server.ViewVariables
                 {
                     return new ViewVariablesBlobMembers.ReferenceToken
                     {
-                        Stringified = value.ToString()
+                        Stringified = PrettyPrint.PrintUserFacing(value)
                     };
                 }
             }

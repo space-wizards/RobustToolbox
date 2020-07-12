@@ -30,9 +30,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
 
-        private HistoryLineEdit CommandBar;
-        private OutputPanel Output;
-        private Control MainControl;
+        private readonly HistoryLineEdit CommandBar;
+        private readonly OutputPanel Output;
+        private readonly Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
@@ -44,13 +44,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _console = console;
             _resourceManager = resMan;
 
-            PerformLayout();
-        }
-
-        private void PerformLayout()
-        {
             Visible = false;
-            MouseFilter = MouseFilterMode.Ignore;
 
             var styleBox = new StyleBoxFlat
             {
@@ -60,7 +54,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             AddChild(new LayoutContainer
             {
-                MouseFilter = MouseFilterMode.Ignore,
                 Children =
                 {
                     (MainControl = new VBoxContainer
@@ -91,6 +84,15 @@ namespace Robust.Client.UserInterface.CustomControls
             _console.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
+
+            CommandBar.OnKeyBindDown += args =>
+            {
+                if (args.Function == EngineKeyFunctions.ShowDebugConsole)
+                {
+                    Toggle();
+                    args.Handle();
+                }
+            };
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -98,6 +100,11 @@ namespace Robust.Client.UserInterface.CustomControls
             base.FrameUpdate(args);
 
             _flushQueue();
+
+            if (!Visible)
+            {
+                return;
+            }
 
             var targetLocation = _targetVisible ? 0 : -MainControl.Height;
             var (posX, posY) = MainControl.Position;
@@ -220,7 +227,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     var data = JsonConvert.DeserializeObject<List<string>>(await reader.ReadToEndAsync());
                     CommandBar.ClearHistory();
                     CommandBar.History.AddRange(data);
-                    CommandBar.HistoryIndex = CommandBar.History.Count; 
+                    CommandBar.HistoryIndex = CommandBar.History.Count;
                 }
             }
             finally

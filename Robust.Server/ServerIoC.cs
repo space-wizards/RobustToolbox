@@ -1,4 +1,5 @@
 ﻿using Robust.Server.Console;
+using Robust.Server.DataMetrics;
 using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
@@ -17,6 +18,7 @@ using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
+using Robust.Server.Scripting;
 using Robust.Server.ServerStatus;
 using Robust.Server.Timing;
 using Robust.Server.ViewVariables;
@@ -51,6 +53,7 @@ namespace Robust.Server
             IoCManager.Register<IConsoleShell, ConsoleShell>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityNetworkManager>();
+            IoCManager.Register<IServerEntityNetworkManager, ServerEntityNetworkManager>();
             IoCManager.Register<IMapLoader, MapLoader>();
             IoCManager.Register<IPauseManager, PauseManager>();
             IoCManager.Register<IPlacementManager, PlacementManager>();
@@ -69,6 +72,9 @@ namespace Robust.Server
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();
             IoCManager.Register<IViewVariablesHost, ViewVariablesHost>();
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
+            IoCManager.Register<IWatchdogApi, WatchdogApi>();
+            IoCManager.Register<IScriptHost, ScriptHost>();
+            IoCManager.Register<IMetricsManager, MetricsManager>();
         }
     }
 }

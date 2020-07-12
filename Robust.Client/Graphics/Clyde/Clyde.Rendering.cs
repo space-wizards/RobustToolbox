@@ -30,8 +30,6 @@ namespace Robust.Client.Graphics.Clyde
         /// </summary>
         private CurrentSpace _currentSpace;
 
-        private CurrentSpace _queuedSpace;
-
         private bool _lightingReady;
 
         /// <summary>
@@ -335,13 +333,6 @@ namespace Robust.Client.Graphics.Clyde
         private void SetSpaceFull(CurrentSpace newSpace)
         {
             _setSpace(newSpace);
-
-            SetQueuedSpace(newSpace);
-        }
-
-        private void SetQueuedSpace(CurrentSpace newSpace)
-        {
-            _queuedSpace = newSpace;
         }
 
         private void ClearFramebuffer(Color color)
@@ -454,40 +445,9 @@ namespace Robust.Client.Graphics.Clyde
             command.ViewMatrix.Matrix = matrix;
         }
 
-        private void DrawResetViewTransform()
-        {
-            AllocRenderCommand(RenderCommandType.ResetViewMatrix);
-        }
-
-        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
+        private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate, in Box2 sr)
         {
             EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
-
-            Box2 sr;
-            if (subRegion.HasValue)
-            {
-                var (w, h) = _batchLoadedTexture!.Size;
-                var csr = subRegion.Value;
-                if (_queuedSpace == CurrentSpace.WorldSpace)
-                {
-                    sr = new Box2(csr.Left / w, (h - csr.Bottom) / h, csr.Right / w, (h - csr.Top) / h);
-                }
-                else
-                {
-                    sr = new Box2(csr.Left / w, (h - csr.Top) / h, csr.Right / w, (h - csr.Bottom) / h);
-                }
-            }
-            else
-            {
-                if (_queuedSpace == CurrentSpace.WorldSpace)
-                {
-                    sr = new Box2(0, 0, 1, 1);
-                }
-                else
-                {
-                    sr = new Box2(0, 1, 1, 0);
-                }
-            }
 
             bl = _currentModelMatrix.Transform(bl);
             br = _currentModelMatrix.Transform(br);
@@ -511,6 +471,16 @@ namespace Robust.Client.Graphics.Clyde
             BatchIndexIndex += 5;
 
             _debugStats.LastClydeDrawCalls += 1;
+        }
+
+        private void DrawTextureWorldSpace(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
+        {
+
+        }
+
+        private void DrawTextureCommon(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, Color modulate, UIBox2? subRegion)
+        {
+
         }
 
         private void DrawPrimitives(DrawPrimitiveTopology primitiveTopology, ClydeHandle textureId,
@@ -629,8 +599,6 @@ namespace Robust.Client.Graphics.Clyde
             ref var command = ref AllocRenderCommand(RenderCommandType.SwitchSpace);
 
             command.SwitchSpace.NewSpace = space;
-
-            SetQueuedSpace(space);
         }
 
         private void DrawUseShader(ClydeHandle handle)
@@ -669,7 +637,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     Ensures that batching metadata matches the current batch.
         ///     If not, the current batch is finished and a new one is started.
         /// </summary>
-        private void EnsureBatchState(ClydeHandle textureId, Color color, bool indexed,
+        private void EnsureBatchState(ClydeHandle textureId, in Color color, bool indexed,
             BatchPrimitiveType primitiveType, ClydeHandle shaderInstance)
         {
             if (_batchMetaData.HasValue)
@@ -943,7 +911,7 @@ namespace Robust.Client.Graphics.Clyde
             public readonly int StartIndex;
             public readonly ClydeHandle ShaderInstance;
 
-            public BatchMetaData(ClydeHandle textureId, Color color, bool indexed, BatchPrimitiveType primitiveType,
+            public BatchMetaData(ClydeHandle textureId, in Color color, bool indexed, BatchPrimitiveType primitiveType,
                 int startIndex, ClydeHandle shaderInstance)
             {
                 TextureId = textureId;

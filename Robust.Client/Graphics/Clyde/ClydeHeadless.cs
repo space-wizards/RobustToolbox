@@ -4,6 +4,7 @@ using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
@@ -119,6 +120,11 @@ namespace Robust.Client.Graphics.Clyde
         public void Screenshot(ScreenshotType type, Action<Image<Rgb24>> callback)
         {
             callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
+        }
+
+        public IClydeViewport CreateViewport()
+        {
+            return new Viewport();
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
@@ -394,6 +400,20 @@ namespace Robust.Client.Graphics.Clyde
             public string Renderer => "ClydeHeadless";
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
+        }
+
+        private sealed class Viewport : IClydeViewport
+        {
+            public void Dispose()
+            {
+            }
+
+            public IRenderTarget RenderTarget { get; } = new DummyRenderTarget(Vector2i.One, new DummyTexture(Vector2i.One));
+
+            public IEye Eye { get; set; }
+            public void Resize(Vector2i newSize)
+            {
+            }
         }
     }
 }

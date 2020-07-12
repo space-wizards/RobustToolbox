@@ -42,8 +42,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
-        private const int ProjViewBindingIndex = 0;
-        private const int UniformConstantsBindingIndex = 1;
         private GLBuffer ProjViewUBO = default!;
         private GLBuffer UniformConstantsUBO = default!;
 
@@ -56,6 +54,8 @@ namespace Robust.Client.Graphics.Clyde
         // VBO to draw a single quad.
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
+
+        private Viewport _mainViewport;
 
         private bool _drawingSplash = true;
 
@@ -222,18 +222,20 @@ namespace Robust.Client.Graphics.Clyde
                 nameof(ProjViewUBO));
             ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.ObjectHandle);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
 
             UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
                 nameof(UniformConstantsUBO));
             UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
                 UniformConstantsUBO.ObjectHandle);
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
+
+            _mainViewport = CreateViewport();
         }
 
         private void DetectOpenGLFeatures()

@@ -64,6 +64,8 @@ namespace Robust.Client.Interfaces.Graphics
 
             return tcs.Task;
         }
+
+        IClydeViewport CreateViewport();
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

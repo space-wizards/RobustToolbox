@@ -203,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     var box = Box2i.FromDimensions(rounded, EntityPostRenderTarget.Size);
 
-                    _renderHandle.DrawTexture(EntityPostRenderTarget.Texture,
+                    _renderHandle.DrawTextureScreen(EntityPostRenderTarget.Texture,
                         box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
                         Color.White, null);
 

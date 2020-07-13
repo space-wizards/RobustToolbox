@@ -286,10 +286,10 @@ namespace Robust.Client.Graphics.Clyde
         {
             public static readonly OverlayComparer Instance = new OverlayComparer();
 
-            public int Compare(Overlay x, Overlay y)
+            public int Compare(Overlay? x, Overlay? y)
             {
-                var zX = x.ZIndex ?? 0;
-                var zY = y.ZIndex ?? 0;
+                var zX = x?.ZIndex ?? 0;
+                var zY = y?.ZIndex ?? 0;
                 return zX.CompareTo(zY);
             }
         }

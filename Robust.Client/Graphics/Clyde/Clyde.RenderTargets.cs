@@ -112,6 +112,30 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        /*
+        This was a dumb idea:
+
+        private void ResizeRenderTarget(RenderTarget rt, Vector2i newSize)
+        {
+            var loadedTexture = _loadedTextures[rt.Texture.TextureId];
+            var textureInstance = rt.Texture;
+
+            // Set new sizes.
+            textureInstance.SetSize(newSize);
+            rt.Size = newSize;
+
+            // Delete old textures.
+            GL.DeleteTexture(loadedTexture.OpenGLObject.Handle);
+            if (rt.DepthStencilBuffer != default)
+            {
+                GL.DeleteRenderbuffer(rt.DepthStencilBuffer.Handle);
+            }
+
+            // Delete the entire old framebuffer because bad OpenGL drivers will just explode otherwise.
+            GL.DeleteFramebuffer(rt.ObjectHandle.Handle);
+        }
+        */
+
         private sealed class RenderTarget : IRenderTarget
         {
             private readonly Clyde _clyde;
@@ -127,7 +151,7 @@ namespace Robust.Client.Graphics.Clyde
                 DepthStencilBuffer = depthStencilBuffer;
             }
 
-            public Vector2i Size { get; }
+            public Vector2i Size { get; set; }
             public ClydeTexture Texture { get; }
             public ClydeHandle Handle { get; }
             public GLHandle DepthStencilBuffer { get; }
@@ -135,6 +159,12 @@ namespace Robust.Client.Graphics.Clyde
             Texture IRenderTarget.Texture => Texture;
 
             public GLHandle ObjectHandle { get; }
+
+            /*
+            // Used to recreate the render target on resize.
+            public RenderTargetFormatParameters FormatParameters;
+            public TextureSampleParameters? SampleParameters;
+            */
 
             public void Delete()
             {

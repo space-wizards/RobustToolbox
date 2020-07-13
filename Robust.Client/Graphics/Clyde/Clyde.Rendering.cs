@@ -31,6 +31,7 @@ namespace Robust.Client.Graphics.Clyde
         private CurrentSpace _currentSpace;
 
         private bool _lightingReady;
+        private Viewport? _currentViewport;
 
         /// <summary>
         ///     The current model matrix we would use.
@@ -206,7 +207,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_lightingReady && loaded.HasLighting)
             {
-                SetTexture(TextureUnit.Texture1, _lightRenderTarget.Texture);
+                SetTexture(TextureUnit.Texture1, _currentViewport!.LightRenderTarget.Texture);
             }
             else
             {

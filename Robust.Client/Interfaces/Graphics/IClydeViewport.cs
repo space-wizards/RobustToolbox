@@ -1,6 +1,5 @@
 using System;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.Graphics
 {
@@ -10,8 +9,6 @@ namespace Robust.Client.Interfaces.Graphics
     public interface IClydeViewport : IDisposable
     {
         IRenderTarget RenderTarget { get; }
-        IEye Eye { get; set; }
-
-        void Resize(Vector2i newSize);
+        IEye? Eye { get; set; }
     }
 }

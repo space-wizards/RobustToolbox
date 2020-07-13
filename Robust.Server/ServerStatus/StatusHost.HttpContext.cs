@@ -50,7 +50,7 @@ namespace Robust.Server.ServerStatus
                 logMgr = IoCManager.Resolve<ILogManager>();
             }, ApplicationStopping);
             var deps = new DependencyCollection();
-            deps.RegisterInstance<ILogManager>(new ProxyLogManager(logMgr));
+            deps.RegisterInstance<ILogManager>(new ProxyLogManager(logMgr!));
             deps.BuildGraph();
             IoCManager.InitThread(deps, true);
         }

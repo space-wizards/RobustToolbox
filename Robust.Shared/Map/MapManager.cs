@@ -33,8 +33,7 @@ namespace Robust.Shared.Map
         public event EventHandler<TileChangedEventArgs>? TileChanged;
 
         public event GridEventHandler? OnGridCreated;
-        public event GridEventHandler OnGridDeserialized;
-
+        public event GridEventHandler? OnGridDeserialized;
         public event GridEventHandler? OnGridRemoved;
 
         /// <summary>

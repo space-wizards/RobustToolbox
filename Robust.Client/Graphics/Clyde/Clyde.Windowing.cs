@@ -185,7 +185,7 @@ namespace Robust.Client.Graphics.Clyde
             _windowScale = (scaleX, scaleY);
 
             GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-            _prevWindowPos = _windowSize = (w, h);
+            _prevWindowSize = _windowSize = (w, h);
 
             GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
             _prevWindowPos = (x, y);

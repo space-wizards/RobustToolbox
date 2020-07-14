@@ -107,6 +107,9 @@ namespace Robust.Server.Maps
             {
                 DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
+
+            if(gridId.HasValue)
+                mapMan.RaiseOnGridDeserialized(gridId.Value);
         }
 
         private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)

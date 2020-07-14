@@ -137,7 +137,7 @@ namespace Robust.Shared.Interfaces.Map
         event EventHandler<TileChangedEventArgs> TileChanged;
 
         event GridEventHandler OnGridCreated;
-
+        event GridEventHandler OnGridDeserialized;
         event GridEventHandler OnGridRemoved;
 
         /// <summary>

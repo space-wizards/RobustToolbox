@@ -33,6 +33,7 @@ namespace Robust.Shared.Map
         public event EventHandler<TileChangedEventArgs>? TileChanged;
 
         public event GridEventHandler? OnGridCreated;
+        public event GridEventHandler OnGridDeserialized;
 
         public event GridEventHandler? OnGridRemoved;
 
@@ -167,6 +168,15 @@ namespace Robust.Shared.Map
                 return;
 
             TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
+        }
+
+        void IMapManagerInternal.RaiseOnGridDeserialized(GridId gridId)
+        {
+#if DEBUG
+            DebugTools.Assert(_dbgGuardRunning);
+#endif
+
+            OnGridDeserialized.Invoke(gridId);
         }
 
         /// <inheritdoc />

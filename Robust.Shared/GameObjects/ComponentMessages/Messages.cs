@@ -1,13 +1,7 @@
-﻿using System;
-using Robust.Shared.Console;
-using Robust.Shared.Input;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Serialization;
+﻿using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects
 {
-
     public class RelayMovementEntityMessage : ComponentMessage
     {
         public IEntity Entity { get; set; }
@@ -16,6 +10,11 @@ namespace Robust.Shared.GameObjects
         {
             Entity = entity;
         }
+    }
+
+    public class EntityMovementMessage : ComponentMessage
+    {
+        public EntityMovementMessage() { }
     }
 
     /// <summary>

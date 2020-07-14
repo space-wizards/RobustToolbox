@@ -175,7 +175,7 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            OnGridDeserialized.Invoke(gridId);
+            OnGridDeserialized?.Invoke(gridId);
         }
 
         /// <inheritdoc />

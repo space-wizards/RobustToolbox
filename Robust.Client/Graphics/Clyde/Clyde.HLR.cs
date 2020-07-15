@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Buffers;
-using System.Linq;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
@@ -60,62 +60,24 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            void RenderOverlays(OverlaySpace space)
-            {
-                using (DebugGroup($"Overlays: {space}"))
-                {
-                    foreach (var overlay in _overlayManager.AllOverlays
-                        .Where(o => o.Space == space)
-                        .OrderBy(o => o.ZIndex))
-                    {
-                        overlay.ClydeRender(_renderHandle);
-                    }
-
-                    FlushRenderQueue();
-                }
-            }
-
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
             SetSpaceFull(CurrentSpace.WorldSpace);
 
-            // Calculate world-space AABB for camera, to cull off-screen things.
-            var eye = _eyeManager.CurrentEye;
-            var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
-
-            if (_eyeManager.CurrentMap != MapId.Nullspace)
-            {
-                using (DebugGroup("Lights"))
-                {
-                    DrawLightsAndFov(worldBounds, eye);
-                }
-
-                using (DebugGroup("Grids"))
-                {
-                    _drawGrids(worldBounds);
-                }
-
-                using (DebugGroup("Entities"))
-                {
-                    DrawEntities(worldBounds);
-                }
-
-                RenderOverlays(OverlaySpace.WorldSpace);
-
-                if (_lightManager.Enabled && eye.DrawFov)
-                {
-                    ApplyFovToBuffer(eye);
-                }
-            }
-
-            _lightingReady = false;
+            RenderViewport(_mainViewport);
 
             SetSpaceFull(CurrentSpace.ScreenSpace);
 
+            // TODO: Re-enable this
+            /*
             if (DebugLayers == ClydeDebugLayers.Fov)
             {
+                // I'm refactoring this code and I found this comment:
                 // NOTE
+                // Yes, it just says "NOTE". Thank you past me.
+                // Anyways I'm 99% sure this was about the fact that this debug layer is actually broken.
+                // Because the math is wrong.
+                // So there are distortions from incorrect projection.
                 _renderHandle.UseShader(_fovDebugShaderInstance);
                 _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                 var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
@@ -128,6 +90,7 @@ namespace Robust.Client.Graphics.Clyde
                 _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
                 _renderHandle.DrawingHandleScreen.DrawTextureRect(_wallBleedIntermediateRenderTarget2.Texture, UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
             }
+            */
 
             TakeScreenshot(ScreenshotType.BeforeUI);
 
@@ -145,12 +108,39 @@ namespace Robust.Client.Graphics.Clyde
             SwapBuffers();
         }
 
-        private void DrawEntities(Box2 worldBounds)
+        private void RenderOverlays(OverlaySpace space)
+        {
+            using (DebugGroup($"Overlays: {space}"))
+            {
+                var list = new List<Overlay>();
+
+                foreach (var overlay in _overlayManager.AllOverlays)
+                {
+                    if (overlay.Space == space)
+                    {
+                        list.Add(overlay);
+                    }
+                }
+
+                list.Sort(OverlayComparer.Instance);
+
+                foreach (var overlay in list)
+                {
+                    overlay.ClydeRender(_renderHandle);
+                }
+
+                FlushRenderQueue();
+            }
+        }
+
+        private void DrawEntities(Viewport viewport, Box2 worldBounds)
         {
             if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
             {
                 return;
             }
+
+            var screenSize = viewport.Size;
 
             // So we could calculate the correct size of the entities based on the contents of their sprite...
             // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
@@ -183,9 +173,9 @@ namespace Robust.Client.Graphics.Clyde
                     var spritePos = entry.sprite.Owner.Transform.WorldPosition;
                     var screenPos = _eyeManager.WorldToScreen(spritePos);
                     var (roundedX, roundedY) = roundedPos = (Vector2i) screenPos;
-                    var flippedPos = new Vector2i(roundedX, ScreenSize.Y - roundedY);
+                    var flippedPos = new Vector2i(roundedX, screenSize.Y - roundedY);
                     flippedPos -= EntityPostRenderTarget.Size / 2;
-                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, ScreenSize));
+                    _renderHandle.Viewport(Box2i.FromDimensions(-flippedPos, screenSize));
                 }
 
                 entry.sprite.Render(_renderHandle.DrawingHandleWorld, entry.worldMatrix, entry.worldRotation);
@@ -193,7 +183,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (entry.sprite.PostShader != null)
                 {
                     _renderHandle.UseRenderTarget(null);
-                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, ScreenSize));
+                    _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
 
                     _renderHandle.UseShader(entry.sprite.PostShader);
                     _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
@@ -250,6 +240,58 @@ namespace Robust.Client.Graphics.Clyde
             var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
+        }
+
+        private void RenderViewport(Viewport viewport)
+        {
+            var oldVp = _currentViewport;
+            _currentViewport = viewport;
+
+            // Calculate world-space AABB for camera, to cull off-screen things.
+            var eye = _eyeManager.CurrentEye;
+            var worldBounds = Box2.CenteredAround(eye.Position.Position,
+                _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+
+            if (_eyeManager.CurrentMap != MapId.Nullspace)
+            {
+                using (DebugGroup("Lights"))
+                {
+                    DrawLightsAndFov(viewport, worldBounds, eye);
+                }
+
+                using (DebugGroup("Grids"))
+                {
+                    _drawGrids(worldBounds);
+                }
+
+                using (DebugGroup("Entities"))
+                {
+                    DrawEntities(viewport, worldBounds);
+                }
+
+                RenderOverlays(OverlaySpace.WorldSpace);
+
+                if (_lightManager.Enabled && eye.DrawFov)
+                {
+                    ApplyFovToBuffer(viewport, eye);
+                }
+            }
+
+            _lightingReady = false;
+
+            _currentViewport = oldVp;
+        }
+
+        private sealed class OverlayComparer : IComparer<Overlay>
+        {
+            public static readonly OverlayComparer Instance = new OverlayComparer();
+
+            public int Compare(Overlay? x, Overlay? y)
+            {
+                var zX = x?.ZIndex ?? 0;
+                var zY = y?.ZIndex ?? 0;
+                return zX.CompareTo(zY);
+            }
         }
     }
 }

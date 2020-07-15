@@ -402,7 +402,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Viewport(0, 0, fbW, fbH);
                 if (fbW != 0 && fbH != 0)
                 {
-                    RegenerateLightingRenderTargets();
+                    _mainViewport.Dispose();
+                    _mainViewport = CreateViewport((fbW, fbH), nameof(_mainViewport));
                 }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));

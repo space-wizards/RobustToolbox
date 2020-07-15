@@ -8,7 +8,6 @@ using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
@@ -20,7 +19,8 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture _stockTextureBlack = default!;
         private ClydeTexture _stockTextureTransparent = default!;
 
-        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
+        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures =
+            new Dictionary<ClydeHandle, LoadedTexture>();
 
         public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
@@ -64,6 +64,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     throw new ArgumentException("Alpha8 images must have multiple of 4 sizes.");
                 }
+
                 internalFormat = PixelInternalFormat.R8;
                 pixelDataFormat = PixelFormat.Red;
                 pixelDataType = PixelType.UnsignedByte;
@@ -160,18 +161,20 @@ namespace Robust.Client.Graphics.Clyde
 
             var (width, height) = size;
 
+            var id = AllocRid();
+            var instance = new ClydeTexture(id, size, this);
             var loaded = new LoadedTexture
             {
                 OpenGLObject = glHandle,
                 Width = width,
                 Height = height,
-                Name = name
+                Name = name,
+                // TextureInstance = new WeakReference<ClydeTexture>(instance)
             };
 
-            var id = AllocRid();
             _loadedTextures.Add(id, loaded);
 
-            return new ClydeTexture(id, size, this);
+            return instance;
         }
 
         private void DeleteTexture(ClydeTexture texture)
@@ -189,16 +192,16 @@ namespace Robust.Client.Graphics.Clyde
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
-            white[0, 0] = new Rgba32(255,255,255,255);
-            _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
+            white[0, 0] = new Rgba32(255, 255, 255, 255);
+            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white);
 
             var black = new Image<Rgba32>(1, 1);
-            black[0, 0] = new Rgba32(0,0,0,255);
-            _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
+            black[0, 0] = new Rgba32(0, 0, 0, 255);
+            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black);
 
             var blank = new Image<Rgba32>(1, 1);
-            blank[0, 0] = new Rgba32(0,0,0,0);
-            _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
+            blank[0, 0] = new Rgba32(0, 0, 0, 0);
+            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank);
         }
 
         /// <summary>
@@ -240,6 +243,7 @@ namespace Robust.Client.Graphics.Clyde
             public int Height;
             public string? Name;
             public Vector2i Size => (Width, Height);
+            // public WeakReference<ClydeTexture> TextureInstance;
         }
 
         private sealed class ClydeTexture : OwnedTexture
@@ -265,8 +269,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     return $"ClydeTexture: {loaded.Name} ({TextureId})";
                 }
+
                 return $"ClydeTexture: ({TextureId})";
             }
+
+            /*public void SetSize(Vector2i newSize)
+            {
+                Size = newSize;
+            }*/
         }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
@@ -281,4 +291,3 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
-

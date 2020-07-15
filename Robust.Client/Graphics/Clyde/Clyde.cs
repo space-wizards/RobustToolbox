@@ -55,7 +55,7 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
-        private Viewport _mainViewport;
+        private Viewport _mainViewport = default!;
 
         private bool _drawingSplash = true;
 
@@ -113,7 +113,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReloadConfig();
 
-            RegenerateLightingRenderTargets();
+            RegenAllLightRts();
         }
 
         public override void PostInject()
@@ -235,7 +235,7 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
 
-            _mainViewport = CreateViewport();
+            _mainViewport = CreateViewport(_windowSize, nameof(_mainViewport));
         }
 
         private void DetectOpenGLFeatures()

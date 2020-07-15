@@ -122,7 +122,7 @@ namespace Robust.Client.Graphics.Clyde
             callback(new Image<Rgb24>(ScreenSize.X, ScreenSize.Y));
         }
 
-        public IClydeViewport CreateViewport()
+        public IClydeViewport CreateViewport(Vector2i size, string? name = null)
         {
             return new Viewport();
         }
@@ -410,10 +410,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public IRenderTarget RenderTarget { get; } = new DummyRenderTarget(Vector2i.One, new DummyTexture(Vector2i.One));
 
-            public IEye Eye { get; set; }
-            public void Resize(Vector2i newSize)
-            {
-            }
+            public IEye? Eye { get; set; }
+
         }
     }
 }

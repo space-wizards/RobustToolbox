@@ -259,11 +259,13 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (physics.LinearVelocity != Vector2.Zero)
             {
-                ent.SendMessage(ent.Transform, new EntityMovementMessage());
+                var entityMoveMessage = new EntityMovementMessage();
+                ent.SendMessage(ent.Transform, entityMoveMessage);
 
                 if (ContainerHelpers.IsInContainer(ent))
                 {
-                    ent.Transform.Parent!.Owner.SendMessage(ent.Transform, new RelayMovementEntityMessage(ent));
+                    var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
+                    ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
                     // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
                     physics.LinearVelocity = Vector2.Zero;
                 }

@@ -255,9 +255,9 @@ namespace Robust.Shared.GameObjects.Components
             return _physicsManager.IsColliding(this, offset, approx);
         }
 
-        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset)
+        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approx = true)
         {
-            return _physicsManager.GetCollidingEntities(this, offset);
+            return _physicsManager.GetCollidingEntities(this, offset, approx);
         }
 
         public bool UpdatePhysicsTree()

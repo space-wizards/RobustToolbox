@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects.Components
         public bool Hard { get; set; }
         bool IsColliding(Vector2 offset, bool approximate = true);
 
-        IEnumerable<IEntity> GetCollidingEntities(Vector2 offset);
+        IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);
         bool UpdatePhysicsTree();
 
         void RemovedFromPhysicsTree(MapId mapId);

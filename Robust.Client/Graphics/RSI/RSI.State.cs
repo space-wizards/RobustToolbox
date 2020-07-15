@@ -86,6 +86,24 @@ namespace Robust.Client.Graphics
                 return Icons[(int) direction][frame];
             }
 
+            public Texture GetFrameAtSecond(Direction direction, float second)
+            {
+                second %= AnimationLength;
+
+                var total = 0f;
+                for (int i = 0; i < Delays.Length; i++)
+                {
+                    var delay = Delays[i];
+
+                    if (total + delay > second)
+                        return GetFrame(direction, i);
+
+                    total += delay;
+                }
+
+                return Frame0;
+            }
+
             /// <summary>
             ///     Gets the delay between the specified frame and the next frame.
             /// </summary>

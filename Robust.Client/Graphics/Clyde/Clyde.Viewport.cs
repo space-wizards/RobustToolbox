@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Maths;
@@ -11,10 +12,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private Viewport CreateViewport(Vector2i size, string? name = null)
         {
-            var viewport = new Viewport(name);
+            var viewport = new Viewport(name, this);
             viewport.Size = size;
             viewport.RenderTarget = CreateRenderTarget(size,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8, true),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: $"{name}-MainRenderTarget");
 
             RegenLightRts(viewport);
@@ -29,40 +30,65 @@ namespace Robust.Client.Graphics.Clyde
             return CreateViewport(size, name);
         }
 
+        private static Vector2 ScreenToMap(Vector2 point, Viewport vp)
+        {
+            if (vp.Eye == null)
+            {
+                return Vector2.Zero;
+            }
+
+            // (inlined version of UiProjMatrix^-1)
+            point -= vp.Size / 2f;
+            point *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
+
+            // view matrix
+            vp.Eye.GetViewMatrixInv(out var viewMatrixInv);
+            point = viewMatrixInv * point;
+
+            return point;
+        }
+
         private sealed class Viewport : IClydeViewport
         {
+            private readonly Clyde _clyde;
+
             // Primary render target.
-            public RenderTarget RenderTarget = default!;
+            public RenderTexture RenderTarget = default!;
 
             // Various render targets used in the light rendering process.
 
             // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
-            public RenderTarget LightRenderTarget = default!;
+            public RenderTexture LightRenderTarget = default!;
 
             // Unused, to be removed.
-            public RenderTarget WallMaskRenderTarget = default!;
+            public RenderTexture WallMaskRenderTarget = default!;
 
             // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
             // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
-            public RenderTarget WallBleedIntermediateRenderTarget1 = default!;
-            public RenderTarget WallBleedIntermediateRenderTarget2 = default!;
+            public RenderTexture WallBleedIntermediateRenderTarget1 = default!;
+            public RenderTexture WallBleedIntermediateRenderTarget2 = default!;
 
             public string? Name { get; }
 
-            public Viewport(string? name)
+            public Viewport(string? name, Clyde clyde)
             {
                 Name = name;
+                _clyde = clyde;
             }
 
-
             public Vector2i Size { get; set; }
+
+            void IClydeViewport.Render()
+            {
+                _clyde.RenderViewport(this);
+            }
 
             public void Dispose()
             {
             }
 
 
-            IRenderTarget IClydeViewport.RenderTarget => RenderTarget;
+            IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
             public IEye? Eye { get; set; }
 
             /*public void Resize(Vector2i newSize)

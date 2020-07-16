@@ -9,18 +9,23 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private readonly Dictionary<ClydeHandle, RenderTarget> _renderTargets =
-            new Dictionary<ClydeHandle, RenderTarget>();
+        private readonly Dictionary<ClydeHandle, RenderTargetBase> _renderTargets =
+            new Dictionary<ClydeHandle, RenderTargetBase>();
 
-        IRenderTarget IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+        public IRenderWindow MainWindowRenderTarget { get; }
+
+        IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
         {
             return CreateRenderTarget(size, format, sampleParameters, name);
         }
 
-        private RenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+        private RenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {
+            DebugTools.Assert(size.X != 0);
+            DebugTools.Assert(size.Y != 0);
+
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
             var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
@@ -95,12 +100,12 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
 
             var handle = AllocRid();
-            var renderTarget = new RenderTarget(size, textureObject, fbo, this, handle, depthStencilBuffer);
+            var renderTarget = new RenderTexture(size, textureObject, fbo, this, handle, depthStencilBuffer);
             _renderTargets.Add(handle, renderTarget);
             return renderTarget;
         }
 
-        private void DeleteRenderTarget(RenderTarget renderTarget)
+        private void DeleteRenderTexture(RenderTexture renderTarget)
         {
             GL.DeleteFramebuffer(renderTarget.ObjectHandle.Handle);
             _renderTargets.Remove(renderTarget.Handle);
@@ -109,6 +114,25 @@ namespace Robust.Client.Graphics.Clyde
             if (renderTarget.DepthStencilBuffer != default)
             {
                 GL.DeleteRenderbuffer(renderTarget.DepthStencilBuffer.Handle);
+            }
+        }
+
+        private void BindRenderTargetFull(RenderTargetBase rt)
+        {
+            BindRenderTargetImmediate(rt);
+            _currentRenderTarget = rt;
+        }
+
+        private void BindRenderTargetImmediate(RenderTargetBase rt)
+        {
+            if (rt is RenderTexture renderTexture)
+            {
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, renderTexture.ObjectHandle.Handle);
+            }
+            else
+            {
+                DebugTools.Assert(rt is RenderWindow);
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
             }
         }
 
@@ -136,27 +160,36 @@ namespace Robust.Client.Graphics.Clyde
         }
         */
 
-        private sealed class RenderTarget : IRenderTarget
+        private abstract class RenderTargetBase : IRenderTarget
+        {
+            protected RenderTargetBase(ClydeHandle handle)
+            {
+                Handle = handle;
+            }
+
+            public abstract Vector2i Size { get; }
+            public ClydeHandle Handle { get; }
+        }
+
+        private sealed class RenderTexture : RenderTargetBase, IRenderTexture
         {
             private readonly Clyde _clyde;
 
-            public RenderTarget(Vector2i size, ClydeTexture texture, GLHandle objectHandle, Clyde clyde,
-                ClydeHandle handle, GLHandle depthStencilBuffer)
+            public RenderTexture(Vector2i size, ClydeTexture texture, GLHandle objectHandle, Clyde clyde,
+                ClydeHandle handle, GLHandle depthStencilBuffer) : base(handle)
             {
                 Size = size;
                 Texture = texture;
                 ObjectHandle = objectHandle;
                 _clyde = clyde;
-                Handle = handle;
                 DepthStencilBuffer = depthStencilBuffer;
             }
 
-            public Vector2i Size { get; set; }
+            public override Vector2i Size { get; }
             public ClydeTexture Texture { get; }
-            public ClydeHandle Handle { get; }
             public GLHandle DepthStencilBuffer { get; }
 
-            Texture IRenderTarget.Texture => Texture;
+            Texture IRenderTexture.Texture => Texture;
 
             public GLHandle ObjectHandle { get; }
 
@@ -168,12 +201,18 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Delete()
             {
-                _clyde.DeleteRenderTarget(this);
+                _clyde.DeleteRenderTexture(this);
             }
+        }
 
-            public void Bind()
+        private sealed class RenderWindow : RenderTargetBase, IRenderWindow
+        {
+            private readonly Clyde _clyde;
+            public override Vector2i Size => _clyde._framebufferSize;
+
+            public RenderWindow(Clyde clyde, ClydeHandle handle) : base(handle)
             {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, ObjectHandle.Handle);
+                _clyde = clyde;
             }
         }
     }

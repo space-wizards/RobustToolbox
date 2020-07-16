@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -16,6 +15,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -39,13 +39,14 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
         private GLBuffer ProjViewUBO = default!;
         private GLBuffer UniformConstantsUBO = default!;
 
-        private RenderTarget EntityPostRenderTarget = default!;
+        private RenderTexture EntityPostRenderTarget = default!;
 
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
@@ -72,6 +73,17 @@ namespace Robust.Client.Graphics.Clyde
             _transferringScreenshots
                 = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
 
+        public Clyde()
+        {
+            var windowRid = AllocRid();
+            var window = new RenderWindow(this, windowRid);
+
+            MainWindowRenderTarget = window;
+            _currentRenderTarget = window;
+
+            _renderTargets.Add(windowRid, window);
+        }
+
         public override bool Initialize()
         {
             if (!InitWindowing())
@@ -87,7 +99,6 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
-            _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
             FlushCursorDisposeQueue();
             ClearDeadShaderInstances();
@@ -235,7 +246,7 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
 
-            _mainViewport = CreateViewport(_windowSize, nameof(_mainViewport));
+            _mainViewport = CreateViewport(_framebufferSize, nameof(_mainViewport));
         }
 
         private void DetectOpenGLFeatures()

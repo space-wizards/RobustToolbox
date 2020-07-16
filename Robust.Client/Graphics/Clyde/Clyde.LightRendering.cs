@@ -77,10 +77,10 @@ namespace Robust.Client.Graphics.Clyde
         private GLHandle _occlusionMaskVao;
 
         // For depth calculation for FOV.
-        private RenderTarget _fovRenderTarget = default!;
+        private RenderTexture _fovRenderTarget = default!;
 
         // For depth calculation of lighting shadows.
-        private RenderTarget _shadowRenderTarget = default!;
+        private RenderTexture _shadowRenderTarget = default!;
 
         // Proxies to textures of the above render targets.
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
@@ -270,7 +270,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void PrepareDepthDraw(RenderTarget target)
+        private void PrepareDepthDraw(RenderTexture target)
         {
             const float arbitraryDistanceMax = 1234;
 
@@ -433,7 +433,7 @@ namespace Robust.Client.Graphics.Clyde
 
             MergeWallLayer(viewport);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
 
             _lightingReady = true;
@@ -442,6 +442,7 @@ namespace Robust.Client.Graphics.Clyde
         private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
+            // TODO: this is 1 KiB/frame of allocations. Cache this list.
             var lights = new List<(PointLightComponent light, Vector2 pos)>(64);
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
             // As they could still affect the shadows of (large) light sources.
@@ -483,7 +484,8 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(BlurOntoWalls));
 
             GL.Disable(EnableCap.Blend);
-            _setSpace(CurrentSpace.ScreenSpace);
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
 
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
@@ -512,14 +514,14 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                viewport.WallBleedIntermediateRenderTarget1.Bind();
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget1);
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget1.Texture);
-                viewport.WallBleedIntermediateRenderTarget2.Bind();
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget2);
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
@@ -529,14 +531,15 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.Enable(EnableCap.Blend);
-            _setSpace(CurrentSpace.WorldSpace);
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
         private void MergeWallLayer(Viewport viewport)
         {
             using var _ = DebugGroup(nameof(MergeWallLayer));
 
-            viewport.LightRenderTarget.Bind();
+            BindRenderTargetFull(viewport.LightRenderTarget);
 
             GL.Viewport(0, 0, viewport.LightRenderTarget.Size.X, viewport.LightRenderTarget.Size.Y);
             GL.Disable(EnableCap.Blend);
@@ -570,7 +573,7 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(viewport.Size, fovShader);
+            DrawBlit(viewport, fovShader);
         }
 
         private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)
@@ -590,16 +593,17 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(viewport.Size, fovShader);
+            DrawBlit(viewport, fovShader);
 
             GL.BindSampler(0, 0);
         }
 
-        private void DrawBlit(Vector2i screenSize, GLShaderProgram shader)
+        private void DrawBlit(Viewport vp, GLShaderProgram shader)
         {
-            _drawQuad(_eyeManager.ScreenToMap((-1, -1)).Position,
-                _eyeManager.ScreenToMap(screenSize + Vector2i.One).Position,
-                Matrix3.Identity, shader);
+            var a = ScreenToMap((-1, -1), vp);
+            var b = ScreenToMap(vp.Size + Vector2i.One, vp);
+
+            _drawQuad(a, b, Matrix3.Identity, shader);
         }
 
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)

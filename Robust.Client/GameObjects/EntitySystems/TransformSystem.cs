@@ -19,6 +19,7 @@ namespace Robust.Client.GameObjects.EntitySystems
     internal sealed class TransformSystem : EntitySystem
     {
         // Max distance per tick how far an entity can move before it is considered teleporting.
+        // TODO: Make these values somehow dependent on server TPS.
         private const float MaxInterpolationDistance = 2.0f;
         private const double MaxInterpolationAngle = Math.PI / 4; // 45 degrees.
 

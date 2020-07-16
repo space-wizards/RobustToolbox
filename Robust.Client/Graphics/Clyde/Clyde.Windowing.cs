@@ -15,7 +15,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
@@ -336,10 +335,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
         {
-            var shift = mods.HasFlag(KeyModifiers.Shift);
-            var alt = mods.HasFlag(KeyModifiers.Alt);
-            var control = mods.HasFlag(KeyModifiers.Control);
-            var system = mods.HasFlag(KeyModifiers.Super);
+            var shift = (mods & KeyModifiers.Shift) != 0;
+            var alt = (mods & KeyModifiers.Alt) != 0;
+            var control = (mods & KeyModifiers.Control) != 0;
+            var system = (mods & KeyModifiers.Super) != 0;
 
             var ev = new KeyEventArgs(
                 key,

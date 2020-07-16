@@ -187,7 +187,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Quad drawing.
             {
-                var quadVertices = new[]
+                Span<Vertex2D> quadVertices = stackalloc[]
                 {
                     new Vertex2D(1, 0, 1, 1),
                     new Vertex2D(0, 0, 0, 1),

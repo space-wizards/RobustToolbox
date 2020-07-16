@@ -804,7 +804,7 @@ namespace Robust.Client.Graphics.Clyde
             return new FullStoredRendererState(_currentMatrixProj, _currentMatrixView, _currentRenderTarget);
         }
 
-        private void PopRenderStateFull(FullStoredRendererState state)
+        private void PopRenderStateFull(in FullStoredRendererState state)
         {
             SetProjViewFull(state.ProjMatrix, state.ViewMatrix);
             BindRenderTargetFull(state.RenderTarget);
@@ -976,11 +976,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class FullStoredRendererState
+        private readonly struct FullStoredRendererState
         {
-            public Matrix3 ProjMatrix;
-            public Matrix3 ViewMatrix;
-            public RenderTargetBase RenderTarget;
+            public readonly Matrix3 ProjMatrix;
+            public readonly Matrix3 ViewMatrix;
+            public readonly RenderTargetBase RenderTarget;
 
             public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix, RenderTargetBase renderTarget)
             {

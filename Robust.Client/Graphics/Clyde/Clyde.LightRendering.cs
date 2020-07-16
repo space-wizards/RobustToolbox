@@ -1,6 +1,5 @@
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
@@ -86,6 +85,10 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture FovTexture => _fovRenderTarget.Texture;
         private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
 
+        private readonly (PointLightComponent light, Vector2 pos)[] _lightsToRenderList
+            = new (PointLightComponent light, Vector2 pos)[MaxLightsPerScene];
+
+        private readonly Matrix4[] _shadowMatrices = new Matrix4[MaxLightsPerScene];
 
         private unsafe void InitLighting()
         {
@@ -306,13 +309,11 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = eye.Position.MapId;
 
-            var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
+            var (lights, count, expandedBounds) = GetLightsToRender(map, worldBounds);
 
             UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
 
             DrawFov(viewport, eye);
-
-            var shadowMatrices = new Matrix4[lights.Count];
 
             using (DebugGroup("Draw shadow depth"))
             {
@@ -321,11 +322,11 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (_lightManager.DrawShadows)
                 {
-                    for (var i = 0; i < lights.Count; i++)
+                    for (var i = 0; i < count; i++)
                     {
                         var (light, lightPos) = lights[i];
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out shadowMatrices[i]);
+                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out _shadowMatrices[i]);
                     }
                 }
 
@@ -352,7 +353,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             Texture? lastMask = null;
 
-            for (var i = 0; i < lights.Count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var (component, lightPos) = lights[i];
                 var transform = component.Owner.Transform;
@@ -405,7 +406,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
                 lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
-                lightShader.SetUniformMaybe("shadowMatrix", shadowMatrices[i], false);
+                lightShader.SetUniformMaybe("shadowMatrix", _shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -436,14 +437,16 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
 
+            Array.Clear(lights, 0, count);
+
             _lightingReady = true;
         }
 
-        private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
+        private ((PointLightComponent light, Vector2 pos)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            // TODO: this is 1 KiB/frame of allocations. Cache this list.
-            var lights = new List<(PointLightComponent light, Vector2 pos)>(64);
+            var count = 0;
+
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
             // As they could still affect the shadows of (large) light sources.
             // We expand the world bounds so that it encompasses the center of every light source.
@@ -465,18 +468,19 @@ namespace Robust.Client.Graphics.Clyde
 
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
 
-                lights.Add((component, lightPos));
+                _lightsToRenderList[count] = (component, lightPos);
+                count += 1;
 
                 expandedBounds = expandedBounds.ExtendToContain(lightPos);
 
-                if (lights.Count == MaxLightsPerScene)
+                if (count == MaxLightsPerScene)
                 {
                     // TODO: Allow more than MaxLightsPerScene lights.
                     break;
                 }
             }
 
-            return (lights, expandedBounds);
+            return (_lightsToRenderList, count, expandedBounds);
         }
 
         private void BlurOntoWalls(Viewport viewport, IEye eye)
@@ -702,10 +706,10 @@ namespace Robust.Client.Graphics.Clyde
                     var (dBrX, dBrY) = (brX, brY) - eyePosition;
 
                     // Get which neighbors are occluding.
-                    var no = occluder.Occluding.HasFlag(OccluderDir.North);
-                    var so = occluder.Occluding.HasFlag(OccluderDir.South);
-                    var eo = occluder.Occluding.HasFlag(OccluderDir.East);
-                    var wo = occluder.Occluding.HasFlag(OccluderDir.West);
+                    var no = (occluder.Occluding & OccluderDir.North) != 0;
+                    var so = (occluder.Occluding & OccluderDir.South) != 0;
+                    var eo = (occluder.Occluding & OccluderDir.East) != 0;
+                    var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                     // Do visibility tests for occluders (described above).
                     var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;

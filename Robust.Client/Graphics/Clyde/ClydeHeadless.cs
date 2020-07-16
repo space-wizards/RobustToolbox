@@ -222,11 +222,6 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetLooping()
-            {
-                // Nada.
-            }
-
             public void SetVolume(float decibels)
             {
                 // Nada.
@@ -254,11 +249,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void WriteBuffer(int handle, ReadOnlySpan<float> data)
-            {
-                // Nada.
-            }
-
-            public void QueueBuffer(int handle)
             {
                 // Nada.
             }

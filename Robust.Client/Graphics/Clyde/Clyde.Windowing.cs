@@ -58,6 +58,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
+        private Vector2i _prevWindowSize;
+        private Vector2i _prevWindowPos;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
         private Thread? _mainThread;
@@ -182,7 +184,10 @@ namespace Robust.Client.Graphics.Clyde
             _windowScale = (scaleX, scaleY);
 
             GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-            _windowSize = (w, h);
+            _prevWindowSize = _windowSize = (w, h);
+
+            GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+            _prevWindowPos = (x, y);
 
             _pixelRatio = _framebufferSize / _windowSize;
 
@@ -515,14 +520,20 @@ namespace Robust.Client.Graphics.Clyde
 
             if (WindowMode == WindowMode.Fullscreen)
             {
+                GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
+                _prevWindowSize = (w, h);
+
+                GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+                _prevWindowPos = (x, y);
                 var monitor = GLFW.GetPrimaryMonitor();
                 var mode = GLFW.GetVideoMode(monitor);
+
                 GLFW.SetWindowMonitor(_glfwWindow, GLFW.GetPrimaryMonitor(), 0, 0, mode->Width, mode->Height,
                     mode->RefreshRate);
             }
             else
             {
-                GLFW.SetWindowMonitor(_glfwWindow, null, 0, 0, 1280, 720, 0);
+                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X, _prevWindowSize.Y, 0);
             }
         }
 

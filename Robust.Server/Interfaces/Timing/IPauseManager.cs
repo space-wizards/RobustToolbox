@@ -12,6 +12,8 @@ namespace Robust.Server.Interfaces.Timing
 
         void DoMapInitialize(MapId mapId);
 
+        event GridEventHandler OnGridInitialize;
+
         void DoGridMapInitialize(GridId gridId);
         void DoGridMapInitialize(IMapGrid grid);
 

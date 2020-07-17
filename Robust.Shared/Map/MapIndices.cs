@@ -42,6 +42,22 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
+        ///     Translates the indices by a given offset.
+        /// </summary>
+        public static MapIndices operator -(MapIndices left, MapIndices right)
+        {
+            return new MapIndices(left.X - right.X, left.Y - right.Y);
+        }
+
+        /// <summary>
+        ///     Returns the opposite indices.
+        /// </summary>
+        public static MapIndices operator -(MapIndices indices)
+        {
+            return new MapIndices(-indices.X, -indices.Y);
+        }
+
+        /// <summary>
         ///     Scales the <paramref name="indices" /> by a scalar amount.
         /// </summary>
         public static MapIndices operator *(MapIndices indices, int multiplier)
@@ -97,6 +113,11 @@ namespace Robust.Shared.Map
         public static implicit operator MapIndices(in Vector2i indices)
         {
             return new MapIndices(indices.X, indices.Y);
+        }
+
+        public static implicit operator Vector2(in MapIndices indices)
+        {
+            return new Vector2(indices.X, indices.Y);
         }
     }
 }

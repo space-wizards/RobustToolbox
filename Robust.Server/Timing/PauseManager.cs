@@ -50,6 +50,8 @@ namespace Robust.Server.Timing
             }
         }
 
+        public event GridEventHandler? OnGridInitialize;
+
         public void DoGridMapInitialize(IMapGrid grid) => DoGridMapInitialize(grid.Index);
         public void DoGridMapInitialize(GridId gridId)
         {
@@ -62,6 +64,8 @@ namespace Robust.Server.Timing
 
                 entity.RunMapInit();
             }
+
+            OnGridInitialize?.Invoke(gridId);
         }
 
         public void AddUninitializedMap(MapId mapId)

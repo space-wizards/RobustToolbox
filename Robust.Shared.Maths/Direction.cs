@@ -4,6 +4,7 @@ using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
+    [Flags]
     public enum Direction
     {
         East = 0,
@@ -13,7 +14,7 @@ namespace Robust.Shared.Maths
         West = 4,
         SouthWest = 5,
         South = 6,
-        SouthEast = 7
+        SouthEast = 7,
     }
 
     /// <summary>
@@ -32,6 +33,32 @@ namespace Robust.Shared.Maths
         public static Direction GetDir(this Vector2 vec)
         {
             return vec.ToAngle().GetDir();
+        }
+
+        /// <summary>
+        /// Converts a direction vector to the closest Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetDir(this Vector2i vec)
+        {
+            return vec.ToAngle().GetDir();
+        }
+
+        public static Direction GetOpposite(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.East => Direction.West,
+                Direction.West => Direction.East,
+                Direction.North => Direction.South,
+                Direction.South => Direction.North,
+                Direction.NorthEast => Direction.SouthWest,
+                Direction.SouthWest => Direction.NorthEast,
+                Direction.NorthWest => Direction.SouthEast,
+                Direction.SouthEast => Direction.NorthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
         }
 
         /// <summary>
@@ -65,6 +92,16 @@ namespace Robust.Shared.Maths
         /// <param name="vec">Vector to get the angle from.</param>
         /// <returns>Angle of the vector.</returns>
         public static Angle ToAngle(this Vector2 vec)
+        {
+            return Math.Atan2(vec.Y, vec.X);
+        }
+
+        /// <summary>
+        /// Converts a direction vector to an angle, where angle is -PI to +PI.
+        /// </summary>
+        /// <param name="vec">Vector to get the angle from.</param>
+        /// <returns>Angle of the vector.</returns>
+        public static Angle ToAngle(this Vector2i vec)
         {
             return Math.Atan2(vec.Y, vec.X);
         }

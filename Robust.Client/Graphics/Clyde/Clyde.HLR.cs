@@ -41,6 +41,11 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            // Completely flush renderer state back to 0.
+            // This should make the renderer more robust
+            // in case an exception got thrown during rendering of the previous frame.
+            ClearRenderState();
+
             _debugStats.Reset();
 
             // Basic pre-render busywork.

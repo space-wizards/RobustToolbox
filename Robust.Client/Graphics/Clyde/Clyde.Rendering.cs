@@ -818,6 +818,20 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(box.Left, box.Bottom, box.Width, box.Height);
         }
 
+        private void ClearRenderState()
+        {
+            BatchVertexIndex = 0;
+            BatchIndexIndex = 0;
+            _queuedRenderCommands.Clear();
+            _currentViewport = null;
+            _lightingReady = false;
+            _currentMatrixModel = Matrix3.Identity;
+            SetScissorFull(null);
+            BindRenderTargetFull(_mainWindowRenderTarget);
+            _batchMetaData = null;
+            _queuedShader = _defaultShader.Handle;
+        }
+
         [StructLayout(LayoutKind.Explicit)]
         private struct RenderCommand
         {

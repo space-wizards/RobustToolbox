@@ -257,7 +257,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Actual code that isn't just pushing/popping renderer state so we can return safely.
 
                 var rt = _currentViewport.RenderTarget;
-                BindRenderTargetFull(rt);
+                BindRenderTargetFull(RtToLoaded(rt));
                 ClearFramebuffer(Color.Transparent);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);

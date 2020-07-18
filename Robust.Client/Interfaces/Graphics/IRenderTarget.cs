@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.Graphics
@@ -5,7 +6,7 @@ namespace Robust.Client.Interfaces.Graphics
     /// <summary>
     ///     Represents something that can be rendered to.
     /// </summary>
-    public interface IRenderTarget
+    public interface IRenderTarget : IDisposable
     {
         /// <summary>
         ///     The size of the render target, in physical pixels.

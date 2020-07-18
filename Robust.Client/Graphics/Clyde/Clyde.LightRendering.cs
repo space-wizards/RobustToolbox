@@ -186,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             using var _ = DebugGroup(nameof(DrawFov));
 
-            PrepareDepthDraw(_fovRenderTarget);
+            PrepareDepthDraw(RtToLoaded(_fovRenderTarget));
 
             if (eye.DrawFov)
             {
@@ -273,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void PrepareDepthDraw(RenderTexture target)
+        private void PrepareDepthDraw(LoadedRenderTarget target)
         {
             const float arbitraryDistanceMax = 1234;
 
@@ -284,7 +284,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.FramebufferHandle.Handle);
             GL.ClearDepth(1);
             GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
@@ -317,7 +317,7 @@ namespace Robust.Client.Graphics.Clyde
 
             using (DebugGroup("Draw shadow depth"))
             {
-                PrepareDepthDraw(_shadowRenderTarget);
+                PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
                 GL.CullFace(CullFaceMode.Back);
 
                 if (_lightManager.DrawShadows)
@@ -333,7 +333,7 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, viewport.LightRenderTarget.ObjectHandle.Handle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, RtToLoaded(viewport.LightRenderTarget).FramebufferHandle.Handle);
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -813,10 +813,10 @@ namespace Robust.Client.Graphics.Clyde
             const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
-            viewport.LightRenderTarget?.Delete();
-            viewport.WallMaskRenderTarget?.Delete();
-            viewport.WallBleedIntermediateRenderTarget1?.Delete();
-            viewport.WallBleedIntermediateRenderTarget2?.Delete();
+            viewport.LightRenderTarget?.Dispose();
+            viewport.WallMaskRenderTarget?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget1?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget2?.Dispose();
 
             viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
                 name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
@@ -836,9 +836,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RegenAllLightRts()
         {
-            foreach (var viewport in _viewports)
+            foreach (var viewportRef in _viewports.Values)
             {
-                RegenLightRts(viewport);
+                if (viewportRef.TryGetTarget(out var viewport))
+                {
+                    RegenLightRts(viewport);
+                }
             }
         }
 

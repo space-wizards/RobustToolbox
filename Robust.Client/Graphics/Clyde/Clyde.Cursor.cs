@@ -70,7 +70,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetCursor(_glfwWindow, impl.Cursor);
         }
 
-        private unsafe void FlushCursorDisposeQueue()
+        private unsafe void FlushCursorDispose()
         {
             while (_cursorDisposeQueue.TryDequeue(out var cursor))
             {

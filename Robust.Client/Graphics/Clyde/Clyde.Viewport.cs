@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
@@ -8,19 +9,24 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private readonly List<Viewport> _viewports = new List<Viewport>();
+        // Use WeakReference here instead of a separate Loaded* object since these only contain managed objects.
+        private readonly Dictionary<ClydeHandle, WeakReference<Viewport>> _viewports =
+            new Dictionary<ClydeHandle, WeakReference<Viewport>>();
 
         private Viewport CreateViewport(Vector2i size, string? name = null)
         {
-            var viewport = new Viewport(name, this);
-            viewport.Size = size;
-            viewport.RenderTarget = CreateRenderTarget(size,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
-                name: $"{name}-MainRenderTarget");
+            var handle = AllocRid();
+            var viewport = new Viewport(handle, name, this)
+            {
+                Size = size,
+                RenderTarget = CreateRenderTarget(size,
+                    new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                    name: $"{name}-MainRenderTarget")
+            };
 
             RegenLightRts(viewport);
 
-            _viewports.Add(viewport);
+            _viewports.Add(handle, new WeakReference<Viewport>(viewport));
 
             return viewport;
         }
@@ -48,8 +54,33 @@ namespace Robust.Client.Graphics.Clyde
             return point;
         }
 
+        private void FlushViewportDispose()
+        {
+            // Free of allocations unless a dead viewport is found.
+            List<ClydeHandle>? toRemove = null;
+            foreach (var (handle, viewportRef) in _viewports)
+            {
+                if (!viewportRef.TryGetTarget(out _))
+                {
+                    toRemove ??= new List<ClydeHandle>();
+                    toRemove.Add(handle);
+                }
+            }
+
+            if (toRemove == null)
+            {
+                return;
+            }
+
+            foreach (var remove in toRemove)
+            {
+                _viewports.Remove(remove);
+            }
+        }
+
         private sealed class Viewport : IClydeViewport
         {
+            private readonly ClydeHandle _handle;
             private readonly Clyde _clyde;
 
             // Primary render target.
@@ -70,9 +101,10 @@ namespace Robust.Client.Graphics.Clyde
 
             public string? Name { get; }
 
-            public Viewport(string? name, Clyde clyde)
+            public Viewport(ClydeHandle handle, string? name, Clyde clyde)
             {
                 Name = name;
+                _handle = handle;
                 _clyde = clyde;
             }
 
@@ -85,16 +117,17 @@ namespace Robust.Client.Graphics.Clyde
 
             public void Dispose()
             {
-            }
+                RenderTarget.Dispose();
+                LightRenderTarget.Dispose();
+                WallMaskRenderTarget.Dispose();
+                WallBleedIntermediateRenderTarget1.Dispose();
+                WallBleedIntermediateRenderTarget2.Dispose();
 
+                _clyde._viewports.Remove(_handle);
+            }
 
             IRenderTexture IClydeViewport.RenderTarget => RenderTarget;
             public IEye? Eye { get; set; }
-
-            /*public void Resize(Vector2i newSize)
-            {
-                Size = newSize;
-            }*/
         }
     }
 }

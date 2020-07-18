@@ -75,13 +75,17 @@ namespace Robust.Client.Graphics.Clyde
 
         public Clyde()
         {
+            // Init main window render target.
             var windowRid = AllocRid();
             var window = new RenderWindow(this, windowRid);
+            var loadedData = new LoadedRenderTarget
+            {
+                IsWindow = true
+            };
+            _renderTargets.Add(windowRid, loadedData);
 
-            MainWindowRenderTarget = window;
-            _currentRenderTarget = window;
-
-            _renderTargets.Add(windowRid, window);
+            _mainWindowRenderTarget = window;
+            _currentRenderTarget = RtToLoaded(window);
         }
 
         public override bool Initialize()
@@ -100,8 +104,12 @@ namespace Robust.Client.Graphics.Clyde
         public void FrameProcess(FrameEventArgs eventArgs)
         {
             _updateAudio();
-            FlushCursorDisposeQueue();
-            ClearDeadShaderInstances();
+
+            FlushCursorDispose();
+            FlushShaderInstanceDispose();
+            FlushRenderTargetDispose();
+            FlushTextureDispose();
+            FlushViewportDispose();
         }
 
         public void Ready()

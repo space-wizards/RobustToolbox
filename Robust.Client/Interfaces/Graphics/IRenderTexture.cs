@@ -11,10 +11,5 @@ namespace Robust.Client.Interfaces.Graphics
         ///     A texture that contains the contents of the render target.
         /// </summary>
         Texture Texture { get; }
-
-        /// <summary>
-        ///     Delete this render target and its backing textures.
-        /// </summary>
-        void Delete();
     }
 }

@@ -276,11 +276,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyTexture : OwnedTexture
         {
-            public override void Delete()
-            {
-                // Hey that was easy.
-            }
-
             public DummyTexture(Vector2i size) : base(size)
             {
             }
@@ -376,6 +371,10 @@ namespace Robust.Client.Graphics.Clyde
             public void Delete()
             {
             }
+
+            public void Dispose()
+            {
+            }
         }
 
         private sealed class DummyRenderWindow : IRenderWindow
@@ -388,6 +387,10 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size => _clyde.ScreenSize;
+
+            public void Dispose()
+            {
+            }
         }
 
         private sealed class DummyDebugStats : IClydeDebugStats

@@ -61,7 +61,7 @@ namespace Robust.Client.Graphics.Clyde
         // The current render target we're rendering to during queue state.
         // This gets immediately updated when switching render targets during (queue) and (misc),
         // but not during (submit).
-        private RenderTargetBase _currentRenderTarget;
+        private LoadedRenderTarget _currentRenderTarget;
 
         // Current model matrix used by the (queue) state.
         // This matrix is applied to most normal geometry coming in.
@@ -980,9 +980,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             public readonly Matrix3 ProjMatrix;
             public readonly Matrix3 ViewMatrix;
-            public readonly RenderTargetBase RenderTarget;
+            public readonly LoadedRenderTarget RenderTarget;
 
-            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix, RenderTargetBase renderTarget)
+            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix, LoadedRenderTarget renderTarget)
             {
                 ProjMatrix = projMatrix;
                 ViewMatrix = viewMatrix;

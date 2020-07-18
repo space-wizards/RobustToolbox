@@ -273,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             return (vertexSource, fragmentSource);
         }
 
-        private void ClearDeadShaderInstances()
+        private void FlushShaderInstanceDispose()
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {

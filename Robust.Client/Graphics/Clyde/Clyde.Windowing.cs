@@ -179,6 +179,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
             _framebufferSize = (fbW, fbH);
+            UpdateWindowLoadedRtSize();
 
             GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
             _windowScale = (scaleX, scaleY);
@@ -397,6 +398,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
                 _framebufferSize = (fbW, fbH);
                 _windowSize = (width, height);
+                UpdateWindowLoadedRtSize();
 
                 if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
                     return;

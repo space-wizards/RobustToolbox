@@ -9,6 +9,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -29,12 +30,12 @@ namespace Robust.Shared.GameObjects.Systems
 
         public SharedPhysicsSystem()
         {
-            EntityQuery = new TypeEntityQuery(typeof(PhysicsComponent));
+            EntityQuery = new TypeEntityQuery(typeof(IPhysicsComponent));
         }
 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        protected void SimulateWorld(float frameTime, List<PhysicsComponent> physicsComponents)
+        protected void SimulateWorld(float frameTime, List<IPhysicsComponent> physicsComponents)
         {
             foreach (var physics in physicsComponents)
             {
@@ -159,14 +160,16 @@ namespace Robust.Shared.GameObjects.Systems
         {
             _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var physics in _componentManager.GetAllComponents<PhysicsComponent>())
+            foreach (var physics in _componentManager.GetAllComponents<IPhysicsComponent>())
             {
-                if (physics.LinearVelocity == Vector2.Zero)
+                if (!physics.Owner.TryGetComponent<ICollidableComponent>(out var aCollidable))
                 {
                     continue;
                 }
 
-                if (!physics.Owner.TryGetComponent<CollidableComponent>(out var aCollidable))
+                aCollidable.SleepAccumulator++;
+
+                if (physics.LinearVelocity == Vector2.Zero)
                 {
                     continue;
                 }
@@ -175,12 +178,12 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void FindCollisionsFor(CollidableComponent a, PhysicsComponent aPhysics,
+        private void FindCollisionsFor(ICollidableComponent a, IPhysicsComponent aPhysics,
             HashSet<(EntityUid, EntityUid)> combinations)
         {
             foreach (var b in a.GetCollidingEntities(Vector2.Zero))
             {
-                var aUid = a.Owner.Uid;
+                var aUid = ((IPhysBody)a).Owner.Uid;
                 var bUid = b.Uid;
 
                 if (bUid.CompareTo(aUid) > 0)
@@ -195,8 +198,8 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
                 }
 
-                var bCollidable = b.GetComponent<CollidableComponent>();
-                if (b.TryGetComponent<PhysicsComponent>(out var bPhysics))
+                var bCollidable = b.GetComponent<ICollidableComponent>();
+                if (b.TryGetComponent<IPhysicsComponent>(out var bPhysics))
                 {
                     _collisionCache.Add(new Manifold(a, bCollidable, aPhysics, bPhysics, a.Hard && bCollidable.Hard, _physicsManager));
                 }
@@ -234,7 +237,7 @@ namespace Robust.Shared.GameObjects.Systems
             return false;
         }
 
-        private void ProcessFriction(PhysicsComponent physics)
+        private void ProcessFriction(IPhysicsComponent physics)
         {
             if (physics.LinearVelocity == Vector2.Zero) return;
 
@@ -250,7 +253,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.LinearVelocity += frictionVelocityChange;
         }
 
-        private void UpdatePosition(PhysicsComponent physics, float frameTime)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
         {
             var ent = physics.Owner;
             physics.LinearVelocity = new Vector2(Math.Abs(physics.LinearVelocity.X) < Epsilon ? 0.0f : physics.LinearVelocity.X, Math.Abs(physics.LinearVelocity.Y) < Epsilon ? 0.0f : physics.LinearVelocity.Y);
@@ -296,10 +299,10 @@ namespace Robust.Shared.GameObjects.Systems
             return done;
         }
 
-        private float GetFriction(PhysicsComponent physics)
+        private float GetFriction(IPhysicsComponent physics)
         {
             var ent = physics.Owner;
-            if (ent.HasComponent<CollidableComponent>() && physics.OnGround)
+            if (ent.HasComponent<ICollidableComponent>() && physics.OnGround)
             {
                 var location = ent.Transform;
                 var grid = _mapManager.GetGrid(location.GridPosition.GridID);

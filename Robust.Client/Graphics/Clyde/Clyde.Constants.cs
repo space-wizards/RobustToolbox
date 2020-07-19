@@ -1,3 +1,4 @@
+using Robust.Client.Graphics.ClientEye;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde

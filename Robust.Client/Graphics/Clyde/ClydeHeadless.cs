@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Input;
@@ -16,14 +17,21 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Hey look, it's Clyde's evil twin brother!
     /// </summary>
+    [UsedImplicitly]
     internal sealed class ClydeHeadless : ClydeBase, IClydeInternal, IClydeAudio
     {
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
+        public IRenderWindow MainWindowRenderTarget { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
             return new DummyShaderInstance();
+        }
+
+        public ClydeHeadless()
+        {
+            MainWindowRenderTarget = new DummyRenderWindow(this);
         }
 
         public Vector2 MouseScreenPosition => ScreenSize / 2;
@@ -91,15 +99,10 @@ namespace Robust.Client.Graphics.Clyde
             return new DummyTexture((image.Width, image.Height));
         }
 
-        public IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+        public IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null)
         {
-            return new DummyRenderTarget(size, new DummyTexture(size));
-        }
-
-        public void CalcWorldProjectionMatrix(out Matrix3 projMatrix)
-        {
-            projMatrix = Matrix3.Identity;
+            return new DummyRenderTexture(size, new DummyTexture(size));
         }
 
         public ICursor GetStandardCursor(StandardCursorShape shape)
@@ -219,11 +222,6 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void SetLooping()
-            {
-                // Nada.
-            }
-
             public void SetVolume(float decibels)
             {
                 // Nada.
@@ -255,11 +253,6 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
-            public void QueueBuffer(int handle)
-            {
-                // Nada.
-            }
-
             public void QueueBuffers(ReadOnlySpan<int> handles)
             {
                 // Nada.
@@ -283,11 +276,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyTexture : OwnedTexture
         {
-            public override void Delete()
-            {
-                // Hey that was easy.
-            }
-
             public DummyTexture(Vector2i size) : base(size)
             {
             }
@@ -369,9 +357,9 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class DummyRenderTarget : IRenderTarget
+        private sealed class DummyRenderTexture : IRenderTexture
         {
-            public DummyRenderTarget(Vector2i size, Texture texture)
+            public DummyRenderTexture(Vector2i size, Texture texture)
             {
                 Size = size;
                 Texture = texture;
@@ -381,6 +369,26 @@ namespace Robust.Client.Graphics.Clyde
             public Texture Texture { get; }
 
             public void Delete()
+            {
+            }
+
+            public void Dispose()
+            {
+            }
+        }
+
+        private sealed class DummyRenderWindow : IRenderWindow
+        {
+            private readonly ClydeHeadless _clyde;
+
+            public DummyRenderWindow(ClydeHeadless clyde)
+            {
+                _clyde = clyde;
+            }
+
+            public Vector2i Size => _clyde.ScreenSize;
+
+            public void Dispose()
             {
             }
         }
@@ -408,10 +416,14 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            public IRenderTarget RenderTarget { get; } = new DummyRenderTarget(Vector2i.One, new DummyTexture(Vector2i.One));
+            public IRenderTexture RenderTarget { get; } = new DummyRenderTexture(Vector2i.One, new DummyTexture(Vector2i.One));
 
             public IEye? Eye { get; set; }
+            public Vector2i Size { get; }
 
+            public void Render()
+            {
+            }
         }
     }
 }

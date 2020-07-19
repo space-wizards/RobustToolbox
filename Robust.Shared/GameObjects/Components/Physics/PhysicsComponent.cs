@@ -9,8 +9,58 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
 {
+    public interface IPhysicsComponent : IComponent
+    {
+        /// <summary>
+        ///     Current mass of the entity in kilograms.
+        /// </summary>
+        float Mass { get; set; }
+
+        /// <summary>
+        ///     Current linear velocity of the entity in meters per second.
+        /// </summary>
+        Vector2 LinearVelocity { get; set; }
+
+        /// <summary>
+        ///     Current angular velocity of the entity in radians per sec.
+        /// </summary>
+        float AngularVelocity { get; set; }
+
+        /// <summary>
+        ///     Current momentum of the entity in kilogram meters per second
+        /// </summary>
+        Vector2 Momentum { get; set; }
+
+        /// <summary>
+        ///     The current status of the object
+        /// </summary>
+        BodyStatus Status { get; set; }
+
+        /// <summary>
+        ///     Represents a virtual controller acting on the physics component.
+        /// </summary>
+        VirtualController? Controller { get; }
+
+        /// <summary>
+        ///     Whether this component is on the ground
+        /// </summary>
+        bool OnGround { get; }
+
+        /// <summary>
+        ///     Whether or not the entity is anchored in place.
+        /// </summary>
+        bool Anchored { get; set; }
+
+        event Action? AnchoredChanged;
+
+        bool Predict { get; set; }
+        void SetController<T>() where T: VirtualController, new();
+        void RemoveController();
+    }
+
     [RegisterComponent]
-    public class PhysicsComponent: Component, IComponent
+    [ComponentReference(typeof(IPhysicsComponent))]
+    public class PhysicsComponent: Component, IPhysicsComponent
     {
         private float _mass;
         private Vector2 _linVelocity;
@@ -18,8 +68,6 @@ namespace Robust.Shared.GameObjects.Components
         private VirtualController? _controller;
         private BodyStatus _status;
         private bool _anchored;
-
-        public Action? AnchoredChanged;
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -128,6 +176,8 @@ namespace Robust.Shared.GameObjects.Components
                 Dirty();
             }
         }
+
+        public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict { get; set; }

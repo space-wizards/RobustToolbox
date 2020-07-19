@@ -53,5 +53,18 @@ namespace Robust.Shared.Physics
         /// Broad Phase proxy ID.
         /// </summary>
         int ProxyId { get; set; }
+
+        /// <summary>
+        /// The type of the body, which determines how collisions effect this object.
+        /// </summary>
+        BodyType BodyType { get; set; }
+
+        int SleepAccumulator { get; set; }
+
+        int SleepThreshold { get; set; }
+
+        bool Awake { get; }
+
+        void WakeBody();
     }
 }

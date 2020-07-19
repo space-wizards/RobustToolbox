@@ -10,6 +10,8 @@ namespace Robust.Client.Interfaces.Graphics
 {
     public interface IClyde
     {
+        IRenderWindow MainWindowRenderTarget { get; }
+
         Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
         event Action<WindowResizedEventArgs> OnWindowResized;
@@ -20,10 +22,8 @@ namespace Robust.Client.Interfaces.Graphics
         Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
 
-        IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+        IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null);
-
-        void CalcWorldProjectionMatrix(out Matrix3 projMatrix);
 
         // Cursor API.
         /// <summary>

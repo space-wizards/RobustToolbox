@@ -17,7 +17,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             SimulateWorld(frameTime,
                 RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e))
-                    .Select(p => p.GetComponent<PhysicsComponent>()).ToList());
+                    .Select(p => p.GetComponent<IPhysicsComponent>()).ToList());
         }
     }
 }

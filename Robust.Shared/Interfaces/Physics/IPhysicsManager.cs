@@ -157,8 +157,8 @@ namespace Robust.Shared.Interfaces.Physics
         public readonly Vector2 Normal;
         public readonly IPhysBody A;
         public readonly IPhysBody B;
-        public PhysicsComponent? APhysics;
-        public PhysicsComponent? BPhysics;
+        public IPhysicsComponent? APhysics;
+        public IPhysicsComponent? BPhysics;
         public readonly bool Hard;
 
         public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
@@ -166,7 +166,8 @@ namespace Robust.Shared.Interfaces.Physics
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, bool hard, IPhysicsManager physicsManager)
+        public Manifold(IPhysBody A, IPhysBody B, IPhysicsComponent? aPhysics, IPhysicsComponent? bPhysics, bool hard,
+            IPhysicsManager physicsManager)
         {
             this.A = A;
             this.B = B;

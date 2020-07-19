@@ -33,6 +33,9 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public int ProxyId { get; set; }
 
+        /// <inheritdoc />
+        public BodyType BodyType { get; set; } = BodyType.Static;
+
         public CollidableComponent()
         {
             PhysicsShapes = new PhysShapeList(this);
@@ -46,7 +49,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _canCollide, "on", true);
             serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-            serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
+            serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
         }
 

@@ -309,16 +309,23 @@ namespace Robust.Shared.Physics
         public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
-            => this[collider.MapID].Update(collider);
+        {
+            collider.WakeBody();
+            return this[collider.MapID].Update(collider);
+        }
 
         public void RemovedFromMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Remove(body);
         }
 
         public void AddedToMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Add(body);
         }
+
+        public int SleepTimeThreshold { get; set; } = 240;
     }
 }

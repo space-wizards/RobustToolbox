@@ -36,6 +36,24 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public BodyType BodyType { get; set; } = BodyType.Static;
 
+        /// <inheritdoc />
+        public int SleepAccumulator { get; set; }
+
+        public int SleepThreshold
+        {
+            get => _physicsManager.SleepTimeThreshold;
+            set => _physicsManager.SleepTimeThreshold = value;
+        }
+
+        /// <inheritdoc />
+        public bool Awake => _physicsManager.SleepTimeThreshold > SleepAccumulator;
+
+        /// <inheritdoc />
+        public void WakeBody()
+        {
+            SleepAccumulator = 0;
+        }
+
         public CollidableComponent()
         {
             PhysicsShapes = new PhysShapeList(this);
@@ -229,6 +247,8 @@ namespace Robust.Shared.GameObjects.Components
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
         }
 
+
+
         private void ShapeAdded(IPhysShape shape)
         {
             shape.OnDataChanged += ShapeDataChanged;
@@ -291,6 +311,7 @@ namespace Robust.Shared.GameObjects.Components
         private void ShapeDataChanged()
         {
             Dirty();
+            UpdatePhysicsTree();
         }
 
         // Custom IList<> implementation so that we can hook addition/removal of shapes.

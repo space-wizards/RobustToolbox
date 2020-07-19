@@ -58,5 +58,13 @@ namespace Robust.Shared.Physics
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>
         BodyType BodyType { get; set; }
+
+        int SleepAccumulator { get; set; }
+
+        int SleepThreshold { get; set; }
+
+        bool Awake { get; }
+
+        void WakeBody();
     }
 }

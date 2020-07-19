@@ -162,12 +162,14 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var physics in _componentManager.GetAllComponents<IPhysicsComponent>())
             {
-                if (physics.LinearVelocity == Vector2.Zero)
+                if (!physics.Owner.TryGetComponent<ICollidableComponent>(out var aCollidable))
                 {
                     continue;
                 }
 
-                if (!physics.Owner.TryGetComponent<ICollidableComponent>(out var aCollidable))
+                aCollidable.SleepAccumulator++;
+
+                if (physics.LinearVelocity == Vector2.Zero)
                 {
                     continue;
                 }

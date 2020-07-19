@@ -38,8 +38,9 @@ namespace Robust.Client.Physics
 
         private List<IPhysicsComponent> ActuallyRelevant()
         {
-            return _componentManager.GetAllComponents<IPhysicsComponent>().Where(p => p.Predict)
+            var relevant = _componentManager.GetAllComponents<IPhysicsComponent>().Where(p => p.Predict)
                 .ToList();
+            return relevant;
         }
     }
 }

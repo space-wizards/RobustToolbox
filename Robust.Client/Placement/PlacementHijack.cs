@@ -12,6 +12,11 @@ namespace Robust.Client.Placement
             return false;
         }
 
+        public virtual bool HijackDeletion(GridCoordinates coordinates)
+        {
+            return false;
+        }
+
         public virtual bool HijackDeletion(IEntity entity)
         {
             return false;

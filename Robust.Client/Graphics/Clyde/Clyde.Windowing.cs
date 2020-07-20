@@ -409,7 +409,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (fbW != 0 && fbH != 0)
                 {
                     _mainViewport.Dispose();
-                    _mainViewport = CreateViewport((fbW, fbH), nameof(_mainViewport));
+                    CreateMainViewport();
                 }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));

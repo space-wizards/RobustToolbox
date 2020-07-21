@@ -50,6 +50,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables]
         public MapId MapID { get; private set; }
 
+        private bool _mapIdInitialized;
+
+
         /// <inheritdoc />
         [ViewVariables]
         public GridId GridID
@@ -335,18 +338,55 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        [ViewVariables]
-        public Vector2 LerpSource => _prevPosition;
-        [ViewVariables]
-        public Angle LerpSourceAngle => _prevRotation;
+        [ViewVariables] public Vector2 LerpSource => _prevPosition;
+        [ViewVariables] public Angle LerpSourceAngle => _prevRotation;
 
-        [ViewVariables]
-        public EntityUid LerpParent { get; private set; }
+        [ViewVariables] public EntityUid LerpParent { get; private set; }
 
         /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
+
+            // Children MAY be initialized here before their parents are.
+            // We do this whole dance to handle this recursively,
+            // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
+            static MapId FindMapIdAndSet(TransformComponent p)
+            {
+                if (p._mapIdInitialized)
+                {
+                    return p.MapID;
+                }
+
+                MapId value;
+                if (p._parent.IsValid())
+                {
+                    value = FindMapIdAndSet((TransformComponent) p.Parent!);
+                }
+                else
+                {
+                    // second level node, terminates recursion up the branch of the tree
+                    if (p.Owner.TryGetComponent(out IMapComponent mapComp))
+                    {
+                        value = mapComp.WorldMap;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                    }
+                }
+
+                p.MapID = value;
+                p._mapIdInitialized = true;
+                return value;
+            }
+
+            if (!_mapIdInitialized)
+            {
+                FindMapIdAndSet(this);
+
+                _mapIdInitialized = true;
+            }
 
             // Has to be done if _parent is set from ExposeData.
             if (_parent.IsValid())
@@ -354,20 +394,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
-
-                MapID = Parent.MapID;
-            }
-            else
-            {
-                // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapComponent mapComp))
-                {
-                    MapID = mapComp.WorldMap;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-                }
             }
 
             UpdateEntityTree();

@@ -178,7 +178,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            toremove.Transform.DetachParent();
+            ContainerHelpers.AttachParentToContainerOrGrid(toremove.Transform);
             return true;
         }
 

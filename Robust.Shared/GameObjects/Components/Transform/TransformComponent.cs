@@ -130,7 +130,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
                 else
                 {
-                    DetachParent();
+                    AttachToGridOrMap();
                 }
             }
         }
@@ -406,7 +406,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public void DetachParent()
+        public void AttachToGridOrMap()
         {
             // nothing to do
             var oldParent = Parent;

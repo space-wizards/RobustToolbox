@@ -17,6 +17,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
     {
         private IServerEntityManager EntityManager = default!;
 
+        const string PROTOTYPES = @"
+- type: entity
+  name: dummy
+  id: dummy
+  components:
+  - type: Transform
+";
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -98,12 +106,28 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(transform.Deleted, Is.True);
         }
 
-        const string PROTOTYPES = @"
-- type: entity
-  name: dummy
-  id: dummy
-  components:
-  - type: Transform
-";
+        [Test]
+        public void TestNestedRemoval()
+        {
+            var owner = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
+            var inserted = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
+            var transform = inserted.Transform;
+            var entity = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+
+            var container = ContainerManagerComponent.Create<Container>("dummy", owner);
+            Assert.That(container.Insert(inserted), Is.True);
+            Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
+
+            var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
+            Assert.That(container2.Insert(entity), Is.True);
+            Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(inserted));
+
+            Assert.That(container2.Remove(entity), Is.True);
+            Assert.That(container.Contains(entity), Is.True);
+            Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(owner));
+
+            owner.Delete();
+            Assert.That(transform.Deleted, Is.True);
+        }
     }
 }

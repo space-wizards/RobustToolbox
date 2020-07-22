@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Interfaces.Physics;
@@ -39,7 +40,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        VirtualController? Controller { get; set; }
+        Dictionary<Type, VirtualController> Controllers { get; set; }
 
         /// <summary>
         ///     Whether this component is on the ground
@@ -54,8 +55,12 @@ namespace Robust.Shared.GameObjects.Components
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
+        void TryAddController<T>() where T : VirtualController, new();
         void SetController<T>() where T : VirtualController, new();
-        void RemoveController();
+        T GetController<T>() where T : VirtualController;
+        bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
+        bool RemoveController(Type type);
+        void RemoveControllers();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -63,7 +68,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController? _controller;
+        private Dictionary<Type, VirtualController> _controllers;
         private bool _anchored;
 
         /// <summary>
@@ -141,10 +146,10 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        public VirtualController? Controller
+        public Dictionary<Type, VirtualController> Controllers
         {
-            get => _controller;
-            set => _controller = value;
+            get => _controllers;
+            set => _controllers = value;
         }
 
         /// <summary>
@@ -180,19 +185,52 @@ namespace Robust.Shared.GameObjects.Components
             return Owner.TryGetComponent(out physics) && !Anchored;
         }
 
-        public void SetController<T>() where T : VirtualController, new()
+        public void TryAddController<T>() where T : VirtualController, new()
         {
-            _controller = new T { ControlledComponent = this };
+            _controllers.TryAdd(typeof(T), new T {ControlledComponent = this});
             Dirty();
         }
 
-        public void RemoveController()
+        public void SetController<T>() where T : VirtualController, new()
         {
-            if (_controller != null)
+            _controllers[typeof(T)] = new T {ControlledComponent = this};
+            Dirty();
+        }
+
+        public T GetController<T>() where T : VirtualController
+        {
+            return (T) _controllers[typeof(T)];
+        }
+
+        public bool TryGetController<T>(out T controller) where T : VirtualController
+        {
+            controller = null!;
+
+            var found = _controllers.TryGetValue(typeof(T), out var value);
+
+            return found && (controller = (value as T)!) != null;
+        }
+
+        public bool RemoveController(Type type)
+        {
+            var removed = _controllers.Remove(type, out var controller);
+
+            if (controller != null)
             {
-                _controller.ControlledComponent = null;
-                _controller = null;
+                controller.ControlledComponent = null;
             }
+
+            return removed;
+        }
+
+        public void RemoveControllers()
+        {
+            foreach (var controller in _controllers.Values)
+            {
+                controller.ControlledComponent = null;
+            }
+
+            _controllers.Clear();
         }
     }
 }

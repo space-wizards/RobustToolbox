@@ -39,7 +39,10 @@ namespace Robust.Shared.GameObjects.Systems
         {
             foreach (var physics in physicsComponents)
             {
-                physics.Controller?.UpdateBeforeProcessing();
+                foreach (var controller in physics.Controllers.Values)
+                {
+                    controller.UpdateBeforeProcessing();
+                }
             }
 
             // Calculate collisions and store them in the cache
@@ -56,7 +59,10 @@ namespace Robust.Shared.GameObjects.Systems
 
             foreach (var physics in physicsComponents)
             {
-                physics.Controller?.UpdateAfterProcessing();
+                foreach (var controller in physics.Controllers.Values)
+                {
+                    controller.UpdateAfterProcessing();
+                }
             }
 
             // Remove all entities that were deleted due to the controller

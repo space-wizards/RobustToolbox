@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -38,7 +39,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        VirtualController? Controller { get; }
+        Dictionary<Type, VirtualController> Controllers { get; }
 
         /// <summary>
         ///     Whether this component is on the ground
@@ -57,7 +58,7 @@ namespace Robust.Shared.GameObjects.Components
         void SetController<T>()
             where T : VirtualController, new();
 
-        void RemoveController();
+        void RemoveControllers();
     }
 
     [Obsolete("Migrate to CollidableComponent")]
@@ -72,7 +73,9 @@ namespace Robust.Shared.GameObjects.Components
         private Vector2 _linVelocity;
         private float _angVelocity;
         private BodyStatus _status;
-        private VirtualController? _controller;
+#pragma warning disable 8618
+        private Dictionary<Type, VirtualController> _controllers;
+#pragma warning restore 8618
         private bool _anchored;
 
         /// <inheritdoc />
@@ -100,7 +103,7 @@ namespace Robust.Shared.GameObjects.Components
                 _collidableComponent.AngularVelocity = _angVelocity;
                 _collidableComponent.Anchored = _anchored;
                 _collidableComponent.Status = _status;
-                _collidableComponent.Controller = _controller;
+                _collidableComponent.Controllers = _controllers;
             }
         }
 
@@ -119,7 +122,7 @@ namespace Robust.Shared.GameObjects.Components
                     serializer.DataField(ref _angVelocity, "avel", 0.0f);
                     serializer.DataField(ref _anchored, "Anchored", false);
                     serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-                    serializer.DataField(ref _controller, "Controller", null);
+                    serializer.DataField(ref _controllers, "Controller", new Dictionary<Type, VirtualController>());
                 }
             }
             else
@@ -161,7 +164,7 @@ namespace Robust.Shared.GameObjects.Components
             set => _collidableComponent.Status = value;
         }
 
-        public VirtualController? Controller => _collidableComponent.Controller;
+        public Dictionary<Type, VirtualController> Controllers => _collidableComponent.Controllers;
 
         public bool OnGround => _collidableComponent.OnGround;
 
@@ -189,9 +192,9 @@ namespace Robust.Shared.GameObjects.Components
             _collidableComponent.SetController<T>();
         }
 
-        public void RemoveController()
+        public void RemoveControllers()
         {
-            _collidableComponent.RemoveController();
+            _collidableComponent.RemoveControllers();
         }
 
         #endregion

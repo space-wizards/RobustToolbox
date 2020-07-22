@@ -55,8 +55,8 @@ namespace Robust.Shared.GameObjects.Components
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
-        void TryAddController<T>() where T : VirtualController, new();
-        void SetController<T>() where T : VirtualController, new();
+        T GetOrCreate<T>() where T : VirtualController, new();
+        T SetController<T>() where T : VirtualController, new();
         T GetController<T>() where T : VirtualController;
         bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
         bool RemoveController(Type type);
@@ -185,16 +185,23 @@ namespace Robust.Shared.GameObjects.Components
             return Owner.TryGetComponent(out physics) && !Anchored;
         }
 
-        public void TryAddController<T>() where T : VirtualController, new()
+        public T GetOrCreate<T>() where T : VirtualController, new()
         {
             _controllers.TryAdd(typeof(T), new T {ControlledComponent = this});
+
             Dirty();
+
+            return (T) _controllers[typeof(T)];
         }
 
-        public void SetController<T>() where T : VirtualController, new()
+        public T SetController<T>() where T : VirtualController, new()
         {
-            _controllers[typeof(T)] = new T {ControlledComponent = this};
+            var controller = new T {ControlledComponent = this};
+            _controllers[typeof(T)] = controller;
+
             Dirty();
+
+            return controller;
         }
 
         public T GetController<T>() where T : VirtualController

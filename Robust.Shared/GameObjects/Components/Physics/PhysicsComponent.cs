@@ -1,14 +1,13 @@
 ﻿using System;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
 {
+    [Obsolete("Use the ICollidableComponent interface, or use ICollidableComponent.Anchored if you are using this to check if the entity can be moved.")]
     public interface IPhysicsComponent : IComponent
     {
         /// <summary>
@@ -54,19 +53,26 @@ namespace Robust.Shared.GameObjects.Components
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
-        void SetController<T>() where T: VirtualController, new();
+
+        void SetController<T>()
+            where T : VirtualController, new();
+
         void RemoveController();
     }
 
+    [Obsolete("Migrate to CollidableComponent")]
     [RegisterComponent]
     [ComponentReference(typeof(IPhysicsComponent))]
-    public class PhysicsComponent: Component, IPhysicsComponent
+    public class PhysicsComponent : Component, IPhysicsComponent
     {
+        private ICollidableComponent _collidableComponent = default!;
+        private bool _upgradeCollidable;
+
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController? _controller;
         private BodyStatus _status;
+        private VirtualController? _controller;
         private bool _anchored;
 
         /// <inheritdoc />
@@ -75,117 +81,27 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override uint? NetID => NetIDs.PHYSICS;
 
-        /// <summary>
-        ///     Current mass of the entity in kilograms.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public float Mass
+        /// <inheritdoc />
+        public override void Initialize()
         {
-            get => _mass;
-            set
+            base.Initialize();
+
+            if (!Owner.EnsureComponent(out CollidableComponent comp))
             {
-                _mass = value;
-                Dirty();
+                Logger.ErrorS("physics", $"Entity {Owner} is missing a {nameof(CollidableComponent)}, adding one for you.");
             }
-        }
 
-        /// <summary>
-        ///     Current linear velocity of the entity in meters per second.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LinearVelocity
-        {
-            get => _linVelocity;
-            set
+            _collidableComponent = comp;
+
+            if (_upgradeCollidable)
             {
-                if(_linVelocity == value)
-                    return;
-
-                _linVelocity = value;
-                Dirty();
+                _collidableComponent.Mass = _mass;
+                _collidableComponent.LinearVelocity = _linVelocity;
+                _collidableComponent.AngularVelocity = _angVelocity;
+                _collidableComponent.Anchored = _anchored;
+                _collidableComponent.Status = _status;
+                _collidableComponent.Controller = _controller;
             }
-        }
-
-        /// <summary>
-        ///     Current angular velocity of the entity in radians per sec.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public float AngularVelocity
-        {
-            get => _angVelocity;
-            set
-            {
-                if(_angVelocity.Equals(value))
-                    return;
-
-                _angVelocity = value;
-                Dirty();
-            }
-        }
-
-        /// <summary>
-        ///     Current momentum of the entity in kilogram meters per second
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Momentum
-        {
-            get => LinearVelocity * Mass;
-            set => LinearVelocity = value / Mass;
-        }
-
-        /// <summary>
-        ///     The current status of the object
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public BodyStatus Status
-        {
-            get => _status;
-            set
-            {
-                _status = value;
-                Dirty();
-            }
-        }
-
-        /// <summary>
-        ///     Represents a virtual controller acting on the physics component.
-        /// </summary>
-        public VirtualController? Controller
-        {
-            get => _controller;
-        }
-
-        /// <summary>
-        ///     Whether this component is on the ground
-        /// </summary>
-        public bool OnGround => Status == BodyStatus.OnGround &&
-                                !IoCManager.Resolve<IPhysicsManager>()
-                                    .IsWeightless(Owner.Transform.GridPosition);
-
-        /// <summary>
-        ///     Whether or not the entity is anchored in place.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Anchored
-        {
-            get => _anchored;
-            set
-            {
-                _anchored = value;
-                AnchoredChanged?.Invoke();
-                Dirty();
-            }
-        }
-
-        public event Action? AnchoredChanged;
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Predict { get; set; }
-
-        public void SetController<T>() where T: VirtualController, new()
-        {
-            _controller = new T {ControlledComponent = this};
-            Dirty();
         }
 
         /// <inheritdoc />
@@ -193,63 +109,91 @@ namespace Robust.Shared.GameObjects.Components
         {
             base.ExposeData(serializer);
 
-            serializer.DataField<float>(ref _mass, "mass", 1);
-            serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
-            serializer.DataField(ref _angVelocity, "avel", 0.0f);
-            serializer.DataField(ref _anchored, "Anchored", false);
-            serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-            serializer.DataField(ref _controller, "Controller", null);
+            if(serializer.Reading) // Prevents the obsolete component from writing
+            {
+                if(!serializer.ReadDataField("upgraded", false))
+                {
+                    _upgradeCollidable = true;
+                    serializer.DataField<float>(ref _mass, "mass", 1);
+                    serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
+                    serializer.DataField(ref _angVelocity, "avel", 0.0f);
+                    serializer.DataField(ref _anchored, "Anchored", false);
+                    serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
+                    serializer.DataField(ref _controller, "Controller", null);
+                }
+            }
+            else
+            {
+                var upgrade = true;
+                serializer.DataField(ref upgrade, "upgraded", true);
+            }
         }
 
-        /// <inheritdoc />
-        public override ComponentState GetComponentState()
+        #region IPhysicsComponent Proxy
+
+        public float Mass
         {
-            return new PhysicsComponentState(_mass, LinearVelocity, AngularVelocity, Anchored);
+            get => _collidableComponent.Mass;
+            set => _collidableComponent.Mass = value;
+        }
+
+        public Vector2 LinearVelocity
+        {
+            get => _collidableComponent.LinearVelocity;
+            set => _collidableComponent.LinearVelocity = value;
+        }
+
+        public float AngularVelocity
+        {
+            get => _collidableComponent.AngularVelocity;
+            set => _collidableComponent.AngularVelocity = value;
+        }
+
+        public Vector2 Momentum
+        {
+            get => _collidableComponent.Momentum;
+            set => _collidableComponent.Momentum = value;
+        }
+
+        public BodyStatus Status
+        {
+            get => _collidableComponent.Status;
+            set => _collidableComponent.Status = value;
+        }
+
+        public VirtualController? Controller => _collidableComponent.Controller;
+
+        public bool OnGround => _collidableComponent.OnGround;
+
+        public bool Anchored
+        {
+            get => _collidableComponent.Anchored;
+            set => _collidableComponent.Anchored = value;
+        }
+
+        public event Action? AnchoredChanged
+        {
+            add => _collidableComponent.AnchoredChanged += value;
+            remove => _collidableComponent.AnchoredChanged -= value;
+        }
+
+        public bool Predict
+        {
+            get => _collidableComponent.Predict;
+            set => _collidableComponent.Predict = value;
+        }
+
+        public void SetController<T>()
+            where T : VirtualController, new()
+        {
+            _collidableComponent.SetController<T>();
         }
 
         public void RemoveController()
         {
-            if (_controller != null)
-            {
-                _controller.ControlledComponent = null;
-                _controller = null;
-            }
+            _collidableComponent.RemoveController();
         }
 
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-
-            RemoveController();
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState == null)
-                return;
-
-            var newState = (PhysicsComponentState)curState;
-            Mass = newState.Mass / 1000f; // gram to kilogram
-
-            LinearVelocity = newState.LinearVelocity;
-            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
-            AngularVelocity = newState.AngularVelocity;
-            Anchored = newState.Anchored;
-            // TODO: Does it make sense to reset controllers here?
-            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
-            // Look man the CM test is in 5 hours cut me some slack.
-            //_controller = null;
-            // Reset predict flag to false to avoid predicting stuff too long.
-            // Another possibly bad hack for content at the moment.
-            Predict = false;
-        }
-    }
-
-    [Serializable, NetSerializable]
-    public enum BodyStatus
-    {
-        OnGround,
-        InAir
+        #endregion
     }
 }

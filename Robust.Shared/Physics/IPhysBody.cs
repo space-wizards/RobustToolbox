@@ -13,7 +13,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Entity that this physBody represents.
         /// </summary>
-        IEntity Owner { get; }
+        IEntity Entity { get; }
 
         /// <summary>
         ///     AABB of this entity in world space.

@@ -118,10 +118,10 @@ namespace Robust.Shared.GameObjects.Systems
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = collision.A.Owner.GetAllComponents<ICollideBehavior>();
+                var aBehaviors = collision.A.Entity.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in aBehaviors)
                 {
-                    var entity = collision.B.Owner;
+                    var entity = collision.B.Entity;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -133,10 +133,10 @@ namespace Robust.Shared.GameObjects.Systems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = collision.B.Owner.GetAllComponents<ICollideBehavior>();
+                var bBehaviors = collision.B.Entity.GetAllComponents<ICollideBehavior>();
                 foreach (var behavior in bBehaviors)
                 {
-                    var entity = collision.A.Owner;
+                    var entity = collision.A.Entity;
                     if (entity.Deleted) continue;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
@@ -183,7 +183,7 @@ namespace Robust.Shared.GameObjects.Systems
         {
             foreach (var b in a.GetCollidingEntities(Vector2.Zero))
             {
-                var aUid = ((IPhysBody)a).Owner.Uid;
+                var aUid = ((IPhysBody)a).Entity.Uid;
                 var bUid = b.Uid;
 
                 if (bUid.CompareTo(aUid) > 0)

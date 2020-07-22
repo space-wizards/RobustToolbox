@@ -443,6 +443,22 @@ namespace Robust.Shared.Serialization
                 return StringToType(type, node.ToString());
             }
 
+            // array
+            if (type.IsArray)
+            {
+                var listNode = (YamlSequenceNode)node;
+                var newArray = (Array)Activator.CreateInstance(type, listNode.Children.Count)!;
+
+                var idx = 0;
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(type.GetElementType()!, entryNode);
+                    newArray.SetValue(value, idx++);
+                }
+
+                return newArray;
+            }
+
             // val enum
             if (type.IsEnum)
                 return Enum.Parse(type, node.ToString());
@@ -578,24 +594,62 @@ namespace Robust.Shared.Serialization
                 return convertible.ToString(CultureInfo.InvariantCulture);
             }
 
+            // array
+            if (type.IsArray)
+            {
+                var sequence = new YamlSequenceNode();
+                var element = type.GetElementType();
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        continue;
+                        throw new ArgumentException("Cannot serialize null value inside array.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    if (element.IsAbstract || element.IsInterface)
+                    {
+                        var concreteType = entry.GetType();
+                        entryNode.Tag = $"!type:{concreteType.Name}";
+                    }
+
+                    sequence.Add(entryNode);
+                }
+
+                return sequence;
+            }
+
             // List<T>
             if (TryGenericListType(type, out var listType))
             {
                 var node = new YamlSequenceNode();
 
-                foreach (var entry in (IEnumerable)obj)
+                foreach (var entry in (IEnumerable) obj)
                 {
                     if (entry == null)
                     {
                         throw new ArgumentException("Cannot serialize null value inside list.");
                     }
 
-                    var entryNode = TypeToNode(entry);
+                    YamlNode entryNode;
+                    //  Terrible idea. for debugging only.
+                    try
+                    {
+                        entryNode = TypeToNode(entry);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        continue;
+                    }
 
                     // write the concrete type tag
                     if (listType.IsAbstract || listType.IsInterface)
                     {
-                        var concreteType =  entry.GetType();
+                        var concreteType = entry.GetType();
                         entryNode.Tag = $"!type:{concreteType.Name}";
                     }
 
@@ -610,7 +664,7 @@ namespace Robust.Shared.Serialization
             {
                 var node = new YamlMappingNode();
 
-                foreach (var oEntry in (IDictionary)obj)
+                foreach (var oEntry in (IDictionary) obj)
                 {
                     var entry = (DictionaryEntry) oEntry!;
                     var keyNode = TypeToNode(entry.Key);
@@ -652,11 +706,13 @@ namespace Robust.Shared.Serialization
                 {
                     _context.StackDepth++;
                 }
+
                 var fork = NewWriter(mapping, _context);
                 if (_context != null)
                 {
                     _context.StackDepth--;
                 }
+
                 exposable.ExposeData(fork);
                 return mapping;
             }
@@ -664,7 +720,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
+                var instance = (ISelfSerialize) Activator.CreateInstance(type)!;
                 return instance.Serialize();
             }
 
@@ -674,124 +730,128 @@ namespace Robust.Shared.Serialization
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(obj));
-        }
-
-        bool IsValueDefault<T>(string field, T value, T providedDefault, WithFormat<T> format)
-        {
-            if ((value != null || providedDefault == null) && (value == null || IsSerializedEqual(value, providedDefault)))
-            {
-                return true;
             }
 
-            if (_context != null)
+            bool IsValueDefault<T>(string field, T value, T providedDefault, WithFormat<T> format)
             {
-                return _context.IsValueDefault(field, value, format);
-            }
+                if ((value != null || providedDefault == null) &&
+                    (value == null || IsSerializedEqual(value, providedDefault)))
+                {
+                    return true;
+                }
 
-            return false;
+                if (_context != null)
+                {
+                    return _context.IsValueDefault(field, value, format);
+                }
 
-        }
-
-        internal static bool IsSerializedEqual(object? a, object? b)
-        {
-            var type = a?.GetType();
-            if (type != b?.GetType())
-            {
                 return false;
+
             }
 
-            if (a == null) // Also implies b is null since it'd have failed the type equality check otherwise.
+            internal static bool IsSerializedEqual(object? a, object? b)
             {
-                return true;
-            }
-
-            if (TryGenericListType(type!, out _))
-            {
-                var listA = (IList) a;
-                var listB = (IList) b!;
-
-                if (listA.Count != listB.Count)
+                var type = a?.GetType();
+                if (type != b?.GetType())
                 {
                     return false;
                 }
 
-                for (var i = 0; i < listA.Count; i++)
+                if (a == null) // Also implies b is null since it'd have failed the type equality check otherwise.
                 {
-                    var elemA = listA[i];
-                    var elemB = listB[i];
+                    return true;
+                }
 
-                    if (!IsSerializedEqual(elemA, elemB))
+                if (TryGenericListType(type!, out _))
+                {
+                    var listA = (IList) a;
+                    var listB = (IList) b!;
+
+                    if (listA.Count != listB.Count)
                     {
                         return false;
                     }
+
+                    for (var i = 0; i < listA.Count; i++)
+                    {
+                        var elemA = listA[i];
+                        var elemB = listB[i];
+
+                        if (!IsSerializedEqual(elemA, elemB))
+                        {
+                            return false;
+                        }
+                    }
+
+                    return true;
                 }
 
-                return true;
+                if (typeof(IExposeData).IsAssignableFrom(type))
+                {
+                    // Serialize both, see if output matches.
+                    var testA = new YamlMappingNode();
+                    var testB = new YamlMappingNode();
+                    var serA = NewWriter(testA);
+                    var serB = NewWriter(testB);
+
+                    var expA = (IExposeData) a;
+                    var expB = (IExposeData) b!;
+
+                    expA.ExposeData(serA);
+                    expB.ExposeData(serB);
+
+                    // Does deep equality.
+                    return testA.Equals(testB);
+                }
+
+                return a.Equals(b);
             }
 
-            if (typeof(IExposeData).IsAssignableFrom(type))
+
+            private static object StringToType(Type type, string str)
             {
-                // Serialize both, see if output matches.
-                var testA = new YamlMappingNode();
-                var testB = new YamlMappingNode();
-                var serA = NewWriter(testA);
-                var serB = NewWriter(testB);
-
-                var expA = (IExposeData) a;
-                var expB = (IExposeData) b!;
-
-                expA.ExposeData(serA);
-                expB.ExposeData(serB);
-
-                // Does deep equality.
-                return testA.Equals(testB);
+                var foo = TypeDescriptor.GetConverter(type);
+                return foo.ConvertFromInvariantString(str);
             }
 
-            return a.Equals(b);
-        }
-
-
-        private static object StringToType(Type type, string str)
-        {
-            var foo = TypeDescriptor.GetConverter(type);
-            return foo.ConvertFromInvariantString(str);
-        }
-
-        public static void RegisterTypeSerializer(Type type, TypeSerializer serializer)
-        {
-            if (!_typeSerializers.ContainsKey(type))
-                _typeSerializers.Add(type, serializer);
-        }
-
-        private static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
-        {
-            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
-
-            if (isList)
+            public static void RegisterTypeSerializer(Type type, TypeSerializer serializer)
             {
-                listType = type.GetGenericArguments()[0];
-                return true;
+                if (!_typeSerializers.ContainsKey(type))
+                    _typeSerializers.Add(type, serializer);
             }
 
-            listType = default;
-            return false;
-        }
-
-        private static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
-
-            if (isDict)
+            private static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
             {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
+                var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+
+                if (isList)
+                {
+                    listType = type.GetGenericArguments()[0];
+                    return true;
+                }
+
+                listType = default;
+                return false;
             }
 
-            keyType = default;
-            valType = default;
-            return false;
+            private static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType,
+                [NotNullWhen(true)] out Type? valType)
+            {
+                var isDict = type.GetTypeInfo().IsGenericType &&
+                             type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+
+                if (isDict)
+                {
+                    var genArgs = type.GetGenericArguments();
+                    keyType = genArgs[0];
+                    valType = genArgs[1];
+                    return true;
+                }
+
+                keyType = default;
+                valType = default;
+                return false;
+
         }
 
         public abstract class TypeSerializer

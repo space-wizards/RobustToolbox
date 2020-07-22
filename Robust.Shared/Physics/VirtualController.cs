@@ -1,4 +1,8 @@
-﻿using Robust.Shared.GameObjects.Components;
+﻿using System.Diagnostics;
+using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Maths;
+using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
 {
@@ -7,7 +11,26 @@ namespace Robust.Shared.Physics
     /// </summary>
     public abstract class VirtualController
     {
-        public abstract ICollidableComponent? ControlledComponent { set; }
+        private Vector2 _linVelocity;
+
+        /// <summary>
+        ///     Current linear velocity of the entity in meters per second.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LinearVelocity
+        {
+            get => _linVelocity;
+            set
+            {
+                if (_linVelocity == value)
+                    return;
+
+                _linVelocity = value;
+                ControlledComponent?.Dirty();
+            }
+        }
+
+        public abstract ICollidableComponent? ControlledComponent { protected get; set; }
 
         /// <summary>
         ///     Modify a physics component before processing impulses

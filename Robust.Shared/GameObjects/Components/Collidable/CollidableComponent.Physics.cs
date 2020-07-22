@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -68,7 +67,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private Dictionary<Type, VirtualController> _controllers;
+        private Dictionary<Type, VirtualController> _controllers = default!;
         private bool _anchored;
 
         /// <summary>

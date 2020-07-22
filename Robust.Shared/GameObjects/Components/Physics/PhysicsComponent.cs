@@ -70,12 +70,9 @@ namespace Robust.Shared.GameObjects.Components
         private bool _upgradeCollidable;
 
         private float _mass;
-        private Vector2 _linVelocity;
         private float _angVelocity;
         private BodyStatus _status;
-#pragma warning disable 8618
-        private Dictionary<Type, VirtualController> _controllers;
-#pragma warning restore 8618
+        private Dictionary<Type, VirtualController> _controllers = default!;
         private bool _anchored;
 
         /// <inheritdoc />
@@ -99,7 +96,6 @@ namespace Robust.Shared.GameObjects.Components
             if (_upgradeCollidable)
             {
                 _collidableComponent.Mass = _mass;
-                _collidableComponent.LinearVelocity = _linVelocity;
                 _collidableComponent.AngularVelocity = _angVelocity;
                 _collidableComponent.Anchored = _anchored;
                 _collidableComponent.Status = _status;
@@ -118,7 +114,6 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     _upgradeCollidable = true;
                     serializer.DataField<float>(ref _mass, "mass", 1);
-                    serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
                     serializer.DataField(ref _angVelocity, "avel", 0.0f);
                     serializer.DataField(ref _anchored, "Anchored", false);
                     serializer.DataField(ref _status, "Status", BodyStatus.OnGround);

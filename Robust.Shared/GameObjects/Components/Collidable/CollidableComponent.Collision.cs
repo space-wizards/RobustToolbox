@@ -268,8 +268,21 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }
 
+            if (_controllers == null)
+            {
+                _controllers = new Dictionary<Type, VirtualController>();
+            }
+            else
+            {
+                foreach (var controller in _controllers.Values)
+                {
+                    controller.ControlledComponent = this;
+                }
+            }
+
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                 new CollisionChangeMessage(Owner.Uid, _canCollide));
+
         }
 
         public override void OnRemove()

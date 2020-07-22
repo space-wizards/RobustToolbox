@@ -122,7 +122,6 @@ namespace Robust.Shared.GameObjects.Components
                     serializer.DataField(ref _angVelocity, "avel", 0.0f);
                     serializer.DataField(ref _anchored, "Anchored", false);
                     serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-                    serializer.DataField(ref _controllers, "Controller", new Dictionary<Type, VirtualController>());
                 }
             }
             else

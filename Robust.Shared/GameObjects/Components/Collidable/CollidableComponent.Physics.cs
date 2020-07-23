@@ -52,13 +52,15 @@ namespace Robust.Shared.GameObjects.Components
 
         protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
 
+        T AddController<T>() where T : VirtualController, new();
+
         T GetController<T>() where T : VirtualController;
 
         bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
 
-        T GetOrCreateController<T>() where T : VirtualController, new();
+        bool HasController<T>() where T : VirtualController;
 
-        T SetController<T>() where T : VirtualController, new();
+        T EnsureController<T>() where T : VirtualController, new();
 
         bool RemoveController<T>() where T : VirtualController;
 
@@ -184,6 +186,16 @@ namespace Robust.Shared.GameObjects.Components
             return Owner.TryGetComponent(out physics) && !Anchored;
         }
 
+        public T AddController<T>() where T : VirtualController, new()
+        {
+            var controller = new T {ControlledComponent = this};
+            _controllers[typeof(T)] = controller;
+
+            Dirty();
+
+            return controller;
+        }
+
         public T GetController<T>() where T : VirtualController
         {
             return (T) _controllers[typeof(T)];
@@ -198,28 +210,21 @@ namespace Robust.Shared.GameObjects.Components
             return found && (controller = (value as T)!) != null;
         }
 
-        public T GetOrCreateController<T>() where T : VirtualController, new()
+        public bool HasController<T>() where T : VirtualController
         {
-            _controllers.TryAdd(typeof(T), new T {ControlledComponent = this});
-
-            Dirty();
-
-            return (T) _controllers[typeof(T)];
+            return _controllers.ContainsKey(typeof(T));
         }
 
-        public T SetController<T>() where T : VirtualController, new()
+        public T EnsureController<T>() where T : VirtualController, new()
         {
-            var controller = new T {ControlledComponent = this};
-            _controllers[typeof(T)] = controller;
+            if (TryGetController(out T controller))
+            {
+                return controller;
+            }
 
-            Dirty();
+            controller = AddController<T>();
 
             return controller;
-        }
-
-        public void SetControllers(Dictionary<Type, VirtualController> controllers)
-        {
-            _controllers = controllers;
         }
 
         public bool RemoveController<T>() where T : VirtualController
@@ -230,6 +235,8 @@ namespace Robust.Shared.GameObjects.Components
             {
                 controller.ControlledComponent = null;
             }
+
+            Dirty();
 
             return removed;
         }
@@ -242,6 +249,7 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             _controllers.Clear();
+            Dirty();
         }
     }
 }

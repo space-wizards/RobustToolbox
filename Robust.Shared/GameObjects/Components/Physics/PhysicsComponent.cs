@@ -56,13 +56,15 @@ namespace Robust.Shared.GameObjects.Components
 
         bool Predict { get; set; }
 
+        T AddController<T>() where T : VirtualController, new();
+
         T GetController<T>() where T : VirtualController;
 
         bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
 
-        T GetOrCreateController<T>() where T : VirtualController, new();
+        bool HasController<T>() where T : VirtualController;
 
-        T SetController<T>() where T : VirtualController, new();
+        T EnsureController<T>() where T : VirtualController, new();
 
         bool RemoveController<T>() where T : VirtualController;
 
@@ -189,6 +191,11 @@ namespace Robust.Shared.GameObjects.Components
             set => _collidableComponent.Predict = value;
         }
 
+        public T AddController<T>() where T : VirtualController, new()
+        {
+            return _collidableComponent.AddController<T>();
+        }
+
         public T GetController<T>() where T : VirtualController
         {
             return _collidableComponent.GetController<T>();
@@ -199,14 +206,14 @@ namespace Robust.Shared.GameObjects.Components
             return _collidableComponent.TryGetController(out controller);
         }
 
-        public T GetOrCreateController<T>() where T : VirtualController, new()
+        public bool HasController<T>() where T : VirtualController
         {
-            return _collidableComponent.GetOrCreateController<T>();
+            return _collidableComponent.HasController<T>();
         }
 
-        public T SetController<T>() where T : VirtualController, new()
+        public T EnsureController<T>() where T : VirtualController, new()
         {
-            return _collidableComponent.SetController<T>();
+            return _collidableComponent.EnsureController<T>();
         }
 
         public bool RemoveController<T>() where T : VirtualController

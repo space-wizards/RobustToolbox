@@ -14,7 +14,7 @@ namespace Robust.Shared.Physics
         private Vector2 _linVelocity;
 
         /// <summary>
-        ///     Current linear velocity of the entity in meters per second.
+        ///     Current contribution to the linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LinearVelocity

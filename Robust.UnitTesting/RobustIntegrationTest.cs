@@ -505,6 +505,7 @@ namespace Robust.UnitTesting
                             var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
+                                Input?.Invoke(this, simFrameEvent);
                                 Tick?.Invoke(this, simFrameEvent);
                                 _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
                             }

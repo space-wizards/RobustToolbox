@@ -103,7 +103,7 @@ namespace Robust.Client.Debugging
                     var physBody = (IPhysBody)boundingBox;
 
                     // all entities have a TransformComponent
-                    var transform = physBody.Owner.Transform;
+                    var transform = physBody.Entity.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)

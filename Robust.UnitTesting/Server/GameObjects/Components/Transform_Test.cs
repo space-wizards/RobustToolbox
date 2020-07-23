@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using NUnit.Framework;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -18,7 +19,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 
-        private IServerEntityManager EntityManager = default!;
+        private IServerEntityManagerInternal EntityManager = default!;
         private IMapManager MapManager = default!;
 
         const string PROTOTYPES = @"
@@ -27,6 +28,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   id: dummy
   components:
   - type: Transform
+
+- type: entity
+  name: dummy
+  id: mapDummy
+  components:
+  - type: Transform
+  - type: Map
+    index: 123
 ";
 
         private MapId MapA;
@@ -42,7 +51,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var compMan = IoCManager.Resolve<IComponentManager>();
             compMan.Initialize();
 
-            EntityManager = IoCManager.Resolve<IServerEntityManager>();
+            EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
             MapManager = IoCManager.Resolve<IMapManager>();
             MapManager.Initialize();
             MapManager.Startup();
@@ -425,6 +434,30 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             node1Trans.LocalPosition = new Vector2(5, 5);
 
             Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
+        }
+
+        [Test]
+        public void TestMapIdInitOrder()
+        {
+            // Tests that if a child initializes before its parent, MapID still gets initialized correctly.
+
+            // Set private _parent field via reflection here.
+            // This basically simulates the field getting set in ExposeData(), with way less test boilerplate.
+            var field = typeof(TransformComponent).GetField("_parent", BindingFlags.NonPublic | BindingFlags.Instance)!;
+            var parent = EntityManager.CreateEntityUninitialized("mapDummy");
+            var child1 = EntityManager.CreateEntityUninitialized("dummy");
+            var child2 = EntityManager.CreateEntityUninitialized("dummy");
+
+            field.SetValue(child1.Transform, parent.Uid);
+            field.SetValue(child2.Transform, child1.Uid);
+
+            EntityManager.FinishEntityInitialization(child2);
+            EntityManager.FinishEntityInitialization(child1);
+            EntityManager.FinishEntityInitialization(parent);
+
+            Assert.AreEqual(new MapId(123), child2.Transform.MapID);
+            Assert.AreEqual(new MapId(123), child1.Transform.MapID);
+            Assert.AreEqual(new MapId(123), parent.Transform.MapID);
         }
     }
 }

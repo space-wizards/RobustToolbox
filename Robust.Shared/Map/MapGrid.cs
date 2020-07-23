@@ -26,6 +26,7 @@ namespace Robust.Shared.Map
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
         /// <inheritdoc />
+        [Obsolete("The concept of 'default grids' is being removed.")]
         public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
 
         /// <inheritdoc />

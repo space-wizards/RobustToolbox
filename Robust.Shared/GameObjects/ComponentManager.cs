@@ -138,6 +138,9 @@ namespace Robust.Shared.GameObjects
 
             component.Initialize();
 
+            DebugTools.Assert(component.Initialized, "Component is not initialized after calling Initialize(). "
+                                                     + "Did you forget to call base.Initialize() in an override?");
+
             if (entity.Initialized)
             {
                 component.Running = true;

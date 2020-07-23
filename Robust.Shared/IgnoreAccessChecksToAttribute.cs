@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-[assembly: IgnoresAccessChecksTo("SixLabors.ImageSharp")]
-
+﻿// ReSharper disable once CheckNamespace
 namespace System.Runtime.CompilerServices {
 
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
@@ -11,6 +8,7 @@ namespace System.Runtime.CompilerServices {
         private readonly string assemblyName;
 
         // ReSharper disable once ConvertToAutoProperty
+        // ReSharper disable once UnusedMember.Global
         public string AssemblyName
             => assemblyName;
 

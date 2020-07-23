@@ -387,11 +387,13 @@ namespace Robust.Shared.Map
             return _maps;
         }
 
+        [Obsolete("The concept of 'default grids' is being removed.")]
         public IMapGrid GetDefaultGrid(MapId mapID)
         {
             return _grids[_defaultGrids[mapID]];
         }
 
+        [Obsolete("The concept of 'default grids' is being removed.")]
         public GridId GetDefaultGridId(MapId mapID)
         {
             if (_defaultGrids.TryGetValue(mapID, out var gridID))

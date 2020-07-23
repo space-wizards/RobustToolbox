@@ -60,13 +60,15 @@ namespace Robust.Shared.GameObjects.Components
 
         T GetController<T>() where T : VirtualController;
 
-        bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
+        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
 
         bool HasController<T>() where T : VirtualController;
 
         T EnsureController<T>() where T : VirtualController, new();
 
-        bool RemoveController<T>() where T : VirtualController;
+        bool EnsureController<T>(out T controller) where T : VirtualController, new();
+
+        bool TryRemoveController<T>() where T : VirtualController;
 
         void RemoveControllers();
     }
@@ -201,7 +203,7 @@ namespace Robust.Shared.GameObjects.Components
             return _collidableComponent.GetController<T>();
         }
 
-        public bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController
+        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
         {
             return _collidableComponent.TryGetController(out controller);
         }
@@ -216,9 +218,14 @@ namespace Robust.Shared.GameObjects.Components
             return _collidableComponent.EnsureController<T>();
         }
 
-        public bool RemoveController<T>() where T : VirtualController
+        public bool EnsureController<T>(out T controller) where T : VirtualController, new()
         {
-            return _collidableComponent.RemoveController<T>();
+            return _collidableComponent.EnsureController(out controller);
+        }
+
+        public bool TryRemoveController<T>() where T : VirtualController
+        {
+            return _collidableComponent.TryRemoveController<T>();
         }
 
         public void RemoveControllers()

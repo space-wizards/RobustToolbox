@@ -52,18 +52,80 @@ namespace Robust.Shared.GameObjects.Components
 
         protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
 
+        /// <summary>
+        ///     Adds a controller of type <see cref="T"/> to this component.
+        /// </summary>
+        /// <typeparam name="T">The controller type to add.</typeparam>
+        /// <returns>The newly added controller.</returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Throws <see cref="InvalidOperationException"/> if a controller of type
+        ///     <see cref="T"/> already exists.
+        /// </exception>
         T AddController<T>() where T : VirtualController, new();
 
+        /// <summary>
+        ///     Gets a controller of type <see cref="T"/> from this component.
+        /// </summary>
+        /// <typeparam name="T">The controller type to get.</typeparam>
+        /// <returns>The existing controller.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Throws <see cref="KeyNotFoundException"/> if no controller exists with
+        ///     type <see cref="T"/>.
+        /// </exception>
         T GetController<T>() where T : VirtualController;
 
-        bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
+        /// <summary>
+        ///     Tries to get a controller of type <see cref="T"/> from this component.
+        /// </summary>
+        /// <param name="controller">The controller if found or null otherwise.</param>
+        /// <typeparam name="T">The type of the controller to find.</typeparam>
+        /// <returns>True if the controller was found, false otherwise.</returns>
+        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
 
+        /// <summary>
+        ///     Checks if this component has a controller of type <see cref="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to check.</typeparam>
+        /// <returns>True if the controller exists, false otherwise.</returns>
         bool HasController<T>() where T : VirtualController;
 
+        /// <summary>
+        ///     Convenience wrapper to implement "create controller if it does
+        ///     not already exist".
+        ///     Always gives you back a controller, and creates it if it does
+        ///     not exist yet.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
+        /// <returns>
+        ///     The existing controller, or the new controller if none existed yet.
+        /// </returns>
         T EnsureController<T>() where T : VirtualController, new();
 
-        bool RemoveController<T>() where T : VirtualController;
+        /// <summary>
+        ///     Convenience wrapper to implement "create controller if it does
+        ///     not already exist".
+        ///     Always gives you back a controller, and creates it if it does
+        ///     not exist yet.
+        /// </summary>
+        /// <param name="controller">
+        ///     The existing controller, or the new controller if none existed yet.
+        /// </param>
+        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
+        /// <returns>
+        ///     True if the component already existed, false if it had to be created.
+        /// </returns>
+        bool EnsureController<T>(out T controller) where T : VirtualController, new();
 
+        /// <summary>
+        ///     Removes the controller of type <see cref="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to remove</typeparam>
+        /// <returns>True if the component was removed, false otherwise.</returns>
+        bool TryRemoveController<T>() where T : VirtualController;
+
+        /// <summary>
+        ///     Removes all controllers from this component.
+        /// </summary>
         void RemoveControllers();
     }
 
@@ -186,8 +248,14 @@ namespace Robust.Shared.GameObjects.Components
             return Owner.TryGetComponent(out physics) && !Anchored;
         }
 
+        /// <inheritdoc />
         public T AddController<T>() where T : VirtualController, new()
         {
+            if (_controllers.ContainsKey(typeof(T)))
+            {
+                throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
+            }
+
             var controller = new T {ControlledComponent = this};
             _controllers[typeof(T)] = controller;
 
@@ -196,12 +264,14 @@ namespace Robust.Shared.GameObjects.Components
             return controller;
         }
 
+        /// <inheritdoc />
         public T GetController<T>() where T : VirtualController
         {
             return (T) _controllers[typeof(T)];
         }
 
-        public bool TryGetController<T>(out T controller) where T : VirtualController
+        /// <inheritdoc />
+        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
         {
             controller = null!;
 
@@ -210,11 +280,13 @@ namespace Robust.Shared.GameObjects.Components
             return found && (controller = (value as T)!) != null;
         }
 
+        /// <inheritdoc />
         public bool HasController<T>() where T : VirtualController
         {
             return _controllers.ContainsKey(typeof(T));
         }
 
+        /// <inheritdoc />
         public T EnsureController<T>() where T : VirtualController, new()
         {
             if (TryGetController(out T controller))
@@ -227,7 +299,20 @@ namespace Robust.Shared.GameObjects.Components
             return controller;
         }
 
-        public bool RemoveController<T>() where T : VirtualController
+        /// <inheritdoc />
+        public bool EnsureController<T>(out T controller) where T : VirtualController, new()
+        {
+            if (TryGetController(out controller))
+            {
+                return true;
+            }
+
+            controller = AddController<T>();
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryRemoveController<T>() where T : VirtualController
         {
             var removed = _controllers.Remove(typeof(T), out var controller);
 
@@ -241,6 +326,7 @@ namespace Robust.Shared.GameObjects.Components
             return removed;
         }
 
+        /// <inheritdoc />
         public void RemoveControllers()
         {
             foreach (var controller in _controllers.Values)

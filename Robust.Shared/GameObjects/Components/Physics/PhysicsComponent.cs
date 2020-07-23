@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        Dictionary<Type, VirtualController> Controllers { get; }
+        protected internal Dictionary<Type, VirtualController> Controllers { get; }
 
         /// <summary>
         ///     Whether this component is on the ground
@@ -159,7 +159,7 @@ namespace Robust.Shared.GameObjects.Components
             set => _collidableComponent.Status = value;
         }
 
-        public Dictionary<Type, VirtualController> Controllers => _collidableComponent.Controllers;
+        Dictionary<Type, VirtualController> IPhysicsComponent.Controllers => _collidableComponent.Controllers;
 
         public bool OnGround => _collidableComponent.OnGround;
 

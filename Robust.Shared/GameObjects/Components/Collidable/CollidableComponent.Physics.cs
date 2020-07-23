@@ -37,11 +37,6 @@ namespace Robust.Shared.GameObjects.Components
         BodyStatus Status { get; set; }
 
         /// <summary>
-        ///     Represents a virtual controller acting on the physics component.
-        /// </summary>
-        Dictionary<Type, VirtualController> Controllers { get; set; }
-
-        /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
         bool OnGround { get; }
@@ -54,11 +49,19 @@ namespace Robust.Shared.GameObjects.Components
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
-        T GetOrCreateController<T>() where T : VirtualController, new();
-        T SetController<T>() where T : VirtualController, new();
+
+        protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
+
         T GetController<T>() where T : VirtualController;
+
         bool TryGetController<T>([MaybeNullWhen(false)] out T controller) where T : VirtualController;
-        bool RemoveController(Type type);
+
+        T GetOrCreateController<T>() where T : VirtualController, new();
+
+        T SetController<T>() where T : VirtualController, new();
+
+        bool RemoveController<T>() where T : VirtualController;
+
         void RemoveControllers();
     }
 
@@ -67,7 +70,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private Dictionary<Type, VirtualController> _controllers = default!;
+        private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
         private bool _anchored;
 
         /// <summary>
@@ -143,15 +146,6 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <summary>
-        ///     Represents a virtual controller acting on the physics component.
-        /// </summary>
-        public Dictionary<Type, VirtualController> Controllers
-        {
-            get => _controllers;
-            set => _controllers = value;
-        }
-
-        /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
         public bool OnGround => Status == BodyStatus.OnGround &&
@@ -178,10 +172,30 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict { get; set; }
 
+        Dictionary<Type, VirtualController> ICollidableComponent.Controllers
+        {
+            get => _controllers;
+            set => _controllers = value;
+        }
+
         [Obsolete("This only exists for legacy reasons.")]
         public bool CanMove([NotNullWhen(true)]IPhysicsComponent physics)
         {
             return Owner.TryGetComponent(out physics) && !Anchored;
+        }
+
+        public T GetController<T>() where T : VirtualController
+        {
+            return (T) _controllers[typeof(T)];
+        }
+
+        public bool TryGetController<T>(out T controller) where T : VirtualController
+        {
+            controller = null!;
+
+            var found = _controllers.TryGetValue(typeof(T), out var value);
+
+            return found && (controller = (value as T)!) != null;
         }
 
         public T GetOrCreateController<T>() where T : VirtualController, new()
@@ -203,23 +217,14 @@ namespace Robust.Shared.GameObjects.Components
             return controller;
         }
 
-        public T GetController<T>() where T : VirtualController
+        public void SetControllers(Dictionary<Type, VirtualController> controllers)
         {
-            return (T) _controllers[typeof(T)];
+            _controllers = controllers;
         }
 
-        public bool TryGetController<T>(out T controller) where T : VirtualController
+        public bool RemoveController<T>() where T : VirtualController
         {
-            controller = null!;
-
-            var found = _controllers.TryGetValue(typeof(T), out var value);
-
-            return found && (controller = (value as T)!) != null;
-        }
-
-        public bool RemoveController(Type type)
-        {
-            var removed = _controllers.Remove(type, out var controller);
+            var removed = _controllers.Remove(typeof(T), out var controller);
 
             if (controller != null)
             {

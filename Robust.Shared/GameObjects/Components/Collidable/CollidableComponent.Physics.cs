@@ -117,11 +117,22 @@ namespace Robust.Shared.GameObjects.Components
         bool EnsureController<T>(out T controller) where T : VirtualController, new();
 
         /// <summary>
-        ///     Removes the controller of type <see cref="T"/>.
+        ///     Removes the controller of type <see cref="T"/> if one exists.
         /// </summary>
         /// <typeparam name="T">The type of the controller to remove</typeparam>
         /// <returns>True if the component was removed, false otherwise.</returns>
         bool TryRemoveController<T>() where T : VirtualController;
+
+        /// <summary>
+        ///     Removes the controller of type <see cref="T"/> if one exists,
+        ///     and if so returns it.
+        /// </summary>
+        /// <param name="controller">
+        ///     The controller if one was removed, null otherwise.
+        /// </param>
+        /// <typeparam name="T">The type of the controller to remove</typeparam>
+        /// <returns>True if the component was removed, false otherwise.</returns>
+        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
 
         /// <summary>
         ///     Removes all controllers from this component.
@@ -318,6 +329,23 @@ namespace Robust.Shared.GameObjects.Components
 
             if (controller != null)
             {
+                controller.ControlledComponent = null;
+            }
+
+            Dirty();
+
+            return removed;
+        }
+
+        /// <inheritdoc />
+        public bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        {
+            controller = null!;
+            var removed = _controllers.Remove(typeof(T), out var virtualController);
+
+            if (virtualController != null)
+            {
+                controller = (T) virtualController;
                 controller.ControlledComponent = null;
             }
 

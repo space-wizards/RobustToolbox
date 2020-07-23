@@ -70,6 +70,8 @@ namespace Robust.Shared.GameObjects.Components
 
         bool TryRemoveController<T>() where T : VirtualController;
 
+        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+
         void RemoveControllers();
     }
 
@@ -226,6 +228,11 @@ namespace Robust.Shared.GameObjects.Components
         public bool TryRemoveController<T>() where T : VirtualController
         {
             return _collidableComponent.TryRemoveController<T>();
+        }
+
+        public bool TryRemoveController<T>(out T controller) where T : VirtualController
+        {
+            return _collidableComponent.TryRemoveController(out controller);
         }
 
         public void RemoveControllers()

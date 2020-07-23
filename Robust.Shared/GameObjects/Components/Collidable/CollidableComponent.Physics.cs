@@ -53,7 +53,8 @@ namespace Robust.Shared.GameObjects.Components
         protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
 
         /// <summary>
-        ///     Adds a controller of type <see cref="T"/> to this component.
+        ///     Adds a controller of type <see cref="T"/> to this component, throwing
+        ///     an error if one already exists.
         /// </summary>
         /// <typeparam name="T">The controller type to add.</typeparam>
         /// <returns>The newly added controller.</returns>
@@ -62,6 +63,13 @@ namespace Robust.Shared.GameObjects.Components
         ///     <see cref="T"/> already exists.
         /// </exception>
         T AddController<T>() where T : VirtualController, new();
+
+        /// <summary>
+        ///     Adds a controller of type <see cref="T"/> to this component.
+        /// </summary>
+        /// <typeparam name="T">The controller type to add.</typeparam>
+        /// <returns>The newly added controller.</returns>
+        T SetController<T>() where T : VirtualController, new();
 
         /// <summary>
         ///     Gets a controller of type <see cref="T"/> from this component.
@@ -267,6 +275,17 @@ namespace Robust.Shared.GameObjects.Components
                 throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
             }
 
+            var controller = new T {ControlledComponent = this};
+            _controllers[typeof(T)] = controller;
+
+            Dirty();
+
+            return controller;
+        }
+
+        /// <inheritdoc />
+        public T SetController<T>() where T : VirtualController, new()
+        {
             var controller = new T {ControlledComponent = this};
             _controllers[typeof(T)] = controller;
 

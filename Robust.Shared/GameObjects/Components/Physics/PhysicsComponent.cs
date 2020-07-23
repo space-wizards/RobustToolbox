@@ -58,6 +58,8 @@ namespace Robust.Shared.GameObjects.Components
 
         T AddController<T>() where T : VirtualController, new();
 
+        T SetController<T>() where T : VirtualController, new();
+
         T GetController<T>() where T : VirtualController;
 
         bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
@@ -198,6 +200,11 @@ namespace Robust.Shared.GameObjects.Components
         public T AddController<T>() where T : VirtualController, new()
         {
             return _collidableComponent.AddController<T>();
+        }
+
+        public T SetController<T>() where T : VirtualController, new()
+        {
+            return _collidableComponent.SetController<T>();
         }
 
         public T GetController<T>() where T : VirtualController

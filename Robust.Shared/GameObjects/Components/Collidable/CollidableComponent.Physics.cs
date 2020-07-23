@@ -146,6 +146,12 @@ namespace Robust.Shared.GameObjects.Components
         ///     Removes all controllers from this component.
         /// </summary>
         void RemoveControllers();
+
+        /// <summary>
+        ///     Sets the linear velocity of all controllers controlling this
+        ///     component to zero.
+        /// </summary>
+        void Stop();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -383,6 +389,15 @@ namespace Robust.Shared.GameObjects.Components
 
             _controllers.Clear();
             Dirty();
+        }
+
+        /// <inheritdoc />
+        public void Stop()
+        {
+            foreach (var controller in _controllers.Values)
+            {
+                controller.LinearVelocity = Vector2.Zero;
+            }
         }
     }
 }

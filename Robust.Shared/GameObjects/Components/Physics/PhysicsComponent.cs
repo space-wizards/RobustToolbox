@@ -75,6 +75,8 @@ namespace Robust.Shared.GameObjects.Components
         bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
 
         void RemoveControllers();
+
+        void Stop();
     }
 
     [Obsolete("Migrate to CollidableComponent")]
@@ -245,6 +247,11 @@ namespace Robust.Shared.GameObjects.Components
         public void RemoveControllers()
         {
             _collidableComponent.RemoveControllers();
+        }
+
+        public void Stop()
+        {
+            _collidableComponent.Stop();
         }
 
         #endregion

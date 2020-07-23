@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects.Components
 
         void RemoveControllers();
 
-        void Stop();
+        bool Stop();
     }
 
     [Obsolete("Migrate to CollidableComponent")]
@@ -256,9 +256,9 @@ namespace Robust.Shared.GameObjects.Components
             _collidableComponent.RemoveControllers();
         }
 
-        public void Stop()
+        public bool Stop()
         {
-            _collidableComponent.Stop();
+            return _collidableComponent.Stop();
         }
 
         #endregion

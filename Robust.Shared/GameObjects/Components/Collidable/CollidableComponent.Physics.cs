@@ -396,7 +396,7 @@ namespace Robust.Shared.GameObjects.Components
         {
             foreach (var controller in _controllers.Values)
             {
-                controller.LinearVelocity = Vector2.Zero;
+                controller.Stop();
             }
         }
     }

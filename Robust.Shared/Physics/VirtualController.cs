@@ -1,7 +1,5 @@
-﻿using System.Diagnostics;
-using Robust.Shared.GameObjects.Components;
+﻿using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -17,7 +15,7 @@ namespace Robust.Shared.Physics
         ///     Current contribution to the linear velocity of the entity in meters per second.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LinearVelocity
+        public virtual Vector2 LinearVelocity
         {
             get => _linVelocity;
             set
@@ -30,7 +28,13 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public abstract ICollidableComponent? ControlledComponent { protected get; set; }
+        public virtual ICollidableComponent? ControlledComponent { protected get; set; }
+
+
+        public virtual void Stop()
+        {
+            LinearVelocity = Vector2.Zero;
+        }
 
         /// <summary>
         ///     Modify a physics component before processing impulses

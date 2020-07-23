@@ -62,6 +62,8 @@ namespace Robust.Shared.GameObjects.Components
 
         T GetController<T>() where T : VirtualController;
 
+        IEnumerable<VirtualController> GetControllers();
+
         bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
 
         bool HasController<T>() where T : VirtualController;
@@ -212,6 +214,11 @@ namespace Robust.Shared.GameObjects.Components
         public T GetController<T>() where T : VirtualController
         {
             return _collidableComponent.GetController<T>();
+        }
+
+        public IEnumerable<VirtualController> GetControllers()
+        {
+            return _collidableComponent.GetControllers();
         }
 
         public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController

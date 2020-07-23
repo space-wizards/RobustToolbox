@@ -30,10 +30,14 @@ namespace Robust.Shared.Physics
 
         public virtual ICollidableComponent? ControlledComponent { protected get; set; }
 
-
-        public virtual void Stop()
+        /// <summary>
+        ///     Tries to set this controller's linear velocity to zero.
+        /// </summary>
+        /// <returns>True if successful, false otherwise.</returns>
+        public virtual bool Stop()
         {
             LinearVelocity = Vector2.Zero;
+            return true;
         }
 
         /// <summary>

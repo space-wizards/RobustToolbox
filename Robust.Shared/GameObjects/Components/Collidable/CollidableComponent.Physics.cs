@@ -83,6 +83,12 @@ namespace Robust.Shared.GameObjects.Components
         T GetController<T>() where T : VirtualController;
 
         /// <summary>
+        ///     Gets all the controllers from this component.
+        /// </summary>
+        /// <returns>An enumerable of the controllers.</returns>
+        IEnumerable<VirtualController> GetControllers();
+
+        /// <summary>
         ///     Tries to get a controller of type <see cref="T"/> from this component.
         /// </summary>
         /// <param name="controller">The controller if found or null otherwise.</param>
@@ -148,10 +154,13 @@ namespace Robust.Shared.GameObjects.Components
         void RemoveControllers();
 
         /// <summary>
-        ///     Sets the linear velocity of all controllers controlling this
-        ///     component to zero.
+        ///     Tries to sets the linear velocity of all controllers controlling
+        ///     this component to zero.
+        ///     This does not short-circuit on the first controller that couldn't
+        ///     be stopped.
         /// </summary>
-        void Stop();
+        /// <returns>True if all of the controllers were reset, false otherwise.</returns>
+        bool Stop();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -307,6 +316,12 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
+        public IEnumerable<VirtualController> GetControllers()
+        {
+            return _controllers.Values;
+        }
+
+        /// <inheritdoc />
         public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
         {
             controller = null!;
@@ -392,12 +407,16 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public void Stop()
+        public bool Stop()
         {
+            var successful = true;
+
             foreach (var controller in _controllers.Values)
             {
-                controller.Stop();
+                successful &= controller.Stop();
             }
+
+            return successful;
         }
     }
 }

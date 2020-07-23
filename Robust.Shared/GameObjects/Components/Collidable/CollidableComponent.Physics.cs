@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -37,11 +37,6 @@ namespace Robust.Shared.GameObjects.Components
         BodyStatus Status { get; set; }
 
         /// <summary>
-        ///     Represents a virtual controller acting on the physics component.
-        /// </summary>
-        VirtualController? Controller { get; set; }
-
-        /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
         bool OnGround { get; }
@@ -54,8 +49,118 @@ namespace Robust.Shared.GameObjects.Components
         event Action? AnchoredChanged;
 
         bool Predict { get; set; }
-        void SetController<T>() where T : VirtualController, new();
-        void RemoveController();
+
+        protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
+
+        /// <summary>
+        ///     Adds a controller of type <see cref="T"/> to this component, throwing
+        ///     an error if one already exists.
+        /// </summary>
+        /// <typeparam name="T">The controller type to add.</typeparam>
+        /// <returns>The newly added controller.</returns>
+        /// <exception cref="InvalidOperationException">
+        ///     Throws <see cref="InvalidOperationException"/> if a controller of type
+        ///     <see cref="T"/> already exists.
+        /// </exception>
+        T AddController<T>() where T : VirtualController, new();
+
+        /// <summary>
+        ///     Adds a controller of type <see cref="T"/> to this component.
+        /// </summary>
+        /// <typeparam name="T">The controller type to add.</typeparam>
+        /// <returns>The newly added controller.</returns>
+        T SetController<T>() where T : VirtualController, new();
+
+        /// <summary>
+        ///     Gets a controller of type <see cref="T"/> from this component.
+        /// </summary>
+        /// <typeparam name="T">The controller type to get.</typeparam>
+        /// <returns>The existing controller.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Throws <see cref="KeyNotFoundException"/> if no controller exists with
+        ///     type <see cref="T"/>.
+        /// </exception>
+        T GetController<T>() where T : VirtualController;
+
+        /// <summary>
+        ///     Gets all the controllers from this component.
+        /// </summary>
+        /// <returns>An enumerable of the controllers.</returns>
+        IEnumerable<VirtualController> GetControllers();
+
+        /// <summary>
+        ///     Tries to get a controller of type <see cref="T"/> from this component.
+        /// </summary>
+        /// <param name="controller">The controller if found or null otherwise.</param>
+        /// <typeparam name="T">The type of the controller to find.</typeparam>
+        /// <returns>True if the controller was found, false otherwise.</returns>
+        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+
+        /// <summary>
+        ///     Checks if this component has a controller of type <see cref="T"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to check.</typeparam>
+        /// <returns>True if the controller exists, false otherwise.</returns>
+        bool HasController<T>() where T : VirtualController;
+
+        /// <summary>
+        ///     Convenience wrapper to implement "create controller if it does
+        ///     not already exist".
+        ///     Always gives you back a controller, and creates it if it does
+        ///     not exist yet.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
+        /// <returns>
+        ///     The existing controller, or the new controller if none existed yet.
+        /// </returns>
+        T EnsureController<T>() where T : VirtualController, new();
+
+        /// <summary>
+        ///     Convenience wrapper to implement "create controller if it does
+        ///     not already exist".
+        ///     Always gives you back a controller, and creates it if it does
+        ///     not exist yet.
+        /// </summary>
+        /// <param name="controller">
+        ///     The existing controller, or the new controller if none existed yet.
+        /// </param>
+        /// <typeparam name="T">The type of the controller to fetch or create.</typeparam>
+        /// <returns>
+        ///     True if the component already existed, false if it had to be created.
+        /// </returns>
+        bool EnsureController<T>(out T controller) where T : VirtualController, new();
+
+        /// <summary>
+        ///     Removes the controller of type <see cref="T"/> if one exists.
+        /// </summary>
+        /// <typeparam name="T">The type of the controller to remove</typeparam>
+        /// <returns>True if the component was removed, false otherwise.</returns>
+        bool TryRemoveController<T>() where T : VirtualController;
+
+        /// <summary>
+        ///     Removes the controller of type <see cref="T"/> if one exists,
+        ///     and if so returns it.
+        /// </summary>
+        /// <param name="controller">
+        ///     The controller if one was removed, null otherwise.
+        /// </param>
+        /// <typeparam name="T">The type of the controller to remove</typeparam>
+        /// <returns>True if the component was removed, false otherwise.</returns>
+        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+
+        /// <summary>
+        ///     Removes all controllers from this component.
+        /// </summary>
+        void RemoveControllers();
+
+        /// <summary>
+        ///     Tries to sets the linear velocity of all controllers controlling
+        ///     this component to zero.
+        ///     This does not short-circuit on the first controller that couldn't
+        ///     be stopped.
+        /// </summary>
+        /// <returns>True if all of the controllers were reset, false otherwise.</returns>
+        bool Stop();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -63,7 +168,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private VirtualController? _controller;
+        private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
         private bool _anchored;
 
         /// <summary>
@@ -139,15 +244,6 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <summary>
-        ///     Represents a virtual controller acting on the physics component.
-        /// </summary>
-        public VirtualController? Controller
-        {
-            get => _controller;
-            set => _controller = value;
-        }
-
-        /// <summary>
         ///     Whether this component is on the ground
         /// </summary>
         public bool OnGround => Status == BodyStatus.OnGround &&
@@ -174,25 +270,153 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict { get; set; }
 
+        Dictionary<Type, VirtualController> ICollidableComponent.Controllers
+        {
+            get => _controllers;
+            set => _controllers = value;
+        }
+
         [Obsolete("This only exists for legacy reasons.")]
         public bool CanMove([NotNullWhen(true)]IPhysicsComponent physics)
         {
             return Owner.TryGetComponent(out physics) && !Anchored;
         }
 
-        public void SetController<T>() where T : VirtualController, new()
+        /// <inheritdoc />
+        public T AddController<T>() where T : VirtualController, new()
         {
-            _controller = new T { ControlledComponent = this };
+            if (_controllers.ContainsKey(typeof(T)))
+            {
+                throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
+            }
+
+            var controller = new T {ControlledComponent = this};
+            _controllers[typeof(T)] = controller;
+
+            Dirty();
+
+            return controller;
+        }
+
+        /// <inheritdoc />
+        public T SetController<T>() where T : VirtualController, new()
+        {
+            var controller = new T {ControlledComponent = this};
+            _controllers[typeof(T)] = controller;
+
+            Dirty();
+
+            return controller;
+        }
+
+        /// <inheritdoc />
+        public T GetController<T>() where T : VirtualController
+        {
+            return (T) _controllers[typeof(T)];
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<VirtualController> GetControllers()
+        {
+            return _controllers.Values;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        {
+            controller = null!;
+
+            var found = _controllers.TryGetValue(typeof(T), out var value);
+
+            return found && (controller = (value as T)!) != null;
+        }
+
+        /// <inheritdoc />
+        public bool HasController<T>() where T : VirtualController
+        {
+            return _controllers.ContainsKey(typeof(T));
+        }
+
+        /// <inheritdoc />
+        public T EnsureController<T>() where T : VirtualController, new()
+        {
+            if (TryGetController(out T controller))
+            {
+                return controller;
+            }
+
+            controller = AddController<T>();
+
+            return controller;
+        }
+
+        /// <inheritdoc />
+        public bool EnsureController<T>(out T controller) where T : VirtualController, new()
+        {
+            if (TryGetController(out controller))
+            {
+                return true;
+            }
+
+            controller = AddController<T>();
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryRemoveController<T>() where T : VirtualController
+        {
+            var removed = _controllers.Remove(typeof(T), out var controller);
+
+            if (controller != null)
+            {
+                controller.ControlledComponent = null;
+            }
+
+            Dirty();
+
+            return removed;
+        }
+
+        /// <inheritdoc />
+        public bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        {
+            controller = null!;
+            var removed = _controllers.Remove(typeof(T), out var virtualController);
+
+            if (virtualController != null)
+            {
+                controller = (T) virtualController;
+                controller.ControlledComponent = null;
+            }
+
+            Dirty();
+
+            return removed;
+        }
+
+        /// <inheritdoc />
+        public void RemoveControllers()
+        {
+            foreach (var controller in _controllers.Values)
+            {
+                controller.ControlledComponent = null;
+            }
+
+            _controllers.Clear();
             Dirty();
         }
 
-        public void RemoveController()
+        /// <inheritdoc />
+        public bool Stop()
         {
-            if (_controller != null)
+            var successful = true;
+
+            foreach (var controller in _controllers.Values)
             {
-                _controller.ControlledComponent = null;
-                _controller = null;
+                successful &= controller.Stop();
             }
+
+            return successful;
         }
     }
 }

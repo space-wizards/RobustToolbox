@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -38,7 +40,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Represents a virtual controller acting on the physics component.
         /// </summary>
-        VirtualController? Controller { get; }
+        protected internal Dictionary<Type, VirtualController> Controllers { get; }
 
         /// <summary>
         ///     Whether this component is on the ground
@@ -54,10 +56,29 @@ namespace Robust.Shared.GameObjects.Components
 
         bool Predict { get; set; }
 
-        void SetController<T>()
-            where T : VirtualController, new();
+        T AddController<T>() where T : VirtualController, new();
 
-        void RemoveController();
+        T SetController<T>() where T : VirtualController, new();
+
+        T GetController<T>() where T : VirtualController;
+
+        IEnumerable<VirtualController> GetControllers();
+
+        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+
+        bool HasController<T>() where T : VirtualController;
+
+        T EnsureController<T>() where T : VirtualController, new();
+
+        bool EnsureController<T>(out T controller) where T : VirtualController, new();
+
+        bool TryRemoveController<T>() where T : VirtualController;
+
+        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+
+        void RemoveControllers();
+
+        bool Stop();
     }
 
     [Obsolete("Migrate to CollidableComponent")]
@@ -69,10 +90,9 @@ namespace Robust.Shared.GameObjects.Components
         private bool _upgradeCollidable;
 
         private float _mass;
-        private Vector2 _linVelocity;
         private float _angVelocity;
         private BodyStatus _status;
-        private VirtualController? _controller;
+        private Dictionary<Type, VirtualController> _controllers = default!;
         private bool _anchored;
 
         /// <inheritdoc />
@@ -96,11 +116,10 @@ namespace Robust.Shared.GameObjects.Components
             if (_upgradeCollidable)
             {
                 _collidableComponent.Mass = _mass;
-                _collidableComponent.LinearVelocity = _linVelocity;
                 _collidableComponent.AngularVelocity = _angVelocity;
                 _collidableComponent.Anchored = _anchored;
                 _collidableComponent.Status = _status;
-                _collidableComponent.Controller = _controller;
+                _collidableComponent.Controllers = _controllers;
             }
         }
 
@@ -115,11 +134,10 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     _upgradeCollidable = true;
                     serializer.DataField<float>(ref _mass, "mass", 1);
-                    serializer.DataField(ref _linVelocity, "vel", Vector2.Zero);
                     serializer.DataField(ref _angVelocity, "avel", 0.0f);
                     serializer.DataField(ref _anchored, "Anchored", false);
                     serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-                    serializer.DataField(ref _controller, "Controller", null);
+                    serializer.DataField(ref _controllers, "Controllers", new Dictionary<Type, VirtualController>());
                 }
             }
             else
@@ -161,7 +179,7 @@ namespace Robust.Shared.GameObjects.Components
             set => _collidableComponent.Status = value;
         }
 
-        public VirtualController? Controller => _collidableComponent.Controller;
+        Dictionary<Type, VirtualController> IPhysicsComponent.Controllers => _collidableComponent.Controllers;
 
         public bool OnGround => _collidableComponent.OnGround;
 
@@ -183,15 +201,64 @@ namespace Robust.Shared.GameObjects.Components
             set => _collidableComponent.Predict = value;
         }
 
-        public void SetController<T>()
-            where T : VirtualController, new()
+        public T AddController<T>() where T : VirtualController, new()
         {
-            _collidableComponent.SetController<T>();
+            return _collidableComponent.AddController<T>();
         }
 
-        public void RemoveController()
+        public T SetController<T>() where T : VirtualController, new()
         {
-            _collidableComponent.RemoveController();
+            return _collidableComponent.SetController<T>();
+        }
+
+        public T GetController<T>() where T : VirtualController
+        {
+            return _collidableComponent.GetController<T>();
+        }
+
+        public IEnumerable<VirtualController> GetControllers()
+        {
+            return _collidableComponent.GetControllers();
+        }
+
+        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        {
+            return _collidableComponent.TryGetController(out controller);
+        }
+
+        public bool HasController<T>() where T : VirtualController
+        {
+            return _collidableComponent.HasController<T>();
+        }
+
+        public T EnsureController<T>() where T : VirtualController, new()
+        {
+            return _collidableComponent.EnsureController<T>();
+        }
+
+        public bool EnsureController<T>(out T controller) where T : VirtualController, new()
+        {
+            return _collidableComponent.EnsureController(out controller);
+        }
+
+        public bool TryRemoveController<T>() where T : VirtualController
+        {
+            return _collidableComponent.TryRemoveController<T>();
+        }
+
+        public bool TryRemoveController<T>(out T controller) where T : VirtualController
+        {
+            return _collidableComponent.TryRemoveController(out controller);
+        }
+
+        public void RemoveControllers()
+        {
+            _collidableComponent.RemoveControllers();
+        }
+
+        public bool Stop()
+        {
+            return _collidableComponent.Stop();
         }
 
         #endregion

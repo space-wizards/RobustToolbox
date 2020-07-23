@@ -99,6 +99,11 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
+        public GridCoordinates ToGridCoordinates(GridId gridId)
+        {
+            return new GridCoordinates(X, Y, gridId);
+        }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {

@@ -326,7 +326,30 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
                 {
-                    // TODO: Implement this.
+                    //TODO: Scale number of sides based on radius
+                    const int Divisions = 8;
+                    const float ArcLength = MathF.PI * 2 / Divisions;
+
+                    var filledTriangle = new Vector2[3];
+
+                    // Draws a "circle", but its just a polygon with a bunch of sides
+                    // this is the GL_LINES version, not GL_LINE_STRIP
+                    for (int i = 0; i < Divisions; i++)
+                    {
+                        var startPos = new Vector2(MathF.Cos(ArcLength * i) * radius, MathF.Sin(ArcLength * i) * radius);
+                        var endPos = new Vector2(MathF.Cos(ArcLength * (i+1)) * radius, MathF.Sin(ArcLength * (i + 1)) * radius);
+
+                        if(!filled)
+                            _renderHandle.DrawLine(startPos, endPos, color);
+                        else
+                        {
+                            filledTriangle[0] = startPos;
+                            filledTriangle[1] = endPos;
+                            filledTriangle[2] = Vector2.Zero;
+
+                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, filledTriangle, color);
+                        }
+                    }
                 }
 
                 public override void DrawLine(Vector2 from, Vector2 to, Color color)

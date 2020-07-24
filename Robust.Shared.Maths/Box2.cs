@@ -321,5 +321,17 @@ namespace Robust.Shared.Maths
                 MathF.Max(x, Right),
                 MathF.Max(y, Top));
         }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        public Vector2 ClosestPoint(in Vector2 position)
+        {
+            // clamp the point to the border of the box
+            var cx = MathF.Clamp(position.X, Left, Right);
+            var cy = MathF.Clamp(position.Y, Bottom, Top);
+
+            return new Vector2(cx, cy);
+        }
     }
 }

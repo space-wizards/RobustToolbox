@@ -155,10 +155,17 @@ namespace Robust.Client.Debugging
                     _handle.DrawRect(box, color);
                 }
 
+                public override void DrawCircle(Vector2 origin, float radius, in Color color)
+                {
+                    _handle.DrawCircle(origin, radius, color);
+                }
+
                 public override void SetTransform(in Matrix3 transform)
                 {
                     _handle.SetTransform(transform);
                 }
+
+
             }
         }
 

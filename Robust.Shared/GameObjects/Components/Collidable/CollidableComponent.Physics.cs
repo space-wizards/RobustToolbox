@@ -165,6 +165,8 @@ namespace Robust.Shared.GameObjects.Components
 
     partial class CollidableComponent : ICollidableComponent
     {
+        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
+
         private float _mass;
         private Vector2 _linVelocity;
         private float _angVelocity;
@@ -290,7 +292,8 @@ namespace Robust.Shared.GameObjects.Components
                 throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
             }
 
-            var controller = new T {ControlledComponent = this};
+            var controller = _dynamicTypeFactory.CreateInstance<T>();
+            controller.ControlledComponent = this;
             _controllers[typeof(T)] = controller;
 
             Dirty();
@@ -301,7 +304,8 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public T SetController<T>() where T : VirtualController, new()
         {
-            var controller = new T {ControlledComponent = this};
+            var controller = _dynamicTypeFactory.CreateInstance<T>();
+            controller.ControlledComponent = this;
             _controllers[typeof(T)] = controller;
 
             Dirty();

@@ -65,6 +65,32 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        public static void AttachParentToContainerOrGrid(ITransformComponent transform)
+        {
+            if (transform.Parent == null
+                || !TryGetContainer(transform.Parent.Owner, out var container)
+                || !TryInsertIntoContainer(transform, container))
+            {
+                transform.AttachToGridOrMap();
+            }
+        }
+
+        private static bool TryInsertIntoContainer(ITransformComponent transform, IContainer container)
+        {
+            if (container.Insert(transform.Owner))
+            {
+                return true;
+            }
+
+            if (container.Owner.Transform.Parent != null
+                && TryGetContainer(container.Owner, out var newContainer))
+            {
+                return TryInsertIntoContainer(transform, newContainer);
+            }
+
+            return false;
+        }
+
         private static bool TryGetManagerComp(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);

@@ -422,7 +422,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
             }
-            else if (mapPos.MapId != MapId.Nullspace && _mapManager.MapExists(mapPos.MapId))
+            else if (_mapManager.HasMapEntity(mapPos.MapId))
             {
                 newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
             }

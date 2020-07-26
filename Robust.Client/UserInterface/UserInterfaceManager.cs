@@ -228,7 +228,13 @@ namespace Robust.Client.UserInterface
                 var offset = pointerPosition - top.GlobalPixelPosition;
                 if (!top.HasPoint(offset / UIScale))
                 {
-                    RemoveModal(top);
+                    if (top.MouseFilter != Control.MouseFilterMode.Stop)
+                        RemoveModal(top);
+                    else
+                    {
+                        _controlFocused = top;
+                        return false; // prevent anything besides the top modal control from receiving input
+                    }
                 }
                 else
                 {

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
@@ -11,7 +12,35 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
 {
-    public class CollidableComponent : Component, ICollidableComponent
+    public interface ICollideBehavior
+    {
+        void CollideWith(IEntity collidedWith);
+
+        /// <summary>
+        ///     Called after all collisions have been processed, as well as how many collisions occured
+        /// </summary>
+        /// <param name="collisionCount"></param>
+        void PostCollide(int collisionCount) { }
+    }
+
+    public interface ICollideSpecial
+    {
+        bool PreventCollide(IPhysBody collidedwith);
+    }
+
+    public partial interface ICollidableComponent : IComponent, IPhysBody
+    {
+        public bool Hard { get; set; }
+        bool IsColliding(Vector2 offset, bool approximate = true);
+
+        IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);
+        bool UpdatePhysicsTree();
+
+        void RemovedFromPhysicsTree(MapId mapId);
+        void AddedToPhysicsTree(MapId mapId);
+    }
+
+    public partial class CollidableComponent : Component, ICollidableComponent
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -27,11 +56,34 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override uint? NetID => NetIDs.COLLIDABLE;
 
+        public IEntity Entity => Owner;
+
         /// <inheritdoc />
         public MapId MapID => Owner.Transform.MapID;
 
         /// <inheritdoc />
         public int ProxyId { get; set; }
+
+        /// <inheritdoc />
+        public BodyType BodyType { get; set; } = BodyType.Static;
+
+        /// <inheritdoc />
+        public int SleepAccumulator { get; set; }
+
+        public int SleepThreshold
+        {
+            get => _physicsManager.SleepTimeThreshold;
+            set => _physicsManager.SleepTimeThreshold = value;
+        }
+
+        /// <inheritdoc />
+        public bool Awake => _physicsManager.SleepTimeThreshold > SleepAccumulator;
+
+        /// <inheritdoc />
+        public void WakeBody()
+        {
+            SleepAccumulator = 0;
+        }
 
         public CollidableComponent()
         {
@@ -46,14 +98,14 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _canCollide, "on", true);
             serializer.DataField(ref _isHard, "hard", true);
             serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-            serializer.DataField(ref _bodyType, "bodyType", BodyType.None);
-            serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape>{new PhysShapeAabb()});
+            serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
+            serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
         }
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_canCollide, _status, _physShapes, _isHard);
+            return new CollidableComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
         }
 
         /// <inheritdoc />
@@ -62,7 +114,7 @@ namespace Robust.Shared.GameObjects.Components
             if (curState == null)
                 return;
 
-            var newState = (CollidableComponentState)curState;
+            var newState = (CollidableComponentState) curState;
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
@@ -81,6 +133,20 @@ namespace Robust.Shared.GameObjects.Components
                 Dirty();
                 UpdateEntityTree();
             }
+
+            Mass = newState.Mass / 1000f; // gram to kilogram
+
+            LinearVelocity = newState.LinearVelocity;
+            // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
+            AngularVelocity = newState.AngularVelocity;
+            Anchored = newState.Anchored;
+            // TODO: Does it make sense to reset controllers here?
+            // This caused space movement to break in content and I'm not 100% sure this is a good fix.
+            // Look man the CM test is in 5 hours cut me some slack.
+            //_controllers = null;
+            // Reset predict flag to false to avoid predicting stuff too long.
+            // Another possibly bad hack for content at the moment.
+            Predict = false;
         }
 
         /// <inheritdoc />
@@ -90,7 +156,7 @@ namespace Robust.Shared.GameObjects.Components
             get
             {
                 var pos = Owner.Transform.WorldPosition;
-                return ((IPhysBody)this).AABB.Translated(pos);
+                return ((IPhysBody) this).AABB.Translated(pos);
             }
         }
 
@@ -127,7 +193,9 @@ namespace Robust.Shared.GameObjects.Components
             set
             {
                 _canCollide = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
+
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new CollisionChangeMessage(Owner.Uid, _canCollide));
                 Dirty();
             }
         }
@@ -159,6 +227,7 @@ namespace Robust.Shared.GameObjects.Components
             get
             {
                 var layers = 0x0;
+
                 foreach (var shape in _physShapes)
                     layers = layers | shape.CollisionLayer;
                 return layers;
@@ -174,20 +243,10 @@ namespace Robust.Shared.GameObjects.Components
             get
             {
                 var mask = 0x0;
+
                 foreach (var shape in _physShapes)
                     mask = mask | shape.CollisionMask;
                 return mask;
-            }
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public BodyStatus Status
-        {
-            get => _status;
-            set
-            {
-                _status = value;
-                Dirty();
             }
         }
 
@@ -199,7 +258,7 @@ namespace Robust.Shared.GameObjects.Components
             // normally ExposeData would create this
             if (_physShapes == null)
             {
-                _physShapes = new List<IPhysShape> { new PhysShapeAabb() };
+                _physShapes = new List<IPhysShape> {new PhysShapeAabb()};
             }
             else
             {
@@ -209,7 +268,13 @@ namespace Robust.Shared.GameObjects.Components
                 }
             }
 
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, _canCollide));
+            foreach (var controller in _controllers.Values)
+            {
+                controller.ControlledComponent = this;
+            }
+
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                new CollisionChangeMessage(Owner.Uid, _canCollide));
         }
 
         public override void OnRemove()
@@ -221,7 +286,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 ShapeRemoved(shape);
             }
-            
+
             // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
         }
@@ -246,6 +311,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         protected override void Shutdown()
         {
+            RemoveControllers();
             _physicsManager.RemoveBody(this);
             base.Shutdown();
         }
@@ -255,9 +321,9 @@ namespace Robust.Shared.GameObjects.Components
             return _physicsManager.IsColliding(this, offset, approx);
         }
 
-        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset)
+        public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approx = true)
         {
-            return _physicsManager.GetCollidingEntities(this, offset);
+            return _physicsManager.GetCollidingEntities(this, offset, approx);
         }
 
         public bool UpdatePhysicsTree()
@@ -288,6 +354,7 @@ namespace Robust.Shared.GameObjects.Components
         private void ShapeDataChanged()
         {
             Dirty();
+            UpdatePhysicsTree();
         }
 
         // Custom IList<> implementation so that we can hook addition/removal of shapes.
@@ -341,6 +408,7 @@ namespace Robust.Shared.GameObjects.Components
             public bool Remove(IPhysShape item)
             {
                 var found = _owner._physShapes.Remove(item);
+
                 if (found)
                 {
                     ItemRemoved(item);
@@ -394,5 +462,12 @@ namespace Robust.Shared.GameObjects.Components
                 _owner.ShapeRemoved(item);
             }
         }
+    }
+
+    [Serializable, NetSerializable]
+    public enum BodyStatus
+    {
+        OnGround,
+        InAir
     }
 }

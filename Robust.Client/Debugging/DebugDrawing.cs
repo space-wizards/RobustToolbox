@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics.Drawing;
+﻿using System;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Debugging;
@@ -10,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.Debugging
 {
@@ -98,8 +100,10 @@ namespace Robust.Client.Debugging
                 var viewport = _eyeManager.GetWorldViewport();
                 foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
                 {
+                    var physBody = (IPhysBody)boundingBox;
+
                     // all entities have a TransformComponent
-                    var transform = ((IPhysBody) boundingBox).Owner.Transform;
+                    var transform = physBody.Entity.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
@@ -114,7 +118,7 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in boundingBox.PhysicsShapes)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float)physBody.SleepThreshold);
                     }
 
                     // draw AABB
@@ -131,8 +135,20 @@ namespace Robust.Client.Debugging
                     _handle = worldHandle;
                 }
 
+                public override Color WakeMixColor => Color.White;
                 public override Color GridFillColor => Color.Blue.WithAlpha(0.05f);
                 public override Color RectFillColor => Color.Green.WithAlpha(0.25f);
+
+                public override Color CalcWakeColor(Color color, float wakePercent)
+                {
+                    var percent = MathF.Clamp(wakePercent, 0, 1);
+
+                    var r = 1 - (percent * (1 - color.R));
+                    var g = 1 - (percent * (1 - color.G));
+                    var b = 1 - (percent * (1 - color.B));
+
+                    return new Color(r, g, b, color.A);
+                }
 
                 public override void DrawRect(in Box2 box, in Color color)
                 {

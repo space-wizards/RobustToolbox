@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.Maths;
@@ -30,6 +31,38 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void SerializeListAsReadOnlyCollectionTest()
+        {
+            // Arrange
+            IReadOnlyCollection<int> data = SerializableList;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedListYaml));
+        }
+
+        [Test]
+        public void SerializeListAsReadOnlyListTest()
+        {
+            // Arrange
+            IReadOnlyList<int> data = SerializableList;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedListYaml));
+        }
+
+        [Test]
         public void DeserializeListTest()
         {
             // Arrange
@@ -46,6 +79,40 @@ namespace Robust.UnitTesting.Shared.Serialization
             for (var i = 0; i < SerializableList.Count; i++)
                 Assert.That(data[i], Is.EqualTo(SerializableList[i]));
         }
+
+        [Test]
+        public void DeserializeListAsReadOnlyListTest()
+        {
+            // Arrange
+            IReadOnlyList<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedListYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableList.Count));
+            for (var i = 0; i < SerializableList.Count; i++)
+                Assert.That(data[i], Is.EqualTo(SerializableList[i]));
+        }
+
+        [Test]
+        public void DeserializeListAsReadOnlyCollectionTest()
+        {
+            // Arrange
+            IReadOnlyCollection<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedListYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            Assert.That(data, Is.EquivalentTo(SerializableList));
+        }
+
 
         private readonly string SerializedListYaml = "datalist:\n- 1\n- 2\n- 3\n...\n";
         private readonly List<int> SerializableList = new List<int> { 1, 2, 3 };
@@ -67,9 +134,42 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void SerializeDictAsReadOnlyTest()
+        {
+            // Arrange
+            IReadOnlyDictionary<string, int> data = SerializableDict;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedDictYaml));
+        }
+
+        [Test]
         public void DeserializeDictTest()
         {
             Dictionary<string, int> data = null!;
+            var rootNode = YamlTextToNode(SerializedDictYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
+
+            // Assert
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableDict.Count));
+            foreach (var kvEntry in SerializableDict)
+                Assert.That(data[kvEntry.Key], Is.EqualTo(kvEntry.Value));
+        }
+
+        [Test]
+        public void DeserializeDictToReadOnlyTest()
+        {
+            IReadOnlyDictionary<string, int> data = null!;
             var rootNode = YamlTextToNode(SerializedDictYaml);
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 

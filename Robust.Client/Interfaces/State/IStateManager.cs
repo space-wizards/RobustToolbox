@@ -12,6 +12,7 @@ namespace Robust.Client.Interfaces.State
         void Update(FrameEventArgs e);
         void FrameUpdate(FrameEventArgs e);
         void FormResize();
+        void RequestStateChange(Type type);
     }
 
     public sealed class StateChangedEventArgs : EventArgs

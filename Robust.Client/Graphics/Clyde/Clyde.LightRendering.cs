@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
@@ -46,30 +45,6 @@ namespace Robust.Client.Graphics.Clyde
         // We keep this around so we can reverse the effects while overlaying actual FOV.
         private Matrix4 _fovProjection;
 
-        // Various render targets used in the light rendering process.
-
-        // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
-        private RenderTarget _lightRenderTarget = default!;
-
-        // For depth calculation for FOV.
-        private RenderTarget _fovRenderTarget = default!;
-
-        // For depth calculation of lighting shadows.
-        private RenderTarget _shadowRenderTarget = default!;
-
-        // Unused, to be removed.
-        private RenderTarget _wallMaskRenderTarget = default!;
-
-        // Two render targets used to apply gaussian blur to the _lightRenderTarget so it bleeds "into" walls.
-        // We need two of them because efficient blur works in two stages and also we're doing multiple iterations.
-        private RenderTarget _wallBleedIntermediateRenderTarget1 = default!;
-        private RenderTarget _wallBleedIntermediateRenderTarget2 = default!;
-
-        // Proxies to textures of some of the above render targets.
-        private ClydeTexture FovTexture => _fovRenderTarget.Texture;
-
-        private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
-
         // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
         // (it uses VSM unlike final FOV).
         private GLHandle _fovFilterSampler;
@@ -100,11 +75,24 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer _occlusionMaskEbo = default!;
         private GLHandle _occlusionMaskVao;
 
+        // For depth calculation for FOV.
+        private RenderTexture _fovRenderTarget = default!;
+
+        // For depth calculation of lighting shadows.
+        private RenderTexture _shadowRenderTarget = default!;
+
+        // Proxies to textures of the above render targets.
+        private ClydeTexture FovTexture => _fovRenderTarget.Texture;
+        private ClydeTexture ShadowTexture => _shadowRenderTarget.Texture;
+
+        private readonly (PointLightComponent light, Vector2 pos)[] _lightsToRenderList
+            = new (PointLightComponent light, Vector2 pos)[MaxLightsPerScene];
+
+        private readonly Matrix4[] _shadowMatrices = new Matrix4[MaxLightsPerScene];
+
         private unsafe void InitLighting()
         {
             LoadLightingShaders();
-
-            RegenerateLightingRenderTargets();
 
             {
                 // Occlusion VAO.
@@ -194,16 +182,16 @@ namespace Robust.Client.Graphics.Clyde
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
 
-        private void DrawFov(IEye eye)
+        private void DrawFov(Viewport viewport, IEye eye)
         {
             using var _ = DebugGroup(nameof(DrawFov));
 
-            PrepareDepthDraw(_fovRenderTarget);
+            PrepareDepthDraw(RtToLoaded(_fovRenderTarget));
 
             if (eye.DrawFov)
             {
                 // Calculate maximum distance for the projection based on screen size.
-                var screenSizeCut = ScreenSize / EyeManager.PixelsPerMeter;
+                var screenSizeCut = viewport.Size / EyeManager.PixelsPerMeter;
                 var maxDist = (float) Math.Max(screenSizeCut.X, screenSizeCut.Y);
 
                 // FOV is rendered twice.
@@ -285,7 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void PrepareDepthDraw(RenderTarget target)
+        private void PrepareDepthDraw(LoadedRenderTarget target)
         {
             const float arbitraryDistanceMax = 1234;
 
@@ -296,7 +284,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.ObjectHandle.Handle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.FramebufferHandle.Handle);
             GL.ClearDepth(1);
             GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
@@ -312,7 +300,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Disable(EnableCap.CullFace);
         }
 
-        private void DrawLightsAndFov(Box2 worldBounds, IEye eye)
+        private void DrawLightsAndFov(Viewport viewport, Box2 worldBounds, IEye eye)
         {
             if (!_lightManager.Enabled)
             {
@@ -321,37 +309,35 @@ namespace Robust.Client.Graphics.Clyde
 
             var map = eye.Position.MapId;
 
-            var (lights, expandedBounds) = GetLightsToRender(map, worldBounds);
+            var (lights, count, expandedBounds) = GetLightsToRender(map, worldBounds);
 
             UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
 
-            DrawFov(eye);
-
-            var shadowMatrices = new Matrix4[lights.Count];
+            DrawFov(viewport, eye);
 
             using (DebugGroup("Draw shadow depth"))
             {
-                PrepareDepthDraw(_shadowRenderTarget);
+                PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
                 GL.CullFace(CullFaceMode.Back);
 
                 if (_lightManager.DrawShadows)
                 {
-                    for (var i = 0; i < lights.Count; i++)
+                    for (var i = 0; i < count; i++)
                     {
                         var (light, lightPos) = lights[i];
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out shadowMatrices[i]);
+                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out _shadowMatrices[i]);
                     }
                 }
 
                 FinalizeDepthDraw();
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, _lightRenderTarget.ObjectHandle.Handle);
+            GL.BindFramebuffer(FramebufferTarget.Framebuffer, RtToLoaded(viewport.LightRenderTarget).FramebufferHandle.Handle);
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            var (lightW, lightH) = GetLightMapSize();
+            var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
 
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
@@ -367,7 +353,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
             Texture? lastMask = null;
 
-            for (var i = 0; i < lights.Count; i++)
+            for (var i = 0; i < count; i++)
             {
                 var (component, lightPos) = lights[i];
 
@@ -426,7 +412,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
                 lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
-                lightShader.SetUniformMaybe("shadowMatrix", shadowMatrices[i], false);
+                lightShader.SetUniformMaybe("shadowMatrix", _shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -448,22 +434,25 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            ApplyLightingFovToBuffer(eye);
+            ApplyLightingFovToBuffer(viewport, eye);
 
-            BlurOntoWalls(eye);
+            BlurOntoWalls(viewport, eye);
 
-            MergeWallLayer();
+            MergeWallLayer(viewport);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            BindRenderTargetFull(viewport.RenderTarget);
+            GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
+
+            Array.Clear(lights, 0, count);
 
             _lightingReady = true;
         }
 
-        private (List<(PointLightComponent light, Vector2 pos)> lights, Box2 expandedBounds)
+        private ((PointLightComponent light, Vector2 pos)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            var lights = new List<(PointLightComponent light, Vector2 pos)>(64);
+            var count = 0;
+
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
             // As they could still affect the shadows of (large) light sources.
             // We expand the world bounds so that it encompasses the center of every light source.
@@ -485,44 +474,46 @@ namespace Robust.Client.Graphics.Clyde
 
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
 
-                lights.Add((component, lightPos));
+                _lightsToRenderList[count] = (component, lightPos);
+                count += 1;
 
                 expandedBounds = expandedBounds.ExtendToContain(lightPos);
 
-                if (lights.Count == MaxLightsPerScene)
+                if (count == MaxLightsPerScene)
                 {
                     // TODO: Allow more than MaxLightsPerScene lights.
                     break;
                 }
             }
 
-            return (lights, expandedBounds);
+            return (_lightsToRenderList, count, expandedBounds);
         }
 
-        private void BlurOntoWalls(IEye eye)
+        private void BlurOntoWalls(Viewport viewport, IEye eye)
         {
             using var _ = DebugGroup(nameof(BlurOntoWalls));
 
             GL.Disable(EnableCap.Blend);
-            _setSpace(CurrentSpace.ScreenSpace);
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
 
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
 
-            shader.SetUniformMaybe("size", (Vector2) _wallBleedIntermediateRenderTarget1.Size);
+            shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
-            var size = _wallBleedIntermediateRenderTarget1.Size;
+            var size = viewport.WallBleedIntermediateRenderTarget1.Size;
             GL.Viewport(0, 0, size.X, size.Y);
 
             // Initially we're pulling from the light render target.
             // So we set it out of the loop so
             // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
-            SetTexture(TextureUnit.Texture0, _lightRenderTarget.Texture);
+            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
 
             // Have to scale the blurring radius based on viewport size and camera zoom.
             const float refCameraHeight = 14;
-            var cameraSize = eye.Zoom.Y * ScreenSize.Y / EyeManager.PixelsPerMeter;
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y / EyeManager.PixelsPerMeter;
             // 7e-3f is just a magic factor that makes it look ok.
             var factor = 7e-3f * (refCameraHeight / cameraSize);
 
@@ -533,39 +524,40 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                _wallBleedIntermediateRenderTarget1.Bind();
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget1);
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
-                _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, _wallBleedIntermediateRenderTarget1.Texture);
-                _wallBleedIntermediateRenderTarget2.Bind();
+                SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget1.Texture);
+                BindRenderTargetFull(viewport.WallBleedIntermediateRenderTarget2);
 
                 // Blur vertically to _wallBleedIntermediateRenderTarget2.
                 shader.SetUniformMaybe("direction", Vector2.UnitY);
-                _drawQuad(Vector2.Zero, ScreenSize, Matrix3.Identity, shader);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, _wallBleedIntermediateRenderTarget2.Texture);
+                SetTexture(TextureUnit.Texture0, viewport.WallBleedIntermediateRenderTarget2.Texture);
             }
 
             GL.Enable(EnableCap.Blend);
-            _setSpace(CurrentSpace.WorldSpace);
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
-        private void MergeWallLayer()
+        private void MergeWallLayer(Viewport viewport)
         {
             using var _ = DebugGroup(nameof(MergeWallLayer));
 
-            _lightRenderTarget.Bind();
+            BindRenderTargetFull(viewport.LightRenderTarget);
 
-            GL.Viewport(0, 0, _lightRenderTarget.Size.X, _lightRenderTarget.Size.Y);
+            GL.Viewport(0, 0, viewport.LightRenderTarget.Size.X, viewport.LightRenderTarget.Size.Y);
             GL.Disable(EnableCap.Blend);
 
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
 
-            var tex = _wallBleedIntermediateRenderTarget2.Texture;
+            var tex = viewport.WallBleedIntermediateRenderTarget2.Texture;
             SetTexture(TextureUnit.Texture0, tex);
 
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -578,7 +570,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.Blend);
         }
 
-        private void ApplyFovToBuffer(IEye eye)
+        private void ApplyFovToBuffer(Viewport viewport, IEye eye)
         {
             // Applies FOV to the final framebuffer.
 
@@ -591,10 +583,10 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(fovShader);
+            DrawBlit(viewport, fovShader);
         }
 
-        private void ApplyLightingFovToBuffer(IEye eye)
+        private void ApplyLightingFovToBuffer(Viewport viewport, IEye eye)
         {
             // Applies FOV to the lighting framebuffer.
 
@@ -611,16 +603,17 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(fovShader);
+            DrawBlit(viewport, fovShader);
 
             GL.BindSampler(0, 0);
         }
 
-        private void DrawBlit(GLShaderProgram shader)
+        private void DrawBlit(Viewport vp, GLShaderProgram shader)
         {
-            _drawQuad(_eyeManager.ScreenToMap((-1, -1)).Position,
-                _eyeManager.ScreenToMap(ScreenSize + Vector2i.One).Position,
-                Matrix3.Identity, shader);
+            var a = ScreenToMap((-1, -1), vp);
+            var b = ScreenToMap(vp.Size + Vector2i.One, vp);
+
+            _drawQuad(a, b, Matrix3.Identity, shader);
         }
 
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
@@ -719,10 +712,10 @@ namespace Robust.Client.Graphics.Clyde
                     var (dBrX, dBrY) = (brX, brY) - eyePosition;
 
                     // Get which neighbors are occluding.
-                    var no = occluder.Occluding.HasFlag(OccluderDir.North);
-                    var so = occluder.Occluding.HasFlag(OccluderDir.South);
-                    var eo = occluder.Occluding.HasFlag(OccluderDir.East);
-                    var wo = occluder.Occluding.HasFlag(OccluderDir.West);
+                    var no = (occluder.Occluding & OccluderDir.North) != 0;
+                    var so = (occluder.Occluding & OccluderDir.South) != 0;
+                    var eo = (occluder.Occluding & OccluderDir.East) != 0;
+                    var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                     // Do visibility tests for occluders (described above).
                     var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
@@ -817,46 +810,57 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void RegenerateLightingRenderTargets()
+        private void RegenLightRts(Viewport viewport)
         {
             // All of these depend on screen size so they have to be re-created if it changes.
 
-            var lightMapSize = GetLightMapSize();
-            var lightMapSizeQuart = GetLightMapSize(true);
+            var lightMapSize = GetLightMapSize(viewport.Size);
+            var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
             const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
-            _lightRenderTarget?.Delete();
-            _wallMaskRenderTarget?.Delete();
-            _wallBleedIntermediateRenderTarget1?.Delete();
-            _wallBleedIntermediateRenderTarget2?.Delete();
+            viewport.LightRenderTarget?.Dispose();
+            viewport.WallMaskRenderTarget?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget1?.Dispose();
+            viewport.WallBleedIntermediateRenderTarget2?.Dispose();
 
-            _wallMaskRenderTarget = CreateRenderTarget(ScreenSize, RenderTargetColorFormat.R8,
-                name: nameof(_wallMaskRenderTarget));
+            viewport.WallMaskRenderTarget = CreateRenderTarget(viewport.Size, RenderTargetColorFormat.R8,
+                name: $"{viewport.Name}-{nameof(viewport.WallMaskRenderTarget)}");
 
-            _lightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
+            viewport.LightRenderTarget = CreateRenderTarget(lightMapSize, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_lightRenderTarget));
+                $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
 
-            _wallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_wallBleedIntermediateRenderTarget1));
+                $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget1)}");
 
-            _wallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
+            viewport.WallBleedIntermediateRenderTarget2 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,
-                nameof(_wallBleedIntermediateRenderTarget2));
+                $"{viewport.Name}-{nameof(viewport.WallBleedIntermediateRenderTarget2)}");
         }
 
-        private Vector2i GetLightMapSize(bool? overrideSetting = null)
+        private void RegenAllLightRts()
+        {
+            foreach (var viewportRef in _viewports.Values)
+            {
+                if (viewportRef.TryGetTarget(out var viewport))
+                {
+                    RegenLightRts(viewport);
+                }
+            }
+        }
+
+        private Vector2i GetLightMapSize(Vector2i screenSize, bool? overrideSetting = null)
         {
             var setting = overrideSetting ?? _quartResLights;
             if (!setting)
             {
-                return (ScreenSize.X, ScreenSize.Y);
+                return screenSize;
             }
 
-            var w = (int) Math.Ceiling(ScreenSize.X / 2f);
-            var h = (int) Math.Ceiling(ScreenSize.Y / 2f);
+            var w = (int) Math.Ceiling(screenSize.X / 2f);
+            var h = (int) Math.Ceiling(screenSize.Y / 2f);
 
             return (w, h);
         }
@@ -864,12 +868,7 @@ namespace Robust.Client.Graphics.Clyde
         protected override void HighResLightsChanged(bool newValue)
         {
             _quartResLights = !newValue;
-            if (_lightRenderTarget == null)
-            {
-                return;
-            }
-
-            RegenerateLightingRenderTargets();
+            RegenAllLightRts();
         }
     }
 }

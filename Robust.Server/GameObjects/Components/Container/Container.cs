@@ -186,13 +186,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            toremove.Transform.DetachParent();
-
-            if (Occlusion == true && toremove.TryGetComponent<PointLightComponent>(out var pointlight))
-            {
-                pointlight.Occluded = false;
-            }
-
+            ContainerHelpers.AttachParentToContainerOrGrid(toremove.Transform);
             return true;
         }
 

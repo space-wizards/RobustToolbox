@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -16,6 +15,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -39,15 +39,14 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
 
-        private const int ProjViewBindingIndex = 0;
-        private const int UniformConstantsBindingIndex = 1;
         private GLBuffer ProjViewUBO = default!;
         private GLBuffer UniformConstantsUBO = default!;
 
-        private RenderTarget EntityPostRenderTarget = default!;
+        private RenderTexture EntityPostRenderTarget = default!;
 
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
@@ -56,6 +55,8 @@ namespace Robust.Client.Graphics.Clyde
         // VBO to draw a single quad.
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
+
+        private Viewport _mainViewport = default!;
 
         private bool _drawingSplash = true;
 
@@ -72,6 +73,21 @@ namespace Robust.Client.Graphics.Clyde
             _transferringScreenshots
                 = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
 
+        public Clyde()
+        {
+            // Init main window render target.
+            var windowRid = AllocRid();
+            var window = new RenderWindow(this, windowRid);
+            var loadedData = new LoadedRenderTarget
+            {
+                IsWindow = true
+            };
+            _renderTargets.Add(windowRid, loadedData);
+
+            _mainWindowRenderTarget = window;
+            _currentRenderTarget = RtToLoaded(window);
+        }
+
         public override bool Initialize()
         {
             if (!InitWindowing())
@@ -87,10 +103,13 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
-            _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
-            FlushCursorDisposeQueue();
-            ClearDeadShaderInstances();
+
+            FlushCursorDispose();
+            FlushShaderInstanceDispose();
+            FlushRenderTargetDispose();
+            FlushTextureDispose();
+            FlushViewportDispose();
         }
 
         public void Ready()
@@ -113,7 +132,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReloadConfig();
 
-            RegenerateLightingRenderTargets();
+            RegenAllLightRts();
         }
 
         public override void PostInject()
@@ -176,7 +195,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Quad drawing.
             {
-                var quadVertices = new[]
+                Span<Vertex2D> quadVertices = stackalloc[]
                 {
                     new Vertex2D(1, 0, 1, 1),
                     new Vertex2D(0, 0, 0, 1),
@@ -222,18 +241,31 @@ namespace Robust.Client.Graphics.Clyde
                 nameof(ProjViewUBO));
             ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.ObjectHandle);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
 
             UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
                 nameof(UniformConstantsUBO));
             UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
                 UniformConstantsUBO.ObjectHandle);
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
+
+            CreateMainViewport();
+        }
+
+        private void CreateMainViewport()
+        {
+            var (w, h) = _framebufferSize;
+
+            // Ensure viewport size is always even to avoid artifacts.
+            if (w % 2 == 1) w += 1;
+            if (h % 2 == 1) h += 1;
+
+            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         private void DetectOpenGLFeatures()

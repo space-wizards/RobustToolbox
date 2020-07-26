@@ -101,7 +101,7 @@ namespace Robust.Client.Debugging
                 }
             }
 
-            internal override void FrameUpdate(FrameEventArgs args)
+            protected internal override void FrameUpdate(FrameEventArgs args)
             {
                 base.FrameUpdate(args);
 

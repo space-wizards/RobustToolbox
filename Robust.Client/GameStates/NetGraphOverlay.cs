@@ -68,7 +68,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        internal override void FrameUpdate(FrameEventArgs args)
+        protected internal override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
 

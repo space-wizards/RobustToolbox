@@ -26,8 +26,6 @@
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
-    <PackageReference Include="Fody" Version="6.2.0" PrivateAssets="All" />
-    <PackageReference Include="InlineIL.Fody" Version="1.4.1" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.5.0" />

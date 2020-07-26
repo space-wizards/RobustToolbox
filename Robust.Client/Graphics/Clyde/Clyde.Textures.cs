@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -8,7 +9,6 @@ using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 
@@ -20,7 +20,10 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture _stockTextureBlack = default!;
         private ClydeTexture _stockTextureTransparent = default!;
 
-        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures = new Dictionary<ClydeHandle, LoadedTexture>();
+        private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures =
+            new Dictionary<ClydeHandle, LoadedTexture>();
+
+        private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new ConcurrentQueue<ClydeHandle>();
 
         public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)
@@ -64,14 +67,18 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     throw new ArgumentException("Alpha8 images must have multiple of 4 sizes.");
                 }
+
                 internalFormat = PixelInternalFormat.R8;
                 pixelDataFormat = PixelFormat.Red;
                 pixelDataType = PixelType.UnsignedByte;
 
-                // TODO: Does it make sense to default to 1 for RGB parameters?
-                // It might make more sense to pass some options to change swizzling.
-                var swizzle = new[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+                unsafe
+                {
+                    // TODO: Does it make sense to default to 1 for RGB parameters?
+                    // It might make more sense to pass some options to change swizzling.
+                    var swizzle = stackalloc[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+                }
             }
             else if (pixelType == typeof(L8) && !actualParams.Srgb)
             {
@@ -87,8 +94,11 @@ namespace Robust.Client.Graphics.Clyde
                 pixelDataFormat = PixelFormat.Red;
                 pixelDataType = PixelType.UnsignedByte;
 
-                var swizzle = new[] {(int) All.Red, (int) All.Red, (int) All.Red, (int) All.One};
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+                unsafe
+                {
+                    var swizzle = stackalloc[] {(int) All.Red, (int) All.Red, (int) All.Red, (int) All.One};
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+                }
             }
             else
             {
@@ -105,7 +115,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            return GenTexture(texture, (copy.Width, copy.Height), name);
+            var pressureEst = EstPixelSize(internalFormat) * copy.Width * copy.Height;
+
+            return GenTexture(texture, (copy.Width, copy.Height), name, pressureEst);
         }
 
         private static void ApplySampleParameters(TextureSampleParameters? sampleParameters)
@@ -151,7 +163,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name)
+        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name, long memoryPressure=0)
         {
             if (name != null)
             {
@@ -160,45 +172,50 @@ namespace Robust.Client.Graphics.Clyde
 
             var (width, height) = size;
 
+            var id = AllocRid();
+            var instance = new ClydeTexture(id, size, this);
             var loaded = new LoadedTexture
             {
                 OpenGLObject = glHandle,
                 Width = width,
                 Height = height,
-                Name = name
+                Name = name,
+                MemoryPressure = memoryPressure
+                // TextureInstance = new WeakReference<ClydeTexture>(instance)
             };
 
-            var id = AllocRid();
             _loadedTextures.Add(id, loaded);
+            //GC.AddMemoryPressure(memoryPressure);
 
-            return new ClydeTexture(id, size, this);
+            return instance;
         }
 
-        private void DeleteTexture(ClydeTexture texture)
+        private void DeleteTexture(ClydeHandle textureHandle)
         {
-            if (!_loadedTextures.TryGetValue(texture.TextureId, out var loadedTexture))
+            if (!_loadedTextures.TryGetValue(textureHandle, out var loadedTexture))
             {
-                // Already deleted.
+                // Already deleted I guess.
                 return;
             }
 
             GL.DeleteTexture(loadedTexture.OpenGLObject.Handle);
-            _loadedTextures.Remove(texture.TextureId);
+            _loadedTextures.Remove(textureHandle);
+            //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
         }
 
         private void LoadStockTextures()
         {
             var white = new Image<Rgba32>(1, 1);
-            white[0, 0] = new Rgba32(255,255,255,255);
-            _stockTextureWhite = (ClydeTexture)Texture.LoadFromImage(white);
+            white[0, 0] = new Rgba32(255, 255, 255, 255);
+            _stockTextureWhite = (ClydeTexture) Texture.LoadFromImage(white);
 
             var black = new Image<Rgba32>(1, 1);
-            black[0, 0] = new Rgba32(0,0,0,255);
-            _stockTextureBlack = (ClydeTexture)Texture.LoadFromImage(black);
+            black[0, 0] = new Rgba32(0, 0, 0, 255);
+            _stockTextureBlack = (ClydeTexture) Texture.LoadFromImage(black);
 
             var blank = new Image<Rgba32>(1, 1);
-            blank[0, 0] = new Rgba32(0,0,0,0);
-            _stockTextureTransparent = (ClydeTexture)Texture.LoadFromImage(blank);
+            blank[0, 0] = new Rgba32(0, 0, 0, 0);
+            _stockTextureTransparent = (ClydeTexture) Texture.LoadFromImage(blank);
         }
 
         /// <summary>
@@ -239,7 +256,17 @@ namespace Robust.Client.Graphics.Clyde
             public int Width;
             public int Height;
             public string? Name;
+            public long MemoryPressure;
             public Vector2i Size => (Width, Height);
+            // public WeakReference<ClydeTexture> TextureInstance;
+        }
+
+        private void FlushTextureDispose()
+        {
+            while (_textureDisposeQueue.TryDequeue(out var handle))
+            {
+                DeleteTexture(handle);
+            }
         }
 
         private sealed class ClydeTexture : OwnedTexture
@@ -248,9 +275,18 @@ namespace Robust.Client.Graphics.Clyde
 
             internal ClydeHandle TextureId { get; }
 
-            public override void Delete()
+            protected override void Dispose(bool disposing)
             {
-                _clyde.DeleteTexture(this);
+                if (disposing)
+                {
+                    // Main thread, do direct GL deletion.
+                    _clyde.DeleteTexture(TextureId);
+                }
+                else
+                {
+                    // Finalizer thread
+                    _clyde._textureDisposeQueue.Enqueue(TextureId);
+                }
             }
 
             internal ClydeTexture(ClydeHandle id, Vector2i size, Clyde clyde) : base(size)
@@ -265,6 +301,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     return $"ClydeTexture: {loaded.Name} ({TextureId})";
                 }
+
                 return $"ClydeTexture: ({TextureId})";
             }
         }
@@ -281,4 +318,3 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
-

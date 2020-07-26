@@ -9,9 +9,11 @@ namespace Robust.Shared.Physics
     {
         public abstract Color GridFillColor { get; }
         public abstract Color RectFillColor { get; }
+        public abstract Color WakeMixColor { get; }
 
         public abstract void DrawRect(in Box2 box, in Color color);
 
         public abstract void SetTransform(in Matrix3 transform);
+        public abstract Color CalcWakeColor(Color color, float wakePercent);
     }
 }

@@ -53,6 +53,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// things like glass display cases.
         /// </summary>
         bool ShowContents { get; set; }
+        bool OccludesLight { get; set; }
 
         /// <summary>
         /// Checks if the entity can be inserted into this container.

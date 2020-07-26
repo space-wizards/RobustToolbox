@@ -268,7 +268,17 @@ namespace Robust.Server.GameObjects.Components.Container
             return new ContainerManagerComponentState(
                 _allContainers.ToDictionary(
                     c => c.ID,
-                    c => (c.ShowContents, c.ContainedEntities.Select(e => e.Uid).ToList())));
+                    DataFor));
+        }
+
+        private static ContainerManagerComponentState.ContainerData DataFor(IContainer container)
+        {
+            return new ContainerManagerComponentState.ContainerData
+            {
+                ContainedEntities = container.ContainedEntities.Select(e => e.Uid).ToArray(),
+                ShowContents = container.ShowContents,
+                OccludesLight = container.OccludesLight
+            };
         }
 
         private struct ContainerPrototypeData : IExposeData

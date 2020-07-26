@@ -1,4 +1,4 @@
-using Robust.Shared.GameObjects;
+﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -9,6 +9,7 @@ namespace Robust.Server.GameObjects
     {
         private Color _color;
         private bool _enabled;
+        private bool _occluded;
         private float _radius;
         private Vector2 _offset;
 

@@ -38,17 +38,6 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        [ViewVariables]
-        public bool Occluded
-        {
-            get => _occluded;
-            set
-            {
-                _occluded = value;
-                Dirty();
-            }
-        }
-
         [ViewVariables(VVAccess.ReadWrite)]
         public float Radius
         {
@@ -84,7 +73,7 @@ namespace Robust.Server.GameObjects
 
         public override ComponentState GetComponentState()
         {
-            return new PointLightComponentState(Enabled, Occluded, Color, Radius, Offset);
+            return new PointLightComponentState(Enabled, Color, Radius, Offset);
         }
     }
 }

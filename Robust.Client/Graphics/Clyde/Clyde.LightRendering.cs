@@ -361,11 +361,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 var circle = new Circle(lightPos, component.Radius);
 
-                if (component.Occluded)
-                {
-                    continue;
-                }
-
                 if (!circle.Intersects(worldBounds))
                 {
                     continue;
@@ -467,7 +462,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var transform = component.Owner.Transform;
 
-                if (!component.Enabled)
+                if (!component.Enabled || component.ContainerOccluded)
                 {
                     continue;
                 }

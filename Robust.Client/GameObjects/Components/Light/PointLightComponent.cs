@@ -42,11 +42,7 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Occluded
-        {
-            get => _occluded;
-            set => _occluded = value;
-        }
+        public bool ContainerOccluded { get; set; }
 
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
@@ -112,7 +108,6 @@ namespace Robust.Client.GameObjects
         private Color _color = Color.White;
         private Vector2 _offset;
         private bool _enabled = true;
-        private bool _occluded;
         private bool _maskAutoRotate;
         private Angle _rotation;
         private float _energy;
@@ -196,7 +191,6 @@ namespace Robust.Client.GameObjects
 
             var newState = (PointLightComponentState) curState;
             Enabled = newState.Enabled;
-            Occluded = newState.Occluded;
             Radius = newState.Radius;
             Offset = newState.Offset;
             Color = newState.Color;

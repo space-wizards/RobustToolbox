@@ -27,7 +27,10 @@ namespace Robust.Client.GameObjects.Components.Containers
             [ViewVariables] public IEntity Owner => Manager.Owner;
             [ViewVariables] public bool Deleted { get; private set; }
             [ViewVariables] public IReadOnlyList<IEntity> ContainedEntities => Entities;
+            [ViewVariables]
             public bool ShowContents { get; set; }
+            [ViewVariables]
+            public bool OccludesLight { get; set; }
 
             public bool CanInsert(IEntity toinsert)
             {

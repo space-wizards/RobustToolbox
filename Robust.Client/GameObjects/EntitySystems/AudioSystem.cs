@@ -80,12 +80,11 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
+            var stream = EntityManager.TryGetEntity(ev.EntityUid, out var entity) ?
+                (PlayingStream?) Play(ev.FileName, entity, ev.AudioParams)
+                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.AudioParams);
 
-            var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates , ev.AudioParams);
-            if (stream != null)
-            {
-                stream.NetIdentifier = ev.Identifier;
-            }
+            stream.NetIdentifier = ev.Identifier;
         }
 
         public override void FrameUpdate(float frameTime)

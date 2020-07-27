@@ -27,11 +27,19 @@ namespace Robust.Shared.GameObjects.Components.Containers
         [Serializable, NetSerializable]
         protected class ContainerManagerComponentState : ComponentState
         {
-            public Dictionary<string,(bool, List<EntityUid>)> Containers { get; }
+            public Dictionary<string, ContainerData> Containers { get; }
 
-            public ContainerManagerComponentState(Dictionary<string, (bool, List<EntityUid>)> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
             {
                 Containers = containers;
+            }
+
+            [Serializable, NetSerializable]
+            public struct ContainerData
+            {
+                public bool ShowContents;
+                public bool OccludesLight;
+                public EntityUid[] ContainedEntities;
             }
         }
 

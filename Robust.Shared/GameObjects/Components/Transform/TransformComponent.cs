@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
                 else
                 {
-                    DetachParent();
+                    AttachToGridOrMap();
                 }
             }
         }
@@ -432,7 +432,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public void DetachParent()
+        public void AttachToGridOrMap()
         {
             // nothing to do
             var oldParent = Parent;
@@ -445,9 +445,18 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             IEntity newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+            {
                 newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
-            else
+            }
+            else if (_mapManager.HasMapEntity(mapPos.MapId))
+            {
                 newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+            }
+            else
+            {
+                DetachParentToNull();
+                return;
+            }
 
             // this would be a no-op
             var oldParentEnt = oldParent.Owner;

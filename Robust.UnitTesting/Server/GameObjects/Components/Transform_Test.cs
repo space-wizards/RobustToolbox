@@ -115,7 +115,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var oldLpos = childTrans.GridPosition;
             var oldWpos = childTrans.WorldPosition;
 
-            childTrans.DetachParent();
+            childTrans.AttachToGridOrMap();
 
             // the gridId won't match, because we just detached from the grid entity
 

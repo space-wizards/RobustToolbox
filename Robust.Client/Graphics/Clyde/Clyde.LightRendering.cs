@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
@@ -356,6 +356,7 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < count; i++)
             {
                 var (component, lightPos) = lights[i];
+
                 var transform = component.Owner.Transform;
 
                 var circle = new Circle(lightPos, component.Radius);
@@ -461,7 +462,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var transform = component.Owner.Transform;
 
-                if (!component.Enabled)
+                if (!component.Enabled || component.ContainerOccluded)
                 {
                     continue;
                 }

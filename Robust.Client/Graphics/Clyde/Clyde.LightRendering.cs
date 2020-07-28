@@ -425,6 +425,8 @@ namespace Robust.Client.Graphics.Clyde
                 (matrix.R0C2, matrix.R1C2) = lightPos;
 
                 _drawQuad(-offset, offset, matrix, lightShader);
+
+                _debugStats.TotalLights += 1;
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);

@@ -131,8 +131,11 @@ namespace Robust.Client.Input
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
-                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
+                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function)
+                    || (_userInterfaceManagerInternal.KeyboardFocused == null && binding.Function.FunctionName.Contains("Text")))
+                {
                     continue;
+                }
 
                 if (PackedMatchesPressedState(binding.PackedKeyCombo))
                 {

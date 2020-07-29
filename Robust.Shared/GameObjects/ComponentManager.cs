@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
@@ -453,8 +454,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        #region Join Functions
+
         /// <inheritdoc />
-        public IEnumerable<T> GetAllComponents<T>()
+        public IEnumerable<T> EntityQuery<T>()
         {
             var comps = _entTraitDict[typeof(T)];
             foreach (var comp in comps.Values)
@@ -464,6 +467,87 @@ namespace Robust.Shared.GameObjects
                 yield return (T) (object) comp;
             }
         }
+
+        /// <inheritdoc />
+        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+        {
+            // this would prob be faster if trait1 was a list (or an array of structs hue).
+            var trait1 = _entTraitDict[typeof(TComp1)];
+            var trait2 = _entTraitDict[typeof(TComp2)];
+
+            // you really want trait1 to be the smaller set of components
+            foreach (var kvComp in trait1)
+            {
+                var uid = kvComp.Key;
+
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                    continue;
+
+                yield return ((TComp1) (object) kvComp.Value, (TComp2) (object) t2Comp);
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+        {
+            var trait1 = _entTraitDict[typeof(TComp1)];
+            var trait2 = _entTraitDict[typeof(TComp2)];
+            var trait3 = _entTraitDict[typeof(TComp3)];
+
+            foreach (var kvComp in trait1)
+            {
+                var uid = kvComp.Key;
+
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                    continue;
+
+                if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                    continue;
+
+                yield return ((TComp1) (object) kvComp.Value,
+                    (TComp2) (object) t2Comp,
+                    (TComp3) (object) t3Comp);
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>()
+            where TComp1 : IComponent
+            where TComp2 : IComponent
+            where TComp3 : IComponent
+            where TComp4 : IComponent
+        {
+            var trait1 = _entTraitDict[typeof(TComp1)];
+            var trait2 = _entTraitDict[typeof(TComp2)];
+            var trait3 = _entTraitDict[typeof(TComp3)];
+            var trait4 = _entTraitDict[typeof(TComp4)];
+
+            foreach (var kvComp in trait1)
+            {
+                var uid = kvComp.Key;
+
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                    continue;
+
+                if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                    continue;
+
+                if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
+                    continue;
+
+                yield return ((TComp1) (object) kvComp.Value,
+                    (TComp2) (object) t2Comp,
+                    (TComp3) (object) t3Comp,
+                    (TComp4) (object) t4Comp);
+            }
+        }
+
+        #endregion
 
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents(Type type)

@@ -31,7 +31,7 @@ namespace Robust.Client.GameStates
         {
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
+            foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;

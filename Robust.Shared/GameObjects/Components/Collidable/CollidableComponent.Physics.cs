@@ -161,6 +161,12 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         /// <returns>True if all of the controllers were reset, false otherwise.</returns>
         bool Stop();
+
+        /// <summary>
+        /// Can this body be moved?
+        /// </summary>
+        /// <returns></returns>
+        bool CanMove();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -417,6 +423,12 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             return successful;
+        }
+
+        /// <inheritdoc />
+        public bool CanMove()
+        {
+            return !Anchored && !Deleted;
         }
     }
 }

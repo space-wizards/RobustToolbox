@@ -7,6 +7,7 @@ namespace Robust.Shared.Map
 {
     /// <summary>
     ///     Internal structure to store 2 indices of a chunk or tile.
+    ///     <remarks>Despite the name, this can refer to specific tiles on a grid.</remarks>
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]

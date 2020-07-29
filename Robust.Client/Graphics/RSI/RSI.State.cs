@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using NFluidsynth;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.Graphics
 {

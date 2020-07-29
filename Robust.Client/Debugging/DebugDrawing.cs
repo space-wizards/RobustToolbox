@@ -98,7 +98,7 @@ namespace Robust.Client.Debugging
                 var drawing = new PhysDrawingAdapter(worldHandle);
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
+                foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
                 {
                     var physBody = (IPhysBody)boundingBox;
 

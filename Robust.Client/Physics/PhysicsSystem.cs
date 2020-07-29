@@ -38,7 +38,7 @@ namespace Robust.Client.Physics
 
         private List<ICollidableComponent> ActuallyRelevant()
         {
-            var relevant = _componentManager.GetAllComponents<ICollidableComponent>().Where(p => p.Predict)
+            var relevant = _componentManager.EntityQuery<ICollidableComponent>().Where(p => p.Predict)
                 .ToList();
             return relevant;
         }

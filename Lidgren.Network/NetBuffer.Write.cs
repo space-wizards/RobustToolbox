@@ -201,7 +201,7 @@ namespace Lidgren.Network
 		/// <summary>
 		/// Writes the specified number of bytes from an array
 		/// </summary>
-		public void Write(Span<byte> source, int offsetInBytes, int numberOfBytes)
+		public void Write(ReadOnlySpan<byte> source, int offsetInBytes, int numberOfBytes)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));

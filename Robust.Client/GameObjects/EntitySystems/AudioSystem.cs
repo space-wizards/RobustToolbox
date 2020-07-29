@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Timers;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Interfaces.Graphics;
@@ -16,6 +17,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Timer = Robust.Shared.Timers.Timer;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects.EntitySystems
@@ -58,7 +60,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             if (!_mapManager.GridExists(ev.Coordinates.GridID))
             {
                 Logger.Error(
-                    $"Server tried to play sound on grid {ev.Coordinates.GridID.Value}, which does not exist. Ignoring.");
+                    $"Client tried to play sound on grid {ev.Coordinates.GridID.Value}, which does not exist. Ignoring.");
                 return;
             }
 
@@ -83,7 +85,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             if (!EntityManager.TryGetEntity(ev.EntityUid, out var entity))
             {
                 Logger.Error(
-                    $"Server tried to play audio file {ev.FileName} on entity {ev.EntityUid} which does not exist.");
+                    $"Client tried to play audio file {ev.FileName} on entity {ev.EntityUid} which does not exist.");
                 return;
             }
 
@@ -119,6 +121,12 @@ namespace Robust.Client.GameObjects.EntitySystems
                     }
 
                     mapPos = stream.TrackingEntity.Transform.MapPosition;
+                }
+
+                if (stream.FadeTime != 0.0f)
+                {
+                    stream.ElapsedDeltaTime += frameTime;
+                    stream.Volume = FloatMath.Lerp(stream.FadeBaseVolume, -50f, stream.ElapsedDeltaTime / stream.FadeTime);
                 }
 
                 if (mapPos != null)
@@ -178,7 +186,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 return Play(audio, audioParams);
             }
 
-            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            Logger.Error($"Client tried to play audio file {filename} which does not exist.");
             return default;
         }
 
@@ -216,7 +224,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 return Play(audio, entity, audioParams);
             }
 
-            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            Logger.Error($"Client tried to play audio file {filename} which does not exist.");
             return default;
         }
 
@@ -261,7 +269,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 return Play(audio, coordinates, audioParams);
             }
 
-            Logger.Error($"Server tried to play audio file {filename} which does not exist.");
+            Logger.Error($"Client tried to play audio file {filename} which does not exist.");
             return default;
         }
 
@@ -316,9 +324,27 @@ namespace Robust.Client.GameObjects.EntitySystems
             public bool Done;
             public float Volume;
 
+            public float FadeBaseVolume;
+            public float FadeEndVolume = -50f;
+            public float FadeTime;
+            public float ElapsedDeltaTime;
+
             public void Stop()
             {
                 Source.StopPlaying();
+            }
+
+            public void FadeStop(int milliseconds)
+            {
+                FadeBaseVolume = Volume;
+                FadeTime = milliseconds / 1000f;
+                Timer.Spawn(milliseconds, () =>
+                {
+                    if (Source.IsPlaying)
+                    {
+                        Source.StopPlaying();
+                    }
+                });
             }
 
             public event Action? PlaybackDone;
@@ -333,6 +359,8 @@ namespace Robust.Client.GameObjects.EntitySystems
     public interface IPlayingAudioStream
     {
         void Stop();
+
+        void FadeStop(int milliseconds);
 
         event Action PlaybackDone;
     }

@@ -51,23 +51,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
-
-                var pos = transform.WorldPosition;
-                var rot = (float)transform.WorldRotation;
-                var cos = MathF.Cos(rot);
-                var sin = MathF.Sin(rot);
-
-                // inlined (transform = rotation * translation)
-                Matrix3 modelMat = default;
-                modelMat.R0C0 = cos;
-                modelMat.R0C1 = -sin;
-                modelMat.R0C2 = pos.X;
-                modelMat.R1C0 = sin;
-                modelMat.R1C1 = cos;
-                modelMat.R1C2 = pos.Y;
-                modelMat.R2C2 = 1;
-
-                gridProgram.SetUniform(UniIModelMatrix, in modelMat);
+                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
 
                 foreach (var (_, chunk) in grid.GetMapChunks())
                 {

@@ -135,9 +135,9 @@ namespace Robust.Shared.GameObjects.Components
                     _upgradeCollidable = true;
                     serializer.DataField<float>(ref _mass, "mass", 1);
                     serializer.DataField(ref _angVelocity, "avel", 0.0f);
-                    serializer.DataField(ref _anchored, "Anchored", false);
-                    serializer.DataField(ref _status, "Status", BodyStatus.OnGround);
-                    serializer.DataField(ref _controllers, "Controllers", new Dictionary<Type, VirtualController>());
+                    serializer.DataField(ref _anchored, "anchored", false);
+                    serializer.DataField(ref _status, "status", BodyStatus.OnGround);
+                    serializer.DataField(ref _controllers, "controllers", new Dictionary<Type, VirtualController>());
                 }
             }
             else

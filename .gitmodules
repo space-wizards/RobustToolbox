@@ -1,0 +1,3 @@
+[submodule "NetSerializer"]
+	path = NetSerializer
+	url = https://github.com/space-wizards/netserializer

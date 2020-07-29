@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenToolkit.GraphicsLibrary
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Shared.Scripting", "Robust.Shared.Scripting\Robust.Shared.Scripting.csproj", "{5AFDBB5C-CF01-4542-95F5-9ED195075313}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetSerializer", "NetSerializer", "{9143C8DD-A989-4089-9149-C50D12189FE4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetSerializer", "NetSerializer\NetSerializer\NetSerializer.csproj", "{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -65,12 +69,17 @@ Global
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Debug|x64.Build.0 = Debug|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Release|x64.ActiveCfg = Release|x64
 		{5AFDBB5C-CF01-4542-95F5-9ED195075313}.Release|x64.Build.0 = Release|x64
+		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Debug|x64.Build.0 = Debug|Any CPU
+		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Release|x64.ActiveCfg = Release|Any CPU
+		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D0DA124B-5580-4345-A02B-9F051F78915F} = {795D76AB-19B5-4682-B51F-6DB148024A0C}
+		{ECBCE1D8-05C2-4881-9446-197C4C8E1C14} = {9143C8DD-A989-4089-9149-C50D12189FE4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {57757344-0FF4-4842-8A68-141CAA18A35D}

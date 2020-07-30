@@ -12,7 +12,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        [Dependency] private readonly IEntityManager _entityManager;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly Dictionary<GridId, Dictionary<MapIndices, MapChunkData>> _mapChunkData =
             new Dictionary<GridId, Dictionary<MapIndices, MapChunkData>>();

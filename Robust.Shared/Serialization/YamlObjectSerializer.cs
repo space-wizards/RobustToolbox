@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -50,6 +51,7 @@ namespace Robust.Shared.Serialization
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
+                { typeof(EntityUid), new EntityUidSerializer() },
             };
         }
 
@@ -1168,6 +1170,19 @@ namespace Robust.Shared.Serialization
                         return mapping;
                 }
                 throw new NotImplementedException();
+            }
+        }
+
+        class EntityUidSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                return EntityUid.Parse(node.AsString());
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                return new YamlScalarNode(obj.ToString());
             }
         }
     }

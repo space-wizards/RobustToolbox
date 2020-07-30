@@ -36,60 +36,60 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
         public void TestThey()
         {
             ITextMacro sut = new They();
-            Assert.AreEqual("She", sut.CapitalizedFormat(female));
-            Assert.AreEqual("he", sut.Format(male));
-            Assert.AreEqual("they", sut.Format(epicene));
-            Assert.AreEqual("it", sut.Format(neuter));
+            Assert.That(sut.CapitalizedFormat(female), Is.EqualTo("She"));
+            Assert.That(sut.Format(male), Is.EqualTo("he"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("they"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("it"));
         }
 
         [Test]
         public void TestTheir()
         {
             var sut = new Their();
-            Assert.AreEqual("her", sut.Format(female));
-            Assert.AreEqual("his", sut.Format(male));
-            Assert.AreEqual("their", sut.Format(epicene));
-            Assert.AreEqual("its", sut.Format(neuter));
+            Assert.That(sut.Format(female), Is.EqualTo("her"));
+            Assert.That(sut.Format(male), Is.EqualTo("his"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("their"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("its"));
         }
 
         [Test]
         public void TestTheirs()
         {
             var sut = new Theirs();
-            Assert.AreEqual("hers", sut.Format(female));
-            Assert.AreEqual("his", sut.Format(male));
-            Assert.AreEqual("theirs", sut.Format(epicene));
-            Assert.AreEqual("its", sut.Format(neuter));
+            Assert.That(sut.Format(female), Is.EqualTo("hers"));
+            Assert.That(sut.Format(male), Is.EqualTo("his"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("theirs"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("its"));
         }
 
         [Test]
         public void TestThem()
         {
             var sut = new Them();
-            Assert.AreEqual("her", sut.Format(female));
-            Assert.AreEqual("him", sut.Format(male));
-            Assert.AreEqual("them", sut.Format(epicene));
-            Assert.AreEqual("it", sut.Format(neuter));
+            Assert.That(sut.Format(female), Is.EqualTo("her"));
+            Assert.That(sut.Format(male), Is.EqualTo("him"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("them"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("it"));
         }
 
         [Test]
         public void TestThemself()
         {
             var sut = new Themself();
-            Assert.AreEqual("herself", sut.Format(female));
-            Assert.AreEqual("himself", sut.Format(male));
-            Assert.AreEqual("themself", sut.Format(epicene));
-            Assert.AreEqual("itself", sut.Format(neuter));
+            Assert.That(sut.Format(female), Is.EqualTo("herself"));
+            Assert.That(sut.Format(male), Is.EqualTo("himself"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("themself"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("itself"));
         }
 
         [Test]
         public void TestTheyre()
         {
             ITextMacro sut = new Theyre();
-            Assert.AreEqual("She's", sut.CapitalizedFormat(female));
-            Assert.AreEqual("he's", sut.Format(male));
-            Assert.AreEqual("they're", sut.Format(epicene));
-            Assert.AreEqual("it's", sut.Format(neuter));
+            Assert.That(sut.CapitalizedFormat(female), Is.EqualTo("She's"));
+            Assert.That(sut.Format(male), Is.EqualTo("he's"));
+            Assert.That(sut.Format(epicene), Is.EqualTo("they're"));
+            Assert.That(sut.Format(neuter), Is.EqualTo("it's"));
         }
 
         [Test]
@@ -97,9 +97,9 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
         {
             var cpu = new Subject("CPU", Gender.Neuter, false);
             ITextMacro sut = new TheName();
-            Assert.AreEqual("The CPU", sut.CapitalizedFormat(cpu));
-            Assert.AreEqual("the CPU", sut.Format(cpu));
-            Assert.AreEqual(male.Name, sut.Format(male));
+            Assert.That(sut.CapitalizedFormat(cpu), Is.EqualTo("The CPU"));
+            Assert.That(sut.Format(cpu), Is.EqualTo("the CPU"));
+            Assert.That(sut.Format(male), Is.EqualTo(male.Name));
         }
     }
 }

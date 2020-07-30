@@ -1,4 +1,5 @@
-﻿using Robust.Client.Interfaces.Graphics;
+﻿using System;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
@@ -50,11 +51,11 @@ namespace Robust.Client.Graphics.ClientEye
         {
             var vpSize = _displayManager.ScreenSize;
 
-            var topLeft = ScreenToWorld(Vector2.Zero);
-            var topRight = ScreenToWorld(new Vector2(vpSize.X, 0));
-            var bottomRight = ScreenToWorld(vpSize);
-            var bottomLeft = ScreenToWorld(new Vector2(0, vpSize.Y));
-
+            var topLeft = ScreenToMap(Vector2.Zero);
+            var topRight = ScreenToMap(new Vector2(vpSize.X, 0));
+            var bottomRight = ScreenToMap(vpSize);
+            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y));
+            
             var left = MathHelper.Min(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
             var bottom = MathHelper.Min(topLeft.Y, topRight.Y, bottomRight.Y, bottomLeft.Y);
             var right = MathHelper.Max(topLeft.X, topRight.X, bottomRight.X, bottomLeft.X);
@@ -107,23 +108,9 @@ namespace Robust.Client.Graphics.ClientEye
             return new ScreenCoordinates(WorldToScreen(worldCoords.Position));
         }
 
-        /// <inheritdoc />
-        public GridCoordinates ScreenToWorld(ScreenCoordinates point)
+        public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
-            return ScreenToWorld(point.Position);
-        }
-
-        /// <inheritdoc />
-        public GridCoordinates ScreenToWorld(Vector2 point)
-        {
-            var mapCoords = ScreenToMap(point);
-
-            if (!_mapManager.TryFindGridAt(mapCoords, out var grid))
-            {
-                grid = _mapManager.GetDefaultGrid(mapCoords.MapId);
-            }
-
-            return new GridCoordinates(grid.WorldToLocal(mapCoords.Position), grid.Index);
+            return new ScreenCoordinates(WorldToScreen(point.Position));
         }
 
         /// <inheritdoc />

@@ -32,7 +32,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <summary>
         ///     Register a definition with this manager.
         /// </summary>
-        /// <param name="tileDef">THe definition to register.</param>
+        /// <param name="tileDef">The definition to register.</param>
         void Register(ITileDefinition tileDef);
     }
 }

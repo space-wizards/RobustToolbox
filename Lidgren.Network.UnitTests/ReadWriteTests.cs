@@ -26,14 +26,14 @@ namespace Lidgren.Network.UnitTests
             var inc = CreateIncomingMessage(data, msg.LengthBits);
 
             var boolean = inc.ReadBoolean();
-            Assert.IsFalse(boolean);
+            Assert.That(boolean, Is.False);
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
 
             var value = inc.ReadInt32(6);
-            Assert.AreEqual(-3, value);
+            Assert.That(value, Is.EqualTo(-3));
 
             boolean = inc.ReadBoolean();
-            Assert.IsTrue(boolean);
+            Assert.That(boolean, Is.True);
 
             inc.SkipPadBits();
         }
@@ -53,7 +53,7 @@ namespace Lidgren.Network.UnitTests
             msg.Write(UInt64.MaxValue, 64);
             var c = msg.WriteVariableInt64(long.MaxValue >> 16);
             msg.Write(true);
-            Assert.AreEqual(7, c);
+            Assert.That(c, Is.EqualTo(7));
 
             msg.WritePadBits();
 
@@ -62,30 +62,30 @@ namespace Lidgren.Network.UnitTests
             var inc = CreateIncomingMessage(data, msg.LengthBits);
 
             var boolean = inc.ReadBoolean();
-            Assert.IsFalse(boolean);
+            Assert.That(boolean, Is.False);
 
             var value = inc.ReadInt32(6);
-            Assert.AreEqual(-3, value);
+            Assert.That(value, Is.EqualTo(-3));
 
             value = inc.ReadInt32();
-            Assert.AreEqual(42, value);
+            Assert.That(value, Is.EqualTo(42));
 
             var ok = inc.ReadString(out var strResult);
-            Assert.IsTrue(ok, "Read/write failure");
-            Assert.AreEqual("duke of earl", strResult);
+            Assert.That(ok, Is.True, "Read/write failure");
+            Assert.That(strResult, Is.EqualTo("duke of earl"));
 
             var byteVal = inc.ReadByte();
-            Assert.AreEqual(43,byteVal);
+            Assert.That(byteVal, Is.EqualTo(43));
 
-            Assert.AreEqual((ushort) 44, inc.ReadUInt16(), "Read/write failure");
+            Assert.That(inc.ReadUInt16(), Is.EqualTo((ushort) 44), "Read/write failure");
 
-            Assert.AreEqual(UInt64.MaxValue, inc.ReadUInt64(64), "Read/write failure");
+            Assert.That(inc.ReadUInt64(64), Is.EqualTo(UInt64.MaxValue), "Read/write failure");
 
             var longVal = inc.ReadVariableInt64();
-            Assert.AreEqual(long.MaxValue >> 16, longVal);
+            Assert.That(longVal, Is.EqualTo(long.MaxValue >> 16));
 
             boolean = inc.ReadBoolean();
-            Assert.IsTrue(boolean);
+            Assert.That(boolean, Is.True);
 
             inc.SkipPadBits();
         }
@@ -118,43 +118,43 @@ namespace Lidgren.Network.UnitTests
             msg.WriteVariableUInt32(48);
             bcnt += msg.WriteVariableInt64(-49);
 
-            Assert.AreEqual(2, bcnt, "WriteVariable* wrote too many bytes!");
+            Assert.That(bcnt, Is.EqualTo(2), "WriteVariable* wrote too many bytes!");
 
             var data = msg.Buffer;
 
             var inc = CreateIncomingMessage(data, msg.LengthBits);
 
             var boolean = inc.ReadBoolean();
-            Assert.IsFalse(boolean);
+            Assert.That(boolean, Is.False);
             var value = inc.ReadInt32(6);
-            Assert.AreEqual(-3, value);
+            Assert.That(value, Is.EqualTo(-3));
             value = inc.ReadInt32();
-            Assert.AreEqual(42, value);
+            Assert.That(value, Is.EqualTo(42));
 
             var ok = inc.ReadString(out var strResult);
-            Assert.IsTrue(ok, "Read/write failure");
-            Assert.AreEqual("duke of earl", strResult);
+            Assert.That(ok, Is.True, "Read/write failure");
+            Assert.That(strResult, Is.EqualTo("duke of earl"));
 
             var byteVal = inc.ReadByte();
-            Assert.AreEqual(43, byteVal);
+            Assert.That(byteVal, Is.EqualTo(43));
 
-            Assert.AreEqual((ushort) 44, inc.ReadUInt16(), "Read/write failure");
+            Assert.That(inc.ReadUInt16(), Is.EqualTo((ushort) 44), "Read/write failure");
 
-            Assert.AreEqual(UInt64.MaxValue, inc.ReadUInt64(64), "Read/write failure");
+            Assert.That(inc.ReadUInt64(64), Is.EqualTo(UInt64.MaxValue), "Read/write failure");
 
             boolean = inc.ReadBoolean();
-            Assert.IsTrue(boolean);
+            Assert.That(boolean, Is.True);
 
             inc.SkipPadBits();
 
-            Assert.AreEqual(567845.0f, inc.ReadSingle());
-            Assert.AreEqual(2115998022, inc.ReadVariableInt32());
-            Assert.AreEqual(46.0, inc.ReadDouble());
-            Assert.AreEqual(14, inc.ReadUInt32(9));
-            Assert.AreEqual(-47, inc.ReadVariableInt32());
-            Assert.AreEqual(470000, inc.ReadVariableInt32());
-            Assert.AreEqual(48, inc.ReadVariableUInt32());
-            Assert.AreEqual(-49, inc.ReadVariableInt64());
+            Assert.That(inc.ReadSingle(), Is.EqualTo(567845.0f));
+            Assert.That(inc.ReadVariableInt32(), Is.EqualTo(2115998022));
+            Assert.That(inc.ReadDouble(), Is.EqualTo(46.0));
+            Assert.That(inc.ReadUInt32(9), Is.EqualTo(14));
+            Assert.That(inc.ReadVariableInt32(), Is.EqualTo(-47));
+            Assert.That(inc.ReadVariableInt32(), Is.EqualTo(470000));
+            Assert.That(inc.ReadVariableUInt32(), Is.EqualTo(48));
+            Assert.That(inc.ReadVariableInt64(), Is.EqualTo(-49));
         }
 
         [Test]
@@ -170,7 +170,7 @@ namespace Lidgren.Network.UnitTests
             msg.Write(tmp);
             msg.Write(tmp);
 
-            Assert.AreEqual(tmp.LengthBits * 2, msg.LengthBits, "NetOutgoingMessage.Write(NetOutgoingMessage) failed!");
+            Assert.That(msg.LengthBits, Is.EqualTo(tmp.LengthBits * 2), "NetOutgoingMessage.Write(NetOutgoingMessage) failed!");
 
             tmp = peer.CreateMessage();
 
@@ -190,9 +190,9 @@ namespace Lidgren.Network.UnitTests
             var readTestItem = new TestItem();
             inc.ReadAllFields(readTestItem, Public | Instance);
 
-            Assert.AreEqual(42, readTestItem.Number);
-            Assert.AreEqual("Hallon", readTestItem.Name);
-            Assert.AreEqual(8.2f, readTestItem.Age);
+            Assert.That(readTestItem.Number, Is.EqualTo(42));
+            Assert.That(readTestItem.Name, Is.EqualTo("Hallon"));
+            Assert.That(readTestItem.Age, Is.EqualTo(8.2f));
 
             // test aligned WriteBytes/ReadBytes
             msg = peer.CreateMessage();
@@ -204,7 +204,7 @@ namespace Lidgren.Network.UnitTests
 
             for (var i = 0; i < tmparr.Length; i++)
             {
-                Assert.AreEqual(result[i], tmparr[i], "readbytes fail");
+                Assert.That(tmparr[i], Is.EqualTo(result[i]), "readbytes fail");
             }
         }
 

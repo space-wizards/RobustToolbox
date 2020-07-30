@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -90,6 +91,9 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ShowContents { get; set; }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool OccludesLight { get; set; }
 
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
@@ -178,7 +182,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            toremove.Transform.DetachParent();
+            ContainerHelpers.AttachParentToContainerOrGrid(toremove.Transform);
             return true;
         }
 

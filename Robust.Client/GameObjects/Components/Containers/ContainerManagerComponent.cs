@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
@@ -108,9 +109,8 @@ namespace Robust.Client.GameObjects.Components.Containers
             }
 
             // Add new containers and update existing contents.
-            foreach (var (id, contEnts) in cast.Containers)
+            foreach (var (id, data) in cast.Containers)
             {
-                var (show, entities) = contEnts;
 
                 if (!_containers.TryGetValue(id, out var container))
                 {
@@ -119,13 +119,14 @@ namespace Robust.Client.GameObjects.Components.Containers
                 }
 
                 // sync show flag
-                container.ShowContents = show;
+                container.ShowContents = data.ShowContents;
+                container.OccludesLight = data.OccludesLight;
 
                 // Remove gone entities.
                 List<IEntity>? toRemove = null;
                 foreach (var entity in container.Entities)
                 {
-                    if (!entities.Contains(entity.Uid))
+                    if (!data.ContainedEntities.Contains(entity.Uid))
                     {
                         toRemove ??= new List<IEntity>();
                         toRemove.Add(entity);
@@ -141,7 +142,7 @@ namespace Robust.Client.GameObjects.Components.Containers
                 }
 
                 // Add new entities.
-                foreach (var uid in entities)
+                foreach (var uid in data.ContainedEntities)
                 {
                     var entity = Owner.EntityManager.GetEntity(uid);
 
@@ -149,6 +150,21 @@ namespace Robust.Client.GameObjects.Components.Containers
                     {
                         container.DoInsert(entity);
                     }
+                }
+            }
+        }
+
+        protected override void Shutdown()
+        {
+            base.Shutdown();
+
+            // On shutdown we won't get to process remove events in the containers so this has to be manually done.
+            foreach (var container in _containers.Values)
+            {
+                foreach (var containerEntity in container.Entities)
+                {
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                        new UpdateContainerOcclusionMessage(containerEntity));
                 }
             }
         }

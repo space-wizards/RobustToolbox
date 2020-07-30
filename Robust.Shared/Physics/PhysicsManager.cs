@@ -50,7 +50,14 @@ namespace Robust.Shared.Physics
             return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
         }
 
-        public Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
+
+        /// <summary>
+        ///     Calculates the normal vector for two colliding bodies
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
@@ -80,8 +87,8 @@ namespace Robust.Shared.Physics
         // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
         public Vector2 SolveCollisionImpulse(Manifold manifold)
         {
-            var aP = manifold.APhysics;
-            var bP = manifold.BPhysics;
+            var aP = manifold.A;
+            var bP = manifold.B;
             if (aP == null && bP == null) return Vector2.Zero;
             var restitution = 0.01f;
             var normal = CalculateNormal(manifold.A, manifold.B);
@@ -106,17 +113,17 @@ namespace Robust.Shared.Physics
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
-            var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
+            var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();
             foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB, approximate))
             {
-                if (body.Owner.Deleted) {
+                if (body.Entity.Deleted) {
                     continue;
                 }
 
                 if (CollidesOnMask(physBody, body))
                 {
                     var preventCollision = false;
-                    var otherModifiers = body.Owner.GetAllComponents<ICollideSpecial>();
+                    var otherModifiers = body.Entity.GetAllComponents<ICollideSpecial>();
                     foreach (var modifier in modifiers)
                     {
                         preventCollision |= modifier.PreventCollide(body);
@@ -127,7 +134,7 @@ namespace Robust.Shared.Physics
                     }
 
                     if (preventCollision) continue;
-                    yield return body.Owner;
+                    yield return body.Entity;
                 }
             }
         }
@@ -160,7 +167,7 @@ namespace Robust.Shared.Physics
         {
             if (!this[physBody.MapID].Add(physBody))
             {
-                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
+                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Entity}");
             }
         }
 
@@ -172,7 +179,7 @@ namespace Robust.Shared.Physics
         {
             var removed = false;
 
-            if (physBody.Owner.Deleted || physBody.Owner.Transform.Deleted)
+            if (physBody.Entity.Deleted || physBody.Entity.Transform.Deleted)
             {
                 foreach (var mapId in _mapManager.GetAllMapIds())
                 {
@@ -220,7 +227,7 @@ namespace Robust.Shared.Physics
             }
 
             if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner.Uid}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Entity.Uid}");
         }
 
         /// <inheritdoc />
@@ -250,12 +257,12 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (predicate != null && predicate.Invoke(body.Owner))
+                if (predicate != null && predicate.Invoke(body.Entity))
                 {
                     return true;
                 }
 
-                var result = new RayCastResults(distFromOrigin, point, body.Owner);
+                var result = new RayCastResults(distFromOrigin, point, body.Entity);
                 results.Add(result);
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
                 return true;
@@ -309,16 +316,23 @@ namespace Robust.Shared.Physics
         public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
-            => this[collider.MapID].Update(collider);
+        {
+            collider.WakeBody();
+            return this[collider.MapID].Update(collider);
+        }
 
         public void RemovedFromMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Remove(body);
         }
 
         public void AddedToMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Add(body);
         }
+
+        public int SleepTimeThreshold { get; set; } = 240;
     }
 }

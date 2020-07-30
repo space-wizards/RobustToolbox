@@ -99,12 +99,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             systems.Update(1);
 
-            Assert.AreEqual(counter.X, 4);
+            Assert.That(counter.X, Is.EqualTo(4));
 
-            Assert.AreEqual(systems.GetEntitySystem<TestSystemA>().LastUpdate, 0);
-            Assert.AreEqual(systems.GetEntitySystem<TestSystemB>().LastUpdate, 3);
-            Assert.AreEqual(systems.GetEntitySystem<TestSystemC>().LastUpdate, 2);
-            Assert.AreEqual(systems.GetEntitySystem<TestSystemD>().LastUpdate, 1);
+            Assert.That(systems.GetEntitySystem<TestSystemA>().LastUpdate, Is.EqualTo(0));
+            Assert.That(systems.GetEntitySystem<TestSystemB>().LastUpdate, Is.EqualTo(3));
+            Assert.That(systems.GetEntitySystem<TestSystemC>().LastUpdate, Is.EqualTo(2));
+            Assert.That(systems.GetEntitySystem<TestSystemD>().LastUpdate, Is.EqualTo(1));
         }
 
         [TearDown]

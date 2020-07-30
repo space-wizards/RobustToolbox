@@ -36,10 +36,11 @@ namespace Robust.Client.Physics
             SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant());
         }
 
-        private List<PhysicsComponent> ActuallyRelevant()
+        private List<ICollidableComponent> ActuallyRelevant()
         {
-            return _componentManager.GetAllComponents<PhysicsComponent>().Where(p => p.Predict)
+            var relevant = _componentManager.EntityQuery<ICollidableComponent>().Where(p => p.Predict)
                 .ToList();
+            return relevant;
         }
     }
 }

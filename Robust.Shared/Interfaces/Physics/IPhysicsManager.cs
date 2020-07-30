@@ -72,14 +72,6 @@ namespace Robust.Shared.Interfaces.Physics
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null);
 
         /// <summary>
-        ///     Calculates the normal vector for two colliding bodies
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        Vector2 CalculateNormal(IPhysBody target, IPhysBody source);
-
-        /// <summary>
         ///     Calculates the penetration depth of the axis-of-least-penetration for a
         /// </summary>
         /// <param name="target"></param>
@@ -106,6 +98,7 @@ namespace Robust.Shared.Interfaces.Physics
 
         void RemovedFromMap(IPhysBody body, MapId mapId);
         void AddedToMap(IPhysBody body, MapId mapId);
+        int SleepTimeThreshold { get; set; }
     }
 
     public struct DebugRayData
@@ -126,53 +119,38 @@ namespace Robust.Shared.Interfaces.Physics
         public float MaxLength { get; }
     }
 
-    public struct Manifold
+    public readonly struct Manifold
     {
+        public readonly ICollidableComponent A;
+        public readonly ICollidableComponent B;
+
+        public readonly Vector2 Normal;
+        public readonly bool Hard;
+
         public Vector2 RelativeVelocity
         {
             get
             {
-                if (APhysics != null)
+                if (A != null)
                 {
-                    if (BPhysics != null)
-                    {
-                        return BPhysics.LinearVelocity - APhysics.LinearVelocity;
-                    }
-                    else
-                    {
-                        return -APhysics.LinearVelocity;
-                    }
+                    if (B != null)
+                        return B.LinearVelocity - A.LinearVelocity;
+                    return -A.LinearVelocity;
                 }
 
-                if (BPhysics != null)
-                {
-                    return BPhysics.LinearVelocity;
-                }
-                else
-                {
-                    return Vector2.Zero;
-                }
+                if (B != null)
+                    return B.LinearVelocity;
+                return Vector2.Zero;
             }
         }
-        public readonly Vector2 Normal;
-        public readonly IPhysBody A;
-        public readonly IPhysBody B;
-        public PhysicsComponent? APhysics;
-        public PhysicsComponent? BPhysics;
-        public readonly bool Hard;
-
-        public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
-        public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(IPhysBody A, IPhysBody B, PhysicsComponent? aPhysics, PhysicsComponent? bPhysics, bool hard, IPhysicsManager physicsManager)
+        public Manifold(ICollidableComponent a, ICollidableComponent b, bool hard)
         {
-            this.A = A;
-            this.B = B;
-            Normal = physicsManager.CalculateNormal(A, B);
-            APhysics = aPhysics;
-            BPhysics = bPhysics;
+            A = a;
+            B = b;
+            Normal = PhysicsManager.CalculateNormal(a, b);
             Hard = hard;
         }
     }

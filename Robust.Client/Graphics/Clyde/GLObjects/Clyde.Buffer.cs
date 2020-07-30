@@ -61,6 +61,9 @@ namespace Robust.Client.Graphics.Clyde
                 ObjectHandle = 0;
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(int start, Span<T> data) where T : unmanaged
             {
@@ -76,6 +79,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(Span<T> data) where T : unmanaged
             {
@@ -91,6 +97,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(in T data) where T : unmanaged
             {
@@ -104,6 +113,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
@@ -119,6 +131,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(in T data) where T : unmanaged
             {
@@ -132,6 +147,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate(int size)
             {

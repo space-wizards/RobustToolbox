@@ -35,7 +35,7 @@ namespace Robust.Server.Console.Commands
             if(transform == null)
                 return;
 
-            transform.DetachParent();
+            transform.AttachToGridOrMap();
 
             MapId mapId;
             if (args.Length == 3 && int.TryParse(args[2], out var intMapId))

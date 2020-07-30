@@ -121,7 +121,7 @@ namespace Robust.Server.GameStates
             var oldDeps = IoCManager.Resolve<IDependencyCollection>();
 
             var deps = new DependencyCollection();
-            deps.RegisterInstance<ILogManager>(IoCManager.Resolve<ILogManager>());
+            deps.RegisterInstance<ILogManager>(new ProxyLogManager(IoCManager.Resolve<ILogManager>()));
             deps.BuildGraph();
 
             (MsgState, INetChannel) GenerateMail(IPlayerSession session)

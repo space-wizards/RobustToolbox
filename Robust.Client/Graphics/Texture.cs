@@ -30,7 +30,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     The size of the texture, in pixels.
         /// </summary>
-        public Vector2i Size { get; }
+        public Vector2i Size { get; /*protected set;*/ }
 
         protected Texture(Vector2i size)
         {

@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]
-    public class GameState
+    public sealed class GameState
     {
         /// <summary>
         ///     An extrapolated state that was created artificially by the client.

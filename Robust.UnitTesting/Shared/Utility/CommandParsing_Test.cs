@@ -32,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             var escaped = CommandParsing.Escape(source);
 
-            Assert.That(escaped, Is.EqualTo(escaped));
+            Assert.That(escaped, Is.EqualTo(expected));
         }
     }
 }

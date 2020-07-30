@@ -13,7 +13,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Entity that this physBody represents.
         /// </summary>
-        IEntity Owner { get; }
+        IEntity Entity { get; }
 
         /// <summary>
         ///     AABB of this entity in world space.
@@ -53,5 +53,18 @@ namespace Robust.Shared.Physics
         /// Broad Phase proxy ID.
         /// </summary>
         int ProxyId { get; set; }
+
+        /// <summary>
+        /// The type of the body, which determines how collisions effect this object.
+        /// </summary>
+        BodyType BodyType { get; set; }
+
+        int SleepAccumulator { get; set; }
+
+        int SleepThreshold { get; set; }
+
+        bool Awake { get; }
+
+        void WakeBody();
     }
 }

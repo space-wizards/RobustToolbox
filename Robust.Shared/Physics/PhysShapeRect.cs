@@ -49,10 +49,11 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public void ApplyState() { }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport)
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
+            float sleepPercent)
         {
             handle.SetTransform(modelMatrix);
-            handle.DrawRect(Rectangle, handle.RectFillColor);
+            handle.DrawRect(Rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 

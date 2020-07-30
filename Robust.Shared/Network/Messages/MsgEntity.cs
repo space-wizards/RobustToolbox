@@ -42,7 +42,7 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int length = buffer.ReadInt32();
+                    int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAsStream(length);
                     SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
                 }
@@ -54,7 +54,7 @@ namespace Robust.Shared.Network.Messages
                     NetId = buffer.ReadUInt32();
 
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    int length = buffer.ReadInt32();
+                    int length = buffer.ReadVariableInt32();
                     using var stream = buffer.ReadAsStream(length);
                     ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
                 }
@@ -76,8 +76,9 @@ namespace Robust.Shared.Network.Messages
                     using (var stream = new MemoryStream())
                     {
                         serializer.Serialize(stream, SystemMessage);
-                        buffer.Write((int)stream.Length);
-                        buffer.Write(stream.ToArray());
+                        buffer.WriteVariableInt32((int)stream.Length);
+                        stream.TryGetBuffer(out var segment);
+                        buffer.Write(segment);
                     }
                 }
                     break;
@@ -91,8 +92,9 @@ namespace Robust.Shared.Network.Messages
                     using (var stream = new MemoryStream())
                     {
                         serializer.Serialize(stream, ComponentMessage);
-                        buffer.Write((int)stream.Length);
-                        buffer.Write(stream.ToArray());
+                        buffer.WriteVariableInt32((int)stream.Length);
+                        stream.TryGetBuffer(out var segment);
+                        buffer.Write(segment);
                     }
                 }
                     break;

@@ -31,10 +31,10 @@ namespace Robust.Client.GameStates
         {
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.GetAllComponents<CollidableComponent>())
+            foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
             {
                 // all entities have a TransformComponent
-                var transform = boundingBox.Owner.Transform;
+                var transform = ((IComponent)boundingBox).Owner.Transform;
 
                 // if not on the same map, continue
                 if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)

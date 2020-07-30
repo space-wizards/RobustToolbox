@@ -7,10 +7,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
-using Lidgren.Network;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
 {
@@ -33,6 +33,8 @@ namespace Robust.Shared.Serialization
         private readonly RobustMappedStringSerializer _mappedStringSerializer = new RobustMappedStringSerializer();
 
         #region Statistics
+
+        private readonly object _statsLock = new object();
 
         public static long LargestObjectSerializedBytes { get; private set; }
 
@@ -121,20 +123,69 @@ namespace Robust.Shared.Serialization
             _serializer.Serialize(stream, toSerialize);
             var end = stream.Position;
             var byteCount = end - start;
-            BytesSerialized += byteCount;
-            ++ObjectsSerialized;
 
-            if (byteCount <= LargestObjectSerializedBytes)
+            lock (_statsLock)
             {
-                return;
-            }
+                BytesSerialized += byteCount;
+                ++ObjectsSerialized;
 
-            LargestObjectSerializedBytes = byteCount;
-            LargestObjectSerializedType = toSerialize.GetType();
+                if (byteCount <= LargestObjectSerializedBytes)
+                {
+                    return;
+                }
+
+                LargestObjectSerializedBytes = byteCount;
+                LargestObjectSerializedType = toSerialize.GetType();
+            }
+        }
+
+        public void SerializeDirect<T>(Stream stream, T toSerialize)
+        {
+            DebugTools.Assert(toSerialize == null || typeof(T) == toSerialize.GetType(),
+                "Object must be of exact type specified in the generic parameter.");
+
+            var start = stream.Position;
+            _serializer.SerializeDirect(stream, toSerialize);
+            var end = stream.Position;
+            var byteCount = end - start;
+
+            lock (_statsLock)
+            {
+                BytesSerialized += byteCount;
+                ++ObjectsSerialized;
+
+                if (byteCount <= LargestObjectSerializedBytes)
+                {
+                    return;
+                }
+
+                LargestObjectSerializedBytes = byteCount;
+                LargestObjectSerializedType = typeof(T);
+            }
         }
 
         public T Deserialize<T>(Stream stream)
             => (T) Deserialize(stream);
+
+        public void DeserializeDirect<T>(Stream stream, out T value)
+        {
+            var start = stream.Position;
+            _serializer.DeserializeDirect(stream, out value);
+            var end = stream.Position;
+            var byteCount = end - start;
+
+            lock (_statsLock)
+            {
+                BytesDeserialized += byteCount;
+                ++ObjectsDeserialized;
+
+                if (byteCount > LargestObjectDeserializedBytes)
+                {
+                    LargestObjectDeserializedBytes = byteCount;
+                    LargestObjectDeserializedType = typeof(T);
+                }
+            }
+        }
 
         public object Deserialize(Stream stream)
         {
@@ -142,16 +193,20 @@ namespace Robust.Shared.Serialization
             var result = _serializer.Deserialize(stream);
             var end = stream.Position;
             var byteCount = end - start;
-            BytesDeserialized += byteCount;
-            ++ObjectsDeserialized;
 
-            if (byteCount <= LargestObjectDeserializedBytes)
+            lock (_statsLock)
             {
-                return result;
-            }
+                BytesDeserialized += byteCount;
+                ++ObjectsDeserialized;
 
-            LargestObjectDeserializedBytes = byteCount;
-            LargestObjectDeserializedType = result.GetType();
+                if (byteCount <= LargestObjectDeserializedBytes)
+                {
+                    return result;
+                }
+
+                LargestObjectDeserializedBytes = byteCount;
+                LargestObjectDeserializedType = result.GetType();
+            }
 
             return result;
         }

@@ -220,6 +220,22 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(mapping, Is.EquivalentTo(new YamlMappingNode {{"bar", "honk!"}, {"foo", "5"}}));
         }
 
+        [Test]
+        public void SerializedEqualDictTest()
+        {
+            var dict = new Dictionary<string, string>
+            {
+                ["A"] = "B",
+                ["C"] = "W",
+                ["D"] = "G",
+                ["E"] = "J"
+            };
+
+            var dict2 = new Dictionary<string, string>(dict);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(dict, dict2), Is.True);
+        }
+
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 

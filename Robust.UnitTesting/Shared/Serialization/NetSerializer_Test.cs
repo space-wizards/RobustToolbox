@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using NetSerializer;
@@ -34,6 +35,97 @@ namespace Robust.UnitTesting.Shared.Serialization
             {
                 Assert.That(deserialized, Is.EquivalentTo(list));
             }
+        }
+
+        [Test]
+        [TestCase(0f)]
+        [TestCase(-0f)]
+        [TestCase(1f)]
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.MaxValue)]
+        [TestCase(float.MinValue)]
+        [TestCase(float.NegativeInfinity)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(MathF.PI)]
+        public void TestFloats(float f)
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, f);
+            stream.Position = 0;
+            Primitives.ReadPrimitive(stream, out float read);
+
+            Assert.That(read, NUnit.Framework.Is.EqualTo(f));
+        }
+
+        [Test]
+        [TestCase(0d)]
+        [TestCase(-0d)]
+        [TestCase(1d)]
+        [TestCase(-1d)]
+        [TestCase(double.NaN)]
+        [TestCase(double.MaxValue)]
+        [TestCase(double.MinValue)]
+        [TestCase(double.NegativeInfinity)]
+        [TestCase(double.PositiveInfinity)]
+        [TestCase(Math.PI)]
+        public void TestDoubles(double d)
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, d);
+            stream.Position = 0;
+            Primitives.ReadPrimitive(stream, out double read);
+
+            Assert.That(read, NUnit.Framework.Is.EqualTo(d));
+        }
+
+        [Test]
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("ABC")]
+        // ReSharper disable StringLiteralTypo
+        [TestCase("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce arcu mi, vehicula at nunc sit amet, lobortis interdum eros. Ut nec tincidunt odio. Etiam at odio id mauris condimentum elementum eu sit amet sem. Donec libero ex, viverra non metus ut, imperdiet varius lectus. Vivamus ultrices orci sed urna cursus, vel cursus velit lacinia. Mauris pellentesque tristique metus, et iaculis est tincidunt at. Integer maximus elit quis mollis sodales. Sed luctus quam a tempus vulputate.")]
+        [TestCase("H̟̟̱̺͉͡o̭̲̱̲͜nk̰̤̙͍͕̘")]
+        [TestCase("🤔 U+1F914")]
+        [TestCase("壮健")]
+        // These emojis are very wide so get split down the middle in both the writing and reading code.
+        // So that makes sure those code paths are tested.
+        [TestCase("a🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔" +
+                  "🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔" +
+                  "🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔" +
+                  "🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔" +
+                  "🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔🤔")]
+        public void TestString(string? str)
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, str);
+            stream.Position = 0;
+
+            Primitives.ReadPrimitive(stream, out string? deserialized);
+            Assert.That(deserialized, Is.EqualTo(str));
+        }
+
+        [Test]
+        public void TestStringEndOfStream()
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, (uint)2000);
+            Primitives.WritePrimitive(stream, (uint)1000);
+
+            stream.Position = 0;
+            Assert.That(() => Primitives.ReadPrimitive(stream, out string _), Throws.TypeOf<EndOfStreamException>());
+        }
+
+        [Test]
+        public void TestStringDestTooShort()
+        {
+            var stream = new MemoryStream();
+            Primitives.WritePrimitive(stream, (uint)2000);
+            Primitives.WritePrimitive(stream, (uint)5);
+            Primitives.WritePrimitive(stream, new byte[2000]);
+
+            stream.Position = 0;
+            Assert.That(() => Primitives.ReadPrimitive(stream, out string _), Throws.TypeOf<InvalidDataException>());
         }
     }
 }

@@ -60,13 +60,15 @@ namespace Robust.Shared.Network.Messages
             {
                 serializer.Serialize(stream, PropertyIndex);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
             using (var stream = new MemoryStream())
             {
                 serializer.Serialize(stream, Value);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

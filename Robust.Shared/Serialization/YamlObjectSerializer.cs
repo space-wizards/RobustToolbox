@@ -793,6 +793,31 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
+            if (TryGenericDictType(type!, out _, out _))
+            {
+                var dictA = (IDictionary) a;
+                var dictB = (IDictionary) b!;
+
+                foreach (var entryMaybe in dictA)
+                {
+                    var entry = (DictionaryEntry) entryMaybe!;
+                    var k = entry.Key;
+                    var v = entry.Value;
+
+                    if (!dictB.Contains(k))
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(v, dictB[k]))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
             if (typeof(IExposeData).IsAssignableFrom(type))
             {
                 // Serialize both, see if output matches.

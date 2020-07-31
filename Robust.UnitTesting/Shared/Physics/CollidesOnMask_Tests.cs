@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
             //Act
             Act();
             //Assert
-            Assert.AreEqual(expected, Result);
+            Assert.That(Result, Is.EqualTo(expected));
         }
     }
 }

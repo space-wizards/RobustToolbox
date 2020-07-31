@@ -82,6 +82,7 @@ namespace Robust.Client.Debugging
             private readonly IEyeManager _eyeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            private readonly ShaderInstance _shader;
 
             public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan)
                 : base(nameof(CollidableOverlay))
@@ -89,11 +90,12 @@ namespace Robust.Client.Debugging
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
 
-                Shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
+                _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
+                handle.UseShader(_shader);
                 var worldHandle = (DrawingHandleWorld) handle;
                 var drawing = new PhysDrawingAdapter(worldHandle);
 
@@ -182,7 +184,7 @@ namespace Robust.Client.Debugging
                 _eyeManager = eyeManager;
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 const float stubLength = 0.25f;
 

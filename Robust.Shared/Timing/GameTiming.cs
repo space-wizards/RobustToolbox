@@ -60,14 +60,15 @@ namespace Robust.Shared.Timing
         {
             get
             {
-                CacheCurTime();
-
                 var (time, lastTimeTick) = _cachedCurTimeInfo;
 
-                Debug.Assert(lastTimeTick == CurTick);
-
                 if (!InSimulation) // rendering can draw frames between ticks
+                {
+                    DebugTools.Assert(0 <= (time + TickRemainder).TotalSeconds);
                     return time + TickRemainder;
+                }
+
+                DebugTools.Assert(0 <= time.TotalSeconds);
                 return time;
             }
         }
@@ -108,6 +109,7 @@ namespace Robust.Shared.Timing
         public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
 
         private byte _tickRate;
+        private TimeSpan _tickRemainder;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
@@ -137,7 +139,16 @@ namespace Robust.Shared.Timing
         /// <summary>
         /// The remaining time left over after the last tick was ran.
         /// </summary>
-        public TimeSpan TickRemainder { get; set; }
+        public TimeSpan TickRemainder
+        {
+            get => _tickRemainder;
+            set
+            {
+                // Generally the upper limit is Tickrate*2, but changing the tickrate mid-round can make this really large until timing can stabilize
+                DebugTools.Assert(TimeSpan.Zero <= TickRemainder);
+                _tickRemainder = value;
+            }
+        }
 
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1, from swapbuffer to swapbuffer. Useful to set a
@@ -193,6 +204,7 @@ namespace Robust.Shared.Timing
             else
               newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
 
+            DebugTools.Assert(TimeSpan.Zero <= newTime);
             _cachedCurTimeInfo = (newTime, CurTick);
         }
 

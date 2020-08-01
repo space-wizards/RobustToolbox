@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
@@ -135,6 +135,11 @@ namespace Robust.Shared.ViewVariables
             ///     otherwise it's a meta token like <see cref="ServerValueTypeToken"/> or <see cref="ReferenceToken"/>.
             /// </summary>
             public object Value { get; set; }
+
+            /// <summary>
+            /// Display override for numeric types.
+            /// </summary>
+            public NumericDisplay Display { get; set; }
         }
     }
 

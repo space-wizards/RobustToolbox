@@ -89,7 +89,7 @@ namespace Robust.Client.ViewVariables
                 editor = _viewVariablesManager.PropertyFor(type);
             }
 
-            var view = editor.Initialize(member.Value, !member.Editable);
+            var view = editor.Initialize(member.Value, !member.Editable, member.Display);
             if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
             {
                 NameLabel.SizeFlagsHorizontal = SizeFlags.FillExpand;

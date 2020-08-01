@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -42,6 +42,8 @@ namespace Robust.Server.ViewVariables.Traits
                     continue;
                 }
 
+                var display = property.GetCustomAttribute<ViewVariablesNumericAttribute>();
+
                 dataList.Add(new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
@@ -49,7 +51,8 @@ namespace Robust.Server.ViewVariables.Traits
                     Type = property.PropertyType.AssemblyQualifiedName,
                     TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
                     Value = property.GetValue(Session.Object),
-                    PropertyIndex = _members.Count
+                    PropertyIndex = _members.Count,
+                    Display = display?.DisplayMethod ?? NumericDisplay.None
                 });
                 _members.Add(property);
             }
@@ -62,6 +65,8 @@ namespace Robust.Server.ViewVariables.Traits
                     continue;
                 }
 
+                var display = field.GetCustomAttribute<ViewVariablesNumericAttribute>();
+
                 dataList.Add(new ViewVariablesBlobMembers.MemberData
                 {
                     Editable = attr.Access == VVAccess.ReadWrite,
@@ -69,7 +74,8 @@ namespace Robust.Server.ViewVariables.Traits
                     Type = field.FieldType.AssemblyQualifiedName,
                     TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
                     Value = field.GetValue(Session.Object),
-                    PropertyIndex = _members.Count
+                    PropertyIndex = _members.Count,
+                    Display = display?.DisplayMethod ?? NumericDisplay.None
                 });
                 _members.Add(field);
             }

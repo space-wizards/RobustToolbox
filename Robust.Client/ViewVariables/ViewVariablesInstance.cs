@@ -61,7 +61,7 @@ namespace Robust.Client.ViewVariables
             var styleOther = false;
             var type = obj.GetType();
 
-            var members = new List<(MemberInfo, VVAccess, object? value, Action<object> onValueChanged, Type)>();
+            var members = new List<(MemberInfo, VVAccess, object? value, Action<object> onValueChanged, Type, NumericDisplay display)>();
 
             foreach (var fieldInfo in type.GetAllFields())
             {
@@ -71,8 +71,10 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
+                var display = fieldInfo.GetCustomAttribute<ViewVariablesNumericAttribute>();
+
                 members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), v => fieldInfo.SetValue(obj, v),
-                    fieldInfo.FieldType));
+                    fieldInfo.FieldType, display?.DisplayMethod ?? NumericDisplay.None));
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
@@ -88,13 +90,16 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
+                var display = propertyInfo.GetCustomAttribute<ViewVariablesNumericAttribute>();
+
                 members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
-                    v => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
+                    v => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType,
+                    display?.DisplayMethod ?? NumericDisplay.None));
             }
 
             members.Sort((a, b) => string.Compare(a.Item1.Name, b.Item1.Name, StringComparison.Ordinal));
 
-            foreach (var (memberInfo, access, value, onValueChanged, memberType) in members)
+            foreach (var (memberInfo, access, value, onValueChanged, memberType, display) in members)
             {
                 var data = new ViewVariablesBlobMembers.MemberData
                 {
@@ -102,7 +107,8 @@ namespace Robust.Client.ViewVariables
                     Name = memberInfo.Name,
                     Type = memberType.AssemblyQualifiedName,
                     TypePretty = TypeAbbreviation.Abbreviate(memberType),
-                    Value = value
+                    Value = value,
+                    Display = display
                 };
 
                 var propertyEdit = new ViewVariablesPropertyControl(vvm, resCache);

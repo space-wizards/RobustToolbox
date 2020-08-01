@@ -1,7 +1,8 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables
 {
@@ -17,9 +18,12 @@ namespace Robust.Client.ViewVariables
 
         protected bool ReadOnly { get; private set; }
 
-        public Control Initialize(object? value, bool readOnly)
+        protected NumericDisplay DisplayOverride { get; private set; }
+
+        public Control Initialize(object? value, bool readOnly, NumericDisplay memberDisplay)
         {
             ReadOnly = readOnly;
+            DisplayOverride = memberDisplay;
             return MakeUI(value);
         }
 

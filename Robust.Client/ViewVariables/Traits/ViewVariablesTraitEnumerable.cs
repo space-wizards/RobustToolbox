@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -161,7 +161,7 @@ namespace Robust.Client.ViewVariables.Traits
                     editor = Instance.ViewVariablesManager.PropertyFor(type);
                 }
 
-                var control = editor.Initialize(element, true);
+                var control = editor.Initialize(element, true, NumericDisplay.None);
                 if (editor is ViewVariablesPropertyEditorReference refEditor)
                 {
                     if (_networked)

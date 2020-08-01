@@ -1,6 +1,7 @@
-using Robust.Client.UserInterface;
+﻿using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
@@ -32,8 +33,8 @@ namespace Robust.Client.ViewVariables.Editors
             WireReference(propertyEditorK, valueK!);
             WireReference(propertyEditorV, valueV!);
 
-            var controlK = propertyEditorK.Initialize(valueK, true);
-            var controlV = propertyEditorV.Initialize(valueV, true);
+            var controlK = propertyEditorK.Initialize(valueK, true, NumericDisplay.None);
+            var controlV = propertyEditorV.Initialize(valueV, true, NumericDisplay.None);
 
             hBox.AddChild(controlK);
             hBox.AddChild(controlV);

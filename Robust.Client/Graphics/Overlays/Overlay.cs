@@ -101,18 +101,23 @@ namespace Robust.Client.Graphics.Overlays
     public enum OverlaySpace
     {
         /// <summary>
+        ///     Used for matching bit flags.
+        /// </summary>
+        None = 0b0000,
+
+        /// <summary>
         ///     This overlay will be drawn in the UI root, thus being in screen space.
         /// </summary>
-        ScreenSpace = 0,
+        ScreenSpace = 0b0001,
 
         /// <summary>
         ///     This overlay will be drawn in the world root, thus being in world space.
         /// </summary>
-        WorldSpace = 1,
+        WorldSpace = 0b0010,
 
         /// <summary>
         ///     Drawn in screen coordinates, but behind the world.
         /// </summary>
-        ScreenSpaceBelowWorld = 2,
+        ScreenSpaceBelowWorld = 0b0100,
     }
 }

@@ -28,7 +28,7 @@ namespace Robust.Shared.Timing
             // does nothing if timer is already running
             _realTimer.Start();
 
-            Paused = false;
+            Paused = true;
             TickRate = NumFrames;
         }
 
@@ -60,7 +60,16 @@ namespace Robust.Shared.Timing
         {
             get
             {
+                // last tickrate change epoch
                 var (time, lastTimeTick) = _cachedCurTimeInfo;
+
+                // add our current time to it.
+                // the server never rewinds time, and the client never rewinds time outside of prediction.
+                // the only way this assert should fail is if the TickRate is changed inside prediction, which should never happen.
+                //DebugTools.Assert(CurTick >= lastTimeTick);
+                //TODO: turns out prediction leaves CurTick at the last predicted tick, and not at the last processed server tick
+                //so time gets rewound when processing events like TickRate.
+                time += TickPeriod * (CurTick.Value - lastTimeTick.Value);
 
                 if (!InSimulation) // rendering can draw frames between ticks
                 {
@@ -191,8 +200,7 @@ namespace Robust.Shared.Timing
         }
 
         // Calculate and store the current time value, based on the current tick rate.
-        // Call this whenever you want an updated value for CurTime, or when
-        // you change the TickRate
+        // Call this whenever you change the TickRate.
         private void CacheCurTime()
         {
             var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
@@ -215,6 +223,17 @@ namespace Robust.Shared.Timing
         {
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// Resets the simulation time.
+        /// </summary>
+        public void ResetSimTime()
+        {
+            _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);;
+            CurTick = GameTick.First;
+            TickRemainder = TimeSpan.Zero;
+            Paused = true;
         }
 
         public bool IsFirstTimePredicted { get; private set; } = true;

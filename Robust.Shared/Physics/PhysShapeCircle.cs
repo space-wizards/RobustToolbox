@@ -5,8 +5,12 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
 {
+    /// <summary>
+    /// A physics shape that represents a circle. The circle cannot be rotated,
+    /// and it's origin is always the same as the entity position.
+    /// </summary>
     [Serializable, NetSerializable]
-    internal class PhysShapeCircle : IPhysShape
+    public class PhysShapeCircle : IPhysShape
     {
         private const float DefaultRadius = 0.5f;
 
@@ -49,7 +53,11 @@ namespace Robust.Shared.Physics
         public float Radius
         {
             get => _radius;
-            set => _radius = value;
+            set
+            {
+                _radius = value;
+                OnDataChanged?.Invoke();
+            }
         }
 
         /// <inheritdoc />
@@ -60,13 +68,16 @@ namespace Robust.Shared.Physics
             serializer.DataField(ref _radius, "radius", DefaultRadius);
         }
 
+        /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return new Box2(-_radius, -_radius, _radius, _radius);
         }
 
+        /// <inheritdoc />
         public void ApplyState() { }
 
+        /// <inheritdoc />
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
         {
             handle.SetTransform(in modelMatrix);

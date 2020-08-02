@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Is = Robust.UnitTesting.Is;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
@@ -14,17 +15,18 @@ namespace Robust.UnitTesting.Shared.Physics
             var a = new Circle(new Vector2(0,0), 0.5f);
             var b = new Circle(new Vector2(1, 1), 0.5f);
 
-            CollisionSolver.CalculateCollisionFeatures(in a, in b, false, out var results);
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
             Assert.AreEqual(false, results.Collided);
         }
+
         [Test]
         public void CircleCircle_Collide()
         {
             var a = new Circle(new Vector2(0, 0), 1f);
             var b = new Circle(new Vector2(1.5f, 0), 1f);
 
-            CollisionSolver.CalculateCollisionFeatures(in a, in b, false, out var results);
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
             Assert.AreEqual(true, results.Collided);
             Assert.AreEqual(Vector2.UnitX, results.Normal);
@@ -39,7 +41,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             var circle = new Circle(new Vector2(0, 0), 0.5f);
 
-            CollisionSolver.CalculateCollisionFeatures(in circle, in circle, false, out var results);
+            CollisionSolver.CalculateCollisionFeatures(in circle, in circle, 1, out var results);
 
             Assert.AreEqual(false, results.Collided);
         }
@@ -90,23 +92,23 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public void ORectCircle_NotCollide()
+        public void RectCircle_NotCollide()
         {
             var a = new OrientedRectangle(Vector2.Zero, Vector2.One * 0.5f, MathF.PI / 4);
             var b = new Circle(new Vector2(1, 1), 0.5f);
 
-            CollisionSolver.CalculateCollisionFeatures(in a, in b, false, out var results);
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
             Assert.AreEqual(false, results.Collided);
         }
 
         [Test]
-        public void ORectCircle_Collide()
+        public void RectCircle_Collide()
         {
             var a = new OrientedRectangle(Vector2.Zero, new Vector2(3, 1), MathF.PI / 2);
             var b = new Circle(new Vector2(1.5f, 0), 1f);
 
-            CollisionSolver.CalculateCollisionFeatures(in a, in b, false, out var results);
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
             Assert.AreEqual(true, results.Collided);
             Assert.That(results.Normal, Is.Approximately(Vector2.UnitX));
@@ -114,6 +116,33 @@ namespace Robust.UnitTesting.Shared.Physics
             Assert.IsNotNull(results.Contacts);
             Assert.AreEqual(1, results.Contacts.Length);
             Assert.That(results.Contacts[0], Is.Approximately(new Vector2(0.75f, 0)));
+        }
+
+        [Test]
+        public void BoxBox_NotCollide()
+        {
+            var a = new AlignedRectangle(new Vector2(1, 0), new Vector2(0.5f, 0.5f));
+            var b = new AlignedRectangle(Vector2.Zero, new Vector2(0.5f, 0.5f));
+
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
+
+            Assert.That(results.Collided, Is.False);
+        }
+        
+        [Test]
+        public void BoxBox_Collide()
+        {
+            var a = new AlignedRectangle(new Vector2(1, 0), new Vector2(0.5f, 0.5f));
+            var b = new AlignedRectangle(new Vector2(0.25f, 0.15f), new Vector2(0.5f, 0.5f));
+
+            CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
+
+            Assert.That(results.Collided, Is.True);
+            Assert.That(results.Normal, Is.EqualTo(new Vector2(-1, 0)));
+            Assert.That(results.Penetration, Is.EqualTo(0.25f / 2));
+            Assert.That(results.Contacts, Is.Not.Null);
+            Assert.That(results.Contacts.Length, Is.EqualTo(1));
+            Assert.That(results.Contacts[0], Is.EqualTo(new Vector2(0.5f, 0.15f)));
         }
     }
 }

@@ -2,7 +2,6 @@
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Math = CannyFastMath.Math;
 using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Physics
@@ -18,16 +17,16 @@ namespace Robust.Shared.Physics
                     switch (b)
                     {
                         case PhysShapeCircle bCircle:
-                            CircleCircle(manifold, aCircle, bCircle, false, out features);
+                            CircleCircle(manifold, aCircle, bCircle, 1, out features);
                             return;
                         case PhysShapeAabb bAabb:
-                            CircleBBox(manifold, aCircle, bAabb, false, out features);
+                            CircleBox(manifold, aCircle, bAabb, 1, out features);
                             return;
                         case PhysShapeRect bRect:
-                            RectCircle(manifold, bRect, aCircle, true, out features);
+                            RectCircle(manifold, bRect, aCircle, -1, out features);
                             return;
                         case PhysShapeGrid bGrid:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                     }
                     break;
@@ -35,16 +34,16 @@ namespace Robust.Shared.Physics
                     switch (b)
                     {
                         case PhysShapeCircle bCircle:
-                            features = default;
+                            CircleBox(manifold, bCircle, aAabb, -1, out features);
                             return;
                         case PhysShapeAabb bAabb:
-                            features = default;
+                            BoxBox(manifold, aAabb, bAabb, 1, out features);
                             return;
                         case PhysShapeRect bRect:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeGrid bGrid:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                     }
                     break;
@@ -52,16 +51,16 @@ namespace Robust.Shared.Physics
                     switch (b)
                     {
                         case PhysShapeCircle bCircle:
-                            features = default;
+                            RectCircle(manifold, aRect, bCircle, 1, out features);
                             return;
                         case PhysShapeAabb bAabb:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeRect bRect:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeGrid bGrid:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                     }
                     break;
@@ -69,16 +68,16 @@ namespace Robust.Shared.Physics
                     switch (b)
                     {
                         case PhysShapeCircle bCircle:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeAabb bAabb:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeRect bRect:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                         case PhysShapeGrid bGrid:
-                            features = default;
+                            DummyBoundsFeatures(manifold, out features);
                             return;
                     }
                     break;
@@ -86,7 +85,15 @@ namespace Robust.Shared.Physics
             features = default;
         }
 
-        private static void CircleCircle(Manifold manifold, PhysShapeCircle a, PhysShapeCircle b, bool flip, out CollisionFeatures features)
+        private static void DummyBoundsFeatures(Manifold manifold, out CollisionFeatures features)
+        {
+            var aRect = new AlignedRectangle(manifold.A.Entity.Transform.WorldPosition, manifold.A.AABB.Size / 2);
+            var bRect = new AlignedRectangle(manifold.B.Entity.Transform.WorldPosition, manifold.B.AABB.Size / 2);
+            CalculateCollisionFeatures(aRect, bRect, 1, out features);
+        }
+
+        private static void CircleCircle(Manifold manifold, PhysShapeCircle a, PhysShapeCircle b, float flip,
+            out CollisionFeatures features)
         {
             var aRad = a.Radius;
             var bRad = b.Radius;
@@ -94,30 +101,41 @@ namespace Robust.Shared.Physics
             var aPos = manifold.A.Entity.Transform.WorldPosition;
             var bPos = manifold.B.Entity.Transform.WorldPosition;
 
-            CalculateCollisionFeatures(new Circle(aPos, aRad), new Circle(bPos, bRad), false, out features);
+            CalculateCollisionFeatures(new Circle(aPos, aRad), new Circle(bPos, bRad), (float) flip, out features);
         }
 
-        private static void CircleBBox(Manifold manifold, PhysShapeCircle a, PhysShapeAabb b, bool flip, out CollisionFeatures features)
+        private static void CircleBox(Manifold manifold, PhysShapeCircle a, PhysShapeAabb b, float flip,
+            out CollisionFeatures features)
         {
             var aRad = a.Radius;
             var aPos = manifold.A.Entity.Transform.WorldPosition;
+            
+            var bRect = new AlignedRectangle(manifold.B.Entity.Transform.WorldPosition, b.LocalBounds.Size / 2);
 
-            var bBox = b.LocalBounds.Translated(manifold.B.Entity.Transform.WorldPosition);
-
-            CalculateCollisionFeatures(in bBox, new Circle(aPos, aRad), flip, out features);
+            CalculateCollisionFeatures(bRect, new Circle(aPos, aRad), (float) flip * -1, out features);
         }
 
-        private static void RectCircle(Manifold manifold, PhysShapeRect a, PhysShapeCircle b, bool flip, out CollisionFeatures features)
+        private static void RectCircle(Manifold manifold, PhysShapeRect a, PhysShapeCircle b, float flip,
+            out CollisionFeatures features)
         {
             var aPos = manifold.A.Entity.Transform.WorldPosition;
             var bPos = manifold.B.Entity.Transform.WorldPosition;
 
-            var bRot = (float)manifold.B.Entity.Transform.WorldRotation.Theta;
+            var aRot = (float)manifold.A.Entity.Transform.WorldRotation.Theta;
 
-            CalculateCollisionFeatures(new OrientedRectangle(aPos, a.Rectangle, bRot), new Circle(bPos, b.Radius), flip, out features);
+            CalculateCollisionFeatures(new OrientedRectangle(aPos, a.Rectangle, aRot), new Circle(bPos, b.Radius), (float) flip, out features);
         }
 
-        public static void CalculateCollisionFeatures(in Circle A, in Circle B, bool flip, out CollisionFeatures features)
+        private static void BoxBox(Manifold manifold, PhysShapeAabb a, PhysShapeAabb b, float flip,
+            out CollisionFeatures features)
+        {
+            var aRect = new AlignedRectangle(manifold.A.Entity.Transform.WorldPosition, a.LocalBounds.Size / 2);
+            var bRect = new AlignedRectangle(manifold.B.Entity.Transform.WorldPosition, b.LocalBounds.Size / 2);
+
+            CalculateCollisionFeatures(in aRect, in bRect, flip, out features);
+        }
+
+        public static void CalculateCollisionFeatures(in Circle A, in Circle B, float flip, out CollisionFeatures features)
         {
             var aRad = A.Radius;
             var bRad = B.Radius;
@@ -162,7 +180,7 @@ namespace Robust.Shared.Physics
             features = new CollisionFeatures(true, normal, penetraction, contacts);
         }
 
-        public static void CalculateCollisionFeatures(in Box2 A, in Circle B, bool flip, out CollisionFeatures features)
+        public static void CalculateCollisionFeatures(in AlignedRectangle A, in Circle B, float flip, out CollisionFeatures features)
         {
             // closest point inside the rectangle to the center of the sphere.
             var closestPoint = A.ClosestPoint(in B.Position);
@@ -200,7 +218,7 @@ namespace Robust.Shared.Physics
             features = new CollisionFeatures(true, normal, depth, contacts);
         }
 
-        public static void CalculateCollisionFeatures(in OrientedRectangle A, in Circle B, bool flip, out CollisionFeatures features)
+        public static void CalculateCollisionFeatures(in OrientedRectangle A, in Circle B, float flip, out CollisionFeatures features)
         {
             // closest point inside the rectangle to the center of the sphere.
             var closestPoint = A.ClosestPointWorld(B.Position);
@@ -237,6 +255,72 @@ namespace Robust.Shared.Physics
 
             features = new CollisionFeatures(true, normal, depth, contacts);
         }
+
+        public static void CalculateCollisionFeatures(in AlignedRectangle A, in AlignedRectangle B, float flip, out CollisionFeatures features)
+        {
+            // Vector from A to B
+            Vector2 n = B.Center - A.Center;
+
+            // Calculate half extents along x axis for each object
+            float a_extent_x = A.HalfExtents.X;
+            float b_extent_x = B.HalfExtents.X;
+
+            // Calculate overlap on x axis
+            float x_overlap = a_extent_x + b_extent_x - MathF.Abs(n.X);
+  
+            // SAT test on x axis
+            if (!(x_overlap > 0))
+            {
+                features = default;
+                return;
+            }
+
+            // Calculate half extents along y axis for each object
+            float a_extent_y = A.HalfExtents.Y;
+            float b_extent_y = B.HalfExtents.Y;
+
+            // Calculate overlap on y axis
+            float y_overlap = a_extent_y + b_extent_y - MathF.Abs(n.Y);
+
+            // SAT test on y axis
+            if (!(y_overlap > 0))
+            {
+                features = default;
+                return;
+            }
+
+            Vector2 normal;
+            float penetration;
+            Vector2 contact;
+
+            // Find out which axis is axis of least penetration
+            if (x_overlap < y_overlap)
+            {
+                // Point towards B knowing that n points from A to B
+                if (n.X < 0)
+                    normal = new Vector2(-1, 0);
+                else
+                    normal = new Vector2(1, 0);
+                penetration = x_overlap / 2;
+                var hitx = A.Center.X + (a_extent_x * normal.X);
+                var hity = B.Center.Y;
+                contact = new Vector2(hitx, hity);
+            }
+            else
+            {
+                // Point toward B knowing that n points from A to B
+                if (n.Y < 0)
+                    normal = new Vector2(0, -1);
+                else
+                    normal = new Vector2(0, 1);
+                penetration = y_overlap / 2;
+                var hitx = B.Center.X;
+                var hity = A.Center.Y + (a_extent_y * normal.Y);
+                contact = new Vector2(hitx, hity);
+            }
+
+            features = new CollisionFeatures(true, normal, penetration, new[] {contact});
+        }
     }
 
     /// <summary>
@@ -257,9 +341,14 @@ namespace Robust.Shared.Physics
         public readonly Vector2 Normal;
 
         /// <summary>
-        /// Half of the total length of penetration. Each object needs to move
+        /// Half of the total depth of penetration. Each object needs to move
         /// by the penetration distance along the normal to resolve the collision.
         /// </summary>
+        /// <remarks>
+        /// The penetration depth is the length of the minimum translation vector (MTV), which
+        /// is the smallest vector along which we can translate an intersecting shape to
+        /// separate it from the other shape.
+        /// </remarks>
         public readonly float Penetration;
 
         /// <summary>
@@ -267,9 +356,6 @@ namespace Robust.Shared.Physics
         /// these points are projected onto has the normal of the collision normal and is
         /// located halfway between the colliding objects.
         /// </summary>
-        /// <remarks>
-        /// Circle-Circle collision only generates one contact.
-        /// </remarks>
         public readonly Vector2[] Contacts;
 
         /// <summary>
@@ -281,6 +367,116 @@ namespace Robust.Shared.Physics
             Normal = normal;
             Penetration = penetration;
             Contacts = contacts;
+        }
+    }
+
+    /// <summary>
+    /// A rectangle that is always axis-aligned.
+    /// </summary>
+    [Serializable]
+    internal readonly struct AlignedRectangle : IEquatable<AlignedRectangle>
+    {
+        /// <summary>
+        /// Center point of the rectangle in world space.
+        /// </summary>
+        public readonly Vector2 Center;
+
+        /// <summary>
+        /// Half of the total width and height of the rectangle.
+        /// </summary>
+        public readonly Vector2 HalfExtents;
+        
+        /// <summary>
+        ///     A 1x1 unit rectangle with the origin centered on the world origin.
+        /// </summary>
+        public static readonly AlignedRectangle UnitCentered = new AlignedRectangle(new Vector2(0.5f, 0.5f));
+
+        /// <summary>
+        ///     The lower X coordinate of the left edge of the box.
+        /// </summary>
+        public float Left => Center.X - HalfExtents.X;
+
+        /// <summary>
+        ///     The higher X coordinate of the right edge of the box.
+        /// </summary>
+        public float Right => Center.X + HalfExtents.X;
+
+        /// <summary>
+        ///     The lower Y coordinate of the top edge of the box.
+        /// </summary>
+        public float Bottom => Center.Y + HalfExtents.Y;
+
+        /// <summary>
+        ///     The higher Y coordinate of the bottom of the box.
+        /// </summary>
+        public float Top => Center.Y + HalfExtents.Y;
+
+        public AlignedRectangle(Box2 box)
+        {
+            var halfWidth = box.Width / 2;
+            var halfHeight = box.Height / 2;
+
+            HalfExtents = new Vector2(halfWidth, halfHeight);
+            Center = new Vector2(box.Left + halfWidth, box.Height + halfHeight);
+        }
+        
+        public AlignedRectangle(Vector2 halfExtents)
+        {
+            Center = default;
+            HalfExtents = halfExtents;
+        }
+
+        public AlignedRectangle(Vector2 center, Vector2 halfExtents)
+        {
+            Center = center;
+            HalfExtents = halfExtents;
+        }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        public Vector2 ClosestPoint(in Vector2 position)
+        {
+            // clamp the point to the border of the box
+            var cx = MathF.Clamp(position.X, Left, Right);
+            var cy = MathF.Clamp(position.Y, Bottom, Top);
+
+            return new Vector2(cx, cy);
+        }
+
+        #region Equality members
+
+        public bool Equals(AlignedRectangle other)
+        {
+            return Center.Equals(other.Center) && HalfExtents.Equals(other.HalfExtents);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is AlignedRectangle other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Center, HalfExtents);
+        }
+
+        public static bool operator ==(AlignedRectangle left, AlignedRectangle right) {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(AlignedRectangle left, AlignedRectangle right) {
+            return !left.Equals(right);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Returns the string representation of this object.
+        /// </summary>
+        public override string ToString()
+        {
+            return $"({Left}, {Bottom}, {Right}, {Top})";
         }
     }
 
@@ -446,7 +642,7 @@ namespace Robust.Shared.Physics
             return new Vector2(dx, dy);
         }
 
-        #region Equality
+        #region Equality Members
 
         /// <inheritdoc />
         public bool Equals(OrientedRectangle other)

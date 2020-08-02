@@ -282,7 +282,7 @@ namespace Robust.Server.GameObjects
             {
                 var ent = child!;
 
-                do
+                while (ent != null && !ent.Deleted)
                 {
                     if (set.Add(ent))
                     {
@@ -295,7 +295,7 @@ namespace Robust.Server.GameObjects
                         // Already processed this entity once.
                         break;
                     }
-                } while (ent != null && !ent.Deleted);
+                }
             }
         }
 

@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var overlay in _overlayManager.AllOverlays)
                 {
-                    if (overlay.Space == space)
+                    if ((overlay.Space & space) != 0)
                     {
                         list.Add(overlay);
                     }
@@ -116,7 +116,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var overlay in list)
                 {
-                    overlay.ClydeRender(_renderHandle);
+                    overlay.ClydeRender(_renderHandle, space);
                 }
 
                 FlushRenderQueue();

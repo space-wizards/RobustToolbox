@@ -45,7 +45,7 @@ namespace Robust.Client.ViewVariables.Editors
                         DebugTools.AssertNotNull(parameters[3]);
                         ValueChanged(parameters[3]);
                     }
-                    else if(EnumHelper.TryParse(enumType, e.Text, true, out var enumValue))
+                    else if(Enum.TryParse(enumType, e.Text, true, out var enumValue))
                     {
                         var underlyingVal = Convert.ChangeType(enumValue, enumStorageType);
                         ValueChanged(underlyingVal);
@@ -56,7 +56,5 @@ namespace Robust.Client.ViewVariables.Editors
             hBox.AddChild(lineEdit);
             return hBox;
         }
-
-        //TODO: https://github.com/dotnet/corefx/issues/692
     }
 }

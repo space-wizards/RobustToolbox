@@ -42,7 +42,7 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static Direction GetDir(this Vector2i vec)
         {
-            return vec.ToAngle().GetDir();
+            return new Angle(vec).GetDir();
         }
 
         public static Direction GetOpposite(this Direction direction)
@@ -92,16 +92,6 @@ namespace Robust.Shared.Maths
         /// <param name="vec">Vector to get the angle from.</param>
         /// <returns>Angle of the vector.</returns>
         public static Angle ToAngle(this Vector2 vec)
-        {
-            return Math.Atan2(vec.Y, vec.X);
-        }
-
-        /// <summary>
-        /// Converts a direction vector to an angle, where angle is -PI to +PI.
-        /// </summary>
-        /// <param name="vec">Vector to get the angle from.</param>
-        /// <returns>Angle of the vector.</returns>
-        public static Angle ToAngle(this Vector2i vec)
         {
             return Math.Atan2(vec.Y, vec.X);
         }

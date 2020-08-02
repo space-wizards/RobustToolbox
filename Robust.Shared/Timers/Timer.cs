@@ -66,7 +66,7 @@ namespace Robust.Shared.Timers
 
                     if (IsRepeating)
                     {
-                        _timeCounter = Time;
+                        _timeCounter += Time;
                     }
                     else
                     {

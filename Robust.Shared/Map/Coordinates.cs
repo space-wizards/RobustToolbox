@@ -100,9 +100,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Converts this set of coordinates to map indices.
         /// </summary>
-        public MapIndices ToMapIndices()
+        public MapIndices ToMapIndices(IMapManager mapManager)
         {
-            return new MapIndices((int)MathF.Floor(X), (int)MathF.Floor(Y));
+            return mapManager.GetGrid(GridID).GetTileRef(this).GridIndices;
         }
 
         /// <summary>

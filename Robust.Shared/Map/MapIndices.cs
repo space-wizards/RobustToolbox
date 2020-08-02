@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -100,9 +101,11 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
-        public GridCoordinates ToGridCoordinates(GridId gridId)
+        public GridCoordinates ToGridCoordinates(IMapManager mapManager, GridId gridId)
         {
-            return new GridCoordinates(X, Y, gridId);
+            var tile = mapManager.GetGrid(gridId).TileSize;
+
+            return new GridCoordinates(X * tile, Y * tile, gridId);
         }
 
         /// <inheritdoc />

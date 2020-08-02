@@ -98,6 +98,14 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
+        ///     Converts this set of coordinates to map indices.
+        /// </summary>
+        public MapIndices ToMapIndices(IMapManager mapManager)
+        {
+            return mapManager.GetGrid(GridID).GetTileRef(this).GridIndices;
+        }
+
+        /// <summary>
         ///     Offsets the position by a given vector.
         /// </summary>
         public GridCoordinates Offset(Vector2 offset)

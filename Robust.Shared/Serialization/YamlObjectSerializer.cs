@@ -451,6 +451,22 @@ namespace Robust.Shared.Serialization
                 return StringToType(type, node.ToString());
             }
 
+            // array
+            if (type.IsArray)
+            {
+                var listNode = (YamlSequenceNode)node;
+                var newArray = (Array)Activator.CreateInstance(type, listNode.Children.Count)!;
+
+                var idx = 0;
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(type.GetElementType()!, entryNode);
+                    newArray.SetValue(value, idx++);
+                }
+
+                return newArray;
+            }
+
             // val enum
             if (type.IsEnum)
                 return Enum.Parse(type, node.ToString());
@@ -600,6 +616,31 @@ namespace Robust.Shared.Serialization
                 // Need it for the culture overload.
                 var convertible = (IConvertible) obj;
                 return convertible.ToString(CultureInfo.InvariantCulture);
+            }
+
+            // array
+            if (type.IsArray)
+            {
+                var sequence = new YamlSequenceNode();
+                var element = type.GetElementType()!;
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        continue;
+                        throw new ArgumentException("Cannot serialize null value inside array.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(element, entry, null, entryNode);
+
+                    sequence.Add(entryNode);
+                }
+
+                return sequence;
             }
 
             // List<T>/IReadOnlyCollection<T>/IReadOnlyList<T>

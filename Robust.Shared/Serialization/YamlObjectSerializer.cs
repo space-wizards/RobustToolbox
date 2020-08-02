@@ -635,11 +635,7 @@ namespace Robust.Shared.Serialization
                     var entryNode = TypeToNode(entry);
 
                     // write the concrete type tag
-                    if (element!.IsAbstract || element!.IsInterface)
-                    {
-                        var concreteType = entry.GetType();
-                        entryNode.Tag = $"!type:{concreteType.Name}";
-                    }
+                    AssignTag<object?>(element, entry, null, entryNode);
 
                     sequence.Add(entryNode);
                 }

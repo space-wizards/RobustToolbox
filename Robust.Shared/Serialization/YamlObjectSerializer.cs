@@ -622,7 +622,7 @@ namespace Robust.Shared.Serialization
             if (type.IsArray)
             {
                 var sequence = new YamlSequenceNode();
-                var element = type.GetElementType();
+                var element = type.GetElementType()!;
 
                 foreach (var entry in (IEnumerable) obj)
                 {

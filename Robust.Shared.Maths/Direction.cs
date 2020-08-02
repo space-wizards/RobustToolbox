@@ -7,6 +7,7 @@ namespace Robust.Shared.Maths
     [Flags]
     public enum Direction
     {
+        Invalid = -1,
         East = 0,
         NorthEast = 1,
         North = 2,

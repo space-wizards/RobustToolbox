@@ -647,8 +647,8 @@ namespace Robust.Shared.Serialization
                 return sequence;
             }
 
-            // List<T>
-            if (TryGenericListType(type, out var listType))
+            // List<T>/IReadOnlyCollection<T>/IReadOnlyList<T>
+            if (TryGenericListType(type, out var listType) || TryGenericReadOnlyCollectionType(type, out listType))
             {
                 var node = new YamlSequenceNode();
                 node.Tag = TagSkipTag;

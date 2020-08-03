@@ -301,7 +301,7 @@ namespace Robust.Server.GameObjects
 
         private static void AddContainedRecursive(IEntity ent, HashSet<IEntity> set)
         {
-            if (!ent.TryGetComponent(out ContainerManagerComponent contMgr))
+            if (!ent.IsValid() || !ent.TryGetComponent(out ContainerManagerComponent contMgr))
             {
                 return;
             }
@@ -489,8 +489,14 @@ namespace Robust.Server.GameObjects
             // TODO: Make map manager netcode aware of PVS to avoid the need for this workaround.
             IncludeMapCriticalEntities(relatives);
 
+
             foreach (var entity in relatives)
             {
+                if (!entity.IsValid())
+                {
+                    continue;
+                }
+
                 DebugTools.Assert(entity.Initialized && !entity.Deleted);
 
                 var lastChange = entity.LastModifiedTick;
@@ -946,7 +952,7 @@ namespace Robust.Server.GameObjects
         {
             foreach (var entity in set.ToArray())
             {
-                if (!entity.TryGetComponent(out VisibilityComponent visibility))
+                if (!entity.IsValid() || !entity.TryGetComponent(out VisibilityComponent visibility))
                     continue;
 
                 if ((visibilityMask & visibility.Layer) == 0)

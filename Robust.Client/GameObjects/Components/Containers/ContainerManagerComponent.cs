@@ -144,12 +144,10 @@ namespace Robust.Client.GameObjects.Components.Containers
                 // Add new entities.
                 foreach (var uid in data.ContainedEntities)
                 {
-                    if (!Owner.EntityManager.TryGetEntity(uid, out var ent))
+                    if (!Owner.EntityManager.TryGetEntity(uid, out var entity))
                     {
                         continue;
                     }
-
-                    var entity = Owner.EntityManager.GetEntity(uid);
 
                     if (!container.Entities.Contains(entity))
                     {

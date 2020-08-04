@@ -131,8 +131,7 @@ namespace Robust.Client.Input
             foreach (var binding in _bindings)
             {
                 // check if our binding is even in the active context
-                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function)
-                    || (_userInterfaceManagerInternal.KeyboardFocused == null && binding.Function.FunctionName.Contains("Text")))
+                if (!Contexts.ActiveContext.FunctionExistsHierarchy(binding.Function))
                 {
                     continue;
                 }
@@ -153,6 +152,10 @@ namespace Robust.Client.Input
                     {
                         // kill any lower level matches
                         UpBind(binding);
+                    }
+                    else
+                    {
+                        bindsDown.Add(binding);
                     }
                 }
             }

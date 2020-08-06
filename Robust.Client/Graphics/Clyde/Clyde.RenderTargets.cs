@@ -4,9 +4,14 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+
+// ReSharper disable once IdentifierTypo
+using RTCF = Robust.Client.Interfaces.Graphics.RenderTargetColorFormat;
+using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
+using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
+using PT = OpenToolkit.Graphics.OpenGL4.PixelType;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -61,22 +66,25 @@ namespace Robust.Client.Graphics.Clyde
 
                 ApplySampleParameters(sampleParameters);
 
-                var internalFormat = format.ColorFormat switch
+                // Make sure to specify the correct pixel type and formats even if we're not uploading any data.
+                // Not doing this (just sending red/byte) is fine on desktop GL but illegal on ES.
+                var (internalFormat, pixFormat, pixType) = format.ColorFormat switch
                 {
-                    RenderTargetColorFormat.Rgba8 => PixelInternalFormat.Rgba8,
-                    RenderTargetColorFormat.Rgba16F => PixelInternalFormat.Rgba16f,
-                    RenderTargetColorFormat.Rgba8Srgb => PixelInternalFormat.Srgb8Alpha8,
-                    RenderTargetColorFormat.R11FG11FB10F => PixelInternalFormat.R11fG11fB10f,
-                    RenderTargetColorFormat.R32F => PixelInternalFormat.R32f,
-                    RenderTargetColorFormat.RG32F => PixelInternalFormat.Rg32f,
-                    RenderTargetColorFormat.R8 => PixelInternalFormat.R8,
+                    // using block comments to force formatters to not fuck this up.
+                    RTCF.Rgba8 => /*       */(PIF.Rgba8, /*       */PF.Rgba, /**/PT.UnsignedByte),
+                    RTCF.Rgba16F => /*     */(PIF.Rgba16f, /*     */PF.Rgba, /**/PT.Float),
+                    RTCF.Rgba8Srgb => /*   */(PIF.Srgb8Alpha8, /* */PF.Rgba, /**/PT.UnsignedByte),
+                    RTCF.R11FG11FB10F => /**/(PIF.R11fG11fB10f, /**/PF.Rgb, /* */PT.Float),
+                    RTCF.R32F => /*        */(PIF.R32f, /*        */PF.Red, /* */PT.Float),
+                    RTCF.RG32F => /*       */(PIF.Rg32f, /*       */PF.Rg, /*  */PT.Float),
+                    RTCF.R8 => /*          */(PIF.R8, /*          */PF.Red, /* */PT.UnsignedByte),
                     _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
                 };
 
                 estPixSize += EstPixelSize(internalFormat);
 
-                GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, PixelFormat.Red,
-                    PixelType.Byte, IntPtr.Zero);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixFormat,
+                    pixType, IntPtr.Zero);
 
                 GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                     texture.Handle,

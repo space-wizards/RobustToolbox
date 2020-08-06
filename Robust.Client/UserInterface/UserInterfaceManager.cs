@@ -417,7 +417,7 @@ namespace Robust.Client.UserInterface
             };
 
             popup.Contents.AddChild(new Label {Text = contents});
-            popup.OpenCenteredMinSize();
+            popup.OpenCentered();
         }
 
         public Control? MouseGetControl(Vector2 coordinates)

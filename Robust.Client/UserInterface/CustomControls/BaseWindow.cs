@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.Log;
@@ -210,6 +210,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void OpenCentered()
         {
+            LayoutContainer.SetSize(this, CombinedMinimumSize);
             Open();
             LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
         }

@@ -140,12 +140,6 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        public void OpenCenteredMinSize()
-        {
-            LayoutContainer.SetSize(this, ContentsMinimumSize);
-            OpenCentered();
-        }
-
         protected override DragMode GetDragModeFor(Vector2 relativeMousePos)
         {
             var mode = DragMode.None;

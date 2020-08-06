@@ -98,6 +98,8 @@ namespace Robust.Client.UserInterface.CustomControls
                     args.Handle();
                 }
             };
+
+            searchResults = new List<string>();
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -230,7 +232,7 @@ namespace Robust.Client.UserInterface.CustomControls
         
         private void FindCommands()
         {
-            searchResults = new List<string>();
+            searchResults.Clear();
             searchIndex = 0;
             commandChanged = false;
             foreach (var cmd in Commands)
@@ -260,7 +262,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             SetInput(searchResults[0]);
         }
-        
+
         private void PrevCommand()
         {
             if (!commandChanged)

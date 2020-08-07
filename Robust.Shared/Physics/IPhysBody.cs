@@ -65,6 +65,15 @@ namespace Robust.Shared.Physics
 
         bool Awake { get; }
 
+        /// <summary>
+        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     while still raising collision events.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful for triggers or such to detect collision without actually causing a blockage.
+        /// </remarks>
+        bool Hard { get; set; }
+
         void WakeBody();
     }
 }

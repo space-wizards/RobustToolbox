@@ -38,6 +38,8 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         IEnumerable<IEntity> GetCollidingEntities(IPhysBody body, Vector2 offset, bool approximate = true);
 
+        IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox);
+
         /// <summary>
         ///     Checks whether a body is colliding
         /// </summary>

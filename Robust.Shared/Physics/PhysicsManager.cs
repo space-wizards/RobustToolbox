@@ -139,6 +139,12 @@ namespace Robust.Shared.Physics
             }
         }
 
+        /// <inheritdoc />
+        public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
+        {
+            return this[mapId].Query(worldBox, false);
+        }
+
         public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
         {
             return GetCollidingEntities(body, offset, approximate).Any();

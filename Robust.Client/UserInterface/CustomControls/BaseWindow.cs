@@ -210,7 +210,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void OpenCentered()
         {
-            LayoutContainer.SetSize(this, CombinedMinimumSize);
             Open();
             LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
         }

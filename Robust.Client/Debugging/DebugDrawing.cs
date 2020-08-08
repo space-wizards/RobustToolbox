@@ -1,10 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
+using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Client.Interfaces.Input;
+using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -23,6 +28,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
         private bool _debugColliders;
         private bool _debugPositions;
@@ -43,7 +49,7 @@ namespace Robust.Client.Debugging
                 if (value)
                 {
                     _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager,
-                        _prototypeManager));
+                        _prototypeManager, _inputManager));
                 }
                 else
                 {
@@ -80,29 +86,82 @@ namespace Robust.Client.Debugging
         {
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
+            private readonly IInputManager _inputManager;
 
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
             private readonly ShaderInstance _shader;
+            private readonly Font _font;
 
-            public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan)
+            private Vector2 _hoverStartScreen = Vector2.Zero;
+            private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
+
+            public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
                 : base(nameof(CollidableOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
+                _inputManager = inputManager;
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
+                var cache = IoCManager.Resolve<IResourceCache>();
+                _font = new VectorFont(cache.GetResource<FontResource>("/Textures/Interface/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
             }
 
+            /// <inheritdoc />
             protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
-                handle.UseShader(_shader);
-                var worldHandle = (DrawingHandleWorld) handle;
+                switch (currentSpace)
+                {
+                    case OverlaySpace.ScreenSpace:
+                        DrawScreen((DrawingHandleScreen) handle);
+                        break;
+                    case OverlaySpace.WorldSpace:
+                        DrawWorld((DrawingHandleWorld) handle);
+                        break;
+                }
+
+            }
+
+            private void DrawScreen(DrawingHandleScreen screenHandle)
+            {
+                var lineHeight = _font.GetLineHeight(1f);
+                Vector2 drawPos = _hoverStartScreen + new Vector2(20, 0) + new Vector2(0, -(_hoverBodies.Count * 4 * lineHeight / 2f));
+                int row = 0;
+
+                foreach (var body in _hoverBodies)
+                {
+                    if (body != _hoverBodies[0])
+                    {
+                        DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), "------");
+                        row++;
+                    }
+
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    row++;
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
+                    row++;
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
+                    row++;
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((ICollidableComponent)body).Anchored}");
+                    row++;
+                }
+
+            }
+
+            private void DrawWorld(DrawingHandleWorld worldHandle)
+            {
+                worldHandle.UseShader(_shader);
                 var drawing = new PhysDrawingAdapter(worldHandle);
+
+                _hoverBodies.Clear();
+                var mouseScreenPos = _inputManager.MouseScreenPosition;
+                var mouseWorldPos = _eyeManager.ScreenToMap(mouseScreenPos).Position;
+                _hoverStartScreen = mouseScreenPos;
 
                 var viewport = _eyeManager.GetWorldViewport();
                 foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
                 {
-                    var physBody = (IPhysBody)boundingBox;
+                    var physBody = (IPhysBody) boundingBox;
 
                     // all entities have a TransformComponent
                     var transform = physBody.Entity.Transform;
@@ -111,20 +170,36 @@ namespace Robust.Client.Debugging
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
                         continue;
 
-                    var worldBox = boundingBox.WorldAABB;
+                    var worldBox = physBody.WorldAABB;
                     var colorEdge = Color.Red.WithAlpha(0.33f);
 
                     // if not on screen, or too small, continue
-                    if (!worldBox.Intersects(viewport) || worldBox.IsEmpty())
+                    if (!worldBox.Intersects(in viewport) || worldBox.IsEmpty())
                         continue;
 
-                    foreach (var shape in boundingBox.PhysicsShapes)
+                    foreach (var shape in physBody.PhysicsShapes)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float)physBody.SleepThreshold);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
+                    }
+
+                    if (worldBox.Contains(mouseWorldPos))
+                    {
+                        _hoverBodies.Add(physBody);
                     }
 
                     // draw AABB
                     worldHandle.DrawRect(worldBox, colorEdge, false);
+                }
+            }
+
+            private static void DrawString(DrawingHandleScreen handle, Font font, Vector2 pos, string str)
+            {
+                var baseLine = new Vector2(pos.X, font.GetAscent(1) + pos.Y);
+
+                foreach (var chr in str)
+                {
+                    var advance = font.DrawChar(handle, chr, baseLine, 1, Color.White);
+                    baseLine += new Vector2(advance, 0);
                 }
             }
 

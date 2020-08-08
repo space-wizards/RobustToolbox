@@ -84,7 +84,7 @@ namespace Robust.Client.Graphics.Overlays
         internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
         {
             DrawingHandleBase handle;
-            if (Space == OverlaySpace.WorldSpace)
+            if (currentSpace == OverlaySpace.WorldSpace)
                 handle = renderHandle.DrawingHandleWorld;
             else
                 handle = renderHandle.DrawingHandleScreen;

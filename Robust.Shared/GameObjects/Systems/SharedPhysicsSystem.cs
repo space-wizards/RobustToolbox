@@ -277,7 +277,7 @@ namespace Robust.Shared.GameObjects.Systems
         // Based off of Randy Gaul's ImpulseEngine code
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
-            const float allowance = 0.05f;
+            const float allowance = 1/128f;
             var percent = Math.Clamp(1f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)

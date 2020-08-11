@@ -77,7 +77,7 @@ namespace Robust.Shared.Random
         /// <param name="chance">The chance to pass, from 0 to 1.</param>
         public static bool Prob(this IRobustRandom random, float chance)
         {
-            DebugTools.Assert(chance <= 1 && chance >= 0, "Chance must be in the range 0-1");
+            DebugTools.Assert(chance <= 1 && chance >= 0, $"Chance must be in the range 0-1. It was {chance}.");
 
             return random.NextDouble() <= chance;
         }

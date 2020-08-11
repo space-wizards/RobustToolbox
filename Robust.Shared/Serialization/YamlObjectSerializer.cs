@@ -451,6 +451,22 @@ namespace Robust.Shared.Serialization
                 return StringToType(type, node.ToString());
             }
 
+            // array
+            if (type.IsArray)
+            {
+                var listNode = (YamlSequenceNode)node;
+                var newArray = (Array)Activator.CreateInstance(type, listNode.Children.Count)!;
+
+                var idx = 0;
+                foreach (var entryNode in listNode)
+                {
+                    var value = NodeToType(type.GetElementType()!, entryNode);
+                    newArray.SetValue(value, idx++);
+                }
+
+                return newArray;
+            }
+
             // val enum
             if (type.IsEnum)
                 return Enum.Parse(type, node.ToString());
@@ -602,6 +618,31 @@ namespace Robust.Shared.Serialization
                 return convertible.ToString(CultureInfo.InvariantCulture);
             }
 
+            // array
+            if (type.IsArray)
+            {
+                var sequence = new YamlSequenceNode();
+                var element = type.GetElementType()!;
+
+                foreach (var entry in (IEnumerable) obj)
+                {
+                    if (entry == null)
+                    {
+                        continue;
+                        throw new ArgumentException("Cannot serialize null value inside array.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(element, entry, null, entryNode);
+
+                    sequence.Add(entryNode);
+                }
+
+                return sequence;
+            }
+
             // List<T>/IReadOnlyCollection<T>/IReadOnlyList<T>
             if (TryGenericListType(type, out var listType) || TryGenericReadOnlyCollectionType(type, out listType))
             {
@@ -740,6 +781,31 @@ namespace Robust.Shared.Serialization
                     var elemB = listB[i];
 
                     if (!IsSerializedEqual(elemA, elemB))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            if (TryGenericDictType(type!, out _, out _))
+            {
+                var dictA = (IDictionary) a;
+                var dictB = (IDictionary) b!;
+
+                foreach (var entryMaybe in dictA)
+                {
+                    var entry = (DictionaryEntry) entryMaybe!;
+                    var k = entry.Key;
+                    var v = entry.Value;
+
+                    if (!dictB.Contains(k))
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(v, dictB[k]))
                     {
                         return false;
                     }

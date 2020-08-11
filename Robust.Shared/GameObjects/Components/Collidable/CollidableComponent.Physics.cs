@@ -161,15 +161,25 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         /// <returns>True if all of the controllers were reset, false otherwise.</returns>
         bool Stop();
+
+        /// <summary>
+        /// Can this body be moved?
+        /// </summary>
+        /// <returns></returns>
+        bool CanMove();
     }
 
     partial class CollidableComponent : ICollidableComponent
     {
-        private float _mass;
+        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
+
+        private float _mass = 1;
+        private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
-        private bool _anchored;
+        private bool _anchored = true;
+        private float _friction = 1;
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -183,6 +193,64 @@ namespace Robust.Shared.GameObjects.Components
                 _mass = value;
                 Dirty();
             }
+        }
+
+        /// <summary>
+        /// Inverse mass of the entity in kilograms (1 / Mass).
+        /// </summary>
+        public float InvMass
+        {
+            get => Mass > 0 ? 1f / Mass : 0f;
+            set => Mass = value > 0 ? 1f / value : 0f;
+        }
+
+        /// <summary>
+        /// Moment of inertia, or angular mass, in kg * m^2.
+        /// </summary>
+        /// <remarks>
+        /// https://en.wikipedia.org/wiki/Moment_of_inertia
+        /// </remarks>
+        public float I
+        {
+            get => _angularMass;
+            set
+            {
+                _angularMass = value;
+                Dirty();
+            }
+        }
+
+        /// <summary>
+        /// Inverse moment of inertia (1 / I).
+        /// </summary>
+        public float InvI
+        {
+            get => I > 0 ? 1 / I : 0f;
+            set => I = value > 0 ? 1 / value : 0f;
+        }
+
+        /// <summary>
+        /// Current Force being applied to this entity in Newtons.
+        /// </summary>
+        /// <remarks>
+        /// The force is applied to the center of mass.
+        /// https://en.wikipedia.org/wiki/Force
+        /// </remarks>
+        public Vector2 Force { get; set; }
+
+        /// <summary>
+        /// Current torque being applied to this entity in N*m.
+        /// </summary>
+        /// <remarks>
+        /// The torque rotates around the Z axis on the object.
+        /// https://en.wikipedia.org/wiki/Torque
+        /// </remarks>
+        public float Torque { get; set; }
+
+        public float Friction
+        {
+            get => _friction;
+            set => _friction = value;
         }
 
         /// <summary>
@@ -290,7 +358,8 @@ namespace Robust.Shared.GameObjects.Components
                 throw new InvalidOperationException($"A controller of type {typeof(T)} already exists.");
             }
 
-            var controller = new T {ControlledComponent = this};
+            var controller = _dynamicTypeFactory.CreateInstance<T>();
+            controller.ControlledComponent = this;
             _controllers[typeof(T)] = controller;
 
             Dirty();
@@ -301,7 +370,8 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public T SetController<T>() where T : VirtualController, new()
         {
-            var controller = new T {ControlledComponent = this};
+            var controller = _dynamicTypeFactory.CreateInstance<T>();
+            controller.ControlledComponent = this;
             _controllers[typeof(T)] = controller;
 
             Dirty();
@@ -417,6 +487,12 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             return successful;
+        }
+
+        /// <inheritdoc />
+        public bool CanMove()
+        {
+            return !Anchored && !Mass.Equals(0) && !Deleted;
         }
     }
 }

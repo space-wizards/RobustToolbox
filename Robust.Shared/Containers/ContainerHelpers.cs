@@ -105,5 +105,29 @@ namespace Robust.Shared.Containers
 
             return false;
         }
+        
+        public static bool IsInSameOrNoContainer(this IEntity user, IEntity other)
+        {
+            DebugTools.AssertNotNull(user);
+            DebugTools.AssertNotNull(other);
+
+            var isUserContained = TryGetContainer(user, out var userContainer);
+            var isOtherContained = TryGetContainer(other, out var otherContainer);
+
+            // Both entities are not in a container
+            if (!isUserContained && !isOtherContained)
+            {
+                return true;
+            }
+
+            // Both entities are in different contained states
+            if (isUserContained != isOtherContained)
+            {
+                return false;
+            }
+
+            // Both entities are in the same container
+            return userContainer == otherContainer;
+        }
     }
 }

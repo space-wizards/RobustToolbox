@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
@@ -149,6 +150,21 @@ namespace Robust.Client.GameObjects.Components.Containers
                     {
                         container.DoInsert(entity);
                     }
+                }
+            }
+        }
+
+        protected override void Shutdown()
+        {
+            base.Shutdown();
+
+            // On shutdown we won't get to process remove events in the containers so this has to be manually done.
+            foreach (var container in _containers.Values)
+            {
+                foreach (var containerEntity in container.Entities)
+                {
+                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                        new UpdateContainerOcclusionMessage(containerEntity));
                 }
             }
         }

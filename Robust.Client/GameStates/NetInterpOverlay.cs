@@ -21,17 +21,20 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
+        private readonly ShaderInstance _shader;
 
         public NetInterpOverlay() : base(nameof(NetInterpOverlay))
         {
             IoCManager.InjectDependencies(this);
-            Shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+            _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
         }
-        protected override void Draw(DrawingHandleBase handle)
+
+        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
+            handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.GetAllComponents<ICollidableComponent>())
+            foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
             {
                 // all entities have a TransformComponent
                 var transform = ((IComponent)boundingBox).Owner.Transform;

@@ -208,7 +208,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             manager.AddComponent(entity, component);
 
             // Act
-            var result = manager.GetAllComponents<DummyComponent>();
+            var result = manager.EntityQuery<DummyComponent>();
 
             // Assert
             var list = result.ToList();

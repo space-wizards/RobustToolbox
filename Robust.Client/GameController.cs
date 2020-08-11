@@ -268,6 +268,7 @@ namespace Robust.Client
         {
             _clyde.ProcessInput(frameEventArgs);
             _networkManager.ProcessPackets();
+            _taskManager.ProcessPendingTasks(); // tasks like connect
         }
 
         private void Tick(FrameEventArgs frameEventArgs)

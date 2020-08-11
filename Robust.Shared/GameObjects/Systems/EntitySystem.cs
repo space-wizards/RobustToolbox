@@ -21,10 +21,14 @@ namespace Robust.Shared.GameObjects.Systems
     public abstract class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly IEntityManager EntityManager = default!;
+        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
+        [Obsolete("You need to create and store the query yourself in a field.")]
         protected IEntityQuery? EntityQuery;
+
+        [Obsolete("You need to use `EntityManager.GetEntities(EntityQuery)`, or store a query yourself.")]
         protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
 
         protected internal List<Type> UpdatesAfter { get; } = new List<Type>();

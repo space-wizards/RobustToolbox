@@ -455,9 +455,9 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             EntityManager.FinishEntityInitialization(child1);
             EntityManager.FinishEntityInitialization(parent);
 
-            Assert.AreEqual(new MapId(123), child2.Transform.MapID);
-            Assert.AreEqual(new MapId(123), child1.Transform.MapID);
-            Assert.AreEqual(new MapId(123), parent.Transform.MapID);
+            Assert.That(child2.Transform.MapID, Is.EqualTo(new MapId(123)));
+            Assert.That(child1.Transform.MapID, Is.EqualTo(new MapId(123)));
+            Assert.That(parent.Transform.MapID, Is.EqualTo(new MapId(123)));
         }
     }
 }

@@ -6,7 +6,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameStates
 {
     [Serializable, NetSerializable]
-    public class GameStateMapData
+    public sealed class GameStateMapData
     {
         // Dict of the new maps along with which grids are their defaults.
         public readonly KeyValuePair<MapId, GridId>[]? CreatedMaps;
@@ -28,8 +28,8 @@ namespace Robust.Shared.GameStates
         public struct GridCreationDatum
         {
             public readonly ushort ChunkSize;
-            public readonly float SnapSize;
             public readonly bool IsTheDefault;
+            public readonly float SnapSize;
 
             public GridCreationDatum(ushort chunkSize, float snapSize, bool isTheDefault)
             {

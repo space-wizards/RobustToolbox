@@ -129,6 +129,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 OverrideMenu.AddItem(initOpts[i], i);
             }
 
+            EraseButton.Pressed = placementManager.Eraser;
             EraseButton.OnToggled += OnEraseButtonToggled;
             OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
             SearchBar.OnTextChanged += OnSearchBarTextChanged;

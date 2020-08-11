@@ -359,13 +359,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = component.Owner.Transform;
 
-                var circle = new Circle(lightPos, component.Radius);
-
-                if (!circle.Intersects(worldBounds))
-                {
-                    continue;
-                }
-
                 Texture? mask = null;
                 var rotation = Angle.Zero;
                 if (component.Mask != null)
@@ -425,6 +418,8 @@ namespace Robust.Client.Graphics.Clyde
                 (matrix.R0C2, matrix.R1C2) = lightPos;
 
                 _drawQuad(-offset, offset, matrix, lightShader);
+
+                _debugStats.TotalLights += 1;
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
@@ -468,6 +463,13 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 var lightPos = transform.WorldMatrix.Transform(component.Offset);
+
+                var circle = new Circle(lightPos, component.Radius);
+
+                if (!circle.Intersects(worldBounds))
+                {
+                    continue;
+                }
 
                 _lightsToRenderList[count] = (component, lightPos);
                 count += 1;

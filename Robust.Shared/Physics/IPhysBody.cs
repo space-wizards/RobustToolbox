@@ -65,6 +65,59 @@ namespace Robust.Shared.Physics
 
         bool Awake { get; }
 
+        /// <summary>
+        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     while still raising collision events.
+        /// </summary>
+        /// <remarks>
+        ///     This is useful for triggers or such to detect collision without actually causing a blockage.
+        /// </remarks>
+        bool Hard { get; set; }
+
+        /// <summary>
+        /// Inverse mass of the entity in kilograms (1 / Mass).
+        /// </summary>
+        float InvMass { get; }
+
+        /// <summary>
+        /// Inverse moment of inertia, in 
+        /// </summary>
+        float InvI { get; }
+
+        /// <summary>
+        /// Current Force being applied to this entity in Newtons.
+        /// </summary>
+        /// <remarks>
+        /// The force is applied to the center of mass.
+        /// https://en.wikipedia.org/wiki/Force
+        /// </remarks>
+        Vector2 Force { get; set; }
+
+        /// <summary>
+        /// Current torque being applied to this entity in N*m.
+        /// </summary>
+        /// <remarks>
+        /// The torque rotates around the Z axis on the object.
+        /// https://en.wikipedia.org/wiki/Torque
+        /// </remarks>
+        float Torque { get; set; }
+
+        /// <summary>
+        /// Sliding friction coefficient. This is how slippery a material is,
+        /// or how much of it's velocity is being countered.
+        /// </summary>
+        /// <remarks>
+        /// This value ranges from 0 to greater than one.
+        /// Ice is 0.03, steel is 0.4, rubber is 1.
+        /// </remarks>
+        float Friction { get; set; }
+
         void WakeBody();
+
+        /// <summary>
+        /// Derived value determining if this body can move or not.
+        /// </summary>
+        /// <returns>True if this body can move, false if it is static.</returns>
+        bool CanMove();
     }
 }

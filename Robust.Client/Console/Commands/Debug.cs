@@ -666,7 +666,7 @@ namespace Robust.Client.Console.Commands
                 }
             });
 
-            window.OpenCenteredMinSize();
+            window.OpenCentered();
 
             return false;
         }

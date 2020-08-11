@@ -90,7 +90,7 @@ namespace Robust.Client.Debugging
                 _owner = owner;
             }
 
-            protected override void Draw(DrawingHandleBase handle)
+            protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
             {
                 foreach (var ray in _owner.raysWithLifeTime)
                 {

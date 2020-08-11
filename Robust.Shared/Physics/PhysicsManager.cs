@@ -50,7 +50,14 @@ namespace Robust.Shared.Physics
             return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
         }
 
-        public Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
+
+        /// <summary>
+        ///     Calculates the normal vector for two colliding bodies
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
@@ -80,8 +87,8 @@ namespace Robust.Shared.Physics
         // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
         public Vector2 SolveCollisionImpulse(Manifold manifold)
         {
-            var aP = manifold.APhysics;
-            var bP = manifold.BPhysics;
+            var aP = manifold.A;
+            var bP = manifold.B;
             if (aP == null && bP == null) return Vector2.Zero;
             var restitution = 0.01f;
             var normal = CalculateNormal(manifold.A, manifold.B);
@@ -130,6 +137,12 @@ namespace Robust.Shared.Physics
                     yield return body.Entity;
                 }
             }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
+        {
+            return this[mapId].Query(worldBox, false);
         }
 
         public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)

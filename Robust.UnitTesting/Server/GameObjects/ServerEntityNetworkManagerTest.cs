@@ -33,12 +33,12 @@ namespace Robust.UnitTesting.Server.GameObjects
             pq.Add(msgE);
             pq.Add(msgF);
 
-            Assert.AreEqual(pq.Take(), msgF);
-            Assert.AreEqual(pq.Take(), msgE);
-            Assert.AreEqual(pq.Take(), msgA);
-            Assert.AreEqual(pq.Take(), msgC);
-            Assert.AreEqual(pq.Take(), msgB);
-            Assert.AreEqual(pq.Take(), msgD);
+            Assert.That(pq.Take(), Is.EqualTo(msgF));
+            Assert.That(pq.Take(), Is.EqualTo(msgE));
+            Assert.That(pq.Take(), Is.EqualTo(msgA));
+            Assert.That(pq.Take(), Is.EqualTo(msgC));
+            Assert.That(pq.Take(), Is.EqualTo(msgB));
+            Assert.That(pq.Take(), Is.EqualTo(msgD));
         }
     }
 }

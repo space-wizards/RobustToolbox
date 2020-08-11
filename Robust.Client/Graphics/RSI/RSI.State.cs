@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -86,22 +85,9 @@ namespace Robust.Client.Graphics
                 return Icons[(int) direction][frame];
             }
 
-            public Texture GetFrameAtSecond(Direction direction, float second)
+            public Texture[] GetFrames(Direction direction)
             {
-                second %= AnimationLength;
-
-                var total = 0f;
-                for (int i = 0; i < Delays.Length; i++)
-                {
-                    var delay = Delays[i];
-
-                    if (total + delay > second)
-                        return GetFrame(direction, i);
-
-                    total += delay;
-                }
-
-                return Frame0;
+                return Icons[(int) direction];
             }
 
             /// <summary>
@@ -115,6 +101,11 @@ namespace Robust.Client.Graphics
             public float GetDelay(int frame)
             {
                 return Delays[frame];
+            }
+
+            public float[] GetDelays()
+            {
+                return Delays;
             }
 
             Texture IDirectionalTextureProvider.Default => Frame0;

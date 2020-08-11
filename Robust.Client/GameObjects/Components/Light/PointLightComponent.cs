@@ -116,6 +116,7 @@ namespace Robust.Client.GameObjects
         ///     Radius, in meters.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float Radius
         {
             get => _radius;

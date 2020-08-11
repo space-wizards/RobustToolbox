@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Input;
 using Robust.Shared.Log;
@@ -14,6 +14,9 @@ namespace Robust.Client.UserInterface.CustomControls
         private DragMode CurrentDrag = DragMode.None;
         private Vector2 DragOffsetTopLeft;
         private Vector2 DragOffsetBottomRight;
+
+        protected bool _firstTimeOpened = true;
+
         public bool Resizable { get; set; } = true;
         public bool IsOpen => Parent != null;
 
@@ -210,14 +213,32 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void OpenCentered()
         {
-            Open();
-            LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
+            if (_firstTimeOpened)
+            {
+                LayoutContainer.SetSize(this, CombinedMinimumSize);
+                Open();
+                LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
+                _firstTimeOpened = false;
+            }
+            else
+            {
+                Open();
+            }
         }
 
         public void OpenToLeft()
         {
-            Open();
-            LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - Size.Y) / 2));
+            if (_firstTimeOpened)
+            {
+                LayoutContainer.SetSize(this, CombinedMinimumSize);
+                Open();
+                LayoutContainer.SetPosition(this, (0, (Parent!.Size.Y - Size.Y) / 2));
+                _firstTimeOpened = false;
+            }
+            else
+            {
+                Open();
+            }
         }
 
         protected virtual void Opened()

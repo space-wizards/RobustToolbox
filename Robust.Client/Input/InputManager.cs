@@ -113,6 +113,15 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
+        public void ToggleBindingsForKey(Key key, bool enabled)
+        {
+            foreach (var binding in GetKeyBindingsForKey(key))
+            {
+                binding.Enabled = enabled;
+            }
+        }
+
+        /// <inheritdoc />
         public void KeyDown(KeyEventArgs args)
         {
             if (!Enabled || args.Key == Key.Unknown)
@@ -239,6 +248,11 @@ namespace Robust.Client.Input
 
         private bool SetBindState(KeyBinding binding, BoundKeyState state, bool uiOnly=false)
         {
+            if (!binding.Enabled)
+            {
+                return false;
+            }
+
             binding.State = state;
 
             var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
@@ -398,6 +412,13 @@ namespace Robust.Client.Input
             _bindings.Insert(pos, binding);
         }
 
+        private List<KeyBinding> GetKeyBindingsForKey(Key key)
+        {
+            return _bindings
+            .Where(x => x.PackedKeyCombo.BaseKey == key)
+            .ToList();
+        }
+
         /// <inheritdoc />
         public IKeyBinding GetKeyBinding(BoundKeyFunction function)
         {
@@ -462,18 +483,21 @@ namespace Robust.Client.Input
 
             public int Priority { get; internal set; }
 
+            public bool Enabled { get; set; }
+
             public KeyBinding(InputManager inputManager, BoundKeyFunction function,
                 KeyBindingType bindingType,
                 Key baseKey,
                 bool canFocus, bool canRepeat, int priority, Key mod1 = Key.Unknown,
                 Key mod2 = Key.Unknown,
-                Key mod3 = Key.Unknown)
+                Key mod3 = Key.Unknown, bool enabled = true)
             {
                 Function = function;
                 BindingType = bindingType;
                 CanFocus = canFocus;
                 CanRepeat = canRepeat;
                 Priority = priority;
+                Enabled = enabled;
                 _inputManager = inputManager;
 
                 PackedKeyCombo = new PackedKeyCombo(baseKey, mod1, mod2, mod3);

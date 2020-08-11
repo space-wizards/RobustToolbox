@@ -28,6 +28,14 @@ namespace Robust.Client.Interfaces.Input
         void KeyUp(KeyEventArgs e);
 
         /// <summary>
+        /// Enables or disables every key binding that is bound to the given key
+        /// Does not respect modifier keys
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="enabled">Whether the bindings get disabled or enabled</param>
+        public void ToggleBindingsForKey(Keyboard.Key key, bool enabled);
+
+        /// <summary>
         /// Registers a new key binding in the input manager.
         /// </summary>
         /// <param name="function">The function the key binding is bound to.</param>

@@ -84,7 +84,11 @@ namespace Robust.Client.GameObjects.EntitySystems
                 (PlayingStream?) Play(ev.FileName, entity, ev.AudioParams)
                 : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.AudioParams);
 
-            stream.NetIdentifier = ev.Identifier;
+            if (stream != null)
+            {
+                stream.NetIdentifier = ev.Identifier;
+            }
+
         }
 
         public override void FrameUpdate(float frameTime)

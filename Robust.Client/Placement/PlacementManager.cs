@@ -320,6 +320,7 @@ namespace Robust.Client.Placement
             IsActive = false;
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
+            _inputManager.ToggleBindingsForKey(Input.Keyboard.Key.MouseLeft, true);
         }
 
         public void Rotate()
@@ -398,6 +399,7 @@ namespace Robust.Client.Placement
             {
                 IsActive = true;
                 Eraser = true;
+                PreventMouseInput();
             }
             else Clear();
         }
@@ -409,6 +411,7 @@ namespace Robust.Client.Placement
                 IsActive = true;
                 Eraser = true;
                 Hijack = hijack;
+                PreventMouseInput();
             }
             else Clear();
         }
@@ -432,6 +435,8 @@ namespace Robust.Client.Placement
 
             var modeType = _modeDictionary.First(pair => pair.Key.Equals(CurrentPermission.PlacementOption)).Value;
             CurrentMode = (PlacementMode) Activator.CreateInstance(modeType, this)!;
+
+            PreventMouseInput();
 
             if (hijack != null)
             {
@@ -516,6 +521,15 @@ namespace Robust.Client.Placement
 
             PlacementType = PlacementTypes.None;
             return true;
+        }
+
+        /// <summary>
+        /// Prevents mouse input other than placing
+        /// </summary>
+        private void PreventMouseInput()
+        {
+            _inputManager.ToggleBindingsForKey(Input.Keyboard.Key.MouseLeft, false);
+            _inputManager.GetKeyBinding(EngineKeyFunctions.EditorPlaceObject).Enabled = true;
         }
 
         private void Render(DrawingHandleWorld handle)

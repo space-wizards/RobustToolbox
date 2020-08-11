@@ -11,6 +11,7 @@ namespace Robust.Server.Console
         bool CanViewVar(IPlayerSession session);
         bool CanAdminPlace(IPlayerSession session);
         bool CanScript(IPlayerSession session);
+        bool CanAdminMenu(IPlayerSession session);
         void SetGroup(IPlayerSession session, ConGroupIndex newGroup);
         ConGroupIndex GetGroupIndex(IPlayerSession session);
         string? GetGroupName(ConGroupIndex index);

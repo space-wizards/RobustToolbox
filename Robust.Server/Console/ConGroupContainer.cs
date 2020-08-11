@@ -160,5 +160,16 @@ namespace Robust.Server.Console
             _logger.Error($"Unknown groupIndex: {groupIndex}");
             return false;
         }
+
+        public bool CanAdminMenu(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanAdminMenu;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
     }
 }

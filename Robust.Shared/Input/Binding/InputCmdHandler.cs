@@ -157,11 +157,9 @@ namespace Robust.Shared.Input.Binding
             switch (msg.State)
             {
                 case BoundKeyState.Up:
-                    _disabled?.Invoke(session, msg.Coordinates, msg.Uid);
-                    return true;
+                    return _disabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
                 case BoundKeyState.Down:
-                    _enabled?.Invoke(session, msg.Coordinates, msg.Uid);
-                    return true;
+                    return _enabled?.Invoke(session, msg.Coordinates, msg.Uid) == true;
             }
 
             //Client Sanitization: unknown key state, just ignore

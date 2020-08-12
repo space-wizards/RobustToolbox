@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -328,8 +326,8 @@ namespace Robust.Shared.Maths
         public Vector2 ClosestPoint(in Vector2 position)
         {
             // clamp the point to the border of the box
-            var cx = MathF.Clamp(position.X, Left, Right);
-            var cy = MathF.Clamp(position.Y, Bottom, Top);
+            var cx = Math.Clamp(position.X, Left, Right);
+            var cy = Math.Clamp(position.Y, Bottom, Top);
 
             return new Vector2(cx, cy);
         }

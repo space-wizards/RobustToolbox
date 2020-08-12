@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -136,7 +137,7 @@ namespace Robust.Shared.Map
         /// </summary>
         private void UpdateAABB()
         {
-            LocalBounds = new Box2();
+            var localBounds = new Box2();
             foreach (var chunk in _chunks.Values)
             {
                 var chunkBounds = chunk.CalcLocalBounds();
@@ -144,17 +145,22 @@ namespace Robust.Shared.Map
                 if(chunkBounds.Size.Equals(Vector2i.Zero))
                     continue;
 
-                if (LocalBounds.Size == Vector2.Zero)
+                if (localBounds.Size == Vector2.Zero)
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = gridBounds;
+                    localBounds = gridBounds;
                 }
                 else
                 {
                     var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = LocalBounds.Union(gridBounds);
+                    localBounds = localBounds.Union(gridBounds);
                 }
             }
+
+            if (localBounds.Size != Vector2.Zero)
+                LocalBounds = localBounds;
+            else
+                Logger.Warning($"Grid {Index} LocalBounds size updated to zero.");
         }
 
         /// <inheritdoc />

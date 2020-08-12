@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -26,6 +24,12 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Position offset of this entity relative to the grid it's on.
         /// </summary>
         GridCoordinates GridPosition { get; set; }
+
+        /// <summary>
+        ///     Current reliable position of the entity. If the entity is on a grid,
+        ///     <see cref="GridCoordinates"/> will be available.
+        /// </summary>
+        ReliableCoordinates ReliablePosition { get; }
 
         /// <summary>
         ///     Current position offset of the entity relative to the world.

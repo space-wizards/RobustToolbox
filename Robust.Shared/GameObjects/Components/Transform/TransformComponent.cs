@@ -281,12 +281,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition
-        {
-            get => new MapCoordinates(WorldPosition, MapID);
-        }
+        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
 
+        /// <inheritdoc />
+        public ReliableCoordinates ReliablePosition => new ReliableCoordinates(_mapManager, MapPosition);
+
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
         public Vector2 LocalPosition

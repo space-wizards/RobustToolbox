@@ -94,6 +94,15 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Determines whether the length of the vector is finite (zero, subnormal, or normal).
+        /// </summary>
+        /// <returns><see langword ="true" /> if the vector is finite, <see langword ="false" /> otherwise.</returns>
+        public bool IsFinite()
+        {
+            return float.IsFinite(X) && float.IsFinite(Y);
+        }
+
+        /// <summary>
         ///     Subtracts a vector from another, returning a new vector.
         /// </summary>
         /// <param name="a">Vector to subtract from.</param>

@@ -2,10 +2,137 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace Robust.Shared.Map
 {
+    [Serializable, NetSerializable]
+    public readonly struct ReliableCoordinates
+    {
+        private readonly MapId MapId; // Map this position is on
+        private readonly GridId GridId; // grid this position is on, if any.
+        private readonly Vector2 Position; // GridId != Invalid ? gridLocal : mapLocal
+
+        public ReliableCoordinates(MapId map, GridCoordinates coords)
+        {
+            if(coords.GridID == GridId.Invalid)
+                throw new InvalidOperationException();
+
+            MapId = map;
+            GridId = coords.GridID;
+            Position = coords.Position;
+        }
+
+        public ReliableCoordinates(MapCoordinates coords)
+        {
+            MapId = coords.MapId;
+            GridId = GridId.Invalid;
+            Position = coords.Position;
+        }
+
+        public ReliableCoordinates(IMapManager mapManager, MapCoordinates coords)
+        {
+            MapId = coords.MapId;
+
+            if (mapManager.TryFindGridAt(coords.MapId, coords.Position, out var grid))
+            {
+                GridId = grid.Index;
+                Position = grid.WorldToLocal(coords.Position);
+            }
+            else
+            {
+                GridId = GridId.Invalid;
+                Position = coords.Position;
+            }
+        }
+
+        public ReliableCoordinates(IMapGrid grid, Vector2 worldPos)
+        {
+            MapId = grid.ParentMapId;
+            GridId = grid.Index;
+            Position = grid.WorldToLocal(worldPos);
+        }
+
+        public MapCoordinates? GetMapCoordinates(IMapManager mapManager)
+        {
+            if (!Position.IsFinite())
+                return null;
+
+            if (GridId == GridId.Invalid)
+            {
+                // Map Local
+                if (mapManager.MapExists(MapId))
+                {
+                    return new MapCoordinates(Position, MapId);
+                }
+            }
+            else
+            {
+                // Grid Local
+                if (mapManager.TryGetGrid(GridId, out var grid))
+                {
+                    return new MapCoordinates(grid.LocalToWorld(Position), grid.ParentMapId);
+                }
+            }
+
+            return null;
+        }
+
+        public bool TryGetMapCoordinates(IMapManager mapManager, out MapCoordinates mapPos)
+        {
+            var coords = GetMapCoordinates(mapManager);
+
+            if (coords.HasValue)
+            {
+                mapPos = coords.Value;
+                return true;
+            }
+
+            mapPos = default;
+            return false;
+        }
+
+        public GridCoordinates? GetGridCoordinates(IMapManager mapManager)
+        {
+            if (!Position.IsFinite())
+                return null;
+
+            if (GridId == GridId.Invalid)
+            {
+                // Map Local
+                if (mapManager.TryFindGridAt(MapId, Position, out var grid))
+                {
+                    return new GridCoordinates(grid.WorldToLocal(Position), grid.Index);
+                }
+            }
+            else
+            {
+                // Grid Local
+                if(mapManager.GridExists(GridId))
+                {
+                    return new GridCoordinates(Position, GridId);
+                }
+            }
+
+            return null;
+        }
+
+        public bool TryGetGridCoordinates(IMapManager mapManager, out GridCoordinates gridPos)
+        {
+            var coords = GetGridCoordinates(mapManager);
+
+            if (coords.HasValue)
+            {
+                gridPos = coords.Value;
+                return true;
+            }
+
+            gridPos = default;
+            return false;
+        }
+    }
+
     /// <summary>
     ///     Coordinates relative to a specific grid.
     /// </summary>

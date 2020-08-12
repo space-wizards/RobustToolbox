@@ -101,7 +101,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             var multiplier = deltaTime / (1f / 60);
 
-            var divisions = Math.Clamp(
+            var divisions = FloatMath.Clamp(
                 MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
                 1,
                 20
@@ -303,7 +303,7 @@ namespace Robust.Shared.GameObjects.Systems
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
             const float allowance = 1 / 128f;
-            var percent = Math.Clamp(1f / divisions, 0.01f, 1f);
+            var percent = FloatMath.Clamp(1f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)
             {

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -261,9 +259,9 @@ namespace Robust.Shared.Maths
         {
             return new Vector2(
                 //factor * (b.X - a.X) + a.X,
-                MathF.Interpolate(a.X, b.X, factor),
+                FloatMath.Lerp(a.X, b.X, factor),
                 //factor * (b.Y - a.Y) + a.Y
-                MathF.Interpolate(a.Y, b.Y, factor)
+                FloatMath.Lerp(a.Y, b.Y, factor)
             );
         }
 

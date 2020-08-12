@@ -2,7 +2,6 @@
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Physics
 {
@@ -109,7 +108,7 @@ namespace Robust.Shared.Physics
         {
             var aRad = a.Radius;
             var aPos = manifold.A.Entity.Transform.WorldPosition;
-            
+
             var bRect = new AlignedRectangle(manifold.B.Entity.Transform.WorldPosition, b.LocalBounds.Size / 2);
 
             CalculateCollisionFeatures(bRect, new Circle(aPos, aRad), (float) flip * -1, out features);
@@ -167,7 +166,7 @@ namespace Robust.Shared.Physics
             // generate collision normal
             var normal = dist.Normalized;
 
-            // half of the total 
+            // half of the total
             var penetraction = (radiiSum - dist.Length) * 0.5f;
 
             var contacts = new Vector2[1];
@@ -267,7 +266,7 @@ namespace Robust.Shared.Physics
 
             // Calculate overlap on x axis
             float x_overlap = a_extent_x + b_extent_x - MathF.Abs(n.X);
-  
+
             // SAT test on x axis
             if (!(x_overlap > 0))
             {
@@ -385,7 +384,7 @@ namespace Robust.Shared.Physics
         /// Half of the total width and height of the rectangle.
         /// </summary>
         public readonly Vector2 HalfExtents;
-        
+
         /// <summary>
         ///     A 1x1 unit rectangle with the origin centered on the world origin.
         /// </summary>
@@ -419,7 +418,7 @@ namespace Robust.Shared.Physics
             HalfExtents = new Vector2(halfWidth, halfHeight);
             Center = new Vector2(box.Left + halfWidth, box.Height + halfHeight);
         }
-        
+
         public AlignedRectangle(Vector2 halfExtents)
         {
             Center = default;
@@ -438,8 +437,8 @@ namespace Robust.Shared.Physics
         public Vector2 ClosestPoint(in Vector2 position)
         {
             // clamp the point to the border of the box
-            var cx = MathF.Clamp(position.X, Left, Right);
-            var cy = MathF.Clamp(position.Y, Bottom, Top);
+            var cx = FloatMath.Clamp(position.X, Left, Right);
+            var cy = FloatMath.Clamp(position.Y, Bottom, Top);
 
             return new Vector2(cx, cy);
         }
@@ -612,8 +611,8 @@ namespace Robust.Shared.Physics
             var yMax = HalfExtents.Y;
 
             // clamp the point to the border of the box
-            var cx = MathF.Clamp(localPoint.X, xMin, xMax);
-            var cy = MathF.Clamp(localPoint.Y, yMin, yMax);
+            var cx = FloatMath.Clamp(localPoint.X, xMin, xMax);
+            var cy = FloatMath.Clamp(localPoint.Y, yMin, yMax);
 
             return TransformPoint(new Vector2(cx, cy));
         }

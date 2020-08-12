@@ -16,7 +16,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.Debugging
 {
@@ -218,7 +217,7 @@ namespace Robust.Client.Debugging
 
                 public override Color CalcWakeColor(Color color, float wakePercent)
                 {
-                    var percent = MathF.Clamp(wakePercent, 0, 1);
+                    var percent = FloatMath.Clamp(wakePercent, 0, 1);
 
                     var r = 1 - (percent * (1 - color.R));
                     var g = 1 - (percent * (1 - color.G));

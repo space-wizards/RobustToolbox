@@ -117,7 +117,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <returns></returns>
         private float ClampSplitCenter(float splitCenter, float? firstMinSize = null, float? secondMinSize = null)
         {
-            splitCenter = Math.Clamp(splitCenter, SplitMin, SplitMax);
+            splitCenter = FloatMath.Clamp(splitCenter, SplitMin, SplitMax);
 
             if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
             {
@@ -128,7 +128,7 @@ namespace Robust.Client.UserInterface.Controls
                 secondMinSize ??= (Vertical ? second.CombinedMinimumSize.Y : second.CombinedMinimumSize.X);
                 var size = Vertical ? Height : Width;
 
-                splitCenter = Math.Clamp(splitCenter, firstMinSize.Value, size - (secondMinSize.Value + SplitWidth));
+                splitCenter = FloatMath.Clamp(splitCenter, firstMinSize.Value, size - (secondMinSize.Value + SplitWidth));
             }
 
             return splitCenter;

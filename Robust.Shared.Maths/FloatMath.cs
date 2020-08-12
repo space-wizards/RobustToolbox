@@ -20,7 +20,7 @@ namespace Robust.Shared.Maths
 #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Clamp<T>(this T val, T min, T max)
+        public static T Clamp<T>(T val, T min, T max)
             where T : IComparable<T>
         {
             if (val.CompareTo(min) < 0) return min;
@@ -29,13 +29,13 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static float Clamp(this float val, float min, float max)
+        public static float Clamp(float val, float min, float max)
         {
             return Math.Max(Math.Min(val, max), min);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double Clamp(this double val, double min, double max)
+        public static double Clamp(double val, double min, double max)
         {
             return Math.Max(Math.Min(val, max), min);
         }

@@ -234,8 +234,8 @@ namespace Robust.Shared.Maths
         public static Vector2 Clamp(Vector2 vector, Vector2 min, Vector2 max)
         {
             return new Vector2(
-                vector.X.Clamp(min.X, max.X),
-                vector.Y.Clamp(min.Y, max.Y)
+                FloatMath.Clamp(vector.X, min.X, max.X),
+                FloatMath.Clamp(vector.Y, min.Y, max.Y)
             );
         }
 

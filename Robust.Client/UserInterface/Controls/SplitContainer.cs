@@ -181,7 +181,7 @@ namespace Robust.Client.UserInterface.Controls
                         _splitCenter = firstMinSize;
                     }
 
-                    _splitCenter += 0f.Clamp(firstMinSize - _splitCenter, size - secondMinSize - SplitWidth - _splitCenter);
+                    _splitCenter += FloatMath.Clamp(0f, firstMinSize - _splitCenter, size - secondMinSize - SplitWidth - _splitCenter);
                     break;
                 }
             }

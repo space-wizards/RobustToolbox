@@ -101,12 +101,14 @@ namespace Robust.Server.GameObjects.EntitySystems
         public AudioSourceServer PlayFromEntity(string filename, IEntity entity, AudioParams? audioParams = null, int range = AudioDistanceRange)
         {
             var id = CacheIdentifier();
+
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
+                Coordinates = entity.Transform.GridPosition,
                 EntityUid = entity.Uid,
                 AudioParams = audioParams ?? AudioParams.Default,
-                Identifier = id
+                Identifier = id,
             };
 
             if (range <= 0)

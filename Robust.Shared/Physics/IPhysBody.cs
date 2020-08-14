@@ -112,6 +112,34 @@ namespace Robust.Shared.Physics
         /// </remarks>
         float Friction { get; set; }
 
+        /// <summary>
+        ///     Current linear velocity of the entity in meters per second.
+        /// </summary>
+        Vector2 LinearVelocity { get; set; }
+
+        /// <summary>
+        ///     Current angular velocity of the entity in radians per sec.
+        /// </summary>
+        float AngularVelocity { get; set; }
+
+        /// <summary>
+        /// Current position of the body in the world, in meters.
+        /// </summary>
+        Vector2 WorldPosition
+        {
+            get => Entity.Transform.WorldPosition;
+            set => Entity.Transform.WorldPosition = value;
+        }
+
+        /// <summary>
+        /// Current rotation of the body in the world, in radians.
+        /// </summary>
+        float WorldRotation
+        {
+            get => (float) Entity.Transform.WorldRotation.Theta;
+            set => Entity.Transform.WorldRotation = new Angle(value);
+        }
+
         void WakeBody();
 
         /// <summary>

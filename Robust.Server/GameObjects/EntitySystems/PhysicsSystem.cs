@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
@@ -15,9 +16,11 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            SimulateWorld(frameTime,
-                RelevantEntities.Where(e => !e.Deleted && !_pauseManager.IsEntityPaused(e))
-                    .Select(p => p.GetComponent<ICollidableComponent>()).ToList());
+            var collidableComponents = EntityManager.ComponentManager
+                .EntityQuery<ICollidableComponent>()
+                .ToList();
+
+            SimulateWorld(frameTime, collidableComponents, false);
         }
     }
 }

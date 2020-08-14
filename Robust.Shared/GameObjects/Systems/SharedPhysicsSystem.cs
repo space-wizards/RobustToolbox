@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -27,22 +28,29 @@ namespace Robust.Shared.GameObjects.Systems
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
-
+        private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
 
         public SharedPhysicsSystem()
         {
             EntityQuery = new TypeEntityQuery(typeof(IPhysicsComponent));
         }
 
-        protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents)
+        protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
         {
+            _awakeBodies.Clear();
+
             foreach (var body in physicsComponents)
             {
+                if(prediction && !body.Predict)
+                    continue;
 
                 if(!body.Awake)
                     continue;
 
-                body.SleepAccumulator++;
+                _awakeBodies.Add(body);
+
+                if(!prediction)
+                    body.SleepAccumulator++;
 
                 // if the body cannot move, nothing to do here
                 if(!body.CanMove())
@@ -138,6 +146,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             while(GetNextCollision(_collisionCache, counter, out var collision))
             {
+                collision.A.WakeBody();
+                collision.B.WakeBody();
+
                 counter++;
                 var impulse = _physicsManager.SolveCollisionImpulse(collision);
                 if (collision.A.CanMove())
@@ -281,12 +292,12 @@ namespace Robust.Shared.GameObjects.Systems
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private static void UpdatePosition(ICollidableComponent body, float frameTime)
+        private static void UpdatePosition(IPhysBody body, float frameTime)
         {
-            var ent = body.Owner;
-            body.LinearVelocity = new Vector2(Math.Abs(body.LinearVelocity.X) < Epsilon ? 0.0f : body.LinearVelocity.X, Math.Abs(body.LinearVelocity.Y) < Epsilon ? 0.0f : body.LinearVelocity.Y);
-            if (body.Anchored ||
-                body.LinearVelocity == Vector2.Zero && Math.Abs(body.AngularVelocity) < Epsilon) return;
+            var ent = body.Entity;
+
+            if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
+                return;
 
             if (ContainerHelpers.IsInContainer(ent) && body.LinearVelocity != Vector2.Zero)
             {
@@ -295,8 +306,8 @@ namespace Robust.Shared.GameObjects.Systems
                 body.LinearVelocity = Vector2.Zero;
             }
 
-            body.Owner.Transform.WorldRotation += body.AngularVelocity * frameTime;
-            body.Owner.Transform.WorldPosition += body.LinearVelocity * frameTime;
+            body.WorldRotation += body.AngularVelocity * frameTime;
+            body.WorldPosition += body.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code

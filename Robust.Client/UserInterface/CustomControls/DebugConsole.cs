@@ -40,7 +40,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private bool _targetVisible;
 
         private bool commandChanged = true;
-        private List<string> searchResults;
+        private readonly List<string> searchResults;
         private int searchIndex = 0;
 
         public DebugConsole(IClientConsole console, IResourceManager resMan)
@@ -253,7 +253,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 if (searchResults.Count == 0)
                     return;
 
-                searchIndex = ++searchIndex % searchResults.Count;
+                searchIndex = (searchIndex + 1) % searchResults.Count;
                 SetInput(searchResults[searchIndex]);
                 return;
             }
@@ -272,9 +272,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 if (searchResults.Count == 0)
                     return;
 
-                searchIndex--;
-                if (searchIndex < 0)
-                    searchIndex += searchResults.Count;
+searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
                 SetInput(searchResults[searchIndex]);
                 return;
             }
@@ -283,7 +281,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (searchResults.Count == 0)
                 return;
 
-            SetInput(searchResults[searchResults.Count - 1]);
+            SetInput(searchResults[^1]);
         }
 
         private void OnCommandChanged(LineEdit.LineEditEventArgs args)

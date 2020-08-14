@@ -126,7 +126,7 @@ namespace Robust.Client.UserInterface.Controls
             get => _cursorPosition;
             set
             {
-                _cursorPosition = value.Clamp(0, _text.Length);
+                _cursorPosition = FloatMath.Clamp(value, 0, _text.Length);
                 _selectionStart = _cursorPosition;
             }
         }
@@ -134,7 +134,7 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionStart
         {
             get => _selectionStart;
-            set => _selectionStart = value.Clamp(0, _text.Length);
+            set => _selectionStart = FloatMath.Clamp(value, 0, _text.Length);
         }
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
@@ -236,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
                     _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
                 }
 
-                var index = GetIndexAtPos(_lastMousePosition.Clamp(contentBox.Left, contentBox.Right));
+                var index = GetIndexAtPos(FloatMath.Clamp(_lastMousePosition, contentBox.Left, contentBox.Right));
 
                 _cursorPosition = index;
             }

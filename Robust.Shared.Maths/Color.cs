@@ -36,8 +36,6 @@ using SysVector4 = System.Numerics.Vector4;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {

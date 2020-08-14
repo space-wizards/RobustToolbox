@@ -77,11 +77,6 @@ namespace Robust.Client.UserInterface.CustomControls
             });
 
             CloseButton.OnPressed += CloseButtonPressed;
-
-            if (CustomSize != null)
-            {
-                LayoutContainer.SetSize(this, CustomSize.Value);
-            }
         }
 
         public MarginContainer Contents { get; private set; }
@@ -96,6 +91,16 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2 CalculateMinimumSize()
         {
             return Vector2.ComponentMax(ContentsMinimumSize, base.CalculateMinimumSize());
+        }
+
+        protected override void Opened()
+        {
+            base.Opened();
+
+            if (_firstTimeOpened && CustomSize != null)
+            {
+                LayoutContainer.SetSize(this, CustomSize.Value);
+            }
         }
 
         private Label TitleLabel;

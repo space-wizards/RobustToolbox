@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -27,31 +28,58 @@ namespace Robust.Shared.GameObjects.Systems
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
-
+        private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
 
         public SharedPhysicsSystem()
         {
             EntityQuery = new TypeEntityQuery(typeof(IPhysicsComponent));
         }
 
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        protected void SimulateWorld(float frameTime, List<ICollidableComponent> physicsComponents)
+        protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
         {
-            foreach (var physics in physicsComponents)
+            _awakeBodies.Clear();
+
+            foreach (var body in physicsComponents)
             {
-                if(!physics.CanMove())
+                if(prediction && !body.Predict)
+                    continue;
+
+                if(!body.Awake)
+                    continue;
+
+                _awakeBodies.Add(body);
+
+                if(!prediction)
+                    body.SleepAccumulator++;
+
+                // if the body cannot move, nothing to do here
+                if(!body.CanMove())
                     continue;
 
                 var linearVelocity = Vector2.Zero;
 
-                foreach (var controller in physics.Controllers.Values)
+                foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
                     linearVelocity += controller.LinearVelocity;
                 }
 
-                physics.LinearVelocity = linearVelocity;
+                // i'm not sure if this is the proper way to solve this, but
+                // these are not kinematic bodies, so we need to preserve the previous
+                // velocity.
+                //if (body.LinearVelocity.LengthSquared < linearVelocity.LengthSquared)
+                    body.LinearVelocity = linearVelocity;
+
+                // Integrate forces
+                const float damping = 0.98f; // space/air friction, so everything eventually stops moving
+                body.LinearVelocity += body.Force * body.InvMass * deltaTime * damping;
+                body.AngularVelocity += body.Torque * body.InvI * deltaTime * damping;
+
+                // forces are instantaneous, so these properties are cleared
+                // once integrated. If you want to apply a continuous force,
+                // it has to be re-applied every tick.
+                body.Force = Vector2.Zero;
+                body.Torque = 0f;
             }
 
             // Calculate collisions and store them in the cache
@@ -63,7 +91,7 @@ namespace Robust.Shared.GameObjects.Systems
             // Process frictional forces
             foreach (var physics in physicsComponents)
             {
-                ProcessFriction(physics);
+                ProcessFriction(physics, deltaTime);
             }
 
             foreach (var physics in physicsComponents)
@@ -79,9 +107,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             const int solveIterationsAt60 = 4;
 
-            var multiplier = frameTime / (1f / 60);
+            var multiplier = deltaTime / (1f / 60);
 
-            var divisions = Math.Clamp(
+            var divisions = FloatMath.Clamp(
                 MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
                 1,
                 20
@@ -93,8 +121,8 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 foreach (var physics in physicsComponents)
                 {
-                    if(physics.CanMove())
-                        UpdatePosition(physics, frameTime / divisions);
+                    if(physics.Awake && physics.CanMove())
+                        UpdatePosition(physics, deltaTime / divisions);
                 }
 
                 for (var j = 0; j < divisions; ++j)
@@ -118,6 +146,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             while(GetNextCollision(_collisionCache, counter, out var collision))
             {
+                collision.A.WakeBody();
+                collision.B.WakeBody();
+
                 counter++;
                 var impulse = _physicsManager.SolveCollisionImpulse(collision);
                 if (collision.A.CanMove())
@@ -178,12 +209,8 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aCollidable in bodies)
             {
-                aCollidable.SleepAccumulator++;
-
-                if (aCollidable.LinearVelocity == Vector2.Zero)
-                {
+                if(!aCollidable.Awake)
                     continue;
-                }
 
                 FindCollisionsFor(aCollidable, combinations);
             }
@@ -240,15 +267,24 @@ namespace Robust.Shared.GameObjects.Systems
             return false;
         }
 
-        private void ProcessFriction(ICollidableComponent body)
+        private void ProcessFriction(ICollidableComponent body, float deltaTime)
         {
             if (body.LinearVelocity == Vector2.Zero) return;
 
-            // Calculate frictional force
-            var friction = GetFriction(body);
+            // sliding friction coefficient, and current gravity at current location
+            var (friction, gravity) = GetFriction(body);
+
+            // friction between the two objects
+            var effectiveFriction = friction * body.Friction;
+
+            // current acceleration due to friction
+            var fAcceleration = effectiveFriction * gravity;
+
+            // integrate acceleration
+            var fVelocity = fAcceleration * deltaTime;
 
             // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(friction, body.LinearVelocity.Length);
+            friction = Math.Min(fVelocity, body.LinearVelocity.Length);
 
             // No multiplication/division by mass here since that would be redundant.
             var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
@@ -256,12 +292,12 @@ namespace Robust.Shared.GameObjects.Systems
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private static void UpdatePosition(ICollidableComponent body, float frameTime)
+        private static void UpdatePosition(IPhysBody body, float frameTime)
         {
-            var ent = body.Owner;
-            body.LinearVelocity = new Vector2(Math.Abs(body.LinearVelocity.X) < Epsilon ? 0.0f : body.LinearVelocity.X, Math.Abs(body.LinearVelocity.Y) < Epsilon ? 0.0f : body.LinearVelocity.Y);
-            if (body.Anchored ||
-                body.LinearVelocity == Vector2.Zero && Math.Abs(body.AngularVelocity) < Epsilon) return;
+            var ent = body.Entity;
+
+            if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
+                return;
 
             if (ContainerHelpers.IsInContainer(ent) && body.LinearVelocity != Vector2.Zero)
             {
@@ -270,15 +306,15 @@ namespace Robust.Shared.GameObjects.Systems
                 body.LinearVelocity = Vector2.Zero;
             }
 
-            body.Owner.Transform.WorldRotation += body.AngularVelocity * frameTime;
-            body.Owner.Transform.WorldPosition += body.LinearVelocity * frameTime;
+            body.WorldRotation += body.AngularVelocity * frameTime;
+            body.WorldPosition += body.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
-            const float allowance = 0.05f;
-            var percent = Math.Clamp(1f / divisions, 0.01f, 1f);
+            const float allowance = 1 / 128f;
+            var percent = FloatMath.Clamp(1f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)
             {
@@ -303,16 +339,16 @@ namespace Robust.Shared.GameObjects.Systems
             return done;
         }
 
-        private float GetFriction(ICollidableComponent body)
+        private (float friction, float gravity) GetFriction(ICollidableComponent body)
         {
             if (!body.OnGround)
-                return 0.0f;
+                return (0f, 0f);
 
             var location = body.Owner.Transform;
             var grid = _mapManager.GetGrid(location.GridPosition.GridID);
             var tile = grid.GetTileRef(location.GridPosition);
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return tileDef.Friction;
+            return (tileDef.Friction, grid.HasGravity ? 9.8f : 0f);
         }
     }
 }

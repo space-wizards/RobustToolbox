@@ -28,8 +28,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -509,10 +507,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector4 Clamp(Vector4 vec, Vector4 min, Vector4 max)
         {
-            vec.X = MathF.Clamp( vec.X, min.X, max.X );
-            vec.Y = MathF.Clamp( vec.Y, min.Y, max.Y );
-            vec.Z = MathF.Clamp( vec.Z, min.Z, max.Z );
-            vec.W = MathF.Clamp( vec.W, min.W, max.W );
+            vec.X = FloatMath.Clamp( vec.X, min.X, max.X );
+            vec.Y = FloatMath.Clamp( vec.Y, min.Y, max.Y );
+            vec.Z = FloatMath.Clamp( vec.Z, min.Z, max.Z );
+            vec.W = FloatMath.Clamp( vec.W, min.W, max.W );
             return vec;
         }
 
@@ -526,10 +524,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Clamp(ref Vector4 vec, ref Vector4 min, ref Vector4 max, out Vector4 result)
         {
-            result.X = MathF.Clamp( vec.X, min.X, max.X );
-            result.Y = MathF.Clamp( vec.Y, min.Y, max.Y );
-            result.Z = MathF.Clamp( vec.Z, min.Z, max.Z );
-            result.W = MathF.Clamp( vec.W, min.W, max.W );
+            result.X = FloatMath.Clamp( vec.X, min.X, max.X );
+            result.Y = FloatMath.Clamp( vec.Y, min.Y, max.Y );
+            result.Z = FloatMath.Clamp( vec.Z, min.Z, max.Z );
+            result.W = FloatMath.Clamp( vec.W, min.W, max.W );
         }
 
         #endregion Clamp
@@ -625,10 +623,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Lerp(ref Vector4 a, ref Vector4 b, float blend, out Vector4 result)
         {
-            result.X = MathF.Interpolate(a.X, b.X, blend);
-            result.Y = MathF.Interpolate(a.Y, b.Y, blend);
-            result.Z = MathF.Interpolate(a.Z, b.Z, blend);
-            result.W = MathF.Interpolate(a.W, b.W, blend);
+            result.X = FloatMath.Lerp(a.X, b.X, blend);
+            result.Y = FloatMath.Lerp(a.Y, b.Y, blend);
+            result.Z = FloatMath.Lerp(a.Z, b.Z, blend);
+            result.W = FloatMath.Lerp(a.W, b.W, blend);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

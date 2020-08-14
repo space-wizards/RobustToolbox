@@ -78,6 +78,15 @@ namespace Robust.Shared.Utility
                 throw new DebugAssertException();
             }
         }
+
+        /// <summary>
+        /// If a debugger is attached to the process, calling this function will cause the
+        /// debugger to break. Equivalent to a software interrupt (INT 3).
+        /// </summary>
+        public static void Break()
+        {
+            Debugger.Break();
+        }
     }
 
     public class DebugAssertException : Exception

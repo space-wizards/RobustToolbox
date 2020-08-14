@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Serialization
                 Assert.That(deserialized, Is.EquivalentTo(list));
             }
         }
-        
+
         public static readonly Dictionary<string, int>?[] DictionaryValues =
         {
             null,
@@ -63,7 +63,33 @@ namespace Robust.UnitTesting.Shared.Serialization
                 Assert.That(deserialized, Is.EquivalentTo(list));
             }
         }
-        
+
+        public static readonly HashSet<int>?[] HashSetValues =
+        {
+            null,
+            new HashSet<int>(),
+            new HashSet<int> {1, 2, 3},
+        };
+
+        [Test]
+        public void TestHashSet([ValueSource(nameof(HashSetValues))] HashSet<int>? set)
+        {
+            var serializer = new Serializer(new[] {typeof(HashSet<int>)});
+            var stream = new MemoryStream();
+            serializer.SerializeDirect(stream, set);
+            stream.Position = 0;
+
+            serializer.DeserializeDirect<HashSet<int>?>(stream, out var deserialized);
+            if (set == null)
+            {
+                Assert.Null(deserialized);
+            }
+            else
+            {
+                Assert.That(deserialized, Is.EquivalentTo(set));
+            }
+        }
+
         [Test]
         [TestCase(0f)]
         [TestCase(-0f)]

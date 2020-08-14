@@ -221,6 +221,8 @@ namespace Robust.Client.UserInterface.CustomControls
             else if(args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
             {
                 PrevCommand();
+                args.Handle();
+                return;
             }
         }
 

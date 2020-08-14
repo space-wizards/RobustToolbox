@@ -39,6 +39,10 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private bool _targetVisible;
 
+        private bool commandChanged = true;
+        private readonly List<string> searchResults;
+        private int searchIndex = 0;
+
         public DebugConsole(IClientConsole console, IResourceManager resMan)
         {
             _console = console;
@@ -75,6 +79,7 @@ namespace Robust.Client.UserInterface.CustomControls
             LayoutContainer.SetAnchorPreset(MainControl, LayoutContainer.LayoutPreset.TopWide);
             LayoutContainer.SetAnchorBottom(MainControl, 0.35f);
 
+            CommandBar.OnTextChanged += OnCommandChanged;
             CommandBar.OnKeyBindDown += CommandBarOnOnKeyBindDown;
             CommandBar.OnTextEntered += CommandEntered;
             CommandBar.OnHistoryChanged += OnHistoryChanged;
@@ -93,6 +98,8 @@ namespace Robust.Client.UserInterface.CustomControls
                     args.Handle();
                 }
             };
+
+            searchResults = new List<string>();
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -148,6 +155,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 _console.ProcessCommand(args.Text);
                 CommandBar.Clear();
             }
+            commandChanged = true;
         }
 
         private void OnHistoryChanged()
@@ -204,6 +212,81 @@ namespace Robust.Client.UserInterface.CustomControls
                 Output.ScrollToBottom();
                 args.Handle();
             }
+            else if (args.Function == EngineKeyFunctions.GuiTabNavigateNext)
+            {
+                NextCommand();
+                args.Handle();
+                return;
+            }
+            else if(args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
+            {
+                PrevCommand();
+                args.Handle();
+                return;
+            }
+        }
+
+        private void SetInput(string cmd)
+        {
+            CommandBar.Text = cmd;
+            CommandBar.CursorPosition = cmd.Length;
+        }
+        
+        private void FindCommands()
+        {
+            searchResults.Clear();
+            searchIndex = 0;
+            commandChanged = false;
+            foreach (var cmd in Commands)
+            {
+                if (cmd.Key.StartsWith(CommandBar.Text))
+                {
+                    searchResults.Add(cmd.Key);
+                }
+            }
+        }
+
+        private void NextCommand()
+        {
+            if (!commandChanged)
+            {
+                if (searchResults.Count == 0)
+                    return;
+
+                searchIndex = (searchIndex + 1) % searchResults.Count;
+                SetInput(searchResults[searchIndex]);
+                return;
+            }
+
+            FindCommands();
+            if (searchResults.Count == 0)
+                return;
+
+            SetInput(searchResults[0]);
+        }
+
+        private void PrevCommand()
+        {
+            if (!commandChanged)
+            {
+                if (searchResults.Count == 0)
+                    return;
+
+searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
+                SetInput(searchResults[searchIndex]);
+                return;
+            }
+
+            FindCommands();
+            if (searchResults.Count == 0)
+                return;
+
+            SetInput(searchResults[^1]);
+        }
+
+        private void OnCommandChanged(LineEdit.LineEditEventArgs args)
+        {
+            commandChanged = true;
         }
 
         private async void _loadHistoryFromDisk()

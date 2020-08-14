@@ -37,6 +37,33 @@ namespace Robust.UnitTesting.Shared.Serialization
             }
         }
 
+        public static readonly Dictionary<string, int>?[] DictionaryValues =
+        {
+            null,
+            new Dictionary<string, int>(),
+            new Dictionary<string, int> {{"A", 1}},
+            new Dictionary<string, int> {{"A", 1}, {"B", 2}, {"C", 3}},
+        };
+
+        [Test]
+        public void TestDictionary([ValueSource(nameof(DictionaryValues))] Dictionary<string, int>? list)
+        {
+            var serializer = new Serializer(new[] {typeof(Dictionary<string, int>)});
+            var stream = new MemoryStream();
+            serializer.SerializeDirect(stream, list);
+            stream.Position = 0;
+
+            serializer.DeserializeDirect<Dictionary<string, int>?>(stream, out var deserialized);
+            if (list == null)
+            {
+                Assert.Null(deserialized);
+            }
+            else
+            {
+                Assert.That(deserialized, Is.EquivalentTo(list));
+            }
+        }
+
         public static readonly HashSet<int>?[] HashSetValues =
         {
             null,
@@ -51,7 +78,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             var stream = new MemoryStream();
             serializer.SerializeDirect(stream, set);
             stream.Position = 0;
-            
+
             serializer.DeserializeDirect<HashSet<int>?>(stream, out var deserialized);
             if (set == null)
             {

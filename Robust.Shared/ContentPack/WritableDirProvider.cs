@@ -84,10 +84,10 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public Stream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             var fullPath = GetFullPath(path);
-            return File.Open(fullPath, fileMode);
+            return File.Open(fullPath, fileMode, access, share);
         }
 
         /// <inheritdoc />

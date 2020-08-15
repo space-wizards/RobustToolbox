@@ -231,7 +231,7 @@ namespace Robust.Client.UserInterface.CustomControls
             CommandBar.Text = cmd;
             CommandBar.CursorPosition = cmd.Length;
         }
-        
+
         private void FindCommands()
         {
             searchResults.Clear();
@@ -295,7 +295,7 @@ searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
             Stream stream;
             try
             {
-                stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Open);
+                stream = _resourceManager.UserData.OpenRead(HistoryPath);
             }
             catch (FileNotFoundException)
             {
@@ -321,7 +321,7 @@ searchIndex = MathHelper.Mod(searchIndex - 1, searchResults.Count);
 
         private void _flushHistoryToDisk()
         {
-            using (var stream = _resourceManager.UserData.Open(HistoryPath, FileMode.Create))
+            using (var stream = _resourceManager.UserData.Create(HistoryPath))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 var data = JsonConvert.SerializeObject(CommandBar.History);

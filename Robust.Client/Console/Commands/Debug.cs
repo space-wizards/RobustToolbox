@@ -509,7 +509,7 @@ namespace Robust.Client.Console.Commands
             var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
             var res = IoCManager.Resolve<IResourceManager>();
 
-            using (var stream = res.UserData.Open(new ResourcePath("/guidump.txt"), FileMode.Create))
+            using (var stream = res.UserData.Create(new ResourcePath("/guidump.txt")))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
                 _writeNode(root, 0, writer);

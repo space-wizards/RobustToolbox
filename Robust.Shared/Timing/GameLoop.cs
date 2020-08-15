@@ -235,12 +235,11 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
-                simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
-                    Update?.Invoke(this, simFrameEvent);
+                    Update?.Invoke(this, realFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)

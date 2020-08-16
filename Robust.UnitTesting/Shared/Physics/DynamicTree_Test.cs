@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var initCap = dt.Capacity;
 
-            Assert.AreEqual(16, initCap);
+            Assert.That(initCap, Is.EqualTo(16));
 
             Assert.Multiple(() =>
             {
@@ -285,11 +285,11 @@ namespace Robust.UnitTesting.Shared.Physics
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(containers.Length, results.Length, "Length");
+                Assert.That(results.Length, Is.EqualTo(containers.Length), "Length");
                 var l = Math.Min(containers.Length, results.Length);
                 for (var i = 0; i < l; ++i)
                 {
-                    Assert.AreEqual(containers[i], results[i]);
+                    Assert.That(results[i], Is.EqualTo(containers[i]));
                 }
             });
         }

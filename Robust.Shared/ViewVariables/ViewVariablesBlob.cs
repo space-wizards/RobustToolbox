@@ -98,6 +98,13 @@ namespace Robust.Shared.ViewVariables
             }
         }
 
+        [Serializable, NetSerializable]
+        public class ServerKeyValuePairToken
+        {
+            public object Key { get; set; }
+            public object Value { get; set; }
+        }
+
         /// <summary>
         ///     Data for a specific property.
         /// </summary>

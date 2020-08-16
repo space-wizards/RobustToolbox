@@ -1,5 +1,4 @@
 ﻿using System;
-
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -86,6 +85,11 @@ namespace Robust.Client.Graphics
                 return Icons[(int) direction][frame];
             }
 
+            public Texture[] GetFrames(Direction direction)
+            {
+                return Icons[(int) direction];
+            }
+
             /// <summary>
             ///     Gets the delay between the specified frame and the next frame.
             /// </summary>
@@ -97,6 +101,11 @@ namespace Robust.Client.Graphics
             public float GetDelay(int frame)
             {
                 return Delays[frame];
+            }
+
+            public float[] GetDelays()
+            {
+                return Delays;
             }
 
             Texture IDirectionalTextureProvider.Default => Frame0;

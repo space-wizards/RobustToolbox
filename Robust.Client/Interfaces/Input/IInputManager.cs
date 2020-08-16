@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 
 namespace Robust.Client.Interfaces.Input
 {
@@ -54,7 +55,7 @@ namespace Robust.Client.Interfaces.Input
         /// <returns>An input command, if any. Null if no command is set.</returns>
         InputCmdHandler? GetInputCommand(BoundKeyFunction function);
 
-        void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler);
+        void SetInputCommand(BoundKeyFunction function, InputCmdHandler? cmdHandler);
 
         /// <summary>
         ///     UIKeyBindStateChanged is called when a keybind is found.

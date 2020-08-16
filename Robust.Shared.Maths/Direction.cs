@@ -1,11 +1,11 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
+    [Flags]
     public enum Direction
     {
+        Invalid = -1,
         East = 0,
         NorthEast = 1,
         North = 2,
@@ -13,7 +13,7 @@ namespace Robust.Shared.Maths
         West = 4,
         SouthWest = 5,
         South = 6,
-        SouthEast = 7
+        SouthEast = 7,
     }
 
     /// <summary>
@@ -32,6 +32,42 @@ namespace Robust.Shared.Maths
         public static Direction GetDir(this Vector2 vec)
         {
             return vec.ToAngle().GetDir();
+        }
+
+        /// <summary>
+        /// Converts a direction vector to the closest Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetDir(this Vector2i vec)
+        {
+            return new Angle(vec).GetDir();
+        }
+
+        /// <summary>
+        /// Converts a direction vector to the closest cardinal Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetCardinalDir(this Vector2i vec)
+        {
+            return new Angle(vec).GetCardinalDir();
+        }
+
+        public static Direction GetOpposite(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.East => Direction.West,
+                Direction.West => Direction.East,
+                Direction.North => Direction.South,
+                Direction.South => Direction.North,
+                Direction.NorthEast => Direction.SouthWest,
+                Direction.SouthWest => Direction.NorthEast,
+                Direction.NorthWest => Direction.SouthEast,
+                Direction.SouthEast => Direction.NorthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
         }
 
         /// <summary>

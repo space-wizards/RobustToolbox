@@ -126,7 +126,7 @@ namespace Robust.Client.UserInterface.Controls
             get => _cursorPosition;
             set
             {
-                _cursorPosition = value.Clamp(0, _text.Length);
+                _cursorPosition = FloatMath.Clamp(value, 0, _text.Length);
                 _selectionStart = _cursorPosition;
             }
         }
@@ -134,7 +134,7 @@ namespace Robust.Client.UserInterface.Controls
         public int SelectionStart
         {
             get => _selectionStart;
-            set => _selectionStart = value.Clamp(0, _text.Length);
+            set => _selectionStart = FloatMath.Clamp(value, 0, _text.Length);
         }
 
         public int SelectionLower => Math.Min(_selectionStart, _cursorPosition);
@@ -236,7 +236,7 @@ namespace Robust.Client.UserInterface.Controls
                     _drawOffset += (int) Math.Ceiling(args.DeltaSeconds / MouseScrollDelay);
                 }
 
-                var index = GetIndexAtPos(_lastMousePosition.Clamp(contentBox.Left, contentBox.Right));
+                var index = GetIndexAtPos(FloatMath.Clamp(_lastMousePosition, contentBox.Left, contentBox.Right));
 
                 _cursorPosition = index;
             }
@@ -812,13 +812,18 @@ namespace Robust.Client.UserInterface.Controls
                         continue;
                     }
 
-                    // Glyph would be completely outside the bounding box and invisible, abort.
                     if (baseLine.X > contentBox.Right)
                     {
+                        // Past the right edge, not gonna render anything anymore.
                         break;
                     }
 
-                    font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    // Make sure we're not off the left edge of the box.
+                    if (baseLine.X + metrics.BearingX + metrics.Width >= contentBox.Left)
+                    {
+                        font.DrawChar(handle, chr, baseLine, UIScale, renderedTextColor);
+                    }
+
                     baseLine += (metrics.Advance, 0);
                 }
 

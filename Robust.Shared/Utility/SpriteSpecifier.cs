@@ -41,6 +41,16 @@ namespace Robust.Shared.Utility
                 RsiPath = rsiPath;
                 RsiState = rsiState;
             }
+
+            public override bool Equals(object? obj)
+            {
+                return (obj is Rsi rsi) && rsi.RsiPath == RsiPath && rsi.RsiState == RsiState;
+            }
+
+            public override int GetHashCode()
+            {
+                return RsiPath.GetHashCode() ^ RsiState.GetHashCode();
+            }
         }
 
         [Serializable, NetSerializable]
@@ -51,6 +61,16 @@ namespace Robust.Shared.Utility
             public Texture(ResourcePath texturePath)
             {
                 TexturePath = texturePath;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                return (obj is Texture texture) && texture.TexturePath == TexturePath;
+            }
+
+            public override int GetHashCode()
+            {
+                return TexturePath.GetHashCode();
             }
         }
     }

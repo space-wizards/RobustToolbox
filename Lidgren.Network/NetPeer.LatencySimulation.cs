@@ -144,7 +144,7 @@ namespace Lidgren.Network
         //Avoids allocation on mapping to IPv6
         private IPEndPoint targetCopy = new IPEndPoint(IPAddress.Any, 0);
 
-		internal bool ActuallySendPacket(ReadOnlySpan<byte> data, int numBytes, NetEndPoint target, out bool connectionReset)
+		internal bool ActuallySendPacket(byte[] data, int numBytes, NetEndPoint target, out bool connectionReset)
 		{
 			connectionReset = false;
 			IPAddress ba = default(IPAddress);
@@ -170,7 +170,7 @@ namespace Lidgren.Network
 	                targetCopy.Address = target.Address;
                 }
 
-                int bytesSent = m_socket.SendTo(data.Slice( 0, numBytes ), 0, targetCopy);
+                int bytesSent = m_socket.SendTo(data, 0, numBytes, 0, targetCopy);
 				if (numBytes != bytesSent)
 					LogWarning("Failed to send the full " + numBytes + "; only " + bytesSent + " bytes sent in packet!");
 

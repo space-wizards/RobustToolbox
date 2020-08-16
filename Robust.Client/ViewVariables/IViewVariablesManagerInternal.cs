@@ -14,7 +14,7 @@ namespace Robust.Client.ViewVariables
         ///     Creates the ideal property editor for a specific property type.
         /// </summary>
         /// <param name="type">The type of the property to create an editor for.</param>
-        ViewVariablesPropertyEditor PropertyFor(Type type);
+        ViewVariablesPropertyEditor PropertyFor(Type? type);
 
         /// <summary>
         ///     Requests a session to an object on the server.

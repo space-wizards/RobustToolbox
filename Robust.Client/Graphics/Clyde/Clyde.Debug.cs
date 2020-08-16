@@ -34,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
             public (int vertices, int indices) LargestBatchSize => (LargestBatchVertices, LargestBatchIndices);
             public int LargestBatchVertices { get; set; }
             public int LargestBatchIndices { get; set; }
+            public int TotalLights { get; set; }
 
             public void Reset()
             {
@@ -42,6 +43,7 @@ namespace Robust.Client.Graphics.Clyde
                 LastBatches = 0;
                 LargestBatchVertices = 0;
                 LargestBatchIndices = 0;
+                TotalLights = 0;
             }
         }
     }

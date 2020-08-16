@@ -2,7 +2,6 @@
 using Robust.Client.GameObjects.Components.Animations;
 using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.GameObjects.Components.UserInterface;
-using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
@@ -38,8 +37,6 @@ namespace Robust.Client.GameObjects
             Register<IconComponent>();
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
-            Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, SharedPhysicsComponent>();
 
             Register<InputComponent>();
 

@@ -66,10 +66,14 @@ namespace Robust.Server.GameStates
 
         private void HandleClientDisconnect(object? sender, NetChannelArgs e)
         {
-            _entityManager.DropPlayerState(_playerManager.GetSessionById(e.Channel.SessionId));
+            _ackedStates.Remove(e.Channel.ConnectionId);
 
-            if (_ackedStates.ContainsKey(e.Channel.ConnectionId))
-                _ackedStates.Remove(e.Channel.ConnectionId);
+            if (!_playerManager.TryGetSessionByChannel(e.Channel, out var session))
+            {
+                return;
+            }
+
+            _entityManager.DropPlayerState(session);
         }
 
         private void HandleStateAck(MsgStateAck msg)
@@ -121,7 +125,7 @@ namespace Robust.Server.GameStates
             var oldDeps = IoCManager.Resolve<IDependencyCollection>();
 
             var deps = new DependencyCollection();
-            deps.RegisterInstance<ILogManager>(IoCManager.Resolve<ILogManager>());
+            deps.RegisterInstance<ILogManager>(new ProxyLogManager(IoCManager.Resolve<ILogManager>()));
             deps.BuildGraph();
 
             (MsgState, INetChannel) GenerateMail(IPlayerSession session)

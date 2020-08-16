@@ -80,7 +80,7 @@ namespace Robust.Shared.IoC
             _resolveTypes[typeof(TInterface)] = implementation.GetType();
             _services[typeof(TInterface)] = implementation;
 
-            InjectDependencies(implementation);
+            InjectDependencies(implementation, true);
 
             if (implementation is IPostInjectInit init)
                 init.PostInject();

@@ -67,13 +67,12 @@ namespace Robust.Server.ViewVariables.Traits
 
         private void _cacheTo(int index)
         {
-            DebugTools.AssertNotNull(_enumerator);
-
             if (Ended || index < _cache.Count)
             {
                 return;
             }
 
+            DebugTools.AssertNotNull(_enumerator);
             while (_cache.Count <= index)
             {
                 if (!_enumerator!.MoveNext())

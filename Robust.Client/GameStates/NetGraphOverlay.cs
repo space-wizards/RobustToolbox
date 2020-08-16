@@ -44,7 +44,7 @@ namespace Robust.Client.GameStates
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
-            _font = new VectorFont(cache.GetResource<FontResource>("/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
+            _font = new VectorFont(cache.GetResource<FontResource>("/Textures/Interface/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
 
             _gameStateManager.GameStateApplied += HandleGameStateApplied;
         }
@@ -68,7 +68,7 @@ namespace Robust.Client.GameStates
         }
 
         /// <inheritdoc />
-        internal override void FrameUpdate(FrameEventArgs args)
+        protected internal override void FrameUpdate(FrameEventArgs args)
         {
             base.FrameUpdate(args);
 
@@ -79,7 +79,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        protected override void Draw(DrawingHandleBase handle)
+        protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
             // remember, 0,0 is top left of ui with +X right and +Y down
 

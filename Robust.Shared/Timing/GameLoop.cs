@@ -87,6 +87,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         public bool DetectSoftLock { get; set; }
 
+        public bool EnableMetrics { get; set; } = false;
+
         /// <summary>
         ///     The method currently being used to limit the Update rate.
         /// </summary>
@@ -186,7 +188,14 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
-                        using (_frameTimeHistogram.NewTimer())
+                        if (EnableMetrics)
+                        {
+                            using (_frameTimeHistogram.NewTimer())
+                            {
+                                Tick?.Invoke(this, simFrameEvent);
+                            }
+                        }
+                        else
                         {
                             Tick?.Invoke(this, simFrameEvent);
                         }
@@ -226,12 +235,11 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
-                simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
-                    Update?.Invoke(this, simFrameEvent);
+                    Update?.Invoke(this, realFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)

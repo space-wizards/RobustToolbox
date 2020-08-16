@@ -12,6 +12,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Configuration;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -227,7 +228,13 @@ namespace Robust.Client.UserInterface
                 var offset = pointerPosition - top.GlobalPixelPosition;
                 if (!top.HasPoint(offset / UIScale))
                 {
-                    RemoveModal(top);
+                    if (top.MouseFilter != Control.MouseFilterMode.Stop)
+                        RemoveModal(top);
+                    else
+                    {
+                        _controlFocused = top;
+                        return false; // prevent anything besides the top modal control from receiving input
+                    }
                 }
                 else
                 {
@@ -271,7 +278,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {
@@ -410,7 +417,7 @@ namespace Robust.Client.UserInterface
             };
 
             popup.Contents.AddChild(new Label {Text = contents});
-            popup.OpenCenteredMinSize();
+            popup.OpenCentered();
         }
 
         public Control? MouseGetControl(Vector2 coordinates)

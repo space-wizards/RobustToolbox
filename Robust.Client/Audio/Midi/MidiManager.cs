@@ -205,7 +205,7 @@ namespace Robust.Client.Audio.Midi
 
                 var renderer = new MidiRenderer(_settings!, soundfontLoader);
 
-                foreach (var file in _resourceManager.ContentFindFiles(new ResourcePath("/MidiCustom/")))
+                foreach (var file in _resourceManager.ContentFindFiles(new ResourcePath("/Audio/MidiCustom/")))
                 {
                     if (file.Extension != "sf2" && file.Extension != "dls") continue;
                     if (_resourceManager.TryGetDiskFilePath(file, out var path))

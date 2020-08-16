@@ -28,11 +28,11 @@ namespace Robust.Shared.Exceptions
 
             if (catcher != null)
             {
-                Logger.ErrorS("runtime", "Caught exception in {0}: {1}", catcher, exception);
+                Logger.ErrorS("runtime", exception, "Caught exception in {Catcher}", catcher);
             }
             else
             {
-                Logger.ErrorS("runtime", "Caught exception: {0}", exception);
+                Logger.ErrorS("runtime", exception, "Caught exception");
             }
         }
 

@@ -27,7 +27,7 @@ namespace Robust.Shared.Audio.Midi
 
         public byte Program { get; set; }
 
-        public byte Pitch { get; set; }
+        public short Pitch { get; set; } // needs range from 0 to 16383
 
         public uint Tick { get; set; }
 
@@ -39,7 +39,7 @@ namespace Robust.Shared.Audio.Midi
                 Channel = (byte) midiEvent.Channel,
                 Control = (byte) midiEvent.Control,
                 Key = (byte) midiEvent.Key,
-                Pitch = (byte) midiEvent.Pitch,
+                Pitch = (short) midiEvent.Pitch,
                 Program = (byte) midiEvent.Program,
                 Value = (byte) midiEvent.Value,
                 Velocity = (byte) midiEvent.Velocity,

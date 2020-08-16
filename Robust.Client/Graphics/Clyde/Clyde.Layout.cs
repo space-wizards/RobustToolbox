@@ -73,18 +73,6 @@ namespace Robust.Client.Graphics.Clyde
                 ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
                 ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
             }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ProjViewMatrices(in ProjViewMatrices readProjMatrix, in Matrix3 viewMatrix)
-            {
-                ProjMatrixC0 = readProjMatrix.ProjMatrixC0;
-                ProjMatrixC1 = readProjMatrix.ProjMatrixC1;
-                ProjMatrixC2 = readProjMatrix.ProjMatrixC2;
-
-                ViewMatrixC0 = new Vector3(viewMatrix.R0C0, viewMatrix.R1C0, viewMatrix.R2C0);
-                ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
-                ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
-            }
         }
 
         [StructLayout(LayoutKind.Explicit, Size = sizeof(float) * 4)]

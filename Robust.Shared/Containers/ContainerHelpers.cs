@@ -65,6 +65,32 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        public static void AttachParentToContainerOrGrid(ITransformComponent transform)
+        {
+            if (transform.Parent == null
+                || !TryGetContainer(transform.Parent.Owner, out var container)
+                || !TryInsertIntoContainer(transform, container))
+            {
+                transform.AttachToGridOrMap();
+            }
+        }
+
+        private static bool TryInsertIntoContainer(ITransformComponent transform, IContainer container)
+        {
+            if (container.Insert(transform.Owner))
+            {
+                return true;
+            }
+
+            if (container.Owner.Transform.Parent != null
+                && TryGetContainer(container.Owner, out var newContainer))
+            {
+                return TryInsertIntoContainer(transform, newContainer);
+            }
+
+            return false;
+        }
+
         private static bool TryGetManagerComp(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);
@@ -78,6 +104,30 @@ namespace Robust.Shared.Containers
                 return TryGetManagerComp(entity.Transform.Parent.Owner, out manager);
 
             return false;
+        }
+        
+        public static bool IsInSameOrNoContainer(this IEntity user, IEntity other)
+        {
+            DebugTools.AssertNotNull(user);
+            DebugTools.AssertNotNull(other);
+
+            var isUserContained = TryGetContainer(user, out var userContainer);
+            var isOtherContained = TryGetContainer(other, out var otherContainer);
+
+            // Both entities are not in a container
+            if (!isUserContained && !isOtherContained)
+            {
+                return true;
+            }
+
+            // Both entities are in different contained states
+            if (isUserContained != isOtherContained)
+            {
+                return false;
+            }
+
+            // Both entities are in the same container
+            return userContainer == otherContainer;
         }
     }
 }

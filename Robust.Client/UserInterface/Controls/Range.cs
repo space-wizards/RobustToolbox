@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         protected float ClampValue(float value)
         {
-            return value.Clamp(_minValue, _maxValue-_page);
+            return FloatMath.Clamp(value, _minValue, _maxValue-_page);
         }
     }
 }

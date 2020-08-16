@@ -203,6 +203,9 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
+                            if (HandleDeletion(coords))
+                                return true;
+
                             if (uid == EntityUid.Invalid)
                             {
                                 return false;
@@ -367,6 +370,15 @@ namespace Robust.Client.Placement
                     DeactivateSpecialPlacement();
                     break;
             }
+        }
+
+        public bool HandleDeletion(GridCoordinates coordinates)
+        {
+            if (!IsActive || !Eraser) return false;
+            if (Hijack != null)
+                return Hijack.HijackDeletion(coordinates);
+
+            return false;
         }
 
         public void HandleDeletion(IEntity entity)

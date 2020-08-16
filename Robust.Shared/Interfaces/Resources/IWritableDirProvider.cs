@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
@@ -57,10 +57,32 @@ namespace Robust.Shared.Interfaces.Resources
         /// <summary>
         /// Attempts to open a file.
         /// </summary>
-        /// <param name="path">File path to open.</param>
+        /// <param name="path">Path of file to open.</param>
         /// <param name="fileMode">Options on how to open the file.</param>
-        /// <returns>A valid file stream, or null if the file could not be opened.</returns>
-        Stream Open(ResourcePath path, FileMode fileMode);
+        /// <param name="access">Specifies the operations that can be performed on the file.</param>
+        /// <param name="share">Specifies the access other threads have to the file.</param>
+        /// <returns>A valid file stream.</returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Thrown if the file does not exist.
+        /// </exception>
+        Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share);
+
+        /// <summary>
+        /// Attempts to open a file.
+        /// </summary>
+        /// <param name="path">Path of file to open.</param>
+        /// <param name="fileMode">Options on how to open the file.</param>
+        /// <returns>A valid file stream.</returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Thrown if the file does not exist.
+        /// </exception>
+        Stream Open(ResourcePath path, FileMode fileMode)
+        {
+            return Open(path,
+                fileMode,
+                fileMode == FileMode.Append ? FileAccess.Write : FileAccess.ReadWrite,
+                FileShare.None);
+        }
 
         /// <summary>
         /// Attempts to rename a file.
@@ -75,19 +97,49 @@ namespace Robust.Shared.Interfaces.Resources
     public static class WritableDirProviderExt
     {
         /// <summary>
+        ///     Opens a file for reading.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="path">The path of the file to open.</param>
+        /// <returns>A valid file stream.</returns>
+        /// <exception cref="FileNotFoundException">
+        ///     Thrown if the file does not exist.
+        /// </exception>
+        public static Stream OpenRead(this IWritableDirProvider provider, ResourcePath path)
+        {
+            return provider.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+
+        /// <summary>
+        ///     Opens a file for writing.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="path">The path of the file to open.</param>
+        /// <returns>A valid file stream.</returns>
+        public static Stream OpenWrite(this IWritableDirProvider provider, ResourcePath path)
+        {
+            return provider.Open(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+        }
+
+        /// <returns>A valid file stream.</returns>
+        public static Stream Create(this IWritableDirProvider provider, ResourcePath path)
+        {
+            return provider.Open(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        }
+
+        /// <summary>
         /// Appends a string to the end of a file. If the file does not
         /// exist, creates it.
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="path">Path of file to append to.</param>
         /// <param name="content">String to append.</param>
-        public static void Append(this IWritableDirProvider provider, ResourcePath path, string content)
+        public static void AppendAllText(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<char> content)
         {
-            using (var stream = provider.Open(path, FileMode.Append))
-            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
-            {
-                writer.Write(content);
-            }
+            using var stream = provider.Open(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+            using var writer = new StreamWriter(stream, EncodingHelpers.UTF8);
+
+            writer.Write(content);
         }
 
         /// <summary>
@@ -96,23 +148,21 @@ namespace Robust.Shared.Interfaces.Resources
         /// <param name="provider"></param>
         /// <param name="path">File to read.</param>
         /// <returns>String of the file contents, or null if the file could not be read.</returns>
-        public static string Read(this IWritableDirProvider provider, ResourcePath path)
+        public static string ReadAllText(this IWritableDirProvider provider, ResourcePath path)
         {
-            using (var stream = provider.Open(path, FileMode.Open))
-            using (var reader = new StreamReader(stream, EncodingHelpers.UTF8))
-            {
-                return reader.ReadToEnd();
-            }
+            using var stream = provider.OpenRead(path);
+            using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
+
+            return reader.ReadToEnd();
         }
 
-        public static byte[] ReadBytes(this IWritableDirProvider provider, ResourcePath path)
+        public static byte[] ReadAllBytes(this IWritableDirProvider provider, ResourcePath path)
         {
-            using (var stream = provider.Open(path, FileMode.Open))
-            using (var memoryStream = new MemoryStream((int) stream.Length))
-            {
-                stream.CopyTo(memoryStream);
-                return memoryStream.ToArray();
-            }
+            using var stream = provider.OpenRead(path);
+            using var memoryStream = new MemoryStream((int) stream.Length);
+
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
         }
 
         /// <summary>
@@ -122,21 +172,19 @@ namespace Robust.Shared.Interfaces.Resources
         /// <param name="provider"></param>
         /// <param name="path">Path of the file to write to.</param>
         /// <param name="content">String contents of the file.</param>
-        public static void Write(this IWritableDirProvider provider, ResourcePath path, string content)
+        public static void WriteAllText(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<char> content)
         {
-            using (var stream = provider.Open(path, FileMode.Create))
-            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
-            {
-                writer.Write(content);
-            }
+            using var stream = provider.Open(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+            using var writer = new StreamWriter(stream, EncodingHelpers.UTF8);
+
+            writer.Write(content);
         }
 
-        public static void WriteBytes(this IWritableDirProvider provider, ResourcePath path, byte[] content)
+        public static void WriteAllBytes(this IWritableDirProvider provider, ResourcePath path, ReadOnlySpan<byte> content)
         {
-            using (var stream = provider.Open(path, FileMode.Create))
-            {
-                stream.Write(content, 0, content.Length);
-            }
+            using var stream = provider.Open(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+
+            stream.Write(content);
         }
     }
 }

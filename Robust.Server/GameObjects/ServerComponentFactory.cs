@@ -8,7 +8,6 @@ using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {
@@ -42,9 +41,6 @@ namespace Robust.Server.GameObjects
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
-
-            Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, SharedPhysicsComponent>();
             Register<SpriteComponent>();
 
             Register<ContainerManagerComponent>();

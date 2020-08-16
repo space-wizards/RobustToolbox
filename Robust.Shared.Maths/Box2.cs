@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -143,6 +141,17 @@ namespace Robust.Shared.Maths
                 return new Box2(left, bottom, right, top);
 
             return new Box2();
+        }
+
+        /// <summary>
+        ///     Returns how much two Boxes overlap from 0 to 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float IntersectPercentage(in Box2 other)
+        {
+            var surfaceIntersect = Area(Intersect(other));
+
+            return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
         }
 
         /// <summary>
@@ -309,6 +318,18 @@ namespace Robust.Shared.Maths
                 MathF.Min(y, Bottom),
                 MathF.Max(x, Right),
                 MathF.Max(y, Top));
+        }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        public Vector2 ClosestPoint(in Vector2 position)
+        {
+            // clamp the point to the border of the box
+            var cx = FloatMath.Clamp(position.X, Left, Right);
+            var cy = FloatMath.Clamp(position.Y, Bottom, Top);
+
+            return new Vector2(cx, cy);
         }
     }
 }

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.ViewVariables.Editors;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -109,11 +105,6 @@ namespace Robust.Client.ViewVariables
                 propertyEdit.SetStyle(styleOther = !styleOther);
                 var editor = propertyEdit.SetProperty(data);
                 editor.OnValueChanged += onValueChanged;
-                // TODO: should this maybe not be hardcoded?
-                if (editor is ViewVariablesPropertyEditorReference refEditor)
-                {
-                    refEditor.OnPressed += () => vvm.OpenVV(data.Value!);
-                }
 
                 yield return propertyEdit;
             }

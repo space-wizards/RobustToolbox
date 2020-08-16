@@ -54,7 +54,7 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Open(resPath, FileMode.Create))
+            using (var file = _resMan.UserData.Create(resPath))
             {
                 using (var writer = new StreamWriter(file))
                 {
@@ -90,7 +90,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.Open(resPath, FileMode.Open);
+                var file = _resMan.UserData.OpenRead(resPath);
                 reader = new StreamReader(file);
             }
 
@@ -139,7 +139,7 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Open(resPath, FileMode.Create))
+            using (var file = _resMan.UserData.Create(resPath))
             {
                 using (var writer = new StreamWriter(file))
                 {
@@ -176,7 +176,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.Open(resPath, FileMode.Open);
+                var file = _resMan.UserData.OpenRead(resPath);
                 reader = new StreamReader(file);
             }
 

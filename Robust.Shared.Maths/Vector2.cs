@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -236,8 +234,8 @@ namespace Robust.Shared.Maths
         public static Vector2 Clamp(Vector2 vector, Vector2 min, Vector2 max)
         {
             return new Vector2(
-                vector.X.Clamp(min.X, max.X),
-                vector.Y.Clamp(min.Y, max.Y)
+                FloatMath.Clamp(vector.X, min.X, max.X),
+                FloatMath.Clamp(vector.Y, min.Y, max.Y)
             );
         }
 
@@ -261,9 +259,9 @@ namespace Robust.Shared.Maths
         {
             return new Vector2(
                 //factor * (b.X - a.X) + a.X,
-                MathF.Interpolate(a.X, b.X, factor),
+                FloatMath.Lerp(a.X, b.X, factor),
                 //factor * (b.Y - a.Y) + a.Y
-                MathF.Interpolate(a.Y, b.Y, factor)
+                FloatMath.Lerp(a.Y, b.Y, factor)
             );
         }
 

@@ -22,5 +22,20 @@ namespace Robust.Client.Graphics.Clyde
             GL.ActiveTexture(unit);
             GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
         }
+
+        private static long EstPixelSize(PixelInternalFormat format)
+        {
+            return format switch
+            {
+                PixelInternalFormat.Rgba8 => 4,
+                PixelInternalFormat.Rgba16f => 8,
+                PixelInternalFormat.Srgb8Alpha8 => 4,
+                PixelInternalFormat.R11fG11fB10f => 4,
+                PixelInternalFormat.R32f => 4,
+                PixelInternalFormat.Rg32f => 4,
+                PixelInternalFormat.R8 => 1,
+                _ => 0
+            };
+        }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Robust.Shared.Interfaces.Log;
 using System;
 using System.IO;
-using System.Text;
 using Robust.Shared.Utility;
+using Serilog.Events;
 
 namespace Robust.Shared.Log
 {
@@ -21,10 +21,15 @@ namespace Robust.Shared.Log
             writer.Dispose();
         }
 
-        public void Log(in LogMessage message)
+        public void Log(string sawmillName, LogEvent message)
         {
-            var name = message.LogLevelToName();
-            writer.WriteLine("{0:o} [{1}] {2}: {3}", DateTime.Now, name, message.SawmillName, message.Message);
+            var name = LogMessage.LogLevelToName(message.Level.ToRobust());
+            writer.WriteLine("{0:o} [{1}] {2}: {3}", DateTime.Now, name, sawmillName, message.RenderMessage());
+
+            if (message.Exception != null)
+            {
+                writer.WriteLine(message.Exception.ToString());
+            }
 
             // This probably isn't the best idea.
             // Remove this flush if it becomes a problem (say performance).

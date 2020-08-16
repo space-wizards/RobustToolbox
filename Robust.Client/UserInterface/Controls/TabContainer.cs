@@ -5,8 +5,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Input;
 using Robust.Shared.Localization;
 using Robust.Shared.Maths;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.UserInterface.Controls
 {

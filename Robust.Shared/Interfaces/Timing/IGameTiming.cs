@@ -136,5 +136,10 @@ namespace Robust.Shared.Interfaces.Timing
         string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
 
         static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;
+
+        /// <summary>
+        /// Resets the simulation time. This should be called on round restarts.
+        /// </summary>
+        void ResetSimTime();
     }
 }

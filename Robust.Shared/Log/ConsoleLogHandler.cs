@@ -1,10 +1,13 @@
 ﻿using Robust.Shared.Interfaces.Log;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Unicode;
 using System.Timers;
-using Robust.Shared.Maths;
+using JetBrains.Annotations;
+using Serilog.Events;
 
 namespace Robust.Shared.Log
 {
@@ -12,91 +15,182 @@ namespace Robust.Shared.Log
     /// <summary>
     ///     Log handler that prints to console.
     /// </summary>
-    public sealed class ConsoleLogHandler : ILogHandler
+    public sealed class ConsoleLogHandler : ILogHandler, IDisposable
     {
+        private static readonly bool WriteAnsiColors;
 
-        private object locker => _writer;
+        // ReSharper disable UnusedMember.Local
+        private const string AnsiCsi = "\x1B[";
+        private const string AnsiFgDefault = AnsiCsi + "39m";
+        private const string AnsiFgBlack = AnsiCsi + "30m";
+        private const string AnsiFgRed = AnsiCsi + "31m";
+        private const string AnsiFgBrightRed = AnsiCsi + "91m";
+        private const string AnsiFgGreen = AnsiCsi + "32m";
+        private const string AnsiFgBrightGreen = AnsiCsi + "92m";
+        private const string AnsiFgYellow = AnsiCsi + "33m";
+        private const string AnsiFgBrightYellow = AnsiCsi + "93m";
+        private const string AnsiFgBlue = AnsiCsi + "34m";
+        private const string AnsiFgBrightBlue = AnsiCsi + "94m";
+        private const string AnsiFgMagenta = AnsiCsi + "35m";
+        private const string AnsiFgBrightMagenta = AnsiCsi + "95m";
+        private const string AnsiFgCyan = AnsiCsi + "36m";
+        private const string AnsiFgBrightCyan = AnsiCsi + "96m";
+        private const string AnsiFgWhite = AnsiCsi + "37m";
+        private const string AnsiFgBrightWhite = AnsiCsi + "97m";
+        // ReSharper restore UnusedMember.Local
 
-        private readonly Stream _writer = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
+        private const string LogBeforeLevel = AnsiFgDefault + "[";
+        private const string LogAfterLevel = AnsiFgDefault + "] ";
 
-        private readonly StringBuilder _line = new StringBuilder(4096);
+        private readonly Stream _stream = new BufferedStream(System.Console.OpenStandardOutput(), 2 * 1024 * 1024);
+
+        private readonly StringBuilder _line = new StringBuilder(1024);
 
         private readonly Timer _timer = new Timer(0.1);
+
+        private readonly bool _isUtf16Out = System.Console.OutputEncoding.CodePage == Encoding.Unicode.CodePage;
+
+        private static readonly bool IsWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+
+        static ConsoleLogHandler()
+        {
+            WriteAnsiColors = !System.Console.IsOutputRedirected;
+
+            if (WriteAnsiColors && IsWindows)
+            {
+                WriteAnsiColors = WindowsConsole.TryEnableVirtualTerminalProcessing();
+            }
+        }
 
         public ConsoleLogHandler()
         {
             _timer.Start();
-            _timer.Elapsed += (sender, args) => _writer.Flush();
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            _timer.Elapsed += (sender, args) =>
             {
-                WindowsConsole.TryEnableVirtualTerminalProcessing();
+                lock (_stream)
+                {
+                    if (IsConsoleActive)
+                    {
+                        _stream.Flush();
+                    }
+                }
+            };
+        }
+
+#if DEBUG
+        [UsedImplicitly]
+#endif
+        public static void TryDetachFromConsoleWindow()
+        {
+            if (IsWindows)
+            {
+                WindowsConsole.TryDetachFromConsoleWindow();
             }
         }
 
-        public void Log(in LogMessage message)
+        private bool IsConsoleActive => !IsWindows || WindowsConsole.IsConsoleActive;
+
+        public void Log(string sawmillName, LogEvent message)
         {
-            var name = LogMessage.LogLevelToName(message.Level);
-            var color = LogLevelToConsoleColor(message.Level);
-            lock (locker)
+            var robustLevel = message.Level.ToRobust();
+            lock (_stream)
             {
                 _line
                     .Clear()
-                    .Append("\x1B[39m")
-                    .Append("[")
-                    .Append("\x1B[38;2;")
-                    .Append(color.RByte)
-                    .Append(';')
-                    .Append(color.GByte)
-                    .Append(';')
-                    .Append(color.BByte)
-                    .Append('m')
-                    .Append(name)
-                    .Append("\x1B[39m")
-                    .Append("] ")
-                    .Append(message.SawmillName)
+                    .Append(LogLevelToString(robustLevel))
+                    .Append(sawmillName)
                     .Append(": ")
-                    .Append(message.Message)
-                    .AppendLine();
-                foreach (var chunk in _line.GetChunks())
+                    .AppendLine(message.RenderMessage());
+
+                if (message.Exception != null)
                 {
-                    _writer.Write(MemoryMarshal.AsBytes(chunk.Span));
+                    _line.AppendLine(message.Exception.ToString());
                 }
 
-                if (message.Level >= LogLevel.Error)
+                // ReSharper disable once SuggestVarOrType_Elsewhere
+                if (!_isUtf16Out)
                 {
-                    _writer.Flush();
+                    Span<byte> buf = stackalloc byte[1024];
+                    var totalChars = _line.Length;
+                    foreach (var chunk in _line.GetChunks())
+                    {
+                        var chunkSize = chunk.Length;
+                        var totalRead = 0;
+                        var span = chunk.Span;
+                        for (;;)
+                        {
+                            var finalChunk = totalRead + chunkSize >= totalChars;
+                            Utf8.FromUtf16(span, buf, out var read, out var wrote, isFinalBlock: finalChunk);
+                            _stream.Write(buf.Slice(0, wrote));
+                            totalRead += read;
+                            if (read >= chunkSize)
+                            {
+                                break;
+                            }
+
+                            span = span[read..];
+                            chunkSize -= read;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (var chunk in _line.GetChunks())
+                    {
+                        _stream.Write(MemoryMarshal.AsBytes(chunk.Span));
+                    }
+                }
+
+                // ReSharper disable once InvertIf
+                if (robustLevel >= LogLevel.Error)
+                {
+                    if (IsConsoleActive)
+                    {
+                        _stream.Flush();
+                    }
                 }
             }
         }
 
-        private static Color LogLevelToConsoleColor(LogLevel level)
+        private static string LogLevelToString(LogLevel level)
         {
-            switch (level)
+            if (WriteAnsiColors)
             {
-                case LogLevel.Debug:
-                    return Color.Navy;
-
-                case LogLevel.Info:
-                    return Color.Cyan;
-
-                case LogLevel.Warning:
-                    return Color.Yellow;
-
-                case LogLevel.Error:
-                    return Color.DarkRed;
-
-                case LogLevel.Fatal:
-                    return Color.Magenta;
-
-                default:
-                    return Color.White;
+                return level switch
+                {
+                    LogLevel.Verbose => LogBeforeLevel + AnsiFgGreen + LogMessage.LogNameDebug + LogAfterLevel,
+                    LogLevel.Debug => LogBeforeLevel + AnsiFgBlue + LogMessage.LogNameDebug + LogAfterLevel,
+                    LogLevel.Info => LogBeforeLevel + AnsiFgBrightCyan + LogMessage.LogNameInfo + LogAfterLevel,
+                    LogLevel.Warning => LogBeforeLevel + AnsiFgBrightYellow + LogMessage.LogNameWarning + LogAfterLevel,
+                    LogLevel.Error => LogBeforeLevel + AnsiFgBrightRed + LogMessage.LogNameError + LogAfterLevel,
+                    LogLevel.Fatal => LogBeforeLevel + AnsiFgBrightMagenta + LogMessage.LogNameFatal + LogAfterLevel,
+                    _ => LogBeforeLevel + AnsiFgWhite + LogMessage.LogNameUnknown + LogAfterLevel
+                };
             }
+
+            return level switch
+            {
+                LogLevel.Verbose => "[" + LogMessage.LogNameVerbose + "] ",
+                LogLevel.Debug => "[" + LogMessage.LogNameDebug + "] ",
+                LogLevel.Info => "[" + LogMessage.LogNameInfo + "] ",
+                LogLevel.Warning => "[" + LogMessage.LogNameWarning + "] ",
+                LogLevel.Error => "[" + LogMessage.LogNameError + "] ",
+                LogLevel.Fatal => "[" + LogMessage.LogNameFatal + "] ",
+                _ => "[" + LogMessage.LogNameUnknown +"] "
+            };
         }
 
+        public void Dispose()
+        {
+            lock (_stream)
+            {
+                _stream.Dispose();
+                _timer.Dispose();
+            }
+        }
     }
 
-    public static class WindowsConsole
+    internal static class WindowsConsole
     {
 
         public static bool TryEnableVirtualTerminalProcessing()
@@ -119,6 +213,24 @@ namespace Robust.Shared.Log
             }
         }
 
+        private static bool _freedConsole;
+
+        public static bool IsConsoleActive => !_freedConsole;
+
+        public static void TryDetachFromConsoleWindow()
+        {
+            if (NativeMethods.GetConsoleWindow() == default
+                || Debugger.IsAttached
+                || System.Console.IsOutputRedirected
+                || System.Console.IsErrorRedirected
+                || System.Console.IsInputRedirected)
+            {
+                return;
+            }
+
+            _freedConsole = NativeMethods.FreeConsole();
+        }
+
         internal static class NativeMethods
         {
 
@@ -130,6 +242,12 @@ namespace Robust.Shared.Log
 
             [DllImport("kernel32", SetLastError = true)]
             internal static extern IntPtr GetStdHandle(int handle);
+
+            [DllImport("kernel32", SetLastError = true)]
+            internal static extern bool FreeConsole();
+
+            [DllImport("kernel32", SetLastError = true)]
+            internal static extern IntPtr GetConsoleWindow();
 
         }
 

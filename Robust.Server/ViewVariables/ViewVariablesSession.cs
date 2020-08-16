@@ -25,7 +25,8 @@ namespace Robust.Server.ViewVariables
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesSession(NetSessionId playerSession, object o, uint sessionId, IViewVariablesHost host, IRobustSerializer robustSerializer)
+        public ViewVariablesSession(NetSessionId playerSession, object o, uint sessionId, IViewVariablesHost host,
+            IRobustSerializer robustSerializer)
         {
             PlayerSession = playerSession;
             Object = o;
@@ -92,16 +93,42 @@ namespace Robust.Server.ViewVariables
 
         public bool TryGetRelativeObject(object[] propertyIndex, out object? value)
         {
+            // First property chain entry is for the trait, rest is value.
+
+            value = default;
+
             foreach (var trait in _traits)
             {
                 if (trait.TryGetRelativeObject(propertyIndex[0], out value))
                 {
-                    return true;
+                    goto found;
                 }
             }
 
-            value = default;
             return false;
+
+            // Yes I just used goto.
+            // The fuck you gonna do about it?
+            found:
+
+            for (var i = 1; i < propertyIndex.Length; i++)
+            {
+                var selector = propertyIndex[i];
+                switch (selector)
+                {
+                    case ViewVariablesSelectorKeyValuePair kvPair:
+                        if (value == null ||
+                            !value.GetType().IsGenericType ||
+                            value.GetType().GetGenericTypeDefinition() != typeof(KeyValuePair<,>))
+                            return false;
+
+                        dynamic kv = value;
+                        value = kvPair.Key ? kv.Key : kv.Value;
+                        break;
+                }
+            }
+
+            return true;
         }
     }
 }

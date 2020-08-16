@@ -36,8 +36,10 @@ using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
-using Robust.Server.Interfaces.Maps;
+using Robust.Server.Log;
 using Robust.Shared.Serialization;
+using Serilog.Debugging;
+using Serilog.Sinks.Loki;
 using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
@@ -201,6 +203,16 @@ namespace Robust.Server
                 _log.RootSawmill.AddHandler(_logHandler!);
             }
 
+            SelfLog.Enable(s =>
+            {
+                System.Console.WriteLine("SERILOG ERROR: {0}", s);
+            });
+
+            if (!SetupLoki())
+            {
+                return true;
+            }
+
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
             _taskManager.Initialize();
 
@@ -306,6 +318,61 @@ namespace Robust.Server
             return false;
         }
 
+        private bool SetupLoki()
+        {
+            _config.RegisterCVar("loki.enabled", false);
+            _config.RegisterCVar("loki.name", "");
+            _config.RegisterCVar("loki.address", "");
+            _config.RegisterCVar("loki.username", "");
+            _config.RegisterCVar("loki.password", "");
+
+            var enabled = _config.GetCVar<bool>("loki.enabled");
+            if (!enabled)
+            {
+                return true;
+            }
+
+            var serverName = _config.GetCVar<string>("loki.name");
+            var address = _config.GetCVar<string>("loki.address");
+            var username = _config.GetCVar<string>("loki.username");
+            var password = _config.GetCVar<string>("loki.password");
+
+            if (string.IsNullOrWhiteSpace(serverName))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Server name is not specified/empty.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Loki address is not specified/empty.");
+                return false;
+            }
+
+            LokiCredentials credentials;
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                credentials = new NoAuthCredentials(address);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    Logger.FatalS("loki", "Misconfiguration: Loki password is not specified/empty but username is.");
+                    return false;
+                }
+
+                credentials = new BasicAuthCredentials(address, username, password);
+            }
+
+            Logger.DebugS("loki", "Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
+                address);
+
+            var handler = new LokiLogHandler(serverName, credentials);
+            _log.RootSawmill.AddHandler(handler);
+            return true;
+        }
+
         private void ProcessExiting(object? sender, EventArgs e)
         {
             _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
@@ -326,20 +393,21 @@ namespace Robust.Server
                 _mainLoop = new GameLoop(_time)
                 {
                     SleepMode = SleepMode.Delay,
-                    DetectSoftLock = true
+                    DetectSoftLock = true,
+                    EnableMetrics = true
                 };
             }
 
             _uptimeStopwatch.Start();
 
+            _mainLoop.Input += (sender, args) => Input(args);
+
             _mainLoop.Tick += (sender, args) => Update(args);
 
-            _mainLoop.Update += (sender, args) =>
-            {
-                ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
-            };
+            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
 
             // set GameLoop.Running to false to return from this function.
+            _time.Paused = false;
             _mainLoop.Run();
 
             _time.InSimulation = true;
@@ -389,6 +457,8 @@ namespace Robust.Server
             {
                 var b = (byte) i;
                 _time.TickRate = b;
+
+                Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
                 SendTickRateUpdateToClients(b);
             });
 
@@ -446,15 +516,20 @@ namespace Robust.Server
             return bps;
         }
 
+        private void Input(FrameEventArgs args)
+        {
+            _systemConsole.Update();
+
+            _network.ProcessPackets();
+            _taskManager.ProcessPendingTasks();
+        }
+
         private void Update(FrameEventArgs frameEventArgs)
         {
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
             UpdateTitle();
-            _systemConsole.Update();
-
-            _network.ProcessPackets();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
 

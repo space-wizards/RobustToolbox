@@ -58,6 +58,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void RequestWindowAttention()
+        {
+            // Nada.
+        }
+
         public override bool Initialize()
         {
             return true;

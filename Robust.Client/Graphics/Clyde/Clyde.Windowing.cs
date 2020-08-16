@@ -468,6 +468,11 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetWindowTitle(_glfwWindow, title);
         }
 
+        public void RequestWindowAttention()
+        {
+            GLFW.RequestWindowAttention(_glfwWindow);
+        }
+
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             GLFW.PollEvents();

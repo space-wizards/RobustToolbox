@@ -68,7 +68,7 @@ namespace Robust.Shared.Maths
             var d2 = dx * dx + dy * dy;
             var r2 = Radius * Radius;
 
-            // Instead of d2 <= r2, use FloatMath.CloseTo to allow for some tolerance.
+            // Instead of d2 <= r2, use MathHelper.CloseTo to allow for some tolerance.
             return (d2 < r2) || MathHelper.CloseTo(d2, r2);
         }
 

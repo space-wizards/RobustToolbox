@@ -52,9 +52,9 @@ namespace Robust.Shared.Serialization
 
         private INetManager? _net;
 
-        private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
-
-        private ISawmill LogSzr => _lazyLogSzr.Value;
+        // I don't want to create 50 line changes in this commit so...
+        // ReSharper disable once InconsistentNaming
+        private ISawmill LogSzr = default!;
 
         private readonly HashSet<INetChannel> _incompleteHandshakes = new HashSet<INetChannel>();
 
@@ -1306,6 +1306,10 @@ namespace Robust.Shared.Serialization
         /// </summary>
         public event Action? ClientHandshakeComplete;
 
+        public void InitLogging()
+        {
+            LogSzr = Logger.GetSawmill("szr");
+        }
     }
 
 }

@@ -75,6 +75,8 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
+            _mappedStringSerializer.InitLogging();
+
             var settings = new Settings
             {
                 CustomTypeSerializers = new ITypeSerializer[] {_mappedStringSerializer}

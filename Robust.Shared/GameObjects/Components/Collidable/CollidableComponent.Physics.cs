@@ -156,7 +156,7 @@ namespace Robust.Shared.GameObjects.Components
         /// Can this body be moved?
         /// </summary>
         /// <returns></returns>
-        bool CanMove();
+        new bool CanMove();
     }
 
     partial class CollidableComponent : ICollidableComponent

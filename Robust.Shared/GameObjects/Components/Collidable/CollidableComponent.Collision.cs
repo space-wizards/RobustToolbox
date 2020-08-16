@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects.Components
 
     public partial interface ICollidableComponent : IComponent, IPhysBody
     {
-        public bool Hard { get; set; }
+        public new bool Hard { get; set; }
         bool IsColliding(Vector2 offset, bool approximate = true);
 
         IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);

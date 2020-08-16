@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -23,17 +19,11 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
 
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
         private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
-
-        public SharedPhysicsSystem()
-        {
-            EntityQuery = new TypeEntityQuery(typeof(IPhysicsComponent));
-        }
 
         protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
         {

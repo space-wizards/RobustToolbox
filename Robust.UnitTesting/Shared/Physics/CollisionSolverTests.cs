@@ -17,7 +17,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
-            Assert.AreEqual(false, results.Collided);
+            Assert.That(results.Collided, Is.EqualTo(false));
         }
 
         [Test]
@@ -28,12 +28,12 @@ namespace Robust.UnitTesting.Shared.Physics
 
             CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
-            Assert.AreEqual(true, results.Collided);
-            Assert.AreEqual(Vector2.UnitX, results.Normal);
-            Assert.AreEqual(0.5f / 2, results.Penetration);
-            Assert.IsNotNull(results.Contacts);
-            Assert.AreEqual(1, results.Contacts.Length);
-            Assert.AreEqual(new Vector2(0.75f, 0), results.Contacts[0]);
+            Assert.That(results.Collided);
+            Assert.That(results.Normal, Is.EqualTo(Vector2.UnitX));
+            Assert.That(results.Penetration, Is.EqualTo(0.5f / 2));
+            Assert.That(results.Contacts, Is.Not.Null);
+            Assert.That(results.Contacts.Length, Is.EqualTo(1));
+            Assert.That(results.Contacts[0], Is.EqualTo(new Vector2(0.75f, 0)));
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             CollisionSolver.CalculateCollisionFeatures(in circle, in circle, 1, out var results);
 
-            Assert.AreEqual(false, results.Collided);
+            Assert.That(results.Collided, Is.EqualTo(false));
         }
 
         [Test]
@@ -77,7 +77,7 @@ namespace Robust.UnitTesting.Shared.Physics
             var localPoint = obb.InverseTransformPoint(worldPoint);
             var result = obb.TransformPoint(localPoint);
 
-            Assert.AreEqual(worldPoint, result);
+            Assert.That(result, Is.EqualTo(worldPoint));
         }
 
         [Test]
@@ -99,7 +99,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
-            Assert.AreEqual(false, results.Collided);
+            Assert.That(results.Collided, Is.EqualTo(false));
         }
 
         [Test]
@@ -110,11 +110,11 @@ namespace Robust.UnitTesting.Shared.Physics
 
             CollisionSolver.CalculateCollisionFeatures(in a, in b, 1, out var results);
 
-            Assert.AreEqual(true, results.Collided);
+            Assert.That(results.Collided);
             Assert.That(results.Normal, Is.Approximately(Vector2.UnitX));
-            Assert.AreEqual(0.5f / 2, results.Penetration);
-            Assert.IsNotNull(results.Contacts);
-            Assert.AreEqual(1, results.Contacts.Length);
+            Assert.That(results.Penetration, Is.EqualTo(0.5f / 2));
+            Assert.That(results.Contacts, Is.Not.Null);
+            Assert.That(results.Contacts.Length, Is.EqualTo(1));
             Assert.That(results.Contacts[0], Is.Approximately(new Vector2(0.75f, 0)));
         }
 
@@ -128,7 +128,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             Assert.That(results.Collided, Is.False);
         }
-        
+
         [Test]
         public void BoxBox_Collide()
         {

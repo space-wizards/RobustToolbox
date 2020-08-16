@@ -9,7 +9,6 @@ namespace Robust.Server.GameObjects
     {
         private Color _color;
         private bool _enabled;
-        private bool _occluded;
         private float _radius;
         private Vector2 _offset;
 

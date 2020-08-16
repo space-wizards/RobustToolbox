@@ -84,7 +84,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 var currentDir = currentEye.Rotation.ToVec();
 
                 var dot = Vector2.Dot(closestDir, currentDir);
-                if (FloatMath.CloseTo(dot, 1, CameraSnapTolerance))
+                if (MathHelper.CloseTo(dot, 1, CameraSnapTolerance))
                 {
                     currentEye.Rotation = closestDir.ToAngle();
                 }

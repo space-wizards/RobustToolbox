@@ -380,13 +380,13 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
 
-                if (!FloatMath.CloseTo(lastRange, component.Radius))
+                if (!MathHelper.CloseTo(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
                     lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
-                if (!FloatMath.CloseTo(lastPower, component.Energy))
+                if (!MathHelper.CloseTo(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
                     lightShader.SetUniformMaybe("lightPower", lastPower);

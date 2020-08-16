@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _ensureValueClamped()
         {
             var newValue = ClampValue(_value);
-            if (!FloatMath.CloseTo(newValue, _value))
+            if (!MathHelper.CloseTo(newValue, _value))
             {
                 _value = newValue;
                 OnValueChanged?.Invoke(this);
@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         protected float ClampValue(float value)
         {
-            return FloatMath.Clamp(value, _minValue, _maxValue-_page);
+            return MathHelper.Clamp(value, _minValue, _maxValue-_page);
         }
     }
 }

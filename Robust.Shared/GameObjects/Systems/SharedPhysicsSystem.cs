@@ -288,12 +288,20 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
                 return;
-
-            if (ContainerHelpers.IsInContainer(ent) && body.LinearVelocity != Vector2.Zero)
+                
+                
+            if (body.LinearVelocity != Vector2.Zero)
             {
-                ent.Transform.Parent!.Owner.SendMessage(ent.Transform, new RelayMovementEntityMessage(ent));
-                // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                body.LinearVelocity = Vector2.Zero;
+                var entityMoveMessage = new EntityMovementMessage();
+                ent.SendMessage(ent.Transform, entityMoveMessage);
+
+                if (ContainerHelpers.IsInContainer(ent))
+                {
+                    var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
+                    ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
+                    // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
+                    body.LinearVelocity = Vector2.Zero;
+                }
             }
 
             body.WorldRotation += body.AngularVelocity * frameTime;

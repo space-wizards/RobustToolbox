@@ -98,6 +98,14 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
+        ///     Converts this set of coordinates to map indices.
+        /// </summary>
+        public MapIndices ToMapIndices(IMapManager mapManager)
+        {
+            return mapManager.GetGrid(GridID).GetTileRef(this).GridIndices;
+        }
+
+        /// <summary>
         ///     Offsets the position by a given vector.
         /// </summary>
         public GridCoordinates Offset(Vector2 offset)
@@ -394,6 +402,31 @@ namespace Robust.Shared.Map
         public static bool operator !=(MapCoordinates a, MapCoordinates b)
         {
             return !a.Equals(b);
+        }
+
+
+        /// <summary>
+        /// Used to deconstruct this object into a tuple.
+        /// </summary>
+        /// <param name="x">World position coordinate on the X axis.</param>
+        /// <param name="y">World position coordinate on the Y axis.</param>
+        public void Deconstruct(out float x, out float y)
+        {
+            x = X;
+            y = Y;
+        }
+
+        /// <summary>
+        /// Used to deconstruct this object into a tuple.
+        /// </summary>
+        /// <param name="mapId">Map identifier relevant to this position.</param>
+        /// <param name="x">World position coordinate on the X axis.</param>
+        /// <param name="y">World position coordinate on the Y axis.</param>
+        public void Deconstruct(out MapId mapId, out float x, out float y)
+        {
+            mapId = MapId;
+            x = X;
+            y = Y;
         }
     }
 }

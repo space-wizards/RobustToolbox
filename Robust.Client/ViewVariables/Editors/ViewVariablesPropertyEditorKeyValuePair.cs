@@ -1,12 +1,17 @@
+using System.Linq;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
     public class ViewVariablesPropertyEditorKeyValuePair : ViewVariablesPropertyEditor
     {
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariables = default!;
+
+        private ViewVariablesPropertyEditor? _propertyEditorK;
+        private ViewVariablesPropertyEditor? _propertyEditorV;
 
         public ViewVariablesPropertyEditorKeyValuePair()
         {
@@ -17,23 +22,23 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBox = new HBoxContainer();
 
-            var propK = value!.GetType().GetProperty("Key")!;
-            var propV = value.GetType().GetProperty("Value")!;
+            dynamic d = value!;
 
-            var valueK = propK.GetValue(value);
-            var valueV = propV.GetValue(value);
+            // NOTE: value can be both a KeyValuePair<,> here OR as a ServerKeyValuePairToken.
 
+            object? valueK = d.Key;
+            object? valueV = d.Value;
+
+            // ReSharper disable ConstantConditionalAccessQualifier
             var typeK = valueK?.GetType();
             var typeV = valueV?.GetType();
+            // ReSharper restore ConstantConditionalAccessQualifier
 
-            var propertyEditorK = _viewVariables.PropertyFor(typeK!);
-            var propertyEditorV = _viewVariables.PropertyFor(typeV!);
+            _propertyEditorK = _viewVariables.PropertyFor(typeK);
+            _propertyEditorV = _viewVariables.PropertyFor(typeV);
 
-            WireReference(propertyEditorK, valueK!);
-            WireReference(propertyEditorV, valueV!);
-
-            var controlK = propertyEditorK.Initialize(valueK, true);
-            var controlV = propertyEditorV.Initialize(valueV, true);
+            var controlK = _propertyEditorK.Initialize(valueK, true);
+            var controlV = _propertyEditorV.Initialize(valueV, true);
 
             hBox.AddChild(controlK);
             hBox.AddChild(controlV);
@@ -41,15 +46,16 @@ namespace Robust.Client.ViewVariables.Editors
             return hBox;
         }
 
-        private void WireReference(ViewVariablesPropertyEditor prop, object value)
+        public override void WireNetworkSelector(uint sessionId, object[] selectorChain)
         {
-            if (!(prop is ViewVariablesPropertyEditorReference reference))
-            {
-                return;
-            }
+            var keySelector = new ViewVariablesSelectorKeyValuePair {Key = true};
+            var valueSelector = new ViewVariablesSelectorKeyValuePair {Key = false};
 
-            // TODO: Won't work when networked, fix this.
-            reference.OnPressed += () => _viewVariables.OpenVV(value);
+            var keyChain = selectorChain.Append(keySelector).ToArray();
+            var valueChain = selectorChain.Append(valueSelector).ToArray();
+
+            _propertyEditorK!.WireNetworkSelector(sessionId, keyChain);
+            _propertyEditorV!.WireNetworkSelector(sessionId, valueChain);
         }
     }
 }

@@ -21,8 +21,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.GameStates
 {

@@ -1,7 +1,5 @@
 ﻿using System;
 using JetBrains.Annotations;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {

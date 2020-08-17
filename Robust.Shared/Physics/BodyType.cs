@@ -1,8 +1,12 @@
-﻿namespace Robust.Shared.Physics
+﻿using System;
+using Robust.Shared.Serialization;
+
+namespace Robust.Shared.Physics
 {
     /// <summary>
     ///     The properties of physical body. This determines how collisions will effect this body.
     /// </summary>
+    [Serializable, NetSerializable]
     public enum BodyType
     {
         /// <summary>

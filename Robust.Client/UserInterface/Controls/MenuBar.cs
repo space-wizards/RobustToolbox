@@ -104,7 +104,11 @@ namespace Robust.Client.UserInterface.Controls
                             Disabled = menuButton.Disabled,
                             TextAlign = Label.AlignMode.Left
                         };
-                        pushButton.OnPressed += _ => menuButton.OnPressed?.Invoke();
+                        pushButton.OnPressed += _ =>
+                        {
+                            _popup.Visible = false;
+                            menuButton.OnPressed?.Invoke();
+                        };
                         container.AddChild(pushButton);
                         break;
 

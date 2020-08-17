@@ -94,7 +94,10 @@ namespace Robust.Shared.Interfaces.Map
 
         IEnumerable<MapId> GetAllMapIds();
 
+        [Obsolete("The concept of 'default grids' is being removed.")]
         IMapGrid GetDefaultGrid(MapId mapID);
+
+        [Obsolete("The concept of 'default grids' is being removed.")]
         GridId GetDefaultGridId(MapId mapID);
 
         void DeleteMap(MapId mapID);

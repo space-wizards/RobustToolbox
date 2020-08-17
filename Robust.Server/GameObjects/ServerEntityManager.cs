@@ -282,7 +282,7 @@ namespace Robust.Server.GameObjects
             {
                 var ent = child!;
 
-                do
+                while (ent != null && !ent.Deleted)
                 {
                     if (set.Add(ent))
                     {
@@ -295,7 +295,7 @@ namespace Robust.Server.GameObjects
                         // Already processed this entity once.
                         break;
                     }
-                } while (ent != null && !ent.Deleted);
+                }
             }
         }
 
@@ -371,7 +371,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (entity.TryGetComponent(out PhysicsComponent body))
+                if (entity.TryGetComponent(out ICollidableComponent body))
                 {
                     if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
                     {
@@ -538,7 +538,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (!entity.TryGetComponent(out PhysicsComponent body))
+                if (!entity.TryGetComponent(out ICollidableComponent body))
                 {
                     // can't be a mover w/o physics
                     continue;
@@ -792,7 +792,7 @@ namespace Robust.Server.GameObjects
                     {
                         addToMovers = true;
                     }
-                    else if (entity.TryGetComponent(out PhysicsComponent physics)
+                    else if (entity.TryGetComponent(out ICollidableComponent physics)
                              && physics.LastModifiedTick >= currentTick)
                     {
                         addToMovers = true;

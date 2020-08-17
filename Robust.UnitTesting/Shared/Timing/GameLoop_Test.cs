@@ -26,6 +26,7 @@ namespace Robust.UnitTesting.Shared.Timing
             var newStopwatch = new Mock<IStopwatch>();
             newStopwatch.SetupGet(p => p.Elapsed).Returns(elapsedVal);
             var gameTiming = GameTimingFactory(newStopwatch.Object);
+            gameTiming.Paused = false;
             var loop = new GameLoop(gameTiming);
 
             var callCount = 0;

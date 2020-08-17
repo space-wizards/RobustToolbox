@@ -14,7 +14,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            new ScriptConsoleClient().OpenCenteredMinSize();
+            new ScriptConsoleClient().OpenCentered();
 
             return false;
         }
@@ -28,7 +28,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            new WatchWindow().OpenCenteredMinSize();
+            new WatchWindow().OpenCentered();
 
             return false;
         }

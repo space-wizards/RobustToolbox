@@ -18,6 +18,7 @@ using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -347,6 +348,12 @@ namespace Robust.UnitTesting
                         _options.BeforeStart?.Invoke();
                         IoCManager.Resolve<IConfigurationManager>()
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                        if (_options.ExtraPrototypes != null)
+                        {
+                            IoCManager.Resolve<IResourceManagerInternal>()
+                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                        }
                     }
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
@@ -434,7 +441,13 @@ namespace Robust.UnitTesting
                         _options.BeforeStart?.Invoke();
                         IoCManager.Resolve<IConfigurationManager>()
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
-                    };
+
+                        if (_options.ExtraPrototypes != null)
+                        {
+                            IoCManager.Resolve<IResourceManagerInternal>()
+                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                        }
+                    }
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 
@@ -505,8 +518,10 @@ namespace Robust.UnitTesting
                             var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
+                                Input?.Invoke(this, simFrameEvent);
                                 Tick?.Invoke(this, simFrameEvent);
                                 _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
+                                Update?.Invoke(this, simFrameEvent);
                             }
 
                             _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));
@@ -553,6 +568,7 @@ namespace Robust.UnitTesting
             public Action? InitIoC { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly? SharedContentAssembly { get; set; }
+            public string? ExtraPrototypes { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }

@@ -21,9 +21,10 @@ namespace Robust.Client.Graphics.Clyde
     {
         public ClydeDebugLayers DebugLayers { get; set; }
 
-        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)> _drawingSpriteList
-            =
-            new RefList<(SpriteComponent, Matrix3, Angle, float)>();
+        private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)>
+            _drawingSpriteList
+                =
+                new RefList<(SpriteComponent, Matrix3, Angle, float)>();
 
         public void Render()
         {
@@ -40,6 +41,11 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            // Completely flush renderer state back to 0.
+            // This should make the renderer more robust
+            // in case an exception got thrown during rendering of the previous frame.
+            ClearRenderState();
+
             _debugStats.Reset();
 
             // Basic pre-render busywork.
@@ -47,9 +53,12 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants();
+            _updateUniformConstants(_framebufferSize);
 
-            SetSpaceFull(CurrentSpace.ScreenSpace);
+            {
+                CalcScreenMatrices(ScreenSize, out var proj, out var view);
+                SetProjViewFull(proj, view);
+            }
 
             // Short path to render only the splash.
             if (_drawingSplash)
@@ -62,35 +71,16 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
-            SetSpaceFull(CurrentSpace.WorldSpace);
-
+            _mainViewport.Eye = _eyeManager.CurrentEye;
             RenderViewport(_mainViewport);
 
-            SetSpaceFull(CurrentSpace.ScreenSpace);
-
-            // TODO: Re-enable this
-            /*
-            if (DebugLayers == ClydeDebugLayers.Fov)
             {
-                // I'm refactoring this code and I found this comment:
-                // NOTE
-                // Yes, it just says "NOTE". Thank you past me.
-                // Anyways I'm 99% sure this was about the fact that this debug layer is actually broken.
-                // Because the math is wrong.
-                // So there are distortions from incorrect projection.
-                _renderHandle.UseShader(_fovDebugShaderInstance);
-                _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
-                _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
-            }
+                var handle = _renderHandle.DrawingHandleScreen;
+                var tex = _mainViewport.RenderTarget.Texture;
 
-            if (DebugLayers == ClydeDebugLayers.Light)
-            {
-                _renderHandle.UseShader(null);
-                _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
-                _renderHandle.DrawingHandleScreen.DrawTextureRect(_wallBleedIntermediateRenderTarget2.Texture, UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
+                handle.DrawTexture(tex, (0, 0));
+                FlushRenderQueue();
             }
-            */
 
             TakeScreenshot(ScreenshotType.BeforeUI);
 
@@ -116,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var overlay in _overlayManager.AllOverlays)
                 {
-                    if (overlay.Space == space)
+                    if ((overlay.Space & space) != 0)
                     {
                         list.Add(overlay);
                     }
@@ -126,7 +116,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var overlay in list)
                 {
-                    overlay.ClydeRender(_renderHandle);
+                    overlay.ClydeRender(_renderHandle, space);
                 }
 
                 FlushRenderQueue();
@@ -182,11 +172,15 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (entry.sprite.PostShader != null)
                 {
-                    _renderHandle.UseRenderTarget(null);
+                    var oldProj = _currentMatrixProj;
+                    var oldView = _currentMatrixView;
+
+                    _renderHandle.UseRenderTarget(viewport.RenderTarget);
                     _renderHandle.Viewport(Box2i.FromDimensions(Vector2i.Zero, screenSize));
 
                     _renderHandle.UseShader(entry.sprite.PostShader);
-                    _renderHandle.SetSpace(CurrentSpace.ScreenSpace);
+                    CalcScreenMatrices(viewport.Size, out var proj, out var view);
+                    _renderHandle.SetProjView(proj, view);
                     _renderHandle.SetModelTransform(Matrix3.Identity);
 
                     var rounded = roundedPos - EntityPostRenderTarget.Size / 2;
@@ -197,7 +191,7 @@ namespace Robust.Client.Graphics.Clyde
                         box.BottomLeft, box.BottomRight, box.TopLeft, box.TopRight,
                         Color.White, null);
 
-                    _renderHandle.SetSpace(CurrentSpace.WorldSpace);
+                    _renderHandle.SetProjView(oldProj, oldView);
                     _renderHandle.UseShader(null);
                 }
             }
@@ -208,7 +202,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2 worldBounds, RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
+        private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
+            RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
             var spriteSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
 
@@ -244,41 +239,98 @@ namespace Robust.Client.Graphics.Clyde
 
         private void RenderViewport(Viewport viewport)
         {
+            if (viewport.Eye == null)
+            {
+                return;
+            }
+
+            // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
+
+            var oldTransform = _currentMatrixModel;
+            var oldScissor = _currentScissorState;
+
+            // Have to flush the render queue so that all commands finish rendering to the previous framebuffer.
+            FlushRenderQueue();
+
+            var eye = viewport.Eye;
+
             var oldVp = _currentViewport;
             _currentViewport = viewport;
 
-            // Calculate world-space AABB for camera, to cull off-screen things.
-            var eye = _eyeManager.CurrentEye;
-            var worldBounds = Box2.CenteredAround(eye.Position.Position,
-                _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+            var state = PushRenderStateFull();
 
-            if (_eyeManager.CurrentMap != MapId.Nullspace)
             {
-                using (DebugGroup("Lights"))
+                // Actual code that isn't just pushing/popping renderer state so we can return safely.
+
+                var rt = _currentViewport.RenderTarget;
+                BindRenderTargetFull(RtToLoaded(rt));
+                ClearFramebuffer(Color.Transparent);
+                SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
+                _updateUniformConstants(viewport.Size);
+
+                CalcWorldMatrices(rt.Size, eye, out var proj, out var view);
+                SetProjViewFull(proj, view);
+
+                // Calculate world-space AABB for camera, to cull off-screen things.
+                var worldBounds = Box2.CenteredAround(eye.Position.Position,
+                    _framebufferSize / (float) EyeManager.PixelsPerMeter * eye.Zoom);
+
+                if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
-                    DrawLightsAndFov(viewport, worldBounds, eye);
+                    using (DebugGroup("Lights"))
+                    {
+                        DrawLightsAndFov(viewport, worldBounds, eye);
+                    }
+
+                    using (DebugGroup("Grids"))
+                    {
+                        _drawGrids(worldBounds);
+                    }
+
+                    using (DebugGroup("Entities"))
+                    {
+                        DrawEntities(viewport, worldBounds);
+                    }
+
+                    RenderOverlays(OverlaySpace.WorldSpace);
+
+                    if (_lightManager.Enabled && eye.DrawFov)
+                    {
+                        ApplyFovToBuffer(viewport, eye);
+                    }
                 }
 
-                using (DebugGroup("Grids"))
+                _lightingReady = false;
+
+                if (DebugLayers == ClydeDebugLayers.Fov)
                 {
-                    _drawGrids(worldBounds);
+                    // I'm refactoring this code and I found this comment:
+                    // NOTE
+                    // Yes, it just says "NOTE". Thank you past me.
+                    // Anyways I'm 99% sure this was about the fact that this debug layer is actually broken.
+                    // Because the math is wrong.
+                    // So there are distortions from incorrect projection.
+                    _renderHandle.UseShader(_fovDebugShaderInstance);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    var pos = UIBox2.FromDimensions(ScreenSize / 2 - (200, 200), (400, 400));
+                    _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 
-                using (DebugGroup("Entities"))
+                if (DebugLayers == ClydeDebugLayers.Light)
                 {
-                    DrawEntities(viewport, worldBounds);
-                }
-
-                RenderOverlays(OverlaySpace.WorldSpace);
-
-                if (_lightManager.Enabled && eye.DrawFov)
-                {
-                    ApplyFovToBuffer(viewport, eye);
+                    _renderHandle.UseShader(null);
+                    _renderHandle.DrawingHandleScreen.SetTransform(Matrix3.Identity);
+                    _renderHandle.DrawingHandleScreen.DrawTextureRect(
+                        viewport.WallBleedIntermediateRenderTarget2.Texture,
+                        UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
             }
 
-            _lightingReady = false;
+            PopRenderStateFull(state);
+            _updateUniformConstants(oldVp?.Size ?? _framebufferSize);
 
+            SetScissorFull(oldScissor);
+            _currentMatrixModel = oldTransform;
             _currentViewport = oldVp;
         }
 

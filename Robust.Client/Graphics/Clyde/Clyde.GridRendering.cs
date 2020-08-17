@@ -2,6 +2,9 @@
 using System.Buffers;
 using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -9,6 +12,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         private readonly Dictionary<GridId, Dictionary<MapIndices, MapChunkData>> _mapChunkData =
             new Dictionary<GridId, Dictionary<MapIndices, MapChunkData>>();
 
@@ -35,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
+            var compMan = _entityManager.ComponentManager;
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
@@ -44,15 +50,13 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var model = Matrix3.Identity;
-                model.R0C2 = grid.WorldPosition.X;
-                model.R1C2 = grid.WorldPosition.Y;
-                gridProgram.SetUniform(UniIModelMatrix, model);
+                var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
+                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
 
                 foreach (var (_, chunk) in grid.GetMapChunks())
                 {
                     // Calc world bounds for chunk.
-                    if (!chunk.CalcWorldBounds().Intersects(worldBounds))
+                    if (!chunk.CalcWorldBounds().Intersects(in worldBounds))
                     {
                         continue;
                     }

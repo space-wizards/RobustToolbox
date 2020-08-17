@@ -16,6 +16,7 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
+using Robust.Client.Player;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
@@ -24,6 +25,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -68,6 +70,8 @@ namespace Robust.Client
         [Dependency] private readonly ISignalHandler _signalHandler = default!;
         [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -260,9 +264,15 @@ namespace Robust.Client
             _mainLoop.Running = false;
         }
 
-        private void Update(FrameEventArgs frameEventArgs)
+        private void Input(FrameEventArgs frameEventArgs)
         {
+            _clyde.ProcessInput(frameEventArgs);
             _networkManager.ProcessPackets();
+            _taskManager.ProcessPendingTasks(); // tasks like connect
+        }
+
+        private void Tick(FrameEventArgs frameEventArgs)
+        {
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
@@ -270,21 +280,36 @@ namespace Robust.Client
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
+                _componentManager.CullRemovedComponents();
                 _gameStateManager.ApplyGameState();
+                _entityManager.Update(frameEventArgs.DeltaSeconds);
+                _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
             _stateManager.Update(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 
-        private void _frameProcessMain(FrameEventArgs frameEventArgs)
+        private void Update(FrameEventArgs frameEventArgs)
         {
             _clyde.FrameProcess(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
             _stateManager.FrameUpdate(frameEventArgs);
+
+            if (_client.RunLevel >= ClientRunLevel.Connected)
+            {
+                _placementManager.FrameUpdate(frameEventArgs);
+                _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+            }
+
             _overlayManager.FrameUpdate(frameEventArgs);
             _userInterfaceManager.FrameUpdate(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+        }
+
+        private void Render()
+        {
+
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
@@ -331,10 +356,6 @@ namespace Robust.Client
                 args.SetObserved(); // don't crash
 #endif
             };
-
-#if !DEBUG
-            ConsoleLogHandler.TryDetachFromConsoleWindow();
-#endif
         }
 
         private string GetUserDataDir()

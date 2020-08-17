@@ -209,7 +209,7 @@ namespace Robust.Shared.Map
 
                     // locate the entity that represents this map that was just sent to us
                     IEntity? sharedMapEntity = null;
-                    var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
                     foreach (var mapComp in mapComps)
                     {
                         if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
@@ -259,7 +259,7 @@ namespace Robust.Shared.Map
                     cGridComp.ClearGridId();
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
-                    var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
+                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>();
                     foreach (var gridComp in gridComps)
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)

@@ -77,11 +77,6 @@ namespace Robust.Client.UserInterface.CustomControls
             });
 
             CloseButton.OnPressed += CloseButtonPressed;
-
-            if (CustomSize != null)
-            {
-                LayoutContainer.SetSize(this, CustomSize.Value);
-            }
         }
 
         public MarginContainer Contents { get; private set; }
@@ -96,6 +91,16 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2 CalculateMinimumSize()
         {
             return Vector2.ComponentMax(ContentsMinimumSize, base.CalculateMinimumSize());
+        }
+
+        protected override void Opened()
+        {
+            base.Opened();
+
+            if (_firstTimeOpened && CustomSize != null)
+            {
+                LayoutContainer.SetSize(this, CustomSize.Value);
+            }
         }
 
         private Label TitleLabel;
@@ -138,12 +143,6 @@ namespace Robust.Client.UserInterface.CustomControls
                 // 50 is arbitrary here. As long as it's bumped back into view.
                 LayoutContainer.SetPosition(this, (spaceX - 50, Position.Y));
             }
-        }
-
-        public void OpenCenteredMinSize()
-        {
-            LayoutContainer.SetSize(this, ContentsMinimumSize);
-            OpenCentered();
         }
 
         protected override DragMode GetDragModeFor(Vector2 relativeMousePos)

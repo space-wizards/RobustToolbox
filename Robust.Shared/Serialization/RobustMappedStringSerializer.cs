@@ -52,9 +52,9 @@ namespace Robust.Shared.Serialization
 
         private INetManager? _net;
 
-        private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
-
-        private ISawmill LogSzr => _lazyLogSzr.Value;
+        // I don't want to create 50 line changes in this commit so...
+        // ReSharper disable once InconsistentNaming
+        private ISawmill LogSzr = default!;
 
         private readonly HashSet<INetChannel> _incompleteHandshakes = new HashSet<INetChannel>();
 
@@ -1178,10 +1178,8 @@ namespace Robust.Shared.Serialization
 
             // indicate not mapped
             WriteCompressedUnsignedInt(stream, UnmappedString);
-            var buf = Encoding.UTF8.GetBytes(value);
-            //Logger.DebugS("szr", $"Encoded unmapped string: {value}");
-            WriteCompressedUnsignedInt(stream, (uint) buf.Length);
-            stream.Write(buf);
+
+            Primitives.WritePrimitive(stream, value);
         }
 
         /// <summary>
@@ -1224,13 +1222,7 @@ namespace Robust.Shared.Serialization
             if (mapIndex == UnmappedString)
             {
                 // not mapped
-                var length = checked((int)ReadCompressedUnsignedInt(stream, out _));
-                // ReSharper disable once SuggestVarOrType_Elsewhere
-                Span<byte> buf = stackalloc byte[length];
-                stream.Read(buf);
-                value = Encoding.UTF8.GetString(buf);
-                //Logger.DebugS("szr", $"Decoded unmapped string: {value}");
-
+                Primitives.ReadPrimitive(stream, out value);
                 return;
             }
 
@@ -1314,6 +1306,10 @@ namespace Robust.Shared.Serialization
         /// </summary>
         public event Action? ClientHandshakeComplete;
 
+        public void InitLogging()
+        {
+            LogSzr = Logger.GetSawmill("szr");
+        }
     }
 
 }

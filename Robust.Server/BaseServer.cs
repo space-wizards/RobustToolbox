@@ -393,17 +393,21 @@ namespace Robust.Server
                 _mainLoop = new GameLoop(_time)
                 {
                     SleepMode = SleepMode.Delay,
-                    DetectSoftLock = true
+                    DetectSoftLock = true,
+                    EnableMetrics = true
                 };
             }
 
             _uptimeStopwatch.Start();
+
+            _mainLoop.Input += (sender, args) => Input(args);
 
             _mainLoop.Tick += (sender, args) => Update(args);
 
             _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
 
             // set GameLoop.Running to false to return from this function.
+            _time.Paused = false;
             _mainLoop.Run();
 
             _time.InSimulation = true;
@@ -453,6 +457,8 @@ namespace Robust.Server
             {
                 var b = (byte) i;
                 _time.TickRate = b;
+
+                Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
                 SendTickRateUpdateToClients(b);
             });
 
@@ -510,15 +516,20 @@ namespace Robust.Server
             return bps;
         }
 
+        private void Input(FrameEventArgs args)
+        {
+            _systemConsole.Update();
+
+            _network.ProcessPackets();
+            _taskManager.ProcessPendingTasks();
+        }
+
         private void Update(FrameEventArgs frameEventArgs)
         {
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
             UpdateTitle();
-            _systemConsole.Update();
-
-            _network.ProcessPackets();
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
 

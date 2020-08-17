@@ -10,8 +10,12 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
 {
+    // RenderHandle contains the public/internal API surface to control actual rendering operations in Clyde.
+
     internal partial class Clyde
     {
+        private RenderHandle _renderHandle = default!;
+
         private sealed class RenderHandle : IRenderHandle
         {
             private readonly Clyde _clyde;
@@ -32,9 +36,9 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetModelTransform(matrix);
             }
 
-            public void SetViewTransform(in Matrix3 matrix)
+            public void SetProjView(in Matrix3 proj, in Matrix3 view)
             {
-                _clyde.DrawSetViewTransform(matrix);
+                _clyde.DrawSetProjViewTransform(proj, view);
             }
 
             public void DrawTextureScreen(Texture texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr,
@@ -90,11 +94,6 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetScissor(scissorBox);
             }
 
-            public void SetSpace(CurrentSpace space)
-            {
-                _clyde.DrawSwitchSpace(space);
-            }
-
             public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
                 if (entity.Deleted)
@@ -104,20 +103,23 @@ namespace Robust.Client.Graphics.Clyde
 
                 var sprite = entity.GetComponent<SpriteComponent>();
 
-                // Switch rendering to world space.
-                SetSpace(CurrentSpace.WorldSpace);
+                var oldProj = _clyde._currentMatrixProj;
+                var oldView = _clyde._currentMatrixView;
 
+                // Switch rendering to pseudo-world space.
                 {
+                    CalcWorldProjMatrix(_clyde._currentRenderTarget.Size, out var proj);
+
                     var ofsX = position.X - _clyde.ScreenSize.X / 2f;
                     var ofsY = position.Y - _clyde.ScreenSize.Y / 2f;
 
-                    var viewMatrix = Matrix3.Identity;
-                    viewMatrix.R0C0 = scale.X;
-                    viewMatrix.R1C1 = scale.Y;
-                    viewMatrix.R0C2 = ofsX / EyeManager.PixelsPerMeter;
-                    viewMatrix.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
+                    var view = Matrix3.Identity;
+                    view.R0C0 = scale.X;
+                    view.R1C1 = scale.Y;
+                    view.R0C2 = ofsX / EyeManager.PixelsPerMeter;
+                    view.R1C2 = -ofsY / EyeManager.PixelsPerMeter;
 
-                    SetViewTransform(viewMatrix);
+                    SetProjView(proj, view);
                 }
 
                 // Draw the entity.
@@ -129,7 +131,7 @@ namespace Robust.Client.Graphics.Clyde
                     overrideDirection);
 
                 // Reset to screen space
-                SetSpace(CurrentSpace.ScreenSpace);
+                SetProjView(oldProj, oldView);
             }
 
             public void DrawLine(Vector2 a, Vector2 b, Color color)
@@ -156,7 +158,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void UseRenderTarget(IRenderTarget? renderTarget)
             {
-                var target = (RenderTarget?) renderTarget;
+                var target = (RenderTexture?) renderTarget;
 
                 _clyde.DrawRenderTarget(target?.Handle ?? default);
             }
@@ -324,7 +326,30 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
                 {
-                    // TODO: Implement this.
+                    //TODO: Scale number of sides based on radius
+                    const int Divisions = 8;
+                    const float ArcLength = MathF.PI * 2 / Divisions;
+
+                    var filledTriangle = new Vector2[3];
+
+                    // Draws a "circle", but its just a polygon with a bunch of sides
+                    // this is the GL_LINES version, not GL_LINE_STRIP
+                    for (int i = 0; i < Divisions; i++)
+                    {
+                        var startPos = new Vector2(MathF.Cos(ArcLength * i) * radius, MathF.Sin(ArcLength * i) * radius);
+                        var endPos = new Vector2(MathF.Cos(ArcLength * (i+1)) * radius, MathF.Sin(ArcLength * (i + 1)) * radius);
+
+                        if(!filled)
+                            _renderHandle.DrawLine(startPos, endPos, color);
+                        else
+                        {
+                            filledTriangle[0] = startPos;
+                            filledTriangle[1] = endPos;
+                            filledTriangle[2] = Vector2.Zero;
+
+                            _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, filledTriangle, color);
+                        }
+                    }
                 }
 
                 public override void DrawLine(Vector2 from, Vector2 to, Color color)

@@ -24,8 +24,8 @@ namespace Robust.Shared.Network.Messages
         public bool WasComplete { get; set; }
 
         // Echo of the entered code with syntax highlighting applied.
-        public FormattedMessage Echo { get; set; }
-        public FormattedMessage Response { get; set; }
+        public FormattedMessage Echo;
+        public FormattedMessage Response;
 
         #endregion
 
@@ -40,8 +40,8 @@ namespace Robust.Shared.Network.Messages
 
                 var length = buffer.ReadVariableInt32();
                 using var stream = buffer.ReadAsStream(length);
-                Echo = serializer.Deserialize<FormattedMessage>(stream);
-                Response = serializer.Deserialize<FormattedMessage>(stream);
+                serializer.DeserializeDirect(stream, out Echo);
+                serializer.DeserializeDirect(stream, out Response);
             }
         }
 
@@ -55,11 +55,12 @@ namespace Robust.Shared.Network.Messages
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
 
                 var memoryStream = new MemoryStream();
-                serializer.Serialize(memoryStream, Echo);
-                serializer.Serialize(memoryStream, Response);
+                serializer.SerializeDirect(memoryStream, Echo);
+                serializer.SerializeDirect(memoryStream, Response);
 
                 buffer.WriteVariableInt32((int)memoryStream.Length);
-                buffer.Write(memoryStream.ToArray());
+                memoryStream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

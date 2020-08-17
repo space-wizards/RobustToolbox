@@ -30,8 +30,6 @@ namespace Robust.Client.Graphics.Overlays
 
         protected IOverlayManager OverlayManager { get; }
 
-        public ShaderInstance? Shader { get; set; }
-
         public int? ZIndex { get; set; }
 
         public virtual bool SubHandlesUseMainShader { get; } = true;
@@ -69,56 +67,57 @@ namespace Robust.Client.Graphics.Overlays
         {
         }
 
-        protected abstract void Draw(DrawingHandleBase handle);
+        /// <summary>
+        /// Draws this overlay to the current space.
+        /// </summary>
+        /// <param name="handle">Current drawing handle that the overlay should be drawing with. Do not hold a reference to this in the overlay.</param>
+        /// <param name="currentSpace">Current space that is being drawn. This function is called for every space that was set up in initialization.</param>
+        protected abstract void Draw(DrawingHandleBase handle, OverlaySpace currentSpace);
 
         public void Dirty()
         {
             _isDirty = true;
         }
 
-        protected internal virtual void FrameUpdate(FrameEventArgs args)
-        {
-        }
+        protected internal virtual void FrameUpdate(FrameEventArgs args) { }
 
-        internal void ClydeRender(IRenderHandle renderHandle)
+        internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
         {
             DrawingHandleBase handle;
-            if (Space == OverlaySpace.WorldSpace)
-            {
+            if (currentSpace == OverlaySpace.WorldSpace)
                 handle = renderHandle.DrawingHandleWorld;
-            }
             else
-            {
                 handle = renderHandle.DrawingHandleScreen;
-            }
 
-            if (Shader != null)
-            {
-                handle.UseShader(Shader);
-            }
-            Draw(handle);
+            Draw(handle, currentSpace);
         }
     }
 
 
     /// <summary>
-    ///     Determines in which canvas layer an overlay gets drawn.
+    ///     Determines in which canvas layers an overlay gets drawn.
     /// </summary>
+    [Flags]
     public enum OverlaySpace
     {
         /// <summary>
+        ///     Used for matching bit flags.
+        /// </summary>
+        None = 0b0000,
+
+        /// <summary>
         ///     This overlay will be drawn in the UI root, thus being in screen space.
         /// </summary>
-        ScreenSpace = 0,
+        ScreenSpace = 0b0001,
 
         /// <summary>
         ///     This overlay will be drawn in the world root, thus being in world space.
         /// </summary>
-        WorldSpace = 1,
+        WorldSpace = 0b0010,
 
         /// <summary>
         ///     Drawn in screen coordinates, but behind the world.
         /// </summary>
-        ScreenSpaceBelowWorld = 2,
+        ScreenSpaceBelowWorld = 0b0100,
     }
 }

@@ -41,6 +41,9 @@ namespace Robust.Client.GameObjects
             set => _enabled = value;
         }
 
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool ContainerOccluded { get; set; }
+
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
         /// </summary>
@@ -113,6 +116,7 @@ namespace Robust.Client.GameObjects
         ///     Radius, in meters.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float Radius
         {
             get => _radius;

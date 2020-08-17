@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
@@ -84,10 +83,10 @@ namespace Robust.Shared.ContentPack
         }
 
         /// <inheritdoc />
-        public Stream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             var fullPath = GetFullPath(path);
-            return File.Open(fullPath, fileMode);
+            return File.Open(fullPath, fileMode, access, share);
         }
 
         /// <inheritdoc />
@@ -107,7 +106,7 @@ namespace Robust.Shared.ContentPack
 
         private static string GetFullPath(string root, ResourcePath path)
         {
-            var relPath = path.Clean().ToRelativePath().ToString();
+            var relPath = path.ToRootedPath().Clean().ToRelativeSystemPath();
             return Path.GetFullPath(Path.Combine(root, relPath));
         }
     }

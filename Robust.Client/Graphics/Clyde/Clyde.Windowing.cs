@@ -15,7 +15,6 @@ using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
@@ -59,6 +58,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
+        private Vector2i _prevWindowSize;
+        private Vector2i _prevWindowPos;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
         private Thread? _mainThread;
@@ -178,12 +179,16 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
             _framebufferSize = (fbW, fbH);
+            UpdateWindowLoadedRtSize();
 
             GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
             _windowScale = (scaleX, scaleY);
 
             GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-            _windowSize = (w, h);
+            _prevWindowSize = _windowSize = (w, h);
+
+            GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+            _prevWindowPos = (x, y);
 
             _pixelRatio = _framebufferSize / _windowSize;
 
@@ -336,10 +341,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
         {
-            var shift = mods.HasFlag(KeyModifiers.Shift);
-            var alt = mods.HasFlag(KeyModifiers.Alt);
-            var control = mods.HasFlag(KeyModifiers.Control);
-            var system = mods.HasFlag(KeyModifiers.Super);
+            var shift = (mods & KeyModifiers.Shift) != 0;
+            var alt = (mods & KeyModifiers.Alt) != 0;
+            var control = (mods & KeyModifiers.Control) != 0;
+            var system = (mods & KeyModifiers.Super) != 0;
 
             var ev = new KeyEventArgs(
                 key,
@@ -393,6 +398,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
                 _framebufferSize = (fbW, fbH);
                 _windowSize = (width, height);
+                UpdateWindowLoadedRtSize();
 
                 if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
                     return;
@@ -403,7 +409,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (fbW != 0 && fbH != 0)
                 {
                     _mainViewport.Dispose();
-                    _mainViewport = CreateViewport((fbW, fbH), nameof(_mainViewport));
+                    CreateMainViewport();
                 }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
@@ -462,6 +468,11 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetWindowTitle(_glfwWindow, title);
         }
 
+        public void RequestWindowAttention()
+        {
+            GLFW.RequestWindowAttention(_glfwWindow);
+        }
+
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             GLFW.PollEvents();
@@ -516,14 +527,20 @@ namespace Robust.Client.Graphics.Clyde
 
             if (WindowMode == WindowMode.Fullscreen)
             {
+                GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
+                _prevWindowSize = (w, h);
+
+                GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+                _prevWindowPos = (x, y);
                 var monitor = GLFW.GetPrimaryMonitor();
                 var mode = GLFW.GetVideoMode(monitor);
+
                 GLFW.SetWindowMonitor(_glfwWindow, GLFW.GetPrimaryMonitor(), 0, 0, mode->Width, mode->Height,
                     mode->RefreshRate);
             }
             else
             {
-                GLFW.SetWindowMonitor(_glfwWindow, null, 0, 0, 1280, 720, 0);
+                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X, _prevWindowSize.Y, 0);
             }
         }
 

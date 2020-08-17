@@ -80,18 +80,15 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
-            if (!EntityManager.TryGetEntity(ev.EntityUid, out var entity))
-            {
-                Logger.Error(
-                    $"Server tried to play audio file {ev.FileName} on entity {ev.EntityUid} which does not exist.");
-                return;
-            }
+            var stream = EntityManager.TryGetEntity(ev.EntityUid, out var entity) ?
+                (PlayingStream?) Play(ev.FileName, entity, ev.AudioParams)
+                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.AudioParams);
 
-            var stream = (PlayingStream?) Play(ev.FileName, entity, ev.AudioParams);
             if (stream != null)
             {
                 stream.NetIdentifier = ev.Identifier;
             }
+
         }
 
         public override void FrameUpdate(float frameTime)

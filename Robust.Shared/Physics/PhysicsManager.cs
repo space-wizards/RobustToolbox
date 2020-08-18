@@ -339,6 +339,15 @@ namespace Robust.Shared.Physics
             this[mapId].Add(body);
         }
 
-        public int SleepTimeThreshold { get; set; } = 240;
+        /// <summary>
+        /// How many ticks before a physics body will go to sleep. Bodies will only sleep if
+        /// they have no velocity.
+        /// </summary>
+        /// <remarks>
+        /// This is an arbitrary number greater than zero. To solve "locker stacks" that span multiple ticks,
+        /// this needs to be greater than one. Every time an entity collides or is moved, the body's <see cref="IPhysBody.SleepAccumulator"/>
+        /// goes back to zero.
+        /// </remarks>
+        public int SleepTimeThreshold { get; set; } = 2;
     }
 }

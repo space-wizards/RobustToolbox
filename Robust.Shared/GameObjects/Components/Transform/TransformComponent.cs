@@ -185,19 +185,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public GridCoordinates GridPosition
         {
-            get
-            {
-                if (_parent.IsValid())
-                {
-                    // transform _position from parent coords to world coords
-                    var worldPos = Parent!.WorldMatrix.Transform(_localPosition);
-                    return new GridCoordinates(worldPos, GridID);
-                }
-                else
-                {
-                    return new GridCoordinates(_localPosition, GridID);
-                }
-            }
+            get => new GridCoordinates(_localPosition, GridID);
             set
             {
                 if (!_parent.IsValid())

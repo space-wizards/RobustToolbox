@@ -74,11 +74,18 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <summary>
+        ///     Gets a tile a the given local coordinates. This will not create a new chunk.
+        /// </summary>
+        /// <param name="localPos">The location of the tile in coordinates.</param>
+        /// <returns>The tile at the world coordinates.</returns>
+        TileRef GetTileRef(GridCoordinates localPos);
+
+        /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
         /// </summary>
         /// <param name="worldPos">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTileRef(GridCoordinates worldPos);
+        TileRef GetTileRef(MapCoordinates worldPos);
 
         /// <summary>
         ///     Gets a tile a the given grid indices. This will not create a new chunk.
@@ -96,9 +103,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Replaces a single tile inside of the grid.
         /// </summary>
-        /// <param name="worldPos"></param>
+        /// <param name="localPos"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(GridCoordinates worldPos, Tile tile);
+        void SetTile(GridCoordinates localPos, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -155,7 +162,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
         /// <returns>The world-space coordinates with global origin.</returns>
-        GridCoordinates LocalToWorld(GridCoordinates posLocal);
+        MapCoordinates LocalToWorld(GridCoordinates posLocal);
 
         /// <summary>
         ///     Transforms local vectors into world space vectors

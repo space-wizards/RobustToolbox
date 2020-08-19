@@ -180,7 +180,13 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTileRef(GridCoordinates worldPos)
+        public TileRef GetTileRef(GridCoordinates localPos)
+        {
+            return GetTileRef(LocalToTile(localPos));
+        }
+
+        /// <inheritdoc />
+        public TileRef GetTileRef(MapCoordinates worldPos)
         {
             return GetTileRef(WorldToTile(worldPos));
         }
@@ -214,9 +220,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(GridCoordinates worldPos, Tile tile)
+        public void SetTile(GridCoordinates localPos, Tile tile)
         {
-            var localTile = WorldToTile(worldPos);
+            var localTile = LocalToTile(localPos);
             SetTile(new MapIndices(localTile.X, localTile.Y), tile);
         }
 
@@ -422,10 +428,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public GridCoordinates LocalToWorld(GridCoordinates posLocal)
+        public MapCoordinates LocalToWorld(GridCoordinates posLocal)
         {
-            return new GridCoordinates(posLocal.Position + WorldPosition,
-                _mapManager.GetDefaultGridId(_mapManager.GetGrid(posLocal.GridID).ParentMapId));
+            return new MapCoordinates(posLocal.Position + WorldPosition, ParentMapId);
         }
 
         /// <inheritdoc />
@@ -445,9 +450,20 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to tile indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToTile(GridCoordinates gridPos)
+        public MapIndices WorldToTile(MapCoordinates mapPos)
         {
-            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            var local = WorldToLocal(mapPos.Position);
+            var x = (int)Math.Floor(local.X / TileSize);
+            var y = (int)Math.Floor(local.Y / TileSize);
+            return new MapIndices(x, y);
+        }
+
+        /// <summary>
+        ///     Transforms local coordinates to tile indices relative to grid origin.
+        /// </summary>
+        public MapIndices LocalToTile(GridCoordinates localPos)
+        {
+            var local = localPos.Position;
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new MapIndices(x, y);

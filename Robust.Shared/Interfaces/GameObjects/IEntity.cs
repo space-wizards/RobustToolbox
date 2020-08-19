@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
@@ -94,7 +95,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Checks to see ift he entity has a component of the specified type.
         /// </summary>
-        /// <param name="t">The component reference type to check.</param>
+        /// <param name="type">The component reference type to check.</param>
         /// <returns></returns>
         bool HasComponent(Type type);
 
@@ -140,6 +141,15 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
+        ///     returning it if it was found.
+        /// </summary>
+        /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
+        /// <returns>The component, if it was found. Null otherwise.</returns>
+        [CanBeNull]
+        T TryGetComponent<T>() where T : IComponent;
+
+        /// <summary>
+        ///     Attempt to retrieve the component with specified type,
         ///     writing it to the <paramref name="component" /> out parameter if it was found.
         /// </summary>
         /// <param name="type">The component reference type to attempt to fetch.</param>
@@ -148,13 +158,29 @@ namespace Robust.Shared.Interfaces.GameObjects
         bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
+        ///     Attempt to retrieve the component with specified type,
+        ///     returning it if it was found.
+        /// </summary>
+        /// <param name="type">The component reference type to attempt to fetch.</param>
+        /// <returns>The component, if it was found. Null otherwise.</returns>
+        IComponent? TryGetComponent(Type type);
+
+        /// <summary>
         ///     Attempt to retrieve the component with specified network ID,
         ///     writing it to the <paramref name="component" /> out parameter if it was found.
         /// </summary>
-        /// <param name="type">The component net ID to attempt to fetch.</param>
+        /// <param name="netId">The component net ID to attempt to fetch.</param>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified net ID was found.</returns>
-        bool TryGetComponent(uint netID, [NotNullWhen(true)] out IComponent? component);
+        bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Attempt to retrieve the component with specified network ID,
+        ///     returning it if it was found.
+        /// </summary>
+        /// <param name="netId">The component net ID to attempt to fetch.</param>
+        /// <returns>The component, if it was found. Null otherwise.</returns>
+        IComponent? TryGetComponent(uint netId);
 
         /// <summary>
         ///     Used by the entity manager to delete the entity.

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -293,6 +294,11 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
         }
 
+        public T TryGetComponent<T>() where T : IComponent
+        {
+            return TryGetComponent(out T component) ? component : default!;
+        }
+
         /// <inheritdoc />
         public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
@@ -301,12 +307,22 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, type, out component);
         }
 
+        public IComponent? TryGetComponent(Type type)
+        {
+            return TryGetComponent(type, out var component) ? component : null;
+        }
+
         /// <inheritdoc />
         public bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
             return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
+        }
+
+        public IComponent? TryGetComponent(uint netId)
+        {
+            return TryGetComponent(netId, out var component) ? component : null;
         }
 
         /// <inheritdoc />

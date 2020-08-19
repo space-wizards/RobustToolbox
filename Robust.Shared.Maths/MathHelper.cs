@@ -13,8 +13,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {

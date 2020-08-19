@@ -103,4 +103,34 @@
                 : "the " + name;
         }
     }
+
+    [RegisterTextMacro("are", "en")]
+    public class ToBe : ITextMacro
+    {
+        public string Format(object? argument)
+        {
+            return IGenderable.GetGenderOrEpicene(argument) switch
+            {
+                Gender.Female => "is",
+                Gender.Male => "is",
+                Gender.Neuter => "is",
+                _ => "are",
+            };
+        }
+    }
+
+    [RegisterTextMacro("have", "en")]
+    public class Have : ITextMacro
+    {
+        public string Format(object? argument)
+        {
+            return IGenderable.GetGenderOrEpicene(argument) switch
+            {
+                Gender.Female => "has",
+                Gender.Male => "has",
+                Gender.Neuter => "has",
+                _ => "have",
+            };
+        }
+    }
 }

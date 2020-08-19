@@ -29,8 +29,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -502,9 +500,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Clamp(Vector3 vec, Vector3 min, Vector3 max)
         {
-            vec.X = MathF.Clamp(vec.X, min.X, max.X);
-            vec.Y = MathF.Clamp(vec.Y, min.Y, max.Y);
-            vec.Z = MathF.Clamp(vec.Z, min.Z, max.Z);
+            vec.X = FloatMath.Clamp(vec.X, min.X, max.X);
+            vec.Y = FloatMath.Clamp(vec.Y, min.Y, max.Y);
+            vec.Z = FloatMath.Clamp(vec.Z, min.Z, max.Z);
             return vec;
         }
 
@@ -518,9 +516,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Clamp(ref Vector3 vec, ref Vector3 min, ref Vector3 max, out Vector3 result)
         {
-            result.X = MathF.Clamp(vec.X, min.X, max.X);
-            result.Y = MathF.Clamp(vec.Y, min.Y, max.Y);
-            result.Z = MathF.Clamp(vec.Z, min.Z, max.Z);
+            result.X = FloatMath.Clamp(vec.X, min.X, max.X);
+            result.Y = FloatMath.Clamp(vec.Y, min.Y, max.Y);
+            result.Z = FloatMath.Clamp(vec.Z, min.Z, max.Z);
         }
 
         #endregion
@@ -630,9 +628,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector3 Lerp(Vector3 a, Vector3 b, float blend)
         {
-            a.X = MathF.Interpolate(a.X, b.X, blend);
-            a.Y = MathF.Interpolate(a.Y, b.Y, blend);
-            a.Z = MathF.Interpolate(a.Z, b.Z, blend);
+            a.X = FloatMath.Lerp(a.X, b.X, blend);
+            a.Y = FloatMath.Lerp(a.Y, b.Y, blend);
+            a.Z = FloatMath.Lerp(a.Z, b.Z, blend);
             return a;
         }
 
@@ -646,9 +644,9 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Lerp(ref Vector3 a, ref Vector3 b, float blend, out Vector3 result)
         {
-            result.X = MathF.Interpolate(a.X, b.X, blend);
-            result.Y = MathF.Interpolate(a.Y, b.Y, blend);
-            result.Z = MathF.Interpolate(a.Z, b.Z, blend);
+            result.X = FloatMath.Lerp(a.X, b.X, blend);
+            result.Y = FloatMath.Lerp(a.Y, b.Y, blend);
+            result.Z = FloatMath.Lerp(a.Z, b.Z, blend);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,6 +1,4 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -44,6 +42,16 @@ namespace Robust.Shared.Maths
         public static Direction GetDir(this Vector2i vec)
         {
             return new Angle(vec).GetDir();
+        }
+
+        /// <summary>
+        /// Converts a direction vector to the closest cardinal Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetCardinalDir(this Vector2i vec)
+        {
+            return new Angle(vec).GetCardinalDir();
         }
 
         public static Direction GetOpposite(this Direction direction)

@@ -84,7 +84,7 @@ namespace Robust.Shared.ContentPack
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;
         }
 
-        public Stream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             if (!path.IsRooted)
             {

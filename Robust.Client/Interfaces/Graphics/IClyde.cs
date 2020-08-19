@@ -14,6 +14,12 @@ namespace Robust.Client.Interfaces.Graphics
 
         Vector2i ScreenSize { get; }
         void SetWindowTitle(string title);
+
+        /// <summary>
+        ///     This is the magic method to make the game window ping you in the task bar.
+        /// </summary>
+        void RequestWindowAttention();
+
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         Texture LoadTextureFromPNGStream(Stream stream, string? name = null,

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Initially based on Box2D by Erin Catto, license follows;
  *
  * Copyright (c) 2009 Erin Catto http://www.box2d.org
@@ -26,8 +26,6 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Physics
 {
@@ -1345,7 +1343,7 @@ namespace Robust.Shared.Physics
 
                     ref var node = ref _tree._nodes[proxy];
 
-                    if (!node.Aabb.Intersects(_aabb))
+                    if (!node.Aabb.Intersects(in _aabb))
                     {
                         continue;
                     }

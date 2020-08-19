@@ -1,8 +1,6 @@
 ﻿using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {

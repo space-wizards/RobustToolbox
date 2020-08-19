@@ -4,8 +4,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.Placement.Modes
 {

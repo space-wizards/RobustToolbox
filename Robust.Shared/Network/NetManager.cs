@@ -806,12 +806,13 @@ namespace Robust.Shared.Network
             {
                 Logger.ErrorS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Wrong deserialization of {type.Name} packet: {ice.Message}");
-                throw;
+                return true;
             }
             catch (Exception e) // yes, we want to catch ALL exeptions for security
             {
                 Logger.WarningS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Failed to deserialize {type.Name} packet: {e.Message}");
+                return true;
             }
 
             if (!_callbacks.TryGetValue(type, out var callback))

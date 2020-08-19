@@ -21,7 +21,8 @@ namespace Robust.Client.Physics
         public override void Update(float frameTime)
         {
             _lastRem = _gameTiming.CurTime;
-            SimulateWorld(frameTime, ActuallyRelevant());
+
+            SimulateWorld(frameTime, EntityManager.ComponentManager.EntityQuery<ICollidableComponent>().ToList(), !_gameTiming.InSimulation || !_gameTiming.IsFirstTimePredicted);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -33,7 +34,7 @@ namespace Robust.Client.Physics
 
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
-            SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant());
+            SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant(), true);
         }
 
         private List<ICollidableComponent> ActuallyRelevant()

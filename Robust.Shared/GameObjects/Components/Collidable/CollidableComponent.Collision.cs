@@ -30,7 +30,7 @@ namespace Robust.Shared.GameObjects.Components
 
     public partial interface ICollidableComponent : IComponent, IPhysBody
     {
-        public bool Hard { get; set; }
+        public new bool Hard { get; set; }
         bool IsColliding(Vector2 offset, bool approximate = true);
 
         IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);
@@ -65,6 +65,7 @@ namespace Robust.Shared.GameObjects.Components
         public int ProxyId { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType { get; set; } = BodyType.Static;
 
         /// <inheritdoc />
@@ -77,6 +78,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public bool Awake => _physicsManager.SleepTimeThreshold > SleepAccumulator;
 
         /// <inheritdoc />
@@ -208,7 +210,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Hard
         {
             get => _isHard;

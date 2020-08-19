@@ -17,16 +17,6 @@ namespace Robust.Shared.GameObjects.Components
         float Mass { get; set; }
 
         /// <summary>
-        ///     Current linear velocity of the entity in meters per second.
-        /// </summary>
-        Vector2 LinearVelocity { get; set; }
-
-        /// <summary>
-        ///     Current angular velocity of the entity in radians per sec.
-        /// </summary>
-        float AngularVelocity { get; set; }
-
-        /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
         /// </summary>
         Vector2 Momentum { get; set; }
@@ -166,7 +156,7 @@ namespace Robust.Shared.GameObjects.Components
         /// Can this body be moved?
         /// </summary>
         /// <returns></returns>
-        bool CanMove();
+        new bool CanMove();
     }
 
     partial class CollidableComponent : ICollidableComponent
@@ -210,6 +200,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <remarks>
         /// https://en.wikipedia.org/wiki/Moment_of_inertia
         /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float I
         {
             get => _angularMass;
@@ -236,6 +227,7 @@ namespace Robust.Shared.GameObjects.Components
         /// The force is applied to the center of mass.
         /// https://en.wikipedia.org/wiki/Force
         /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Force { get; set; }
 
         /// <summary>
@@ -245,8 +237,10 @@ namespace Robust.Shared.GameObjects.Components
         /// The torque rotates around the Z axis on the object.
         /// https://en.wikipedia.org/wiki/Torque
         /// </remarks>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Torque { get; set; }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public float Friction
         {
             get => _friction;
@@ -266,6 +260,7 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _linVelocity = value;
+                WakeBody();
                 Dirty();
             }
         }
@@ -283,6 +278,7 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _angVelocity = value;
+                WakeBody();
                 Dirty();
             }
         }

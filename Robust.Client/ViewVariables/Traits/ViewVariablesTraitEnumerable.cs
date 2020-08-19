@@ -162,21 +162,12 @@ namespace Robust.Client.ViewVariables.Traits
                 }
 
                 var control = editor.Initialize(element, true);
-                if (editor is ViewVariablesPropertyEditorReference refEditor)
+                if (_networked)
                 {
-                    if (_networked)
-                    {
-                        var iSafe = i;
-                        refEditor.OnPressed += () =>
-                            Instance.ViewVariablesManager.OpenVV(
-                                new ViewVariablesSessionRelativeSelector(Instance.Session!.SessionId,
-                                    new object[] {new ViewVariablesEnumerableIndexSelector(iSafe), }));
-                    }
-                    else
-                    {
-                        refEditor.OnPressed += () => Instance.ViewVariablesManager.OpenVV(element!);
-                    }
+                    var selectorChain = new object[] {new ViewVariablesEnumerableIndexSelector(i)};
+                    editor.WireNetworkSelector(Instance.Session!.SessionId, selectorChain);
                 }
+
                 _elementsVBox.AddChild(control);
             }
 

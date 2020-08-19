@@ -28,7 +28,7 @@ namespace Robust.Shared.IoC
     /// <para>
     /// <c>IoCManager</c> is actually a static wrapper class around a thread local <see cref="IDependencyCollection"/>.
     /// As such, <c>IoCManager</c> will not work in other threads,
-    /// unless they have first been initialized with <see cref="InitThread(Robust.Shared.IoC.IDependencyCollection)"/>.
+    /// unless they have first been initialized with <see cref="InitThread()"/> or <see cref="InitThread(IDependencyCollection,bool)"/>.
     /// You should not initialize IoC in thread pools like that of <see cref="Task.Run(Action)"/>,
     /// since said thread pool might be used by different running instances
     /// (for example, server and client running in the same process, they have a different IoC instance).
@@ -40,6 +40,21 @@ namespace Robust.Shared.IoC
         private const string NoContextAssert = "IoC has no context on this thread. Are you calling IoC from the wrong thread or did you forget to initialize it?";
         private static readonly ThreadLocal<IDependencyCollection> _container = new ThreadLocal<IDependencyCollection>();
 
+        /// <summary>
+        /// Returns the singleton thread-local instance of the IoCManager's dependency collection.
+        /// </summary>
+        /// <remarks>
+        /// This property will be null if <see cref="InitThread()"/> has not been called on this thread yet.
+        /// </remarks>
+        public static IDependencyCollection? Instance => _container.IsValueCreated ? _container.Value : null;
+
+        /// <summary>
+        /// Ensures that the <see cref="IDependencyCollection"/> instance exists for this thread.
+        /// </summary>
+        /// <remarks>
+        /// This will create a new instance of a <see cref="IDependencyCollection"/> for this thread,
+        /// otherwise it will do nothing if one already exists.
+        /// </remarks>
         public static void InitThread()
         {
             if (_container.IsValueCreated)
@@ -50,6 +65,13 @@ namespace Robust.Shared.IoC
             _container.Value = new DependencyCollection();
         }
 
+        /// <summary>
+        /// Sets an existing <see cref="IDependencyCollection"/> as the instance for this thread.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Will be thrown if a <see cref="IDependencyCollection"/> instance is already set for this thread,
+        /// and replaceExisting is set to false.</exception>
+        /// <param name="collection">Collection to set as the instance for this thread.</param>
+        /// <param name="replaceExisting">If this is true, replaces the existing collection, if one is set for this thread.</param>
         public static void InitThread(IDependencyCollection collection, bool replaceExisting=false)
         {
             if (_container.IsValueCreated && !replaceExisting)
@@ -146,7 +168,7 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Initializes the object graph by building every object and resolving all dependencies.
         /// </summary>
-        /// <seealso cref="InjectDependencies(object)"/>
+        /// <seealso cref="InjectDependencies{T}"/>
         public static void BuildGraph()
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);

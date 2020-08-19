@@ -20,6 +20,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Player
 {
@@ -46,11 +47,14 @@ namespace Robust.Server.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
+        [ViewVariables]
         private readonly Dictionary<NetSessionId, PlayerSession> _sessions = new Dictionary<NetSessionId, PlayerSession>();
 
+        [ViewVariables]
         private readonly Dictionary<NetSessionId, PlayerData> _playerData = new Dictionary<NetSessionId, PlayerData>();
 
         /// <inheritdoc />
+        [ViewVariables]
         public int PlayerCount
         {
             get
@@ -68,6 +72,7 @@ namespace Robust.Server.Player
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public int MaxPlayers { get; private set; } = 32;
 
         /// <inheritdoc />
@@ -339,7 +344,10 @@ namespace Robust.Server.Player
         /// </summary>
         private void EndSession(object? sender, NetChannelArgs args)
         {
-            var session = GetSessionByChannel(args.Channel);
+            if (!TryGetSessionByChannel(args.Channel, out var session))
+            {
+                return;
+            }
 
             // make sure nothing got messed up during the life of the session
             DebugTools.Assert(session.ConnectedClient == args.Channel);

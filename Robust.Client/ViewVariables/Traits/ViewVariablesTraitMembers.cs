@@ -52,19 +52,13 @@ namespace Robust.Client.ViewVariables.Traits
                     var propertyEdit = new ViewVariablesPropertyControl(_vvm, _resourceCache);
                     propertyEdit.SetStyle(otherStyle = !otherStyle);
                     var editor = propertyEdit.SetProperty(propertyData);
-                    // TODO: should this maybe not be hardcoded?
-                    if (editor is ViewVariablesPropertyEditorReference refEditor)
-                    {
-                        refEditor.OnPressed += () =>
-                            Instance.ViewVariablesManager.OpenVV(
-                                new ViewVariablesSessionRelativeSelector(Instance.Session!.SessionId,
-                                    new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}));
-                    }
-
+                    
+                    var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
+                    editor.WireNetworkSelector(Instance.Session!.SessionId, selectorChain);
                     editor.OnValueChanged += o =>
                     {
                         Instance.ViewVariablesManager.ModifyRemote(Instance.Session!,
-                            new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}, o);
+                            selectorChain, o);
                     };
 
                     _memberList.AddChild(propertyEdit);

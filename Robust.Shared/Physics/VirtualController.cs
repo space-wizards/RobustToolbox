@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics
     /// </summary>
     public abstract class VirtualController
     {
-        private Vector2 _linVelocity;
+        private Vector2 _linearVelocity;
 
         /// <summary>
         ///     Current contribution to the linear velocity of the entity in meters per second.
@@ -17,14 +17,19 @@ namespace Robust.Shared.Physics
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Vector2 LinearVelocity
         {
-            get => _linVelocity;
+            get => _linearVelocity;
             set
             {
-                if (_linVelocity == value)
+                if (_linearVelocity == value)
                     return;
 
-                _linVelocity = value;
-                ControlledComponent?.Dirty();
+                _linearVelocity = value;
+
+                if (ControlledComponent != null)
+                {
+                    ControlledComponent.WakeBody();
+                    ControlledComponent.Dirty();
+                }
             }
         }
 

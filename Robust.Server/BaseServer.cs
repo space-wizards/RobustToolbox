@@ -423,7 +423,7 @@ namespace Robust.Server
         }
 
         public bool DisableLoadContext { private get; set; }
-        public bool LoadConfigAndUserData { private get; set; }
+        public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {

@@ -172,6 +172,7 @@ namespace Robust.Server
             _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
             _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
             _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
+            _config.RegisterCVar("log.runtimelog", true, CVar.ARCHIVE);
 
             _logHandlerFactory = logHandlerFactory;
 
@@ -490,13 +491,16 @@ namespace Robust.Server
             // shutdown entities
             _entities.Shutdown();
 
-            // Wrtie down exception log
-            var logPath = _config.GetCVar<string>("log.path");
-            var relPath = PathHelpers.ExecutableRelativeFile(logPath);
-            Directory.CreateDirectory(relPath);
-            var pathToWrite = Path.Combine(relPath,
-                "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
-            File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            if (_config.GetCVar<bool>("log.runtimelog"))
+            {
+                // Wrtie down exception log
+                var logPath = _config.GetCVar<string>("log.path");
+                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
+                Directory.CreateDirectory(relPath);
+                var pathToWrite = Path.Combine(relPath,
+                    "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            }
 
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 

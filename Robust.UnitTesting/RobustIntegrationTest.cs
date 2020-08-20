@@ -358,6 +358,9 @@ namespace Robust.UnitTesting
                         }
                     }
 
+                    IoCManager.Resolve<IConfigurationManager>()
+                        .OverrideConVars(new []{("log.runtimelog", "false")});
+
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {
                         throw new Exception("Server failed to start.");

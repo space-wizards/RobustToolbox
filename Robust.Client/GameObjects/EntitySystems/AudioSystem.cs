@@ -228,6 +228,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(entity.Transform.WorldPosition))
             {
+                source.Dispose();
                 Logger.Warning("Can't play positional audio, can't set position.");
                 return null;
             }
@@ -274,6 +275,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(coordinates.ToMapPos(_mapManager)))
             {
+                source.Dispose();
                 Logger.Warning("Can't play positional audio, can't set position.");
                 return null;
             }

@@ -333,10 +333,11 @@ namespace Robust.Shared.Maths
 
         #endregion Mod
 
+        #region Clamp
+
         /// <summary>
         /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
         /// </summary>
-        #region Clamp
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Clamp<T>(T val, T min, T max)
             where T : IComparable<T>

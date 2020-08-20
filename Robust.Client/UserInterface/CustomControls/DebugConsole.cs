@@ -127,7 +127,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                posY = FloatMath.Lerp(posY, targetLocation, args.DeltaSeconds * 20);
+                posY = MathHelper.Lerp(posY, targetLocation, args.DeltaSeconds * 20);
             }
 
             LayoutContainer.SetPosition(MainControl, (posX, posY));

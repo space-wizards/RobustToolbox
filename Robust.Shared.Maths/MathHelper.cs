@@ -88,7 +88,7 @@ namespace Robust.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long)NextPowerOfTwo((double) n);
+            return (long) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace Robust.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int)NextPowerOfTwo((double) n);
+            return (int) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -111,9 +111,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float NextPowerOfTwo(float n)
         {
-            if (float.IsNaN(n) || float.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (float.IsNaN(n) || float.IsInfinity(n))
+                throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (float)NextPowerOfTwo((double) n);
+            return (float) NextPowerOfTwo((double) n);
         }
 
         /// <summary>
@@ -124,7 +125,8 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NextPowerOfTwo(double n)
         {
-            if (double.IsNaN(n) || double.IsInfinity(n)) throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
+            if (double.IsNaN(n) || double.IsInfinity(n))
+                throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
 
             // Don't return negative powers of two, that's nonsense.
@@ -254,12 +256,18 @@ namespace Robust.Shared.Maths
 
         #region MinMax
 
+        /// <summary>
+        /// Returns the minimum of 4 values
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Min(float a, float b, float c, float d)
         {
             return MathF.Min(a, MathF.Min(b, MathF.Min(c, d)));
         }
 
+        /// <summary>
+        /// Returns the maximum of 4 values
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Max(float a, float b, float c, float d)
         {
@@ -269,7 +277,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Returns the median value out of a, b and c.
         /// </summary>
-        /// <returns>THe median.</returns>
+        /// <returns>The median.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Median(float a, float b, float c)
         {
@@ -277,6 +285,8 @@ namespace Robust.Shared.Maths
         }
 
         #endregion MinMax
+
+        #region Mod
 
         /// <summary>
         ///     This method provides floored modulus.
@@ -301,11 +311,161 @@ namespace Robust.Shared.Maths
         /// <returns>The remainder.</returns>
         [DebuggerStepThrough]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Mod(float n, float d)
+        {
+            return n - (float) Math.Floor(n / d) * d;
+        }
+
+        /// <summary>
+        ///     This method provides floored modulus.
+        ///     C-like languages use truncated modulus for their '%' operator.
+        /// </summary>
+        /// <param name="n">The dividend.</param>
+        /// <param name="d">The divisor.</param>
+        /// <returns>The remainder.</returns>
+        [DebuggerStepThrough]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Mod(int n, int d)
         {
             var r = n % d;
             return r < 0 ? r + d : r;
         }
+
+        #endregion Mod
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        #region Clamp
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Clamp<T>(T val, T min, T max)
+            where T : IComparable<T>
+        {
+            if (val.CompareTo(min) < 0) return min;
+            if (val.CompareTo(max) > 0) return max;
+            return val;
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp(float val, float min, float max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Clamp(double val, double min, double max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        ///     Clamps <paramref name="val"/> between 0 and 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp01(float val)
+        {
+            return Clamp(val, 0, 1);
+        }
+
+        #endregion Clamp
+
+        #region CloseTo
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(float a, float b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(float a, double b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(double a, float b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseTo(double a, double b, double tolerance = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        #endregion CloseTo
+
+        #region Lerp
+
+        /// <summary>
+        /// Linearly interpolates between <paramref name="a"/> to <paramref name="b"/>, returning the value at <paramref name="blend"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double Lerp(double a, double b, double blend)
+        {
+            return a + (b - a) * blend;
+        }
+
+        /// <summary>
+        /// Linearly interpolates between <paramref name="a"/> to <paramref name="b"/>, returning the value at <paramref name="blend"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Lerp(float a, float b, float blend)
+        {
+            return a + (b - a) * blend;
+        }
+
+        #endregion Lerp
+
+        #region InterpolateCubic
+
+        /// <summary>
+        /// Cubic interpolates form <paramref name="a"/> to <paramref name="b"/>, where <paramref name="preA"/> and <paramref name="postB"/> are handles and returns the position at <paramref name="t"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float InterpolateCubic(float preA, float a, float b, float postB, float t)
+        {
+            return a + 0.5f * t * (b - preA + t * (2.0f * preA - 5.0f * a + 4.0f * b - postB + t * (3.0f * (a - b) + postB - preA)));
+        }
+
+        /// <summary>
+        /// Cubic interpolates form <paramref name="a"/> to <paramref name="b"/>, where <paramref name="preA"/> and <paramref name="postB"/> are handles and returns the position at <paramref name="t"/>
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double InterpolateCubic(double preA, double a, double b, double postB, double t)
+        {
+            return a + 0.5 * t * (b - preA + t * (2.0 * preA - 5.0 * a + 4.0 * b - postB + t * (3.0 * (a - b) + postB - preA)));
+        }
+
+        #endregion InterpolateCubic
 
         #endregion Public Members
     }

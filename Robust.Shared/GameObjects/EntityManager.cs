@@ -153,8 +153,8 @@ namespace Robust.Shared.GameObjects
             foreach (var entity in _entityTreesPerMap[mapId].Query(position, approximate))
             {
                 var transform = entity.Transform;
-                if (FloatMath.CloseTo(transform.GridPosition.X, position.X) &&
-                    FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
+                if (MathHelper.CloseTo(transform.GridPosition.X, position.X) &&
+                    MathHelper.CloseTo(transform.GridPosition.Y, position.Y))
                 {
                     yield return entity;
                 }
@@ -416,8 +416,8 @@ namespace Robust.Shared.GameObjects
                 {
                     var transform = entity.Transform;
                     var entPos = transform.WorldPosition;
-                    if (FloatMath.CloseTo(entPos.X, position.X)
-                        && FloatMath.CloseTo(entPos.Y, position.Y))
+                    if (MathHelper.CloseTo(entPos.X, position.X)
+                        && MathHelper.CloseTo(entPos.Y, position.Y))
                     {
                         yield return entity;
                     }

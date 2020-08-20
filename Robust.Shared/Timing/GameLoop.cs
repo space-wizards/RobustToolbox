@@ -273,7 +273,7 @@ namespace Robust.Shared.Timing
         private TimeSpan CalcTickPeriod()
         {
             // ranges from -1 to 1, with 0 being 'default'
-            var ratio = FloatMath.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var ratio = MathHelper.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
             var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
             return _timing.TickPeriod - diff;
         }

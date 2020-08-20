@@ -37,4 +37,12 @@ namespace Robust.Shared.ViewVariables
 
         public int Index { get; set; }
     }
+
+    [Serializable, NetSerializable]
+    public class ViewVariablesSelectorKeyValuePair
+    {
+        // If false it's the value instead.
+        public bool Key { get; set; }
+    }
+
 }

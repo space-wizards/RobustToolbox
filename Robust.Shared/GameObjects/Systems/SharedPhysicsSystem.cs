@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -23,18 +20,18 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
 
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
         private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
 
-        public SharedPhysicsSystem()
-        {
-            EntityQuery = new TypeEntityQuery(typeof(IPhysicsComponent));
-        }
-
+        /// <summary>
+        /// Simulates the physical world for a given amount of time.
+        /// </summary>
+        /// <param name="deltaTime">Delta Time in seconds of how long to simulate the world.</param>
+        /// <param name="physicsComponents">List of all possible physics bodes </param>
+        /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
         {
             _awakeBodies.Clear();
@@ -49,6 +46,7 @@ namespace Robust.Shared.GameObjects.Systems
 
                 _awakeBodies.Add(body);
 
+                // running prediction updates will not cause a body to go to sleep.
                 if(!prediction)
                     body.SleepAccumulator++;
 
@@ -71,9 +69,8 @@ namespace Robust.Shared.GameObjects.Systems
                     body.LinearVelocity = linearVelocity;
 
                 // Integrate forces
-                const float damping = 0.98f; // space/air friction, so everything eventually stops moving
-                body.LinearVelocity += body.Force * body.InvMass * deltaTime * damping;
-                body.AngularVelocity += body.Torque * body.InvI * deltaTime * damping;
+                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
+                body.AngularVelocity += body.Torque * body.InvI * deltaTime;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -121,6 +118,10 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 foreach (var physics in physicsComponents)
                 {
+                    // TODO: Remove this once we are not sending *every* body to the solver
+                    if(prediction && !physics.Predict)
+                        continue;
+
                     if(physics.Awake && physics.CanMove())
                         UpdatePosition(physics, deltaTime / divisions);
                 }
@@ -138,12 +139,36 @@ namespace Robust.Shared.GameObjects.Systems
         // Runs collision behavior and updates cache
         private void ProcessCollisions(IEnumerable<ICollidableComponent> bodies)
         {
-            var collisionsWith = new Dictionary<ICollideBehavior, int>();
+            _collisionCache.Clear();
+            var combinations = new HashSet<(EntityUid, EntityUid)>();
+            foreach (var aCollidable in bodies)
+            {
+                if(!aCollidable.Awake)
+                    continue;
 
-            FindCollisions(bodies);
+                foreach (var b in _physicsManager.GetCollidingEntities(aCollidable, Vector2.Zero))
+                {
+                    var aUid = aCollidable.Entity.Uid;
+                    var bUid = b.Uid;
+
+                    if (bUid.CompareTo(aUid) > 0)
+                    {
+                        var tmpUid = bUid;
+                        bUid = aUid;
+                        aUid = tmpUid;
+                    }
+
+                    if (!combinations.Add((aUid, bUid)))
+                    {
+                        continue;
+                    }
+
+                    var bCollidable = b.GetComponent<ICollidableComponent>();
+                    _collisionCache.Add(new Manifold(aCollidable, bCollidable, aCollidable.Hard && bCollidable.Hard));
+                }
+            }
 
             var counter = 0;
-
             while(GetNextCollision(_collisionCache, counter, out var collision))
             {
                 collision.A.WakeBody();
@@ -162,6 +187,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
+            var collisionsWith = new Dictionary<ICollideBehavior, int>();
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
@@ -203,44 +229,7 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void FindCollisions(IEnumerable<ICollidableComponent> bodies)
-        {
-            _collisionCache.Clear();
-            var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var aCollidable in bodies)
-            {
-                if(!aCollidable.Awake)
-                    continue;
-
-                FindCollisionsFor(aCollidable, combinations);
-            }
-        }
-
-        private void FindCollisionsFor(ICollidableComponent a, HashSet<(EntityUid, EntityUid)> combinations)
-        {
-            foreach (var b in _physicsManager.GetCollidingEntities(a, Vector2.Zero))
-            {
-                var aUid = a.Entity.Uid;
-                var bUid = b.Uid;
-
-                if (bUid.CompareTo(aUid) > 0)
-                {
-                    var tmpUid = bUid;
-                    bUid = aUid;
-                    aUid = tmpUid;
-                }
-
-                if (!combinations.Add((aUid, bUid)))
-                {
-                    continue;
-                }
-
-                var bCollidable = b.GetComponent<ICollidableComponent>();
-                _collisionCache.Add(new Manifold(a, bCollidable, a.Hard && bCollidable.Hard));
-            }
-        }
-
-        private bool GetNextCollision(List<Manifold> collisions, int counter, out Manifold collision)
+        private bool GetNextCollision(IReadOnlyList<Manifold> collisions, int counter, out Manifold collision)
         {
             // The *4 is completely arbitrary
             if (counter > collisions.Count * 4)
@@ -299,11 +288,18 @@ namespace Robust.Shared.GameObjects.Systems
             if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
                 return;
 
-            if (ContainerHelpers.IsInContainer(ent) && body.LinearVelocity != Vector2.Zero)
+            if (body.LinearVelocity != Vector2.Zero)
             {
-                ent.Transform.Parent!.Owner.SendMessage(ent.Transform, new RelayMovementEntityMessage(ent));
-                // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                body.LinearVelocity = Vector2.Zero;
+                var entityMoveMessage = new EntityMovementMessage();
+                ent.SendMessage(ent.Transform, entityMoveMessage);
+
+                if (ContainerHelpers.IsInContainer(ent))
+                {
+                    var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
+                    ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
+                    // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
+                    body.LinearVelocity = Vector2.Zero;
+                }
             }
 
             body.WorldRotation += body.AngularVelocity * frameTime;

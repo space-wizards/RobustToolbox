@@ -32,7 +32,7 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.TryGetComponent(out SnapGridComponent snap))
+            if (Owner.TryGetComponent(out SnapGridComponent? snap))
             {
                 SnapGrid = snap;
                 SnapGrid.OnPositionChanged += SnapGridOnPositionChanged;
@@ -93,7 +93,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var neighbor in SnapGrid.GetInDir(dir))
                 {
-                    if (neighbor.TryGetComponent(out ClientOccluderComponent comp) && comp.Enabled)
+                    if (neighbor.TryGetComponent(out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;

@@ -126,7 +126,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             if(entity == null || !entity.IsValid())
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!entity.TryGetComponent(out InputComponent inputComp))
+            if (!entity.TryGetComponent(out InputComponent? inputComp))
             {
                 Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}");
                 return;

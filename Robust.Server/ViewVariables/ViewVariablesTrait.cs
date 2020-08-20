@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
 using Robust.Server.ViewVariables.Traits;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
@@ -103,6 +103,21 @@ namespace Robust.Server.ViewVariables
             }
             else if (!Session.RobustSerializer.CanSerialize(valType))
             {
+                // Handle KeyValuePair<,>
+                if (valType.IsGenericType && valType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+                {
+                    dynamic kv = value;
+
+                    var key = kv.Key;
+                    var val = kv.Value;
+
+                    return new ViewVariablesBlobMembers.ServerKeyValuePairToken
+                    {
+                        Key = MakeValueNetSafe(key),
+                        Value = MakeValueNetSafe(val)
+                    };
+                }
+
                 // Can't send this value type over the wire.
                 return new ViewVariablesBlobMembers.ServerValueTypeToken
                 {

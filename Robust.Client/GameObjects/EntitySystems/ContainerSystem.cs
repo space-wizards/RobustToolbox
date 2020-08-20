@@ -55,7 +55,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private static void UpdateEntity(IEntity entity)
         {
-            if (entity.TryGetComponent(out SpriteComponent sprite))
+            if (entity.TryGetComponent(out SpriteComponent? sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -73,7 +73,7 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            if (entity.TryGetComponent(out PointLightComponent light))
+            if (entity.TryGetComponent(out PointLightComponent? light))
             {
                 light.ContainerOccluded = false;
 

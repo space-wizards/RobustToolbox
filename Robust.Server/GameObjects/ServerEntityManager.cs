@@ -301,7 +301,7 @@ namespace Robust.Server.GameObjects
 
         private static void AddContainedRecursive(IEntity ent, HashSet<IEntity> set)
         {
-            if (!ent.TryGetComponent(out ContainerManagerComponent contMgr))
+            if (!ent.TryGetComponent(out ContainerManagerComponent? contMgr))
             {
                 return;
             }
@@ -371,7 +371,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (entity.TryGetComponent(out IPhysicsComponent body))
+                if (entity.TryGetComponent(out ICollidableComponent? body))
                 {
                     if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
                     {
@@ -383,7 +383,7 @@ namespace Robust.Server.GameObjects
 
                         if (MathF.Abs(body.AngularVelocity) > 0)
                         {
-                            if (entity.TryGetComponent(out TransformComponent txf) && txf.ChildCount > 0)
+                            if (entity.TryGetComponent(out TransformComponent? txf) && txf.ChildCount > 0)
                             {
                                 // has children spinning
                                 continue;
@@ -538,7 +538,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (!entity.TryGetComponent(out IPhysicsComponent body))
+                if (!entity.TryGetComponent(out ICollidableComponent? body))
                 {
                     // can't be a mover w/o physics
                     continue;
@@ -792,7 +792,7 @@ namespace Robust.Server.GameObjects
                     {
                         addToMovers = true;
                     }
-                    else if (entity.TryGetComponent(out IPhysicsComponent physics)
+                    else if (entity.TryGetComponent(out ICollidableComponent? physics)
                              && physics.LastModifiedTick >= currentTick)
                     {
                         addToMovers = true;
@@ -946,7 +946,7 @@ namespace Robust.Server.GameObjects
         {
             foreach (var entity in set.ToArray())
             {
-                if (!entity.TryGetComponent(out VisibilityComponent visibility))
+                if (!entity.TryGetComponent(out VisibilityComponent? visibility))
                     continue;
 
                 if ((visibilityMask & visibility.Layer) == 0)

@@ -344,7 +344,10 @@ namespace Robust.Server.Player
         /// </summary>
         private void EndSession(object? sender, NetChannelArgs args)
         {
-            var session = GetSessionByChannel(args.Channel);
+            if (!TryGetSessionByChannel(args.Channel, out var session))
+            {
+                return;
+            }
 
             // make sure nothing got messed up during the life of the session
             DebugTools.Assert(session.ConnectedClient == args.Channel);

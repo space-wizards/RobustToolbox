@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Utility;
 
@@ -102,12 +102,17 @@ namespace Robust.Shared.ContentPack
 
         private string GetFullPath(ResourcePath path)
         {
+            if (!path.IsRooted)
+            {
+                throw new ArgumentException("Path must be rooted.");
+            }
+
             return GetFullPath(RootDir, path);
         }
 
         private static string GetFullPath(string root, ResourcePath path)
         {
-            var relPath = path.Clean().ToRelativePath().ToString();
+            var relPath = path.Clean().ToRelativeSystemPath();
             return Path.GetFullPath(Path.Combine(root, relPath));
         }
     }

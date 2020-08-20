@@ -407,7 +407,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in newResults)
             {
-                if (entity.TryGetComponent(out ICollidableComponent component))
+                if (entity.TryGetComponent(out ICollidableComponent? component))
                 {
                     if (component.WorldAABB.Contains(position))
                         yield return entity;
@@ -582,7 +582,7 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            if (ent.TryGetComponent(out ICollidableComponent collider))
+            if (ent.TryGetComponent(out ICollidableComponent? collider))
                 return collider.WorldAABB;
 
             var pos = ent.Transform.WorldPosition;

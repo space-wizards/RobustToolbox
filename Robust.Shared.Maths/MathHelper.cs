@@ -364,6 +364,15 @@ namespace Robust.Shared.Maths
             return Math.Max(Math.Min(val, max), min);
         }
 
+        /// <summary>
+        ///     Clamps <paramref name="val"/> between 0 and 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float Clamp01(float val)
+        {
+            return Clamp(val, 0, 1);
+        }
+
         #endregion Clamp
 
         #region CloseTo

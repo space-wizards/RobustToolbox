@@ -18,12 +18,11 @@ namespace Robust.Server.GameObjects
         protected override void Shutdown()
         {
             base.Shutdown();
-
-            DebugTools.AssertNotNull(playerSession);
-
+            
             // Warning: careful here, Detach removes this component, make sure this is after the base shutdown
             // to prevent infinite recursion
-            playerSession.DetachFromEntity();
+            // ReSharper disable once ConstantConditionalAccessQualifier
+            playerSession?.DetachFromEntity();
         }
     }
 

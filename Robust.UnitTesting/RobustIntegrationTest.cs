@@ -58,7 +58,7 @@ namespace Robust.UnitTesting
             return instance;
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public async Task TearDown()
         {
             _integrationInstances.ForEach(p => p.Stop());

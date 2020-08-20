@@ -94,66 +94,84 @@ namespace Robust.Client.GameObjects.EntitySystems
         public override void FrameUpdate(float frameTime)
         {
             // Update positions of streams every frame.
-            foreach (var stream in _playingClydeStreams)
+            try
             {
-                if (!stream.Source.IsPlaying)
+                foreach (var stream in _playingClydeStreams)
                 {
-                    StreamDone(stream);
-                    continue;
-                }
-
-                MapCoordinates? mapPos = null;
-                if (stream.TrackingCoordinates != null)
-                {
-                    mapPos = stream.TrackingCoordinates.Value.ToMap(_mapManager);
-                }
-                else if (stream.TrackingEntity != null)
-                {
-                    if (stream.TrackingEntity.Deleted)
+                    if (!stream.Source.IsPlaying)
                     {
                         StreamDone(stream);
                         continue;
                     }
 
-                    mapPos = stream.TrackingEntity.Transform.MapPosition;
-                }
-
-                if (mapPos != null)
-                {
-                    var pos = mapPos.Value;
-                    if (pos.MapId != _eyeManager.CurrentMap)
+                    MapCoordinates? mapPos = null;
+                    if (stream.TrackingCoordinates != null)
                     {
-                        stream.Source.SetVolume(-10000000);
-                    }
-                    else
-                    {
-                        var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                        var occlusion = 0f;
-                        if (sourceRelative.Length > 0)
+                        var coords = stream.TrackingCoordinates.Value;
+                        if (_mapManager.GridExists(coords.GridID))
                         {
-                            occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
-                                pos.MapId,
-                                new CollisionRay(
-                                    pos.Position,
-                                    sourceRelative.Normalized,
-                                    OcclusionCollisionMask),
-                                sourceRelative.Length,
-                                stream.TrackingEntity);
+                            mapPos = stream.TrackingCoordinates.Value.ToMap(_mapManager);
+                        }
+                        else
+                        {
+                            // Grid no longer exists, delete stream.
+                            StreamDone(stream);
+                            continue;
+                        }
+                    }
+                    else if (stream.TrackingEntity != null)
+                    {
+                        if (stream.TrackingEntity.Deleted)
+                        {
+                            StreamDone(stream);
+                            continue;
                         }
 
-                        stream.Source.SetVolume(stream.Volume);
-                        stream.Source.SetOcclusion(occlusion);
+                        mapPos = stream.TrackingEntity.Transform.MapPosition;
                     }
 
-                    if (!stream.Source.SetPosition(pos.Position))
+                    if (mapPos != null)
                     {
-                        Logger.Warning("Interrupting positional audio, can't set position.");
-                        stream.Source.StopPlaying();
+                        var pos = mapPos.Value;
+                        if (pos.MapId != _eyeManager.CurrentMap)
+                        {
+                            stream.Source.SetVolume(-10000000);
+                        }
+                        else
+                        {
+                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var occlusion = 0f;
+                            if (sourceRelative.Length > 0)
+                            {
+                                occlusion = IoCManager.Resolve<IPhysicsManager>().IntersectRayPenetration(
+                                    pos.MapId,
+                                    new CollisionRay(
+                                        pos.Position,
+                                        sourceRelative.Normalized,
+                                        OcclusionCollisionMask),
+                                    sourceRelative.Length,
+                                    stream.TrackingEntity);
+                            }
+
+                            stream.Source.SetVolume(stream.Volume);
+                            stream.Source.SetOcclusion(occlusion);
+                        }
+
+                        if (!stream.Source.SetPosition(pos.Position))
+                        {
+                            Logger.Warning("Interrupting positional audio, can't set position.");
+                            stream.Source.StopPlaying();
+                        }
                     }
                 }
             }
-
-            _playingClydeStreams.RemoveAll(p => p.Done);
+            finally
+            {
+                // if this doesn't get ran (exception...) then the list can fill up with disposed garbage.
+                // that will then throw on IsPlaying.
+                // meaning it'll break the entire audio system.
+                _playingClydeStreams.RemoveAll(p => p.Done);
+            }
         }
 
         private static void StreamDone(PlayingStream stream)

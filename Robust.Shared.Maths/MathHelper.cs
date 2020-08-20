@@ -26,7 +26,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the value of Pi as a <see cref="System.Single"/>.
         /// </summary>
-        public const float Pi = 3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930382f;
+        public const float Pi = MathF.PI;
 
         /// <summary>
         /// Defines the value of Pi divided by two as a <see cref="System.Single"/>.
@@ -61,7 +61,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the value of E as a <see cref="System.Single"/>.
         /// </summary>
-        public const float E = 2.71828182845904523536f;
+        public const float E = MathF.E;
 
         /// <summary>
         /// Defines the base-10 logarithm of E.
@@ -182,7 +182,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float DegreesToRadians(float degrees)
         {
-            const float degToRad = (float) Math.PI / 180.0f;
+            const float degToRad = Pi / 180.0f;
             return degrees * degToRad;
         }
 
@@ -194,7 +194,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float RadiansToDegrees(float radians)
         {
-            const float radToDeg = 180.0f / (float) Math.PI;
+            const float radToDeg = 180.0f / Pi;
             return radians * radToDeg;
         }
 
@@ -313,7 +313,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Mod(float n, float d)
         {
-            return n - (float) Math.Floor(n / d) * d;
+            return n - MathF.Floor(n / d) * d;
         }
 
         /// <summary>

@@ -137,25 +137,28 @@ namespace Robust.Server
         /// <inheritdoc />
         public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
-            // Sets up the configMgr
-            // If a config file path was passed, use it literally.
-            // This ensures it's working-directory relative
-            // (for people passing config file through the terminal or something).
-            // Otherwise use the one next to the executable.
-            if (_commandLineArgs?.ConfigFile != null)
+            if (LoadConfigAndUserData)
             {
-                _config.LoadFromFile(_commandLineArgs.ConfigFile);
-            }
-            else
-            {
-                var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
-                if (File.Exists(path))
+                // Sets up the configMgr
+                // If a config file path was passed, use it literally.
+                // This ensures it's working-directory relative
+                // (for people passing config file through the terminal or something).
+                // Otherwise use the one next to the executable.
+                if (_commandLineArgs?.ConfigFile != null)
                 {
-                    _config.LoadFromFile(path);
+                    _config.LoadFromFile(_commandLineArgs.ConfigFile);
                 }
                 else
                 {
-                    _config.SetSaveFile(path);
+                    var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                    if (File.Exists(path))
+                    {
+                        _config.LoadFromFile(path);
+                    }
+                    else
+                    {
+                        _config.SetSaveFile(path);
+                    }
                 }
             }
 
@@ -238,7 +241,9 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir = _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data");
+            var dataDir =  LoadConfigAndUserData ?
+                _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data") :
+                null;
 
             // Set up the VFS
             _resources.Initialize(dataDir);
@@ -418,6 +423,7 @@ namespace Robust.Server
         }
 
         public bool DisableLoadContext { private get; set; }
+        public bool LoadConfigAndUserData { private get; set; }
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {

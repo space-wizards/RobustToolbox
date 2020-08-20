@@ -333,6 +333,8 @@ namespace Robust.UnitTesting
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
 
+                    server.LoadConfigAndUserData = false;
+
                     if (_options?.ServerContentAssembly != null)
                     {
                         IoCManager.Resolve<ModLoader>().ServerContentAssembly = _options.ServerContentAssembly;

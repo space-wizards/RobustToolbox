@@ -388,7 +388,7 @@ namespace Robust.Server.Maps
             {
                 foreach (var entity in Entities)
                 {
-                    if (entity.TryGetComponent(out IMapGridComponent grid))
+                    if (entity.TryGetComponent(out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity.Uid;

@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return GridId.Invalid;
 
                 // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapGridComponent gridComp))
+                if (Owner.TryGetComponent(out IMapGridComponent? gridComp))
                     return gridComp.GridIndex;
 
                 // branch or leaf node
@@ -366,7 +366,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 else
                 {
                     // second level node, terminates recursion up the branch of the tree
-                    if (p.Owner.TryGetComponent(out IMapComponent mapComp))
+                    if (p.Owner.TryGetComponent(out IMapComponent? mapComp))
                     {
                         value = mapComp.WorldMap;
                     }
@@ -571,7 +571,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            ICollidableComponent collider;
+            ICollidableComponent? collider;
 
             if (oldId != MapId.Nullspace)
             {
@@ -768,7 +768,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
 
         private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
+            Owner.TryGetComponent(out ICollidableComponent? collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

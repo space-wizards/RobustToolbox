@@ -89,7 +89,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (_entity.TryGetComponent(out ISpriteComponent sprite))
+                if (_entity.TryGetComponent(out ISpriteComponent? sprite))
                 {
                     var hBox = new HBoxContainer();
                     top.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;

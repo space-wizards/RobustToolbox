@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 

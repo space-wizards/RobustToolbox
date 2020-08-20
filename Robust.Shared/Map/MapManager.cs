@@ -343,7 +343,7 @@ namespace Robust.Shared.Map
             }
 
             // re-use or add map component
-            if (!newMapEntity.TryGetComponent(out MapComponent mapComp))
+            if (!newMapEntity.TryGetComponent(out MapComponent? mapComp))
             {
                 mapComp = newMapEntity.AddComponent<MapComponent>();
             }

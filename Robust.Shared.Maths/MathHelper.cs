@@ -350,6 +350,78 @@ namespace Robust.Shared.Maths
         /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static sbyte Clamp(sbyte val, sbyte min, sbyte max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static byte Clamp(byte val, byte min, byte max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static short Clamp(short val, short min, short max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ushort Clamp(ushort val, ushort min, ushort max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int Clamp(int val, int min, int max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint Clamp(uint val, uint min, uint max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static long Clamp(long val, long min, long max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ulong Clamp(ulong val, ulong min, ulong max)
+        {
+            return Math.Max(Math.Min(val, max), min);
+        }
+
+        /// <summary>
+        /// Clamps <paramref name="val"/> between <paramref name="min"/> and <paramref name="max"/>.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float Clamp(float val, float min, float max)
         {
             return Math.Max(Math.Min(val, max), min);

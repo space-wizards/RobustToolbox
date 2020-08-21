@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
@@ -145,8 +144,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <returns>The component, if it was found. Null otherwise.</returns>
-        [CanBeNull]
-        T TryGetComponent<T>() where T : IComponent;
+        [return: MaybeNull]
+        T GetComponentOrNull<T>() where T : IComponent;
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,
@@ -163,7 +162,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="type">The component reference type to attempt to fetch.</param>
         /// <returns>The component, if it was found. Null otherwise.</returns>
-        IComponent? TryGetComponent(Type type);
+        IComponent? GetComponentOrNull(Type type);
 
         /// <summary>
         ///     Attempt to retrieve the component with specified network ID,
@@ -180,7 +179,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="netId">The component net ID to attempt to fetch.</param>
         /// <returns>The component, if it was found. Null otherwise.</returns>
-        IComponent? TryGetComponent(uint netId);
+        IComponent? GetComponentOrNull(uint netId);
 
         /// <summary>
         ///     Used by the entity manager to delete the entity.

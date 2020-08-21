@@ -294,9 +294,10 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
         }
 
-        public T TryGetComponent<T>() where T : IComponent
+        [return: MaybeNull]
+        public T GetComponentOrNull<T>() where T : IComponent
         {
-            return TryGetComponent(out T component) ? component : default!;
+            return TryGetComponent(out T component) ? component : default;
         }
 
         /// <inheritdoc />
@@ -307,7 +308,7 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, type, out component);
         }
 
-        public IComponent? TryGetComponent(Type type)
+        public IComponent? GetComponentOrNull(Type type)
         {
             return TryGetComponent(type, out var component) ? component : null;
         }
@@ -320,7 +321,7 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
         }
 
-        public IComponent? TryGetComponent(uint netId)
+        public IComponent? GetComponentOrNull(uint netId)
         {
             return TryGetComponent(netId, out var component) ? component : null;
         }

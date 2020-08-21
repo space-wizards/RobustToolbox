@@ -59,7 +59,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             return _interfaces.TryGetValue(uiKey, out boundUserInterface);
         }
 
-        public BoundUserInterface? TryGetBoundUserInterface(object uiKey)
+        public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
         {
             return TryGetBoundUserInterface(uiKey, out var boundUserInterface)
                 ? boundUserInterface

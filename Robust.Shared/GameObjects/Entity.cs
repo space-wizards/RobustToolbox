@@ -294,10 +294,9 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
         }
 
-        [return: MaybeNull]
-        public T GetComponentOrNull<T>() where T : IComponent
+        public T? GetComponentOrNull<T>() where T : class
         {
-            return TryGetComponent(out T component) ? component : default;
+            return TryGetComponent(out T? component) ? component : default;
         }
 
         /// <inheritdoc />

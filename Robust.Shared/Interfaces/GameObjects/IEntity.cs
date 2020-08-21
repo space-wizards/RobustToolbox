@@ -144,8 +144,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <returns>The component, if it was found. Null otherwise.</returns>
-        [return: MaybeNull]
-        T GetComponentOrNull<T>() where T : IComponent;
+        T? GetComponentOrNull<T>() where T : class;
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,

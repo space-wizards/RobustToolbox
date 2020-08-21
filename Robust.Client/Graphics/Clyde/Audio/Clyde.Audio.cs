@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
@@ -728,9 +729,10 @@ namespace Robust.Client.Graphics.Clyde
             private void Dispose(bool disposing)
             {
                 if (SourceHandle == null) return;
-                if (!disposing)
+
+                if (!disposing || Thread.CurrentThread != _master._mainThread)
                 {
-                    // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
+                    // We can't run this code inside another thread so tell Clyde to clear it up later.
                     _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);
                     for (var i = 0; i < BufferHandles.Length; i++)
                         _master.DeleteAudioBufferOnMainThread(BufferHandles[i]);

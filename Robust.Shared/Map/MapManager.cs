@@ -295,8 +295,12 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            var newEntity = _entityManager.CreateEntityUninitialized(null);
+            var newEntity = (Entity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
+
+            newEntity.InitializeComponents();
+            newEntity.StartAllComponents();
+
             return newEntity;
         }
 

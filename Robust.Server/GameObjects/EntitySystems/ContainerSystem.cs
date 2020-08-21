@@ -19,7 +19,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             if (oldParentEntity == null || !oldParentEntity.IsValid())
                 return;
 
-            if (oldParentEntity.TryGetComponent(out IContainerManager containerManager))
+            if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))
             {
                 containerManager.ForceRemove(message.Entity);
             }

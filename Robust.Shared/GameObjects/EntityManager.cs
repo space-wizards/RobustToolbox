@@ -153,8 +153,8 @@ namespace Robust.Shared.GameObjects
             foreach (var entity in _entityTreesPerMap[mapId].Query(position, approximate))
             {
                 var transform = entity.Transform;
-                if (FloatMath.CloseTo(transform.GridPosition.X, position.X) &&
-                    FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
+                if (MathHelper.CloseTo(transform.GridPosition.X, position.X) &&
+                    MathHelper.CloseTo(transform.GridPosition.Y, position.Y))
                 {
                     yield return entity;
                 }
@@ -407,7 +407,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in newResults)
             {
-                if (entity.TryGetComponent(out ICollidableComponent component))
+                if (entity.TryGetComponent(out ICollidableComponent? component))
                 {
                     if (component.WorldAABB.Contains(position))
                         yield return entity;
@@ -416,8 +416,8 @@ namespace Robust.Shared.GameObjects
                 {
                     var transform = entity.Transform;
                     var entPos = transform.WorldPosition;
-                    if (FloatMath.CloseTo(entPos.X, position.X)
-                        && FloatMath.CloseTo(entPos.Y, position.Y))
+                    if (MathHelper.CloseTo(entPos.X, position.X)
+                        && MathHelper.CloseTo(entPos.Y, position.Y))
                     {
                         yield return entity;
                     }
@@ -582,7 +582,7 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            if (ent.TryGetComponent(out ICollidableComponent collider))
+            if (ent.TryGetComponent(out ICollidableComponent? collider))
                 return collider.WorldAABB;
 
             var pos = ent.Transform.WorldPosition;

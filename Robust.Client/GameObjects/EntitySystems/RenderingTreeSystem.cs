@@ -105,7 +105,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private void UpdateEntity(IEntity entity)
         {
-            if (entity.TryGetComponent(out SpriteComponent spriteComponent))
+            if (entity.TryGetComponent(out SpriteComponent? spriteComponent))
             {
                 if (!spriteComponent.TreeUpdateQueued)
                 {
@@ -115,12 +115,12 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            if (entity.TryGetComponent(out ClientOccluderComponent occluder))
+            if (entity.TryGetComponent(out ClientOccluderComponent? occluder))
             {
                 QueueUpdateOccluder(occluder);
             }
 
-            if (entity.TryGetComponent(out PointLightComponent light))
+            if (entity.TryGetComponent(out PointLightComponent? light))
             {
                 QueueUpdateLight(light);
             }
@@ -158,21 +158,21 @@ namespace Robust.Client.GameObjects.EntitySystems
             var oldMapTrees = _mapTrees.GetValueOrDefault(ev.OldMapId);
             var newMapTrees = _mapTrees.GetValueOrDefault(ev.Entity.Transform.MapID);
 
-            if (ev.Entity.TryGetComponent(out SpriteComponent sprite))
+            if (ev.Entity.TryGetComponent(out SpriteComponent? sprite))
             {
                 oldMapTrees?.SpriteTree.Remove(sprite);
 
                 newMapTrees?.SpriteTree.AddOrUpdate(sprite);
             }
 
-            if (ev.Entity.TryGetComponent(out ClientOccluderComponent occluder))
+            if (ev.Entity.TryGetComponent(out ClientOccluderComponent? occluder))
             {
                 oldMapTrees?.OccluderTree.Remove(occluder);
 
                 newMapTrees?.OccluderTree.AddOrUpdate(occluder);
             }
 
-            if (ev.Entity.TryGetComponent(out PointLightComponent light))
+            if (ev.Entity.TryGetComponent(out PointLightComponent? light))
             {
                 oldMapTrees?.LightTree.Remove(light);
 

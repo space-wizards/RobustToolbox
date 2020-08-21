@@ -168,13 +168,13 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool OnSnapCenter(Vector2 position)
         {
-            return (FloatMath.CloseTo(position.X % SnapSize, 0) && FloatMath.CloseTo(position.Y % SnapSize, 0));
+            return (MathHelper.CloseTo(position.X % SnapSize, 0) && MathHelper.CloseTo(position.Y % SnapSize, 0));
         }
 
         /// <inheritdoc />
         public bool OnSnapBorder(Vector2 position)
         {
-            return (FloatMath.CloseTo(position.X % SnapSize, SnapSize / 2) && FloatMath.CloseTo(position.Y % SnapSize, SnapSize / 2));
+            return (MathHelper.CloseTo(position.X % SnapSize, SnapSize / 2) && MathHelper.CloseTo(position.Y % SnapSize, SnapSize / 2));
         }
 
         #region TileAccess

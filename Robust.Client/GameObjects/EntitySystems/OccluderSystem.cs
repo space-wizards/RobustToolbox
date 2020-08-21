@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             while (_dirtyEntities.TryDequeue(out var entity))
             {
                 if (!entity.Deleted
-                    && entity.TryGetComponent(out ClientOccluderComponent occluder)
+                    && entity.TryGetComponent(out ClientOccluderComponent? occluder)
                     && occluder.UpdateGeneration != _updateGeneration)
                 {
                     occluder.Update();
@@ -54,7 +54,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             var sender = ev.Sender;
             if (sender.IsValid() &&
-                sender.TryGetComponent(out ClientOccluderComponent iconSmooth)
+                sender.TryGetComponent(out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
                 var snapGrid = sender.GetComponent<SnapGridComponent>();

@@ -58,7 +58,7 @@ namespace Robust.UnitTesting
             return instance;
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public async Task TearDown()
         {
             _integrationInstances.ForEach(p => p.Stop());
@@ -333,6 +333,8 @@ namespace Robust.UnitTesting
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
 
+                    server.LoadConfigAndUserData = false;
+
                     if (_options?.ServerContentAssembly != null)
                     {
                         IoCManager.Resolve<ModLoader>().ServerContentAssembly = _options.ServerContentAssembly;
@@ -355,6 +357,9 @@ namespace Robust.UnitTesting
                                 .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
                         }
                     }
+
+                    IoCManager.Resolve<IConfigurationManager>()
+                        .OverrideConVars(new []{("log.runtimelog", "false")});
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {

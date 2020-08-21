@@ -174,7 +174,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEmpty()
         {
-            return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
+            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -271,10 +271,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Box2 a, Box2 b)
         {
-            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
-                   FloatMath.CloseTo(a.Right, b.Right) &&
-                   FloatMath.CloseTo(a.Top, b.Top) &&
-                   FloatMath.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseTo(a.Right, b.Right) &&
+                   MathHelper.CloseTo(a.Top, b.Top) &&
+                   MathHelper.CloseTo(a.Left, b.Left);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -326,8 +326,8 @@ namespace Robust.Shared.Maths
         public Vector2 ClosestPoint(in Vector2 position)
         {
             // clamp the point to the border of the box
-            var cx = FloatMath.Clamp(position.X, Left, Right);
-            var cy = FloatMath.Clamp(position.Y, Bottom, Top);
+            var cx = MathHelper.Clamp(position.X, Left, Right);
+            var cy = MathHelper.Clamp(position.Y, Bottom, Top);
 
             return new Vector2(cx, cy);
         }

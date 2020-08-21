@@ -234,8 +234,8 @@ namespace Robust.Shared.Maths
         public static Vector2 Clamp(Vector2 vector, Vector2 min, Vector2 max)
         {
             return new Vector2(
-                FloatMath.Clamp(vector.X, min.X, max.X),
-                FloatMath.Clamp(vector.Y, min.Y, max.Y)
+                MathHelper.Clamp(vector.X, min.X, max.X),
+                MathHelper.Clamp(vector.Y, min.Y, max.Y)
             );
         }
 
@@ -259,9 +259,9 @@ namespace Robust.Shared.Maths
         {
             return new Vector2(
                 //factor * (b.X - a.X) + a.X,
-                FloatMath.Lerp(a.X, b.X, factor),
+                MathHelper.Lerp(a.X, b.X, factor),
                 //factor * (b.Y - a.Y) + a.Y
-                FloatMath.Lerp(a.Y, b.Y, factor)
+                MathHelper.Lerp(a.Y, b.Y, factor)
             );
         }
 
@@ -357,13 +357,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EqualsApprox(Vector2 other)
         {
-            return FloatMath.CloseTo(X, other.X) && FloatMath.CloseTo(Y, other.Y);
+            return MathHelper.CloseTo(X, other.X) && MathHelper.CloseTo(Y, other.Y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EqualsApprox(Vector2 other, double tolerance)
         {
-            return FloatMath.CloseTo(X, other.X, tolerance) && FloatMath.CloseTo(Y, other.Y, tolerance);
+            return MathHelper.CloseTo(X, other.X, tolerance) && MathHelper.CloseTo(Y, other.Y, tolerance);
         }
     }
 }

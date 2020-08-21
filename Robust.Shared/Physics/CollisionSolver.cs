@@ -437,8 +437,8 @@ namespace Robust.Shared.Physics
         public Vector2 ClosestPoint(in Vector2 position)
         {
             // clamp the point to the border of the box
-            var cx = FloatMath.Clamp(position.X, Left, Right);
-            var cy = FloatMath.Clamp(position.Y, Bottom, Top);
+            var cx = MathHelper.Clamp(position.X, Left, Right);
+            var cy = MathHelper.Clamp(position.Y, Bottom, Top);
 
             return new Vector2(cx, cy);
         }
@@ -611,8 +611,8 @@ namespace Robust.Shared.Physics
             var yMax = HalfExtents.Y;
 
             // clamp the point to the border of the box
-            var cx = FloatMath.Clamp(localPoint.X, xMin, xMax);
-            var cy = FloatMath.Clamp(localPoint.Y, yMin, yMax);
+            var cx = MathHelper.Clamp(localPoint.X, xMin, xMax);
+            var cy = MathHelper.Clamp(localPoint.Y, yMin, yMax);
 
             return TransformPoint(new Vector2(cx, cy));
         }

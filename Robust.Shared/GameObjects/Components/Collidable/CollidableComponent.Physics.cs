@@ -343,7 +343,8 @@ namespace Robust.Shared.GameObjects.Components
         [Obsolete("This only exists for legacy reasons.")]
         public bool CanMove([NotNullWhen(true)]IPhysicsComponent physics)
         {
-            return Owner.TryGetComponent(out physics) && !Anchored;
+            // Cursed method
+            return Owner.TryGetComponent(out physics!) && !Anchored;
         }
 
         /// <inheritdoc />

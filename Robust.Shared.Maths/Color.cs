@@ -992,10 +992,10 @@ namespace Robust.Shared.Maths
         public bool Equals(Color other)
         {
             return
-                FloatMath.CloseTo(R, other.R) &&
-                FloatMath.CloseTo(G, other.G) &&
-                FloatMath.CloseTo(B, other.B) &&
-                FloatMath.CloseTo(A, other.A);
+                MathHelper.CloseTo(R, other.R) &&
+                MathHelper.CloseTo(G, other.G) &&
+                MathHelper.CloseTo(B, other.B) &&
+                MathHelper.CloseTo(A, other.A);
         }
 
         [PublicAPI]

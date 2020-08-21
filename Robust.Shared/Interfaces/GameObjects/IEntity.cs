@@ -136,7 +136,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <typeparam name="T">The component reference type to attempt to fetch.</typeparam>
         /// <param name="component">The component, if it was found. Null otherwise.</param>
         /// <returns>True if a component with specified type was found.</returns>
-        bool TryGetComponent<T>([NotNullWhen(true)] out T component);
+        bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class;
 
         /// <summary>
         ///     Attempt to retrieve the component with specified type,

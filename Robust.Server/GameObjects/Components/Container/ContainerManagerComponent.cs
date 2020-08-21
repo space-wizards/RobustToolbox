@@ -156,18 +156,16 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             foreach (var container in EntityContainers.Values)
             {
-                // Container has previously been disposed
-                if (container.Deleted && EntityContainers.ContainsKey(container.ID))
-                {
-                    EntityContainers.Remove(container.ID);
-                    return;
-                }
-
                 if (container.Contains(entity))
                 {
                     container.ForceRemove(entity);
                 }
             }
+        }
+
+        public override void InternalContainerShutdown(IContainer container)
+        {
+            EntityContainers.Remove(container.ID);
         }
 
         /// <inheritdoc />

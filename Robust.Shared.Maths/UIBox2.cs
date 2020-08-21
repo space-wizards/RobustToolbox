@@ -68,7 +68,7 @@ namespace Robust.Shared.Maths
 
         public bool IsEmpty()
         {
-            return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
+            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
         }
 
         public bool Encloses(UIBox2 inner)
@@ -149,10 +149,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static bool operator ==(UIBox2 a, UIBox2 b)
         {
-            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
-                   FloatMath.CloseTo(a.Right, b.Right) &&
-                   FloatMath.CloseTo(a.Top, b.Top) &&
-                   FloatMath.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseTo(a.Right, b.Right) &&
+                   MathHelper.CloseTo(a.Top, b.Top) &&
+                   MathHelper.CloseTo(a.Left, b.Left);
         }
 
         public static bool operator !=(UIBox2 a, UIBox2 b)

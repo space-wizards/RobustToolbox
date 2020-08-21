@@ -33,7 +33,7 @@ namespace Robust.Shared.Maths
             _position = position;
             _direction = direction;
 
-            DebugTools.Assert(FloatMath.CloseTo(_direction.LengthSquared, 1));
+            DebugTools.Assert(MathHelper.CloseTo(_direction.LengthSquared, 1));
 
         }
 

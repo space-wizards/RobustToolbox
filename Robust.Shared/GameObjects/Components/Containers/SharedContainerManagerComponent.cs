@@ -23,6 +23,7 @@ namespace Robust.Shared.GameObjects.Components.Containers
 
         public abstract bool ContainsEntity(IEntity entity);
         public abstract void ForceRemove(IEntity entity);
+        public abstract void InternalContainerShutdown(IContainer container);
 
         [Serializable, NetSerializable]
         protected class ContainerManagerComponentState : ComponentState

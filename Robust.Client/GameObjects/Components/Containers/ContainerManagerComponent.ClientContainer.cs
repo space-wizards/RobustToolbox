@@ -81,5 +81,9 @@ namespace Robust.Client.GameObjects.Components.Containers
                 Deleted = true;
             }
         }
+
+        public override void InternalContainerShutdown(IContainer container)
+        {
+        }
     }
 }

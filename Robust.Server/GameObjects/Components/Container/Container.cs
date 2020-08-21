@@ -224,7 +224,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual void Shutdown()
         {
-            Manager.Dirty();
+            Manager.InternalContainerShutdown(this);
             Deleted = true;
         }
     }

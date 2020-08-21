@@ -344,7 +344,10 @@ namespace Robust.Client.Audio.Midi
                         if (!renderer.Disposed)
                             renderer.Render();
                         else
+                        {
+                            ((IMidiRenderer)renderer).InternalDispose();
                             _renderers.Remove(renderer);
+                        }
                     }
 
                 Thread.Sleep(1);

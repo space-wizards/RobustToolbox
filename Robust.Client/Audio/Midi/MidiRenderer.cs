@@ -568,8 +568,6 @@ namespace Robust.Client.Audio.Midi
         /// <inheritdoc />
         void IMidiRenderer.InternalDispose()
         {
-            Disposed = true;
-
             Source?.Dispose();
             _synth?.Dispose();
             _player?.Dispose();

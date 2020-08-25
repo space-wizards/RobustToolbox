@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.GameObjects.Components;
@@ -18,6 +19,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Shared.GameObjects.Components.Transform.TransformComponent;
 
 namespace Robust.Server.GameObjects
 {
@@ -45,7 +47,16 @@ namespace Robust.Server.GameObjects
 
         private int _nextServerEntityUid = (int) EntityUid.FirstUid;
 
+        private Dictionary<EntityUid, GameTick>? _lastSeen;
+        private HashSet<EntityUid>? _checkedEnts;
+        private List<EntityState>? _entityStates;
+        private HashSet<EntityUid>? _neededEnts;
+        private SortedSet<EntityUid>? _seenMovers2;
+        private HashSet<IEntity>? _relatives;
+        private Box2 _viewbox;
+
         private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new List<(GameTick, EntityUid)>();
+
 
         public override void Update()
         {
@@ -236,17 +247,6 @@ namespace Robust.Server.GameObjects
             return oldTick;
         }
 
-        private static IEnumerable<EntityUid> GetLastSeenAfter(Dictionary<EntityUid, GameTick> lastSeen, GameTick fromTick)
-        {
-            foreach (var (uid, tick) in lastSeen)
-            {
-                if (tick > fromTick)
-                {
-                    yield return uid;
-                }
-            }
-        }
-
         private IEnumerable<EntityUid> GetLastSeenOn(Dictionary<EntityUid, GameTick> lastSeen, GameTick fromTick)
         {
             foreach (var (uid, tick) in lastSeen)
@@ -256,11 +256,6 @@ namespace Robust.Server.GameObjects
                     yield return uid;
                 }
             }
-        }
-
-        private static void SetLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid, GameTick tick)
-        {
-            lastSeen[uid] = tick;
         }
 
         private static void ClearLastSeenTick(Dictionary<EntityUid, GameTick> lastSeen, EntityUid uid)
@@ -276,7 +271,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
+        private static void IncludeRelatives(IEnumerable<IEntity> children, HashSet<IEntity> set)
         {
             foreach (var child in children)
             {
@@ -343,346 +338,42 @@ namespace Robust.Server.GameObjects
                 return GetEntityStates(fromTick);
             }
 
-            var playerUid = playerEnt.Uid;
+            var position = playerEnt.Transform.WorldPosition;
+            _viewbox = new Box2(position, position).Enlarged(MaxUpdateRange);
 
-            var transform = playerEnt.Transform;
-            var position = transform.WorldPosition;
-            var mapId = transform.MapID;
-            var viewbox = new Box2(position, position).Enlarged(MaxUpdateRange);
-
-            var seenMovers = GetSeenMovers(player);
-            var lSeen = GetLastSeen(player);
+            _seenMovers2 = GetSeenMovers(player);
+            _lastSeen = GetLastSeen(player);
 
             var pseStateRes = _playerSeenEntityStatesResources.Value!;
-            var checkedEnts = pseStateRes.IncludedEnts;
-            var entityStates = pseStateRes.EntityStates;
-            var neededEnts = pseStateRes.NeededEnts;
-            var relatives = pseStateRes.Relatives;
-            checkedEnts.Clear();
-            entityStates.Clear();
-            neededEnts.Clear();
-            relatives.Clear();
+            _checkedEnts = pseStateRes.IncludedEnts;
+            _entityStates = pseStateRes.EntityStates;
+            _neededEnts = pseStateRes.NeededEnts;
+            _relatives = pseStateRes.Relatives;
 
-            foreach (var uid in seenMovers.ToList())
-            {
-                if (!TryGetEntity(uid, out var entity) || entity.Deleted)
-                {
-                    seenMovers.Remove(uid);
-                    continue;
-                }
+            _checkedEnts.Clear();
+            _entityStates.Clear();
+            _neededEnts.Clear();
+            _relatives.Clear();
 
-                if (entity.TryGetComponent(out ICollidableComponent? body))
-                {
-                    if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
-                    {
-                        if (AnyParentInSet(uid, seenMovers))
-                        {
-                            // parent is moving
-                            continue;
-                        }
-
-                        if (MathF.Abs(body.AngularVelocity) > 0)
-                        {
-                            if (entity.TryGetComponent(out TransformComponent? txf) && txf.ChildCount > 0)
-                            {
-                                // has children spinning
-                                continue;
-                            }
-                        }
-
-                        seenMovers.Remove(uid);
-                    }
-                }
-
-                var state = GetEntityState(ComponentManager, uid, fromTick);
-
-                if (checkedEnts.Add(uid))
-                {
-                    entityStates.Add(state);
-
-                    // mover did not change
-                    if (state.ComponentStates != null)
-                    {
-                        // mover can be seen
-                        if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
-                        {
-                            // mover changed and can't be seen
-                            var idx = Array.FindIndex(state.ComponentStates,
-                                x => x is TransformComponent.TransformComponentState);
-
-                            if (idx != -1)
-                            {
-                                // mover changed positional data and can't be seen
-                                var oldState =
-                                    (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                                var newState = new TransformComponent.TransformComponentState(Vector2NaN,
-                                    oldState.Rotation, oldState.ParentID);
-                                state.ComponentStates[idx] = newState;
-                                seenMovers.Remove(uid);
-                                ClearLastSeenTick(lSeen, uid);
-
-                                checkedEnts.Add(uid);
-
-                                var needed = oldState.ParentID;
-                                if (!needed.IsValid() || checkedEnts.Contains(needed))
-                                {
-                                    // either no parent attached or parent already included
-                                    continue;
-                                }
-
-                                if (GetLastSeenTick(lSeen, needed) == GameTick.Zero)
-                                {
-                                    neededEnts.Add(needed);
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // mover already added?
-                    if (!viewbox.Intersects(GetWorldAabbFromEntity(entity)))
-                    {
-                        // mover can't be seen
-                        var oldState =
-                            (TransformComponent.TransformComponentState) entity.Transform.GetComponentState();
-                        entityStates.Add(new EntityState(uid,
-                            new ComponentChanged[]
-                            {
-                                new ComponentChanged(false, NetIDs.TRANSFORM, "Transform")
-                            },
-                            new ComponentState[]
-                            {
-                                new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                                    oldState.ParentID)
-                            }));
-
-                        seenMovers.Remove(uid);
-                        ClearLastSeenTick(lSeen, uid);
-                        checkedEnts.Add(uid);
-
-                        var needed = oldState.ParentID;
-                        if (!needed.IsValid() || checkedEnts.Contains(needed))
-                        {
-                            // either no parent attached or parent already included
-                            continue;
-                        }
-
-                        if (GetLastSeenTick(lSeen, needed) == GameTick.Zero)
-                        {
-                            neededEnts.Add(needed);
-                        }
-                    }
-                }
-            }
-
-            var currentTick = CurrentTick;
+            ProcessSeenMovers(fromTick);
 
             // scan pvs box and include children and parents recursively
-            IncludeRelatives(GetEntitiesInRange(mapId, position, range, true), relatives);
+            IncludeRelatives(GetEntitiesInRange(playerEnt.Transform.MapID, position, range, true), _relatives);
 
             // Exclude any entities that are currently invisible to the player.
-            ExcludeInvisible(relatives, player.VisibilityMask);
+            ExcludeInvisible(_relatives, player.VisibilityMask);
 
             // Always send updates for all grid and map entities.
             // If we don't, the client-side game state manager WILL blow up.
             // TODO: Make map manager netcode aware of PVS to avoid the need for this workaround.
-            IncludeMapCriticalEntities(relatives);
+            IncludeMapCriticalEntities(_relatives);
 
-            foreach (var entity in relatives)
-            {
-                DebugTools.Assert(entity.Initialized && !entity.Deleted);
-
-                var lastChange = entity.LastModifiedTick;
-
-                var uid = entity.Uid;
-
-                var lastSeen = UpdateLastSeenTick(lSeen, uid, currentTick);
-
-                DebugTools.Assert(lastSeen != currentTick);
-
-                /*
-                if (uid != playerUid && entity.Prototype == playerEnt.Prototype && lastSeen < fromTick)
-                {
-                    Logger.DebugS("pvs", $"Player {playerUid} is seeing player {uid}.");
-                }
-                */
-
-                if (checkedEnts.Contains(uid))
-                {
-                    // already have it
-                    continue;
-                }
-
-                if (lastChange <= lastSeen)
-                {
-                    // hasn't changed since last seen
-                    continue;
-                }
-
-                // should this be lastSeen or fromTick?
-                var entityState = GetEntityState(ComponentManager, uid, lastSeen);
-
-                checkedEnts.Add(uid);
-
-                if (entityState.ComponentStates == null)
-                {
-                    // no changes
-                    continue;
-                }
-
-                entityStates.Add(entityState);
-
-                if (uid == playerUid)
-                {
-                    continue;
-                }
-
-                if (!entity.TryGetComponent(out ICollidableComponent? body))
-                {
-                    // can't be a mover w/o physics
-                    continue;
-                }
-
-                if (!body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
-                {
-                    // has motion
-                    seenMovers.Add(uid);
-                }
-                else
-                {
-                    // not moving
-                    seenMovers.Remove(uid);
-                }
-            }
-
-            var priorTick = new GameTick(fromTick.Value - 1);
-            foreach (var uid in GetLastSeenOn(lSeen, priorTick))
-            {
-                if (checkedEnts.Contains(uid))
-                {
-                    continue;
-                }
-
-                if (uid == playerUid)
-                {
-                    continue;
-                }
-
-                if (!TryGetEntity(uid, out var entity) || entity.Deleted)
-                {
-                    // TODO: remove from states list being sent?
-                    continue;
-                }
-
-                if (viewbox.Intersects(GetWorldAabbFromEntity(entity)))
-                {
-                    // can be seen
-                    continue;
-                }
-
-                var state = GetEntityState(ComponentManager, uid, fromTick);
-
-                if (state.ComponentStates == null)
-                {
-                    // nothing changed
-                    continue;
-                }
-
-                checkedEnts.Add(uid);
-                entityStates.Add(state);
-
-                seenMovers.Remove(uid);
-                ClearLastSeenTick(lSeen, uid);
-
-                var idx = Array.FindIndex(state.ComponentStates, x => x is TransformComponent.TransformComponentState);
-
-                if (idx == -1)
-                {
-                    // no transform changes
-                    continue;
-                }
-
-                var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                var newState =
-                    new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
-                state.ComponentStates[idx] = newState;
-
-
-                var needed = oldState.ParentID;
-                if (!needed.IsValid() || checkedEnts.Contains(needed))
-                {
-                    // don't need to include parent or already included
-                    continue;
-                }
-
-                if (GetLastSeenTick(lSeen, needed) == GameTick.First)
-                {
-                    neededEnts.Add(needed);
-                }
-            }
-
-            do
-            {
-                var moreNeededEnts = new HashSet<EntityUid>();
-
-                foreach (var uid in moreNeededEnts)
-                {
-                    if (checkedEnts.Contains(uid))
-                    {
-                        continue;
-                    }
-
-                    var entity = GetEntity(uid);
-                    var state = GetEntityState(ComponentManager, uid, fromTick);
-
-                    if (state.ComponentStates == null || viewbox.Intersects(GetWorldAabbFromEntity(entity)))
-                    {
-                        // no states or should already be seen
-                        continue;
-                    }
-
-
-                    checkedEnts.Add(uid);
-                    entityStates.Add(state);
-
-                    var idx = Array.FindIndex(state.ComponentStates,
-                        x => x is TransformComponent.TransformComponentState);
-
-                    if (idx == -1)
-                    {
-                        // no transform state
-                        continue;
-                    }
-
-                    var oldState = (TransformComponent.TransformComponentState) state.ComponentStates[idx];
-                    var newState =
-                        new TransformComponent.TransformComponentState(Vector2NaN, oldState.Rotation,
-                            oldState.ParentID);
-                    state.ComponentStates[idx] = newState;
-                    seenMovers.Remove(uid);
-
-                    ClearLastSeenTick(lSeen, uid);
-                    var needed = oldState.ParentID;
-
-                    if (!needed.IsValid() || checkedEnts.Contains(needed))
-                    {
-                        // done here
-                        continue;
-                    }
-
-                    // check if further needed
-                    if (!checkedEnts.Contains(uid) && GetLastSeenTick(lSeen, needed) == GameTick.Zero)
-                    {
-                        moreNeededEnts.Add(needed);
-                    }
-                }
-
-                neededEnts = moreNeededEnts;
-            } while (neededEnts.Count > 0);
+            ProcessRelatives(playerEnt.Uid);
+            ProcessLastSeen(fromTick, new GameTick(fromTick.Value - 1), playerEnt.Uid);
+            ProcessNeededEntities(fromTick);
 
             // help the client out
-            entityStates.Sort((a, b) => a.Uid.CompareTo(b.Uid));
+            _entityStates.Sort((a, b) => a.Uid.CompareTo(b.Uid));
 
 #if DEBUG_NULL_ENTITY_STATES
             foreach ( var state in entityStates ) {
@@ -694,7 +385,256 @@ namespace Robust.Server.GameObjects
 #endif
 
             // no point sending an empty collection
-            return entityStates.Count == 0 ? default : entityStates;
+            return _entityStates.Count == 0 ? default : _entityStates;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessSeenMovers(GameTick fromTick)
+        {
+            foreach (var uid in _seenMovers2.ToList())
+            {
+                if (!TryGetEntity(uid, out IEntity? entity) || entity.Deleted)
+                {
+                    _seenMovers2!.Remove(uid);
+                    continue;
+                }
+
+                if (entity.TryGetComponent(out ICollidableComponent? body))
+                {
+                    if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
+                    {
+                        // parent is moving
+                        if (AnyParentInSet(uid, _seenMovers2!))
+                            continue;
+
+                        // has children spinning
+                        if (MathF.Abs(body.AngularVelocity) > 0 && entity.TryGetComponent(out TransformComponent? txf) &&
+                            txf.ChildCount > 0)
+                            continue;
+
+                        _seenMovers2!.Remove(uid);
+                    }
+                }
+
+                var state = GetEntityState(ComponentManager, uid, fromTick);
+
+                if (_checkedEnts!.Add(uid))
+                {
+                    _entityStates!.Add(state);
+
+                    // Mover did not change or can be seen
+                    if (state.ComponentStates == null || _viewbox.Intersects(GetWorldAabbFromEntity(entity)))
+                        continue;
+
+                    int index = Array.FindIndex(state.ComponentStates, componentState => componentState is TransformComponentState);
+
+                    if (index == -1)
+                        continue;
+
+                    // Mover changed positional data and can't be seen
+                    var oldState = (TransformComponentState) state.ComponentStates[index];
+                    var newState = new TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+
+                    state.ComponentStates[index] = newState;
+                    _seenMovers2!.Remove(uid);
+                    ClearLastSeenTick(_lastSeen!, uid);
+
+                    _checkedEnts.Add(uid);
+
+                    var needed = oldState.ParentID;
+
+                    // either no parent attached or parent already included
+                    if (!needed.IsValid() || _checkedEnts.Contains(needed))
+                        continue;
+
+                    if (GetLastSeenTick(_lastSeen!, needed) == GameTick.Zero)
+                        _neededEnts!.Add(needed);
+                }
+                else
+                {
+                    // mover already added?
+                    if (_viewbox.Intersects(GetWorldAabbFromEntity(entity)))
+                        continue;
+
+                    // mover can't be seen
+                    var oldState = (TransformComponentState) entity.Transform.GetComponentState();
+
+                    var componentsChanged = new ComponentChanged[]
+                    {
+                        new ComponentChanged(false, NetIDs.TRANSFORM, "Transform")
+                    };
+
+                    var componentStates = new ComponentState[]
+                    {
+                        new TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID)
+                    };
+
+                    _entityStates!.Add(new EntityState(uid, componentsChanged, componentStates));
+
+                    _seenMovers2!.Remove(uid);
+                    ClearLastSeenTick(_lastSeen!, uid);
+                    _checkedEnts.Add(uid);
+
+                    var needed = oldState.ParentID;
+
+                    // No parent attached or parent already included
+                    if (!needed.IsValid() || _checkedEnts.Contains(needed))
+                        continue;
+
+                    if (GetLastSeenTick(_lastSeen!, needed) == GameTick.Zero)
+                        _neededEnts!.Add(needed);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessRelatives(EntityUid playerUid)
+        {
+            foreach (var entity in _relatives!)
+            {
+                DebugTools.Assert(entity.Initialized && !entity.Deleted);
+
+                var uid = entity.Uid;
+                var lastSeen = UpdateLastSeenTick(_lastSeen!, uid, CurrentTick);
+
+                DebugTools.Assert(lastSeen != CurrentTick);
+
+                // If already checked or not changed, continue
+                if (_checkedEnts!.Contains(uid) || entity.LastModifiedTick <= lastSeen)
+                    continue;
+
+                // should this be lastSeen or fromTick?
+                // I don't know Q, should it?
+                var entityState = GetEntityState(ComponentManager, uid, lastSeen);
+
+                _checkedEnts.Add(uid);
+
+                // no changes
+                if (entityState.ComponentStates == null)
+                    continue;
+
+                _entityStates!.Add(entityState);
+
+                if (uid == playerUid)
+                    continue;
+
+                // Continue if entity has no physics
+                if (!entity.TryGetComponent(out ICollidableComponent? body))
+                    continue;
+
+                if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
+                {
+                    _seenMovers2!.Remove(uid);
+                }
+                else
+                {
+                    _seenMovers2!.Add(uid);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessLastSeen(GameTick fromTick, GameTick priorTick, EntityUid playerUid)
+        {
+            foreach (var uid in GetLastSeenOn(_lastSeen!, priorTick))
+            {
+                if (_checkedEnts!.Contains(uid))
+                    continue;
+
+                if (uid == playerUid)
+                    continue;
+
+                // TODO: remove from states list being sent?
+                if (!TryGetEntity(uid, out IEntity? entity) || entity.Deleted)
+                    continue;
+
+                // can be seen
+                if (_viewbox.Intersects(GetWorldAabbFromEntity(entity)))
+                    continue;
+
+                var state = GetEntityState(ComponentManager, uid, fromTick);
+
+                // nothing changed
+                if (state.ComponentStates == null)
+                    continue;
+
+                _checkedEnts.Add(uid);
+                _entityStates!.Add(state);
+
+                _seenMovers2!.Remove(uid);
+                ClearLastSeenTick(_lastSeen!, uid);
+
+                int index = Array.FindIndex(state.ComponentStates, componentState => componentState is TransformComponentState);
+
+                // no transform changes
+                if (index == -1)
+                    continue;
+
+                var oldState = (TransformComponentState) state.ComponentStates[index];
+                var newState = new TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+                state.ComponentStates[index] = newState;
+
+                var needed = oldState.ParentID;
+
+                // don't need to include parent or already included
+                if (!needed.IsValid() || _checkedEnts.Contains(needed))
+                    continue;
+
+                if (GetLastSeenTick(_lastSeen!, needed) == GameTick.First)
+                    _neededEnts!.Add(needed);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ProcessNeededEntities(GameTick fromTick)
+        {
+            HashSet<EntityUid> neededEnts;
+            do
+            {
+                var moreNeededEnts = new HashSet<EntityUid>();
+
+                foreach (var uid in moreNeededEnts)
+                {
+                    if (_checkedEnts!.Contains(uid))
+                        continue;
+
+                    var entity = GetEntity(uid);
+                    var state = GetEntityState(ComponentManager, uid, fromTick);
+
+                    // no states or should already be seen
+                    if (state.ComponentStates == null || _viewbox.Intersects(GetWorldAabbFromEntity(entity)))
+                        continue;
+
+                    _checkedEnts.Add(uid);
+                    _entityStates!.Add(state);
+
+                    var idx = Array.FindIndex(state.ComponentStates,
+                                              componentState => componentState is TransformComponentState);
+
+                    // no transform state
+                    if (idx == -1)
+                        continue;
+
+                    var oldState = (TransformComponentState) state.ComponentStates[idx];
+                    var newState = new TransformComponentState(Vector2NaN, oldState.Rotation, oldState.ParentID);
+
+                    state.ComponentStates[idx] = newState;
+                    _seenMovers2!.Remove(uid);
+
+                    ClearLastSeenTick(_lastSeen!, uid);
+                    var needed = oldState.ParentID;
+
+                    // done here
+                    if (!needed.IsValid() || _checkedEnts.Contains(needed))
+                        continue;
+
+                    // check if further needed
+                    if (!_checkedEnts.Contains(uid) && GetLastSeenTick(_lastSeen!, needed) == GameTick.Zero)
+                        moreNeededEnts.Add(needed);
+                }
+
+                neededEnts = moreNeededEnts;
+            } while (neededEnts.Count > 0);
         }
 
         public override void DeleteEntity(IEntity e)

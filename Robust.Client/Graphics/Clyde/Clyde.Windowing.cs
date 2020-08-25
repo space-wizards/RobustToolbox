@@ -186,8 +186,6 @@ namespace Robust.Client.Graphics.Clyde
                 CreateWindowGl31();
             }
 
-            // TODO: If Windows use MessageBoxW here since it's easy enough.
-            // I think, at least.
             if (_glfwWindow == null)
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

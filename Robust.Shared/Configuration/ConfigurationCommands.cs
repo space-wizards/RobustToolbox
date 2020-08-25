@@ -13,7 +13,8 @@ namespace Robust.Shared.Configuration
 
         public string Help => @"cvar <name> [value]
 If a value is passed, the value is parsed and stored as the new value of the CVar.
-If not, the current value of the CVar is displayed.";
+If not, the current value of the CVar is displayed.
+Use 'cvar ?' to get a list of all registered CVars.";
 
         protected static object ParseObject(Type type, string input)
         {

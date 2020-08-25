@@ -22,9 +22,16 @@ namespace Robust.Server.Console.Commands
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             var name = args[0];
 
+            if (name == "?")
+            {
+                var cvars = configManager.GetRegisteredCVars();
+                shell.SendText(player, string.Join("\n", cvars));
+                return;
+            }
+
             if (!configManager.IsCVarRegistered(name))
             {
-                shell.SendText(player, $"CVar '{name}' is not registered.");
+                shell.SendText(player, $"CVar '{name}' is not registered. Use 'cvar ?' to get a list of all registered CVars.");
                 return;
             }
 

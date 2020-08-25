@@ -201,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     MessageBoxW(null,
                         errorContent,
-                        "Failed to create window",
+                        "Space Station 14: Failed to create window",
                         MB_OK | MB_ICONERROR);
                 }
 

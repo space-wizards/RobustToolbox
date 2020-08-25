@@ -209,6 +209,12 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
+        public IEnumerable<string> GetRegisteredCVars()
+        {
+            return _configVars.Keys;
+        }
+
+        /// <inheritdoc />
         public void SetCVar(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.

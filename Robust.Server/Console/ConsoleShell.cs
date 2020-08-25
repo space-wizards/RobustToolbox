@@ -153,7 +153,7 @@ namespace Robust.Server.Console
             }
             catch (Exception e)
             {
-                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}");
+                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}:\n{e}");
                 SendText(session, $"There was an error while executing the command: {e}");
             }
         }

@@ -16,6 +16,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using static Robust.Client.Utility.LiterallyJustMessageBox;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using GLFW = OpenToolkit.GraphicsLibraryFramework.GLFW;
@@ -189,6 +190,21 @@ namespace Robust.Client.Graphics.Clyde
             // I think, at least.
             if (_glfwWindow == null)
             {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var code = GLFW.GetError(out string desc);
+
+                    var errorContent = "Failed to create the game window. " +
+                        "This probably means your GPU is too old to play the game. " +
+                        "That or update your graphic drivers\n" +
+                        $"The exact error is: [{code}]\n {desc}";
+
+                    MessageBoxW(null,
+                        errorContent,
+                        "Space Station 14: Failed to create window",
+                        MB_OK | MB_ICONERROR);
+                }
+
                 Logger.FatalS("clyde.win",
                     "Failed to create GLFW window! " +
                     "This probably means your GPU is too old to run the game. " +

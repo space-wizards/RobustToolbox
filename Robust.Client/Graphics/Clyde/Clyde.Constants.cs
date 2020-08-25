@@ -5,6 +5,11 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
+        private static readonly (string, uint)[] BaseShaderAttribLocations = {
+            ("aPos", 0),
+            ("tCoord", 1)
+        };
+
         private const int UniIModUV = 0;
         private const int UniIModelMatrix = 1;
         private const int UniIModulate = 2;
@@ -26,5 +31,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private const int BindingIndexProjView = 0;
         private const int BindingIndexUniformConstants = 1;
+
+        private enum Renderer
+        {
+            Default = default,
+            OpenGL31 = 1,
+            Explode = -1,
+        }
     }
 }

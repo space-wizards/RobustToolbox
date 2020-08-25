@@ -129,23 +129,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             InitCursors();
-            InitWindow();
-            return true;
+
+            return InitWindow();
         }
 
-        private void InitWindow()
+        private bool InitWindow()
         {
-            GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-            GLFW.WindowHint(WindowHintInt.ContextVersionMajor, MinimumOpenGLVersion.Major);
-            GLFW.WindowHint(WindowHintInt.ContextVersionMinor, MinimumOpenGLVersion.Minor);
-            GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
-#if DEBUG
-            GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
-            GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-            GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-
             var width = _configurationManager.GetCVar<int>("display.width");
             var height = _configurationManager.GetCVar<int>("display.height");
 
@@ -159,7 +148,53 @@ namespace Robust.Client.Graphics.Clyde
                 height = mode->Height;
             }
 
-            _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+#if DEBUG
+            GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
+#endif
+            GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
+            GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+            GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
+
+            var renderer = (Renderer) _configurationManager.GetCVar<int>("display.renderer");
+
+            if (renderer == Renderer.Default)
+            {
+                // Try OpenGL Core 3.3
+                GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
+                GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
+                GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+
+                _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+
+                if (_glfwWindow == null)
+                {
+                    // Window failed to init due to error.
+                    var err = GLFW.GetErrorRaw(out _);
+
+                    if (err == ErrorCode.VersionUnavailable)
+                    {
+                        Logger.DebugS("clyde.win", "OpenGL Core 3.3 unsupported, trying OpenGL 3.1");
+
+                        CreateWindowGl31();
+                    }
+                }
+            }
+            else if (renderer == Renderer.OpenGL31)
+            {
+                CreateWindowGl31();
+            }
+
+            // TODO: If Windows use MessageBoxW here since it's easy enough.
+            // I think, at least.
+            if (_glfwWindow == null)
+            {
+                Logger.FatalS("clyde.win",
+                    "Failed to create GLFW window! " +
+                    "This probably means your GPU is too old to run the game. " +
+                    "That or update your graphics drivers.");
+                return false;
+            }
 
             LoadWindowIcon();
 
@@ -201,6 +236,18 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.MakeContextCurrent(_glfwWindow);
 
             InitOpenGL();
+
+            return true;
+
+            void CreateWindowGl31()
+            {
+                GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
+                GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
+                GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+
+                _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+            }
         }
 
         private void LoadWindowIcon()
@@ -267,7 +314,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitGLContext()
         {
-            // Initialize the OpenTK 3 GL context with GLFW.
             _graphicsContext = new GLFWBindingsContext();
             GL.LoadBindings(_graphicsContext);
         }

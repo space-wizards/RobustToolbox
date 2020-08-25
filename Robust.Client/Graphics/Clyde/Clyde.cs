@@ -41,8 +41,6 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
-
         private GLBuffer ProjViewUBO = default!;
         private GLBuffer UniformConstantsUBO = default!;
 
@@ -64,7 +62,9 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
-        private bool _hasKhrDebug;
+        private bool _hasGLKhrDebug;
+        private bool _hasGLTextureSwizzle;
+        private bool _hasGLSamplerObjects;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -143,6 +143,11 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
+
+            _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
+            _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
+            _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
+            _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -154,10 +159,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitOpenGL()
         {
-            DetectOpenGLFeatures();
-
-            SetupDebugCallback();
-
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
@@ -165,12 +166,16 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
             Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
 
+            DetectOpenGLFeatures();
+
+            SetupDebugCallback();
+
             LoadVendorSettings(vendor, renderer, version);
 
             var major = GL.GetInteger(GetPName.MajorVersion);
             var minor = GL.GetInteger(GetPName.MinorVersion);
 
-            DebugInfo = new ClydeDebugInfo(new Version(major, minor), MinimumOpenGLVersion, renderer, vendor, version);
+            DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
             GL.Enable(EnableCap.FramebufferSrgb);
@@ -272,10 +277,43 @@ namespace Robust.Client.Graphics.Clyde
         {
             var extensions = GetGLExtensions();
 
-            if (extensions.Contains("GL_KHR_debug"))
+            var major = GL.GetInteger(GetPName.MajorVersion);
+            var minor = GL.GetInteger(GetPName.MinorVersion);
+
+            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, params string[] exts)
             {
-                _hasKhrDebug = true;
+                // Check if feature is available from the GL context.
+                cap = CompareVersion(major, minor, majorMin, minorMin) || extensions.Overlaps(exts);
+
+                var prev = cap;
+                var cVarName = $"display.ogl_block_{capName}";
+                var block = _configurationManager.GetCVar<bool>(cVarName);
+
+                if (block)
+                {
+                    cap = false;
+                    Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
+                }
+
+                Logger.DebugS("clyde.ogl", $"  {capName}: {_hasGLKhrDebug}");
             }
+
+            Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
+
+            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, "GL_KHR_debug");
+            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, "GL_ARB_sampler_objects");
+            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, "GL_ARB_texture_swizzle",
+                "GL_EXT_texture_swizzle");
+        }
+
+        private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)
+        {
+            if (majorB > majorA)
+            {
+                return true;
+            }
+
+            return majorA == majorB && minorB >= minorA;
         }
 
         [SuppressMessage("ReSharper", "UnusedParameter.Local")]
@@ -287,7 +325,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void SetupDebugCallback()
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 Logger.DebugS("clyde.ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
                 return;
@@ -390,7 +428,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }
@@ -413,7 +451,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PushDebugGroupMaybe(string group)
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }
@@ -424,7 +462,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PopDebugGroupMaybe()
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }

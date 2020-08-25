@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var program = _compileProgram(vertBody, fragBody, name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
 
             program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
             program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
@@ -78,7 +78,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
-            var program = _compileProgram(vertBody, fragBody, loaded.Name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
 
             loaded.Program.Delete();
 
@@ -125,7 +125,8 @@ namespace Robust.Client.Graphics.Clyde
             return reader.ReadToEnd();
         }
 
-        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string? name = null)
+        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
+            (string, uint)[] attribLocations, string? name = null)
         {
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
@@ -158,7 +159,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 try
                 {
-                    program.Link();
+                    program.Link(attribLocations);
                 }
                 catch (ShaderCompilationException e)
                 {

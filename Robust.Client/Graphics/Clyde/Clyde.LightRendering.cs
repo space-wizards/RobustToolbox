@@ -137,11 +137,14 @@ namespace Robust.Client.Graphics.Clyde
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
 
-            _fovFilterSampler = new GLHandle(GL.GenSampler());
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
-            GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+            if (_hasGLSamplerObjects)
+            {
+                _fovFilterSampler = new GLHandle(GL.GenSampler());
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMagFilter, (int) All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
+                GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+            }
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
@@ -155,7 +158,11 @@ namespace Robust.Client.Graphics.Clyde
             var depthVert = ReadEmbeddedShader("shadow-depth.vert");
             var depthFrag = ReadEmbeddedShader("shadow-depth.frag");
 
-            _fovCalculationProgram = _compileProgram(depthVert, depthFrag, "Shadow Depth Program");
+            (string, uint)[] attribLocations = {
+                ("aPos", 0)
+            };
+
+            _fovCalculationProgram = _compileProgram(depthVert, depthFrag, attribLocations, "Shadow Depth Program");
 
             var debugShader = _resourceCache.GetResource<ShaderSourceResource>("/Shaders/Internal/depth-debug.swsl");
             _fovDebugShaderInstance = (ClydeShaderInstance) InstanceShader(debugShader.ClydeHandle);
@@ -592,9 +599,18 @@ namespace Robust.Client.Graphics.Clyde
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
-            // Have to bind sampler to use linear filtering on the shadow map here.
+            // Have to swap to linear filtering on the shadow map here.
             // VSM wants it.
-            GL.BindSampler(0, _fovFilterSampler.Handle);
+            if (_hasGLSamplerObjects)
+            {
+                GL.BindSampler(0, _fovFilterSampler.Handle);
+            }
+            else
+            {
+                // OpenGL why do you torture me so.
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
+            }
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
@@ -602,7 +618,15 @@ namespace Robust.Client.Graphics.Clyde
 
             DrawBlit(viewport, fovShader);
 
-            GL.BindSampler(0, 0);
+            if (_hasGLSamplerObjects)
+            {
+                GL.BindSampler(0, 0);
+            }
+            else
+            {
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+            }
         }
 
         private void DrawBlit(Viewport vp, GLShaderProgram shader)

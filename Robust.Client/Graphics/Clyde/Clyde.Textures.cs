@@ -44,6 +44,28 @@ namespace Robust.Client.Graphics.Clyde
             var actualParams = loadParams ?? TextureLoadParameters.Default;
             var pixelType = typeof(T);
 
+            if (!_hasGLTextureSwizzle)
+            {
+                // If texture swizzle isn't available we have to pre-process the images to apply it ourselves
+                // and then upload as RGBA8.
+                // Yes this is inefficient but the alternative is modifying the shaders,
+                // which I CBA to do.
+                // Even 8 year old iGPUs support texture swizzle.
+                if (pixelType == typeof(A8))
+                {
+                    // Disable sRGB so stuff doesn't get interpreter wrong.
+                    actualParams.Srgb = false;
+                    var img = ApplyA8Swizzle((Image<A8>) (object) image);
+                    return LoadTextureFromImage(img, name, loadParams);
+                }
+
+                if (pixelType == typeof(L8) && !actualParams.Srgb)
+                {
+                    var img = ApplyL8Swizzle((Image<L8>) (object) image);
+                    return LoadTextureFromImage(img, name, loadParams);
+                }
+            }
+
             // Flip image because OpenGL reads images upside down.
             var copy = FlipClone(image);
 
@@ -83,7 +105,7 @@ namespace Robust.Client.Graphics.Clyde
             else if (pixelType == typeof(L8) && !actualParams.Srgb)
             {
                 // Can only use R8 for L8 if sRGB is OFF.
-                // Because OpenGL doesn't provide non-sRGB single/dual channel image formats.
+                // Because OpenGL doesn't provide sRGB single/dual channel image formats.
                 // Vulkan when?
                 if (copy.Width % 4 != 0 || copy.Height % 4 != 0)
                 {
@@ -249,6 +271,37 @@ namespace Robust.Client.Graphics.Clyde
                 srcRow.CopyTo(dstRow);
             }
         }
+
+        private static Image<Rgba32> ApplyA8Swizzle(Image<A8> source)
+        {
+            var newImage = new Image<Rgba32>(source.Width, source.Height);
+            var sourceSpan = source.GetPixelSpan();
+            var destSpan = newImage.GetPixelSpan();
+
+            for (var i = 0; i < sourceSpan.Length; i++)
+            {
+                var px = sourceSpan[i].PackedValue;
+                destSpan[i] = new Rgba32(255, 255, 255, px);
+            }
+
+            return newImage;
+        }
+
+        private static Image<Rgba32> ApplyL8Swizzle(Image<L8> source)
+        {
+            var newImage = new Image<Rgba32>(source.Width, source.Height);
+            var sourceSpan = source.GetPixelSpan();
+            var destSpan = newImage.GetPixelSpan();
+
+            for (var i = 0; i < sourceSpan.Length; i++)
+            {
+                var px = sourceSpan[i].PackedValue;
+                destSpan[i] = new Rgba32(px, px, px, 255);
+            }
+
+            return newImage;
+        }
+
 
         private sealed class LoadedTexture
         {

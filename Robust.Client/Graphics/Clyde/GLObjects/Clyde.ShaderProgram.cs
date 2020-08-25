@@ -46,7 +46,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void Link()
+            public void Link((string, uint)[] attribLocations)
             {
                 ClearCaches();
                 _handle = (uint) GL.CreateProgram();
@@ -63,6 +63,15 @@ namespace Robust.Client.Graphics.Clyde
                 if (_fragmentShader != null)
                 {
                     GL.AttachShader(_handle, _fragmentShader.ObjectHandle);
+                }
+
+                foreach (var (varName, loc) in attribLocations)
+                {
+                    // OpenGL 3.1 is ass and doesn't allow you to specify layout(location = X) in shaders.
+                    // So we have to manually do it here.
+                    // Ugh.
+
+                    GL.BindAttribLocation(_handle, loc, varName);
                 }
 
                 GL.LinkProgram(_handle);

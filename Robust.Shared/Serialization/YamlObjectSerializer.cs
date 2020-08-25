@@ -173,7 +173,7 @@ namespace Robust.Shared.Serialization
         {
             if (Reading) // read
             {
-                if (_context != null && _context.TryGetCachedField(name, out T theValue))
+                if (_context != null && _context.TryGetCachedField<T>(name, out var theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
@@ -256,7 +256,7 @@ namespace Robust.Shared.Serialization
         {
             if (Reading)
             {
-                if (_context != null && _context.TryGetCachedField(name, out TTarget theValue))
+                if (_context != null && _context.TryGetCachedField<TTarget>(name, out var theValue))
                 {
                     // Itermediate field so value doesn't get reset to default(T) if this fails.
                     value = theValue;
@@ -307,7 +307,7 @@ namespace Robust.Shared.Serialization
                 throw new InvalidOperationException("Cannot use ReadDataField while not reading.");
             }
 
-            if (_context != null && _context.TryGetCachedField(name, out T val))
+            if (_context != null && _context.TryGetCachedField<T>(name, out var val))
             {
                 return val;
             }

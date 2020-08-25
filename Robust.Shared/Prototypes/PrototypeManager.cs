@@ -240,7 +240,7 @@ namespace Robust.Shared.Prototypes
 
             foreach (var (stream, filePath) in yamlStreams)
             {
-                for (var i = 0; i < stream.Documents.Count; i++)
+                for (var i = 0; i < stream!.Documents.Count; i++)
                 {
                     try
                     {

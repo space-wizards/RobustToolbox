@@ -102,7 +102,7 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var tile in chunk)
                 {
                     var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
-                    if (!regionMaybe.HasValue)
+                    if (regionMaybe == null)
                     {
                         continue;
                     }

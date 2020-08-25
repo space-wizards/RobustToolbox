@@ -14,6 +14,7 @@ namespace Robust.Client.Console
         bool CanViewVar();
         bool CanAdminPlace();
         bool CanScript();
+        bool CanAdminMenu();
         event Action ConGroupUpdated;
     }
 }

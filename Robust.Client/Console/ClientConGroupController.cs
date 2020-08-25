@@ -53,6 +53,13 @@ namespace Robust.Client.Console
             return _clientConGroup.CanScript;
         }
 
+        public bool CanAdminMenu()
+        {
+            if (_clientConGroup == null)
+                return false;
+            return _clientConGroup.CanAdminMenu;
+        }
+
         /// <summary>
         /// Update client console group data with message from the server.
         /// </summary>

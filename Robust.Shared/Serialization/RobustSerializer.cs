@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Loader;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
@@ -31,6 +31,11 @@ namespace Robust.Shared.Serialization
         private HashSet<Type> _serializableTypes = default!;
 
         private readonly RobustMappedStringSerializer _mappedStringSerializer = new RobustMappedStringSerializer();
+
+        private static Type[] AlwaysNetSerializable => new[]
+        {
+            typeof(Vector2i)
+        };
 
         #region Statistics
 
@@ -74,6 +79,8 @@ namespace Robust.Shared.Serialization
                 }
             }
 #endif
+
+            types.AddRange(AlwaysNetSerializable);
 
             _mappedStringSerializer.InitLogging();
 

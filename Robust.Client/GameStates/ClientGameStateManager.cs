@@ -167,6 +167,8 @@ namespace Robust.Client.GameStates
                 return;
             }
 
+            // Logger.DebugS("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
+
             // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
             // this won't run meaning it could potentially get stuck dirty.
             if (Predicting)

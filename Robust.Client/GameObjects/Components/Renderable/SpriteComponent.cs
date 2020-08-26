@@ -1589,9 +1589,12 @@ namespace Robust.Client.GameObjects
                     return default;
                 }
 
-                var state = rsi[State];
+                if (rsi.TryGetState(State, out var state))
+                {
+                    return EffectiveDirection(state, worldRotation, null);
+                }
 
-                return EffectiveDirection(state, worldRotation, null);
+                return default;
             }
 
             public Vector2 LocalToLayer(Vector2 localPos)

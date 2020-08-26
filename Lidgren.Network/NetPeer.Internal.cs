@@ -199,7 +199,7 @@ namespace Lidgren.Network
 					m_buf = m_receiveBuffer
 				};
 
-				var macBytes = NetUtility.GetMacAddressBytes();
+				var macBytes = NetUtility.GetMacAddressBytes() ?? Array.Empty<byte>();
 
 				var boundEp = m_socket.LocalEndPoint as NetEndPoint;
 				var hashCode = boundEp!.GetHashCode();

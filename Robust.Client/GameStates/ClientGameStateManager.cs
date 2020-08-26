@@ -170,7 +170,7 @@ namespace Robust.Client.GameStates
             var targetBufSize = _processor.TargetBufferSize;
             var applyCount = Math.Max(1, curBufSize - targetBufSize - StateBufferMergeThreshold);
 
-            Logger.Debug(applyCount.ToString());
+            // Logger.Debug(applyCount.ToString());
 
             var i = 0;
             for (; i < applyCount; i++)

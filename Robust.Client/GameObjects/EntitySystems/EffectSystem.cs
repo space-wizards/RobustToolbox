@@ -14,6 +14,9 @@ using System.Collections.Generic;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics.Overlays;
+using Robust.Client.Player;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
@@ -29,6 +32,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IOverlayManager overlayManager = default!;
         [Dependency] private readonly IPrototypeManager prototypeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private readonly List<Effect> _Effects = new List<Effect>();
 
@@ -39,7 +44,7 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
-            var overlay = new EffectOverlay(this, prototypeManager, _mapManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -52,8 +57,12 @@ namespace Robust.Client.GameObjects
 
         public void CreateEffect(EffectSystemMessage message)
         {
+            if (message.AttachedEntityUid != null && message.Coordinates != default)
+            {
+                Logger.Warning("Set both an AttachedEntityUid and GridCoordinates on an EffectSystemMessage for sprite {0} which is not supported!", message.EffectSprite);
+            }
+            
             var gameTime = gameTiming.CurTime;
-
             if (gameTime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
             {
                 Logger.Warning("Effect using sprite {0} died in transit to the client", message.EffectSprite);
@@ -62,6 +71,10 @@ namespace Robust.Client.GameObjects
 
             //Create effect from creation message
             var effect = new Effect(message, resourceCache, _mapManager);
+            if (effect.AttachedEntityUid != null)
+            {
+                effect.AttachedEntity = _entityManager.GetEntity(effect.AttachedEntityUid.Value);
+            }
 
             //Age the effect through a single update to the previous update tick of the effect system
             //effect.Update((float)((lasttimeprocessed - effect.Age).TotalSeconds));
@@ -104,6 +117,18 @@ namespace Robust.Client.GameObjects
 
             public bool AnimationLoops { get; set; }
 
+            /// <summary>
+            /// Entity that the effect is attached to
+            /// </summary>
+            public IEntity? AttachedEntity { get; set; }
+            
+            public EntityUid? AttachedEntityUid { get; }
+            
+            /// <summary>
+            /// Offset relative to the attached entity
+            /// </summary>
+            public Vector2 AttachedOffset { get; }
+            
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
@@ -209,6 +234,8 @@ namespace Robust.Client.GameObjects
                 }
 
                 AnimationLoops = effectcreation.AnimationLoops;
+                AttachedEntityUid = effectcreation.AttachedEntityUid;
+                AttachedOffset = effectcreation.AttachedOffset;
                 Coordinates = effectcreation.Coordinates;
                 EmitterCoordinates = effectcreation.EmitterCoordinates;
                 Velocity = effectcreation.Velocity;
@@ -312,6 +339,8 @@ namespace Robust.Client.GameObjects
 
         private sealed class EffectOverlay : Overlay
         {
+            private readonly IPlayerManager _playerManager;
+            
             public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -319,12 +348,13 @@ namespace Robust.Client.GameObjects
             private readonly EffectSystem _owner;
             private readonly IMapManager _mapManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan) : base(
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan) : base(
                 "EffectSystem")
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 _mapManager = mapMan;
+                _playerManager = playerMan;
             }
 
             protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
@@ -333,10 +363,12 @@ namespace Robust.Client.GameObjects
 
                 var worldHandle = (DrawingHandleWorld) handle;
                 ShaderInstance? currentShader = null;
+                var player = _playerManager.LocalPlayer?.ControlledEntity;
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (_mapManager.GetGrid(effect.Coordinates.GridID).ParentMapId != map)
+                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&  
+                        _mapManager.GetGrid(effect.Coordinates.GridID).ParentMapId != map)
                     {
                         continue;
                     }
@@ -350,7 +382,9 @@ namespace Robust.Client.GameObjects
                     }
 
                     var effectSprite = effect.EffectSprite;
-                    var effectOrigin = effect.Coordinates.ToMapPos(_mapManager);
+                    var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ?? 
+                                               effect.Coordinates.ToMapPos(_mapManager);
+                    
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
 
                     var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);

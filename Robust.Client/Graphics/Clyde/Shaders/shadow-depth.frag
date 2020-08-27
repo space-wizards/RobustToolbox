@@ -1,12 +1,8 @@
-#version 140
-
-in vec2 pos;
-
-/*layout(location = 0)*/ out vec4 depth;
+varying highp vec2 pos;
 
 void main()
 {
-    vec2 adjustedPos = pos;
+    highp vec2 adjustedPos = pos;
     if (!gl_FrontFacing)
     {
         // Slightly bias back faces inwards.
@@ -14,9 +10,14 @@ void main()
         // "behind" walls at certain angles/positions.
         //adjustedPos -= sign(adjustedPos) * 1.5/32.0;
     }
-    float dist = length(adjustedPos);
-    float dx = dFdx(dist);
-    float dy = dFdy(dist); // I'm aware derivative of y makes no sense here but oh well.
-    depth = vec4(dist, dist * dist + 0.25 * (dx*dx + dy*dy), 0, 1);
+    highp float dist = length(adjustedPos);
+#ifdef HAS_DFDX
+    highp float dx = dFdx(dist);
+    highp float dy = dFdy(dist); // I'm aware derivative of y makes no sense here but oh well.
+#else
+    highp float dx = 1.0;
+    highp float dy = 1.0;
+#endif
+    gl_FragColor = vec4(dist, dist * dist + 0.25 * (dx*dx + dy*dy), 0.0, 1.0);
 }
 

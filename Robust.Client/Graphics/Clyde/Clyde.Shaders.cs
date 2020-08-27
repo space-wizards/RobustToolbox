@@ -131,6 +131,22 @@ namespace Robust.Client.Graphics.Clyde
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
 
+            var versionHeader = "#version 140\n#define HAS_DFDX\n";
+
+            if (_hasGLES)
+            {
+                // GLES2 uses a different GLSL versioning scheme to desktop GL.
+                versionHeader = "#version 100\n";
+            }
+
+            if (_hasGLUniformBuffers)
+            {
+                versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
+            }
+
+            vertexSource = versionHeader + vertexSource;
+            fragmentSource = versionHeader + fragmentSource;
+
             try
             {
                 try
@@ -139,8 +155,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
+                    System.IO.File.WriteAllText("error.glsl", vertexSource);
                     throw new ShaderCompilationException(
-                        "Failed to compile vertex shader, see inner for details.", e);
+                        "Failed to compile vertex shader, see inner for details (and error.glsl for formatted source).", e);
                 }
 
                 try
@@ -149,8 +166,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 catch (ShaderCompilationException e)
                 {
+                    System.IO.File.WriteAllText("error.glsl", fragmentSource);
                     throw new ShaderCompilationException(
-                        "Failed to compile fragment shader, see inner for details.", e);
+                        "Failed to compile fragment shader, see inner for details (and error.glsl for formatted source).", e);
                 }
 
                 var program = new GLShaderProgram(this, name);
@@ -205,8 +223,8 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var (name, varying) in shader.Varyings)
             {
-                varyingsFragment.AppendFormat("in {0} {1};\n", varying.Type.GetNativeType(), name);
-                varyingsVertex.AppendFormat("out {0} {1};\n", varying.Type.GetNativeType(), name);
+                varyingsFragment.AppendFormat("varying {0} {1};\n", varying.Type.GetNativeType(), name);
+                varyingsVertex.AppendFormat("varying {0} {1};\n", varying.Type.GetNativeType(), name);
             }
 
             ShaderFunctionDefinition? fragmentMain = null;

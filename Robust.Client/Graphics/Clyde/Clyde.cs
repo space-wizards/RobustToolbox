@@ -65,6 +65,14 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLKhrDebug;
         private bool _hasGLTextureSwizzle;
         private bool _hasGLSamplerObjects;
+        private bool _hasGLSrgb;
+        private bool _hasGLPrimitiveRestart;
+        private bool _hasGLReadFramebuffer;
+        private bool _hasGLUniformBuffers;
+        private bool _hasGLVertexArrayObject;
+        private bool _hasGLFancyFloatFormats;
+        // This is updated from Clyde.Windowing.
+        private bool _hasGLES;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -148,6 +156,7 @@ namespace Robust.Client.Graphics.Clyde
             _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
             _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
             _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
+            _configurationManager.RegisterCVar("display.ogl_block_vertex_array_object", false);
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -172,23 +181,54 @@ namespace Robust.Client.Graphics.Clyde
 
             LoadVendorSettings(vendor, renderer, version);
 
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            var major = 2;
+            var minor = 0;
+
+            if (!_hasGLES)
+            {
+                major = GL.GetInteger(GetPName.MajorVersion);
+                minor = GL.GetInteger(GetPName.MinorVersion);
+            }
 
             DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
-            GL.Enable(EnableCap.FramebufferSrgb);
-            GL.Enable(EnableCap.PrimitiveRestart);
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
+            if (_hasGLSrgb)
+            {
+                GL.Enable(EnableCap.FramebufferSrgb);
+            }
+            if (_hasGLPrimitiveRestart)
+            {
+                GL.Enable(EnableCap.PrimitiveRestart);
+                GL.PrimitiveRestartIndex(ushort.MaxValue);
+            }
+            else
+            {
+                Logger.WarningS("clyde.ogl", "NO PRIMITIVE RESTART! Things will probably go terribly, terribly wrong (no fallback path yet)");
+            }
+            if (!_hasGLVertexArrayObject)
+            {
+                Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
+            }
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
+            Logger.DebugS("clyde.ogl", "Loading stock textures...");
+
             LoadStockTextures();
+
+            Logger.DebugS("clyde.ogl", "Loading stock shaders...");
+
             LoadStockShaders();
+
+            Logger.DebugS("clyde.ogl", "Creating various GL objects...");
 
             CreateMiscGLObjects();
 
+            Logger.DebugS("clyde.ogl", "Setting up RenderHandle...");
+
             _renderHandle = new RenderHandle(this);
+
+            Logger.DebugS("clyde.ogl", "Setting viewport and rendering splash...");
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
 
@@ -277,8 +317,15 @@ namespace Robust.Client.Graphics.Clyde
         {
             var extensions = GetGLExtensions();
 
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            // To prevent trouble, use a version of "0.0" for GLES
+            var major = 0;
+            var minor = 0;
+
+            if (!_hasGLES)
+            {
+                major = GL.GetInteger(GetPName.MajorVersion);
+                minor = GL.GetInteger(GetPName.MinorVersion);
+            }
 
             void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, params string[] exts)
             {
@@ -304,6 +351,14 @@ namespace Robust.Client.Graphics.Clyde
             CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, "GL_ARB_sampler_objects");
             CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, "GL_ARB_texture_swizzle",
                 "GL_EXT_texture_swizzle");
+            CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, "GL_OES_vertex_array_object",
+                "GL_ARB_vertex_array_object");
+            _hasGLSrgb = !_hasGLES;
+            _hasGLReadFramebuffer = !_hasGLES;
+            _hasGLPrimitiveRestart = !_hasGLES;
+            _hasGLUniformBuffers = !_hasGLES;
+            _hasGLFancyFloatFormats = !_hasGLES;
+            Logger.DebugS("clyde.ogl", $"  GLES: {_hasGLES}");
         }
 
         private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)

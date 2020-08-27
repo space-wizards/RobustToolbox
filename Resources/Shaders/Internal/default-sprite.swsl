@@ -1,7 +1,7 @@
 
 
 void fragment() {
-    COLOR = texture(TEXTURE, UV);
+    COLOR = texture2D(TEXTURE, UV);
 }
 
 

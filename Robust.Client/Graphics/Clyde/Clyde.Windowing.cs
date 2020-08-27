@@ -164,9 +164,8 @@ namespace Robust.Client.Graphics.Clyde
 
             Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
                 Renderer.OpenGL33,
-                Renderer.OpenGL31
-                // This isn't supported at this time.
-                // Renderer.OpenGLES2
+                Renderer.OpenGL31,
+                Renderer.OpenGLES2
             } : stackalloc Renderer[] {renderer};
             
             foreach (Renderer r in renderers)
@@ -175,6 +174,8 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (_glfwWindow != null)
                 {
+                    renderer = r;
+                    _hasGLES = renderer == Renderer.OpenGLES2;
                     break;
                 }
                 // Window failed to init due to error.

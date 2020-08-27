@@ -1,18 +1,19 @@
-#version 140
-
-out vec4 FragColor;
-
-in vec2 UV;
+varying highp vec2 UV;
 
 uniform sampler2D TEXTURE;
 uniform sampler2D lightMap;
-uniform vec4 modulate;
+uniform highp vec4 modulate;
 
+#ifdef HAS_UNIFORM_BUFFERS
 layout (std140) uniform uniformConstants
 {
     vec2 SCREEN_PIXEL_SIZE;
     float TIME;
 };
+#else
+uniform highp vec2 SCREEN_PIXEL_SIZE;
+uniform highp float TIME;
+#endif
 
 uniform vec2 TEXTURE_PIXEL_SIZE;
 
@@ -20,11 +21,11 @@ uniform vec2 TEXTURE_PIXEL_SIZE;
 
 void main()
 {
-    vec4 FRAGCOORD = gl_FragCoord;
+    highp vec4 FRAGCOORD = gl_FragCoord;
 
-    vec4 COLOR = vec4(0);
+    lowp vec4 COLOR = vec4(0.0);
 
     // [SHADER_CODE]
 
-    FragColor = COLOR;
+    gl_FragColor = COLOR;
 }

@@ -79,7 +79,9 @@ namespace Robust.Client.Graphics.Clyde
 
             if (pixelType == typeof(Rgba32))
             {
-                internalFormat = actualParams.Srgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
+                // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.
+                // Shaders are expected to compensate for this
+                internalFormat = (actualParams.Srgb && _hasGLSrgb) ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
                 pixelDataFormat = PixelFormat.Rgba;
                 pixelDataType = PixelType.UnsignedByte;
             }

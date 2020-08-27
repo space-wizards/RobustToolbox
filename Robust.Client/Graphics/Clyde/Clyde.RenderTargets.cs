@@ -41,7 +41,11 @@ namespace Robust.Client.Graphics.Clyde
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
             var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
-            var boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
+            var boundReadBuffer = 0;
+            if (_hasGLReadFramebuffer)
+            {
+                boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
+            }
 
             // Generate FBO.
             var fbo = new GLHandle(GL.GenFramebuffer());
@@ -66,9 +70,30 @@ namespace Robust.Client.Graphics.Clyde
 
                 ApplySampleParameters(sampleParameters);
 
+                var colorFormat = format.ColorFormat;
+                if ((!_hasGLSrgb) && (colorFormat == RTCF.Rgba8Srgb))
+                {
+                    // If SRGB is not supported, switch formats.
+                    // The shaders will have to compensate.
+                    colorFormat = RTCF.Rgba8;
+                }
+                // This isn't good
+                if (!_hasGLFancyFloatFormats)
+                {
+                    switch (colorFormat)
+                    {
+                        case RTCF.R32F:
+                        case RTCF.RG32F:
+                        case RTCF.R11FG11FB10F:
+                        case RTCF.Rgba16F:
+                            colorFormat = RTCF.Rgba8;
+                            break;
+                    }
+                }
+
                 // Make sure to specify the correct pixel type and formats even if we're not uploading any data.
                 // Not doing this (just sending red/byte) is fine on desktop GL but illegal on ES.
-                var (internalFormat, pixFormat, pixType) = format.ColorFormat switch
+                var (internalFormat, pixFormat, pixType) = colorFormat switch
                 {
                     // using block comments to force formatters to not fuck this up.
                     RTCF.Rgba8 => /*       */(PIF.Rgba8, /*       */PF.Rgba, /**/PT.UnsignedByte),
@@ -86,9 +111,18 @@ namespace Robust.Client.Graphics.Clyde
                 GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixFormat,
                     pixType, IntPtr.Zero);
 
-                GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-                    texture.Handle,
-                    0);
+                if (!_hasGLES)
+                {
+                    GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                        texture.Handle,
+                        0);
+                }
+                else
+                {
+                    // OpenGL ES uses a different name, and has an odd added target argument
+                    GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                        TextureTarget.Texture2D, texture.Handle, 0);
+                }
 
                 textureObject = GenTexture(texture, size, name == null ? null : $"{name}-color");
             }
@@ -107,7 +141,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 estPixSize += 4;
 
-                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment,
+                    RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.StencilAttachment,
                     RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
             }
 
@@ -118,7 +154,10 @@ namespace Robust.Client.Graphics.Clyde
 
             // Re-bind previous framebuffers.
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+            if (_hasGLReadFramebuffer)
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+            }
 
             var pressure = estPixSize * size.X * size.Y;
 

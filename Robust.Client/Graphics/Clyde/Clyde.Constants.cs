@@ -34,8 +34,11 @@ namespace Robust.Client.Graphics.Clyde
 
         private enum Renderer
         {
+            // Default: Try all supported renderers (not necessarily the renderers shown here)
             Default = default,
-            OpenGL31 = 1,
+            OpenGL33 = 1,
+            OpenGL31 = 2,
+            OpenGLES2 = 3,
             Explode = -1,
         }
     }

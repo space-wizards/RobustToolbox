@@ -30,10 +30,14 @@ using Keys = OpenToolkit.GraphicsLibraryFramework.Keys;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 using MouseButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
 using OpenGlProfile = OpenToolkit.GraphicsLibraryFramework.OpenGlProfile;
+using ClientApi = OpenToolkit.GraphicsLibraryFramework.ClientApi;
+using ContextApi = OpenToolkit.GraphicsLibraryFramework.ContextApi;
 using Window = OpenToolkit.GraphicsLibraryFramework.Window;
 using WindowHintBool = OpenToolkit.GraphicsLibraryFramework.WindowHintBool;
 using WindowHintInt = OpenToolkit.GraphicsLibraryFramework.WindowHintInt;
 using WindowHintOpenGlProfile = OpenToolkit.GraphicsLibraryFramework.WindowHintOpenGlProfile;
+using WindowHintClientApi = OpenToolkit.GraphicsLibraryFramework.WindowHintClientApi;
+using WindowHintContextApi = OpenToolkit.GraphicsLibraryFramework.WindowHintContextApi;
 using WindowHintString = OpenToolkit.GraphicsLibraryFramework.WindowHintString;
 
 namespace Robust.Client.Graphics.Clyde
@@ -158,32 +162,25 @@ namespace Robust.Client.Graphics.Clyde
 
             var renderer = (Renderer) _configurationManager.GetCVar<int>("display.renderer");
 
-            if (renderer == Renderer.Default)
+            Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
+                Renderer.OpenGL33,
+                Renderer.OpenGL31
+                // This isn't supported at this time.
+                // Renderer.OpenGLES2
+            } : stackalloc Renderer[] {renderer};
+            
+            foreach (Renderer r in renderers)
             {
-                // Try OpenGL Core 3.3
-                GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
-                GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-                GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+                CreateWindowForRenderer(r);
 
-                _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
-
-                if (_glfwWindow == null)
+                if (_glfwWindow != null)
                 {
-                    // Window failed to init due to error.
-                    var err = GLFW.GetErrorRaw(out _);
-
-                    if (err == ErrorCode.VersionUnavailable)
-                    {
-                        Logger.DebugS("clyde.win", "OpenGL Core 3.3 unsupported, trying OpenGL 3.1");
-
-                        CreateWindowGl31();
-                    }
+                    break;
                 }
-            }
-            else if (renderer == Renderer.OpenGL31)
-            {
-                CreateWindowGl31();
+                // Window failed to init due to error.
+                // Try not to treat the error code seriously.
+                var code = GLFW.GetError(out string desc);
+                Logger.DebugS("clyde.win", $"{r} unsupported: [${code}] ${desc}");
             }
 
             if (_glfwWindow == null)
@@ -253,13 +250,37 @@ namespace Robust.Client.Graphics.Clyde
 
             return true;
 
-            void CreateWindowGl31()
+            void CreateWindowForRenderer(Renderer r)
             {
-                GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
-                GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
-                GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-
+                if (r == Renderer.OpenGL33)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+                }
+                else if (r == Renderer.OpenGL31)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                }
+                else if (r == Renderer.OpenGLES2)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 2);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 0);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
+                    // GLES2 is initialized through EGL to allow ANGLE usage.
+                    // (It may be an idea to make this a configuration cvar)
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                }
                 _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
             }
         }

@@ -68,6 +68,14 @@ namespace Robust.Shared.Utility
             return read;
         }
 
+        public override int ReadByte()
+        {
+            Span<byte> span = stackalloc byte[1];
+            var read = Read(span);
+
+            return read == 0 ? -1 : span[0];
+        }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             throw new NotSupportedException();
@@ -88,6 +96,12 @@ namespace Robust.Shared.Utility
         {
             _hash.AppendData(buffer);
             _wrapping.Write(buffer);
+        }
+
+        public override void WriteByte(byte value)
+        {
+            Span<byte> span = stackalloc byte[] {value};
+            Write(span);
         }
 
         public override bool CanRead => _wrapping.CanRead;

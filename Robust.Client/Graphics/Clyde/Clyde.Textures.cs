@@ -70,7 +70,9 @@ namespace Robust.Client.Graphics.Clyde
             var copy = FlipClone(image);
 
             var texture = new GLHandle((uint) GL.GenTexture());
+            CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
+            CheckGlError();
             ApplySampleParameters(actualParams.SampleParameters);
 
             PixelInternalFormat internalFormat;
@@ -134,6 +136,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, copy.Width, copy.Height, 0,
                         pixelDataFormat, pixelDataType, (IntPtr) ptr);
+                    CheckGlError();
                 }
             }
 
@@ -142,22 +145,26 @@ namespace Robust.Client.Graphics.Clyde
             return GenTexture(texture, (copy.Width, copy.Height), name, pressureEst);
         }
 
-        private static void ApplySampleParameters(TextureSampleParameters? sampleParameters)
+        private void ApplySampleParameters(TextureSampleParameters? sampleParameters)
         {
             var actualParams = sampleParameters ?? TextureSampleParameters.Default;
             if (actualParams.Filter)
             {
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
                     (int) TextureMinFilter.Linear);
+                CheckGlError();
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
                     (int) TextureMagFilter.Linear);
+                CheckGlError();
             }
             else
             {
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter,
                     (int) TextureMinFilter.Nearest);
+                CheckGlError();
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter,
                     (int) TextureMagFilter.Nearest);
+                CheckGlError();
             }
 
             switch (actualParams.WrapMode)
@@ -165,24 +172,31 @@ namespace Robust.Client.Graphics.Clyde
                 case TextureWrapMode.None:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
                         (int) OGLTextureWrapMode.ClampToEdge);
+                    CheckGlError();
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
                         (int) OGLTextureWrapMode.ClampToEdge);
+                    CheckGlError();
                     break;
                 case TextureWrapMode.Repeat:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
                         (int) OGLTextureWrapMode.Repeat);
+                    CheckGlError();
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
                         (int) OGLTextureWrapMode.Repeat);
+                    CheckGlError();
                     break;
                 case TextureWrapMode.MirroredRepeat:
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS,
                         (int) OGLTextureWrapMode.MirroredRepeat);
+                    CheckGlError();
                     GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT,
                         (int) OGLTextureWrapMode.MirroredRepeat);
+                    CheckGlError();
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            CheckGlError();
         }
 
         private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name, long memoryPressure=0)
@@ -221,6 +235,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.DeleteTexture(loadedTexture.OpenGLObject.Handle);
+            CheckGlError();
             _loadedTextures.Remove(textureHandle);
             //GC.RemoveMemoryPressure(loadedTexture.MemoryPressure);
         }

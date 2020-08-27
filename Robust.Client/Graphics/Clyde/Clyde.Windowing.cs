@@ -466,6 +466,7 @@ namespace Robust.Client.Graphics.Clyde
                 _pixelRatio = _framebufferSize / _windowSize;
 
                 GL.Viewport(0, 0, fbW, fbH);
+                CheckGlError();
                 if (fbW != 0 && fbH != 0)
                 {
                     _mainViewport.Dispose();

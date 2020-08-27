@@ -99,6 +99,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Only handles positions, no other vertex data necessary.
                 _occlusionVao = new GLHandle(GL.GenVertexArray());
                 GL.BindVertexArray(_occlusionVao.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
 
@@ -110,6 +111,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vector3), IntPtr.Zero);
                 GL.EnableVertexAttribArray(0);
+                CheckGlError();
             }
 
             {
@@ -118,6 +120,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 _occlusionMaskVao = new GLHandle(GL.GenVertexArray());
                 GL.BindVertexArray(_occlusionMaskVao.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionMaskVao, nameof(_occlusionMaskVao));
 
@@ -129,6 +132,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, sizeof(Vector2), IntPtr.Zero);
                 GL.EnableVertexAttribArray(0);
+                CheckGlError();
             }
 
             // FOV FBO.
@@ -144,6 +148,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureMinFilter, (int) All.Linear);
                 GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapS, (int) All.Repeat);
                 GL.SamplerParameter(_fovFilterSampler.Handle, SamplerParameterName.TextureWrapT, (int) All.Repeat);
+                CheckGlError();
             }
 
             // Shadow FBO.
@@ -205,10 +210,12 @@ namespace Robust.Client.Graphics.Clyde
                 // Once with back face culling like regular lighting.
                 // Then once with front face culling for the final FOV pass (so you see "into" walls).
                 GL.CullFace(CullFaceMode.Back);
+                CheckGlError();
 
                 DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
 
                 GL.CullFace(CullFaceMode.Front);
+                CheckGlError();
 
                 DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
             }
@@ -274,8 +281,10 @@ namespace Robust.Client.Graphics.Clyde
                 _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
                 // Shift viewport around so we write to the correct quadrant of the depth map.
                 GL.Viewport(step * i, viewportY, step, 1);
+                CheckGlError();
 
                 GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+                CheckGlError();
                 _debugStats.LastGLDrawCalls += 1;
             }
         }
@@ -285,26 +294,38 @@ namespace Robust.Client.Graphics.Clyde
             const float arbitraryDistanceMax = 1234;
 
             GL.Enable(EnableCap.DepthTest);
+            CheckGlError();
             GL.DepthFunc(DepthFunction.Lequal);
+            CheckGlError();
             GL.DepthMask(true);
+            CheckGlError();
 
             GL.Enable(EnableCap.CullFace);
+            CheckGlError();
             GL.FrontFace(FrontFaceDirection.Cw);
+            CheckGlError();
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.FramebufferHandle.Handle);
+            CheckGlError();
             GL.ClearDepth(1);
+            CheckGlError();
             GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
+            CheckGlError();
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
+            CheckGlError();
 
             GL.BindVertexArray(_occlusionVao.Handle);
+            CheckGlError();
 
             _fovCalculationProgram.Use();
         }
 
-        private static void FinalizeDepthDraw()
+        private void FinalizeDepthDraw()
         {
             GL.Disable(EnableCap.DepthTest);
+            CheckGlError();
             GL.Disable(EnableCap.CullFace);
+            CheckGlError();
         }
 
         private void DrawLightsAndFov(Viewport viewport, Box2 worldBounds, IEye eye)
@@ -326,6 +347,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 PrepareDepthDraw(RtToLoaded(_shadowRenderTarget));
                 GL.CullFace(CullFaceMode.Back);
+                CheckGlError();
 
                 if (_lightManager.DrawShadows)
                 {
@@ -341,11 +363,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, RtToLoaded(viewport.LightRenderTarget).FramebufferHandle.Handle);
+            CheckGlError();
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            CheckGlError();
 
             var (lightW, lightH) = GetLightMapSize(viewport.Size);
             GL.Viewport(0, 0, lightW, lightH);
+            CheckGlError();
 
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
@@ -354,6 +379,7 @@ namespace Robust.Client.Graphics.Clyde
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.One);
+            CheckGlError();
 
             var lastRange = float.NaN;
             var lastPower = float.NaN;
@@ -430,6 +456,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            CheckGlError();
 
             ApplyLightingFovToBuffer(viewport, eye);
 
@@ -439,6 +466,7 @@ namespace Robust.Client.Graphics.Clyde
 
             BindRenderTargetFull(viewport.RenderTarget);
             GL.Viewport(0, 0, viewport.Size.X, viewport.Size.Y);
+            CheckGlError();
 
             Array.Clear(lights, 0, count);
 
@@ -498,6 +526,7 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(BlurOntoWalls));
 
             GL.Disable(EnableCap.Blend);
+            CheckGlError();
             CalcScreenMatrices(viewport.Size, out var proj, out var view);
             SetProjViewBuffer(proj, view);
 
@@ -509,6 +538,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var size = viewport.WallBleedIntermediateRenderTarget1.Size;
             GL.Viewport(0, 0, size.X, size.Y);
+            CheckGlError();
 
             // Initially we're pulling from the light render target.
             // So we set it out of the loop so
@@ -545,6 +575,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             GL.Enable(EnableCap.Blend);
+            CheckGlError();
             // We didn't trample over the old _currentMatrices so just roll it back.
             SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
@@ -556,7 +587,9 @@ namespace Robust.Client.Graphics.Clyde
             BindRenderTargetFull(viewport.LightRenderTarget);
 
             GL.Viewport(0, 0, viewport.LightRenderTarget.Size.X, viewport.LightRenderTarget.Size.Y);
+            CheckGlError();
             GL.Disable(EnableCap.Blend);
+            CheckGlError();
 
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
@@ -567,11 +600,14 @@ namespace Robust.Client.Graphics.Clyde
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
             GL.BindVertexArray(_occlusionMaskVao.Handle);
+            CheckGlError();
 
             GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
                 IntPtr.Zero);
+            CheckGlError();
 
             GL.Enable(EnableCap.Blend);
+            CheckGlError();
         }
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)
@@ -604,12 +640,15 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLSamplerObjects)
             {
                 GL.BindSampler(0, _fovFilterSampler.Handle);
+                CheckGlError();
             }
             else
             {
                 // OpenGL why do you torture me so.
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Linear);
+                CheckGlError();
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Linear);
+                CheckGlError();
             }
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -621,11 +660,14 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLSamplerObjects)
             {
                 GL.BindSampler(0, 0);
+                CheckGlError();
             }
             else
             {
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)All.Nearest);
+                CheckGlError();
                 GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)All.Nearest);
+                CheckGlError();
             }
         }
 
@@ -813,11 +855,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Upload geometry to OpenGL.
                 GL.BindVertexArray(_occlusionVao.Handle);
+                CheckGlError();
 
                 _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
                 _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
 
                 GL.BindVertexArray(_occlusionMaskVao.Handle);
+                CheckGlError();
 
                 _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(..ami));
                 _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(..imi));

@@ -175,17 +175,21 @@ namespace Robust.Client.Graphics.Clyde
                         var rt = _renderTargets[command.RenderTarget.RenderTarget];
                         BindRenderTargetImmediate(rt);
                         GL.Viewport(0, 0, rt.Size.X, rt.Size.Y);
+                        CheckGlError();
                         break;
 
                     case RenderCommandType.Viewport:
                         ref var vp = ref command.Viewport.Viewport;
                         GL.Viewport(vp.Left, vp.Bottom, vp.Width, vp.Height);
+                        CheckGlError();
                         break;
 
                     case RenderCommandType.Clear:
                         ref var color = ref command.Clear.Color;
                         GL.ClearColor(color.R, color.G, color.B, color.A);
+                        CheckGlError();
                         GL.Clear(ClearBufferMask.ColorBufferBit);
+                        CheckGlError();
                         break;
 
                     default:
@@ -199,11 +203,14 @@ namespace Robust.Client.Graphics.Clyde
             var loadedTexture = _loadedTextures[command.TextureId];
 
             GL.BindVertexArray(BatchVAO.Handle);
+            CheckGlError();
 
             var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
 
             GL.ActiveTexture(TextureUnit.Texture0);
+            CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
+            CheckGlError();
 
             if (_lightingReady && loaded.HasLighting)
             {
@@ -231,10 +238,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 GL.DrawElements(primitiveType, command.Count, DrawElementsType.UnsignedShort,
                     command.StartIndex * sizeof(ushort));
+                CheckGlError();
             }
             else
             {
                 GL.DrawArrays(primitiveType, command.StartIndex, command.Count);
+                CheckGlError();
             }
 
             _debugStats.LastGLDrawCalls += 1;
@@ -257,6 +266,7 @@ namespace Robust.Client.Graphics.Clyde
         private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
             GL.BindVertexArray(QuadVAO.Handle);
+            CheckGlError();
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
             (rectTransform.R0C2, rectTransform.R1C2) = a;
@@ -265,6 +275,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _debugStats.LastGLDrawCalls += 1;
             GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+            CheckGlError();
         }
 
         /// <summary>
@@ -276,6 +287,7 @@ namespace Robust.Client.Graphics.Clyde
             BreakBatch();
 
             GL.BindVertexArray(BatchVAO.Handle);
+            CheckGlError();
 
             _debugStats.LargestBatchVertices = Math.Max(BatchVertexIndex, _debugStats.LargestBatchVertices);
             _debugStats.LargestBatchIndices = Math.Max(BatchIndexIndex, _debugStats.LargestBatchIndices);
@@ -325,23 +337,29 @@ namespace Robust.Client.Graphics.Clyde
                 if (!oldIsScissoring)
                 {
                     GL.Enable(EnableCap.ScissorTest);
+                    CheckGlError();
                 }
 
                 // Don't forget to flip it, these coordinates have bottom left as origin.
                 // TODO: Broken when rendering to non-screen render targets.
                 GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+                CheckGlError();
             }
             else if (oldIsScissoring)
             {
                 GL.Disable(EnableCap.ScissorTest);
+                CheckGlError();
             }
         }
 
         private void ClearFramebuffer(Color color)
         {
             GL.ClearColor(color.ConvertOpenTK());
+            CheckGlError();
             GL.ClearStencil(0);
+            CheckGlError();
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.StencilBufferBit);
+            CheckGlError();
         }
 
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
@@ -406,16 +424,21 @@ namespace Robust.Client.Graphics.Clyde
                 if (!_isStencilling)
                 {
                     GL.Enable(EnableCap.StencilTest);
+                    CheckGlError();
                     _isStencilling = true;
                 }
 
                 GL.StencilMask(instance.Stencil.WriteMask);
+                CheckGlError();
                 GL.StencilFunc(ToGLStencilFunc(instance.Stencil.Func), instance.Stencil.Ref, instance.Stencil.ReadMask);
+                CheckGlError();
                 GL.StencilOp(StencilOp.Keep, StencilOp.Keep, ToGLStencilOp(instance.Stencil.Op));
+                CheckGlError();
             }
             else if (_isStencilling)
             {
                 GL.Disable(EnableCap.StencilTest);
+                CheckGlError();
                 _isStencilling = false;
             }
 
@@ -748,14 +771,21 @@ namespace Robust.Client.Graphics.Clyde
             _queuedScreenshots.RemoveAll(p => p.type == type);
 
             GL.CreateBuffers(1, out uint pbo);
+            CheckGlError();
             GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+            CheckGlError();
             GL.BufferData(BufferTarget.PixelPackBuffer, ScreenSize.X * ScreenSize.Y * sizeof(Rgb24), IntPtr.Zero,
                 BufferUsageHint.StreamRead);
+            CheckGlError();
             GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
+            CheckGlError();
             GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            CheckGlError();
             var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
+            CheckGlError();
 
             GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+            CheckGlError();
 
             _transferringScreenshots.Add((pbo, fence, ScreenSize, image => delegates.ForEach(p => p.callback(image))));
         }
@@ -773,11 +803,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 int status;
                 GL.GetSync(fence, SyncParameterName.SyncStatus, sizeof(int), null, &status);
+                CheckGlError();
 
                 if (status == (int) All.Signaled)
                 {
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
+                    CheckGlError();
                     var ptr = GL.MapBuffer(BufferTarget.PixelPackBuffer, BufferAccess.ReadOnly);
+                    CheckGlError();
 
                     var packSpan = new ReadOnlySpan<Rgb24>((void*) ptr, width * height);
 
@@ -787,9 +820,13 @@ namespace Robust.Client.Graphics.Clyde
                     FlipCopy(packSpan, imageSpan, width, height);
 
                     GL.UnmapBuffer(BufferTarget.PixelPackBuffer);
+                    CheckGlError();
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
+                    CheckGlError();
                     GL.DeleteBuffer(pbo);
+                    CheckGlError();
                     GL.DeleteSync(fence);
+                    CheckGlError();
 
                     _transferringScreenshots.Remove(screenshot);
 
@@ -811,11 +848,13 @@ namespace Robust.Client.Graphics.Clyde
 
             var (width, height) = state.RenderTarget.Size;
             GL.Viewport(0, 0, width, height);
+            CheckGlError();
         }
 
         private void SetViewportImmediate(Box2i box)
         {
             GL.Viewport(box.Left, box.Bottom, box.Width, box.Height);
+            CheckGlError();
         }
 
         private void ClearRenderState()

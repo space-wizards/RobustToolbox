@@ -48,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Bind color attachment to FBO.
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
+            CheckGlError();
 
             ObjectLabelMaybe(ObjectLabelIdentifier.Framebuffer, fbo, name);
 
@@ -61,8 +62,10 @@ namespace Robust.Client.Graphics.Clyde
             // Color attachment.
             {
                 var texture = new GLHandle(GL.GenTexture());
+                CheckGlError();
 
                 GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
+                CheckGlError();
 
                 ApplySampleParameters(sampleParameters);
 
@@ -85,10 +88,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixFormat,
                     pixType, IntPtr.Zero);
+                CheckGlError();
 
                 GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                     texture.Handle,
                     0);
+                CheckGlError();
 
                 textureObject = GenTexture(texture, size, name == null ? null : $"{name}-color");
             }
@@ -98,27 +103,33 @@ namespace Robust.Client.Graphics.Clyde
             {
                 depthStencilBuffer = new GLHandle(GL.GenRenderbuffer());
                 GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.Renderbuffer, depthStencilBuffer,
                     name == null ? null : $"{name}-depth-stencil");
 
                 GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, width,
                     height);
+                CheckGlError();
 
                 estPixSize += 4;
 
                 GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
                     RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                CheckGlError();
             }
 
             // This should always pass but OpenGL makes it easy to check for once so let's.
             var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            CheckGlError();
             DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
                 $"new framebuffer has bad status {status}");
 
             // Re-bind previous framebuffers.
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
+            CheckGlError();
             GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+            CheckGlError();
 
             var pressure = estPixSize * size.X * size.Y;
 
@@ -149,12 +160,14 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(!renderTarget.IsWindow, "Cannot delete window-backed render targets directly.");
 
             GL.DeleteFramebuffer(renderTarget.FramebufferHandle.Handle);
+            CheckGlError();
             _renderTargets.Remove(handle);
             DeleteTexture(renderTarget.TextureHandle);
 
             if (renderTarget.DepthStencilHandle != default)
             {
                 GL.DeleteRenderbuffer(renderTarget.DepthStencilHandle.Handle);
+                CheckGlError();
             }
 
             //GC.RemoveMemoryPressure(renderTarget.MemoryPressure);
@@ -178,15 +191,17 @@ namespace Robust.Client.Graphics.Clyde
             return _renderTargets[rt.Handle];
         }
 
-        private static void BindRenderTargetImmediate(LoadedRenderTarget rt)
+        private void BindRenderTargetImmediate(LoadedRenderTarget rt)
         {
             if (rt.IsWindow)
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                CheckGlError();
             }
             else
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, rt.FramebufferHandle.Handle);
+                CheckGlError();
             }
         }
 

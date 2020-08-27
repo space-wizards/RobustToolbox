@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -65,6 +66,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLKhrDebug;
         private bool _hasGLTextureSwizzle;
         private bool _hasGLSamplerObjects;
+        private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -145,6 +147,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.GridChanged += _updateOnGridModified;
 
             _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
+            _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
             _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
             _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
@@ -178,10 +181,15 @@ namespace Robust.Client.Graphics.Clyde
             DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
+            CheckGlError();
             GL.Enable(EnableCap.FramebufferSrgb);
+            CheckGlError();
             GL.Enable(EnableCap.PrimitiveRestart);
+            CheckGlError();
             GL.PrimitiveRestartIndex(ushort.MaxValue);
+            CheckGlError();
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            CheckGlError();
 
             LoadStockTextures();
             LoadStockShaders();
@@ -191,6 +199,7 @@ namespace Robust.Client.Graphics.Clyde
             _renderHandle = new RenderHandle(this);
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            CheckGlError();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -221,6 +230,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+
+                CheckGlError();
             }
 
             // Batch rendering
@@ -238,6 +249,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
 
+                CheckGlError();
+
                 BatchEBO = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));
             }
@@ -247,6 +260,7 @@ namespace Robust.Client.Graphics.Clyde
             ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
 
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
+            CheckGlError();
 
             UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
                 nameof(UniformConstantsUBO));
@@ -254,6 +268,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
                 UniformConstantsUBO.ObjectHandle);
+            CheckGlError();
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),

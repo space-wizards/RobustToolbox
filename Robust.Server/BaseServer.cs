@@ -80,6 +80,7 @@ namespace Robust.Server
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
@@ -320,6 +321,8 @@ namespace Robust.Server
             AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
 
             _watchdogApi.Initialize();
+
+            _stringSerializer.LockStrings();
 
             return false;
         }

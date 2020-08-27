@@ -50,6 +50,8 @@ namespace Robust.Shared
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<ITextMacroFactory, TextMacroFactory>();
+            IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            IoCManager.Register<RobustMappedStringSerializer, RobustMappedStringSerializer>();
         }
     }
 }

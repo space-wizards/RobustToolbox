@@ -38,8 +38,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Input\CommandBindMapping.cs" />
+    <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
+      <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
+    </Compile>
     <Compile Update="Serialization\RobustSerializer.Handshake.cs">
       <DependentUpon>RobustSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
+      <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />

@@ -285,7 +285,7 @@ namespace Robust.Server
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
             IoCManager.Resolve<IPrototypeManager>().LoadedData +=
-                IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
+                (yaml, name) => _stringSerializer.AddStrings(yaml);
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;

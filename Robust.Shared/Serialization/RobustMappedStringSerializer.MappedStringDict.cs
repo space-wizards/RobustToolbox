@@ -31,10 +31,9 @@ namespace Robust.Shared.Serialization
             private string[]? _mappedStrings;
             private Dictionary<string, int>? _stringMapping;
 
-            // When constructing the mapped strings server side, it can be done in multiple threads at once.
-            // To avoid lock contention, each thread will lock to add a single list.
-            // This then gets flattened when the final list gets made.
-            private readonly List<List<string>> _buildingBatches = new List<List<string>>();
+            // HashSet<string> of strings that we are currently building.
+            // This should be added to in a thread-safe manner with TryAddString during building.
+            private readonly HashSet<string> _buildingStrings = new HashSet<string>();
 
             public int StringCount => _mappedStrings?.Length ?? 0;
 
@@ -47,12 +46,9 @@ namespace Robust.Shared.Serialization
             {
                 Locked = true;
 
-                // Flatten string mapping, remove duplicates, and sort.
-                _mappedStrings = _buildingBatches
-                    .SelectMany(p => p)
-                    .Distinct()
-                    .OrderBy(p => p)
-                    .ToArray();
+                // Sort to ensure determinism even if addition order is different.
+                _mappedStrings = _buildingStrings.ToArray();
+                Array.Sort(_mappedStrings);
 
                 // Create dictionary.
                 _stringMapping = GenMapDict(_mappedStrings);
@@ -166,7 +162,7 @@ namespace Robust.Shared.Serialization
                     throw new InvalidOperationException("Mapped strings are locked, will not clear.");
                 }
 
-                _buildingBatches.Clear();
+                _buildingStrings.Clear();
                 _mappedStrings = null;
                 _stringMapping = null;
             }
@@ -188,205 +184,13 @@ namespace Robust.Shared.Serialization
             /// <exception cref="InvalidOperationException">
             /// Thrown if the string is not normalized (<see cref="String.IsNormalized()"/>).
             /// </exception>
-            public void AddSingleString(string str)
+            public void AddString(string str)
             {
                 if (Locked)
                 {
                     throw new InvalidOperationException("Mapped strings are locked, will not add.");
                 }
 
-                var batch = new List<string>();
-                AddStringInternal(str, batch);
-                CommitBatch(batch);
-            }
-
-            /// <summary>
-            /// Add the constant strings from an <see cref="Assembly"/> to the
-            /// mapping.
-            /// </summary>
-            /// <param name="asm">The assembly from which to collect constant strings.</param>
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            public unsafe void AddStrings(Assembly asm)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                var batch = new List<string>();
-                var sw = Stopwatch.StartNew();
-                if (asm.TryGetRawMetadata(out var blob, out var len))
-                {
-                    var reader = new MetadataReader(blob, len);
-                    var usrStrHandle = default(UserStringHandle);
-                    do
-                    {
-                        var userStr = reader.GetUserString(usrStrHandle);
-                        if (userStr != "")
-                        {
-                            // Because these strings are in a loaded assembly they're already interned.
-                            // This intern call retrieves the interned instance.
-                            AddStringInternal(string.Intern(userStr.Normalize()), batch);
-                        }
-
-                        usrStrHandle = reader.GetNextHandle(usrStrHandle);
-                    } while (usrStrHandle != default);
-
-                    var strHandle = default(StringHandle);
-                    do
-                    {
-                        var str = reader.GetString(strHandle);
-                        if (str != "")
-                        {
-                            // Ditto about interning.
-                            AddStringInternal(string.Intern(str.Normalize()), batch);
-                        }
-
-                        strHandle = reader.GetNextHandle(strHandle);
-                    } while (strHandle != default);
-                }
-
-                CommitBatch(batch);
-
-                var added = batch.Count;
-                _sawmill.Debug($"Mapping {added} strings from {asm.GetName().Name} took {sw.ElapsedMilliseconds}ms.");
-            }
-
-            /// <summary>
-            /// Add strings from the given <see cref="YamlStream"/> to the mapping.
-            /// </summary>
-            /// <remarks>
-            /// Strings are taken from YAML anchors, tags, and leaf nodes.
-            /// </remarks>
-            /// <param name="yaml">The YAML to collect strings from.</param>
-            /// <param name="name">The stream name. Only used for logging.</param>
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            public void AddStrings(YamlStream yaml, string name)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                var batch = new List<string>();
-                var sw = Stopwatch.StartNew();
-                foreach (var doc in yaml)
-                {
-                    foreach (var node in doc.AllNodes)
-                    {
-                        var a = node.Anchor;
-                        if (!string.IsNullOrEmpty(a))
-                        {
-                            AddStringInternal(a, batch);
-                        }
-
-                        var t = node.Tag;
-                        if (!string.IsNullOrEmpty(t))
-                        {
-                            AddStringInternal(t, batch);
-                        }
-
-                        if (!(node is YamlScalarNode scalar))
-                            continue;
-
-                        var v = scalar.Value;
-                        if (string.IsNullOrEmpty(v))
-                        {
-                            continue;
-                        }
-
-                        AddStringInternal(v, batch);
-                    }
-                }
-
-                CommitBatch(batch);
-
-                var added = batch.Count;
-                _sawmill.Debug($"Mapping {added} string candidates from {name} took {sw.ElapsedMilliseconds}ms.");
-            }
-
-            /// <summary>
-            /// Add strings from the given <see cref="JObject"/> to the mapping.
-            /// </summary>
-            /// <remarks>
-            /// Strings are taken from JSON property names and string nodes.
-            /// </remarks>
-            /// <param name="obj">The JSON to collect strings from.</param>
-            /// <param name="name">The stream name. Only used for logging.</param>
-            public void AddStrings(JObject obj, string name)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                var batch = new List<string>();
-                var sw = Stopwatch.StartNew();
-                foreach (var node in obj.DescendantsAndSelf())
-                {
-                    switch (node)
-                    {
-                        case JValue value:
-                        {
-                            if (value.Type != JTokenType.String)
-                            {
-                                continue;
-                            }
-
-                            var v = value.Value?.ToString();
-                            if (string.IsNullOrEmpty(v))
-                            {
-                                continue;
-                            }
-
-                            AddStringInternal(v, batch);
-                            break;
-                        }
-                        case JProperty prop:
-                        {
-                            var propName = prop.Name;
-                            if (string.IsNullOrEmpty(propName))
-                            {
-                                continue;
-                            }
-
-                            AddStringInternal(propName, batch);
-                            break;
-                        }
-                    }
-                }
-
-                CommitBatch(batch);
-
-                var added = batch.Count;
-                _sawmill.Debug($"Mapping {added} strings from {name} took {sw.ElapsedMilliseconds}ms.");
-            }
-
-            /// <summary>
-            /// Add strings from the given enumeration to the mapping.
-            /// </summary>
-            /// <param name="strings">The strings to add.</param>
-            /// <param name="providerName">The source provider of the strings to be logged.</param>
-            [MethodImpl(MethodImplOptions.Synchronized)]
-            public void AddStrings(IEnumerable<string> strings, string providerName)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                var batch = new List<string>();
-                foreach (var str in strings)
-                {
-                    AddStringInternal(str, batch);
-                }
-
-                CommitBatch(batch);
-                _sawmill.Debug($"Mapping {batch.Count} strings from {providerName}.");
-            }
-
-            private static void AddStringInternal(string str, List<string> batch)
-            {
                 if (string.IsNullOrEmpty(str))
                 {
                     return;
@@ -409,10 +213,15 @@ namespace Robust.Shared.Serialization
 
                 if (str.Length <= MinMappedStringSize) return;
 
+                if (!TryAddString(str))
+                {
+                    return;
+                }
+
                 var symTrimmedStr = str.Trim(TrimmableSymbolChars);
                 if (symTrimmedStr != str)
                 {
-                    AddStringInternal(symTrimmedStr, batch);
+                    AddString(symTrimmedStr);
                 }
 
                 if (str.Contains('/'))
@@ -423,7 +232,8 @@ namespace Robust.Shared.Serialization
                         for (var l = 1; l <= parts.Length - i; ++l)
                         {
                             var subStr = string.Join('/', parts.Skip(i).Take(l));
-                            batch.Add(subStr);
+                            if (!TryAddString(subStr))
+                                continue;
 
                             if (!subStr.Contains('.'))
                             {
@@ -437,7 +247,7 @@ namespace Robust.Shared.Serialization
                                 {
                                     var subSubStr = string.Join('.', subParts.Skip(si).Take(sl));
                                     // ReSharper disable once InvertIf
-                                    batch.Add(subSubStr);
+                                    TryAddString(subSubStr);
                                 }
                             }
                         }
@@ -447,7 +257,7 @@ namespace Robust.Shared.Serialization
                 {
                     foreach (var substr in str.Split("_"))
                     {
-                        AddStringInternal(substr, batch);
+                        AddString(substr);
                     }
                 }
                 else if (str.Contains(" "))
@@ -456,7 +266,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (substr == str) continue;
 
-                        AddStringInternal(substr, batch);
+                        AddString(substr);
                     }
                 }
                 else
@@ -466,7 +276,7 @@ namespace Robust.Shared.Serialization
                     {
                         if (substr == str) continue;
 
-                        AddStringInternal(substr, batch);
+                        AddString(substr);
                     }
 
                     for (var si = 0; si < parts.Length; ++si)
@@ -474,20 +284,173 @@ namespace Robust.Shared.Serialization
                         for (var sl = 1; sl <= parts.Length - si; ++sl)
                         {
                             var subSubStr = String.Concat(parts.Skip(si).Take(sl));
-                            batch.Add(subSubStr);
+                            TryAddString(subSubStr);
                         }
                     }
                 }
-
-                batch.Add(str);
             }
 
-            // See normally I would call this method "AddBatch" but "commit batch" sounds cooler than it is.
-            private void CommitBatch(List<string> batch)
+            /// <summary>
+            /// Add the constant strings from an <see cref="Assembly"/> to the
+            /// mapping.
+            /// </summary>
+            /// <param name="asm">The assembly from which to collect constant strings.</param>
+            public unsafe void AddStrings(Assembly asm)
             {
-                lock (_buildingBatches)
+                if (Locked)
                 {
-                    _buildingBatches.Add(batch);
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                if (!asm.TryGetRawMetadata(out var blob, out var len))
+                    return;
+
+                var reader = new MetadataReader(blob, len);
+                var usrStrHandle = default(UserStringHandle);
+                do
+                {
+                    var userStr = reader.GetUserString(usrStrHandle);
+                    if (userStr != "")
+                    {
+                        // Because these strings are in a loaded assembly they're already interned.
+                        // This intern call retrieves the interned instance.
+                        AddString(string.Intern(userStr.Normalize()));
+                    }
+
+                    usrStrHandle = reader.GetNextHandle(usrStrHandle);
+                } while (usrStrHandle != default);
+
+                var strHandle = default(StringHandle);
+                do
+                {
+                    var str = reader.GetString(strHandle);
+                    if (str != "")
+                    {
+                        // Ditto about interning.
+                        AddString(string.Intern(str.Normalize()));
+                    }
+
+                    strHandle = reader.GetNextHandle(strHandle);
+                } while (strHandle != default);
+            }
+
+            /// <summary>
+            /// Add strings from the given <see cref="YamlStream"/> to the mapping.
+            /// </summary>
+            /// <remarks>
+            /// Strings are taken from YAML anchors, tags, and leaf nodes.
+            /// </remarks>
+            /// <param name="yaml">The YAML to collect strings from.</param>
+            public void AddStrings(YamlStream yaml)
+            {
+                if (Locked)
+                {
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                foreach (var doc in yaml)
+                {
+                    foreach (var node in doc.AllNodes)
+                    {
+                        var a = node.Anchor;
+                        if (!string.IsNullOrEmpty(a))
+                        {
+                            AddString(a);
+                        }
+
+                        var t = node.Tag;
+                        if (!string.IsNullOrEmpty(t))
+                        {
+                            AddString(t);
+                        }
+
+                        if (!(node is YamlScalarNode scalar))
+                            continue;
+
+                        var v = scalar.Value;
+                        if (string.IsNullOrEmpty(v))
+                        {
+                            continue;
+                        }
+
+                        AddString(v);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Add strings from the given <see cref="JObject"/> to the mapping.
+            /// </summary>
+            /// <remarks>
+            /// Strings are taken from JSON property names and string nodes.
+            /// </remarks>
+            /// <param name="obj">The JSON to collect strings from.</param>
+            public void AddStrings(JObject obj)
+            {
+                if (Locked)
+                {
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                foreach (var node in obj.DescendantsAndSelf())
+                {
+                    switch (node)
+                    {
+                        case JValue value:
+                        {
+                            if (value.Type != JTokenType.String)
+                            {
+                                continue;
+                            }
+
+                            var v = value.Value?.ToString();
+                            if (string.IsNullOrEmpty(v))
+                            {
+                                continue;
+                            }
+
+                            AddString(v);
+                            break;
+                        }
+                        case JProperty prop:
+                        {
+                            var propName = prop.Name;
+                            if (string.IsNullOrEmpty(propName))
+                            {
+                                continue;
+                            }
+
+                            AddString(propName);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Add strings from the given enumeration to the mapping.
+            /// </summary>
+            /// <param name="strings">The strings to add.</param>
+            public void AddStrings(IEnumerable<string> strings)
+            {
+                if (Locked)
+                {
+                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
+                }
+
+                foreach (var str in strings)
+                {
+                    AddString(str);
+                }
+            }
+
+            private bool TryAddString(string str)
+            {
+                // Yes this spends like half the CPU time of AddString in lock contention.
+                // But it's still faster than all my other attempts, so...
+                lock (_buildingStrings)
+                {
+                    return _buildingStrings.Add(str);
                 }
             }
 

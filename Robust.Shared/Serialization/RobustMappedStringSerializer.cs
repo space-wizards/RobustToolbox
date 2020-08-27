@@ -21,6 +21,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
+using static Robust.Shared.Utility.Base64Helpers;
 
 namespace Robust.Shared.Serialization
 {
@@ -460,51 +461,6 @@ namespace Robust.Shared.Serialization
         }
 
         /// <summary>
-        /// Converts a byte array such as a hash to a Base64 representation that is URL safe.
-        /// </summary>
-        /// <param name="data"></param>
-        /// <returns>A base64url string form of the byte array.</returns>
-        private static string ConvertToBase64Url(byte[]? data)
-        {
-            return data == null ? "" : ConvertToBase64Url(Convert.ToBase64String(data));
-        }
-
-        /// <summary>
-        /// Converts a a Base64 string to one that is URL safe.
-        /// </summary>
-        /// <returns>A base64url formed string.</returns>
-        private static string ConvertToBase64Url(string b64Str)
-        {
-            if (b64Str is null)
-            {
-                throw new ArgumentNullException(nameof(b64Str));
-            }
-
-            var cut = b64Str[^1] == '=' ? b64Str[^2] == '=' ? 2 : 1 : 0;
-            b64Str = new StringBuilder(b64Str).Replace('+', '-').Replace('/', '_').ToString(0, b64Str.Length - cut);
-            return b64Str;
-        }
-
-        /// <summary>
-        /// Converts a URL-safe Base64 string into a byte array.
-        /// </summary>
-        /// <param name="s">A base64url formed string.</param>
-        /// <returns>The represented byte array.</returns>
-        public byte[] ConvertFromBase64Url(string s)
-        {
-            var l = s.Length % 3;
-            var sb = new StringBuilder(s);
-            sb.Replace('-', '+').Replace('_', '/');
-            for (var i = 0; i < l; ++i)
-            {
-                sb.Append('=');
-            }
-
-            s = sb.ToString();
-            return Convert.FromBase64String(s);
-        }
-
-        /// <summary>
         /// Add a string to the constant mapping.
         /// </summary>
         /// <remarks>
@@ -525,7 +481,7 @@ namespace Robust.Shared.Serialization
         {
             if (!_net.IsClient)
             {
-                _dict.AddSingleString(str);
+                _dict.AddString(str);
             }
         }
 
@@ -534,7 +490,6 @@ namespace Robust.Shared.Serialization
         /// mapping.
         /// </summary>
         /// <param name="asm">The assembly from which to collect constant strings.</param>
-        [MethodImpl(MethodImplOptions.Synchronized)]
         public void AddStrings(Assembly asm)
         {
             if (!_net.IsClient)
@@ -550,13 +505,11 @@ namespace Robust.Shared.Serialization
         /// Strings are taken from YAML anchors, tags, and leaf nodes.
         /// </remarks>
         /// <param name="yaml">The YAML to collect strings from.</param>
-        /// <param name="name">The stream name. Only used for logging.</param>
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public void AddStrings(YamlStream yaml, string name)
+        public void AddStrings(YamlStream yaml)
         {
             if (!_net.IsClient)
             {
-                _dict.AddStrings(yaml, name);
+                _dict.AddStrings(yaml);
             }
         }
 
@@ -567,12 +520,11 @@ namespace Robust.Shared.Serialization
         /// Strings are taken from JSON property names and string nodes.
         /// </remarks>
         /// <param name="obj">The JSON to collect strings from.</param>
-        /// <param name="name">The stream name. Only used for logging.</param>
-        public void AddStrings(JObject obj, string name)
+        public void AddStrings(JObject obj)
         {
             if (!_net.IsClient)
             {
-                _dict.AddStrings(obj, name);
+                _dict.AddStrings(obj);
             }
         }
 
@@ -580,13 +532,11 @@ namespace Robust.Shared.Serialization
         /// Add strings from the given enumeration to the mapping.
         /// </summary>
         /// <param name="strings">The strings to add.</param>
-        /// <param name="providerName">The source provider of the strings to be logged.</param>
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public void AddStrings(IEnumerable<string> strings, string providerName)
+        public void AddStrings(IEnumerable<string> strings)
         {
             if (!_net.IsClient)
             {
-                _dict.AddStrings(strings, providerName);
+                _dict.AddStrings(strings);
             }
         }
 

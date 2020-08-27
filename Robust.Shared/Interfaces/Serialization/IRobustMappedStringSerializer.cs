@@ -67,8 +67,7 @@ namespace Robust.Shared.Serialization
         /// Strings are taken from YAML anchors, tags, and leaf nodes.
         /// </remarks>
         /// <param name="yaml">The YAML to collect strings from.</param>
-        /// <param name="name">The stream name. Only used for logging.</param>
-        void AddStrings(YamlStream yaml, string name);
+        void AddStrings(YamlStream yaml);
 
         /// <summary>
         /// Add strings from the given <see cref="JObject"/> to the mapping.
@@ -77,15 +76,13 @@ namespace Robust.Shared.Serialization
         /// Strings are taken from JSON property names and string nodes.
         /// </remarks>
         /// <param name="obj">The JSON to collect strings from.</param>
-        /// <param name="name">The stream name. Only used for logging.</param>
-        void AddStrings(JObject obj, string name);
+        void AddStrings(JObject obj);
 
         /// <summary>
         /// Add strings from the given enumeration to the mapping.
         /// </summary>
         /// <param name="strings">The strings to add.</param>
-        /// <param name="providerName">The source provider of the strings to be logged.</param>
-        void AddStrings(IEnumerable<string> strings, string providerName);
+        void AddStrings(IEnumerable<string> strings);
 
         /// <summary>
         /// See <see cref="RobustMappedStringSerializer.OnClientCompleteHandshake"/>.

@@ -771,29 +771,31 @@ namespace Robust.Client.Graphics.Clyde
                     // Handle faces, rules described above.
                     // Note that faces are drawn with their 'normals' facing in the described direction in 3D space.
                     // That is, they're clockwise "as viewed from the outside".
+                    // (When changing things to QuadBatchIndexWrite,
+                    // I described the behaviour correctly in this comment and then failed to implement it - 20kdc)
 
                     // North face (TL/TR)
                     if (!no || !tlV && !trV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vTRL, vTLL, vTLH, vTRH);
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTRH, vTLH, vTLL, vTRL);
                     }
 
                     // East face (TR/BR)
                     if (!eo || !brV && !trV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vBRL, vTRL, vTRH, vBRH);
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBRH, vTRH, vTRL, vBRL);
                     }
 
                     // South face (BR/BL)
                     if (!so || !brV && !blV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vBLL, vBRL, vBRH, vBLH);
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBLH, vBRH, vBRL, vBLL);
                     }
 
                     // West face (BL/TL)
                     if (!wo || !blV && !tlV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vTLL, vBLL, vBLH, vTLH);
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTLH, vBLH, vBLL, vTLL);
                     }
 
                     // Generate mask geometry.

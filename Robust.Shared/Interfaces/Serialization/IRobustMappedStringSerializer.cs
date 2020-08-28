@@ -89,6 +89,10 @@ namespace Robust.Shared.Serialization
         /// </summary>
         event Action? ClientHandshakeComplete;
 
+        /// <summary>
+        ///     Lock the string mapping so that no new strings may be added,
+        ///     and generate the strings package that can be sent to clients.
+        /// </summary>
         void LockStrings();
     }
 }

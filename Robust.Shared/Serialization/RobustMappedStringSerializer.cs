@@ -4,10 +4,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -49,11 +47,11 @@ namespace Robust.Shared.Serialization
 
         private delegate void ReadStringDelegate(Stream stream, out string? value);
 
-        private static readonly MethodInfo WriteMappedStringMethodInfo
-            = ((WriteStringDelegate) StaticWriteMappedString).Method;
+        private static MethodInfo WriteMappedStringMethodInfo
+            => ((WriteStringDelegate) StaticWriteMappedString).Method;
 
-        private static readonly MethodInfo ReadMappedStringMethodInfo
-            = ((ReadStringDelegate) StaticReadMappedString).Method;
+        private static MethodInfo ReadMappedStringMethodInfo
+            => ((ReadStringDelegate) StaticReadMappedString).Method;
 
         private static readonly char[] TrimmableSymbolChars =
         {
@@ -61,6 +59,8 @@ namespace Robust.Shared.Serialization
             '*', '(', ')', '^', '`', '"', '\'', '`', '~', '[', ']',
             '{', '}', ':', ';', '-'
         };
+
+        private static readonly HashAlgorithmName PackHashAlgo = HashAlgorithmName.SHA512;
 
         /// <summary>
         /// The shortest a string can be in order to be inserted in the mapping.
@@ -99,9 +99,7 @@ namespace Robust.Shared.Serialization
         /// </remarks>
         private const int FirstMappedIndexStart = 2;
 
-        private static readonly HashAlgorithmName PackHashAlgo = HashAlgorithmName.SHA512;
-
-        [IoC.Dependency] private readonly INetManager _net = default!;
+        [Dependency] private readonly INetManager _net = default!;
 
         // I don't want to create 50 line changes in this commit so...
         // ReSharper disable once InconsistentNaming
@@ -598,19 +596,19 @@ namespace Robust.Shared.Serialization
         // TODO: move the below methods to some stream helpers class
 
 #if ROBUST_SERIALIZER_DISABLE_COMPRESSED_UINTS
-            public static int WriteCompressedUnsignedInt(Stream stream, uint value)
+            private static int WriteCompressedUnsignedInt(Stream stream, uint value)
             {
                 WriteUnsignedInt(stream, value);
                 return 4;
             }
 
-            public static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
+            private static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
             {
                 byteCount = 4;
                 return ReadUnsignedInt(stream);
             }
 #else
-        public static int WriteCompressedUnsignedInt(Stream stream, uint value)
+        private static int WriteCompressedUnsignedInt(Stream stream, uint value)
         {
             var length = 1;
             while (value >= 0x80)
@@ -624,7 +622,7 @@ namespace Robust.Shared.Serialization
             return length;
         }
 
-        public static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
+        private static uint ReadCompressedUnsignedInt(Stream stream, out int byteCount)
         {
             byteCount = 0;
             var value = 0u;
@@ -651,14 +649,14 @@ namespace Robust.Shared.Serialization
 #endif
 
         [UsedImplicitly]
-        public static unsafe void WriteUnsignedInt(Stream stream, uint value)
+        private static unsafe void WriteUnsignedInt(Stream stream, uint value)
         {
             var bytes = MemoryMarshal.AsBytes(new ReadOnlySpan<uint>(&value, 1));
             stream.Write(bytes);
         }
 
         [UsedImplicitly]
-        public static unsafe uint ReadUnsignedInt(Stream stream)
+        private static unsafe uint ReadUnsignedInt(Stream stream)
         {
             uint value;
             var bytes = MemoryMarshal.AsBytes(new Span<uint>(&value, 1));
@@ -692,7 +690,7 @@ namespace Robust.Shared.Serialization
 
             if (_net.IsClient)
             {
-                // Client cannot make its own string dictionaries, lock immediately.
+                // Client cannot make its own string dictionary, lock immediately.
                 _dict.Locked = true;
             }
 

@@ -15,7 +15,7 @@ uniform highp vec2 SCREEN_PIXEL_SIZE;
 uniform highp float TIME;
 #endif
 
-uniform vec2 TEXTURE_PIXEL_SIZE;
+uniform highp vec2 TEXTURE_PIXEL_SIZE;
 
 // [SHADER_HEADER_CODE]
 

@@ -18,12 +18,12 @@ void vertex()
 
     VERTEX = apply_mvp(VERTEX);
 
-    pos = (VERTEX + vec2(1)) / 2;
+    pos = (VERTEX + vec2(1.0)) / 2.0;
 
     blurPos1.xy = pos + offset;
     blurPos1.zw = pos - offset;
-    blurPos2.xy = pos + offset * 2;
-    blurPos2.zw = pos - offset * 2;
+    blurPos2.xy = pos + offset * 2.0;
+    blurPos2.zw = pos - offset * 2.0;
 }
 
 

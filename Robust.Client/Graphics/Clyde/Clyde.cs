@@ -323,7 +323,7 @@ namespace Robust.Client.Graphics.Clyde
             void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, bool forceDisableOnES, params string[] exts)
             {
                 // Check if feature is available from the GL context.
-                cap = CompareVersion(major, minor, majorMin, minorMin) || extensions.Overlaps(exts);
+                cap = CompareVersion(majorMin, minorMin, major, minor) || extensions.Overlaps(exts);
 
                 var prev = cap;
                 var cVarName = $"display.ogl_block_{capName}";
@@ -347,7 +347,7 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
 
             CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, false, "GL_KHR_debug");
-            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, false, "GL_ARB_sampler_objects");
+            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, true, "GL_ARB_sampler_objects");
             CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, true, "GL_ARB_texture_swizzle",
                 "GL_EXT_texture_swizzle");
             CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, false, "GL_OES_vertex_array_object",
@@ -446,9 +446,11 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 case DebugSeverity.DebugSeverityHigh:
                     sawmill.Error(contents);
+                    // throw new ArgumentOutOfRangeException("TEST TEST TEST", severity, null);
                     break;
                 case DebugSeverity.DebugSeverityMedium:
                     sawmill.Error(contents);
+                    // throw new ArgumentOutOfRangeException("TEST TEST TEST", severity, null);
                     break;
                 case DebugSeverity.DebugSeverityLow:
                     sawmill.Warning(contents);

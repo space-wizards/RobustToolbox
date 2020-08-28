@@ -235,7 +235,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
 
             // The light is now the center of the universe.
-            _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
+            _fovCalculationProgram.SetUniform("shadowLightMatrix", lightMatrix, false);
 
             var baseProj = Matrix4.CreatePerspectiveFieldOfView(
                 MathHelper.DegreesToRadians(90),
@@ -271,7 +271,7 @@ namespace Robust.Client.Graphics.Clyde
                     projMatrix = proj;
                 }
 
-                _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
+                _fovCalculationProgram.SetUniform("shadowProjectionMatrix", proj, false);
                 // Shift viewport around so we write to the correct quadrant of the depth map.
                 GL.Viewport(step * i, viewportY, step, 1);
 

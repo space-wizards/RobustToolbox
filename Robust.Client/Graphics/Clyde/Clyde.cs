@@ -200,7 +200,7 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLPrimitiveRestart)
             {
                 GL.Enable(EnableCap.PrimitiveRestart);
-                GL.PrimitiveRestartIndex(ushort.MaxValue);
+                GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
             }
             else
             {
@@ -211,6 +211,9 @@ namespace Robust.Client.Graphics.Clyde
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            // Primitive Restart's presence or lack thereof changes the amount of required memory.
+            InitRenderingBatchBuffers();
 
             Logger.DebugS("clyde.ogl", "Loading stock textures...");
 
@@ -317,7 +320,7 @@ namespace Robust.Client.Graphics.Clyde
                 minor = GL.GetInteger(GetPName.MinorVersion);
             }
 
-            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, params string[] exts)
+            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, bool forceDisableOnES, params string[] exts)
             {
                 // Check if feature is available from the GL context.
                 cap = CompareVersion(major, minor, majorMin, minorMin) || extensions.Overlaps(exts);
@@ -332,16 +335,22 @@ namespace Robust.Client.Graphics.Clyde
                     Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
                 }
 
-                Logger.DebugS("clyde.ogl", $"  {capName}: {_hasGLKhrDebug}");
+                if (_hasGLES && forceDisableOnES)
+                {
+                    cap = false;
+                    Logger.DebugS("clyde.ogl", $"  On GLES, BLOCKING {capName}");
+                }
+
+                Logger.DebugS("clyde.ogl", $"  {capName}: {cap}");
             }
 
             Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
 
-            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, "GL_KHR_debug");
-            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, "GL_ARB_sampler_objects");
-            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, "GL_ARB_texture_swizzle",
+            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, false, "GL_KHR_debug");
+            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, false, "GL_ARB_sampler_objects");
+            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, true, "GL_ARB_texture_swizzle",
                 "GL_EXT_texture_swizzle");
-            CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, "GL_OES_vertex_array_object",
+            CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, false, "GL_OES_vertex_array_object",
                 "GL_ARB_vertex_array_object");
             _hasGLSrgb = !_hasGLES;
             _hasGLReadFramebuffer = !_hasGLES;

@@ -275,7 +275,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Shift viewport around so we write to the correct quadrant of the depth map.
                 GL.Viewport(step * i, viewportY, step, 1);
 
-                GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+                GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
                 _debugStats.LastGLDrawCalls += 1;
             }
         }
@@ -299,6 +299,8 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindVertexArray(_occlusionVao.Handle);
 
             _fovCalculationProgram.Use();
+
+            TempSetupUniformBlockEmulator(_fovCalculationProgram);
         }
 
         private static void FinalizeDepthDraw()
@@ -349,6 +351,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
+
+            TempSetupUniformBlockEmulator(lightShader);
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
@@ -504,6 +508,8 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
 
+            TempSetupUniformBlockEmulator(shader);
+
             shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
@@ -561,6 +567,8 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
 
+            TempSetupUniformBlockEmulator(shader);
+
             var tex = viewport.WallBleedIntermediateRenderTarget2.Texture;
             SetTexture(TextureUnit.Texture0, tex);
 
@@ -568,7 +576,7 @@ namespace Robust.Client.Graphics.Clyde
 
             GL.BindVertexArray(_occlusionMaskVao.Handle);
 
-            GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
                 IntPtr.Zero);
 
             GL.Enable(EnableCap.Blend);
@@ -580,6 +588,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
+
+            TempSetupUniformBlockEmulator(fovShader);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
@@ -596,6 +606,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
+
+            TempSetupUniformBlockEmulator(fovShader);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
@@ -652,10 +664,10 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
             var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount() * 4);
 
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxOccluders * 4);
-            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 5);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount());
 
             try
             {
@@ -687,13 +699,21 @@ namespace Robust.Client.Graphics.Clyde
 
                     // Vertices used as main occlusion geometry.
                     // We always send all of these (see below) to keep code complexity down.
+                    ushort vTLH = (ushort) (ai + 0);
                     arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
+                    ushort vTLL = (ushort) (ai + 1);
                     arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
+                    ushort vTRH = (ushort) (ai + 2);
                     arrayBuffer[ai + 2] = new Vector3(trX, trY, polygonHeight);
+                    ushort vTRL = (ushort) (ai + 3);
                     arrayBuffer[ai + 3] = new Vector3(trX, trY, -polygonHeight);
+                    ushort vBRH = (ushort) (ai + 4);
                     arrayBuffer[ai + 4] = new Vector3(brX, brY, polygonHeight);
+                    ushort vBRL = (ushort) (ai + 5);
                     arrayBuffer[ai + 5] = new Vector3(brX, brY, -polygonHeight);
+                    ushort vBLH = (ushort) (ai + 6);
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
+                    ushort vBLL = (ushort) (ai + 7);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
                     //
@@ -745,49 +765,31 @@ namespace Robust.Client.Graphics.Clyde
                     var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
 
                     // Handle faces, rules described above.
+                    // Note that faces are drawn with their 'normals' facing in the described direction in 3D space.
+                    // That is, they're clockwise "as viewed from the outside".
 
-                    // North face.
+                    // North face (TL/TR)
                     if (!no || !tlV && !trV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 0);
-                        indexBuffer[ii + 1] = (ushort) (ai + 1);
-                        indexBuffer[ii + 2] = (ushort) (ai + 2);
-                        indexBuffer[ii + 3] = (ushort) (ai + 3);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTRL, vTLL, vTLH, vTRH);
                     }
 
-                    // East face.
+                    // East face (TR/BR)
                     if (!eo || !brV && !trV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 2);
-                        indexBuffer[ii + 1] = (ushort) (ai + 3);
-                        indexBuffer[ii + 2] = (ushort) (ai + 4);
-                        indexBuffer[ii + 3] = (ushort) (ai + 5);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBRL, vTRL, vTRH, vBRH);
                     }
 
-                    // South face.
+                    // South face (BR/BL)
                     if (!so || !brV && !blV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 4);
-                        indexBuffer[ii + 1] = (ushort) (ai + 5);
-                        indexBuffer[ii + 2] = (ushort) (ai + 6);
-                        indexBuffer[ii + 3] = (ushort) (ai + 7);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBLL, vBRL, vBRH, vBLH);
                     }
 
-                    // West face.
+                    // West face (BL/TL)
                     if (!wo || !blV && !tlV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 6);
-                        indexBuffer[ii + 1] = (ushort) (ai + 7);
-                        indexBuffer[ii + 2] = (ushort) (ai + 0);
-                        indexBuffer[ii + 3] = (ushort) (ai + 1);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTLL, vBLL, vBLH, vTLH);
                     }
 
                     // Generate mask geometry.
@@ -797,15 +799,10 @@ namespace Robust.Client.Graphics.Clyde
                     arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
 
                     // Generate mask indices.
-                    indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
-                    indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
-                    indexMaskBuffer[imi + 2] = (ushort) (ami + 2);
-                    indexMaskBuffer[imi + 3] = (ushort) (ami + 3);
-                    indexMaskBuffer[imi + 4] = ushort.MaxValue; // Primitive restart
+                    QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort) ami);
 
                     ai += 8;
                     ami += 4;
-                    imi += 5;
                 }
 
                 _occlusionDataLength = ii;

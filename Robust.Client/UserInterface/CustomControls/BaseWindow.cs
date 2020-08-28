@@ -217,7 +217,10 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 LayoutContainer.SetSize(this, CombinedMinimumSize);
                 Open();
-                LayoutContainer.SetPosition(this, (Parent!.Size - Size) / 2);
+                // An explaination: The BadOpenGLVersionWindow was showing up off the top-left corner of the screen.
+                // Basically, if OpenCentered happens super-early, RootControl doesn't get time to layout children.
+                // But we know that this is always going to be one of the roots anyway for now.
+                LayoutContainer.SetPosition(this, (UserInterfaceManager.RootControl.Size - Size) / 2);
                 _firstTimeOpened = false;
             }
             else

@@ -8,17 +8,6 @@ const highp float PI = 3.1415926535897932384626433; // That enough digits?
 // so we can use that to "reverse engineer" the position.
 uniform highp mat4 shadowMatrix;
 
-// BE SURE TO CHECK THE CORRESPONDING UNPACK CODE in shadow-depth.frag
-// Also, it'd be nice if these functions were put into some sort of common code
-// FF1616 dummy (used when we have float textures)
-highp vec2 ffTwoUnpack(highp vec4 val) {
-#ifdef HAS_FLOAT_TEXTURES
-    return val.xy;
-#else
-	return (val.xy * 255.0) + val.zw;
-#endif
-}
-
 // This returns a vec2 because of VSM moments.
 highp vec2 occludeDepth(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY)
 {
@@ -62,7 +51,7 @@ highp vec2 occludeDepth(highp vec2 diff, sampler2D shadowMap, highp float mapOff
     s.xyz /= s.w;
     highp float su = s.x * 0.5 + 0.5;
 
-    return ffTwoUnpack(texture2D(shadowMap, vec2(su / 4.0 + shadowMapOffset, mapOffsetY)));
+    return zClydeShadowDepthUnpack(texture2D(shadowMap, vec2(su / 4.0 + shadowMapOffset, mapOffsetY)));
 }
 
 bool doesOcclude(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY, highp float bias)

@@ -47,6 +47,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             ProjViewUBO.Apply(program);
             UniformConstantsUBO.Apply(program);
+            program.SetUniformMaybe("TEXTURE_SRGB", 0.0f);
+            program.SetUniformMaybe("FRAMEBUFFER_SRGB", 0.0f);
         }
 
         // Gets the primitive type required by QuadBatchIndexWrite.

@@ -16,6 +16,8 @@ namespace Robust.Client.Graphics.Clyde
     {
         private ClydeShaderInstance _defaultShader = default!;
 
+        private string _shaderLibrary = default!;
+
         private string _shaderWrapCodeDefaultFrag = default!;
         private string _shaderWrapCodeDefaultVert = default!;
 
@@ -108,6 +110,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadStockShaders()
         {
+            _shaderLibrary = ReadEmbeddedShader("z-library.glsl");
+
             _shaderWrapCodeDefaultFrag = ReadEmbeddedShader("base-default.frag");
             _shaderWrapCodeDefaultVert = ReadEmbeddedShader("base-default.vert");
 
@@ -150,13 +154,18 @@ namespace Robust.Client.Graphics.Clyde
                 versionHeader += "#define HAS_FLOAT_TEXTURES\n";
             }
 
+            if (_hasGLSrgb)
+            {
+                versionHeader += "#define HAS_SRGB\n";
+            }
+
             if (_hasGLUniformBuffers)
             {
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
             }
 
-            vertexSource = versionHeader + vertexSource;
-            fragmentSource = versionHeader + fragmentSource;
+            vertexSource = versionHeader + _shaderLibrary + vertexSource;
+            fragmentSource = versionHeader + _shaderLibrary + fragmentSource;
 
             try
             {

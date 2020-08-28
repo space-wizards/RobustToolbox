@@ -1,17 +1,5 @@
 varying highp vec2 pos;
 
-// BE SURE TO CHECK THE CORRESPONDING UNPACK CODE AT:
-//  RobustToolbox/Resources/Shaders/Internal/shadow_cast_shared.swsl
-// Also, it'd be nice if these functions were put into some sort of common code
-lowp vec4 ffTwoPack(highp vec2 val) {
-#ifdef HAS_FLOAT_TEXTURES
-    return vec4(val, 0.0, 1.0);
-#else
-    highp vec2 valH = floor(val);
-    return vec4(valH / 255.0, val - valH);
-#endif
-}
-
 void main()
 {
     highp vec2 adjustedPos = pos;
@@ -30,6 +18,6 @@ void main()
     highp float dx = 1.0;
     highp float dy = 1.0;
 #endif
-    gl_FragColor = ffTwoPack(vec2(dist, dist * dist + 0.25 * (dx*dx + dy*dy)));
+    gl_FragColor = zClydeShadowDepthPack(vec2(dist, dist * dist + 0.25 * (dx*dx + dy*dy)));
 }
 

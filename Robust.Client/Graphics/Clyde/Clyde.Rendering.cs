@@ -225,6 +225,8 @@ namespace Robust.Client.Graphics.Clyde
             program.SetUniformMaybe(UniIModulate, command.Modulate);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
 
+            ProjViewUBO.Apply(program);
+            UniformConstantsUBO.Apply(program);
 
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)

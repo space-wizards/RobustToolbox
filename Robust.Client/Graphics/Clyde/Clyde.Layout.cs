@@ -52,7 +52,7 @@ namespace Robust.Client.Graphics.Clyde
 
         [StructLayout(LayoutKind.Explicit, Size = 28 * sizeof(float))]
         [PublicAPI]
-        private struct ProjViewMatrices
+        private struct ProjViewMatrices : IAppliableUniformSet
         {
             [FieldOffset(0 * sizeof(float))] public Vector3 ProjMatrixC0;
             [FieldOffset(4 * sizeof(float))] public Vector3 ProjMatrixC1;
@@ -73,11 +73,25 @@ namespace Robust.Client.Graphics.Clyde
                 ViewMatrixC1 = new Vector3(viewMatrix.R0C1, viewMatrix.R1C1, viewMatrix.R2C1);
                 ViewMatrixC2 = new Vector3(viewMatrix.R0C2, viewMatrix.R1C2, viewMatrix.R2C2);
             }
+
+            public void Apply(Clyde clyde, GLShaderProgram program)
+            {
+                program.SetUniformMaybe("projectionMatrix", new Matrix3(
+                    ProjMatrixC0.X, ProjMatrixC1.X, ProjMatrixC2.X,
+                    ProjMatrixC0.Y, ProjMatrixC1.Y, ProjMatrixC2.Y,
+                    ProjMatrixC0.Z, ProjMatrixC1.Z, ProjMatrixC2.Z
+                ));
+                program.SetUniformMaybe("viewMatrix", new Matrix3(
+                    ViewMatrixC0.X, ViewMatrixC1.X, ViewMatrixC2.X,
+                    ViewMatrixC0.Y, ViewMatrixC1.Y, ViewMatrixC2.Y,
+                    ViewMatrixC0.Z, ViewMatrixC1.Z, ViewMatrixC2.Z
+                ));
+            }
         }
 
         [StructLayout(LayoutKind.Explicit, Size = sizeof(float) * 4)]
         [PublicAPI]
-        private struct UniformConstants
+        private struct UniformConstants : IAppliableUniformSet
         {
             [FieldOffset(0)] public Vector2 ScreenPixelSize;
             [FieldOffset(2 * sizeof(float))] public float Time;
@@ -86,6 +100,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ScreenPixelSize = screenPixelSize;
                 Time = time;
+            }
+
+            public void Apply(Clyde clyde, GLShaderProgram program)
+            {
+                program.SetUniformMaybe("SCREEN_PIXEL_SIZE", ScreenPixelSize);
+                program.SetUniformMaybe("TIME", Time);
             }
         }
     }

@@ -111,7 +111,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(name, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform(name);
                 }
 
                 return result;
@@ -121,7 +121,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(id, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform($"[id {id}]");
                 }
 
                 return result;
@@ -204,6 +204,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetUniform(string uniformName, float single)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, single);
+            }
+
+            public void SetUniform(int uniformName, float single)
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, single);
@@ -321,6 +327,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetUniform(string uniformName, in Vector2 vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            public void SetUniform(int uniformName, in Vector2 vector)
             {
                 var uniformId = GetUniform(uniformName);
                 SetUniformDirect(uniformId, vector);
@@ -471,9 +483,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private static void ThrowCouldNotGetUniform()
+            private static void ThrowCouldNotGetUniform(string name)
             {
-                throw new ArgumentException("Could not get uniform!");
+                throw new ArgumentException($"Could not get uniform \"{name}\"!");
             }
         }
     }

@@ -54,8 +54,11 @@ namespace Robust.Client.Graphics.Clyde
 
             var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
 
-            program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
-            program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            if (_hasGLUniformBuffers)
+            {
+                program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+                program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            }
 
             var loaded = new LoadedShader
             {
@@ -84,8 +87,11 @@ namespace Robust.Client.Graphics.Clyde
 
             loaded.Program = program;
 
-            program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
-            program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            if (_hasGLUniformBuffers)
+            {
+                program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+                program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
+            }
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)

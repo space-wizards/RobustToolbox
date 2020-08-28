@@ -41,8 +41,8 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        private GLBuffer ProjViewUBO = default!;
-        private GLBuffer UniformConstantsUBO = default!;
+        private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
+        private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
 
         private RenderTexture EntityPostRenderTarget = default!;
 
@@ -282,18 +282,8 @@ namespace Robust.Client.Graphics.Clyde
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));
             }
 
-            ProjViewUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
-                nameof(ProjViewUBO));
-            ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
-
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
-
-            UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
-                nameof(UniformConstantsUBO));
-            UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
-
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
-                UniformConstantsUBO.ObjectHandle);
+            ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
+            UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),

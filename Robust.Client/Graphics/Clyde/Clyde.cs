@@ -458,18 +458,34 @@ namespace Robust.Client.Graphics.Clyde
 
         private static DebugProc? _debugMessageCallbackInstance;
 
-        private static HashSet<string> GetGLExtensions()
+        private HashSet<string> GetGLExtensions()
         {
-            var extensions = new HashSet<string>();
-
-            var count = GL.GetInteger(GetPName.NumExtensions);
-            for (var i = 0; i < count; i++)
+            if (!_hasGLES)
             {
-                var extension = GL.GetString(StringNameIndexed.Extensions, i);
-                extensions.Add(extension);
+                var extensions = new HashSet<string>();
+                var extensionsText = "";
+                // Desktop OpenGL uses this API to discourage static buffers
+                var count = GL.GetInteger(GetPName.NumExtensions);
+                for (var i = 0; i < count; i++)
+                {
+                    if (i != 0)
+                    {
+                        extensionsText += " ";
+                    }
+                    var extension = GL.GetString(StringNameIndexed.Extensions, i);
+                    extensionsText += extension;
+                    extensions.Add(extension);
+                }
+                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
+                return extensions;
             }
-
-            return extensions;
+            else
+            {
+                // GLES uses the (old?) API
+                var extensions = GL.GetString(StringName.Extensions);
+                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
+                return new HashSet<string>(extensions.Split(' '));
+            }
         }
 
         [Conditional("DEBUG")]

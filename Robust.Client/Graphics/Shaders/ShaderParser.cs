@@ -594,7 +594,7 @@ namespace Robust.Client.Graphics.Shaders
 
             public override string ToString()
             {
-                return $"({LineStart}:{LineEnd}:{ColumnStart}:{ColumnEnd})";
+                return $"({FileName}:{LineStart}:{LineEnd}:{ColumnStart}:{ColumnEnd})";
             }
         }
     }

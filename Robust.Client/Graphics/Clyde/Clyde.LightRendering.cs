@@ -133,7 +133,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.Rgba8 : RenderTargetColorFormat.RG32F, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
 
@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.Rgba8 : RenderTargetColorFormat.RG32F, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
                 nameof(_shadowRenderTarget));
         }
@@ -245,6 +245,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var step = width / 4;
 
+            GL.Disable(EnableCap.Blend);
+
             for (var i = 0; i < 4; i++)
             {
                 // The occlusion geometry has to be rotated for every orientation and also corrected
@@ -278,6 +280,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
                 _debugStats.LastGLDrawCalls += 1;
             }
+
+            GL.Enable(EnableCap.Blend);
         }
 
         private void PrepareDepthDraw(LoadedRenderTarget target)

@@ -145,6 +145,11 @@ namespace Robust.Client.Graphics.Clyde
                 versionHeader = "#version 100\n";
             }
 
+            if (_hasGLFancyFloatFormats)
+            {
+                versionHeader += "#define HAS_FLOAT_TEXTURES\n";
+            }
+
             if (_hasGLUniformBuffers)
             {
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";

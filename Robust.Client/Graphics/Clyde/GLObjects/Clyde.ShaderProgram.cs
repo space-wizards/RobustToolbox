@@ -222,12 +222,15 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static unsafe void SetUniformDirect(int slot, in Matrix3 value)
+            private static unsafe void SetUniformDirect(int uniformId, in Matrix3 value, bool transpose=true)
             {
-                fixed (Matrix3* ptr = &value)
+                Matrix3 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix3(slot, 1, true, (float*) ptr);
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix3(uniformId, 1, false, (float*) &tmpTranspose);
             }
 
             public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)
@@ -239,10 +242,13 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
             {
-                fixed (Matrix4* ptr = &value)
+                Matrix4 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix4(uniformId, 1, transpose, (float*) ptr);
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix4(uniformId, 1, false, (float*) &tmpTranspose);
             }
 
             public void SetUniform(string uniformName, in Vector4 vector)

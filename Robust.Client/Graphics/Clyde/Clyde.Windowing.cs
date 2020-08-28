@@ -158,7 +158,6 @@ namespace Robust.Client.Graphics.Clyde
 #endif
             GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
             GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-            GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
 
             var renderer = (Renderer) _configurationManager.GetCVar<int>("display.renderer");
 
@@ -261,6 +260,7 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
                     GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
                     GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
                 }
                 else if (r == Renderer.OpenGL31)
                 {
@@ -270,6 +270,7 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
                     GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
                     GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
                 }
                 else if (r == Renderer.OpenGLES2)
                 {
@@ -281,6 +282,7 @@ namespace Robust.Client.Graphics.Clyde
                     // (It may be an idea to make this a configuration cvar)
                     GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
                     GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
                 }
                 _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
             }

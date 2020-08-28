@@ -202,10 +202,6 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Enable(EnableCap.PrimitiveRestart);
                 GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
             }
-            else
-            {
-                Logger.WarningS("clyde.ogl", "NO PRIMITIVE RESTART! Things will probably go terribly, terribly wrong (no fallback path yet)");
-            }
             if (!_hasGLVertexArrayObject)
             {
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");

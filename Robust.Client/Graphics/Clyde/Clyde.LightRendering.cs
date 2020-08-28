@@ -133,7 +133,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
-                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.Rgba8 : RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
 
@@ -148,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
-                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.Rgba8 : RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFancyFloatFormats ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
                 nameof(_shadowRenderTarget));
         }
@@ -840,7 +840,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var lightMapSize = GetLightMapSize(viewport.Size);
             var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
-            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
+            var lightMapColorFormat = _hasGLFancyFloatFormats ? RenderTargetColorFormat.R11FG11FB10F : RenderTargetColorFormat.Rgba8;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
             viewport.LightRenderTarget?.Dispose();

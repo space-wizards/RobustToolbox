@@ -6,6 +6,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.Log;
 
 // ReSharper disable once IdentifierTypo
 using RTCF = Robust.Client.Interfaces.Graphics.RenderTargetColorFormat;
@@ -86,6 +87,7 @@ namespace Robust.Client.Graphics.Clyde
                         case RTCF.RG32F:
                         case RTCF.R11FG11FB10F:
                         case RTCF.Rgba16F:
+                            Logger.WarningS("clyde.ogl", "The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
                             colorFormat = RTCF.Rgba8;
                             break;
                     }

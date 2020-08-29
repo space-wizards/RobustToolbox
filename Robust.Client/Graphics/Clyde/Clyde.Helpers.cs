@@ -41,13 +41,21 @@ namespace Robust.Client.Graphics.Clyde
             };
         }
 
-        // Sets up uniforms (temporary, this should be moved to GLShaderProgram.Use)
+        // Sets up uniforms (It'd be nice to move this, or make some contextual stuff implicit, but things got complicated.)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void TempSetupUniformBlockEmulator(GLShaderProgram program)
+        private void SetupGlobalUniformsImmediate(GLShaderProgram program, ClydeTexture? tex)
+        {
+            SetupGlobalUniformsImmediate(program, (tex != null) ? tex.IsSrgb : false);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void SetupGlobalUniformsImmediate(GLShaderProgram program, bool texIsSrgb)
         {
             ProjViewUBO.Apply(program);
             UniformConstantsUBO.Apply(program);
-            program.SetUniformMaybe("SRGB_EMU_CONFIG", new Vector2(1.0f, 1.0f));
+            if (!_hasGLSrgb)
+            {
+                program.SetUniformMaybe("SRGB_EMU_CONFIG", new Vector2(texIsSrgb ? 1 : 0, _currentBoundRenderTarget.IsSrgb ? 1 : 0));
+            }
         }
 
         // Gets the primitive type required by QuadBatchIndexWrite.

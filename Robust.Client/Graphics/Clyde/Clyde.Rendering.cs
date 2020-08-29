@@ -206,6 +206,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindVertexArray(BatchVAO.Handle);
 
             var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
+            SetupGlobalUniformsImmediate(program, loadedTexture.IsSrgb);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2D, loadedTexture.OpenGLObject.Handle);
@@ -357,8 +358,6 @@ namespace Robust.Client.Graphics.Clyde
             program.Use();
 
             // Assign shader parameters to uniform since they may be dirty.
-            TempSetupUniformBlockEmulator(program);
-
             foreach (var (name, value) in instance.Parameters)
             {
                 if (!program.HasUniform(name))

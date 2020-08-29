@@ -25,7 +25,13 @@ namespace Robust.Client.Graphics.Clyde
             = new ConcurrentQueue<ClydeHandle>();
 
         IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
+        // Initialized in Clyde's constructor
         private readonly RenderWindow _mainWindowRenderTarget;
+
+        // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
+        // It is used for SRGB emulation.
+        // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
+        private LoadedRenderTarget _currentBoundRenderTarget;
 
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
@@ -41,6 +47,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
+            // Note that this means _currentBoundRenderTarget goes temporarily out of sync here
             var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
             var boundReadBuffer = 0;
             if (_hasGLReadFramebuffer)
@@ -76,6 +83,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // If SRGB is not supported, switch formats.
                     // The shaders will have to compensate.
+                    // Note that a check is performed on the *original* format.
                     colorFormat = RTCF.Rgba8;
                 }
                 // This isn't good
@@ -126,7 +134,8 @@ namespace Robust.Client.Graphics.Clyde
                         TextureTarget.Texture2D, texture.Handle, 0);
                 }
 
-                textureObject = GenTexture(texture, size, name == null ? null : $"{name}-color");
+                // Check on original format is NOT a bug, this is so srgb emulation works
+                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color");
             }
 
             // Depth/stencil buffers.
@@ -154,7 +163,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
                 $"new framebuffer has bad status {status}");
 
-            // Re-bind previous framebuffers.
+            // Re-bind previous framebuffers (thus _currentBoundRenderTarget is back in sync)
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
             if (_hasGLReadFramebuffer)
             {
@@ -167,6 +176,7 @@ namespace Robust.Client.Graphics.Clyde
             var data = new LoadedRenderTarget
             {
                 IsWindow = false,
+                IsSrgb = textureObject.IsSrgb,
                 DepthStencilHandle = depthStencilBuffer,
                 FramebufferHandle = fbo,
                 Size = size,
@@ -219,8 +229,10 @@ namespace Robust.Client.Graphics.Clyde
             return _renderTargets[rt.Handle];
         }
 
-        private static void BindRenderTargetImmediate(LoadedRenderTarget rt)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void BindRenderTargetImmediate(LoadedRenderTarget rt)
         {
+            // NOTE: It's critically important that this be the "focal point" of all framebuffer bindings.
             if (rt.IsWindow)
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -229,6 +241,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, rt.FramebufferHandle.Handle);
             }
+            _currentBoundRenderTarget = rt;
         }
 
         private void FlushRenderTargetDispose()
@@ -249,6 +262,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool IsWindow;
             public Vector2i Size;
+            public bool IsSrgb;
 
             // Remaining properties only apply if the render target is NOT a window.
             // Handle to the framebuffer object.

@@ -88,12 +88,14 @@ namespace Robust.Client.Graphics.Clyde
             var window = new RenderWindow(this, windowRid);
             var loadedData = new LoadedRenderTarget
             {
-                IsWindow = true
+                IsWindow = true,
+                IsSrgb = true
             };
             _renderTargets.Add(windowRid, loadedData);
 
             _mainWindowRenderTarget = window;
             _currentRenderTarget = RtToLoaded(window);
+            _currentBoundRenderTarget = _currentRenderTarget;
         }
 
         public override bool Initialize()

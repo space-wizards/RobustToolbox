@@ -295,7 +295,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Enable(EnableCap.CullFace);
             GL.FrontFace(FrontFaceDirection.Cw);
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.FramebufferHandle.Handle);
+            BindRenderTargetImmediate(target);
             GL.ClearDepth(1);
             GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
@@ -304,7 +304,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _fovCalculationProgram.Use();
 
-            TempSetupUniformBlockEmulator(_fovCalculationProgram);
+            SetupGlobalUniformsImmediate(_fovCalculationProgram, null);
         }
 
         private static void FinalizeDepthDraw()
@@ -346,7 +346,7 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, RtToLoaded(viewport.LightRenderTarget).FramebufferHandle.Handle);
+            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
@@ -356,7 +356,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
 
-            TempSetupUniformBlockEmulator(lightShader);
+            SetupGlobalUniformsImmediate(lightShader, ShadowTexture);
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
@@ -512,7 +512,7 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
 
-            TempSetupUniformBlockEmulator(shader);
+            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
 
             shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -571,9 +571,10 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_mergeWallLayerShaderHandle].Program;
             shader.Use();
 
-            TempSetupUniformBlockEmulator(shader);
-
             var tex = viewport.WallBleedIntermediateRenderTarget2.Texture;
+
+            SetupGlobalUniformsImmediate(shader, tex);
+
             SetTexture(TextureUnit.Texture0, tex);
 
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -593,7 +594,7 @@ namespace Robust.Client.Graphics.Clyde
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
 
-            TempSetupUniformBlockEmulator(fovShader);
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
@@ -611,7 +612,7 @@ namespace Robust.Client.Graphics.Clyde
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
 
-            TempSetupUniformBlockEmulator(fovShader);
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 

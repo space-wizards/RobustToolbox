@@ -21,6 +21,7 @@ namespace Robust.Client.GameObjects
         internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color Color
         {
             get => _color;
@@ -35,6 +36,7 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public bool Enabled
         {
             get => _enabled;
@@ -73,6 +75,7 @@ namespace Robust.Client.GameObjects
         public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float Energy
         {
             get => _energy;

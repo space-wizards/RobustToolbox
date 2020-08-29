@@ -36,6 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, RobustSerializer>();
+            container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.BuildGraph();
 
             container.Resolve<IReflectionManager>().LoadAssemblies(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
@@ -46,6 +47,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var serializer = container.Resolve<IRobustSerializer>();
             serializer.Initialize();
+            IoCManager.Resolve<IRobustMappedStringSerializer>().LockStrings();
 
             byte[] array;
             using(var stream = new MemoryStream())

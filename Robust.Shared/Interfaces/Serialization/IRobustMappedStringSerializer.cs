@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using NetSerializer;
 using Newtonsoft.Json.Linq;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network.Messages;
@@ -13,6 +14,11 @@ namespace Robust.Shared.Serialization
     [PublicAPI]
     internal interface IRobustMappedStringSerializer
     {
+        /// <summary>
+        ///     The type serializer to register with NetSerializer.
+        /// </summary>
+        ITypeSerializer TypeSerializer { get; }
+
         /// <summary>
         /// Starts the handshake from the server end of the given channel,
         /// sending a <see cref="MsgMapStrServerHandshake"/>.
@@ -94,5 +100,7 @@ namespace Robust.Shared.Serialization
         ///     and generate the strings package that can be sent to clients.
         /// </summary>
         void LockStrings();
+
+        void Initialize();
     }
 }

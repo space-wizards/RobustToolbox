@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly INetManager _netManager = default!;
-        [Dependency] private readonly RobustMappedStringSerializer _mappedStringSerializer = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new ITypeSerializer[] {_mappedStringSerializer}
+                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);

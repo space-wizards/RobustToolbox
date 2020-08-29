@@ -134,6 +134,8 @@ namespace Robust.Shared.Serialization
             );
 
 
+        public ITypeSerializer TypeSerializer => this;
+
         /// <summary>
         /// Starts the handshake from the server end of the given channel,
         /// sending a <see cref="MsgMapStrServerHandshake"/>.
@@ -575,7 +577,7 @@ namespace Robust.Shared.Serialization
         /// <param name="value"> The (possibly null) string to write.</param>
         private static void StaticWriteMappedString(Stream stream, string? value)
         {
-            var mss = IoCManager.Resolve<RobustMappedStringSerializer>();
+            var mss = (RobustMappedStringSerializer) IoCManager.Resolve<IRobustMappedStringSerializer>();
             mss._dict.WriteMappedString(stream, value);
         }
         /// <summary>
@@ -589,7 +591,7 @@ namespace Robust.Shared.Serialization
         /// </exception>
         private static void StaticReadMappedString(Stream stream, out string? value)
         {
-            var mss = IoCManager.Resolve<RobustMappedStringSerializer>();
+            var mss = (RobustMappedStringSerializer) IoCManager.Resolve<IRobustMappedStringSerializer>();
             mss._dict.ReadMappedString(stream, out value);
         }
 

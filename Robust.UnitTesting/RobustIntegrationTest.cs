@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -163,6 +164,7 @@ namespace Robust.UnitTesting
             /// <exception cref="InvalidOperationException">
             ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
             /// </exception>
+            [Pure]
             public T ResolveDependency<T>()
             {
                 if (!_isSurelyIdle)

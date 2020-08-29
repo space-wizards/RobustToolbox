@@ -24,6 +24,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.StylePropertiesChanged();
 
+			// Temporary workaround to fix button styles in content thanks to a lack of correct style updating for child selectors.
+			// The changing of the style class on the parent control (button in this case) doesn't cause a style update in the label correctly currently.
+			// This works around that.
             Label.Restyle();
         }
 

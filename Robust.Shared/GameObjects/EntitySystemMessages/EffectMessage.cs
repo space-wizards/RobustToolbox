@@ -2,6 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
+using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.GameObjects.EntitySystemMessages
 {
@@ -24,6 +25,16 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// </summary>
         public bool AnimationLoops { get; set; }
 
+        /// <summary>
+        /// Effect position attached to an entity
+        /// </summary>
+        public EntityUid? AttachedEntityUid { get; set; }
+        
+        /// <summary>
+        /// Effect offset relative to the parent
+        /// </summary>
+        public Vector2 AttachedOffset { get; set; } = Vector2.Zero;
+        
         /// <summary>
         /// Effect position relative to the emit position
         /// </summary>

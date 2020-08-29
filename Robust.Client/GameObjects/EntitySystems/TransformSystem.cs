@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -17,12 +18,16 @@ namespace Robust.Client.GameObjects.EntitySystems
     [UsedImplicitly]
     internal sealed class TransformSystem : EntitySystem
     {
+        // Max distance per tick how far an entity can move before it is considered teleporting.
+        // TODO: Make these values somehow dependent on server TPS.
+        private const float MaxInterpolationDistance = 2.0f;
+        private const double MaxInterpolationAngle = Math.PI / 4; // 45 degrees.
+
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
-        [ViewVariables]
-        private readonly List<TransformComponent> _lerpingTransforms = new List<TransformComponent>();
+        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new List<TransformComponent>();
 
         public override void Initialize()
         {
@@ -47,20 +52,35 @@ namespace Robust.Client.GameObjects.EntitySystems
                 var transform = _lerpingTransforms[i];
                 var found = false;
 
-                if (transform.LerpDestination != null)
+                // Only lerp if parent didn't change.
+                // E.g. entering lockers would do it.
+                if (transform.LerpParent == transform.ParentUid)
                 {
-                    var oldNext = transform.LerpDestination.Value;
-                    transform.LocalPosition = Vector2.Lerp(transform.LerpSource, oldNext, step);
-                    transform.LerpDestination = oldNext;
-                    found = true;
-                }
+                    if (transform.LerpDestination != null)
+                    {
+                        var lerpDest = transform.LerpDestination.Value;
+                        var lerpSource = transform.LerpSource;
+                        if ((lerpDest - lerpSource).LengthSquared < MaxInterpolationDistance * MaxInterpolationDistance)
+                        {
+                            transform.LocalPosition = Vector2.Lerp(lerpSource, lerpDest, step);
+                            // Setting LocalPosition clears LerpPosition so fix that.
+                            transform.LerpDestination = lerpDest;
+                            found = true;
+                        }
+                    }
 
-                if (transform.LerpAngle != null)
-                {
-                    var oldNext = transform.LerpAngle.Value;
-                    transform.LocalRotation = Angle.Lerp(transform.LerpSourceAngle, oldNext, step);
-                    transform.LerpAngle = oldNext;
-                    found = true;
+                    if (transform.LerpAngle != null)
+                    {
+                        var lerpDest = transform.LerpAngle.Value;
+                        var lerpSource = transform.LerpSourceAngle;
+                        if (lerpDest.Theta - lerpSource.Theta < MaxInterpolationAngle)
+                        {
+                            transform.LocalRotation = Angle.Lerp(lerpSource, lerpDest, step);
+                            // Setting LocalRotation clears LerpAngle so fix that.
+                            transform.LerpAngle = lerpDest;
+                            found = true;
+                        }
+                    }
                 }
 
                 // Transforms only get removed from the lerp list if they no longer are in here.

@@ -245,7 +245,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -295,8 +295,12 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            var newEntity = _entityManager.CreateEntityUninitialized(null);
+            var newEntity = (Entity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
+
+            newEntity.InitializeComponents();
+            newEntity.StartAllComponents();
+
             return newEntity;
         }
 
@@ -343,7 +347,7 @@ namespace Robust.Shared.Map
             }
 
             // re-use or add map component
-            if (!newMapEntity.TryGetComponent(out MapComponent mapComp))
+            if (!newMapEntity.TryGetComponent(out MapComponent? mapComp))
             {
                 mapComp = newMapEntity.AddComponent<MapComponent>();
             }
@@ -387,11 +391,13 @@ namespace Robust.Shared.Map
             return _maps;
         }
 
+        [Obsolete("The concept of 'default grids' is being removed.")]
         public IMapGrid GetDefaultGrid(MapId mapID)
         {
             return _grids[_defaultGrids[mapID]];
         }
 
+        [Obsolete("The concept of 'default grids' is being removed.")]
         public GridId GetDefaultGridId(MapId mapID)
         {
             if (_defaultGrids.TryGetValue(mapID, out var gridID))
@@ -444,7 +450,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>())
+                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>())
                 {
                     if (comp.GridIndex != actualID)
                         continue;

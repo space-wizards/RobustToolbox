@@ -1,8 +1,8 @@
-#version 330 core
+#version 140
 
 in vec2 pos;
 
-layout(location = 0) out vec4 depth;
+/*layout(location = 0)*/ out vec4 depth;
 
 void main()
 {

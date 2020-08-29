@@ -55,21 +55,39 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private static void UpdateEntity(IEntity entity)
         {
-            if (!entity.TryGetComponent(out SpriteComponent sprite))
+            if (entity.TryGetComponent(out SpriteComponent? sprite))
             {
-                return;
+                sprite.ContainerOccluded = false;
+
+                // We have to recursively scan for containers upwards in case of nested containers.
+                var tempParent = entity;
+                while (ContainerHelpers.TryGetContainer(tempParent, out var container))
+                {
+                    if (!container.ShowContents)
+                    {
+                        sprite.ContainerOccluded = true;
+                        break;
+                    }
+
+                    tempParent = container.Owner;
+                }
             }
 
-            sprite.ContainerOccluded = false;
-
-            // We have to recursively scan for containers upwards in case of nested containers.
-            var tempParent = entity;
-            while (ContainerHelpers.TryGetContainer(tempParent, out var container))
+            if (entity.TryGetComponent(out PointLightComponent? light))
             {
-                if (!container.ShowContents)
+                light.ContainerOccluded = false;
+
+                // We have to recursively scan for containers upwards in case of nested containers.
+                var tempParent = entity;
+                while (ContainerHelpers.TryGetContainer(tempParent, out var container))
                 {
-                    sprite.ContainerOccluded = true;
-                    return;
+                    if (container.OccludesLight)
+                    {
+                        light.ContainerOccluded = true;
+                        break;
+                    }
+
+                    tempParent = container.Owner;
                 }
             }
         }

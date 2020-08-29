@@ -109,15 +109,7 @@ Mouse Pos:
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                GridCoordinates playerGridPos;
-                if (_mapManager.TryFindGridAt(playerWorldOffset, out var playerGrid))
-                {
-                    playerGridPos = playerGrid.MapToGrid(playerWorldOffset);
-                }
-                else
-                {
-                    playerGridPos = new GridCoordinates(playerWorldOffset.Position, GridId.Invalid);
-                }
+                var playerGridPos = playerManager.LocalPlayer.ControlledEntity.Transform.GridPosition;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}

@@ -53,8 +53,6 @@ namespace Robust.Client.Graphics.ClientEye
         /// <inheritdoc />
         public void GetViewMatrix(out Matrix3 viewMatrix)
         {
-            //TODO: Something is funky with this, matrices are being multiplied backwards, Position is negative
-            //Should this be a normal transform that is inverted?
             var scaleMat = Matrix3.CreateScale(_scale.X, _scale.Y);
             var rotMat = Matrix3.CreateRotation(_rotation);
             var transMat = Matrix3.CreateTranslation(-_coords.Position);

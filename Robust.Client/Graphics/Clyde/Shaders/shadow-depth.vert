@@ -1,6 +1,6 @@
-#version 330 core
+#version 140
 
-layout (location = 0) in vec3 aPos;
+/*layout (location = 0)*/ in vec3 aPos;
 
 out vec2 pos;
 

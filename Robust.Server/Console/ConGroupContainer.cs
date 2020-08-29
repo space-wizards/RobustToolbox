@@ -45,7 +45,7 @@ namespace Robust.Server.Console
             if (_resMan.UserData.Exists(_groupPath))
             {
                 _logger.Info($"Loading permGroups from UserData: {_groupPath}");
-                var file = _resMan.UserData.Open(_groupPath, FileMode.Open);
+                var file = _resMan.UserData.OpenRead(_groupPath);
                 LoadGroupYamlStream(file);
                 return;
             }
@@ -89,7 +89,7 @@ namespace Robust.Server.Console
         {
             _logger.Info($"Saving permGroups to UserData: {_groupPath}");
             _resMan.UserData.CreateDir(_groupPath);
-            var file = _resMan.UserData.Open(_groupPath, FileMode.Create);
+            var file = _resMan.UserData.Create(_groupPath);
 
             using (var sw = new StreamWriter(file))
             {
@@ -155,6 +155,17 @@ namespace Robust.Server.Console
             if (_groups.TryGetValue(groupIndex, out var group))
             {
                 return group.CanScript;
+            }
+
+            _logger.Error($"Unknown groupIndex: {groupIndex}");
+            return false;
+        }
+
+        public bool CanAdminMenu(ConGroupIndex groupIndex)
+        {
+            if (_groups.TryGetValue(groupIndex, out var group))
+            {
+                return group.CanAdminMenu;
             }
 
             _logger.Error($"Unknown groupIndex: {groupIndex}");

@@ -155,6 +155,11 @@ namespace Robust.Client.Audio.Midi
         /// <param name="time"></param>
         /// <param name="absolute"></param>
         void ScheduleMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent, uint time, bool absolute);
+
+        /// <summary>
+        ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
+        /// </summary>
+        internal void InternalDispose();
     }
 
     public class MidiRenderer : IMidiRenderer
@@ -558,7 +563,11 @@ namespace Robust.Client.Audio.Midi
                     CloseMidi();
                     break;
             }
+        }
 
+        /// <inheritdoc />
+        void IMidiRenderer.InternalDispose()
+        {
             Source?.Dispose();
             _synth?.Dispose();
             _player?.Dispose();

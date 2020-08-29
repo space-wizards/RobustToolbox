@@ -1,6 +1,4 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -70,8 +68,8 @@ namespace Robust.Shared.Maths
             var d2 = dx * dx + dy * dy;
             var r2 = Radius * Radius;
 
-            // Instead of d2 <= r2, use FloatMath.CloseTo to allow for some tolerance.
-            return (d2 < r2) || FloatMath.CloseTo(d2, r2);
+            // Instead of d2 <= r2, use MathHelper.CloseTo to allow for some tolerance.
+            return (d2 < r2) || MathHelper.CloseTo(d2, r2);
         }
 
         /// <inheritdoc />

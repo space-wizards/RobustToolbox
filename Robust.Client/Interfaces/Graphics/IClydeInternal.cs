@@ -46,5 +46,6 @@ namespace Robust.Client.Interfaces.Graphics
         string GetKeyNameScanCode(int scanCode);
 
         int GetKeyScanCode(Keyboard.Key key);
+        void Shutdown();
     }
 }

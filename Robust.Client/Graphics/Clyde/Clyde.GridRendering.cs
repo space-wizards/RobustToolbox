@@ -2,6 +2,9 @@
 using System.Buffers;
 using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -9,6 +12,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         private readonly Dictionary<GridId, Dictionary<MapIndices, MapChunkData>> _mapChunkData =
             new Dictionary<GridId, Dictionary<MapIndices, MapChunkData>>();
 
@@ -26,7 +31,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             SetTexture(TextureUnit.Texture0, _tileDefinitionManager.TileTextureAtlas);
-            SetTexture(TextureUnit.Texture1, _lightingReady ? _lightRenderTarget.Texture : _stockTextureWhite);
+            SetTexture(TextureUnit.Texture1, _lightingReady ? _currentViewport!.LightRenderTarget.Texture : _stockTextureWhite);
 
             var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
 
@@ -35,6 +40,7 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
+            var compMan = _entityManager.ComponentManager;
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
@@ -44,15 +50,13 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var model = Matrix3.Identity;
-                model.R0C2 = grid.WorldPosition.X;
-                model.R1C2 = grid.WorldPosition.Y;
-                gridProgram.SetUniform(UniIModelMatrix, model);
+                var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
+                gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
 
                 foreach (var (_, chunk) in grid.GetMapChunks())
                 {
                     // Calc world bounds for chunk.
-                    if (!chunk.CalcWorldBounds().Intersects(worldBounds))
+                    if (!chunk.CalcWorldBounds().Intersects(in worldBounds))
                     {
                         continue;
                     }
@@ -70,9 +74,11 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     GL.BindVertexArray(datum.VAO);
+                    CheckGlError();
 
                     _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);
+                    CheckGlError();
                 }
             }
         }
@@ -98,7 +104,7 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var tile in chunk)
                 {
                     var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
-                    if (!regionMaybe.HasValue)
+                    if (regionMaybe == null)
                     {
                         continue;
                     }
@@ -121,6 +127,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 GL.BindVertexArray(datum.VAO);
+                CheckGlError();
                 datum.EBO.Use();
                 datum.VBO.Use();
                 datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * 5));
@@ -139,6 +146,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var vao = (uint)GL.GenVertexArray();
             GL.BindVertexArray(vao);
+            CheckGlError();
 
             var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
@@ -155,6 +163,7 @@ namespace Robust.Client.Graphics.Clyde
             // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
+            CheckGlError();
 
             // Assign VBO and EBO to VAO.
             // OpenGL 3.x is such a good API.
@@ -214,6 +223,7 @@ namespace Robust.Client.Graphics.Clyde
             foreach (var chunkDatum in data.Values)
             {
                 GL.DeleteVertexArray(chunkDatum.VAO);
+                CheckGlError();
                 chunkDatum.VBO.Delete();
                 chunkDatum.EBO.Delete();
             }

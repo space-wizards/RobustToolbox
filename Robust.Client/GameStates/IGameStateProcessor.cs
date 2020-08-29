@@ -59,6 +59,12 @@ namespace Robust.Client.GameStates
         bool Logging { get; set; }
 
         /// <summary>
+        ///     The last REAL server tick that has been processed.
+        ///     i.e. not incremented on extrapolation.
+        /// </summary>
+        GameTick LastProcessedRealState { get; set; }
+
+        /// <summary>
         ///     Adds a new state into the processor. These are usually from networking or replays.
         /// </summary>
         /// <param name="state">Newly received state.</param>

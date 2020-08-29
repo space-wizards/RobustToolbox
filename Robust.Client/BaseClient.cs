@@ -53,6 +53,7 @@ namespace Robust.Client
         {
             _net.RegisterNetMessage<MsgServerInfo>(MsgServerInfo.NAME, HandleServerInfo);
             _net.RegisterNetMessage<MsgSetTickRate>(MsgSetTickRate.NAME, HandleSetTickRate);
+            _net.RegisterNetMessage<MsgServerInfoReq>(MsgServerInfoReq.NAME);
             _net.Connected += OnConnected;
             _net.ConnectFailed += OnConnectFailed;
             _net.Disconnect += OnNetDisconnect;
@@ -116,6 +117,8 @@ namespace Robust.Client
             _entityManager.Startup();
             _mapManager.Startup();
 
+            _timing.ResetSimTime();
+            _timing.Paused = false;
             PlayerJoinedServer?.Invoke(this, new PlayerEventArgs(session));
         }
 
@@ -189,7 +192,7 @@ namespace Robust.Client
         private void HandleSetTickRate(MsgSetTickRate message)
         {
             _timing.TickRate = message.NewTickRate;
-            Logger.InfoS("client", $"Tickrate changed to: {message.NewTickRate}");
+            Logger.InfoS("client", $"Tickrate changed to: {message.NewTickRate} on tick {_timing.CurTick}");
         }
 
         private void OnLocalStatusChanged(object? obj, StatusEventArgs eventArgs)

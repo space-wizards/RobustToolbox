@@ -72,6 +72,13 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         void RegisterIgnore(string name);
 
+        /// <summary>
+        /// Loads a single prototype class type into the manager.
+        /// </summary>
+        /// <param name="protoClass">A prototype class type that implements IPrototype. This type also
+        /// requires a <see cref="PrototypeAttribute"/> with a non-empty class string.</param>
+        void RegisterType(Type protoClass);
+
         event Action<YamlStream, string>? LoadedData;
 
     }
@@ -233,7 +240,7 @@ namespace Robust.Shared.Prototypes
 
             foreach (var (stream, filePath) in yamlStreams)
             {
-                for (var i = 0; i < stream.Documents.Count; i++)
+                for (var i = 0; i < stream!.Documents.Count; i++)
                 {
                     try
                     {
@@ -281,24 +288,7 @@ namespace Robust.Shared.Prototypes
             Clear();
             foreach (var type in ReflectionManager.GetAllChildren<IPrototype>())
             {
-                var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
-                if (attribute == null)
-                {
-                    throw new InvalidImplementationException(type, typeof(IPrototype), "No " + nameof(PrototypeAttribute) + " to give it a type string.");
-                }
-
-                if (prototypeTypes.ContainsKey(attribute.Type))
-                {
-                    throw new InvalidImplementationException(type, typeof(IPrototype),
-                        $"Duplicate prototype type ID: {attribute.Type}. Current: {prototypeTypes[attribute.Type]}");
-                }
-
-                prototypeTypes[attribute.Type] = type;
-                prototypes[type] = new List<IPrototype>();
-                if (typeof(IIndexedPrototype).IsAssignableFrom(type))
-                {
-                    indexedPrototypes[type] = new Dictionary<string, IIndexedPrototype>();
-                }
+                RegisterType(type);
             }
         }
 
@@ -357,6 +347,37 @@ namespace Robust.Shared.Prototypes
         public void RegisterIgnore(string name)
         {
             IgnoredPrototypeTypes.Add(name);
+        }
+
+        /// <inheritdoc />
+        public void RegisterType(Type type)
+        {
+            if(!(typeof(IPrototype).IsAssignableFrom(type)))
+                throw new InvalidOperationException("Type must implement IPrototype.");
+
+            var attribute = (PrototypeAttribute?)Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+
+            if (attribute == null)
+            {
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    "No " + nameof(PrototypeAttribute) + " to give it a type string.");
+            }
+
+            if (prototypeTypes.ContainsKey(attribute.Type))
+            {
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {prototypeTypes[attribute.Type]}");
+            }
+
+            prototypeTypes[attribute.Type] = type;
+            prototypes[type] = new List<IPrototype>();
+
+            if (typeof(IIndexedPrototype).IsAssignableFrom(type))
+            {
+                indexedPrototypes[type] = new Dictionary<string, IIndexedPrototype>();
+            }
         }
 
         public event Action<YamlStream, string>? LoadedData;

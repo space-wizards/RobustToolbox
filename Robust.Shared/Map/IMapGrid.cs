@@ -16,6 +16,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     True if we are the default grid of our map.
         /// </summary>
+        [Obsolete("The concept of 'default grids' is being removed.")]
         bool IsDefaultGrid { get; }
 
         /// <summary>

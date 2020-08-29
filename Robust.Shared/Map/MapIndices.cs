@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -7,6 +8,7 @@ namespace Robust.Shared.Map
 {
     /// <summary>
     ///     Internal structure to store 2 indices of a chunk or tile.
+    ///     <remarks>Despite the name, this can refer to a specific tile on a grid.</remarks>
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
@@ -39,6 +41,22 @@ namespace Robust.Shared.Map
         public static MapIndices operator +(MapIndices left, MapIndices right)
         {
             return new MapIndices(left.X + right.X, left.Y + right.Y);
+        }
+
+        /// <summary>
+        ///     Translates the indices by a given offset.
+        /// </summary>
+        public static MapIndices operator -(MapIndices left, MapIndices right)
+        {
+            return new MapIndices(left.X - right.X, left.Y - right.Y);
+        }
+
+        /// <summary>
+        ///     Returns the opposite indices.
+        /// </summary>
+        public static MapIndices operator -(MapIndices indices)
+        {
+            return new MapIndices(-indices.X, -indices.Y);
         }
 
         /// <summary>
@@ -83,6 +101,13 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
+        public GridCoordinates ToGridCoordinates(IMapManager mapManager, GridId gridId)
+        {
+            var tile = mapManager.GetGrid(gridId).TileSize;
+
+            return new GridCoordinates(X * tile, Y * tile, gridId);
+        }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {
@@ -97,6 +122,11 @@ namespace Robust.Shared.Map
         public static implicit operator MapIndices(in Vector2i indices)
         {
             return new MapIndices(indices.X, indices.Y);
+        }
+
+        public static implicit operator Vector2(in MapIndices indices)
+        {
+            return new Vector2(indices.X, indices.Y);
         }
     }
 }

@@ -19,9 +19,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
-        // Max distance per tick how far an entity can move before it is considered teleporting.
-        private const float MaxInterpDistance = 2.0f;
-
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
@@ -53,6 +50,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables]
         public MapId MapID { get; private set; }
 
+        private bool _mapIdInitialized;
+
+
         /// <inheritdoc />
         [ViewVariables]
         public GridId GridID
@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return GridId.Invalid;
 
                 // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapGridComponent gridComp))
+                if (Owner.TryGetComponent(out IMapGridComponent? gridComp))
                     return gridComp.GridIndex;
 
                 // branch or leaf node
@@ -133,7 +133,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
                 else
                 {
-                    DetachParent();
+                    AttachToGridOrMap();
                 }
             }
         }
@@ -211,8 +211,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 if (value.GridID != GridID)
                 {
-                    var newGrid = _mapManager.GetGrid(value.GridID);
-                    AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
+                    if (value.GridID != GridId.Invalid)
+                    {
+                        var newGrid = _mapManager.GetGrid(value.GridID);
+                        AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
+                    }
+                    else
+                    {
+                        var map = _mapManager.GetMapEntity(MapID);
+                        AttachParent(map);
+                    }
                 }
 
                 // world coords to parent coords
@@ -330,15 +338,55 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        [ViewVariables]
-        public Vector2 LerpSource => _prevPosition;
-        [ViewVariables]
-        public Angle LerpSourceAngle => _prevRotation;
+        [ViewVariables] public Vector2 LerpSource => _prevPosition;
+        [ViewVariables] public Angle LerpSourceAngle => _prevRotation;
+
+        [ViewVariables] public EntityUid LerpParent { get; private set; }
 
         /// <inheritdoc />
         public override void Initialize()
         {
             base.Initialize();
+
+            // Children MAY be initialized here before their parents are.
+            // We do this whole dance to handle this recursively,
+            // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
+            static MapId FindMapIdAndSet(TransformComponent p)
+            {
+                if (p._mapIdInitialized)
+                {
+                    return p.MapID;
+                }
+
+                MapId value;
+                if (p._parent.IsValid())
+                {
+                    value = FindMapIdAndSet((TransformComponent) p.Parent!);
+                }
+                else
+                {
+                    // second level node, terminates recursion up the branch of the tree
+                    if (p.Owner.TryGetComponent(out IMapComponent? mapComp))
+                    {
+                        value = mapComp.WorldMap;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                    }
+                }
+
+                p.MapID = value;
+                p._mapIdInitialized = true;
+                return value;
+            }
+
+            if (!_mapIdInitialized)
+            {
+                FindMapIdAndSet(this);
+
+                _mapIdInitialized = true;
+            }
 
             // Has to be done if _parent is set from ExposeData.
             if (_parent.IsValid())
@@ -346,20 +394,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
                 ((TransformComponent) Parent!)._children.Add(Owner.Uid);
-
-                MapID = Parent.MapID;
-            }
-            else
-            {
-                // second level node, terminates recursion up the branch of the tree
-                if (Owner.TryGetComponent(out IMapComponent mapComp))
-                {
-                    MapID = mapComp.WorldMap;
-                }
-                else
-                {
-                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
-                }
             }
 
             UpdateEntityTree();
@@ -398,7 +432,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <summary>
         /// Detaches this entity from its parent.
         /// </summary>
-        public void DetachParent()
+        public void AttachToGridOrMap()
         {
             // nothing to do
             var oldParent = Parent;
@@ -411,9 +445,18 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             IEntity newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+            {
                 newMapEntity = _entityManager.GetEntity(mapGrid.GridEntityId);
-            else
+            }
+            else if (_mapManager.HasMapEntity(mapPos.MapId))
+            {
                 newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+            }
+            else
+            {
+                DetachParentToNull();
+                return;
+            }
 
             // this would be a no-op
             var oldParentEnt = oldParent.Owner;
@@ -528,7 +571,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            ICollidableComponent collider;
+            ICollidableComponent? collider;
 
             if (oldId != MapId.Nullspace)
             {
@@ -665,6 +708,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 _nextPosition = nextTransform.LocalPosition;
                 _nextRotation = nextTransform.Rotation;
+                LerpParent = nextTransform.ParentID;
                 ActivateLerp();
             }
             else
@@ -672,6 +716,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // this should cause the lerp to do nothing
                 _nextPosition = null;
                 _nextRotation = null;
+                LerpParent = EntityUid.Invalid;
             }
         }
 
@@ -723,7 +768,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
 
         private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out ICollidableComponent collider) && collider.UpdatePhysicsTree();
+            Owner.TryGetComponent(out ICollidableComponent? collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

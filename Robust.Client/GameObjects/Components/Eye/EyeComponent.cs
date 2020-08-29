@@ -26,6 +26,8 @@ namespace Robust.Client.GameObjects
         private Vector2 setZoomOnInitialize = Vector2.One;
         private Vector2 offset = Vector2.Zero;
 
+        public IEye Eye => _eye;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
         {

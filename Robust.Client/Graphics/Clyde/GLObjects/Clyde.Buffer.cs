@@ -27,9 +27,11 @@ namespace Robust.Client.Graphics.Clyde
                 UsageHint = usage;
 
                 GL.GenBuffers(1, out uint handle);
+                clyde.CheckGlError();
                 ObjectHandle = handle;
 
                 GL.BindBuffer(type, handle);
+                clyde.CheckGlError();
 
                 _clyde.ObjectLabelMaybe(ObjectLabelIdentifier.Buffer, ObjectHandle, name);
             }
@@ -53,14 +55,19 @@ namespace Robust.Client.Graphics.Clyde
                 DebugTools.Assert(ObjectHandle != 0);
 
                 GL.BindBuffer(Type, ObjectHandle);
+                _clyde.CheckGlError();
             }
 
             public void Delete()
             {
                 GL.DeleteBuffer(ObjectHandle);
+                _clyde.CheckGlError();
                 ObjectHandle = 0;
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(int start, Span<T> data) where T : unmanaged
             {
@@ -74,8 +81,13 @@ namespace Robust.Client.Graphics.Clyde
                         GL.BufferSubData(Type, (IntPtr) start, byteSpan.Length, (IntPtr) ptr);
                     }
                 }
+
+                _clyde.CheckGlError();
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(Span<T> data) where T : unmanaged
             {
@@ -89,8 +101,13 @@ namespace Robust.Client.Graphics.Clyde
                         GL.BufferSubData(Type, IntPtr.Zero, byteSpan.Length, (IntPtr) ptr);
                     }
                 }
+
+                _clyde.CheckGlError();
             }
 
+            /// <summary>
+            ///     <c>glBufferSubData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void WriteSubData<T>(in T data) where T : unmanaged
             {
@@ -102,8 +119,13 @@ namespace Robust.Client.Graphics.Clyde
                         GL.BufferSubData(Type, IntPtr.Zero, sizeof(T), (IntPtr) ptr);
                     }
                 }
+
+                _clyde.CheckGlError();
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(Span<T> data) where T : unmanaged
             {
@@ -117,8 +139,13 @@ namespace Robust.Client.Graphics.Clyde
                         GL.BufferData(Type, byteSpan.Length, (IntPtr) ptr, UsageHint);
                     }
                 }
+
+                _clyde.CheckGlError();
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate<T>(in T data) where T : unmanaged
             {
@@ -130,13 +157,19 @@ namespace Robust.Client.Graphics.Clyde
                         GL.BufferData(Type, sizeof(T), (IntPtr) ptr, UsageHint);
                     }
                 }
+
+                _clyde.CheckGlError();
             }
 
+            /// <summary>
+            ///     <c>glBufferData</c>
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate(int size)
             {
                 Use();
                 GL.BufferData(Type, size, IntPtr.Zero, UsageHint);
+                _clyde.CheckGlError();
             }
         }
 

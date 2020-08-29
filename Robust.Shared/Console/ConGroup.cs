@@ -14,5 +14,6 @@ namespace Robust.Shared.Console
         public bool CanViewVar { get; set; }
         public bool CanAdminPlace { get; set; }
         public bool CanScript { get; set; }
+        public bool CanAdminMenu { get; set; }
     }
 }

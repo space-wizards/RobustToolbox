@@ -60,7 +60,8 @@ namespace Robust.Shared.Network.Messages
             {
                 serializer.Serialize(stream, RequestMeta);
                 buffer.Write((int)stream.Length);
-                buffer.Write(stream.ToArray());
+                stream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

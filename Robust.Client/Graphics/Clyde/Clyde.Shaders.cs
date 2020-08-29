@@ -52,10 +52,10 @@ namespace Robust.Client.Graphics.Clyde
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var program = _compileProgram(vertBody, fragBody, name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
 
-            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
-            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
+            program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+            program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
 
             var loaded = new LoadedShader
             {
@@ -78,14 +78,14 @@ namespace Robust.Client.Graphics.Clyde
 
             var (vertBody, fragBody) = GetShaderCode(newShader);
 
-            var program = _compileProgram(vertBody, fragBody, loaded.Name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, loaded.Name);
 
             loaded.Program.Delete();
 
             loaded.Program = program;
 
-            program.BindBlock(UniProjViewMatrices, ProjViewBindingIndex);
-            program.BindBlock(UniUniformConstants, UniformConstantsBindingIndex);
+            program.BindBlock(UniProjViewMatrices, BindingIndexProjView);
+            program.BindBlock(UniUniformConstants, BindingIndexUniformConstants);
         }
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
@@ -125,7 +125,8 @@ namespace Robust.Client.Graphics.Clyde
             return reader.ReadToEnd();
         }
 
-        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource, string? name = null)
+        private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
+            (string, uint)[] attribLocations, string? name = null)
         {
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
@@ -158,7 +159,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 try
                 {
-                    program.Link();
+                    program.Link(attribLocations);
                 }
                 catch (ShaderCompilationException e)
                 {
@@ -273,7 +274,7 @@ namespace Robust.Client.Graphics.Clyde
             return (vertexSource, fragmentSource);
         }
 
-        private void ClearDeadShaderInstances()
+        private void FlushShaderInstanceDispose()
         {
             while (_deadShaderInstances.TryDequeue(out var handle))
             {

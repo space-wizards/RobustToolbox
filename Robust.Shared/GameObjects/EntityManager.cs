@@ -43,6 +43,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
 
+        /// <inheritdoc />
+        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
@@ -153,8 +156,8 @@ namespace Robust.Shared.GameObjects
             foreach (var entity in _entityTreesPerMap[mapId].Query(position, approximate))
             {
                 var transform = entity.Transform;
-                if (FloatMath.CloseTo(transform.GridPosition.X, position.X) &&
-                    FloatMath.CloseTo(transform.GridPosition.Y, position.Y))
+                if (MathHelper.CloseTo(transform.GridPosition.X, position.X) &&
+                    MathHelper.CloseTo(transform.GridPosition.Y, position.Y))
                 {
                     yield return entity;
                 }
@@ -407,20 +410,9 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in newResults)
             {
-                if (entity.TryGetComponent(out ICollidableComponent component))
+                if (Intersecting(entity, position))
                 {
-                    if (component.WorldAABB.Contains(position))
-                        yield return entity;
-                }
-                else
-                {
-                    var transform = entity.Transform;
-                    var entPos = transform.WorldPosition;
-                    if (FloatMath.CloseTo(entPos.X, position.X)
-                        && FloatMath.CloseTo(entPos.Y, position.Y))
-                    {
-                        yield return entity;
-                    }
+                    yield return entity;
                 }
             }
         }
@@ -447,6 +439,34 @@ namespace Robust.Shared.GameObjects
             }
 
             return GetEntitiesIntersecting(entity.Transform.GridPosition, approximate);
+        }
+
+        /// <inheritdoc />
+        public bool IsIntersecting(IEntity entityOne, IEntity entityTwo)
+        {
+            var position = entityOne.Transform.MapPosition.Position;
+            return Intersecting(entityTwo, position);
+        }
+
+        private bool Intersecting(IEntity entity, Vector2 mapPosition)
+        {
+            if (entity.TryGetComponent(out ICollidableComponent? component))
+            {
+                if (component.WorldAABB.Contains(mapPosition))
+                    return true;
+            }
+            else
+            {
+                var transform = entity.Transform;
+                var entPos = transform.WorldPosition;
+                if (MathHelper.CloseTo(entPos.X, mapPosition.X)
+                    && MathHelper.CloseTo(entPos.Y, mapPosition.Y))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <inheritdoc />
@@ -582,7 +602,7 @@ namespace Robust.Shared.GameObjects
             if (ent.Deleted)
                 return new Box2(0, 0, 0, 0);
 
-            if (ent.TryGetComponent(out ICollidableComponent collider))
+            if (ent.TryGetComponent(out ICollidableComponent? collider))
                 return collider.WorldAABB;
 
             var pos = ent.Transform.WorldPosition;

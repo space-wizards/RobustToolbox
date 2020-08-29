@@ -156,6 +156,7 @@ namespace Robust.Shared.Map
                     foreach (var chunkData in gridDatum.ChunkData)
                     {
                         var chunk = grid.GetChunk(chunkData.Index);
+                        chunk.SuppressCollisionRegeneration = true;
                         DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
 
                         var counter = 0;
@@ -171,6 +172,9 @@ namespace Robust.Shared.Map
                                 }
                             }
                         }
+
+                        chunk.SuppressCollisionRegeneration = false;
+                        chunk.RegenerateCollision();
                     }
 
                     if (modified.Count != 0)
@@ -209,7 +213,7 @@ namespace Robust.Shared.Map
 
                     // locate the entity that represents this map that was just sent to us
                     IEntity? sharedMapEntity = null;
-                    var mapComps = _entityManager.ComponentManager.GetAllComponents<IMapComponent>();
+                    var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
                     foreach (var mapComp in mapComps)
                     {
                         if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
@@ -259,7 +263,7 @@ namespace Robust.Shared.Map
                     cGridComp.ClearGridId();
                     cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
-                    var gridComps = _entityManager.ComponentManager.GetAllComponents<IMapGridComponent>();
+                    var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>();
                     foreach (var gridComp in gridComps)
                     {
                         if (gridComp.GridIndex == kvNewGrid.Key)

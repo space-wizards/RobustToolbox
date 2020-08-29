@@ -13,7 +13,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void OnMoveEvent(MoveEvent @event)
         {
-            if (@event.Sender.TryGetComponent(out SnapGridComponent snapGrid))
+            if (@event.Sender.TryGetComponent(out SnapGridComponent? snapGrid))
             {
                 snapGrid.UpdatePosition();
             }

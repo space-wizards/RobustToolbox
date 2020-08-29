@@ -56,7 +56,7 @@ namespace Robust.Client.ViewVariables
             _netManager.RegisterNetMessage<MsgViewVariablesReqData>(MsgViewVariablesReqData.NAME);
         }
 
-        public ViewVariablesPropertyEditor PropertyFor(Type type)
+        public ViewVariablesPropertyEditor PropertyFor(Type? type)
         {
             // TODO: make this more flexible.
             if (type == null)
@@ -189,14 +189,15 @@ namespace Robust.Client.ViewVariables
                 return new ViewVariablesPropertyEditorColor();
             }
 
+            if (type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
+                type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return new ViewVariablesPropertyEditorKeyValuePair();
+            }
+
             if (type != typeof(ViewVariablesBlobMembers.ServerValueTypeToken) && !type.IsValueType)
             {
                 return new ViewVariablesPropertyEditorReference();
-            }
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
-            {
-                return new ViewVariablesPropertyEditorKeyValuePair();
             }
 
             return new ViewVariablesPropertyEditorDummy();

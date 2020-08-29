@@ -238,7 +238,7 @@ namespace Robust.Shared.Serialization
         /// </exception>
         public virtual T ReadDataField<T>(string name)
         {
-            if (TryReadDataField(name, out T val))
+            if (TryReadDataField<T>(name, out var val))
             {
                 return val;
             }

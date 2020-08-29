@@ -162,6 +162,7 @@ namespace Robust.UnitTesting.Shared.Timing
             newStopwatch.SetupGet(p => p.Elapsed).Returns(() => elapsedVal);
             var gameTiming = GameTimingFactory(newStopwatch.Object);
             gameTiming.InSimulation = false;
+            gameTiming.Paused = false; // paused timing returns 0 frame time.
             gameTiming.StartFrame(); // changes last time from 0 to 3
 
             // Act

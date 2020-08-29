@@ -10,6 +10,7 @@ using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Input;
+using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -427,9 +428,16 @@ namespace Robust.Client.Input
         }
 
         /// <inheritdoc />
-        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler cmdHandler)
+        public void SetInputCommand(BoundKeyFunction function, InputCmdHandler? cmdHandler)
         {
-            _commands[function] = cmdHandler;
+            if (cmdHandler == null)
+            {
+                _commands.Remove(function);
+            }
+            else
+            {
+                _commands[function] = cmdHandler;
+            }
         }
 
         [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]

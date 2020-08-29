@@ -95,7 +95,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             var prototype = manager.Index<EntityPrototype>("PlaceInheritTester");
 
-            Assert.AreEqual(prototype.PlacementMode, "SnapgridCenter");
+            Assert.That(prototype.PlacementMode, Is.EqualTo("SnapgridCenter"));
         }
 
         private enum YamlTestEnum

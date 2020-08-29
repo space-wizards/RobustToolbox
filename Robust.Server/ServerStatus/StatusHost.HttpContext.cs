@@ -44,28 +44,15 @@ namespace Robust.Server.ServerStatus
                 return;
             }
 
-            IoCManager.Clear();
             ILogManager? logMgr = null;
             WaitSync(() =>
             {
                 logMgr = IoCManager.Resolve<ILogManager>();
             }, ApplicationStopping);
-            IoCManager.InitThread();
-            if (logMgr != null)
-            {
-                try
-                {
-                    IoCManager.RegisterInstance<ILogManager>(logMgr);
-                }
-                catch (Exception ex)
-                {
-                    logMgr.GetSawmill("http").Error("Can't register log manager instance on thread.\n" + ex);
-                }
-            }
-
-            IoCManager.BuildGraph();
+            var deps = new DependencyCollection();
+            deps.RegisterInstance<ILogManager>(new ProxyLogManager(logMgr!));
+            deps.BuildGraph();
+            IoCManager.InitThread(deps, true);
         }
-
     }
-
 }

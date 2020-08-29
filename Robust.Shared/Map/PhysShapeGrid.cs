@@ -48,7 +48,8 @@ namespace Robust.Shared.Map
             _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
         }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport)
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
+            float sleepPercent)
         {
             handle.SetTransform(modelMatrix);
             foreach (var chunk in _mapGrid.GetMapChunks().Values)
@@ -58,7 +59,7 @@ namespace Robust.Shared.Map
                     var localChunkPos = new Vector2(chunk.Indices.X, chunk.Indices.Y) * _mapGrid.ChunkSize;
                     var localBox = box.Translated(localChunkPos);
 
-                    handle.DrawRect(localBox, handle.GridFillColor);
+                    handle.DrawRect(localBox, handle.CalcWakeColor(handle.GridFillColor, sleepPercent));
                 }
             }
             handle.SetTransform(Matrix3.Identity);
@@ -92,6 +93,8 @@ namespace Robust.Shared.Map
                 _mapGrid = (IMapGridInternal)mapMan.GetGrid(_gridId);
             }
         }
+
+        public event Action? OnDataChanged { add { } remove { } }
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)

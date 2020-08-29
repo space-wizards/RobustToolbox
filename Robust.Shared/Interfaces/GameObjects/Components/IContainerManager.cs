@@ -62,5 +62,10 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         bool ContainsEntity(IEntity entity);
 
         void ForceRemove(IEntity entity);
+
+        /// <summary>
+        ///     DO NOT CALL THIS DIRECTLY. Call <see cref="IContainer.Shutdown"/> instead.
+        /// </summary>
+        void InternalContainerShutdown(IContainer container);
     }
 }

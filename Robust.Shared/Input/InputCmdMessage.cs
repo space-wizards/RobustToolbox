@@ -57,6 +57,12 @@ namespace Robust.Shared.Input
             if (ReferenceEquals(null, other)) return 1;
             return InputSequence.CompareTo(other.InputSequence);
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"tick={Tick}, subTick={SubTick}, seq={InputSequence} func={InputFunctionId}";
+        }
     }
 
     /// <summary>

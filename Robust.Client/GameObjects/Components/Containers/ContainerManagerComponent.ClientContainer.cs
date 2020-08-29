@@ -26,8 +26,11 @@ namespace Robust.Client.GameObjects.Components.Containers
             [ViewVariables] public string ID { get; }
             [ViewVariables] public IEntity Owner => Manager.Owner;
             [ViewVariables] public bool Deleted { get; private set; }
-            [ViewVariables] public IReadOnlyCollection<IEntity> ContainedEntities => Entities;
+            [ViewVariables] public IReadOnlyList<IEntity> ContainedEntities => Entities;
+            [ViewVariables]
             public bool ShowContents { get; set; }
+            [ViewVariables]
+            public bool OccludesLight { get; set; }
 
             public bool CanInsert(IEntity toinsert)
             {
@@ -77,6 +80,10 @@ namespace Robust.Client.GameObjects.Components.Containers
             {
                 Deleted = true;
             }
+        }
+
+        public override void InternalContainerShutdown(IContainer container)
+        {
         }
     }
 }

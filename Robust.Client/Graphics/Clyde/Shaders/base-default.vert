@@ -1,9 +1,9 @@
-#version 330 core
+#version 140
 
 // Vertex position.
-layout (location = 0) in vec2 aPos;
+/*layout (location = 0)*/ in vec2 aPos;
 // Texture coordinates.
-layout (location = 1) in vec2 tCoord;
+/*layout (location = 1)*/ in vec2 tCoord;
 
 out vec2 UV;
 out vec2 Pos;

@@ -29,5 +29,10 @@ namespace Robust.Client.ViewVariables
         {
             OnValueChanged?.Invoke(newValue);
         }
+
+        public virtual void WireNetworkSelector(uint sessionId, object[] selectorChain)
+        {
+
+        }
     }
 }

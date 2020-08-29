@@ -153,7 +153,7 @@ namespace Robust.Server.Console
             }
             catch (Exception e)
             {
-                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}");
+                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}:\n{e}");
                 SendText(session, $"There was an error while executing the command: {e}");
             }
         }
@@ -186,13 +186,14 @@ namespace Robust.Server.Console
                 throw new ArgumentNullException(nameof(session));
 
             var realPass = _configMan.GetCVar<string>("console.password");
+            var hostPass = _configMan.GetCVar<string>("console.hostpassword");
 
             // password disabled
             if (string.IsNullOrWhiteSpace(realPass))
                 return false;
 
             // wrong password
-            if (password != realPass)
+            if (password != realPass && password != hostPass)
                 return false;
 
             // success!
@@ -209,7 +210,6 @@ namespace Robust.Server.Console
 
             public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
-                // system console can't log in to itself, and is pointless anyways
                 if (player == null)
                     return;
 
@@ -219,8 +219,10 @@ namespace Robust.Server.Console
 
                 // WE ARE AT THE BRIDGE OF DEATH
                 if (shell.ElevateShell(player, args[0]))
+                {
+                    shell.SendText(player, "Logged in.");
                     return;
-
+                }
                 // CAST INTO THE GORGE OF ETERNAL PERIL
                 Logger.WarningS(
                     "con.auth",
@@ -270,7 +272,10 @@ namespace Robust.Server.Console
 
                 // WE ARE AT THE BRIDGE OF DEATH
                 if (shell.ElevateShellHost(player, args[0]))
+                {
+                    shell.SendText(player, "Logged in as host.");
                     return;
+                }
 
                 // CAST INTO THE GORGE OF ETERNAL PERIL
                 Logger.WarningS(
@@ -279,6 +284,25 @@ namespace Robust.Server.Console
 
                 var net = IoCManager.Resolve<IServerNetManager>();
                 net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
+            }
+        }
+
+        private class LogoutCommand : IClientCommand
+        {
+            public string Command => "logout";
+            public string Description => "Demotes the client to player permission group.";
+            public string Help => "logout";
+
+            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+            {
+                // system console can't log in to itself, and is pointless anyways
+                if (player == null)
+                    return;
+
+                var groupController = IoCManager.Resolve<IConGroupController>();
+                groupController.SetGroup(player, new ConGroupIndex(1));
+                shell.SendText(player, "Logged out.");
+
             }
         }
 

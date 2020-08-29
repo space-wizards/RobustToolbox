@@ -82,6 +82,8 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Cursor automatically used when the mouse is not over any UI control.
         /// </summary>
         ICursor? WorldCursor { get; set; }
+
+        void PushModal(Control modal);
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
@@ -117,8 +119,6 @@ namespace Robust.Client.Interfaces.UserInterface
         void ControlHidden(Control control);
 
         void ControlRemovedFromTree(Control control);
-
-        void PushModal(Control modal);
 
         void RemoveModal(Control modal);
 

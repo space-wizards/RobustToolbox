@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -39,13 +38,15 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         IEnumerable<IEntity> GetCollidingEntities(IPhysBody body, Vector2 offset, bool approximate = true);
 
+        IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox);
+
         /// <summary>
         ///     Checks whether a body is colliding
         /// </summary>
         /// <param name="body"></param>
         /// <param name="offset"></param>
         /// <returns></returns>
-        bool IsColliding(IPhysBody body, Vector2 offset);
+        bool IsColliding(IPhysBody body, Vector2 offset, bool approx);
 
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
@@ -71,14 +72,6 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>The distance the ray traveled while colliding with entities</returns>
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null);
-
-        /// <summary>
-        ///     Calculates the normal vector for two colliding bodies
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        Vector2 CalculateNormal(IPhysBody target, IPhysBody source);
 
         /// <summary>
         ///     Calculates the penetration depth of the axis-of-least-penetration for a
@@ -107,6 +100,7 @@ namespace Robust.Shared.Interfaces.Physics
 
         void RemovedFromMap(IPhysBody body, MapId mapId);
         void AddedToMap(IPhysBody body, MapId mapId);
+        int SleepTimeThreshold { get; set; }
     }
 
     public struct DebugRayData
@@ -127,52 +121,39 @@ namespace Robust.Shared.Interfaces.Physics
         public float MaxLength { get; }
     }
 
-    public struct Manifold
+    public readonly struct Manifold
     {
+        public readonly ICollidableComponent A;
+        public readonly ICollidableComponent B;
+
+        public readonly Vector2 Normal;
+        public readonly bool Hard;
+
         public Vector2 RelativeVelocity
         {
             get
             {
-                if (APhysics != null)
+                if (A != null)
                 {
-                    if (BPhysics != null)
-                    {
-                        return BPhysics.LinearVelocity - APhysics.LinearVelocity;
-                    }
-                    else
-                    {
-                        return -APhysics.LinearVelocity;
-                    }
+                    if (B != null)
+                        return B.LinearVelocity - A.LinearVelocity;
+                    return -A.LinearVelocity;
                 }
 
-                if (BPhysics != null)
-                {
-                    return BPhysics.LinearVelocity;
-                }
-                else
-                {
-                    return Vector2.Zero;
-                }
+                if (B != null)
+                    return B.LinearVelocity;
+                return Vector2.Zero;
             }
         }
-        public readonly Vector2 Normal;
-        public readonly IPhysBody A;
-        public readonly IPhysBody B;
-        public SharedPhysicsComponent? APhysics;
-        public SharedPhysicsComponent? BPhysics;
 
-        public float InvAMass => 1 / APhysics?.Mass ?? 0.0f;
-        public float InvBMass => 1 / BPhysics?.Mass ?? 0.0f;
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0;
-
-        public Manifold(IPhysBody A, IPhysBody B, SharedPhysicsComponent? aPhysics, SharedPhysicsComponent? bPhysics, IPhysicsManager physicsManager)
+        public Manifold(ICollidableComponent a, ICollidableComponent b, bool hard)
         {
-            this.A = A;
-            this.B = B;
-            Normal = physicsManager.CalculateNormal(A, B);
-            APhysics = aPhysics;
-            BPhysics = bPhysics;
+            A = a;
+            B = b;
+            Normal = PhysicsManager.CalculateNormal(a, b);
+            Hard = hard;
         }
     }
 }

@@ -89,7 +89,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (_entity.TryGetComponent(out ISpriteComponent sprite))
+                if (_entity.TryGetComponent(out ISpriteComponent? sprite))
                 {
                     var hBox = new HBoxContainer();
                     top.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;
@@ -201,15 +201,9 @@ namespace Robust.Client.ViewVariables.Instances
                 var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
                 propertyEdit.SetStyle(otherStyle = !otherStyle);
                 var editor = propertyEdit.SetProperty(propertyData);
-                editor.OnValueChanged += o =>
-                    ViewVariablesManager.ModifyRemote(_entitySession, new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}, o);
-                if (editor is ViewVariablesPropertyEditorReference refEditor)
-                {
-                    refEditor.OnPressed += () =>
-                        ViewVariablesManager.OpenVV(
-                            new ViewVariablesSessionRelativeSelector(_entitySession.SessionId,
-                                new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)}));
-                }
+                var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
+                editor.OnValueChanged += o => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o);
+                editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);
 
                 _serverVariables.AddChild(propertyEdit);
             }

@@ -26,6 +26,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         IComponentManager ComponentManager { get; }
         IEntityNetworkManager EntityNetManager { get; }
+        IEntitySystemManager EntitySysManager { get; }
         IEventBus EventBus { get; }
 
         #region Entity Management
@@ -178,6 +179,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false);
 
+        /// <summary>
+        /// Gets whether two entities are intersecting each other
+        /// </summary>
+        /// <param name="entityOne"></param>
+        /// <param name="entityTwo"></param>
+        /// <returns></returns>
+        public bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
+        
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
         /// </summary>

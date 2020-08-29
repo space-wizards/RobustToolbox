@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -146,6 +144,17 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Returns how much two Boxes overlap from 0 to 1.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public float IntersectPercentage(in Box2 other)
+        {
+            var surfaceIntersect = Area(Intersect(other));
+
+            return surfaceIntersect / (Area(this) + Area(other) - surfaceIntersect);
+        }
+
+        /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -165,7 +174,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEmpty()
         {
-            return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
+            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -262,10 +271,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator ==(Box2 a, Box2 b)
         {
-            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
-                   FloatMath.CloseTo(a.Right, b.Right) &&
-                   FloatMath.CloseTo(a.Top, b.Top) &&
-                   FloatMath.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseTo(a.Right, b.Right) &&
+                   MathHelper.CloseTo(a.Top, b.Top) &&
+                   MathHelper.CloseTo(a.Left, b.Left);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -309,6 +318,18 @@ namespace Robust.Shared.Maths
                 MathF.Min(y, Bottom),
                 MathF.Max(x, Right),
                 MathF.Max(y, Top));
+        }
+
+        /// <summary>
+        /// Given a point, returns the closest point to it inside the box.
+        /// </summary>
+        public Vector2 ClosestPoint(in Vector2 position)
+        {
+            // clamp the point to the border of the box
+            var cx = MathHelper.Clamp(position.X, Left, Right);
+            var cy = MathHelper.Clamp(position.Y, Bottom, Top);
+
+            return new Vector2(cx, cy);
         }
     }
 }

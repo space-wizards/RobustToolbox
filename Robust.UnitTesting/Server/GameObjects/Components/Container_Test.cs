@@ -3,6 +3,7 @@ using System.IO;
 using NUnit.Framework;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -16,6 +17,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
     public class ContainerTest : RobustUnitTest
     {
         private IServerEntityManager EntityManager = default!;
+
+        const string PROTOTYPES = @"
+- type: entity
+  name: dummy
+  id: dummy
+  components:
+  - type: Transform
+";
 
         [OneTimeSetUp]
         public void Setup()
@@ -98,12 +107,107 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(transform.Deleted, Is.True);
         }
 
-        const string PROTOTYPES = @"
-- type: entity
-  name: dummy
-  id: dummy
-  components:
-  - type: Transform
-";
+        [Test]
+        public void TestNestedRemoval()
+        {
+            var owner = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var inserted = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var transform = inserted.Transform;
+            var entity = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+
+            var container = ContainerManagerComponent.Create<Container>("dummy", owner);
+            Assert.That(container.Insert(inserted), Is.True);
+            Assert.That(transform.Parent!.Owner, Is.EqualTo(owner));
+
+            var container2 = ContainerManagerComponent.Create<Container>("dummy", inserted);
+            Assert.That(container2.Insert(entity), Is.True);
+            Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(inserted));
+
+            Assert.That(container2.Remove(entity), Is.True);
+            Assert.That(container.Contains(entity), Is.True);
+            Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(owner));
+
+            owner.Delete();
+            Assert.That(transform.Deleted, Is.True);
+        }
+
+        [Test]
+        public void TestNestedRemovalWithDenial()
+        {
+            var entityOne = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var entityTwo = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var entityThree = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var entityItem = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+
+            var container = ContainerManagerComponent.Create<Container>("dummy", entityOne);
+            var container2 = ContainerManagerComponent.Create<ContainerOnlyContainer>("dummy", entityTwo);
+            var container3 = ContainerManagerComponent.Create<Container>("dummy", entityThree);
+
+            Assert.That(container.Insert(entityTwo), Is.True);
+            Assert.That(entityTwo.Transform.Parent!.Owner, Is.EqualTo(entityOne));
+
+            Assert.That(container2.Insert(entityThree), Is.True);
+            Assert.That(entityThree.Transform.Parent!.Owner, Is.EqualTo(entityTwo));
+
+            Assert.That(container3.Insert(entityItem), Is.True);
+            Assert.That(entityItem.Transform.Parent!.Owner, Is.EqualTo(entityThree));
+
+            Assert.That(container3.Remove(entityItem), Is.True);
+            Assert.That(container.Contains(entityItem), Is.True);
+            Assert.That(entityItem.Transform.Parent!.Owner, Is.EqualTo(entityOne));
+
+            entityOne.Delete();
+            Assert.That(entityTwo.Transform.Deleted, Is.True);
+        }
+
+        private class ContainerOnlyContainer : BaseContainer
+        {
+            /// <summary>
+            /// The generic container class uses a list of entities
+            /// </summary>
+            private readonly List<IEntity> _containerList = new List<IEntity>();
+
+            /// <inheritdoc />
+            public ContainerOnlyContainer(string id, IContainerManager manager) : base(id, manager) { }
+
+            /// <inheritdoc />
+            public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+
+            /// <inheritdoc />
+            protected override void InternalInsert(IEntity toinsert)
+            {
+                _containerList.Add(toinsert);
+                base.InternalInsert(toinsert);
+            }
+
+            /// <inheritdoc />
+            protected override void InternalRemove(IEntity toremove)
+            {
+                _containerList.Remove(toremove);
+                base.InternalRemove(toremove);
+            }
+
+            /// <inheritdoc />
+            public override bool Contains(IEntity contained)
+            {
+                return _containerList.Contains(contained);
+            }
+
+            /// <inheritdoc />
+            public override void Shutdown()
+            {
+                base.Shutdown();
+
+                foreach (var entity in _containerList)
+                {
+                    entity.Delete();
+                }
+            }
+
+            public override bool CanInsert(IEntity toinsert)
+            {
+                return toinsert.TryGetComponent(out IContainerManager _);
+            }
+        }
     }
 }

@@ -36,8 +36,6 @@ using SysVector4 = System.Numerics.Vector4;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 #endif
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -994,10 +992,10 @@ namespace Robust.Shared.Maths
         public bool Equals(Color other)
         {
             return
-                FloatMath.CloseTo(R, other.R) &&
-                FloatMath.CloseTo(G, other.G) &&
-                FloatMath.CloseTo(B, other.B) &&
-                FloatMath.CloseTo(A, other.A);
+                MathHelper.CloseTo(R, other.R) &&
+                MathHelper.CloseTo(G, other.G) &&
+                MathHelper.CloseTo(B, other.B) &&
+                MathHelper.CloseTo(A, other.A);
         }
 
         [PublicAPI]

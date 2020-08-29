@@ -1,10 +1,12 @@
-﻿using Robust.Client.Graphics;
+﻿using Robust.Client.GameObjects.EntitySystems;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -38,6 +40,9 @@ namespace Robust.Client.GameObjects
             get => _enabled;
             set => _enabled = value;
         }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool ContainerOccluded { get; set; }
 
         /// <summary>
         ///     Determines if the light mask should automatically rotate with the entity. (like a flashlight)
@@ -111,6 +116,7 @@ namespace Robust.Client.GameObjects
         ///     Radius, in meters.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float Radius
         {
             get => _radius;
@@ -163,6 +169,18 @@ namespace Robust.Client.GameObjects
             if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
             {
                 Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
+            }
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new RenderTreeRemoveLightMessage(this, map));
             }
         }
 

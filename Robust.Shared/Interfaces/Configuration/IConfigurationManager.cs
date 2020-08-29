@@ -44,6 +44,12 @@ namespace Robust.Shared.Interfaces.Configuration
         bool IsCVarRegistered(string name);
 
         /// <summary>
+        /// Gets a list of all registered cvars
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<string> GetRegisteredCVars();
+
+        /// <summary>
         /// Sets a CVars value.
         /// </summary>
         /// <param name="name">The name of the CVar.</param>

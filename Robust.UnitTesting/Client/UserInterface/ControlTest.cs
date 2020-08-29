@@ -96,7 +96,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             control.SetValue(_refTypeAttachedProperty, "honk");
 
-            Assert.AreEqual(control.GetValue(_refTypeAttachedProperty), "honk");
+            Assert.That(control.GetValue(_refTypeAttachedProperty), Is.EqualTo("honk"));
         }
 
         [Test]
@@ -137,11 +137,11 @@ namespace Robust.UnitTesting.Client.UserInterface
         {
             var control = new Control();
 
-            Assert.AreEqual(5, control.GetValue(_genericProperty));
+            Assert.That(control.GetValue(_genericProperty), Is.EqualTo(5));
 
             control.SetValue(_genericProperty, 11);
 
-            Assert.AreEqual(11, control.GetValue(_genericProperty));
+            Assert.That(control.GetValue(_genericProperty), Is.EqualTo(11));
 
             Assert.That(() => control.SetValue(_genericProperty, 10), Throws.ArgumentException);
         }

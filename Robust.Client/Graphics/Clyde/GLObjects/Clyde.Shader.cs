@@ -26,12 +26,16 @@ namespace Robust.Client.Graphics.Clyde
                 ObjectHandle = (uint)GL.CreateShader(type);
                 Type = type;
                 GL.ShaderSource((int) ObjectHandle, shaderSource);
+                _clyde.CheckGlError();
                 GL.CompileShader(ObjectHandle);
+                _clyde.CheckGlError();
 
                 GL.GetShader(ObjectHandle, ShaderParameter.CompileStatus, out var compiled);
+                _clyde.CheckGlError();
                 if (compiled != 1)
                 {
                     var message = GL.GetShaderInfoLog((int) ObjectHandle);
+                    _clyde.CheckGlError();
                     Delete();
                     throw new ShaderCompilationException(message);
                 }
@@ -44,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
                     return;
                 }
                 GL.DeleteShader(ObjectHandle);
+                _clyde.CheckGlError();
                 ObjectHandle = 0;
             }
         }

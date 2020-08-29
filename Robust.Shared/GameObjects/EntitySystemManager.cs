@@ -38,6 +38,12 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
+        /// <inheritdoc />
+        public event EventHandler<SystemChangedArgs>? SystemLoaded;
+
+        /// <inheritdoc />
+        public event EventHandler<SystemChangedArgs>? SystemUnloaded;
+
         /// <exception cref="InvalidEntitySystemException">Thrown if the provided type is not registered.</exception>
         public T GetEntitySystem<T>()
             where T : IEntitySystem
@@ -117,6 +123,7 @@ namespace Robust.Shared.GameObjects
             foreach (var system in _systems.Values)
             {
                 system.Initialize();
+                SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
 
             // Create update order for entity systems.
@@ -195,6 +202,7 @@ namespace Robust.Shared.GameObjects
             // System.Values is modified by RemoveSystem
             foreach (var system in _systems.Values)
             {
+                SystemUnloaded?.Invoke(this, new SystemChangedArgs(system));
                 system.Shutdown();
                 _entityManager.EventBus.UnsubscribeEvents(system);
             }
@@ -266,6 +274,16 @@ namespace Robust.Shared.GameObjects
             {
                 System = system;
             }
+        }
+    }
+
+    public class SystemChangedArgs : EventArgs
+    {
+        public IEntitySystem System { get; }
+
+        public SystemChangedArgs(IEntitySystem system)
+        {
+            System = system;
         }
     }
 

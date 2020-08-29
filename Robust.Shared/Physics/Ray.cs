@@ -1,8 +1,6 @@
 ﻿using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -35,7 +33,7 @@ namespace Robust.Shared.Maths
             _position = position;
             _direction = direction;
 
-            DebugTools.Assert(FloatMath.CloseTo(_direction.LengthSquared, 1));
+            DebugTools.Assert(MathHelper.CloseTo(_direction.LengthSquared, 1));
 
         }
 

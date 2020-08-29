@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
@@ -286,11 +287,16 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T component)
+        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
             return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
+        }
+
+        public T? GetComponentOrNull<T>() where T : class
+        {
+            return TryGetComponent(out T? component) ? component : default;
         }
 
         /// <inheritdoc />
@@ -301,12 +307,22 @@ namespace Robust.Shared.GameObjects
             return EntityManager.ComponentManager.TryGetComponent(Uid, type, out component);
         }
 
+        public IComponent? GetComponentOrNull(Type type)
+        {
+            return TryGetComponent(type, out var component) ? component : null;
+        }
+
         /// <inheritdoc />
         public bool TryGetComponent(uint netId, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
             return EntityManager.ComponentManager.TryGetComponent(Uid, netId, out component);
+        }
+
+        public IComponent? GetComponentOrNull(uint netId)
+        {
+            return TryGetComponent(netId, out var component) ? component : null;
         }
 
         /// <inheritdoc />
@@ -353,6 +369,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
+            if (Deleted)
+            {
+                return $"{Name} ({Uid}, {Prototype?.ID})D";
+            }
             return $"{Name} ({Uid}, {Prototype?.ID})";
         }
     }

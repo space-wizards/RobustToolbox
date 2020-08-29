@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -16,6 +16,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -28,7 +29,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IDisposable
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -39,15 +40,12 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        private static readonly Version MinimumOpenGLVersion = new Version(3, 3);
-
-        private const int ProjViewBindingIndex = 0;
-        private const int UniformConstantsBindingIndex = 1;
         private GLBuffer ProjViewUBO = default!;
         private GLBuffer UniformConstantsUBO = default!;
 
-        private RenderTarget EntityPostRenderTarget = default!;
+        private RenderTexture EntityPostRenderTarget = default!;
 
         private GLBuffer BatchVBO = default!;
         private GLBuffer BatchEBO = default!;
@@ -57,13 +55,18 @@ namespace Robust.Client.Graphics.Clyde
         private GLBuffer QuadVBO = default!;
         private GLHandle QuadVAO;
 
+        private Viewport _mainViewport = default!;
+
         private bool _drawingSplash = true;
 
         private GLShaderProgram? _currentProgram;
 
         private bool _quartResLights = true;
 
-        private bool _hasKhrDebug;
+        private bool _hasGLKhrDebug;
+        private bool _hasGLTextureSwizzle;
+        private bool _hasGLSamplerObjects;
+        private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -71,6 +74,21 @@ namespace Robust.Client.Graphics.Clyde
         private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
             _transferringScreenshots
                 = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
+
+        public Clyde()
+        {
+            // Init main window render target.
+            var windowRid = AllocRid();
+            var window = new RenderWindow(this, windowRid);
+            var loadedData = new LoadedRenderTarget
+            {
+                IsWindow = true
+            };
+            _renderTargets.Add(windowRid, loadedData);
+
+            _mainWindowRenderTarget = window;
+            _currentRenderTarget = RtToLoaded(window);
+        }
 
         public override bool Initialize()
         {
@@ -87,10 +105,13 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
-            _renderTime += eventArgs.DeltaSeconds;
             _updateAudio();
-            FlushCursorDisposeQueue();
-            ClearDeadShaderInstances();
+
+            FlushCursorDispose();
+            FlushShaderInstanceDispose();
+            FlushRenderTargetDispose();
+            FlushTextureDispose();
+            FlushViewportDispose();
         }
 
         public void Ready()
@@ -113,7 +134,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             base.ReloadConfig();
 
-            RegenerateLightingRenderTargets();
+            RegenAllLightRts();
         }
 
         public override void PostInject()
@@ -124,6 +145,12 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
+
+            _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
+            _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
+            _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
+            _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
+            _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -135,10 +162,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitOpenGL()
         {
-            DetectOpenGLFeatures();
-
-            SetupDebugCallback();
-
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
@@ -146,18 +169,27 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
             Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
 
+            DetectOpenGLFeatures();
+
+            SetupDebugCallback();
+
             LoadVendorSettings(vendor, renderer, version);
 
             var major = GL.GetInteger(GetPName.MajorVersion);
             var minor = GL.GetInteger(GetPName.MinorVersion);
 
-            DebugInfo = new ClydeDebugInfo(new Version(major, minor), MinimumOpenGLVersion, renderer, vendor, version);
+            DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
+            CheckGlError();
             GL.Enable(EnableCap.FramebufferSrgb);
+            CheckGlError();
             GL.Enable(EnableCap.PrimitiveRestart);
+            CheckGlError();
             GL.PrimitiveRestartIndex(ushort.MaxValue);
+            CheckGlError();
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            CheckGlError();
 
             LoadStockTextures();
             LoadStockShaders();
@@ -167,6 +199,7 @@ namespace Robust.Client.Graphics.Clyde
             _renderHandle = new RenderHandle(this);
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            CheckGlError();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -176,7 +209,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             // Quad drawing.
             {
-                var quadVertices = new[]
+                Span<Vertex2D> quadVertices = stackalloc[]
                 {
                     new Vertex2D(1, 0, 1, 1),
                     new Vertex2D(0, 0, 0, 1),
@@ -197,6 +230,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+
+                CheckGlError();
             }
 
             // Batch rendering
@@ -214,6 +249,8 @@ namespace Robust.Client.Graphics.Clyde
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
 
+                CheckGlError();
+
                 BatchEBO = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));
             }
@@ -222,28 +259,76 @@ namespace Robust.Client.Graphics.Clyde
                 nameof(ProjViewUBO));
             ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, ProjViewBindingIndex, ProjViewUBO.ObjectHandle);
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
+            CheckGlError();
 
             UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
                 nameof(UniformConstantsUBO));
             UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
 
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, UniformConstantsBindingIndex,
+            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
                 UniformConstantsUBO.ObjectHandle);
+            CheckGlError();
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
+
+            CreateMainViewport();
+        }
+
+        private void CreateMainViewport()
+        {
+            var (w, h) = _framebufferSize;
+
+            // Ensure viewport size is always even to avoid artifacts.
+            if (w % 2 == 1) w += 1;
+            if (h % 2 == 1) h += 1;
+
+            _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
         }
 
         private void DetectOpenGLFeatures()
         {
             var extensions = GetGLExtensions();
 
-            if (extensions.Contains("GL_KHR_debug"))
+            var major = GL.GetInteger(GetPName.MajorVersion);
+            var minor = GL.GetInteger(GetPName.MinorVersion);
+
+            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, params string[] exts)
             {
-                _hasKhrDebug = true;
+                // Check if feature is available from the GL context.
+                cap = CompareVersion(major, minor, majorMin, minorMin) || extensions.Overlaps(exts);
+
+                var prev = cap;
+                var cVarName = $"display.ogl_block_{capName}";
+                var block = _configurationManager.GetCVar<bool>(cVarName);
+
+                if (block)
+                {
+                    cap = false;
+                    Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
+                }
+
+                Logger.DebugS("clyde.ogl", $"  {capName}: {_hasGLKhrDebug}");
             }
+
+            Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
+
+            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, "GL_KHR_debug");
+            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, "GL_ARB_sampler_objects");
+            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, "GL_ARB_texture_swizzle",
+                "GL_EXT_texture_swizzle");
+        }
+
+        private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)
+        {
+            if (majorB > majorA)
+            {
+                return true;
+            }
+
+            return majorA == majorB && minorB >= minorA;
         }
 
         [SuppressMessage("ReSharper", "UnusedParameter.Local")]
@@ -255,7 +340,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void SetupDebugCallback()
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 Logger.DebugS("clyde.ogl", "KHR_debug not present, OpenGL debug logging not enabled.");
                 return;
@@ -358,7 +443,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }
@@ -381,7 +466,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PushDebugGroupMaybe(string group)
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }
@@ -392,7 +477,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PopDebugGroupMaybe()
         {
-            if (!_hasKhrDebug)
+            if (!_hasGLKhrDebug)
             {
                 return;
             }
@@ -400,7 +485,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.PopDebugGroup();
         }
 
-        public void Dispose()
+        public void Shutdown()
         {
             ShutdownWindowing();
             _shutdownAudio();

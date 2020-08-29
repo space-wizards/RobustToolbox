@@ -1,13 +1,12 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.GameObjects;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
-using Robust.Shared.Physics;
 
 namespace Robust.Client.Physics
 {
@@ -22,7 +21,8 @@ namespace Robust.Client.Physics
         public override void Update(float frameTime)
         {
             _lastRem = _gameTiming.CurTime;
-            SimulateWorld(frameTime, ActuallyRelevant());
+
+            SimulateWorld(frameTime, EntityManager.ComponentManager.EntityQuery<ICollidableComponent>().ToList(), !_gameTiming.InSimulation || !_gameTiming.IsFirstTimePredicted);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -34,13 +34,14 @@ namespace Robust.Client.Physics
 
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
-            SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant());
+            SimulateWorld((float) diff.TotalSeconds, ActuallyRelevant(), true);
         }
 
-        private List<SharedPhysicsComponent> ActuallyRelevant()
+        private List<ICollidableComponent> ActuallyRelevant()
         {
-            return _componentManager.GetAllComponents<PhysicsComponent>().Where(p => p.Predict)
-                .ToList<SharedPhysicsComponent>();
+            var relevant = _componentManager.EntityQuery<ICollidableComponent>().Where(p => p.Predict)
+                .ToList();
+            return relevant;
         }
     }
 }

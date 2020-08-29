@@ -28,7 +28,7 @@ namespace Robust.Shared.Timing
             // does nothing if timer is already running
             _realTimer.Start();
 
-            Paused = false;
+            Paused = true;
             TickRate = NumFrames;
         }
 
@@ -60,14 +60,24 @@ namespace Robust.Shared.Timing
         {
             get
             {
-                CacheCurTime();
-
+                // last tickrate change epoch
                 var (time, lastTimeTick) = _cachedCurTimeInfo;
 
-                Debug.Assert(lastTimeTick == CurTick);
+                // add our current time to it.
+                // the server never rewinds time, and the client never rewinds time outside of prediction.
+                // the only way this assert should fail is if the TickRate is changed inside prediction, which should never happen.
+                //DebugTools.Assert(CurTick >= lastTimeTick);
+                //TODO: turns out prediction leaves CurTick at the last predicted tick, and not at the last processed server tick
+                //so time gets rewound when processing events like TickRate.
+                time += TickPeriod * (CurTick.Value - lastTimeTick.Value);
 
                 if (!InSimulation) // rendering can draw frames between ticks
+                {
+                    DebugTools.Assert(0 <= (time + TickRemainder).TotalSeconds);
                     return time + TickRemainder;
+                }
+
+                DebugTools.Assert(0 <= time.TotalSeconds);
                 return time;
             }
         }
@@ -108,6 +118,7 @@ namespace Robust.Shared.Timing
         public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
 
         private byte _tickRate;
+        private TimeSpan _tickRemainder;
 
         /// <summary>
         ///     The target ticks/second of the simulation.
@@ -137,7 +148,16 @@ namespace Robust.Shared.Timing
         /// <summary>
         /// The remaining time left over after the last tick was ran.
         /// </summary>
-        public TimeSpan TickRemainder { get; set; }
+        public TimeSpan TickRemainder
+        {
+            get => _tickRemainder;
+            set
+            {
+                // Generally the upper limit is Tickrate*2, but changing the tickrate mid-round can make this really large until timing can stabilize
+                DebugTools.Assert(TimeSpan.Zero <= TickRemainder);
+                _tickRemainder = value;
+            }
+        }
 
         /// <summary>
         ///     Current graphics frame since init OpenGL which is taken as frame 1, from swapbuffer to swapbuffer. Useful to set a
@@ -180,8 +200,7 @@ namespace Robust.Shared.Timing
         }
 
         // Calculate and store the current time value, based on the current tick rate.
-        // Call this whenever you want an updated value for CurTime, or when
-        // you change the TickRate
+        // Call this whenever you change the TickRate.
         private void CacheCurTime()
         {
             var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
@@ -193,6 +212,7 @@ namespace Robust.Shared.Timing
             else
               newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
 
+            DebugTools.Assert(TimeSpan.Zero <= newTime);
             _cachedCurTimeInfo = (newTime, CurTick);
         }
 
@@ -203,6 +223,17 @@ namespace Robust.Shared.Timing
         {
             _realTimer.Restart();
             _lastRealTime = TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// Resets the simulation time.
+        /// </summary>
+        public void ResetSimTime()
+        {
+            _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);;
+            CurTick = GameTick.First;
+            TickRemainder = TimeSpan.Zero;
+            Paused = true;
         }
 
         public bool IsFirstTimePredicted { get; private set; } = true;

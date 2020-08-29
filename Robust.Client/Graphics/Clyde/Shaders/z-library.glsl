@@ -29,5 +29,23 @@ highp vec2 zClydeShadowDepthUnpack(highp vec4 val) {
 #endif
 }
 
+// -- srgb/linear conversion core --
+
+highp vec4 zFromSrgb(highp vec4 sRGB)
+{
+    highp vec3 higher = pow((sRGB.rgb + 0.055) / 1.055, vec3(2.4));
+    highp vec3 lower = sRGB.rgb / 12.92;
+    highp vec3 s = max(vec3(0.0), sign(sRGB.rgb - 0.04045));
+    return vec4(mix(lower, higher, s), sRGB.a);
+}
+
+highp vec4 zToSrgb(highp vec4 sRGB)
+{
+    highp vec3 higher = (pow(sRGB.rgb, vec3(0.41666666666667)) * 1.055) - 0.055;
+    highp vec3 lower = sRGB.rgb * 12.92;
+    highp vec3 s = max(vec3(0.0), sign(sRGB.rgb - 0.0031308));
+    return vec4(mix(lower, higher, s), sRGB.a);
+}
+
 // -- Utilities End --
 

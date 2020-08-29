@@ -30,11 +30,11 @@ void vertex()
 void fragment()
 {
     // Very simple gaussian blur.
-    highp vec4 sum = texture2D(TEXTURE, pos) * 0.375;
-    sum += texture2D(TEXTURE, blurPos1.xy) * 0.25;
-    sum += texture2D(TEXTURE, blurPos1.zw) * 0.25;
-    sum += texture2D(TEXTURE, blurPos2.xy) * 0.0625;
-    sum += texture2D(TEXTURE, blurPos2.zw) * 0.0625;
+    highp vec4 sum = zTexture(pos) * 0.375;
+    sum += zTexture(blurPos1.xy) * 0.25;
+    sum += zTexture(blurPos1.zw) * 0.25;
+    sum += zTexture(blurPos2.xy) * 0.0625;
+    sum += zTexture(blurPos2.zw) * 0.0625;
 
     // We actually "add" energy to the wall here while blurring with the * 1.2.
     // Keep in mind that the wall is pitch black right now

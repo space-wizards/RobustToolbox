@@ -12,5 +12,5 @@ void vertex()
 
 void fragment()
 {
-    COLOR = texture2D(TEXTURE, pos);
+    COLOR = zTexture(pos);
 }

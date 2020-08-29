@@ -9,24 +9,6 @@ varying vec2 Pos;
 // Maybe we should merge these CPU side.
 // idk yet.
 uniform mat3 modelMatrix;
-#ifdef HAS_UNIFORM_BUFFERS
-layout (std140) uniform projectionViewMatrices
-{
-    mat3 projectionMatrix;
-    mat3 viewMatrix;
-};
-
-layout (std140) uniform uniformConstants
-{
-    vec2 SCREEN_PIXEL_SIZE;
-    float TIME;
-};
-#else
-uniform mat3 projectionMatrix;
-uniform mat3 viewMatrix;
-uniform vec2 SCREEN_PIXEL_SIZE;
-uniform float TIME;
-#endif
 
 // Allows us to do texture atlassing with texture coordinates 0->1
 // Input texture coordinates get mapped to this range.

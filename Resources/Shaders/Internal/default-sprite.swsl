@@ -1,7 +1,7 @@
 
 
 void fragment() {
-    COLOR = texture2D(TEXTURE, UV);
+    COLOR = zTexture(UV);
 }
 
 

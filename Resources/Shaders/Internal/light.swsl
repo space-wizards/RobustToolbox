@@ -34,7 +34,7 @@ highp float shadowContrib(highp vec2 diff)
 
 void fragment()
 {
-    highp float mask = texture2D(TEXTURE, UV).r;
+    highp float mask = zTexture(UV).r;
 
     highp vec2 diff = worldPosition - lightCenter;
 

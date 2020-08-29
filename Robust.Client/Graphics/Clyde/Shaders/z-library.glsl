@@ -47,5 +47,64 @@ highp vec4 zToSrgb(highp vec4 sRGB)
     return vec4(mix(lower, higher, s), sRGB.a);
 }
 
+// -- uniforms --
+
+#ifdef HAS_UNIFORM_BUFFERS
+layout (std140) uniform projectionViewMatrices
+{
+    mat3 projectionMatrix;
+    mat3 viewMatrix;
+};
+
+layout (std140) uniform uniformConstants
+{
+    vec2 SCREEN_PIXEL_SIZE;
+    float TIME;
+};
+#else
+uniform highp mat3 projectionMatrix;
+uniform highp mat3 viewMatrix;
+uniform highp vec2 SCREEN_PIXEL_SIZE;
+uniform highp float TIME;
+#endif
+
+uniform sampler2D TEXTURE;
+uniform highp vec2 TEXTURE_PIXEL_SIZE;
+
+// -- srgb emulation --
+
+#ifdef HAS_SRGB
+highp vec4 zTexture(highp vec2 uv)
+{
+    return texture2D(TEXTURE, uv);
+}
+
+highp vec4 zAdjustResult(highp vec4 col)
+{
+    return col;
+}
+#else
+uniform lowp vec2 SRGB_EMU_CONFIG;
+
+highp vec4 zTexture(highp vec2 uv)
+{
+    highp vec4 col = texture2D(TEXTURE, uv);
+    if (SRGB_EMU_CONFIG.x > 0.5)
+    {
+        return zFromSrgb(col);
+    }
+    return col;
+}
+
+highp vec4 zAdjustResult(highp vec4 col)
+{
+    if (SRGB_EMU_CONFIG.y > 0.5)
+    {
+        return zToSrgb(col);
+    }
+    return col;
+}
+#endif
+
 // -- Utilities End --
 

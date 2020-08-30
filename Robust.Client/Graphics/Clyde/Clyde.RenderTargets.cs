@@ -87,7 +87,7 @@ namespace Robust.Client.Graphics.Clyde
                     colorFormat = RTCF.Rgba8;
                 }
                 // This isn't good
-                if (!_hasGLFancyFloatFormats)
+                if (!_hasGLFloatFramebuffers)
                 {
                     switch (colorFormat)
                     {
@@ -121,7 +121,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixFormat,
                     pixType, IntPtr.Zero);
 
-                if (!_hasGLES)
+                if (!_isGLES)
                 {
                     GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                         texture.Handle,

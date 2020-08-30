@@ -70,9 +70,9 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLReadFramebuffer;
         private bool _hasGLUniformBuffers;
         private bool _hasGLVertexArrayObject;
-        private bool _hasGLFancyFloatFormats;
+        private bool _hasGLFloatFramebuffers;
         // This is updated from Clyde.Windowing.
-        private bool _hasGLES;
+        private bool _isGLES;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -186,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
             var major = 2;
             var minor = 0;
 
-            if (!_hasGLES)
+            if (!_isGLES)
             {
                 major = GL.GetInteger(GetPName.MajorVersion);
                 minor = GL.GetInteger(GetPName.MinorVersion);
@@ -312,7 +312,7 @@ namespace Robust.Client.Graphics.Clyde
             var major = 0;
             var minor = 0;
 
-            if (!_hasGLES)
+            if (!_isGLES)
             {
                 major = GL.GetInteger(GetPName.MajorVersion);
                 minor = GL.GetInteger(GetPName.MinorVersion);
@@ -333,7 +333,7 @@ namespace Robust.Client.Graphics.Clyde
                     Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
                 }
 
-                if (_hasGLES && forceDisableOnES)
+                if (_isGLES && forceDisableOnES)
                 {
                     cap = false;
                     Logger.DebugS("clyde.ogl", $"  On GLES, BLOCKING {capName}");
@@ -350,12 +350,12 @@ namespace Robust.Client.Graphics.Clyde
                 "GL_EXT_texture_swizzle");
             CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, false, "GL_OES_vertex_array_object",
                 "GL_ARB_vertex_array_object");
-            _hasGLSrgb = !_hasGLES;
-            _hasGLReadFramebuffer = !_hasGLES;
-            _hasGLPrimitiveRestart = !_hasGLES;
-            _hasGLUniformBuffers = !_hasGLES;
-            _hasGLFancyFloatFormats = !_hasGLES;
-            Logger.DebugS("clyde.ogl", $"  GLES: {_hasGLES}");
+            _hasGLSrgb = !_isGLES;
+            _hasGLReadFramebuffer = !_isGLES;
+            _hasGLPrimitiveRestart = !_isGLES;
+            _hasGLUniformBuffers = !_isGLES;
+            _hasGLFloatFramebuffers = !_isGLES;
+            Logger.DebugS("clyde.ogl", $"  GLES: {_isGLES}");
         }
 
         private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)
@@ -462,7 +462,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private HashSet<string> GetGLExtensions()
         {
-            if (!_hasGLES)
+            if (!_isGLES)
             {
                 var extensions = new HashSet<string>();
                 var extensionsText = "";
@@ -478,7 +478,7 @@ namespace Robust.Client.Graphics.Clyde
                     extensionsText += extension;
                     extensions.Add(extension);
                 }
-                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
+                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensionsText);
                 return extensions;
             }
             else

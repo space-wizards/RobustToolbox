@@ -143,13 +143,13 @@ namespace Robust.Client.Graphics.Clyde
 
             var versionHeader = "#version 140\n#define HAS_DFDX\n";
 
-            if (_hasGLES)
+            if (_isGLES)
             {
                 // GLES2 uses a different GLSL versioning scheme to desktop GL.
                 versionHeader = "#version 100\n";
             }
 
-            if (_hasGLFancyFloatFormats)
+            if (_hasGLFloatFramebuffers)
             {
                 versionHeader += "#define HAS_FLOAT_TEXTURES\n";
             }

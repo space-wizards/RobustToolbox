@@ -174,7 +174,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_glfwWindow != null)
                 {
                     renderer = r;
-                    _hasGLES = renderer == Renderer.OpenGLES2;
+                    _isGLES = renderer == Renderer.OpenGLES2;
                     break;
                 }
                 // Window failed to init due to error.

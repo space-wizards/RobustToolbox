@@ -54,22 +54,6 @@ namespace Robust.Client.Graphics.Clyde
             ///     Updates the buffer contents.
             /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reallocate(Span<T> data)
-            {
-                if (_implUBO != null)
-                {
-                    _implUBO.Reallocate(data);
-                }
-                else
-                {
-                    _implMirror = data[0];
-                }
-            }
-
-            /// <summary>
-            ///     Updates the buffer contents.
-            /// </summary>
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reallocate(in T data)
             {
                 if (_implUBO != null)

@@ -45,7 +45,7 @@ namespace Robust.Client.Graphics.Clyde
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupGlobalUniformsImmediate(GLShaderProgram program, ClydeTexture? tex)
         {
-            SetupGlobalUniformsImmediate(program, (tex != null) ? tex.IsSrgb : false);
+            SetupGlobalUniformsImmediate(program, tex?.IsSrgb ?? false);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupGlobalUniformsImmediate(GLShaderProgram program, bool texIsSrgb)

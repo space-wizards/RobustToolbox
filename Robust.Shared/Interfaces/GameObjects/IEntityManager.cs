@@ -68,7 +68,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// Returns an entity by id
         /// </summary>
         /// <param name="uid"></param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
+        /// <returns>Entity or throws if entity id doesn't exist</returns>
         IEntity GetEntity(EntityUid uid);
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="entityTwo"></param>
         /// <returns></returns>
         public bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
-        
+
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
         /// </summary>

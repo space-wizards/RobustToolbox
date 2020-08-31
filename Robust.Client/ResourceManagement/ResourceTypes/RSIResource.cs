@@ -74,7 +74,7 @@ namespace Robust.Client.ResourceManagement
 
             var metaData = ParseMetaData(manifestJson);
             var frameSize = metaData.Size;
-            var rsi = new RSI(frameSize);
+            var rsi = new RSI(frameSize, path);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>();
 

@@ -113,7 +113,7 @@ namespace Robust.Shared.Network
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
         /// </summary>
-        private readonly StringTable _strings = new StringTable();
+        private readonly StringTable _strings;
 
         /// <summary>
         ///     The list of network peers we are listening on.
@@ -202,6 +202,11 @@ namespace Robust.Shared.Network
 
         private bool _initialized;
 
+        public NetManager()
+        {
+            _strings = new StringTable(this);
+        }
+
         public void ResetBandwidthMetrics()
         {
             _bandwidthUsage.Clear();
@@ -244,7 +249,7 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, FakeDuplicatesChanged);
 #endif
 
-            _strings.Initialize(this, () =>
+            _strings.Initialize(() =>
             {
                 Logger.InfoS("net","Message string table loaded.");
             }, UpdateNetMessageFunctions);

@@ -32,7 +32,7 @@ namespace Robust.Shared.Network
         private const int StringTablePacketId = 0;
 
         private bool _initialized = false;
-        private INetManager _network = default!;
+        private readonly INetManager _network;
         private readonly Dictionary<int, string> _strings;
         private int _lastStringIndex;
         private InitCallback? _callback;
@@ -41,8 +41,9 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Default constructor.
         /// </summary>
-        public StringTable()
+        public StringTable(INetManager network)
         {
+            _network = network;
             _strings = new Dictionary<int, string>();
         }
 
@@ -54,14 +55,13 @@ namespace Robust.Shared.Network
         /// <summary>
         /// Initializes the string table.
         /// </summary>
-        public void Initialize(INetManager network, InitCallback? callback = null,
+        public void Initialize(InitCallback? callback = null,
             StringTableUpdateCallback? updateCallback = null)
         {
             DebugTools.Assert(!_initialized);
 
             _callback = callback;
             _updateCallback = updateCallback;
-            _network = network;
             _network.RegisterNetMessage<MsgStringTableEntries>(MsgStringTableEntries.NAME, ReceiveEntries,
                 NetMessageAccept.Client);
 

@@ -86,7 +86,6 @@ namespace Robust.Shared.Serialization
         }
     }
 
-    [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true, Inherited = false)]
     /// <summary>
     /// Attribute for marking an enum type as being the bitflag representation for a field.
     ///
@@ -98,6 +97,7 @@ namespace Robust.Shared.Serialization
     /// NB: AllowMultiple is <c>true</c> - don't assume the same representation cannot
     /// be reused between multiple fields.
     /// </summary>
+    [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true, Inherited = false)]
     public class FlagsForAttribute : Attribute
     {
         private readonly Type _tag;

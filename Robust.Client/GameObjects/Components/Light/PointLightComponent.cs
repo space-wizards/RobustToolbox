@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
+using System;
 
 namespace Robust.Client.GameObjects
 {
@@ -21,6 +22,7 @@ namespace Robust.Client.GameObjects
         internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public Color Color
         {
             get => _color;
@@ -35,6 +37,7 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public bool Enabled
         {
             get => _enabled;
@@ -73,6 +76,7 @@ namespace Robust.Client.GameObjects
         public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
         public float Energy
         {
             get => _energy;
@@ -122,7 +126,7 @@ namespace Robust.Client.GameObjects
             get => _radius;
             set
             {
-                _radius = value;
+                _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedMessage(this));
             }
         }

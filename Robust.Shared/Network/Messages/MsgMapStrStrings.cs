@@ -1,12 +1,10 @@
 using System;
-using System.Buffers;
-using System.IO;
 using JetBrains.Annotations;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Serialization
+namespace Robust.Shared.Network.Messages
 {
 
     /// <summary>
@@ -16,11 +14,11 @@ namespace Robust.Shared.Serialization
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgRobustMappedStringsSerializerStrings : NetMessage
+    internal class MsgMapStrStrings : NetMessage
     {
 
-        public MsgRobustMappedStringsSerializerStrings(INetChannel ch)
-            : base(nameof(MsgRobustMappedStringsSerializerStrings), MsgGroups.Core)
+        public MsgMapStrStrings(INetChannel ch)
+            : base(nameof(MsgMapStrStrings), MsgGroups.Core)
         {
         }
 

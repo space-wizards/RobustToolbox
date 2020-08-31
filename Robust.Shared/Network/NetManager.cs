@@ -39,7 +39,6 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
-
         [Dependency] private readonly IRobustSerializer _serializer = default!;
 
         private static readonly Counter SentPacketsMetrics = Metrics.CreateCounter(
@@ -86,8 +85,6 @@ namespace Robust.Shared.Network
             "robust_net_unsent",
             "Number of queued (unsent) messages that have yet to be sent.");
 
-
-
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
         /// <summary>
@@ -99,7 +96,7 @@ namespace Robust.Shared.Network
             new Dictionary<NetConnection, NetSessionId>();
 
         // Used for processing incoming net messages.
-        private readonly (Func<INetChannel, NetMessage>, Type)[] _netMsgFunctions = new (Func<INetChannel, NetMessage>, Type)[256];
+        private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
         // Used for processing outgoing net messages.
         private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions = new Dictionary<Type, Func<NetMessage>>();
@@ -250,7 +247,7 @@ namespace Robust.Shared.Network
             _strings.Initialize(this, () =>
             {
                 Logger.InfoS("net","Message string table loaded.");
-            });
+            }, UpdateNetMessageFunctions);
             _serializer.ClientHandshakeComplete += () =>
             {
                 Logger.InfoS("net","Client completed serializer handshake.");
@@ -258,6 +255,19 @@ namespace Robust.Shared.Network
             };
 
             _initialized = true;
+        }
+
+        private void UpdateNetMessageFunctions(MsgStringTableEntries.Entry[] entries)
+        {
+            foreach (var entry in entries)
+            {
+                if (entry.Id > byte.MaxValue)
+                {
+                    continue;
+                }
+
+                CacheNetMsgFunction((byte) entry.Id);
+            }
         }
 
         private void NetVerboseChanged(bool on)
@@ -339,6 +349,10 @@ namespace Robust.Shared.Network
                 Thread.Sleep(50);
             }
 
+            // Clear cached message functions.
+            Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
+            // Clear string table.
+            // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
 
             _cancelConnectTokenSource?.Cancel();
@@ -778,22 +792,23 @@ namespace Robust.Shared.Network
                 return true;
             }
 
+            var channel = GetChannel(msg.SenderConnection);
+
             var id = msg.ReadByte();
 
-            if (_netMsgFunctions[id].Item1 == null)
+            ref var entry = ref _netMsgFunctions[id];
+            if (entry.CreateFunction == null)
             {
-                if (!CacheNetMsgFunction(id))
-                {
-                    Logger.WarningS("net",
-                        $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
-                    return true;
-                }
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
+
+                channel.Disconnect("Got NetMessage with invalid ID");
+                return true;
             }
 
-            var (func, type) = _netMsgFunctions[id];
+            var type = entry.Type;
 
-            var channel = GetChannel(msg.SenderConnection);
-            var instance = func(channel);
+            var instance = entry.CreateFunction(channel);
             instance.MsgChannel = channel;
 
             #if DEBUG
@@ -824,12 +839,8 @@ namespace Robust.Shared.Network
                 return true;
             }
 
-            if (!_callbacks.TryGetValue(type, out var callback))
-            {
-                Logger.WarningS("net",
-                    $"{msg.SenderConnection.RemoteEndPoint}: Received packet {id}:{type}, but callback was not registered.");
-                return true;
-            }
+            // Callback must be available or else construction delegate will not be registered.
+            var callback = _callbacks[type];
 
             try
             {
@@ -843,23 +854,28 @@ namespace Robust.Shared.Network
             return true;
         }
 
-        private bool CacheNetMsgFunction(byte id)
+        private void CacheNetMsgFunction(byte id)
         {
             if (!_strings.TryGetString(id, out var name))
             {
-                return false;
+                return;
             }
 
             if (!_messages.TryGetValue(name, out var packetType))
             {
-                return false;
+                return;
+            }
+
+            if (!_callbacks.ContainsKey(packetType))
+            {
+                return;
             }
 
             var constructor = packetType.GetConstructor(new[] {typeof(INetChannel)})!;
 
             DebugTools.AssertNotNull(constructor);
 
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{id}", typeof(NetMessage), new[]{typeof(INetChannel)}, packetType, false);
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[]{typeof(INetChannel)}, packetType, false);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
 
@@ -871,22 +887,33 @@ namespace Robust.Shared.Network
             var @delegate =
                 (Func<INetChannel, NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<INetChannel, NetMessage>));
 
-            _netMsgFunctions[id] = (@delegate, packetType);
-            return true;
+            ref var entry = ref _netMsgFunctions[id];
+            entry.CreateFunction = @delegate;
+            entry.Type = packetType;
         }
 
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
+        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
             where T : NetMessage
         {
-            _strings.AddString(name);
+            var id = _strings.AddString(name);
 
             _messages.Add(name, typeof(T));
 
-            if (rxCallback != null)
+            var thisSide = IsServer ? NetMessageAccept.Server : NetMessageAccept.Client;
+
+            if (rxCallback != null && (accept & thisSide) != 0)
+            {
                 _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
+
+                if (id != -1)
+                {
+                    CacheNetMsgFunction((byte) id);
+                }
+            }
 
             // This means we *will* be caching creation delegates for messages that are never sent (by this side).
             // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
@@ -1084,6 +1111,11 @@ namespace Robust.Shared.Network
             }
         }
 
+        private struct NetMsgEntry
+        {
+            public Func<INetChannel, NetMessage>? CreateFunction;
+            public Type Type;
+        }
     }
 
     /// <summary>

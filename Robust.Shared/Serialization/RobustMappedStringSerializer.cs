@@ -213,9 +213,9 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="OnClientCompleteHandshake"/>
         private void NetworkInitialize()
         {
-            _net.RegisterNetMessage<MsgMapStrServerHandshake>(nameof(MsgMapStrServerHandshake), HandleServerHandshake);
-            _net.RegisterNetMessage<MsgMapStrClientHandshake>(nameof(MsgMapStrClientHandshake), HandleClientHandshake);
-            _net.RegisterNetMessage<MsgMapStrStrings>(nameof(MsgMapStrStrings), HandleStringsMessage);
+            _net.RegisterNetMessage<MsgMapStrServerHandshake>(nameof(MsgMapStrServerHandshake), HandleServerHandshake, NetMessageAccept.Client);
+            _net.RegisterNetMessage<MsgMapStrClientHandshake>(nameof(MsgMapStrClientHandshake), HandleClientHandshake, NetMessageAccept.Server);
+            _net.RegisterNetMessage<MsgMapStrStrings>(nameof(MsgMapStrStrings), HandleStringsMessage, NetMessageAccept.Client);
 
             _net.Disconnect += NetOnDisconnect;
         }
@@ -264,13 +264,7 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="NetworkInitialize"/>
         private void HandleStringsMessage(MsgMapStrStrings msg)
         {
-            if (_net.IsServer)
-            {
-                // Reason should show up on disconnect logs.
-                msg.MsgChannel.Disconnect("MsgMapStrStrings sent to server.");
-                return;
-            }
-
+            DebugTools.Assert(_net.IsClient);
             DebugTools.AssertNotNull(msg.Package);
             DebugTools.AssertNotNull(_serverHash);
 
@@ -402,11 +396,7 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="NetworkInitialize"/>
         private void HandleServerHandshake(MsgMapStrServerHandshake msgMapStr)
         {
-            if (_net.IsServer)
-            {
-                LogSzr.Error("Received server handshake on server.");
-                return;
-            }
+            DebugTools.Assert(_net.IsClient);
 
             _serverHash = msgMapStr.Hash;
 

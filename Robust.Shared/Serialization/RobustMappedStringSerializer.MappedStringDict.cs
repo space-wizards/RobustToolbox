@@ -92,10 +92,11 @@ namespace Robust.Shared.Serialization
                 using var zs = new DeflateStream(stream, CompressionMode.Decompress, true);
                 using var hasherStream = new HasherStream(zs, hasher, true);
 
-                var count = ReadCompressedUnsignedInt(hasherStream, out _);
+                Primitives.ReadPrimitive(hasherStream, out uint count);
                 for (var i = 0; i < count; ++i)
                 {
-                    var l = (int) ReadCompressedUnsignedInt(hasherStream, out _);
+                    Primitives.ReadPrimitive(hasherStream, out uint lu);
+                    var l = (int) lu;
                     var y = hasherStream.Read(buf, 0, l);
                     if (y != l)
                     {
@@ -126,7 +127,7 @@ namespace Robust.Shared.Serialization
                 using (var zs = new DeflateStream(stream, CompressionLevel.Optimal, true))
                 {
                     using var hasherStream = new HasherStream(zs, hasher, true);
-                    WriteCompressedUnsignedInt(hasherStream, (uint) strings.Length);
+                    Primitives.WritePrimitive(hasherStream, (uint) strings.Length);
 
                     foreach (var str in strings)
                     {
@@ -139,7 +140,7 @@ namespace Robust.Shared.Serialization
                             throw new NotImplementedException("Overly long string in strings package.");
                         }
 
-                        WriteCompressedUnsignedInt(hasherStream, (uint) l);
+                        Primitives.WritePrimitive(hasherStream, (uint) l);
                         hasherStream.Write(buf[..l]);
                     }
                 }
@@ -225,43 +226,21 @@ namespace Robust.Shared.Serialization
 
                 if (str.Contains('/'))
                 {
-                    var parts = str.Split('/', StringSplitOptions.RemoveEmptyEntries);
-                    for (var i = 0; i < parts.Length; ++i)
+                    foreach (var substr in str.Split("/", StringSplitOptions.RemoveEmptyEntries))
                     {
-                        for (var l = 1; l <= parts.Length - i; ++l)
-                        {
-                            var subStr = string.Join('/', parts.Skip(i).Take(l));
-                            if (!TryAddString(subStr))
-                                continue;
-
-                            if (!subStr.Contains('.'))
-                            {
-                                continue;
-                            }
-
-                            var subParts = subStr.Split('.', StringSplitOptions.RemoveEmptyEntries);
-                            for (var si = 0; si < subParts.Length; ++si)
-                            {
-                                for (var sl = 1; sl <= subParts.Length - si; ++sl)
-                                {
-                                    var subSubStr = string.Join('.', subParts.Skip(si).Take(sl));
-                                    // ReSharper disable once InvertIf
-                                    TryAddString(subSubStr);
-                                }
-                            }
-                        }
+                        AddString(substr);
                     }
                 }
                 else if (str.Contains("_"))
                 {
-                    foreach (var substr in str.Split("_"))
+                    foreach (var substr in str.Split("_", StringSplitOptions.RemoveEmptyEntries))
                     {
                         AddString(substr);
                     }
                 }
                 else if (str.Contains(" "))
                 {
-                    foreach (var substr in str.Split(" "))
+                    foreach (var substr in str.Split(" ", StringSplitOptions.RemoveEmptyEntries))
                     {
                         if (substr == str) continue;
 
@@ -283,7 +262,7 @@ namespace Robust.Shared.Serialization
                         for (var sl = 1; sl <= parts.Length - si; ++sl)
                         {
                             var subSubStr = String.Concat(parts.Skip(si).Take(sl));
-                            TryAddString(subSubStr);
+                            AddString(subSubStr);
                         }
                     }
                 }
@@ -460,7 +439,7 @@ namespace Robust.Shared.Serialization
 
                 if (value == null)
                 {
-                    WriteCompressedUnsignedInt(stream, MappedNull);
+                    Primitives.WritePrimitive(stream, MappedNull);
                     return;
                 }
 
@@ -473,14 +452,13 @@ namespace Robust.Shared.Serialization
                             "A string mapping outside of the mapped string table was encountered.");
                     }
 #endif
-                    WriteCompressedUnsignedInt(stream, (uint) mapping + FirstMappedIndexStart);
+                    Primitives.WritePrimitive(stream, (uint) mapping + FirstMappedIndexStart);
                     //Logger.DebugS("szr", $"Encoded mapped string: {value}");
                     return;
                 }
 
                 // indicate not mapped
-                WriteCompressedUnsignedInt(stream, UnmappedString);
-
+                Primitives.WritePrimitive(stream, UnmappedString);
                 Primitives.WritePrimitive(stream, value);
             }
 
@@ -489,7 +467,7 @@ namespace Robust.Shared.Serialization
             {
                 DebugTools.Assert(Locked);
 
-                var mapIndex = ReadCompressedUnsignedInt(stream, out _);
+                Primitives.ReadPrimitive(stream, out uint mapIndex);
                 if (mapIndex == MappedNull)
                 {
                     value = null;

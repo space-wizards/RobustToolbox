@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using Lidgren.Network;
 using Prometheus;
 using Robust.Shared.Configuration;
@@ -695,7 +696,15 @@ namespace Robust.Shared.Network
 
             _strings.SendFullTable(channel);
 
-            await _serializer.Handshake(channel);
+            try
+            {
+                await _serializer.Handshake(channel);
+            }
+            catch (TaskCanceledException)
+            {
+                // Client disconnected during handshake.
+                return;
+            }
 
             Logger.InfoS("net", "{ConnectionEndpoint}: Connected", channel.RemoteEndPoint);
 

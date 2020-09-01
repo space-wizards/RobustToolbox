@@ -17,6 +17,7 @@ namespace Robust.Shared.Localization
     {
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ITextMacroFactory _textMacroFactory = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
         private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
         private CultureInfo? _defaultCulture;
@@ -164,8 +165,8 @@ namespace Robust.Shared.Localization
             {
                 _readEntry(entry, catalog);
             }
-            IoCManager.Resolve<IRobustMappedStringSerializer>()
-                .AddStrings(yamlStream, filePath.ToString());
+
+            _stringSerializer.AddStrings(yamlStream);
         }
 
         private static void _readEntry(YamlMappingNode entry, Catalog catalog)

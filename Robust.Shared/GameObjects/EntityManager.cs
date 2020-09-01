@@ -43,6 +43,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
 
+        /// <inheritdoc />
+        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>

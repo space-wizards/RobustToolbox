@@ -1,9 +1,9 @@
 using JetBrains.Annotations;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Serialization
+namespace Robust.Shared.Network.Messages
 {
 
     /// <summary>
@@ -20,11 +20,11 @@ namespace Robust.Shared.Serialization
     /// </remarks>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgRobustMappedStringsSerializerClientHandshake : NetMessage
+    internal class MsgMapStrClientHandshake : NetMessage
     {
 
-        public MsgRobustMappedStringsSerializerClientHandshake(INetChannel ch)
-            : base(nameof(MsgRobustMappedStringsSerializerClientHandshake), MsgGroups.Core)
+        public MsgMapStrClientHandshake(INetChannel ch)
+            : base(nameof(MsgMapStrClientHandshake), MsgGroups.Core)
         {
         }
 

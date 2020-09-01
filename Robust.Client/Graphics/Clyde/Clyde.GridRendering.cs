@@ -75,9 +75,11 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     GL.BindVertexArray(datum.VAO);
+                    CheckGlError();
 
                     _debugStats.LastGLDrawCalls += 1;
                     GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
+                    CheckGlError();
                 }
             }
         }
@@ -122,6 +124,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 GL.BindVertexArray(datum.VAO);
+                CheckGlError();
                 datum.EBO.Use();
                 datum.VBO.Use();
                 datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * GetQuadBatchIndexCount()));
@@ -140,6 +143,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var vao = (uint)GL.GenVertexArray();
             GL.BindVertexArray(vao);
+            CheckGlError();
 
             var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
             var eboSize = _indicesPerChunk(chunk) * sizeof(ushort);
@@ -156,6 +160,7 @@ namespace Robust.Client.Graphics.Clyde
             // Texture Coords.
             GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
             GL.EnableVertexAttribArray(1);
+            CheckGlError();
 
             // Assign VBO and EBO to VAO.
             // OpenGL 3.x is such a good API.
@@ -215,6 +220,7 @@ namespace Robust.Client.Graphics.Clyde
             foreach (var chunkDatum in data.Values)
             {
                 GL.DeleteVertexArray(chunkDatum.VAO);
+                CheckGlError();
                 chunkDatum.VBO.Delete();
                 chunkDatum.EBO.Delete();
             }

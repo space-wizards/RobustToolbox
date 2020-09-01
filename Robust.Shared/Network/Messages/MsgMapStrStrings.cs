@@ -1,12 +1,10 @@
 using System;
-using System.Buffers;
-using System.IO;
 using JetBrains.Annotations;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Network;
+using Robust.Shared.Serialization;
 
-namespace Robust.Shared.Serialization
+namespace Robust.Shared.Network.Messages
 {
 
     /// <summary>
@@ -16,15 +14,13 @@ namespace Robust.Shared.Serialization
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgRobustMappedStringsSerializerStrings : NetMessage
+    internal class MsgMapStrStrings : NetMessage
     {
 
-        public MsgRobustMappedStringsSerializerStrings(INetChannel ch)
-            : base(nameof(MsgRobustMappedStringsSerializerStrings), MsgGroups.Core)
+        public MsgMapStrStrings(INetChannel ch)
+            : base(nameof(MsgMapStrStrings), MsgGroups.Core)
         {
         }
-
-        public int PackageSize { get; set; }
 
         /// <value>
         /// The raw bytes of the string mapping held by the server.
@@ -33,8 +29,8 @@ namespace Robust.Shared.Serialization
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
-            PackageSize = buffer.ReadVariableInt32();
-            buffer.ReadBytes(Package = new byte[PackageSize]);
+            var size = buffer.ReadVariableInt32();
+            buffer.ReadBytes(Package = new byte[size]);
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)

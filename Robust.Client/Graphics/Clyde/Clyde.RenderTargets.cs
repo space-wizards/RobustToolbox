@@ -60,6 +60,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Bind color attachment to FBO.
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, fbo.Handle);
+            CheckGlError();
 
             ObjectLabelMaybe(ObjectLabelIdentifier.Framebuffer, fbo, name);
 
@@ -73,8 +74,10 @@ namespace Robust.Client.Graphics.Clyde
             // Color attachment.
             {
                 var texture = new GLHandle(GL.GenTexture());
+                CheckGlError();
 
                 GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
+                CheckGlError();
 
                 ApplySampleParameters(sampleParameters);
 
@@ -120,6 +123,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 GL.TexImage2D(TextureTarget.Texture2D, 0, internalFormat, width, height, 0, pixFormat,
                     pixType, IntPtr.Zero);
+                CheckGlError();
 
                 if (!_isGLES)
                 {
@@ -133,6 +137,7 @@ namespace Robust.Client.Graphics.Clyde
                     GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
                         TextureTarget.Texture2D, texture.Handle, 0);
                 }
+                CheckGlError();
 
                 // Check on original format is NOT a bug, this is so srgb emulation works
                 textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color");
@@ -143,12 +148,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 depthStencilBuffer = new GLHandle(GL.GenRenderbuffer());
                 GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.Renderbuffer, depthStencilBuffer,
                     name == null ? null : $"{name}-depth-stencil");
 
                 GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.Depth24Stencil8, width,
                     height);
+                CheckGlError();
 
                 estPixSize += 4;
 
@@ -156,18 +163,22 @@ namespace Robust.Client.Graphics.Clyde
                     RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
                 GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.StencilAttachment,
                     RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                CheckGlError();
             }
 
             // This should always pass but OpenGL makes it easy to check for once so let's.
             var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+            CheckGlError();
             DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
                 $"new framebuffer has bad status {status}");
 
             // Re-bind previous framebuffers (thus _currentBoundRenderTarget is back in sync)
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
+            CheckGlError();
             if (_hasGLReadFramebuffer)
             {
                 GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+                CheckGlError();
             }
 
             var pressure = estPixSize * size.X * size.Y;
@@ -200,12 +211,14 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(!renderTarget.IsWindow, "Cannot delete window-backed render targets directly.");
 
             GL.DeleteFramebuffer(renderTarget.FramebufferHandle.Handle);
+            CheckGlError();
             _renderTargets.Remove(handle);
             DeleteTexture(renderTarget.TextureHandle);
 
             if (renderTarget.DepthStencilHandle != default)
             {
                 GL.DeleteRenderbuffer(renderTarget.DepthStencilHandle.Handle);
+                CheckGlError();
             }
 
             //GC.RemoveMemoryPressure(renderTarget.MemoryPressure);
@@ -236,10 +249,12 @@ namespace Robust.Client.Graphics.Clyde
             if (rt.IsWindow)
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                CheckGlError();
             }
             else
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, rt.FramebufferHandle.Handle);
+                CheckGlError();
             }
             _currentBoundRenderTarget = rt;
         }

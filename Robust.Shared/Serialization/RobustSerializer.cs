@@ -6,10 +6,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Loader;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization
@@ -17,9 +17,9 @@ namespace Robust.Shared.Serialization
 
     public partial class RobustSerializer : IRobustSerializer
     {
-
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly INetManager _netManager = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));
 
@@ -30,7 +30,10 @@ namespace Robust.Shared.Serialization
 
         private HashSet<Type> _serializableTypes = default!;
 
-        private readonly RobustMappedStringSerializer _mappedStringSerializer = new RobustMappedStringSerializer();
+        private static Type[] AlwaysNetSerializable => new[]
+        {
+            typeof(Vector2i)
+        };
 
         #region Statistics
 
@@ -56,8 +59,6 @@ namespace Robust.Shared.Serialization
 
         public void Initialize()
         {
-            IoCManager.RegisterInstance<IRobustMappedStringSerializer>(_mappedStringSerializer);
-
             var types = _reflectionManager.FindTypesWithAttribute<NetSerializableAttribute>().ToList();
 #if !FULL_RELEASE
             // confirm only shared types are marked for serialization, no client & server only types
@@ -75,22 +76,17 @@ namespace Robust.Shared.Serialization
             }
 #endif
 
-            _mappedStringSerializer.InitLogging();
+            types.AddRange(AlwaysNetSerializable);
+
+            _mappedStringSerializer.Initialize();
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new ITypeSerializer[] {_mappedStringSerializer}
+                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
-
-            if (_netManager.IsClient)
-            {
-                _mappedStringSerializer.LockMappedStrings = true;
-            }
-
-            _mappedStringSerializer.NetworkInitialize(_netManager);
         }
 
         public void Serialize(Stream stream, object toSerialize)

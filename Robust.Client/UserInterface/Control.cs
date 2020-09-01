@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     A node in the GUI system.
-    ///     See https://github.com/space-wizards/RobustToolbox/wiki/UI-System-Tutorial for some basic concepts.
+    ///     See https://hackmd.io/@ss14/ui-system-tutorial for some basic concepts.
     /// </summary>
     [PublicAPI]
     public partial class Control : IDisposable

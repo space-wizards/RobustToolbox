@@ -118,7 +118,12 @@ namespace Robust.Shared.Interfaces.Network
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
+        /// <param name="accept">
+        /// The side of the network this message is accepted on.
+        /// If we are not on the side specified, the receive callback will not be registered even if provided.
+        /// </param>
+        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
             where T : NetMessage;
 
         /// <summary>

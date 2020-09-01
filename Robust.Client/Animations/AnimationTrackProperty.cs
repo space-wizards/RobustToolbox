@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Animations;
 using Robust.Shared.Maths;
@@ -86,7 +86,7 @@ namespace Robust.Client.Animations
 
         protected abstract void ApplyProperty(object context, object value);
 
-        private static object InterpolateLinear(object a, object b, float t)
+        protected static object InterpolateLinear(object a, object b, float t)
         {
             switch (a)
             {
@@ -112,7 +112,7 @@ namespace Robust.Client.Animations
             }
         }
 
-        private static object InterpolateCubic(object preA, object a, object b, object postB, float t)
+        protected static object InterpolateCubic(object preA, object a, object b, object postB, float t)
         {
             switch (a)
             {

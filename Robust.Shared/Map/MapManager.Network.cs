@@ -156,6 +156,7 @@ namespace Robust.Shared.Map
                     foreach (var chunkData in gridDatum.ChunkData)
                     {
                         var chunk = grid.GetChunk(chunkData.Index);
+                        chunk.SuppressCollisionRegeneration = true;
                         DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
 
                         var counter = 0;
@@ -171,6 +172,9 @@ namespace Robust.Shared.Map
                                 }
                             }
                         }
+
+                        chunk.SuppressCollisionRegeneration = false;
+                        chunk.RegenerateCollision();
                     }
 
                     if (modified.Count != 0)

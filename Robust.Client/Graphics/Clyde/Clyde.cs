@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -73,6 +74,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLFloatFramebuffers;
         // This is updated from Clyde.Windowing.
         private bool _isGLES;
+        private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
             = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
@@ -155,6 +157,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.GridChanged += _updateOnGridModified;
 
             _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
+            _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
             _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
             _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
@@ -198,17 +201,21 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLSrgb)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);
+                CheckGlError();
             }
             if (_hasGLPrimitiveRestart)
             {
                 GL.Enable(EnableCap.PrimitiveRestart);
+                CheckGlError();
                 GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
+                CheckGlError();
             }
             if (!_hasGLVertexArrayObject)
             {
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            CheckGlError();
 
             // Primitive Restart's presence or lack thereof changes the amount of required memory.
             InitRenderingBatchBuffers();
@@ -232,6 +239,7 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "Setting viewport and rendering splash...");
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            CheckGlError();
 
             // Quickly do a render with _drawingSplash = true so the screen isn't blank.
             Render();
@@ -262,6 +270,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+
+                CheckGlError();
             }
 
             // Batch rendering
@@ -278,6 +288,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Texture Coords.
                 GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
                 GL.EnableVertexAttribArray(1);
+
+                CheckGlError();
 
                 BatchEBO = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));

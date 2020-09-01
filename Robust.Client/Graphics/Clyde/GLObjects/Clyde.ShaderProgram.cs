@@ -119,7 +119,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(name, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform(name);
                 }
 
                 return result;
@@ -129,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (!TryGetUniform(id, out var result))
                 {
-                    ThrowCouldNotGetUniform();
+                    ThrowCouldNotGetUniform($"[id {id}]");
                 }
 
                 return result;
@@ -223,6 +223,12 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.CheckGlError();
             }
 
+            public void SetUniform(int uniformName, float single)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, single);
+            }
+
             public void SetUniform(string uniformName, in Matrix3 matrix)
             {
                 var uniformId = GetUniform(uniformName);
@@ -236,13 +242,16 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private unsafe void SetUniformDirect(int slot, in Matrix3 value)
+            private unsafe void SetUniformDirect(int slot, in Matrix3 value, bool transpose=true)
             {
-                fixed (Matrix3* ptr = &value)
+                Matrix3 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix3(slot, 1, true, (float*) ptr);
-                    _clyde.CheckGlError();
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix3(slot, 1, false, (float*) &tmpTranspose);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, in Matrix4 matrix, bool transpose=true)
@@ -254,11 +263,14 @@ namespace Robust.Client.Graphics.Clyde
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private unsafe void SetUniformDirect(int uniformId, in Matrix4 value, bool transpose=true)
             {
-                fixed (Matrix4* ptr = &value)
+                Matrix4 tmpTranspose = value;
+                if (transpose)
                 {
-                    GL.UniformMatrix4(uniformId, 1, transpose, (float*) ptr);
-                    _clyde.CheckGlError();
+                    // transposition not supported on GLES2, & no access to _hasGLES
+                    tmpTranspose.Transpose();
                 }
+                GL.UniformMatrix4(uniformId, 1, false, (float*) &tmpTranspose);
+                _clyde.CheckGlError();
             }
 
             public void SetUniform(string uniformName, in Vector4 vector)
@@ -334,6 +346,12 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public void SetUniform(string uniformName, in Vector2 vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            public void SetUniform(int uniformName, in Vector2 vector)
             {
                 var uniformId = GetUniform(uniformName);
                 SetUniformDirect(uniformId, vector);
@@ -488,9 +506,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            private static void ThrowCouldNotGetUniform()
+            private static void ThrowCouldNotGetUniform(string name)
             {
-                throw new ArgumentException("Could not get uniform!");
+                throw new ArgumentException($"Could not get uniform \"{name}\"!");
             }
         }
     }

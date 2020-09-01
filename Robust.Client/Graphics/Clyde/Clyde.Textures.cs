@@ -78,10 +78,14 @@ namespace Robust.Client.Graphics.Clyde
             PixelInternalFormat internalFormat;
             PixelFormat pixelDataFormat;
             PixelType pixelDataType;
+            bool isActuallySrgb = false;
 
             if (pixelType == typeof(Rgba32))
             {
-                internalFormat = actualParams.Srgb ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
+                // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.
+                // Shaders are expected to compensate for this
+                internalFormat = (actualParams.Srgb && _hasGLSrgb) ? PixelInternalFormat.Srgb8Alpha8 : PixelInternalFormat.Rgba8;
+                isActuallySrgb = actualParams.Srgb;
                 pixelDataFormat = PixelFormat.Rgba;
                 pixelDataType = PixelType.UnsignedByte;
             }
@@ -142,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var pressureEst = EstPixelSize(internalFormat) * copy.Width * copy.Height;
 
-            return GenTexture(texture, (copy.Width, copy.Height), name, pressureEst);
+            return GenTexture(texture, (copy.Width, copy.Height), isActuallySrgb, name, pressureEst);
         }
 
         private void ApplySampleParameters(TextureSampleParameters? sampleParameters)
@@ -199,7 +203,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, string? name, long memoryPressure=0)
+        private ClydeTexture GenTexture(GLHandle glHandle, Vector2i size, bool srgb, string? name, long memoryPressure=0)
         {
             if (name != null)
             {
@@ -209,12 +213,13 @@ namespace Robust.Client.Graphics.Clyde
             var (width, height) = size;
 
             var id = AllocRid();
-            var instance = new ClydeTexture(id, size, this);
+            var instance = new ClydeTexture(id, size, srgb, this);
             var loaded = new LoadedTexture
             {
                 OpenGLObject = glHandle,
                 Width = width,
                 Height = height,
+                IsSrgb = srgb,
                 Name = name,
                 MemoryPressure = memoryPressure
                 // TextureInstance = new WeakReference<ClydeTexture>(instance)
@@ -323,6 +328,7 @@ namespace Robust.Client.Graphics.Clyde
             public GLHandle OpenGLObject;
             public int Width;
             public int Height;
+            public bool IsSrgb;
             public string? Name;
             public long MemoryPressure;
             public Vector2i Size => (Width, Height);
@@ -340,6 +346,7 @@ namespace Robust.Client.Graphics.Clyde
         private sealed class ClydeTexture : OwnedTexture
         {
             private readonly Clyde _clyde;
+            public readonly bool IsSrgb;
 
             internal ClydeHandle TextureId { get; }
 
@@ -357,9 +364,10 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            internal ClydeTexture(ClydeHandle id, Vector2i size, Clyde clyde) : base(size)
+            internal ClydeTexture(ClydeHandle id, Vector2i size, bool srgb, Clyde clyde) : base(size)
             {
                 TextureId = id;
+                IsSrgb = srgb;
                 _clyde = clyde;
             }
 

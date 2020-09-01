@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics.Clyde
             new Dictionary<GridId, Dictionary<MapIndices, MapChunkData>>();
 
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
-        private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 5;
+        private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private void _drawGrids(Box2 worldBounds)
         {
@@ -34,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
             SetTexture(TextureUnit.Texture1, _lightingReady ? _currentViewport!.LightRenderTarget.Texture : _stockTextureWhite);
 
             var (gridProgram, _) = ActivateShaderInstance(_defaultShader.Handle);
+            SetupGlobalUniformsImmediate(gridProgram, (ClydeTexture) _tileDefinitionManager.TileTextureAtlas);
 
             gridProgram.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             gridProgram.SetUniformTextureMaybe(UniILightTexture, TextureUnit.Texture1);
@@ -77,7 +78,7 @@ namespace Robust.Client.Graphics.Clyde
                     CheckGlError();
 
                     _debugStats.LastGLDrawCalls += 1;
-                    GL.DrawElements(BeginMode.TriangleStrip, datum.TileCount * 5, DrawElementsType.UnsignedShort, 0);
+                    GL.DrawElements(GetQuadGLPrimitiveType(), datum.TileCount * GetQuadBatchIndexCount(), DrawElementsType.UnsignedShort, 0);
                     CheckGlError();
                 }
             }
@@ -112,17 +113,13 @@ namespace Robust.Client.Graphics.Clyde
                     var region = regionMaybe.Value;
 
                     var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
-                    var nIdx = i * 5;
+                    vertexBuffer[vIdx + 0] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
+                    var nIdx = i * GetQuadBatchIndexCount();
                     var tIdx = (ushort) (i * 4);
-                    indexBuffer[nIdx + 0] = tIdx;
-                    indexBuffer[nIdx + 1] = (ushort) (tIdx + 1);
-                    indexBuffer[nIdx + 2] = (ushort) (tIdx + 2);
-                    indexBuffer[nIdx + 3] = (ushort) (tIdx + 3);
-                    indexBuffer[nIdx + 4] = ushort.MaxValue;
+                    QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
                     i += 1;
                 }
 
@@ -130,7 +127,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
                 datum.EBO.Use();
                 datum.VBO.Use();
-                datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * 5));
+                datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * GetQuadBatchIndexCount()));
                 datum.VBO.Reallocate(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
                 datum.Dirty = false;
                 datum.TileCount = i;

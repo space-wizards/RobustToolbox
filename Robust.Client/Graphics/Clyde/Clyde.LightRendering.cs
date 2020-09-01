@@ -137,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // FOV FBO.
             _fovRenderTarget = CreateRenderTarget((FovMapSize, 2),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat},
                 nameof(_fovRenderTarget));
 
@@ -153,7 +153,7 @@ namespace Robust.Client.Graphics.Clyde
 
             // Shadow FBO.
             _shadowRenderTarget = CreateRenderTarget((ShadowMapSize, MaxLightsPerScene),
-                new RenderTargetFormatParameters(RenderTargetColorFormat.RG32F, true),
+                new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters {WrapMode = TextureWrapMode.Repeat, Filter = true},
                 nameof(_shadowRenderTarget));
         }
@@ -242,7 +242,7 @@ namespace Robust.Client.Graphics.Clyde
             var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
 
             // The light is now the center of the universe.
-            _fovCalculationProgram.SetUniform("lightMatrix", lightMatrix, false);
+            _fovCalculationProgram.SetUniform("shadowLightMatrix", lightMatrix, false);
 
             var baseProj = Matrix4.CreatePerspectiveFieldOfView(
                 MathHelper.DegreesToRadians(90),
@@ -251,6 +251,8 @@ namespace Robust.Client.Graphics.Clyde
                 maxDist * 1.1f);
 
             var step = width / 4;
+
+            GL.Disable(EnableCap.Blend);
 
             for (var i = 0; i < 4; i++)
             {
@@ -278,15 +280,17 @@ namespace Robust.Client.Graphics.Clyde
                     projMatrix = proj;
                 }
 
-                _fovCalculationProgram.SetUniform("projectionMatrix", proj, false);
+                _fovCalculationProgram.SetUniform("shadowProjectionMatrix", proj, false);
                 // Shift viewport around so we write to the correct quadrant of the depth map.
                 GL.Viewport(step * i, viewportY, step, 1);
                 CheckGlError();
 
-                GL.DrawElements(BeginMode.TriangleStrip, _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+                GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
                 CheckGlError();
                 _debugStats.LastGLDrawCalls += 1;
             }
+
+            GL.Enable(EnableCap.Blend);
         }
 
         private void PrepareDepthDraw(LoadedRenderTarget target)
@@ -305,7 +309,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.FrontFace(FrontFaceDirection.Cw);
             CheckGlError();
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, target.FramebufferHandle.Handle);
+            BindRenderTargetImmediate(target);
             CheckGlError();
             GL.ClearDepth(1);
             CheckGlError();
@@ -318,6 +322,8 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             _fovCalculationProgram.Use();
+
+            SetupGlobalUniformsImmediate(_fovCalculationProgram, null);
         }
 
         private void FinalizeDepthDraw()
@@ -362,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
-            GL.BindFramebuffer(FramebufferTarget.Framebuffer, RtToLoaded(viewport.LightRenderTarget).FramebufferHandle.Handle);
+            BindRenderTargetImmediate(RtToLoaded(viewport.LightRenderTarget));
             CheckGlError();
             GLClearColor(Color.FromSrgb(AmbientLightColor));
             GL.Clear(ClearBufferMask.ColorBufferBit);
@@ -374,6 +380,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var lightShader = _loadedShaders[_lightShaderHandle].Program;
             lightShader.Use();
+
+            SetupGlobalUniformsImmediate(lightShader, ShadowTexture);
 
             SetTexture(TextureUnit.Texture1, ShadowTexture);
             lightShader.SetUniformTextureMaybe("shadowMap", TextureUnit.Texture1);
@@ -533,6 +541,8 @@ namespace Robust.Client.Graphics.Clyde
             var shader = _loadedShaders[_wallBleedBlurShaderHandle].Program;
             shader.Use();
 
+            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
+
             shader.SetUniformMaybe("size", (Vector2) viewport.WallBleedIntermediateRenderTarget1.Size);
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
@@ -595,6 +605,9 @@ namespace Robust.Client.Graphics.Clyde
             shader.Use();
 
             var tex = viewport.WallBleedIntermediateRenderTarget2.Texture;
+
+            SetupGlobalUniformsImmediate(shader, tex);
+
             SetTexture(TextureUnit.Texture0, tex);
 
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
@@ -602,7 +615,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindVertexArray(_occlusionMaskVao.Handle);
             CheckGlError();
 
-            GL.DrawElements(PrimitiveType.TriangleFan, _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
                 IntPtr.Zero);
             CheckGlError();
 
@@ -616,6 +629,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
             fovShader.Use();
+
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
@@ -632,6 +647,8 @@ namespace Robust.Client.Graphics.Clyde
 
             var fovShader = _loadedShaders[_fovLightShaderHandle].Program;
             fovShader.Use();
+
+            SetupGlobalUniformsImmediate(fovShader, FovTexture);
 
             SetTexture(TextureUnit.Texture0, FovTexture);
 
@@ -694,10 +711,10 @@ namespace Robust.Client.Graphics.Clyde
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
             var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
-            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 20);
+            var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount() * 4);
 
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxOccluders * 4);
-            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * 5);
+            var indexMaskBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount());
 
             try
             {
@@ -729,13 +746,21 @@ namespace Robust.Client.Graphics.Clyde
 
                     // Vertices used as main occlusion geometry.
                     // We always send all of these (see below) to keep code complexity down.
+                    ushort vTLH = (ushort) (ai + 0);
                     arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
+                    ushort vTLL = (ushort) (ai + 1);
                     arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
+                    ushort vTRH = (ushort) (ai + 2);
                     arrayBuffer[ai + 2] = new Vector3(trX, trY, polygonHeight);
+                    ushort vTRL = (ushort) (ai + 3);
                     arrayBuffer[ai + 3] = new Vector3(trX, trY, -polygonHeight);
+                    ushort vBRH = (ushort) (ai + 4);
                     arrayBuffer[ai + 4] = new Vector3(brX, brY, polygonHeight);
+                    ushort vBRL = (ushort) (ai + 5);
                     arrayBuffer[ai + 5] = new Vector3(brX, brY, -polygonHeight);
+                    ushort vBLH = (ushort) (ai + 6);
                     arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
+                    ushort vBLL = (ushort) (ai + 7);
                     arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
 
                     //
@@ -787,49 +812,33 @@ namespace Robust.Client.Graphics.Clyde
                     var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
 
                     // Handle faces, rules described above.
+                    // Note that faces are drawn with their 'normals' facing in the described direction in 3D space.
+                    // That is, they're clockwise "as viewed from the outside".
+                    // (When changing things to QuadBatchIndexWrite,
+                    // I described the behaviour correctly in this comment and then failed to implement it - 20kdc)
 
-                    // North face.
+                    // North face (TL/TR)
                     if (!no || !tlV && !trV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 0);
-                        indexBuffer[ii + 1] = (ushort) (ai + 1);
-                        indexBuffer[ii + 2] = (ushort) (ai + 2);
-                        indexBuffer[ii + 3] = (ushort) (ai + 3);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTRH, vTLH, vTLL, vTRL);
                     }
 
-                    // East face.
+                    // East face (TR/BR)
                     if (!eo || !brV && !trV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 2);
-                        indexBuffer[ii + 1] = (ushort) (ai + 3);
-                        indexBuffer[ii + 2] = (ushort) (ai + 4);
-                        indexBuffer[ii + 3] = (ushort) (ai + 5);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBRH, vTRH, vTRL, vBRL);
                     }
 
-                    // South face.
+                    // South face (BR/BL)
                     if (!so || !brV && !blV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 4);
-                        indexBuffer[ii + 1] = (ushort) (ai + 5);
-                        indexBuffer[ii + 2] = (ushort) (ai + 6);
-                        indexBuffer[ii + 3] = (ushort) (ai + 7);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vBLH, vBRH, vBRL, vBLL);
                     }
 
-                    // West face.
+                    // West face (BL/TL)
                     if (!wo || !blV && !tlV)
                     {
-                        indexBuffer[ii + 0] = (ushort) (ai + 6);
-                        indexBuffer[ii + 1] = (ushort) (ai + 7);
-                        indexBuffer[ii + 2] = (ushort) (ai + 0);
-                        indexBuffer[ii + 3] = (ushort) (ai + 1);
-                        indexBuffer[ii + 4] = ushort.MaxValue; // Primitive restart
-                        ii += 5;
+                        QuadBatchIndexWrite(indexBuffer, ref ii, vTLH, vBLH, vBLL, vTLL);
                     }
 
                     // Generate mask geometry.
@@ -839,15 +848,10 @@ namespace Robust.Client.Graphics.Clyde
                     arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
 
                     // Generate mask indices.
-                    indexMaskBuffer[imi + 0] = (ushort) (ami + 0);
-                    indexMaskBuffer[imi + 1] = (ushort) (ami + 1);
-                    indexMaskBuffer[imi + 2] = (ushort) (ami + 2);
-                    indexMaskBuffer[imi + 3] = (ushort) (ami + 3);
-                    indexMaskBuffer[imi + 4] = ushort.MaxValue; // Primitive restart
+                    QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort) ami);
 
                     ai += 8;
                     ami += 4;
-                    imi += 5;
                 }
 
                 _occlusionDataLength = ii;
@@ -881,7 +885,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var lightMapSize = GetLightMapSize(viewport.Size);
             var lightMapSizeQuart = GetLightMapSize(viewport.Size, true);
-            const RenderTargetColorFormat lightMapColorFormat = RenderTargetColorFormat.R11FG11FB10F;
+            var lightMapColorFormat = _hasGLFloatFramebuffers ? RenderTargetColorFormat.R11FG11FB10F : RenderTargetColorFormat.Rgba8;
             var lightMapSampleParameters = new TextureSampleParameters {Filter = true};
 
             viewport.LightRenderTarget?.Dispose();

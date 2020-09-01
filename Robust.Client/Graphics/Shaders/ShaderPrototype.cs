@@ -170,7 +170,7 @@ namespace Robust.Client.Graphics.Shaders
                         continue;
                     }
 
-                    var value = _parseUniformValue(item.Value, uniformDefinition.Type);
+                    var value = _parseUniformValue(item.Value, uniformDefinition.Type.Type);
                     ShaderParams.Add(name, value);
                 }
             }
@@ -221,7 +221,7 @@ namespace Robust.Client.Graphics.Shaders
                 }
             }
 
-            source += "void fragment() {\n    COLOR = texture(TEXTURE, UV);\n}";
+            source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
 
             var preset = ShaderParser.Parse(source, _resourceCache);
             CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");

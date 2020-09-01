@@ -105,12 +105,30 @@ namespace Robust.Client.Graphics.Shaders
             _currentParser!.EatWhitespace();
             var word = _parseWord();
 
-            if (word.Word != "include")
+            if (word.Word == "include")
+            {
+                HandleInclude();
+            }
+            else if (word.Word == "ifdef")
+            {
+                HandleVerbatimProcessor(word);
+            }
+            else if (word.Word == "endif")
+            {
+                HandleVerbatimProcessor(word);
+            }
+            else if (word.Word == "ifndef")
+            {
+                HandleVerbatimProcessor(word);
+            }
+            else if (word.Word == "else")
+            {
+                HandleVerbatimProcessor(word);
+            }
+            else
             {
                 throw new ShaderParseException($"Unknown preprocessor directive '{word.Word}'");
             }
-
-            HandleInclude();
         }
 
         private void HandleInclude()
@@ -144,6 +162,17 @@ namespace Robust.Client.Graphics.Shaders
             using var reader = new StreamReader(stream, EncodingHelpers.UTF8);
 
             PushTokenize(reader, pathString);
+        }
+
+        private void HandleVerbatimProcessor(TokenWord word)
+        {
+            var basis = "#" + word.Word + " ";
+            while (!_currentParser!.IsEOL())
+            {
+                basis += _currentParser.Take();
+            }
+            basis += '\n';
+            _tokens.Add(new TokenWord(basis, word.Position));
         }
 
         private TokenSymbol _parseSymbol(char chr)

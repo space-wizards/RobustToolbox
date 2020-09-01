@@ -32,10 +32,16 @@ namespace Robust.Client.Graphics.Clyde
         private const int BindingIndexProjView = 0;
         private const int BindingIndexUniformConstants = 1;
 
+        // To be clear: You shouldn't change this. This just helps with understanding where Primitive Restart is being used.
+        private const ushort PrimitiveRestartIndex = ushort.MaxValue;
+
         private enum Renderer
         {
+            // Default: Try all supported renderers (not necessarily the renderers shown here)
             Default = default,
-            OpenGL31 = 1,
+            OpenGL33 = 1,
+            OpenGL31 = 2,
+            OpenGLES2 = 3,
             Explode = -1,
         }
     }

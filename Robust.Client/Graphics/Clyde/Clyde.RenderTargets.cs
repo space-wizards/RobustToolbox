@@ -6,6 +6,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Robust.Shared.Log;
 
 // ReSharper disable once IdentifierTypo
 using RTCF = Robust.Client.Interfaces.Graphics.RenderTargetColorFormat;
@@ -24,7 +25,13 @@ namespace Robust.Client.Graphics.Clyde
             = new ConcurrentQueue<ClydeHandle>();
 
         IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
+        // Initialized in Clyde's constructor
         private readonly RenderWindow _mainWindowRenderTarget;
+
+        // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
+        // It is used for SRGB emulation.
+        // It, like _mainWindowRenderTarget, is initialized in Clyde's constructor
+        private LoadedRenderTarget _currentBoundRenderTarget;
 
         IRenderTexture IClyde.CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters, string? name)
@@ -40,8 +47,13 @@ namespace Robust.Client.Graphics.Clyde
 
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
+            // Note that this means _currentBoundRenderTarget goes temporarily out of sync here
             var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
-            var boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
+            var boundReadBuffer = 0;
+            if (_hasGLReadFramebuffer)
+            {
+                boundReadBuffer = GL.GetInteger(GetPName.ReadFramebufferBinding);
+            }
 
             // Generate FBO.
             var fbo = new GLHandle(GL.GenFramebuffer());
@@ -69,9 +81,32 @@ namespace Robust.Client.Graphics.Clyde
 
                 ApplySampleParameters(sampleParameters);
 
+                var colorFormat = format.ColorFormat;
+                if ((!_hasGLSrgb) && (colorFormat == RTCF.Rgba8Srgb))
+                {
+                    // If SRGB is not supported, switch formats.
+                    // The shaders will have to compensate.
+                    // Note that a check is performed on the *original* format.
+                    colorFormat = RTCF.Rgba8;
+                }
+                // This isn't good
+                if (!_hasGLFloatFramebuffers)
+                {
+                    switch (colorFormat)
+                    {
+                        case RTCF.R32F:
+                        case RTCF.RG32F:
+                        case RTCF.R11FG11FB10F:
+                        case RTCF.Rgba16F:
+                            Logger.WarningS("clyde.ogl", "The framebuffer {0} [{1}] is trying to be floating-point when that's not supported. Forcing Rgba8.", name == null ? "[unnamed]" : name, size);
+                            colorFormat = RTCF.Rgba8;
+                            break;
+                    }
+                }
+
                 // Make sure to specify the correct pixel type and formats even if we're not uploading any data.
                 // Not doing this (just sending red/byte) is fine on desktop GL but illegal on ES.
-                var (internalFormat, pixFormat, pixType) = format.ColorFormat switch
+                var (internalFormat, pixFormat, pixType) = colorFormat switch
                 {
                     // using block comments to force formatters to not fuck this up.
                     RTCF.Rgba8 => /*       */(PIF.Rgba8, /*       */PF.Rgba, /**/PT.UnsignedByte),
@@ -90,12 +125,22 @@ namespace Robust.Client.Graphics.Clyde
                     pixType, IntPtr.Zero);
                 CheckGlError();
 
-                GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
-                    texture.Handle,
-                    0);
+                if (!_isGLES)
+                {
+                    GL.FramebufferTexture(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                        texture.Handle,
+                        0);
+                }
+                else
+                {
+                    // OpenGL ES uses a different name, and has an odd added target argument
+                    GL.FramebufferTexture2D(FramebufferTarget.Framebuffer, FramebufferAttachment.ColorAttachment0,
+                        TextureTarget.Texture2D, texture.Handle, 0);
+                }
                 CheckGlError();
 
-                textureObject = GenTexture(texture, size, name == null ? null : $"{name}-color");
+                // Check on original format is NOT a bug, this is so srgb emulation works
+                textureObject = GenTexture(texture, size, format.ColorFormat == RTCF.Rgba8Srgb, name == null ? null : $"{name}-color");
             }
 
             // Depth/stencil buffers.
@@ -114,7 +159,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 estPixSize += 4;
 
-                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthStencilAttachment,
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment,
+                    RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
+                GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.StencilAttachment,
                     RenderbufferTarget.Renderbuffer, depthStencilBuffer.Handle);
                 CheckGlError();
             }
@@ -125,11 +172,14 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.Assert(status == FramebufferErrorCode.FramebufferComplete,
                 $"new framebuffer has bad status {status}");
 
-            // Re-bind previous framebuffers.
+            // Re-bind previous framebuffers (thus _currentBoundRenderTarget is back in sync)
             GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
             CheckGlError();
-            GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
-            CheckGlError();
+            if (_hasGLReadFramebuffer)
+            {
+                GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, boundReadBuffer);
+                CheckGlError();
+            }
 
             var pressure = estPixSize * size.X * size.Y;
 
@@ -137,6 +187,7 @@ namespace Robust.Client.Graphics.Clyde
             var data = new LoadedRenderTarget
             {
                 IsWindow = false,
+                IsSrgb = textureObject.IsSrgb,
                 DepthStencilHandle = depthStencilBuffer,
                 FramebufferHandle = fbo,
                 Size = size,
@@ -191,8 +242,10 @@ namespace Robust.Client.Graphics.Clyde
             return _renderTargets[rt.Handle];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindRenderTargetImmediate(LoadedRenderTarget rt)
         {
+            // NOTE: It's critically important that this be the "focal point" of all framebuffer bindings.
             if (rt.IsWindow)
             {
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
@@ -203,6 +256,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.BindFramebuffer(FramebufferTarget.Framebuffer, rt.FramebufferHandle.Handle);
                 CheckGlError();
             }
+            _currentBoundRenderTarget = rt;
         }
 
         private void FlushRenderTargetDispose()
@@ -223,6 +277,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             public bool IsWindow;
             public Vector2i Size;
+            public bool IsSrgb;
 
             // Remaining properties only apply if the render target is NOT a window.
             // Handle to the framebuffer object.

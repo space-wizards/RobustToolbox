@@ -1,15 +1,14 @@
-#version 140
+/*layout (location = 0)*/ attribute vec3 aPos;
 
-/*layout (location = 0)*/ in vec3 aPos;
+varying vec2 pos;
 
-out vec2 pos;
-
-uniform mat4 projectionMatrix;
-uniform mat4 lightMatrix;
+// Note: This is *not* the standard projectionMatrix!
+uniform mat4 shadowProjectionMatrix;
+uniform mat4 shadowLightMatrix;
 
 void main()
 {
-    vec4 rel = lightMatrix * vec4(aPos, 1);
-    gl_Position = projectionMatrix * rel;
+    vec4 rel = shadowLightMatrix * vec4(aPos, 1.0);
+    gl_Position = shadowProjectionMatrix * rel;
     pos = rel.xy;
 }

@@ -72,8 +72,8 @@ namespace Robust.Client.Graphics.Clyde
         // Buffers and data for the batching system. Written into during (queue) and processed during (submit).
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
 
-        // Need 5 indices per quad: 4 to draw the quad with triangle strips and another one as primitive restart.
-        private readonly ushort[] BatchIndexData = new ushort[MaxBatchQuads * 5];
+        // Only write from InitRenderingBatchBuffers!
+        private ushort[] BatchIndexData = default!;
         private int BatchVertexIndex;
         private int BatchIndexIndex;
 
@@ -98,6 +98,11 @@ namespace Robust.Client.Graphics.Clyde
         private bool _isStencilling;
 
         private readonly RefList<RenderCommand> _queuedRenderCommands = new RefList<RenderCommand>();
+
+        private void InitRenderingBatchBuffers()
+        {
+            BatchIndexData = new ushort[MaxBatchQuads * GetQuadBatchIndexCount()];
+        }
 
         /// <summary>
         ///     Updates uniform constants shared to all shaders, such as time and pixel size.
@@ -206,6 +211,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
 
             var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
+            SetupGlobalUniformsImmediate(program, loadedTexture.IsSrgb);
 
             GL.ActiveTexture(TextureUnit.Texture0);
             CheckGlError();
@@ -231,7 +237,6 @@ namespace Robust.Client.Graphics.Clyde
 
             program.SetUniformMaybe(UniIModulate, command.Modulate);
             program.SetUniformMaybe(UniITexturePixelSize, Vector2.One / loadedTexture.Size);
-
 
             var primitiveType = MapPrimitiveType(command.PrimitiveType);
             if (command.Indexed)
@@ -479,7 +484,7 @@ namespace Robust.Client.Graphics.Clyde
         private void DrawTexture(ClydeHandle texture, Vector2 bl, Vector2 br, Vector2 tl, Vector2 tr, in Color modulate,
             in Box2 sr)
         {
-            EnsureBatchState(texture, modulate, true, BatchPrimitiveType.TriangleFan, _queuedShader);
+            EnsureBatchState(texture, modulate, true, GetQuadBatchPrimitiveType(), _queuedShader);
 
             bl = _currentMatrixModel.Transform(bl);
             br = _currentMatrixModel.Transform(br);
@@ -493,14 +498,7 @@ namespace Robust.Client.Graphics.Clyde
             BatchVertexData[vIdx + 2] = new Vertex2D(tr, sr.TopRight);
             BatchVertexData[vIdx + 3] = new Vertex2D(tl, sr.TopLeft);
             BatchVertexIndex += 4;
-            var nIdx = BatchIndexIndex;
-            var tIdx = (ushort) vIdx;
-            BatchIndexData[nIdx + 0] = tIdx;
-            BatchIndexData[nIdx + 1] = (ushort) (tIdx + 1);
-            BatchIndexData[nIdx + 2] = (ushort) (tIdx + 2);
-            BatchIndexData[nIdx + 3] = (ushort) (tIdx + 3);
-            BatchIndexData[nIdx + 4] = ushort.MaxValue;
-            BatchIndexIndex += 5;
+            QuadBatchIndexWrite(BatchIndexData, ref BatchIndexIndex, (ushort) vIdx);
 
             _debugStats.LastClydeDrawCalls += 1;
         }
@@ -519,7 +517,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var o = BatchIndexIndex + i;
                 var index = indices[i];
-                if (index != ushort.MaxValue) // Don't offset primitive restart.
+                if (index != PrimitiveRestartIndex) // Don't offset primitive restart.
                 {
                     index = (ushort) (index + BatchVertexIndex);
                 }

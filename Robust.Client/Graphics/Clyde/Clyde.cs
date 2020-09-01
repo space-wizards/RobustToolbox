@@ -42,8 +42,8 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        private GLBuffer ProjViewUBO = default!;
-        private GLBuffer UniformConstantsUBO = default!;
+        private GLUniformBuffer<ProjViewMatrices> ProjViewUBO = default!;
+        private GLUniformBuffer<UniformConstants> UniformConstantsUBO = default!;
 
         private RenderTexture EntityPostRenderTarget = default!;
 
@@ -66,6 +66,14 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLKhrDebug;
         private bool _hasGLTextureSwizzle;
         private bool _hasGLSamplerObjects;
+        private bool _hasGLSrgb;
+        private bool _hasGLPrimitiveRestart;
+        private bool _hasGLReadFramebuffer;
+        private bool _hasGLUniformBuffers;
+        private bool _hasGLVertexArrayObject;
+        private bool _hasGLFloatFramebuffers;
+        // This is updated from Clyde.Windowing.
+        private bool _isGLES;
         private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
@@ -82,12 +90,14 @@ namespace Robust.Client.Graphics.Clyde
             var window = new RenderWindow(this, windowRid);
             var loadedData = new LoadedRenderTarget
             {
-                IsWindow = true
+                IsWindow = true,
+                IsSrgb = true
             };
             _renderTargets.Add(windowRid, loadedData);
 
             _mainWindowRenderTarget = window;
             _currentRenderTarget = RtToLoaded(window);
+            _currentBoundRenderTarget = _currentRenderTarget;
         }
 
         public override bool Initialize()
@@ -151,6 +161,7 @@ namespace Robust.Client.Graphics.Clyde
             _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
             _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
             _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
+            _configurationManager.RegisterCVar("display.ogl_block_vertex_array_object", false);
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -175,28 +186,57 @@ namespace Robust.Client.Graphics.Clyde
 
             LoadVendorSettings(vendor, renderer, version);
 
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            var major = 2;
+            var minor = 0;
+
+            if (!_isGLES)
+            {
+                major = GL.GetInteger(GetPName.MajorVersion);
+                minor = GL.GetInteger(GetPName.MinorVersion);
+            }
 
             DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
-            CheckGlError();
-            GL.Enable(EnableCap.FramebufferSrgb);
-            CheckGlError();
-            GL.Enable(EnableCap.PrimitiveRestart);
-            CheckGlError();
-            GL.PrimitiveRestartIndex(ushort.MaxValue);
-            CheckGlError();
+            if (_hasGLSrgb)
+            {
+                GL.Enable(EnableCap.FramebufferSrgb);
+                CheckGlError();
+            }
+            if (_hasGLPrimitiveRestart)
+            {
+                GL.Enable(EnableCap.PrimitiveRestart);
+                CheckGlError();
+                GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
+                CheckGlError();
+            }
+            if (!_hasGLVertexArrayObject)
+            {
+                Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
+            }
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             CheckGlError();
 
+            // Primitive Restart's presence or lack thereof changes the amount of required memory.
+            InitRenderingBatchBuffers();
+
+            Logger.DebugS("clyde.ogl", "Loading stock textures...");
+
             LoadStockTextures();
+
+            Logger.DebugS("clyde.ogl", "Loading stock shaders...");
+
             LoadStockShaders();
+
+            Logger.DebugS("clyde.ogl", "Creating various GL objects...");
 
             CreateMiscGLObjects();
 
+            Logger.DebugS("clyde.ogl", "Setting up RenderHandle...");
+
             _renderHandle = new RenderHandle(this);
+
+            Logger.DebugS("clyde.ogl", "Setting viewport and rendering splash...");
 
             GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
             CheckGlError();
@@ -255,20 +295,8 @@ namespace Robust.Client.Graphics.Clyde
                     sizeof(ushort) * BatchIndexData.Length, nameof(BatchEBO));
             }
 
-            ProjViewUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
-                nameof(ProjViewUBO));
-            ProjViewUBO.Reallocate(sizeof(ProjViewMatrices));
-
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexProjView, ProjViewUBO.ObjectHandle);
-            CheckGlError();
-
-            UniformConstantsUBO = new GLBuffer(this, BufferTarget.UniformBuffer, BufferUsageHint.StreamDraw,
-                nameof(UniformConstantsUBO));
-            UniformConstantsUBO.Reallocate(sizeof(UniformConstants));
-
-            GL.BindBufferBase(BufferRangeTarget.UniformBuffer, BindingIndexUniformConstants,
-                UniformConstantsUBO.ObjectHandle);
-            CheckGlError();
+            ProjViewUBO = new GLUniformBuffer<ProjViewMatrices>(this, BindingIndexProjView, nameof(ProjViewUBO));
+            UniformConstantsUBO = new GLUniformBuffer<UniformConstants>(this, BindingIndexUniformConstants, nameof(UniformConstantsUBO));
 
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
@@ -292,13 +320,20 @@ namespace Robust.Client.Graphics.Clyde
         {
             var extensions = GetGLExtensions();
 
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            // To prevent trouble, use a version of "0.0" for GLES
+            var major = 0;
+            var minor = 0;
 
-            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, params string[] exts)
+            if (!_isGLES)
+            {
+                major = GL.GetInteger(GetPName.MajorVersion);
+                minor = GL.GetInteger(GetPName.MinorVersion);
+            }
+
+            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, bool forceDisableOnES, params string[] exts)
             {
                 // Check if feature is available from the GL context.
-                cap = CompareVersion(major, minor, majorMin, minorMin) || extensions.Overlaps(exts);
+                cap = CompareVersion(majorMin, minorMin, major, minor) || extensions.Overlaps(exts);
 
                 var prev = cap;
                 var cVarName = $"display.ogl_block_{capName}";
@@ -310,15 +345,29 @@ namespace Robust.Client.Graphics.Clyde
                     Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
                 }
 
-                Logger.DebugS("clyde.ogl", $"  {capName}: {_hasGLKhrDebug}");
+                if (_isGLES && forceDisableOnES)
+                {
+                    cap = false;
+                    Logger.DebugS("clyde.ogl", $"  On GLES, BLOCKING {capName}");
+                }
+
+                Logger.DebugS("clyde.ogl", $"  {capName}: {cap}");
             }
 
             Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
 
-            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, "GL_KHR_debug");
-            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, "GL_ARB_sampler_objects");
-            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, "GL_ARB_texture_swizzle",
+            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, false, "GL_KHR_debug");
+            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, true, "GL_ARB_sampler_objects");
+            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, true, "GL_ARB_texture_swizzle",
                 "GL_EXT_texture_swizzle");
+            CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, false, "GL_OES_vertex_array_object",
+                "GL_ARB_vertex_array_object");
+            _hasGLSrgb = !_isGLES;
+            _hasGLReadFramebuffer = !_isGLES;
+            _hasGLPrimitiveRestart = !_isGLES;
+            _hasGLUniformBuffers = !_isGLES;
+            _hasGLFloatFramebuffers = !_isGLES;
+            Logger.DebugS("clyde.ogl", $"  GLES: {_isGLES}");
         }
 
         private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)
@@ -421,18 +470,34 @@ namespace Robust.Client.Graphics.Clyde
 
         private static DebugProc? _debugMessageCallbackInstance;
 
-        private static HashSet<string> GetGLExtensions()
+        private HashSet<string> GetGLExtensions()
         {
-            var extensions = new HashSet<string>();
-
-            var count = GL.GetInteger(GetPName.NumExtensions);
-            for (var i = 0; i < count; i++)
+            if (!_isGLES)
             {
-                var extension = GL.GetString(StringNameIndexed.Extensions, i);
-                extensions.Add(extension);
+                var extensions = new HashSet<string>();
+                var extensionsText = "";
+                // Desktop OpenGL uses this API to discourage static buffers
+                var count = GL.GetInteger(GetPName.NumExtensions);
+                for (var i = 0; i < count; i++)
+                {
+                    if (i != 0)
+                    {
+                        extensionsText += " ";
+                    }
+                    var extension = GL.GetString(StringNameIndexed.Extensions, i);
+                    extensionsText += extension;
+                    extensions.Add(extension);
+                }
+                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensionsText);
+                return extensions;
             }
-
-            return extensions;
+            else
+            {
+                // GLES uses the (old?) API
+                var extensions = GL.GetString(StringName.Extensions);
+                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
+                return new HashSet<string>(extensions.Split(' '));
+            }
         }
 
         [Conditional("DEBUG")]

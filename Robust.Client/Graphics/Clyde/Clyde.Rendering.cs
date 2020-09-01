@@ -73,7 +73,7 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Vertex2D[] BatchVertexData = new Vertex2D[MaxBatchQuads * 4];
 
         // Only write from InitRenderingBatchBuffers!
-        private ushort[] BatchIndexData;
+        private ushort[] BatchIndexData = default!;
         private int BatchVertexIndex;
         private int BatchIndexIndex;
 

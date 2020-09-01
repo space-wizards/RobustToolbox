@@ -4,6 +4,18 @@
 // It's literally just called the Z-Library for alphabetical ordering reasons.
 //  - 20kdc
 
+// -- varying/attribute --
+
+#ifndef HAS_VARYING_ATTRIBUTE
+#ifdef VERTEX_SHADER
+#define varying out
+#define attribute in
+#else
+#define varying in
+#define attribute in
+#endif
+#endif
+
 // -- shadow depth --
 
 // If float textures are supported, puts the values in the R/G fields.

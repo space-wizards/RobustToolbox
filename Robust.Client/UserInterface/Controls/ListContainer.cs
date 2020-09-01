@@ -12,11 +12,10 @@ namespace Robust.Client.UserInterface.Controls
 
         private const int DefaultSeparation = 0;
 
-        private readonly VScrollBar _vScrollBar;
+        public readonly VScrollBar VScrollBar;
         private readonly List<Control> _list;
         private readonly List<float> _heights;
-        private int _startIndex;
-        private int _endIndex;
+        private float _totalHeight;
         private bool _disableListRemove;
         private bool _dirty;
         private bool _disableListCalc;
@@ -35,6 +34,11 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public int StartIndex { get; private set; }
+        public int EndIndex { get; private set; }
+
+        public int ItemCount => _list.Count;
+
         public int? SeparationOverride { get; set; }
 
         public ListContainer() : base()
@@ -45,20 +49,307 @@ namespace Robust.Client.UserInterface.Controls
             _list = new List<Control>();
             _heights = new List<float>();
 
-            _vScrollBar = new VScrollBar
+            VScrollBar = new VScrollBar
             {
                 Visible = false,
                 SizeFlagsVertical = SizeFlags.Fill,
                 SizeFlagsHorizontal = SizeFlags.ShrinkEnd
             };
 
-            AddChild(_vScrollBar);
-            _vScrollBar.OnValueChanged += _scrollValueChanged;
+            AddChild(VScrollBar);
+            VScrollBar.OnValueChanged += _scrollValueChanged;
 
-            _startIndex = 0;
+            StartIndex = -1;
+            EndIndex = -1;
             _disableListRemove = false;
-            _dirty = true;
+            _dirty = false;
             _disableListCalc = false;
+        }
+
+        public Control? GetLastItem()
+        {
+            return _list.Count > 0 ? _list[_list.Count - 1] : null;
+        }
+
+        protected override void LayoutUpdateOverride()
+        {
+            if (VScrollBar?.Parent == null)
+            {
+                // Just don't run this before we're properly initialized.
+                return;
+            }
+
+            DebugTools.Assert(_list.Count == _heights.Count);
+
+            // Calculate _vScrollBar height
+            var separation = (int)(ActualSeparation * UIScale);
+            var (sWidth, sHeight) = Size;
+
+            RecalculateScrollBar();
+
+            if (VScrollBar.Visible)
+            {
+                sWidth -= VScrollBar.Width;
+            }
+
+            FitChildInPixelBox(VScrollBar, PixelSizeBox);
+
+            // Calculate which items are to be shown
+            if (_list.Count == 0)
+            {
+                return;
+            }
+
+            /*
+             * Example:
+             * 
+             * height | _heights | Type
+             * 
+             * 10 | 00 | Control.Size.Y
+             * 10 | 10 | Control.Size.Y
+             * 10 | 20 | Control.Size.Y
+             * 
+             * If viewport height is 20
+             * visible should be 2 items (start = 0, end = 1)
+             * 
+             * scroll.Y = 5
+             * visible should be 3 items (start = 0, end = 2)
+             * 
+             * start:
+             * scroll.Y >= _heights[start + 1]
+             * 5 >= _heights[0 + 1]
+             * 5 >= 10
+             * so start = 0
+             * 
+             * end:
+             * scroll.Y + Height >= _heights[end + 1]
+             * 5 + 20 >= _heights[1 + 1]
+             * 25 >= 20
+             * so end = 2
+             */
+            var start = StartIndex;
+            var scroll = _getScrollValue();
+            // If scroll is past the *next* threshold then increase start.
+            while (start < _heights.Count - 1 && scroll.Y >= _heights[start + 1] + (separation * start))
+            {
+                start += 1;
+            }
+            // If scroll is less than the current height, thus going into the previous limit, decrease start
+            while (start > 0 && scroll.Y < _heights[start] + (separation * start))
+            {
+                start -= 1;
+            }
+
+            // When scrolling only rebuild visible list when a new item should be visible
+            if (start != StartIndex)
+            {
+                StartIndex = start;
+                _dirty = true;
+            }
+
+            // Do the same as above for the bottom of the list, but 
+            var end = EndIndex;
+            var visibleBottom = scroll.Y + Height;
+            while (end < _heights.Count - 1 && visibleBottom > _heights[end + 1] + (separation * end))
+            {
+                end += 1;
+            }
+            while (end > 0 && visibleBottom < _heights[end] + (separation * end))
+            {
+                end -= 1;
+            }
+
+            if (end != EndIndex)
+            {
+                EndIndex = end;
+                _dirty = true;
+            }
+
+            if (_dirty)
+            {
+                _dirty = false;
+
+                // _disableListRemove is so that only Children and not _list is changed
+                _disableListRemove = true;
+                foreach (var child in Children.ToList())
+                {
+                    if (child == VScrollBar)
+                    {
+                        continue;
+                    }
+
+                    RemoveChild(child);
+                }
+                _disableListRemove = false;
+
+                for (var i = StartIndex; i <= EndIndex; i++)
+                {
+                    AddChild(_list[i]);
+                }
+
+                VScrollBar.SetPositionLast();
+            }
+
+            if (ChildCount <= 1)
+            {
+                return;
+            }
+
+            var offset = _heights[StartIndex] + (separation * StartIndex) - scroll.Y;
+
+            foreach (var child in Children)
+            {
+                if (child == VScrollBar)
+                {
+                    continue;
+                }
+
+                var (x, y) = child.CombinedMinimumSize;
+                var targetBox = UIBox2.FromDimensions(0, offset, sWidth, y);
+                FitChildInBox(child, targetBox);
+
+                var size = child.CombinedMinimumSize.Y;
+                offset += size + separation;
+            }
+        }
+
+        private void RecalculateScrollBar()
+        {
+            var separation = (int)(ActualSeparation * UIScale);
+            var cHeight = _totalHeight + (separation * _heights.Count);
+            var (sWidth, sHeight) = Size;
+
+            try
+            {
+                // Suppress events to avoid weird recursion.
+                _suppressScrollValueChanged = true;
+
+                if (sHeight < cHeight)
+                {
+                    VScrollBar.Visible = true;
+                    VScrollBar.Page = sHeight;
+                    VScrollBar.MaxValue = cHeight;
+                }
+                else
+                {
+                    VScrollBar.Visible = false;
+                }
+            }
+            finally
+            {
+                // I really don't think this can throw an exception but oh well let's finally it.
+                _suppressScrollValueChanged = false;
+            }
+        }
+
+        private void OnChildMinimumSizeChanged(Control child)
+        {
+            RecalculateListHeight(_list.IndexOf(child));
+        }
+
+        private void RecalculateListHeight(int index)
+        {
+            // Ensure _heights has the same count as _list
+            if (_heights.Count > _list.Count)
+            {
+                _heights.RemoveRange(_list.Count, _heights.Count - _list.Count);
+                if (EndIndex >= _heights.Count)
+                {
+                    EndIndex = _heights.Count - 1;
+                }
+            }
+            else
+            {
+                while (_heights.Count < _list.Count)
+                {
+                    _heights.Add(0);
+                }
+            }
+
+            if (_disableListCalc || index < 0 || index >= _heights.Count)
+            {
+                return;
+            }
+
+            _disableListCalc = true;
+
+            var i = index > 0 ? index - 1 : 0;
+            var height = _heights[i];
+            if (_heights.Count > 0 && _heights[i] + _list[index].CombinedMinimumSize.Y == _heights[index])
+            {
+                _disableListCalc = false;
+                return;
+            }
+
+            for (; i < _list.Count; i++)
+            {
+                _heights[i] = height;
+                height += _list[i].CombinedMinimumSize.Y;
+            }
+
+            _totalHeight = height;
+
+            _disableListCalc = false;
+            RecalculateScrollBar();
+        }
+
+        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
+        {
+            base.MouseWheel(args);
+
+            VScrollBar.ValueTarget -= args.Delta.Y * 50;
+        }
+
+        protected override void ChildAdded(Control newChild)
+        {
+            base.ChildAdded(newChild);
+
+            if (newChild == VScrollBar)
+            {
+                if (VScrollBar?.Parent == null)
+                {
+                    // Just don't run this before we're properly initialized.
+                    return;
+                }
+
+                VScrollBar?.SetPositionLast();
+                return;
+            }
+
+            if (_list.Contains(newChild))
+            {
+                return;
+            }
+
+            _list.Add(newChild);
+            RecalculateListHeight(_list.Count - 1);
+
+            //AddItem(newChild);
+            newChild.OnMinimumSizeChanged += OnChildMinimumSizeChanged;
+
+            _dirty = true;
+            //if (_vScrollBar?.MaxValue > Height)
+            //{
+            //    _disableListRemove = true;
+            //    RemoveChild(newChild);
+            //    _disableListRemove = false;
+            //}
+        }
+
+        public void AddItem(Control newChild)
+        {
+        }
+
+        protected override void ChildRemoved(Control child)
+        {
+            if (_disableListRemove)
+            {
+                return;
+            }
+
+            RemoveItem(child);
+
+            base.ChildRemoved(child);
         }
 
         public void RemoveItem(Control child)
@@ -70,239 +361,22 @@ namespace Robust.Client.UserInterface.Controls
 
             var index = _list.IndexOf(child);
             _list.Remove(child);
+            _dirty = true;
+            child.OnMinimumSizeChanged -= OnChildMinimumSizeChanged;
 
             if (Children.Contains(child))
             {
                 RemoveChild(child);
             }
-
             RecalculateListHeight(index);
-        }
-
-        public Control? GetLastItem()
-        {
-            return _list.Count > 0 ? _list[_list.Count - 1] : null;
-        }
-
-        protected override void LayoutUpdateOverride()
-        {
-            if (_vScrollBar?.Parent == null)
-            {
-                // Just don't run this before we're properly initialized.
-                return;
-            }
-
-            DebugTools.Assert(_list.Count == _heights.Count);
-
-            var separation = (int)(ActualSeparation * UIScale);
-
-            var start = _startIndex;
-            var scroll = _getScrollValue();
-            while (start < _heights.Count - 1 && scroll.Y >= _heights[start + 1] + (separation * start))
-            {
-                start += 1;
-            }
-            while (start > 0 && scroll.Y < _heights[start] + (separation * start))
-            {
-                start -= 1;
-            }
-
-            if (start != _startIndex)
-            {
-                _startIndex = start;
-                _dirty = true;
-            }
-
-            var end = _endIndex;
-            while (end < _heights.Count - 1 && scroll.Y + Height >= _heights[end + 1] + (separation * end))
-            {
-                end += 1;
-            }
-            while (end > 0 && scroll.Y + Height < _heights[end] + (separation * end))
-            {
-                end -= 1;
-            }
-
-            if (end != _endIndex)
-            {
-                _endIndex = end;
-                _dirty = true;
-            }
-
-            if (_dirty)
-            {
-                _dirty = false;
-
-                _disableListRemove = true;
-                foreach (var child in Children.ToList())
-                {
-                    if (child == _vScrollBar)
-                    {
-                        continue;
-                    }
-
-                    RemoveChild(child);
-                }
-                _disableListRemove = false;
-
-                for (var i = _startIndex; i <= _endIndex; i++)
-                {
-                    AddChild(_list[i]);
-                }
-            }
-
-            var cHeight = (_heights.Count > 0 ? _heights[_heights.Count - 1] : 0) + (separation * _heights.Count);
-
-            var (sWidth, sHeight) = Size;
-
-            try
-            {
-                // Suppress events to avoid weird recursion.
-                _suppressScrollValueChanged = true;
-
-                if (sHeight < cHeight)
-                {
-                    _vScrollBar.Visible = true;
-                    _vScrollBar.Page = sHeight;
-                    _vScrollBar.MaxValue = cHeight;
-                }
-                else
-                {
-                    _vScrollBar.Visible = false;
-                }
-            }
-            finally
-            {
-                // I really don't think this can throw an exception but oh well let's finally it.
-                _suppressScrollValueChanged = false;
-            }
-
-            FitChildInPixelBox(_vScrollBar, PixelSizeBox);
-
-            var sSize = (sWidth, sHeight);
-            var offset = new Vector2(0, _heights[_startIndex] + (separation * _startIndex)) - scroll;
-
-            foreach (var child in Children)
-            {
-                if (child == _vScrollBar)
-                {
-                    continue;
-                }
-
-                var targetBox = UIBox2.FromDimensions(offset, Vector2.ComponentMax(child.CombinedMinimumSize, sSize));
-                FitChildInBox(child, targetBox);
-
-                var size = child.CombinedMinimumSize.Y;
-                offset += new Vector2(0, size + separation);
-            }
-        }
-
-        private void OnChildMinimumSizeChanged(Control child)
-        {
-            if (child == _vScrollBar)
-            {
-                return;
-            }
-
-            RecalculateListHeight(_list.IndexOf(child));
-        }
-
-        private void RecalculateListHeight(int index)
-        {
-            _heights.RemoveRange(_list.Count, _heights.Count - _list.Count);
-            if (_endIndex >= _heights.Count)
-            {
-                _endIndex = _heights.Count - 1;
-            }
-            if (_disableListCalc || index < 0 || index >= _list.Count)
-            {
-                return;
-            }
-
-            _disableListCalc = true;
-
-            var i = index;
-            var height = _heights.Count > 0 ? _heights[i] : 0f;
-            for (; i < _list.Count; i++)
-            {
-                if (_heights.Count <= i)
-                {
-                    _heights.Add(height);
-                }
-                else
-                {
-                    _heights[i] = height;
-                }
-                height += _list[i].CombinedMinimumSize.Y;
-            }
-
-            _disableListCalc = false;
-        }
-
-        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
-        {
-            base.MouseWheel(args);
-
-            _vScrollBar.ValueTarget -= args.Delta.Y * 50;
-        }
-
-        protected override void ChildAdded(Control newChild)
-        {
-            base.ChildAdded(newChild);
-
-            if (newChild == _vScrollBar)
-            {
-                if (_vScrollBar?.Parent == null)
-                {
-                    // Just don't run this before we're properly initialized.
-                    return;
-                }
-
-                _vScrollBar?.SetPositionLast();
-                return;
-            }
-
-            if (_list.Contains(newChild))
-            {
-                return;
-            }
-
-            _list.Add(newChild);
-            _heights.Add(0);
-            newChild.OnMinimumSizeChanged += OnChildMinimumSizeChanged;
-
-            if (_vScrollBar?.MaxValue > Height)
-            {
-                _disableListRemove = true;
-                RemoveChild(newChild);
-                _disableListRemove = false;
-            }
-        }
-
-        protected override void ChildRemoved(Control child)
-        {
-            if (_disableListRemove)
-            {
-                return;
-            }
-
-            base.ChildRemoved(child);
-
-            child.OnMinimumSizeChanged -= OnChildMinimumSizeChanged;
-
-            var index = _list.IndexOf(child);
-
-            if (_list.Remove(child))
-            {
-                RecalculateListHeight(index);
-            }
+            UpdateLayout();
         }
 
         [Pure]
         private Vector2 _getScrollValue()
         {
-            var v = _vScrollBar.Value;
-            if (!_vScrollBar.Visible)
+            var v = VScrollBar.Value;
+            if (!VScrollBar.Visible)
             {
                 v = 0;
             }

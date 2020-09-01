@@ -409,8 +409,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyDebugInfo : IClydeDebugInfo
         {
-            public Version OpenGLVersion { get; } = new Version(3, 3);
-            public Version MinimumVersion { get; } = new Version(3, 3);
+            public OpenGLVersion OpenGLVersion { get; } = new OpenGLVersion(3, 3, isES: false, isCore: true);
             public string Renderer => "ClydeHeadless";
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";

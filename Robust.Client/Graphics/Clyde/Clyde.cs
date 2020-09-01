@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -63,17 +61,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool _quartResLights = true;
 
-        private bool _hasGLKhrDebug;
-        private bool _hasGLTextureSwizzle;
-        private bool _hasGLSamplerObjects;
-        private bool _hasGLSrgb;
-        private bool _hasGLPrimitiveRestart;
-        private bool _hasGLReadFramebuffer;
-        private bool _hasGLUniformBuffers;
-        private bool _hasGLVertexArrayObject;
-        private bool _hasGLFloatFramebuffers;
-        // This is updated from Clyde.Windowing.
-        private bool _isGLES;
         private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
@@ -158,10 +145,7 @@ namespace Robust.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
             _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
-            _configurationManager.RegisterCVar("display.ogl_block_khr_debug", false);
-            _configurationManager.RegisterCVar("display.ogl_block_sampler_objects", false);
-            _configurationManager.RegisterCVar("display.ogl_block_texture_swizzle", false);
-            _configurationManager.RegisterCVar("display.ogl_block_vertex_array_object", false);
+            RegisterBlockCVars();
         }
 
         public override event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -181,21 +165,17 @@ namespace Robust.Client.Graphics.Clyde
             Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
 
             DetectOpenGLFeatures();
-
+            InitMissingGLFunctions();
             SetupDebugCallback();
 
             LoadVendorSettings(vendor, renderer, version);
 
-            var major = 2;
-            var minor = 0;
+            var major = GL.GetInteger(GetPName.MajorVersion);
+            var minor = GL.GetInteger(GetPName.MinorVersion);
 
-            if (!_isGLES)
-            {
-                major = GL.GetInteger(GetPName.MajorVersion);
-                minor = GL.GetInteger(GetPName.MinorVersion);
-            }
+            var glVersion = new OpenGLVersion((byte) major, (byte) minor, _isGLES, _isCore);
 
-            DebugInfo = new ClydeDebugInfo(new Version(major, minor), new Version(3, 1), renderer, vendor, version);
+            DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version);
 
             GL.Enable(EnableCap.Blend);
             if (_hasGLSrgb)
@@ -314,76 +294,6 @@ namespace Robust.Client.Graphics.Clyde
             if (h % 2 == 1) h += 1;
 
             _mainViewport = CreateViewport((w, h), nameof(_mainViewport));
-        }
-
-        private void DetectOpenGLFeatures()
-        {
-            var extensions = GetGLExtensions();
-
-            // To prevent trouble, use a version of "0.0" for GLES
-            var major = 0;
-            var minor = 0;
-
-            if (!_isGLES)
-            {
-                major = GL.GetInteger(GetPName.MajorVersion);
-                minor = GL.GetInteger(GetPName.MinorVersion);
-            }
-
-            void CheckGLCap(ref bool cap, string capName, int majorMin, int minorMin, bool forceDisableOnES, params string[] exts)
-            {
-                // Check if feature is available from the GL context.
-                cap = CompareVersion(majorMin, minorMin, major, minor) || extensions.Overlaps(exts);
-
-                var prev = cap;
-                var cVarName = $"display.ogl_block_{capName}";
-                var block = _configurationManager.GetCVar<bool>(cVarName);
-
-                if (block)
-                {
-                    cap = false;
-                    Logger.DebugS("clyde.ogl", $"  {cVarName} SET, BLOCKING {capName} (was: {prev})");
-                }
-
-                if (_isGLES && forceDisableOnES)
-                {
-                    cap = false;
-                    Logger.DebugS("clyde.ogl", $"  On GLES, BLOCKING {capName}");
-                }
-
-                Logger.DebugS("clyde.ogl", $"  {capName}: {cap}");
-            }
-
-            Logger.DebugS("clyde.ogl", "OpenGL capabilities:");
-
-            CheckGLCap(ref _hasGLKhrDebug, "khr_debug", 4, 2, false, "GL_KHR_debug");
-            CheckGLCap(ref _hasGLSamplerObjects, "sampler_objects", 3, 3, true, "GL_ARB_sampler_objects");
-            CheckGLCap(ref _hasGLTextureSwizzle, "texture_swizzle", 3, 3, true, "GL_ARB_texture_swizzle",
-                "GL_EXT_texture_swizzle");
-            CheckGLCap(ref _hasGLVertexArrayObject, "vertex_array_object", 3, 0, false, "GL_OES_vertex_array_object",
-                "GL_ARB_vertex_array_object");
-            _hasGLSrgb = !_isGLES;
-            _hasGLReadFramebuffer = !_isGLES;
-            _hasGLPrimitiveRestart = !_isGLES;
-            _hasGLUniformBuffers = !_isGLES;
-            _hasGLFloatFramebuffers = !_isGLES;
-            Logger.DebugS("clyde.ogl", $"  GLES: {_isGLES}");
-        }
-
-        private static bool CompareVersion(int majorA, int minorA, int majorB, int minorB)
-        {
-            if (majorB > majorA)
-            {
-                return true;
-            }
-
-            return majorA == majorB && minorB >= minorA;
-        }
-
-        [SuppressMessage("ReSharper", "UnusedParameter.Local")]
-        private void LoadVendorSettings(string vendor, string renderer, string version)
-        {
-            // Nothing yet.
         }
 
         [Conditional("DEBUG")]

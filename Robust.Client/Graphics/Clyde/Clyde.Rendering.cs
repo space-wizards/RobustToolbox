@@ -12,6 +12,7 @@ using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Utility;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
@@ -768,16 +769,44 @@ namespace Robust.Client.Graphics.Clyde
 
             _queuedScreenshots.RemoveAll(p => p.type == type);
 
+            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
+            CheckGlError();
+
+            var bufferLength = ScreenSize.X * ScreenSize.Y;
+            if (!(_hasGLFenceSync && HasGLAnyMapBuffer && _hasGLPixelBufferObjects))
+            {
+                Logger.DebugS("clyde.ogl", "Necessary features for async screenshots not available, falling back to blocking path.");
+
+                // We need these 3 features to be able to do asynchronous screenshots, if we don't have them,
+                // we'll have to fall back to a crappy synchronous stalling method of glReadPixels().
+
+                var buffer = new Rgba32[bufferLength];
+                fixed (Rgba32* ptr = buffer)
+                {
+                    var bufSize = sizeof(Rgba32) * bufferLength;
+                    GL.ReadnPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, bufSize,
+                        (IntPtr) ptr);
+                }
+
+                var (w, h) = ScreenSize;
+
+                var image = new Image<Rgb24>(w, h);
+                var imageSpan = image.GetPixelSpan();
+
+                FlipCopyScreenshot(buffer, imageSpan, w, h);
+
+                RunCallback(image);
+                return;
+            }
+
             GL.CreateBuffers(1, out uint pbo);
             CheckGlError();
             GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
             CheckGlError();
-            GL.BufferData(BufferTarget.PixelPackBuffer, ScreenSize.X * ScreenSize.Y * sizeof(Rgb24), IntPtr.Zero,
+            GL.BufferData(BufferTarget.PixelPackBuffer, bufferLength * sizeof(Rgba32), IntPtr.Zero,
                 BufferUsageHint.StreamRead);
             CheckGlError();
-            GL.PixelStore(PixelStoreParameter.PackAlignment, 1);
-            CheckGlError();
-            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgb, PixelType.UnsignedByte, IntPtr.Zero);
+            GL.ReadPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
             CheckGlError();
             var fence = GL.FenceSync(SyncCondition.SyncGpuCommandsComplete, WaitSyncFlags.None);
             CheckGlError();
@@ -785,7 +814,9 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
             CheckGlError();
 
-            _transferringScreenshots.Add((pbo, fence, ScreenSize, image => delegates.ForEach(p => p.callback(image))));
+            _transferringScreenshots.Add((pbo, fence, ScreenSize, RunCallback));
+
+            void RunCallback(Image<Rgb24> image) => delegates.ForEach(p => p.callback(image));
         }
 
         private unsafe void CheckTransferringScreenshots()
@@ -805,19 +836,23 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (status == (int) All.Signaled)
                 {
+                    var bufLen = width * height;
+                    var bufSize = sizeof(Rgba32) * bufLen;
+
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, pbo);
                     CheckGlError();
-                    var ptr = GL.MapBuffer(BufferTarget.PixelPackBuffer, BufferAccess.ReadOnly);
+                    var ptr = MapFullBuffer(BufferTarget.PixelPackBuffer, bufSize, BufferAccess.ReadOnly,
+                        BufferAccessMask.MapReadBit);
                     CheckGlError();
 
-                    var packSpan = new ReadOnlySpan<Rgb24>((void*) ptr, width * height);
+                    var packSpan = new ReadOnlySpan<Rgba32>((void*) ptr, width * height);
 
                     var image = new Image<Rgb24>(width, height);
                     var imageSpan = image.GetPixelSpan();
 
-                    FlipCopy(packSpan, imageSpan, width, height);
+                    FlipCopyScreenshot(packSpan, imageSpan, width, height);
 
-                    GL.UnmapBuffer(BufferTarget.PixelPackBuffer);
+                    UnmapBuffer(BufferTarget.PixelPackBuffer);
                     CheckGlError();
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
                     CheckGlError();
@@ -1033,7 +1068,8 @@ namespace Robust.Client.Graphics.Clyde
             public readonly Matrix3 ViewMatrix;
             public readonly LoadedRenderTarget RenderTarget;
 
-            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix, LoadedRenderTarget renderTarget)
+            public FullStoredRendererState(in Matrix3 projMatrix, in Matrix3 viewMatrix,
+                LoadedRenderTarget renderTarget)
             {
                 ProjMatrix = projMatrix;
                 ViewMatrix = viewMatrix;

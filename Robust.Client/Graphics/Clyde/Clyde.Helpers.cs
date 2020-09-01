@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 using System.Runtime.CompilerServices;
 using System;
 using System.Buffers;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -140,6 +141,48 @@ namespace Robust.Client.Graphics.Clyde
             if (err != ErrorCode.NoError)
             {
                 Logger.ErrorS("clyde.ogl", $"OpenGL error: {err} at {path}:{line}\n{Environment.StackTrace}");
+            }
+        }
+
+        // Both access and mask are specified because I like prematurely optimizing and this is the most performant.
+        // And easiest.
+        private unsafe void* MapFullBuffer(BufferTarget buffer, int length, BufferAccess access, BufferAccessMask mask)
+        {
+            DebugTools.Assert(HasGLAnyMapBuffer);
+
+            void* ptr;
+
+            if (_hasGLMapBufferRange)
+            {
+                ptr = (void*) GL.MapBufferRange(buffer, IntPtr.Zero, length, mask);
+            }
+            else if (_hasGLMapBuffer)
+            {
+                ptr = (void*) GL.MapBuffer(buffer, access);
+            }
+            else
+            {
+                DebugTools.Assert(_hasGLMapBufferOes);
+
+                ptr = _glMapBufferOes(buffer, BufferAccess.ReadOnly);
+            }
+
+            return ptr;
+        }
+
+        private void UnmapBuffer(BufferTarget buffer)
+        {
+            DebugTools.Assert(HasGLAnyMapBuffer);
+
+            if (_hasGLMapBufferRange || _hasGLMapBuffer)
+            {
+                GL.UnmapBuffer(buffer);
+            }
+            else
+            {
+                DebugTools.Assert(_hasGLMapBufferOes);
+
+                _glUnmapBufferOes(buffer);
             }
         }
     }

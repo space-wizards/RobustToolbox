@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
@@ -17,7 +15,6 @@ using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
@@ -33,7 +30,6 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -195,7 +191,6 @@ namespace Robust.Client
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
             }
 
-            _checkOpenGLVersion();
             return true;
         }
 
@@ -227,22 +222,6 @@ namespace Robust.Client
                     new DnsEndPoint(uri.Host, uri.IsDefaultPort ? 1212 : uri.Port));
             }
         }
-
-        private void _checkOpenGLVersion()
-        {
-            var debugInfo = _clyde.DebugInfo;
-
-            // == null because I'm too lazy to implement a dummy for headless.
-            if (debugInfo == null || debugInfo.OpenGLVersion >= debugInfo.MinimumVersion)
-            {
-                // OpenGL version supported, we're good.
-                return;
-            }
-
-            var window = new BadOpenGLVersionWindow(debugInfo);
-            window.OpenCentered();
-        }
-
 
         public void Shutdown(string? reason = null)
         {

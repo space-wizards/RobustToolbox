@@ -9,18 +9,15 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {
-            public ClydeDebugInfo(Version openGLVersion, Version minimumVersion, string renderer, string vendor,
-                string versionString)
+            public ClydeDebugInfo(OpenGLVersion openGLVersion, string renderer, string vendor, string versionString)
             {
                 OpenGLVersion = openGLVersion;
-                MinimumVersion = minimumVersion;
                 Renderer = renderer;
                 Vendor = vendor;
                 VersionString = versionString;
             }
 
-            public Version OpenGLVersion { get; }
-            public Version MinimumVersion { get; }
+            public OpenGLVersion OpenGLVersion { get; }
             public string Renderer { get; }
             public string Vendor { get; }
             public string VersionString { get; }

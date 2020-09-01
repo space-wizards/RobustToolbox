@@ -166,7 +166,7 @@ namespace Robust.Client.Graphics.Clyde
                 Renderer.OpenGL31,
                 Renderer.OpenGLES2
             } : stackalloc Renderer[] {renderer};
-            
+
             foreach (Renderer r in renderers)
             {
                 CreateWindowForRenderer(r);
@@ -175,6 +175,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     renderer = r;
                     _isGLES = renderer == Renderer.OpenGLES2;
+                    _isCore = renderer == Renderer.OpenGL33;
                     break;
                 }
                 // Window failed to init due to error.

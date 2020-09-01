@@ -1,11 +1,8 @@
-using System;
-
 namespace Robust.Client.Interfaces.Graphics
 {
     internal interface IClydeDebugInfo
     {
-        Version OpenGLVersion { get; }
-        Version MinimumVersion { get; }
+        OpenGLVersion OpenGLVersion { get; }
 
         string Renderer { get; }
         string Vendor { get; }

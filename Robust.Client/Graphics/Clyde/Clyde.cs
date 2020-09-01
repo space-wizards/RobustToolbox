@@ -456,11 +456,9 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 case DebugSeverity.DebugSeverityHigh:
                     sawmill.Error(contents);
-                    // throw new ArgumentOutOfRangeException("TEST TEST TEST", severity, null);
                     break;
                 case DebugSeverity.DebugSeverityMedium:
                     sawmill.Error(contents);
-                    // throw new ArgumentOutOfRangeException("TEST TEST TEST", severity, null);
                     break;
                 case DebugSeverity.DebugSeverityLow:
                     sawmill.Warning(contents);

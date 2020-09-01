@@ -13,6 +13,8 @@
 #else
 #define varying in
 #define attribute in
+#define gl_FragColor colourOutput
+out highp vec4 colourOutput;
 #endif
 #endif
 

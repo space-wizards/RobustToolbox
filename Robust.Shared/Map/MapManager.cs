@@ -52,8 +52,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool SuppressOnTileChanged { get; set; }
 
-        private MapId HighestMapID = MapId.Nullspace;
-        private GridId HighestGridID = GridId.Invalid;
+        public MapId HighestMapID { get; private set; } = MapId.Nullspace;
+        public GridId HighestGridID { get; private set; } = GridId.Invalid;
 
         private readonly HashSet<MapId> _maps = new HashSet<MapId>();
         private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();

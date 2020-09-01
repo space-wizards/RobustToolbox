@@ -146,7 +146,7 @@ namespace Robust.Client.Graphics.Clyde
             if (_isGLES)
             {
                 // GLES2 uses a different GLSL versioning scheme to desktop GL.
-                versionHeader = "#version 100\n";
+                versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
             }
 
             if (_hasGLFloatFramebuffers)
@@ -164,8 +164,8 @@ namespace Robust.Client.Graphics.Clyde
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
             }
 
-            vertexSource = versionHeader + _shaderLibrary + vertexSource;
-            fragmentSource = versionHeader + _shaderLibrary + fragmentSource;
+            vertexSource = versionHeader + "#define VERTEX_SHADER\n" + _shaderLibrary + vertexSource;
+            fragmentSource = versionHeader + "#define FRAGMENT_SHADER\n" + _shaderLibrary + fragmentSource;
 
             try
             {

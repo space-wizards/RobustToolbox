@@ -250,7 +250,7 @@ namespace Robust.Client.Graphics.Clyde
                     // transposition not supported on GLES2, & no access to _hasGLES
                     tmpTranspose.Transpose();
                 }
-                GL.UniformMatrix3(uniformId, 1, false, (float*) &tmpTranspose);
+                GL.UniformMatrix3(slot, 1, false, (float*) &tmpTranspose);
                 _clyde.CheckGlError();
             }
 

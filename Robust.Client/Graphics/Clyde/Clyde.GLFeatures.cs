@@ -22,6 +22,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLMapBufferOes;
         private bool _hasGLMapBufferRange;
         private bool _hasGLPixelBufferObjects;
+        private bool _hasGLStandardDerivatives;
 
         private bool _hasGLFenceSync;
 
@@ -66,6 +67,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBuffer, "map_buffer", (2, 0));
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (2, 1));
+                CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (2, 1));
             }
             else
             {
@@ -77,6 +79,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferOes, "map_buffer_oes", exts: "GL_OES_mapbuffer");
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
+                CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
             }
 
             // TODO: Enable these on ES 3.0
@@ -122,7 +125,8 @@ namespace Robust.Client.Graphics.Clyde
                 "map_buffer",
                 "map_buffer_range",
                 "pixel_buffer_object",
-                "map_buffer_oes"
+                "map_buffer_oes",
+                "standard_derivatives"
             };
 
             foreach (var cvar in cvars)

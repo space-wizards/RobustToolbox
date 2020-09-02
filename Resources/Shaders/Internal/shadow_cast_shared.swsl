@@ -12,7 +12,7 @@ uniform highp mat4 shadowMatrix;
 highp vec2 occludeDepth(highp vec2 diff, sampler2D shadowMap, highp float mapOffsetY)
 {
     highp float angle = atan(diff.y, -diff.x) + PI + radians(135.0);
-#ifdef HAS_DFDX
+#ifdef HAS_MOD
     angle = mod(angle, 2.0 * PI);
 #else
     angle -= floor(angle / (2.0 * PI)) * (2.0 * PI);

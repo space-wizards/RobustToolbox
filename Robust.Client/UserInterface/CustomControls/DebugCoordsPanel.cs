@@ -8,7 +8,6 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Player;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Timing;
 
@@ -24,6 +23,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IMapManager _mapManager;
 
         private readonly Label contents;
+        private UIBox2i _uiBox;
 
         //TODO: Think about a factory for this
         public DebugCoordsPanel(IPlayerManager playerMan,
@@ -87,6 +87,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 tile = default;
             }
 
+            var controlHovered = UserInterfaceManager.CurrentlyHovered;
+
             stringBuilder.AppendFormat(@"Positioning Debug:
 Screen Size: {0}
 Mouse Pos:
@@ -95,7 +97,7 @@ Mouse Pos:
     {3}
     {4}
     GUI: {5}", screenSize, mouseScreenPos, mouseWorldMap, mouseGridPos,
-                tile, UserInterfaceManager.CurrentlyHovered);
+                tile, controlHovered);
 
             stringBuilder.AppendLine("\nAttached Entity:");
             if (playerManager.LocalPlayer?.ControlledEntity == null)
@@ -117,8 +119,25 @@ Mouse Pos:
     EntityUid: {3}", playerScreen, playerWorldOffset, playerGridPos, entityTransform.Owner.Uid);
             }
 
+            if (controlHovered != null)
+            {
+                _uiBox = UIBox2i.FromDimensions(controlHovered.GlobalPixelPosition, controlHovered.PixelSize);
+            }
+
             contents.Text = stringBuilder.ToString();
             MinimumSizeChanged();
+        }
+
+        protected internal override void Draw(DrawingHandleScreen handle)
+        {
+            base.Draw(handle);
+
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
+            handle.DrawRect(_uiBox, Color.Red, false);
         }
 
         protected override Vector2 CalculateMinimumSize()

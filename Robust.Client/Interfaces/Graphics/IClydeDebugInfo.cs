@@ -7,5 +7,6 @@ namespace Robust.Client.Interfaces.Graphics
         string Renderer { get; }
         string Vendor { get; }
         string VersionString { get; }
+        bool Overriding { get; }
     }
 }

@@ -97,8 +97,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Occlusion VAO.
                 // Only handles positions, no other vertex data necessary.
-                _occlusionVao = new GLHandle(GL.GenVertexArray());
-                GL.BindVertexArray(_occlusionVao.Handle);
+                _occlusionVao = new GLHandle(GenVertexArray());
+                BindVertexArray(_occlusionVao.Handle);
                 CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
@@ -118,8 +118,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Occlusion mask VAO.
                 // Only handles positions, no other vertex data necessary.
 
-                _occlusionMaskVao = new GLHandle(GL.GenVertexArray());
-                GL.BindVertexArray(_occlusionMaskVao.Handle);
+                _occlusionMaskVao = new GLHandle(GenVertexArray());
+                BindVertexArray(_occlusionMaskVao.Handle);
                 CheckGlError();
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionMaskVao, nameof(_occlusionMaskVao));
@@ -318,7 +318,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
             CheckGlError();
 
-            GL.BindVertexArray(_occlusionVao.Handle);
+            BindVertexArray(_occlusionVao.Handle);
             CheckGlError();
 
             _fovCalculationProgram.Use();
@@ -612,7 +612,7 @@ namespace Robust.Client.Graphics.Clyde
 
             shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
 
-            GL.BindVertexArray(_occlusionMaskVao.Handle);
+            BindVertexArray(_occlusionMaskVao.Handle);
             CheckGlError();
 
             GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionMaskDataLength, DrawElementsType.UnsignedShort,
@@ -858,13 +858,13 @@ namespace Robust.Client.Graphics.Clyde
                 _occlusionMaskDataLength = imi;
 
                 // Upload geometry to OpenGL.
-                GL.BindVertexArray(_occlusionVao.Handle);
+                BindVertexArray(_occlusionVao.Handle);
                 CheckGlError();
 
                 _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
                 _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
 
-                GL.BindVertexArray(_occlusionMaskVao.Handle);
+                BindVertexArray(_occlusionMaskVao.Handle);
                 CheckGlError();
 
                 _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(..ami));

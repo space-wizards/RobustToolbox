@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Graphics.ClientEye;
@@ -145,6 +146,9 @@ namespace Robust.Client.Graphics.Clyde
 
             _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
             _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
+            // This cvar does not modify the actual GL version requested or anything,
+            // it overrides the version we detect to detect GL features.
+            _configurationManager.RegisterCVar<string?>("display.ogl_override_version", null);
             RegisterBlockCVars();
         }
 
@@ -160,22 +164,29 @@ namespace Robust.Client.Graphics.Clyde
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
+            var major = GL.GetInteger(GetPName.MajorVersion);
+            var minor = GL.GetInteger(GetPName.MinorVersion);
+
             Logger.DebugS("clyde.ogl", "OpenGL Vendor: {0}", vendor);
             Logger.DebugS("clyde.ogl", "OpenGL Renderer: {0}", renderer);
             Logger.DebugS("clyde.ogl", "OpenGL Version: {0}", version);
 
-            DetectOpenGLFeatures();
-            InitMissingGLFunctions();
+            var overrideVersion = ParseGLOverrideVersion();
+
+            if (overrideVersion != null)
+            {
+                (major, minor) = overrideVersion.Value;
+                Logger.DebugS("clyde.ogl", "OVERRIDING detected GL version to: {0}.{1}", major, minor);
+            }
+
+            DetectOpenGLFeatures(major, minor);
             SetupDebugCallback();
 
             LoadVendorSettings(vendor, renderer, version);
 
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
-
             var glVersion = new OpenGLVersion((byte) major, (byte) minor, _isGLES, _isCore);
 
-            DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version);
+            DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version, overrideVersion != null);
 
             GL.Enable(EnableCap.Blend);
             if (_hasGLSrgb)
@@ -190,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
                 GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
                 CheckGlError();
             }
-            if (!_hasGLVertexArrayObject)
+            if (!HasGLAnyVertexArrayObjects)
             {
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
@@ -225,6 +236,31 @@ namespace Robust.Client.Graphics.Clyde
             Render();
         }
 
+        private (int major, int minor)? ParseGLOverrideVersion()
+        {
+            var overrideGLVersion = _configurationManager.GetCVar<string?>("display.ogl_override_version");
+            if (overrideGLVersion == null)
+            {
+                return null;
+            }
+
+            var split = overrideGLVersion.Split(".");
+            if (split.Length != 2)
+            {
+                Logger.WarningS("clyde.ogl", "display.ogl_override_version is in invalid format");
+                return null;
+            }
+
+            if (!int.TryParse(split[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out var major)
+                || !int.TryParse(split[1], NumberStyles.Integer, CultureInfo.InvariantCulture, out var minor))
+            {
+                Logger.WarningS("clyde.ogl", "display.ogl_override_version is in invalid format");
+                return null;
+            }
+
+            return (major, minor);
+        }
+
         private unsafe void CreateMiscGLObjects()
         {
             // Quad drawing.
@@ -241,8 +277,8 @@ namespace Robust.Client.Graphics.Clyde
                     quadVertices,
                     nameof(QuadVBO));
 
-                QuadVAO = new GLHandle((uint) GL.GenVertexArray());
-                GL.BindVertexArray(QuadVAO.Handle);
+                QuadVAO = new GLHandle(GenVertexArray());
+                BindVertexArray(QuadVAO.Handle);
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, QuadVAO, nameof(QuadVAO));
                 // Vertex Coords
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
@@ -259,8 +295,8 @@ namespace Robust.Client.Graphics.Clyde
                 BatchVBO = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                     Vertex2D.SizeOf * BatchVertexData.Length, nameof(BatchVBO));
 
-                BatchVAO = new GLHandle(GL.GenVertexArray());
-                GL.BindVertexArray(BatchVAO.Handle);
+                BatchVAO = new GLHandle(GenVertexArray());
+                BindVertexArray(BatchVAO.Handle);
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, BatchVAO, nameof(BatchVAO));
                 // Vertex Coords
                 GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
@@ -310,11 +346,13 @@ namespace Robust.Client.Graphics.Clyde
 
             GCHandle.Alloc(_debugMessageCallbackInstance);
 
-            var ep = _graphicsContext.GetProcAddress("glDebugMessageCallback");
-            var d = Marshal.GetDelegateForFunctionPointer<DebugMessageCallbackDelegate>(ep);
+            // OpenTK seemed to have trouble marshalling the delegate so do it manually.
+
+            var procName = _isGLKhrDebugESExtension ? "glDebugMessageCallbackKHR" : "glDebugMessageCallback";
+            LoadGLProc(procName, out DebugMessageCallbackDelegate proc);
             _debugMessageCallbackInstance = DebugMessageCallback;
             var funcPtr = Marshal.GetFunctionPointerForDelegate(_debugMessageCallbackInstance);
-            d(funcPtr, new IntPtr(0x3005));
+            proc(funcPtr, new IntPtr(0x3005));
         }
 
         private delegate void DebugMessageCallbackDelegate(IntPtr funcPtr, IntPtr userParam);
@@ -380,36 +418,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private static DebugProc? _debugMessageCallbackInstance;
 
-        private HashSet<string> GetGLExtensions()
-        {
-            if (!_isGLES)
-            {
-                var extensions = new HashSet<string>();
-                var extensionsText = "";
-                // Desktop OpenGL uses this API to discourage static buffers
-                var count = GL.GetInteger(GetPName.NumExtensions);
-                for (var i = 0; i < count; i++)
-                {
-                    if (i != 0)
-                    {
-                        extensionsText += " ";
-                    }
-                    var extension = GL.GetString(StringNameIndexed.Extensions, i);
-                    extensionsText += extension;
-                    extensions.Add(extension);
-                }
-                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensionsText);
-                return extensions;
-            }
-            else
-            {
-                // GLES uses the (old?) API
-                var extensions = GL.GetString(StringName.Extensions);
-                Logger.DebugS("clyde.ogl", "OpenGL Extensions: {0}", extensions);
-                return new HashSet<string>(extensions.Split(' '));
-            }
-        }
-
         [Conditional("DEBUG")]
         private void ObjectLabelMaybe(ObjectLabelIdentifier identifier, uint name, string? label)
         {
@@ -423,7 +431,14 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            GL.ObjectLabel(identifier, name, label.Length, label);
+            if (_isGLKhrDebugESExtension)
+            {
+                GL.ObjectLabel(identifier, name, label.Length, label);
+            }
+            else
+            {
+                GL.Khr.ObjectLabel((ObjectIdentifier) identifier, name, label.Length, label);
+            }
         }
 
         [Conditional("DEBUG")]
@@ -446,7 +461,14 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, 0, group.Length, group);
+            if (_isGLKhrDebugESExtension)
+            {
+                GL.Khr.PushDebugGroup((DebugSource) DebugSourceExternal.DebugSourceApplication, 0, group.Length, group);
+            }
+            else
+            {
+                GL.PushDebugGroup(DebugSourceExternal.DebugSourceApplication, 0, group.Length, group);
+            }
         }
 
         [Conditional("DEBUG")]
@@ -457,7 +479,14 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            GL.PopDebugGroup();
+            if (_isGLKhrDebugESExtension)
+            {
+                GL.Khr.PopDebugGroup();
+            }
+            else
+            {
+                GL.PopDebugGroup();
+            }
         }
 
         public void Shutdown()

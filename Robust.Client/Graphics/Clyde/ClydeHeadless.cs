@@ -413,6 +413,7 @@ namespace Robust.Client.Graphics.Clyde
             public string Renderer => "ClydeHeadless";
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";
+            public bool Overriding => false;
         }
 
         private sealed class Viewport : IClydeViewport

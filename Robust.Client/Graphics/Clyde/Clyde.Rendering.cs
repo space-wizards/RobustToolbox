@@ -208,7 +208,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var loadedTexture = _loadedTextures[command.TextureId];
 
-            GL.BindVertexArray(BatchVAO.Handle);
+            BindVertexArray(BatchVAO.Handle);
             CheckGlError();
 
             var (program, loaded) = ActivateShaderInstance(command.ShaderInstance);
@@ -271,7 +271,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _drawQuad(Vector2 a, Vector2 b, in Matrix3 modelMatrix, GLShaderProgram program)
         {
-            GL.BindVertexArray(QuadVAO.Handle);
+            BindVertexArray(QuadVAO.Handle);
             CheckGlError();
             var rectTransform = Matrix3.Identity;
             (rectTransform.R0C0, rectTransform.R1C1) = b - a;
@@ -292,7 +292,7 @@ namespace Robust.Client.Graphics.Clyde
             // Finish any batches that may have been WiP.
             BreakBatch();
 
-            GL.BindVertexArray(BatchVAO.Handle);
+            BindVertexArray(BatchVAO.Handle);
             CheckGlError();
 
             _debugStats.LargestBatchVertices = Math.Max(BatchVertexIndex, _debugStats.LargestBatchVertices);
@@ -786,6 +786,7 @@ namespace Robust.Client.Graphics.Clyde
                     var bufSize = sizeof(Rgba32) * bufferLength;
                     GL.ReadnPixels(0, 0, ScreenSize.X, ScreenSize.Y, PixelFormat.Rgba, PixelType.UnsignedByte, bufSize,
                         (IntPtr) ptr);
+                    CheckGlError();
                 }
 
                 var (w, h) = ScreenSize;
@@ -843,7 +844,6 @@ namespace Robust.Client.Graphics.Clyde
                     CheckGlError();
                     var ptr = MapFullBuffer(BufferTarget.PixelPackBuffer, bufSize, BufferAccess.ReadOnly,
                         BufferAccessMask.MapReadBit);
-                    CheckGlError();
 
                     var packSpan = new ReadOnlySpan<Rgba32>((void*) ptr, width * height);
 
@@ -853,7 +853,6 @@ namespace Robust.Client.Graphics.Clyde
                     FlipCopyScreenshot(packSpan, imageSpan, width, height);
 
                     UnmapBuffer(BufferTarget.PixelPackBuffer);
-                    CheckGlError();
                     GL.BindBuffer(BufferTarget.PixelPackBuffer, 0);
                     CheckGlError();
                     GL.DeleteBuffer(pbo);

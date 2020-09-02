@@ -1,12 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using System.Runtime.CompilerServices;
-using System;
-using System.Buffers;
 using Robust.Shared.Utility;
+using ES20 = OpenToolkit.Graphics.ES20;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -55,6 +54,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             SetupGlobalUniformsImmediate(program, tex?.IsSrgb ?? false);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetupGlobalUniformsImmediate(GLShaderProgram program, bool texIsSrgb)
         {
@@ -62,7 +62,8 @@ namespace Robust.Client.Graphics.Clyde
             UniformConstantsUBO.Apply(program);
             if (!_hasGLSrgb)
             {
-                program.SetUniformMaybe("SRGB_EMU_CONFIG", new Vector2(texIsSrgb ? 1 : 0, _currentBoundRenderTarget.IsSrgb ? 1 : 0));
+                program.SetUniformMaybe("SRGB_EMU_CONFIG",
+                    new Vector2(texIsSrgb ? 1 : 0, _currentBoundRenderTarget.IsSrgb ? 1 : 0));
             }
         }
 
@@ -92,12 +93,14 @@ namespace Robust.Client.Graphics.Clyde
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void QuadBatchIndexWrite(Span<ushort> indexData, ref int nIdx, ushort tIdx)
         {
-            QuadBatchIndexWrite(indexData, ref nIdx, tIdx, (ushort) (tIdx + 1), (ushort) (tIdx + 2), (ushort) (tIdx + 3));
+            QuadBatchIndexWrite(indexData, ref nIdx, tIdx, (ushort) (tIdx + 1), (ushort) (tIdx + 2),
+                (ushort) (tIdx + 3));
         }
 
         // Writes a quad into the index buffer. Note that the 'middle line' is from tIdx0 to tIdx2.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void QuadBatchIndexWrite(Span<ushort> indexData, ref int nIdx, ushort tIdx0, ushort tIdx1, ushort tIdx2, ushort tIdx3)
+        private void QuadBatchIndexWrite(Span<ushort> indexData, ref int nIdx, ushort tIdx0, ushort tIdx1, ushort tIdx2,
+            ushort tIdx3)
         {
             if (_hasGLPrimitiveRestart)
             {
@@ -155,16 +158,20 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLMapBufferRange)
             {
                 ptr = (void*) GL.MapBufferRange(buffer, IntPtr.Zero, length, mask);
+                CheckGlError();
             }
             else if (_hasGLMapBuffer)
             {
                 ptr = (void*) GL.MapBuffer(buffer, access);
+                CheckGlError();
             }
             else
             {
                 DebugTools.Assert(_hasGLMapBufferOes);
 
-                ptr = _glMapBufferOes(buffer, BufferAccess.ReadOnly);
+                ptr = (void*) ES20.GL.Oes.MapBuffer((ES20.BufferTargetArb) buffer,
+                    (ES20.BufferAccessArb) BufferAccess.ReadOnly);
+                CheckGlError();
             }
 
             return ptr;
@@ -177,13 +184,83 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLMapBufferRange || _hasGLMapBuffer)
             {
                 GL.UnmapBuffer(buffer);
+                CheckGlError();
             }
             else
             {
                 DebugTools.Assert(_hasGLMapBufferOes);
 
-                _glUnmapBufferOes(buffer);
+                ES20.GL.Oes.UnmapBuffer((ES20.BufferTarget) buffer);
+                CheckGlError();
             }
+        }
+
+        private uint GenVertexArray()
+        {
+            DebugTools.Assert(HasGLAnyVertexArrayObjects);
+
+            int value;
+            if (_hasGLVertexArrayObject)
+            {
+                value = GL.GenVertexArray();
+                CheckGlError();
+            }
+            else
+            {
+                DebugTools.Assert(_hasGLVertexArrayObjectOes);
+
+                value = ES20.GL.Oes.GenVertexArray();
+                CheckGlError();
+            }
+
+            return (uint) value;
+        }
+
+        private void BindVertexArray(uint vao)
+        {
+            DebugTools.Assert(HasGLAnyVertexArrayObjects);
+
+            if (_hasGLVertexArrayObject)
+            {
+                GL.BindVertexArray(vao);
+                CheckGlError();
+            }
+            else
+            {
+                DebugTools.Assert(_hasGLVertexArrayObjectOes);
+
+                ES20.GL.Oes.BindVertexArray(vao);
+                CheckGlError();
+            }
+        }
+
+        private void DeleteVertexArray(uint vao)
+        {
+            DebugTools.Assert(HasGLAnyVertexArrayObjects);
+
+            if (_hasGLVertexArrayObject)
+            {
+                GL.DeleteVertexArray(vao);
+                CheckGlError();
+            }
+            else
+            {
+                DebugTools.Assert(_hasGLVertexArrayObjectOes);
+
+                ES20.GL.Oes.DeleteVertexArray(vao);
+                CheckGlError();
+            }
+        }
+
+        private void LoadGLProc<T>(string name, out T field) where T : Delegate
+        {
+            var proc = _graphicsContext.GetProcAddress(name);
+            if (proc == IntPtr.Zero || proc == new IntPtr(1) || proc == new IntPtr(2))
+            {
+                throw new InvalidOperationException($"Unable to load GL function '{name}'!");
+            }
+
+            field = Marshal.GetDelegateForFunctionPointer<T>(proc);
         }
     }
 }

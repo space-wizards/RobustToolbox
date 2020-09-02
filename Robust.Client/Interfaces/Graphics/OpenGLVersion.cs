@@ -14,5 +14,11 @@
             IsES = isES;
             IsCore = isCore;
         }
+
+        public override string ToString()
+        {
+            var suffix = IsCore ? " Core" : IsES ? " ES" : "";
+            return $"{Major}.{Minor}{suffix}";
+        }
     }
 }

@@ -74,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
                     }
 
-                    GL.BindVertexArray(datum.VAO);
+                    BindVertexArray(datum.VAO);
                     CheckGlError();
 
                     _debugStats.LastGLDrawCalls += 1;
@@ -141,8 +141,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)
         {
-            var vao = (uint)GL.GenVertexArray();
-            GL.BindVertexArray(vao);
+            var vao = GenVertexArray();
+            BindVertexArray(vao);
             CheckGlError();
 
             var vboSize = _verticesPerChunk(chunk) * Vertex2D.SizeOf;
@@ -219,7 +219,7 @@ namespace Robust.Client.Graphics.Clyde
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {
-                GL.DeleteVertexArray(chunkDatum.VAO);
+                DeleteVertexArray(chunkDatum.VAO);
                 CheckGlError();
                 chunkDatum.VBO.Delete();
                 chunkDatum.EBO.Delete();

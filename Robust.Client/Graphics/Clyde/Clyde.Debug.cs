@@ -1,4 +1,3 @@
-using System;
 using Robust.Client.Interfaces.Graphics;
 
 namespace Robust.Client.Graphics.Clyde
@@ -9,15 +8,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class ClydeDebugInfo : IClydeDebugInfo
         {
-            public ClydeDebugInfo(OpenGLVersion openGLVersion, string renderer, string vendor, string versionString)
+            public ClydeDebugInfo(OpenGLVersion openGLVersion, string renderer, string vendor, string versionString, bool overriding)
             {
                 OpenGLVersion = openGLVersion;
                 Renderer = renderer;
                 Vendor = vendor;
                 VersionString = versionString;
+                Overriding = overriding;
             }
 
             public OpenGLVersion OpenGLVersion { get; }
+            public bool Overriding { get; }
             public string Renderer { get; }
             public string Vendor { get; }
             public string VersionString { get; }

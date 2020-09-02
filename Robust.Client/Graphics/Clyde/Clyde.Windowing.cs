@@ -355,6 +355,12 @@ namespace Robust.Client.Graphics.Clyde
         {
             _graphicsContext = new GLFWBindingsContext();
             GL.LoadBindings(_graphicsContext);
+
+            if (_isGLES)
+            {
+                // On GLES we use some OES and KHR functions so make sure to initialize them.
+                OpenToolkit.Graphics.ES20.GL.LoadBindings(_graphicsContext);
+            }
         }
 
         private void ShutdownWindowing()

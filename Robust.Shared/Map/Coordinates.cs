@@ -3,12 +3,16 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.Map
 {
     /// <summary>
     ///     Coordinates relative to a specific grid.
     /// </summary>
+    [Obsolete("Use EntityCoordinates instead.")]
     [PublicAPI]
     [Serializable, NetSerializable]
     public readonly struct GridCoordinates : IEquatable<GridCoordinates>
@@ -427,6 +431,199 @@ namespace Robust.Shared.Map
             mapId = MapId;
             x = X;
             y = Y;
+        }
+    }
+
+    /// <summary>
+    /// A set of coordinates relative to another entity.
+    /// </summary>
+    [PublicAPI]
+    [Serializable, NetSerializable]
+    public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>
+    {
+        /// <summary>
+        /// ID of the entity that this position is relative to.
+        /// </summary>
+        public readonly EntityUid EntityId;
+
+        /// <summary>
+        /// Position in the entity's local space.
+        /// </summary>
+        public readonly Vector2 Position;
+
+        /// <summary>
+        /// Constructs a new instance of <see cref="EntityCoordinates"/>.
+        /// </summary>
+        /// <param name="entityId">ID of the entity that this position is relative to.</param>
+        /// <param name="position">Position in the entity's local space.</param>
+        public EntityCoordinates(EntityUid entityId, Vector2 position)
+        {
+            if(!entityId.IsValid())
+                throw new ArgumentException("Invalid ID", nameof(entityId));
+
+            if(!float.IsFinite(position.X) || !float.IsFinite(position.Y))
+                throw new ArgumentOutOfRangeException(nameof(position), "Vector is not finite.");
+
+            EntityId = entityId;
+            Position = position;
+        }
+
+        /// <summary>
+        /// Verifies that this set of coordinates can be currently resolved to a location.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
+        /// <returns><see langword="true" /> if this set of coordinates can be currently resolved to a location, otherwise <see langword="false" />.</returns>
+        public bool IsValid(IEntityManager entityManager)
+        {
+            if (!EntityId.IsValid() || !entityManager.EntityExists(EntityId))
+                return false;
+
+            if (!float.IsFinite(Position.X) || !float.IsFinite(Position.Y))
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Transforms this set of coordinates from the entity's local space to the map space.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager containing the entity Id.</param>
+        /// <returns></returns>
+        public MapCoordinates ToMap(IEntityManager entityManager)
+        {
+            var transform = entityManager.GetEntity(EntityId).Transform;
+            var worldPos = transform.WorldMatrix.Transform(Position);
+            return new MapCoordinates(worldPos, transform.MapID);
+        }
+
+        public Vector2 ToMapPos(IEntityManager entityManager)
+        {
+            var transform = entityManager.GetEntity(EntityId).Transform;
+            return transform.WorldMatrix.Transform(Position);
+        }
+
+        public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
+        {
+            if(entity.Transform.MapID != coordinates.MapId)
+                throw new InvalidOperationException("Entity is not on the same map!");
+
+            var localPos = entity.Transform.InvWorldMatrix.Transform(coordinates.Position);
+            return new EntityCoordinates(entity.Uid, localPos);
+        }
+
+        public static EntityCoordinates FromMap(IEntityManager entityManager, IMapManager mapManager, MapCoordinates coordinates)
+        {
+            var mapId = coordinates.MapId;
+            var mapEntity = mapManager.GetMapEntity(mapId);
+
+
+            return new EntityCoordinates();
+        }
+
+        /// <summary>
+        /// Converts a set of <seealso cref="EntityCoordinates"/> into a set of <seealso cref="GridCoordinates"/>.
+        /// </summary>
+        /// <param name="entityManager">Entity manager that contains the <see cref="EntityId"/>.</param>
+        /// <param name="coordinates">Coordinates being converted to <see cref="GridCoordinates"/>. The <see cref="EntityId"/>
+        /// will be resolved to it's corresponding <see cref="GridId"/>.</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Will be thrown if the <see cref="EntityId"/> is not a grid.</exception>
+        public GridCoordinates ToGrid(IEntityManager entityManager, EntityCoordinates coordinates)
+        {
+            if (!entityManager.TryGetEntity(coordinates.EntityId, out var gridEntity)
+                || !gridEntity.TryGetComponent<IMapGridComponent>(out var gridComp))
+            {
+                throw new InvalidOperationException("The entity is not a grid!");
+            }
+
+            return new GridCoordinates(coordinates.Position, gridComp.GridIndex);
+        }
+
+        public static EntityCoordinates FromGrid(IEntityManager entityManager, GridCoordinates coordinates)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Offsets the position by a given vector. This happens in local space.
+        /// </summary>
+        /// <param name="position">The vector to offset by local to the entity.</param>
+        /// <returns>Newly offset coordinates.</returns>
+        public EntityCoordinates Offset(Vector2 position)
+        {
+            return new EntityCoordinates(EntityId, Position + position);
+        }
+
+        /// <summary>
+        /// Compares two sets of coordinates to see if they are in range of each other.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager containing the two entity Ids.</param>
+        /// <param name="otherCoordinates">Other set of coordinates to use.</param>
+        /// <param name="range">maximum distance between the two sets of coordinates.</param>
+        /// <returns>True if the two points are within a given range.</returns>
+        public bool InRange(IEntityManager entityManager, EntityCoordinates otherCoordinates, float range)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool TryDistance(IEntityManager entityManager, EntityCoordinates otherCoordinates, out float distance)
+        {
+            throw new NotImplementedException();
+        }
+
+        #region IEquatable
+
+        /// <inheritdoc />
+        public bool Equals(EntityCoordinates other)
+        {
+            return EntityId.Equals(other.EntityId) && Position.Equals(other.Position);
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            return obj is EntityCoordinates other && Equals(other);
+        }
+
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(EntityId, Position);
+        }
+
+        /// <summary>
+        ///     Check for equality by value between two objects.
+        /// </summary>
+        public static bool operator ==(EntityCoordinates left, EntityCoordinates right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        ///     Check for inequality by value between two objects.
+        /// </summary>
+        public static bool operator !=(EntityCoordinates left, EntityCoordinates right)
+        {
+            return !left.Equals(right);
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Deconstructs the object into it's fields.
+        /// </summary>
+        /// <param name="entId">ID of the entity that this position is relative to.</param>
+        /// <param name="localPos">Position in the entity's local space.</param>
+        public void Deconstruct(out EntityUid entId, out Vector2 localPos)
+        {
+            entId = EntityId;
+            localPos = Position;
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"EntId={EntityId}, X={Position.X:N2}, Y={Position.Y:N2}";
         }
     }
 }

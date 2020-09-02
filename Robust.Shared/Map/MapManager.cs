@@ -52,8 +52,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool SuppressOnTileChanged { get; set; }
 
-        public MapId HighestMapID { get; private set; } = MapId.Nullspace;
-        public GridId HighestGridID { get; private set; } = GridId.Invalid;
+        private MapId HighestMapID = MapId.Nullspace;
+        private GridId HighestGridID = GridId.Invalid;
 
         private readonly HashSet<MapId> _maps = new HashSet<MapId>();
         private readonly Dictionary<MapId, GameTick> _mapCreationTick = new Dictionary<MapId, GameTick>();
@@ -578,6 +578,16 @@ namespace Robust.Shared.Map
 
             if (_netManager.IsServer)
                 _gridDeletionHistory.Add((_gameTiming.CurTick, gridID));
+        }
+
+        public MapId NextMapId()
+        {
+            return HighestMapID = new MapId(HighestMapID.Value + 1);
+        }
+
+        public GridId NextGridId()
+        {
+            return HighestGridID = new GridId(HighestGridID.Value + 1);
         }
     }
 

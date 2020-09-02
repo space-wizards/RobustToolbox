@@ -35,7 +35,8 @@ namespace Robust.Client.Graphics
             _configurationManager.RegisterCVar(CVarWindowMode, (int) WindowMode, CVar.ARCHIVE, _windowModeChanged);
             _configurationManager.RegisterCVar("display.width", 1280);
             _configurationManager.RegisterCVar("display.height", 720);
-            _configurationManager.RegisterCVar("display.highreslights", false, onValueChanged: HighResLightsChanged);
+            _configurationManager.RegisterCVar("display.lightmapdivider", 2, onValueChanged: LightmapDividerChanged);
+            _configurationManager.RegisterCVar("display.softshadows", true, onValueChanged: SoftShadowsChanged);
             _configurationManager.RegisterCVar("audio.device", "");
         }
 
@@ -76,7 +77,11 @@ namespace Robust.Client.Graphics
         {
         }
 
-        protected virtual void HighResLightsChanged(bool newValue)
+        protected virtual void LightmapDividerChanged(int newValue)
+        {
+        }
+
+        protected virtual void SoftShadowsChanged(bool newValue)
         {
         }
     }

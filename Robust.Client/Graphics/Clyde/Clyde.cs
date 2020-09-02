@@ -59,7 +59,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private GLShaderProgram? _currentProgram;
 
-        private bool _quartResLights = true;
+        private int _lightmapDivider = 2;
+        private bool _enableSoftShadows = true;
 
         private bool _checkGLErrors;
 
@@ -124,7 +125,8 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _quartResLights = !_configurationManager.GetCVar<bool>("display.highreslights");
+            _lightmapDivider = _configurationManager.GetCVar<int>("display.lightmapdivider");
+            _enableSoftShadows = _configurationManager.GetCVar<bool>("display.softshadows");
         }
 
         protected override void ReloadConfig()

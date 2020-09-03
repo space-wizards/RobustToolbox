@@ -10,8 +10,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly Button ApplyButton;
         private readonly CheckBox VSyncCheckBox;
         private readonly CheckBox FullscreenCheckBox;
-        private readonly Slider LightingQualitySlider;
-        private readonly CheckBox SoftShadowsCheckBox;
+        private readonly OptionButton LightingPresetOption;
         private readonly IConfigurationManager configManager;
 
         protected override Vector2? CustomSize => (180, 160);
@@ -34,15 +33,15 @@ namespace Robust.Client.UserInterface.CustomControls
             vBox.AddChild(FullscreenCheckBox);
             FullscreenCheckBox.OnToggled += OnCheckBoxToggled;
 
-            vBox.AddChild(new Label {Text = "Light Resolution"});
+            vBox.AddChild(new Label {Text = "Lighting Quality"});
 
-            LightingQualitySlider = new Slider {MinValue = 0, MaxValue = 2, Rounded = true};
-            vBox.AddChild(LightingQualitySlider);
-            LightingQualitySlider.OnValueChanged += OnLightingQualityChanged;
-
-            SoftShadowsCheckBox = new CheckBox {Text = "Soft Shadows"};
-            vBox.AddChild(SoftShadowsCheckBox);
-            SoftShadowsCheckBox.OnToggled += OnCheckBoxToggled;
+            LightingPresetOption = new OptionButton();
+            LightingPresetOption.AddItem("Very Low");
+            LightingPresetOption.AddItem("Low");
+            LightingPresetOption.AddItem("Medium");
+            LightingPresetOption.AddItem("High");
+            vBox.AddChild(LightingPresetOption);
+            LightingPresetOption.OnItemSelected += OnLightingQualityChanged;
 
             ApplyButton = new Button
             {
@@ -54,15 +53,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
             VSyncCheckBox.Pressed = configManager.GetCVar<bool>("display.vsync");
             FullscreenCheckBox.Pressed = ConfigIsFullscreen;
-            LightingQualitySlider.Value = ConfigLightingQuality;
-            SoftShadowsCheckBox.Pressed = configManager.GetCVar<bool>("display.softshadows");
+            LightingPresetOption.SelectId(ConfigLightingQuality);
         }
 
         private void OnApplyButtonPressed(BaseButton.ButtonEventArgs args)
         {
             configManager.SetCVar("display.vsync", VSyncCheckBox.Pressed);
-            ConfigLightingQuality = (int) LightingQualitySlider.Value;
-            configManager.SetCVar("display.softshadows", SoftShadowsCheckBox.Pressed);
+            ConfigLightingQuality = LightingPresetOption.SelectedId;
             configManager.SetCVar("display.windowmode",
                 (int) (FullscreenCheckBox.Pressed ? WindowMode.Fullscreen : WindowMode.Windowed));
             configManager.SaveToFile();
@@ -74,8 +71,9 @@ namespace Robust.Client.UserInterface.CustomControls
             UpdateApplyButton();
         }
 
-        private void OnLightingQualityChanged(Range rng)
+        private void OnLightingQualityChanged(OptionButton.ItemSelectedEventArgs args)
         {
+            LightingPresetOption.SelectId(args.Id);
             UpdateApplyButton();
         }
 
@@ -83,9 +81,8 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             var isVSyncSame = VSyncCheckBox.Pressed == configManager.GetCVar<bool>("display.vsync");
             var isFullscreenSame = FullscreenCheckBox.Pressed == ConfigIsFullscreen;
-            var isLightingQualitySame = ((int) LightingQualitySlider.Value) == ConfigLightingQuality;
-            var isSoftShadowsSame = SoftShadowsCheckBox.Pressed == configManager.GetCVar<bool>("display.softshadows");
-            ApplyButton.Disabled = isVSyncSame && isFullscreenSame && isLightingQualitySame && isSoftShadowsSame;
+            var isLightingQualitySame = LightingPresetOption.SelectedId == ConfigLightingQuality;
+            ApplyButton.Disabled = isVSyncSame && isFullscreenSame && isLightingQualitySame;
         }
 
         private bool ConfigIsFullscreen =>
@@ -96,17 +93,22 @@ namespace Robust.Client.UserInterface.CustomControls
             get
             {
                 var val = configManager.GetCVar<int>("display.lightmapdivider");
-                if (val < 2)
+                var soft = configManager.GetCVar<bool>("display.softshadows");
+                if (val >= 8)
                 {
-                    return 2;
+                    return 0;
                 }
-                else if (val < 3)
+                else if ((val >= 2) && !soft)
                 {
                     return 1;
                 }
+                else if (val >= 2)
+                {
+                    return 2;
+                }
                 else
                 {
-                    return 0;
+                    return 3;
                 }
             }
             set
@@ -114,14 +116,22 @@ namespace Robust.Client.UserInterface.CustomControls
                 if (value == 0)
                 {
                     configManager.SetCVar("display.lightmapdivider", 8);
+                    configManager.SetCVar("display.softshadows", false);
                 }
                 else if (value == 1)
                 {
                     configManager.SetCVar("display.lightmapdivider", 2);
+                    configManager.SetCVar("display.softshadows", false);
+                }
+                else if (value == 2)
+                {
+                    configManager.SetCVar("display.lightmapdivider", 2);
+                    configManager.SetCVar("display.softshadows", true);
                 }
                 else
                 {
                     configManager.SetCVar("display.lightmapdivider", 1);
+                    configManager.SetCVar("display.softshadows", true);
                 }
             }
         }

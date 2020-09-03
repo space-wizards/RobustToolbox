@@ -984,6 +984,16 @@ namespace Robust.Shared.Maths
             return $"#{hexColor:X8}";
         }
 
+        public string ToHexNoAlpha()
+        {
+            var hexColor = 0;
+            hexColor += RByte << 16;
+            hexColor += GByte << 8;
+            hexColor += BByte;
+
+            return $"#{hexColor:X6}";
+        }
+
         /// <summary>
         ///     Compares whether this Color4 structure is equal to the specified Color4.
         /// </summary>

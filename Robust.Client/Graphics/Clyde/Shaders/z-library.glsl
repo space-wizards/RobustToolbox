@@ -4,9 +4,10 @@
 // It's literally just called the Z-Library for alphabetical ordering reasons.
 //  - 20kdc
 
-// -- varying/attribute --
+// -- varying/attribute/texture2D --
 
 #ifndef HAS_VARYING_ATTRIBUTE
+#define texture2D texture
 #ifdef VERTEX_SHADER
 #define varying out
 #define attribute in

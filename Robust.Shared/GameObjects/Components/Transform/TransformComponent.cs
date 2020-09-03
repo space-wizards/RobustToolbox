@@ -284,7 +284,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public EntityCoordinates Coordinates
         {
-            get => new EntityCoordinates(_parent.IsValid() ? _parent : Owner.Uid, LocalPosition);
+            get
+            {
+                var valid = _parent.IsValid();
+                return new EntityCoordinates(valid ? _parent : Owner.Uid, valid ? LocalPosition : Vector2.Zero);
+            }
             set
             {
                 var oldPosition = GridPosition;

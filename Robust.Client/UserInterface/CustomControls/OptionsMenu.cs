@@ -53,13 +53,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
             VSyncCheckBox.Pressed = configManager.GetCVar<bool>("display.vsync");
             FullscreenCheckBox.Pressed = ConfigIsFullscreen;
-            LightingPresetOption.SelectId(ConfigLightingQuality);
+            LightingPresetOption.SelectId(GetConfigLightingQuality());
         }
 
         private void OnApplyButtonPressed(BaseButton.ButtonEventArgs args)
         {
             configManager.SetCVar("display.vsync", VSyncCheckBox.Pressed);
-            ConfigLightingQuality = LightingPresetOption.SelectedId;
+            SetConfigLightingQuality(LightingPresetOption.SelectedId);
             configManager.SetCVar("display.windowmode",
                 (int) (FullscreenCheckBox.Pressed ? WindowMode.Fullscreen : WindowMode.Windowed));
             configManager.SaveToFile();
@@ -81,58 +81,55 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             var isVSyncSame = VSyncCheckBox.Pressed == configManager.GetCVar<bool>("display.vsync");
             var isFullscreenSame = FullscreenCheckBox.Pressed == ConfigIsFullscreen;
-            var isLightingQualitySame = LightingPresetOption.SelectedId == ConfigLightingQuality;
+            var isLightingQualitySame = LightingPresetOption.SelectedId == GetConfigLightingQuality();
             ApplyButton.Disabled = isVSyncSame && isFullscreenSame && isLightingQualitySame;
         }
 
         private bool ConfigIsFullscreen =>
             configManager.GetCVar<int>("display.windowmode") == (int) WindowMode.Fullscreen;
 
-        private int ConfigLightingQuality
+        private int GetConfigLightingQuality()
         {
-            get
+            var val = configManager.GetCVar<int>("display.lightmapdivider");
+            var soft = configManager.GetCVar<bool>("display.softshadows");
+            if (val >= 8)
             {
-                var val = configManager.GetCVar<int>("display.lightmapdivider");
-                var soft = configManager.GetCVar<bool>("display.softshadows");
-                if (val >= 8)
-                {
-                    return 0;
-                }
-                else if ((val >= 2) && !soft)
-                {
-                    return 1;
-                }
-                else if (val >= 2)
-                {
-                    return 2;
-                }
-                else
-                {
-                    return 3;
-                }
+                return 0;
             }
-            set
+            else if ((val >= 2) && !soft)
             {
-                if (value == 0)
-                {
-                    configManager.SetCVar("display.lightmapdivider", 8);
-                    configManager.SetCVar("display.softshadows", false);
-                }
-                else if (value == 1)
-                {
-                    configManager.SetCVar("display.lightmapdivider", 2);
-                    configManager.SetCVar("display.softshadows", false);
-                }
-                else if (value == 2)
-                {
-                    configManager.SetCVar("display.lightmapdivider", 2);
-                    configManager.SetCVar("display.softshadows", true);
-                }
-                else
-                {
-                    configManager.SetCVar("display.lightmapdivider", 1);
-                    configManager.SetCVar("display.softshadows", true);
-                }
+                return 1;
+            }
+            else if (val >= 2)
+            {
+                return 2;
+            }
+            else
+            {
+                return 3;
+            }
+        }
+        private void SetConfigLightingQuality(int value)
+        {
+            if (value == 0)
+            {
+                configManager.SetCVar("display.lightmapdivider", 8);
+                configManager.SetCVar("display.softshadows", false);
+            }
+            else if (value == 1)
+            {
+                configManager.SetCVar("display.lightmapdivider", 2);
+                configManager.SetCVar("display.softshadows", false);
+            }
+            else if (value == 2)
+            {
+                configManager.SetCVar("display.lightmapdivider", 2);
+                configManager.SetCVar("display.softshadows", true);
+            }
+            else
+            {
+                configManager.SetCVar("display.lightmapdivider", 1);
+                configManager.SetCVar("display.softshadows", true);
             }
         }
     }

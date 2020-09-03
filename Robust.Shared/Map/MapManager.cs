@@ -579,6 +579,16 @@ namespace Robust.Shared.Map
             if (_netManager.IsServer)
                 _gridDeletionHistory.Add((_gameTiming.CurTick, gridID));
         }
+
+        public MapId NextMapId()
+        {
+            return HighestMapID = new MapId(HighestMapID.Value + 1);
+        }
+
+        public GridId NextGridId()
+        {
+            return HighestGridID = new GridId(HighestGridID.Value + 1);
+        }
     }
 
     /// <summary>

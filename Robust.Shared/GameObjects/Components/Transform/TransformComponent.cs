@@ -294,16 +294,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     var newEntity = _entityManager.GetEntity(value.EntityId);
                     AttachParent(newEntity);
                 }
-                else
-                {
-                    var worldCoords = value.ToMapPos(_entityManager);
-
-                    var newPos = Parent!.InvWorldMatrix.Transform(worldCoords);
-
-                    // float rounding error guard, if the offset is less than 1mm ignore it
-                    if ((newPos - _localPosition).LengthSquared < 10.0E-3)
-                        return;
-                }
 
                 _localPosition = value.Position;
 

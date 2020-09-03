@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -16,8 +17,9 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<Control> _list;
         private readonly List<float> _heights;
         private float _totalHeight;
+        private bool _updatePosition;
         private bool _disableListRemove;
-        private bool _dirty;
+        private bool _updateChildren;
         private bool _disableListCalc;
 
         private bool _suppressScrollValueChanged;
@@ -62,7 +64,7 @@ namespace Robust.Client.UserInterface.Controls
             StartIndex = -1;
             EndIndex = -1;
             _disableListRemove = false;
-            _dirty = false;
+            _updateChildren = false;
             _disableListCalc = false;
         }
 
@@ -122,9 +124,9 @@ namespace Robust.Client.UserInterface.Controls
              * so start = 0
              * 
              * end:
-             * scroll.Y + Height >= _heights[end + 1]
-             * 5 + 20 >= _heights[1 + 1]
-             * 25 >= 20
+             * scroll.Y + Height > _heights[end + 1]
+             * 5 + 20 > _heights[1 + 1]
+             * 25 > 20
              * so end = 2
              */
             var start = StartIndex;
@@ -144,7 +146,7 @@ namespace Robust.Client.UserInterface.Controls
             if (start != StartIndex)
             {
                 StartIndex = start;
-                _dirty = true;
+                _updateChildren = true;
             }
 
             // Do the same as above for the bottom of the list, but 
@@ -154,7 +156,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 end += 1;
             }
-            while (end > 0 && visibleBottom < _heights[end] + (separation * end))
+            while (end > 0 && visibleBottom <= _heights[end] + (separation * end))
             {
                 end -= 1;
             }
@@ -162,12 +164,12 @@ namespace Robust.Client.UserInterface.Controls
             if (end != EndIndex)
             {
                 EndIndex = end;
-                _dirty = true;
+                _updateChildren = true;
             }
 
-            if (_dirty)
+            if (_updateChildren)
             {
-                _dirty = false;
+                _updateChildren = false;
 
                 // _disableListRemove is so that only Children and not _list is changed
                 _disableListRemove = true;
@@ -190,12 +192,12 @@ namespace Robust.Client.UserInterface.Controls
                 VScrollBar.SetPositionLast();
             }
 
-            if (ChildCount <= 1)
+            if (ChildCount <= 1 || !_updatePosition)
             {
                 return;
             }
 
-            var offset = _heights[StartIndex] + (separation * StartIndex) - scroll.Y;
+            var offset = _heights[StartIndex] + (separation * StartIndex) - (float)Math.Round(scroll.Y);
 
             foreach (var child in Children)
             {
@@ -208,8 +210,8 @@ namespace Robust.Client.UserInterface.Controls
                 var targetBox = UIBox2.FromDimensions(0, offset, sWidth, y);
                 FitChildInBox(child, targetBox);
 
-                var size = child.CombinedMinimumSize.Y;
-                offset += size + separation;
+                //var size = child.CombinedMinimumSize.Y;
+                offset += y + separation;
             }
         }
 
@@ -247,6 +249,7 @@ namespace Robust.Client.UserInterface.Controls
             RecalculateListHeight(_list.IndexOf(child));
         }
 
+        // Should be updated every time _list changes and when the size of an item in the _list changes
         private void RecalculateListHeight(int index)
         {
             // Ensure _heights has the same count as _list
@@ -287,9 +290,11 @@ namespace Robust.Client.UserInterface.Controls
                 height += _list[i].CombinedMinimumSize.Y;
             }
 
-            _totalHeight = height;
-
             _disableListCalc = false;
+
+            _totalHeight = height;
+            _updatePosition = true;
+
             RecalculateScrollBar();
         }
 
@@ -327,7 +332,7 @@ namespace Robust.Client.UserInterface.Controls
             //AddItem(newChild);
             newChild.OnMinimumSizeChanged += OnChildMinimumSizeChanged;
 
-            _dirty = true;
+            _updateChildren = true;
             //if (_vScrollBar?.MaxValue > Height)
             //{
             //    _disableListRemove = true;
@@ -361,7 +366,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var index = _list.IndexOf(child);
             _list.Remove(child);
-            _dirty = true;
+            _updateChildren = true;
             child.OnMinimumSizeChanged -= OnChildMinimumSizeChanged;
 
             if (Children.Contains(child))
@@ -390,6 +395,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
+            _updatePosition = true;
             UpdateLayout();
         }
     }

@@ -460,7 +460,7 @@ namespace Robust.Shared.Map
         ///     Location of the Y axis local to the parent.
         /// </summary>
         public float Y => Position.Y;
-        
+
         /// <summary>
         ///     Constructs a new instance of <see cref="EntityCoordinates"/>.
         /// </summary>
@@ -533,7 +533,7 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///    Creates EntityCoordinates given a parent and some MapCoordinates.
+        ///    Creates EntityCoordinates given a parent Uid and some MapCoordinates.
         /// </summary>
         /// <param name="entityManager">Entity Manager containing the entity Id.</param>
         /// <param name="parentUid"></param>
@@ -548,7 +548,7 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///
+        ///    Creates a set of EntityCoordinates given some MapCoordinates.
         /// </summary>
         /// <param name="entityManager"></param>
         /// <param name="mapManager"></param>
@@ -563,7 +563,7 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        /// Converts a set of <seealso cref="EntityCoordinates"/> into a set of <seealso cref="GridCoordinates"/>.
+        ///     Converts a set of <seealso cref="EntityCoordinates"/> into a set of <seealso cref="GridCoordinates"/>.
         /// </summary>
         /// <param name="entityManager">Entity manager that contains the <see cref="EntityId"/>.</param>
         /// <param name="coordinates">Coordinates being converted to <see cref="GridCoordinates"/>. The <see cref="EntityId"/>
@@ -581,12 +581,24 @@ namespace Robust.Shared.Map
             return new GridCoordinates(coordinates.Position, gridComp.GridIndex);
         }
 
+        /// <summary>
+        ///     Creates a set of EntityCoordinates given some GridCoordinates.
+        /// </summary>
+        /// <param name="mapManager"></param>
+        /// <param name="coordinates"></param>
+        /// <returns></returns>
         public static EntityCoordinates FromGrid(IMapManager mapManager, GridCoordinates coordinates)
         {
             var grid = mapManager.GetGrid(coordinates.GridID);
             return new EntityCoordinates(grid.GridEntityId, coordinates.Position);
         }
 
+        /// <summary>
+        ///     Returns the Grid Id this entity is on.
+        ///     If none of the ancestors are a grid, returns <see cref="GridId.Invalid"/> grid instead.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager that contains the parent's Id</param>
+        /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
             var parent = EntityId;

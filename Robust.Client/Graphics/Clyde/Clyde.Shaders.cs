@@ -141,12 +141,21 @@ namespace Robust.Client.Graphics.Clyde
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
 
-            var versionHeader = "#version 140\n#define HAS_DFDX\n";
+            var versionHeader = "#version 140\n#define HAS_MOD\n";
 
             if (_isGLES)
             {
                 // GLES2 uses a different GLSL versioning scheme to desktop GL.
                 versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
+                if (_hasGLStandardDerivatives)
+                {
+                    versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                }
+            }
+
+            if (_hasGLStandardDerivatives)
+            {
+                versionHeader += "#define HAS_DFDX\n";
             }
 
             if (_hasGLFloatFramebuffers)

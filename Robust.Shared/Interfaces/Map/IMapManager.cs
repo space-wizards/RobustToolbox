@@ -166,5 +166,8 @@ namespace Robust.Shared.Interfaces.Map
         void ApplyGameStatePre(GameStateMapData? data);
         void ApplyGameStatePost(GameStateMapData? data);
         bool HasMapEntity(MapId mapId);
+
+        MapId NextMapId();
+        GridId NextGridId();
     }
 }

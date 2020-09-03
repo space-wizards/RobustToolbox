@@ -112,7 +112,24 @@ namespace Robust.UnitTesting.Shared.Map
             var mapEntity = mapManager.CreateNewMapEntity(mapId);
 
             Assert.That(mapEntity.Transform.ParentUid.IsValid(), Is.False);
-            Assert.That(mapEntity.Transform.Coordinates.EntityId == mapEntity.Uid, Is.True);
+            Assert.That(mapEntity.Transform.Coordinates.EntityId, Is.EqualTo(mapEntity.Uid));
+        }
+
+        /// <summary>
+        ///     Even if we change the local position of an entity without a parent,
+        ///     EntityCoordinates should still return offset 0.
+        /// </summary>
+        [Test]
+        public void NoParent_OffsetZero()
+        {
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var mapEntity = mapManager.CreateNewMapEntity(mapId);
+            Assert.That(mapEntity.Transform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
+
+            mapEntity.Transform.LocalPosition = Vector2.One;
+            Assert.That(mapEntity.Transform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
         }
 
         [Test]

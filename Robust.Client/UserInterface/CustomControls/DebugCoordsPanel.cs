@@ -111,12 +111,12 @@ Mouse Pos:
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerGridPos = playerManager.LocalPlayer.ControlledEntity.Transform.GridPosition;
+                var playerCoordinates = playerManager.LocalPlayer.ControlledEntity.Transform.Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
-    EntityUid: {3}", playerScreen, playerWorldOffset, playerGridPos, entityTransform.Owner.Uid);
+    EntityUid: {3}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid);
             }
 
             if (controlHovered != null)

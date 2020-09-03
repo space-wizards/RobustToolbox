@@ -282,6 +282,46 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        public EntityCoordinates Coordinates
+        {
+            get => new EntityCoordinates(_parent.IsValid() ? _parent : Owner.Uid, LocalPosition);
+            set
+            {
+                var oldPosition = GridPosition;
+
+                if (value.EntityId != _parent)
+                {
+                    var newEntity = _entityManager.GetEntity(value.EntityId);
+                    AttachParent(newEntity);
+                }
+                else
+                {
+                    var worldCoords = value.ToMapPos(_entityManager);
+
+                    var newPos = Parent!.InvWorldMatrix.Transform(worldCoords);
+
+                    // float rounding error guard, if the offset is less than 1mm ignore it
+                    if ((newPos - _localPosition).LengthSquared < 10.0E-3)
+                        return;
+                }
+
+                _localPosition = value.Position;
+
+                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                if (Running)
+                {
+                    RebuildMatrices();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldPosition, GridPosition));
+                }
+
+                Dirty();
+                UpdateEntityTree();
+                UpdatePhysicsTree();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public MapCoordinates MapPosition
         {
             get => new MapCoordinates(WorldPosition, MapID);

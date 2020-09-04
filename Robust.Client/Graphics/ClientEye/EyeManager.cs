@@ -1,8 +1,6 @@
-﻿using System;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -21,7 +19,6 @@ namespace Robust.Client.Graphics.ClientEye
         /// </summary>
         public const int PixelsPerMeter = 32;
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 

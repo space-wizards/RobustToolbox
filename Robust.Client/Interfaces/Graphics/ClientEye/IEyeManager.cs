@@ -47,7 +47,7 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// </summary>
         /// <param name="point">Point in world to transform.</param>
         /// <returns>Corresponding point in UI screen space.</returns>
-        ScreenCoordinates WorldToScreen(EntityCoordinates point);
+        ScreenCoordinates CoordinatesToScreen(EntityCoordinates point);
 
         /// <summary>
         /// Unprojects a point from UI screen space to world space using the current camera.

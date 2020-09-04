@@ -601,21 +601,7 @@ namespace Robust.Shared.Map
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            var parent = EntityId;
-            while (parent.IsValid())
-            {
-                var entity = entityManager.GetEntity(parent);
-                if (entity.TryGetComponent(out IMapGridComponent? mapGrid))
-                {
-                    return mapGrid.GridIndex;
-                }
-
-                var newParentUid = entity.Transform.ParentUid;
-                if(!newParentUid.IsValid())
-                    return GridId.Invalid;
-            }
-
-            return GridId.Invalid;
+            return !IsValid(entityManager) ? GridId.Invalid : entityManager.GetEntity(EntityId).Transform.GridID;
         }
 
         /// <summary>

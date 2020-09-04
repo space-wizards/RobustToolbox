@@ -101,10 +101,9 @@ namespace Robust.Client.Graphics.ClientEye
         }
 
         /// <inheritdoc />
-        public ScreenCoordinates WorldToScreen(EntityCoordinates point)
+        public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            var worldCoords = _mapManager.GetGrid(point.GetGridId(_entityManager)).LocalToWorld(point);
-            return new ScreenCoordinates(WorldToScreen(worldCoords.Position));
+            return MapToScreen(point.ToMap(_entityManager));
         }
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)

@@ -102,18 +102,18 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             {
                 Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
                 Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
-                Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(GridA.GridEntityId, (4, 4))));
+                Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(parentTrans.Owner.Uid, (-1, -1))));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
             });
 
             // move the parent, and the child should move with it
             childTrans.WorldPosition = new Vector2(6, 6);
-            parentTrans.WorldPosition += new Vector2(-7, -7);
+            parentTrans.WorldPosition += new Vector2(-8, -8);
 
-            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-1, -1)));
+            Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-2, -2)));
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
-            var oldLpos = childTrans.Coordinates;
+            var oldLpos = new Vector2(-2, -2);
             var oldWpos = childTrans.WorldPosition;
 
             childTrans.AttachToGridOrMap();
@@ -122,7 +122,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLpos.Position));
+                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLpos));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
             });
         }

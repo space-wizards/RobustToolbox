@@ -2,6 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Map;
@@ -441,6 +442,8 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>
     {
+        public static readonly EntityCoordinates Invalid = new EntityCoordinates(EntityUid.Invalid, Vector2.Zero);
+
         /// <summary>
         ///     ID of the entity that this position is relative to.
         /// </summary>
@@ -468,12 +471,6 @@ namespace Robust.Shared.Map
         /// <param name="position">Position in the entity's local space.</param>
         public EntityCoordinates(EntityUid entityId, Vector2 position)
         {
-            if(!entityId.IsValid())
-                throw new ArgumentException("Invalid ID", nameof(entityId));
-
-            if(!float.IsFinite(position.X) || !float.IsFinite(position.Y))
-                throw new ArgumentOutOfRangeException(nameof(position), "Vector is not finite.");
-
             EntityId = entityId;
             Position = position;
         }
@@ -501,6 +498,9 @@ namespace Robust.Shared.Map
         /// <returns></returns>
         public MapCoordinates ToMap(IEntityManager entityManager)
         {
+            if(!IsValid(entityManager))
+                return MapCoordinates.Nullspace;
+
             var transform = entityManager.GetEntity(EntityId).Transform;
             var worldPos = transform.WorldMatrix.Transform(Position);
             return new MapCoordinates(worldPos, transform.MapID);
@@ -563,22 +563,46 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
+        ///     Converts this set of coordinates to MapIndices.
+        /// </summary>
+        /// <param name="entityManager"></param>
+        /// <param name="mapManager"></param>
+        /// <returns></returns>
+        public MapIndices ToMapIndices(IEntityManager entityManager, IMapManager mapManager)
+        {
+            if(!IsValid(entityManager))
+                return new MapIndices();
+
+            var gridCoords = ToGrid(entityManager, mapManager);
+
+            if (gridCoords.GridID != GridId.Invalid)
+            {
+                return mapManager.GetGrid(gridCoords.GridID).GetTileRef(gridCoords).GridIndices;
+            }
+
+            var (x, y) = ToMapPos(entityManager);
+
+            return new MapIndices((int)x, (int)y);
+        }
+
+        /// <summary>
         ///     Converts a set of <seealso cref="EntityCoordinates"/> into a set of <seealso cref="GridCoordinates"/>.
         /// </summary>
         /// <param name="entityManager">Entity manager that contains the <see cref="EntityId"/>.</param>
-        /// <param name="coordinates">Coordinates being converted to <see cref="GridCoordinates"/>. The <see cref="EntityId"/>
-        /// will be resolved to it's corresponding <see cref="GridId"/>.</param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException">Will be thrown if the <see cref="EntityId"/> is not a grid.</exception>
-        public GridCoordinates ToGrid(IEntityManager entityManager, EntityCoordinates coordinates)
+        public GridCoordinates ToGrid(IEntityManager entityManager, IMapManager mapManager)
         {
-            if (!entityManager.TryGetEntity(coordinates.EntityId, out var gridEntity)
-                || !gridEntity.TryGetComponent<IMapGridComponent>(out var gridComp))
-            {
-                throw new InvalidOperationException("The entity is not a grid!");
-            }
+            if(!IsValid(entityManager))
+                return GridCoordinates.InvalidGrid;
 
-            return new GridCoordinates(coordinates.Position, gridComp.GridIndex);
+            var gridId = GetGridId(entityManager);
+
+            if (gridId == GridId.Invalid)
+                return new GridCoordinates(ToMapPos(entityManager), GridId.Invalid);
+
+            var pos = mapManager.GetGrid(GetGridId(entityManager)).WorldToLocal(ToMapPos(entityManager));
+            return new GridCoordinates(pos, gridId);
+
         }
 
         /// <summary>
@@ -601,7 +625,40 @@ namespace Robust.Shared.Map
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? GridId.Invalid : entityManager.GetEntity(EntityId).Transform.GridID;
+            return !IsValid(entityManager) ? GridId.Invalid : GetParent(entityManager).Transform.GridID;
+        }
+
+        /// <summary>
+        ///     Returns the Map Id this entity is on.
+        ///     If the parent entity is not valid, returns <see cref="MapId.Nullspace"/> instead.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager that contains the parent's Id</param>
+        /// <returns>Map Id this entity is on or <see cref="MapId.Nullspace"/></returns>
+        public MapId GetMapId(IEntityManager entityManager)
+        {
+            return !IsValid(entityManager) ? MapId.Nullspace : GetParent(entityManager).Transform.MapID;
+        }
+
+        /// <summary>
+        ///     Returns the parent entity.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager containing the parent entity</param>
+        /// <returns>Parent entity or throws if entity id doesn't exist</returns>
+        public IEntity GetParent(IEntityManager entityManager)
+        {
+            return entityManager.GetEntity(EntityId);
+        }
+
+        /// <summary>
+        ///     Attempt to get the parent entity, returning whether or not the entity was gotten.
+        /// </summary>
+        /// <param name="entityManager">Entity Manager containing the parent entity</param>
+        /// <param name="parent">The parent entity or null if not valid</param>
+        /// <returns>True if a value was returned, false otherwise.</returns>
+        public bool TryGetParent(IEntityManager entityManager, [NotNullWhen(true)] out IEntity? parent)
+        {
+            parent = null;
+            return IsValid(entityManager) && entityManager.TryGetEntity(EntityId, out parent);
         }
 
         /// <summary>
@@ -623,6 +680,9 @@ namespace Robust.Shared.Map
         /// <returns>True if the two points are within a given range.</returns>
         public bool InRange(IEntityManager entityManager, EntityCoordinates otherCoordinates, float range)
         {
+            if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
+                return false;
+
             var mapCoordinates = ToMap(entityManager);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager);
 
@@ -638,10 +698,13 @@ namespace Robust.Shared.Map
         /// <returns>True if it was possible to calculate the distance</returns>
         public bool TryDistance(IEntityManager entityManager, EntityCoordinates otherCoordinates, out float distance)
         {
+            distance = 0f;
+
+            if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
+                return false;
+
             var mapCoordinates = ToMap(entityManager);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager);
-
-            distance = 0f;
 
             if (mapCoordinates.MapId != otherMapCoordinates.MapId)
                 return false;

@@ -45,15 +45,17 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         /// <summary>
-        ///     Passing an invalid entity ID into the constructor makes it throw.
+        ///     Passing an invalid entity ID into the constructor makes it invalid.
         /// </summary>
         [Test]
         public void IsValid_InvalidEntId_False()
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                var _ = new EntityCoordinates(EntityUid.Invalid, Vector2.Zero);
-            });
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            // Same as EntityCoordinates.Invalid
+            var coords = new EntityCoordinates(EntityUid.Invalid, Vector2.Zero);
+
+            Assert.That(coords.IsValid(entityManager), Is.False);
         }
 
         /// <summary>
@@ -83,7 +85,7 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         /// <summary>
-        ///     Passing a valid entity ID into the constructor with infinite numbers makes it throw.
+        ///     Passing a valid entity ID into the constructor with infinite numbers makes it invalid.
         /// </summary>
         [TestCase(float.NaN, float.NaN)]
         [TestCase(0, float.NaN)]
@@ -96,11 +98,10 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapManager.CreateMap();
             var mapEntity = mapManager.CreateNewMapEntity(mapId);
 
-            Assert.Throws<ArgumentOutOfRangeException>(() =>
-            {
-                var newEnt = entityManager.CreateEntityUninitialized("dummy", new MapCoordinates(new Vector2(x, y), mapId));
-                var coords = newEnt.Transform.Coordinates;
-            });
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new MapCoordinates(new Vector2(x, y), mapId));
+            var coords = newEnt.Transform.Coordinates;
+
+            Assert.That(coords.IsValid(entityManager), Is.False);
         }
 
         [Test]
@@ -139,12 +140,12 @@ namespace Robust.UnitTesting.Shared.Map
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             var mapId = mapManager.CreateMap();
-            var mapEntity = mapManager.CreateNewMapEntity(mapId);
+            var mapEnt = mapManager.CreateNewMapEntity(mapId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new MapCoordinates(Vector2.Zero, mapId));
 
-            Assert.That(mapEntity.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
+            Assert.That(mapEnt.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
             Assert.That(newEnt.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
-            Assert.That(newEnt.Transform.Coordinates.EntityId, Is.EqualTo(mapEntity.Uid));
+            Assert.That(newEnt.Transform.Coordinates.EntityId, Is.EqualTo(mapEnt.Uid));
         }
 
         [Test]
@@ -162,6 +163,98 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(gridEnt.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
             Assert.That(newEnt.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(grid.Index));
             Assert.That(newEnt.Transform.Coordinates.EntityId, Is.EqualTo(gridEnt.Uid));
+        }
+
+        [Test]
+        public void GetMapId_Map()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var mapEnt = mapManager.CreateNewMapEntity(mapId);
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new MapCoordinates(Vector2.Zero, mapId));
+
+            Assert.That(mapEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
+            Assert.That(newEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
+        }
+
+        [Test]
+        public void GetMapId_Grid()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt = entityManager.GetEntity(grid.GridEntityId);
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+
+            Assert.That(gridEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
+            Assert.That(newEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
+        }
+
+        [Test]
+        public void GetParent()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var grid = mapManager.CreateGrid(mapId);
+            var mapEnt = mapManager.GetMapEntity(mapId);
+            var gridEnt = entityManager.GetEntity(grid.GridEntityId);
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+
+            Assert.That(mapEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
+            Assert.That(gridEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
+            Assert.That(newEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(gridEnt));
+
+            // Reparenting the entity should return correct results.
+            newEnt.Transform.AttachParent(mapEnt);
+
+            Assert.That(newEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
+        }
+
+        [Test]
+        public void TryGetParent()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var grid = mapManager.CreateGrid(mapId);
+            var mapEnt = mapManager.GetMapEntity(mapId);
+            var gridEnt = entityManager.GetEntity(grid.GridEntityId);
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+
+            Assert.That(mapEnt.Transform.Coordinates.TryGetParent(entityManager, out var mapEntParent), Is.EqualTo(true));
+            Assert.That(mapEntParent, Is.EqualTo(mapEnt));
+
+            Assert.That(gridEnt.Transform.Coordinates.TryGetParent(entityManager, out var gridEntParent), Is.EqualTo(true));
+            Assert.That(gridEntParent, Is.EqualTo(mapEnt));
+
+            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out var newEntParent), Is.EqualTo(true));
+            Assert.That(newEntParent, Is.EqualTo(gridEnt));
+
+            // Reparenting the entity should return correct results.
+            newEnt.Transform.AttachParent(mapEnt);
+
+            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out newEntParent), Is.EqualTo(true));
+            Assert.That(newEntParent, Is.EqualTo(mapEnt));
+
+            // Deleting the parent should make TryGetParent return false.
+            mapEnt.Delete();
+
+            // These shouldn't be valid anymore.
+            Assert.That(newEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
+            Assert.That(gridEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
+
+            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out newEntParent), Is.EqualTo(false));
+            Assert.That(newEntParent, Is.Null);
+
+            Assert.That(gridEnt.Transform.Coordinates.TryGetParent(entityManager, out gridEntParent), Is.EqualTo(false));
+            Assert.That(gridEntParent, Is.Null);
         }
 
         [Test]

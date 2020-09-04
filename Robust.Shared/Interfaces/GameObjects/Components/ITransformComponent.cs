@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -21,11 +19,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// </summary>
         [Animatable]
         Vector2 LocalPosition { get; set; }
-
-        /// <summary>
-        ///     Position offset of this entity relative to its parent.
-        /// </summary>
-        EntityCoordinates Coordinates { get; set; }
 
         /// <summary>
         ///     Position offset of this entity relative to its parent.

@@ -63,13 +63,11 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntityServer(prototypeName);
-            var gridId = coordinates.GetGridId(this);
             
-            if (gridId != GridId.Invalid)
+            if (TryGetEntity(coordinates.EntityId, out var entity))
             {
-                var gridEntityId = _mapManager.GetGrid(gridId).GridEntityId;
-                newEntity.Transform.AttachParent(GetEntity(gridEntityId));
-                newEntity.Transform.LocalPosition = coordinates.Position;
+                newEntity.Transform.AttachParent(entity);
+                newEntity.Transform.Coordinates = coordinates;
             }
 
             return newEntity;
@@ -114,15 +112,14 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public override IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridId(this);
-            
-            if (gridId == GridId.Invalid)
-                throw new InvalidOperationException($"Tried to spawn entity {protoName} onto invalid grid.");
+            if (!coordinates.IsValid(this))
+                throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
+            
             InitializeAndStartEntity((Entity) entity);
-            var grid = _mapManager.GetGrid(gridId);
-            if (_pauseManager.IsMapInitialized(grid.ParentMapId))
+            
+            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this)))
             {
                 entity.RunMapInit();
             }

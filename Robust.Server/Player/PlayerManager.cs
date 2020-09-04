@@ -225,7 +225,7 @@ namespace Robust.Server.Player
         /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range)
+        public List<IPlayerSession> GetPlayersInRange(MapCoordinates worldPos, int range)
         {
             _sessionsLock.EnterReadLock();
             //TODO: This needs to be moved to the PVS system.
@@ -233,8 +233,7 @@ namespace Robust.Server.Player
             {
                 return
                     _sessions.Values.Where(x =>
-                            x.AttachedEntity != null && worldPos.InRange(_entityManager,
-                                x.AttachedEntity.Transform.Coordinates, range))
+                            x.AttachedEntity != null && worldPos.InRange(x.AttachedEntity.Transform.MapPosition, range))
                         .Cast<IPlayerSession>()
                         .ToList();
             }
@@ -242,6 +241,17 @@ namespace Robust.Server.Player
             {
                 _sessionsLock.ExitReadLock();
             }
+        }
+        
+        /// <summary>
+        ///     Gets all players inside of a circle.
+        /// </summary>
+        /// <param name="worldPos">Position of the circle in world-space.</param>
+        /// <param name="range">Radius of the circle in world units.</param>
+        /// <returns></returns>
+        public List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range)
+        {
+            return GetPlayersInRange(worldPos.ToMap(_entityManager), range);
         }
 
         public List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate)

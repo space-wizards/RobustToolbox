@@ -66,7 +66,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         public void ComponentStatePositionTest()
         {
             // Arrange
-            var initialPos = new EntityCoordinates(new EntityUid(1), (0, 0));
+            var initialPos = new EntityCoordinates(GridA.GridEntityId, (0, 0));
             var parent = EntityManager.SpawnEntity("dummy", initialPos);
             var child = EntityManager.SpawnEntity("dummy", initialPos);
             var parentTrans = parent.Transform;
@@ -96,7 +96,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         public void WorldRotationTest()
         {
             // Arrange
-            var initalPos = new EntityCoordinates(new EntityUid(1), (0, 0));
+            var initalPos = new EntityCoordinates(GridA.GridEntityId, (0, 0));
             var node1 = EntityManager.SpawnEntity("dummy", initalPos);
             var node2 = EntityManager.SpawnEntity("dummy", initalPos);
             var node3 = EntityManager.SpawnEntity("dummy", initalPos);

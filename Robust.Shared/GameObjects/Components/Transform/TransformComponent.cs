@@ -251,10 +251,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition
-        {
-            get => new MapCoordinates(WorldPosition, MapID);
-        }
+        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]

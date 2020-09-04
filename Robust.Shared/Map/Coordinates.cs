@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Shared.Map
@@ -270,6 +269,12 @@ namespace Robust.Shared.Map
             Position = position;
         }
 
+        public EntityCoordinates(EntityUid entityId, float x, float y)
+        {
+            EntityId = entityId;
+            Position = new Vector2(x, y);
+        }
+
         /// <summary>
         ///     Verifies that this set of coordinates can be currently resolved to a location.
         /// </summary>
@@ -369,7 +374,7 @@ namespace Robust.Shared.Map
                 return new MapIndices();
 
             var gridId = GetGridId(entityManager);
-
+            
             if (gridId != GridId.Invalid)
             {
                 return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
@@ -377,7 +382,18 @@ namespace Robust.Shared.Map
 
             var (x, y) = ToMapPos(entityManager);
 
-            return new MapIndices((int)x, (int)y);
+            return new MapIndices((int) x, (int) y);
+        }
+
+        /// <summary>
+        ///     Returns an new set of EntityCoordinates with the same <see cref="EntityId"/>
+        ///     but on a different position.
+        /// </summary>
+        /// <param name="newPosition">The position the new EntityCoordinates will be in</param>
+        /// <returns>A new set of EntityCoordinates with the specified position and same <see cref="EntityId"/> as this one.</returns>
+        public EntityCoordinates WithPosition(Vector2 newPosition)
+        {
+            return new EntityCoordinates(EntityId, newPosition);
         }
 
         /// <summary>

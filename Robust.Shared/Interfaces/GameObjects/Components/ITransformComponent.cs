@@ -28,6 +28,11 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         EntityCoordinates Coordinates { get; set; }
 
         /// <summary>
+        ///     Position offset of this entity relative to its parent.
+        /// </summary>
+        EntityCoordinates Coordinates { get; set; }
+
+        /// <summary>
         ///     Current position offset of the entity relative to the world.
         /// </summary>
         Vector2 WorldPosition { get; set; }

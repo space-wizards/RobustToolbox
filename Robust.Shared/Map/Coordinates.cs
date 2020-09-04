@@ -475,6 +475,12 @@ namespace Robust.Shared.Map
             Position = position;
         }
 
+        public EntityCoordinates(EntityUid entityId, float x, float y)
+        {
+            EntityId = entityId;
+            Position = new Vector2(x, y);
+        }
+
         /// <summary>
         ///     Verifies that this set of coordinates can be currently resolved to a location.
         /// </summary>
@@ -615,6 +621,17 @@ namespace Robust.Shared.Map
         {
             var grid = mapManager.GetGrid(coordinates.GridID);
             return new EntityCoordinates(grid.GridEntityId, coordinates.Position);
+        }
+
+        /// <summary>
+        ///     Returns an new set of EntityCoordinates with the same <see cref="EntityId"/>
+        ///     but on a different position.
+        /// </summary>
+        /// <param name="newPosition">The position the new EntityCoordinates will be in</param>
+        /// <returns>A new set of EntityCoordinates with the specified position and same <see cref="EntityId"/> as this one.</returns>
+        public EntityCoordinates WithPosition(Vector2 newPosition)
+        {
+            return new EntityCoordinates(EntityId, newPosition);
         }
 
         /// <summary>

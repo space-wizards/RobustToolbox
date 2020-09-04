@@ -312,7 +312,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public bool OnGround => Status == BodyStatus.OnGround &&
                                 !IoCManager.Resolve<IPhysicsManager>()
-                                    .IsWeightless(Owner.Transform.GridPosition);
+                                    .IsWeightless(Owner.Transform.Coordinates);
 
         /// <summary>
         ///     Whether or not the entity is anchored in place.

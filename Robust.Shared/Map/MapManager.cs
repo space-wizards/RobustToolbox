@@ -264,7 +264,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, GridCoordinates.InvalidGrid);
+                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, EntityCoordinates.Invalid);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
@@ -442,7 +442,7 @@ namespace Robust.Shared.Map
                 HighestGridID = actualID;
             }
 
-            var grid = new MapGrid(this, actualID, chunkSize, snapSize, currentMapID);
+            var grid = new MapGrid(this, _entityManager, actualID, chunkSize, snapSize, currentMapID);
             _grids.Add(actualID, grid);
             Logger.DebugS("map", $"Creating new grid {actualID}");
 

@@ -44,7 +44,7 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
-            var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager, _entityManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects
             }
 
             //Create effect from creation message
-            var effect = new Effect(message, resourceCache, _mapManager);
+            var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
             if (effect.AttachedEntityUid != null)
             {
                 effect.AttachedEntity = _entityManager.GetEntity(effect.AttachedEntityUid.Value);
@@ -132,22 +132,22 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
-            public GridCoordinates Coordinates;
+            public EntityCoordinates Coordinates;
 
             /// <summary>
             /// Where the emitter was when the effect was first emitted
             /// </summary>
-            public GridCoordinates EmitterCoordinates;
+            public EntityCoordinates EmitterCoordinates;
 
             /// <summary>
             /// Effect's x/y velocity
             /// </summary>
-            public Vector2 Velocity = new Vector2(0, 0);
+            public Vector2 Velocity = Vector2.Zero;
 
             /// <summary>
             /// Effect's x/y acceleration
             /// </summary>
-            public Vector2 Acceleration = new Vector2(0, 0);
+            public Vector2 Acceleration = Vector2.Zero;
 
             /// <summary>
             /// Effect's radial velocity - relative to EmitterPosition
@@ -215,8 +215,9 @@ namespace Robust.Client.GameObjects
             public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
 
             private readonly IMapManager _mapManager;
+            private readonly IEntityManager _entityManager;
 
-            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager)
+            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager, IEntityManager entityManager)
             {
                 if (effectcreation.RsiState != null)
                 {
@@ -254,6 +255,7 @@ namespace Robust.Client.GameObjects
                 ColorDelta = effectcreation.ColorDelta;
                 Shaded = effectcreation.Shaded;
                 _mapManager = mapManager;
+                _entityManager = entityManager;
             }
 
             public void Update(float frameTime)
@@ -269,11 +271,11 @@ namespace Robust.Client.GameObjects
                 var deltaPosition = new Vector2(0f, 0f);
 
                 //If we have an emitter we can do special effects around that emitter position
-                if (_mapManager.GridExists(EmitterCoordinates.GridID))
+                if (_mapManager.GridExists(EmitterCoordinates.GetGridId(_entityManager)))
                 {
                     //Calculate delta p due to radial velocity
                     var positionRelativeToEmitter =
-                        Coordinates.ToMapPos(_mapManager) - EmitterCoordinates.ToMapPos(_mapManager);
+                        Coordinates.ToMapPos(_entityManager) - EmitterCoordinates.ToMapPos(_entityManager);
                     var deltaRadial = RadialVelocity * frameTime;
                     deltaPosition = positionRelativeToEmitter * (deltaRadial / positionRelativeToEmitter.Length);
 
@@ -290,7 +292,7 @@ namespace Robust.Client.GameObjects
 
                 //Calculate new position from our velocity as well as possible rotation/movement around emitter
                 deltaPosition += Velocity * frameTime;
-                Coordinates = new GridCoordinates(Coordinates.Position + deltaPosition, Coordinates.GridID);
+                Coordinates = Coordinates.Offset(deltaPosition);
 
                 //Finish calculating new rotation, size, color
                 Rotation += RotationRate * frameTime;
@@ -347,14 +349,16 @@ namespace Robust.Client.GameObjects
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;
             private readonly IMapManager _mapManager;
+            private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan) : base(
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base(
                 "EffectSystem")
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 _mapManager = mapMan;
                 _playerManager = playerMan;
+                _entityManager = entityManager;
             }
 
             protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
@@ -368,7 +372,7 @@ namespace Robust.Client.GameObjects
                 foreach (var effect in _owner._Effects)
                 {
                     if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&  
-                        _mapManager.GetGrid(effect.Coordinates.GridID).ParentMapId != map)
+                        _mapManager.GetGrid(effect.Coordinates.GetGridId(_entityManager)).ParentMapId != map)
                     {
                         continue;
                     }
@@ -383,7 +387,7 @@ namespace Robust.Client.GameObjects
 
                     var effectSprite = effect.EffectSprite;
                     var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ?? 
-                                               effect.Coordinates.ToMapPos(_mapManager);
+                                               effect.Coordinates.ToMapPos(_entityManager);
                     
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
 

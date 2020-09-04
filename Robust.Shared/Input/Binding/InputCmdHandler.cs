@@ -72,7 +72,7 @@ namespace Robust.Shared.Input.Binding
         }
     }
 
-    public delegate bool PointerInputCmdDelegate(ICommonSession? session, GridCoordinates coords, EntityUid uid);
+    public delegate bool PointerInputCmdDelegate(ICommonSession? session, EntityCoordinates coords, EntityUid uid);
 
     public delegate bool PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
@@ -117,13 +117,13 @@ namespace Robust.Shared.Input.Binding
         public readonly struct PointerInputCmdArgs
         {
             public readonly ICommonSession? Session;
-            public readonly GridCoordinates Coordinates;
+            public readonly EntityCoordinates Coordinates;
             public readonly ScreenCoordinates ScreenCoordinates;
             public readonly EntityUid EntityUid;
             public readonly BoundKeyState State;
             public readonly FullInputCmdMessage OriginalMessage;
 
-            public PointerInputCmdArgs(ICommonSession? session, GridCoordinates coordinates,
+            public PointerInputCmdArgs(ICommonSession? session, EntityCoordinates coordinates,
                 ScreenCoordinates screenCoordinates, EntityUid entityUid, BoundKeyState state,
                 FullInputCmdMessage originalMessage)
             {

@@ -1,5 +1,4 @@
-﻿using System.CodeDom;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -18,7 +17,8 @@ namespace Robust.Client.Placement.Modes
 
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var mapGrid = pManager.MapManager.GetGrid(gridId);
 
             if (mapGrid.IsDefaultGrid)
             {
@@ -59,7 +59,8 @@ namespace Robust.Client.Placement.Modes
 
                     // move mouse one tile out along normal
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;
-                    MouseCoords = new GridCoordinates(closest.WorldToLocal(newTilePos), closest.Index);
+
+                    MouseCoords = new EntityCoordinates(closest.GridEntityId, closest.WorldToLocal(newTilePos));
                 }
                 //else free place
             }
@@ -73,21 +74,19 @@ namespace Robust.Client.Placement.Modes
             {
                 if(!mapGrid.IsDefaultGrid)
                 {
-                    MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2,
-                        CurrentTile.Y + tileSize / 2,
-                        MouseCoords.GridID);
+                    MouseCoords = new EntityCoordinates(MouseCoords.EntityId, (CurrentTile.X + tileSize / 2,
+                        CurrentTile.Y + tileSize / 2));
                 }
                 // else we don't modify coords
             }
             else
             {
-                MouseCoords = new GridCoordinates(CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
-                    CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y,
-                    MouseCoords.GridID);
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId, (CurrentTile.X + tileSize / 2 + pManager.PlacementOffset.X,
+                    CurrentTile.Y + tileSize / 2 + pManager.PlacementOffset.Y));
             }
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             if (!RangeCheck(position))
             {

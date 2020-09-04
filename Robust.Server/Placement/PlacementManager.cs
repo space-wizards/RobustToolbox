@@ -118,7 +118,7 @@ namespace Robust.Server.Placement
             }
             else
             {
-                var mapCoords = coordinates.ToMap(_mapManager);
+                var mapCoords = coordinates.ToMap(_entityManager);
                 PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
             }
         }

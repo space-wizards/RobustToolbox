@@ -60,12 +60,14 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntityServer(prototypeName);
-            if (coordinates.GridID != GridId.Invalid)
+            var gridId = coordinates.GetGridId(this);
+            
+            if (gridId != GridId.Invalid)
             {
-                var gridEntityId = _mapManager.GetGrid(coordinates.GridID).GridEntityId;
+                var gridEntityId = _mapManager.GetGrid(gridId).GridEntityId;
                 newEntity.Transform.AttachParent(GetEntity(gridEntityId));
                 newEntity.Transform.LocalPosition = coordinates.Position;
             }
@@ -110,14 +112,16 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntity(string? protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates)
         {
-            if (coordinates.GridID == GridId.Invalid)
+            var gridId = coordinates.GetGridId(this);
+            
+            if (gridId == GridId.Invalid)
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} onto invalid grid.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) entity);
-            var grid = _mapManager.GetGrid(coordinates.GridID);
+            var grid = _mapManager.GetGrid(gridId);
             if (_pauseManager.IsMapInitialized(grid.ParentMapId))
             {
                 entity.RunMapInit();
@@ -135,7 +139,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates)
+        public override IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates)
         {
             var newEnt = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity((Entity) newEnt);

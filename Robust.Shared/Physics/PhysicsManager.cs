@@ -17,6 +17,7 @@ namespace Robust.Shared.Physics
     public class PhysicsManager : IPhysicsManager
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
@@ -44,12 +45,12 @@ namespace Robust.Shared.Physics
             return false;
         }
 
-        public bool IsWeightless(GridCoordinates gridPosition)
+        public bool IsWeightless(EntityCoordinates coordinates)
         {
-            var tile = _mapManager.GetGrid(gridPosition.GridID).GetTileRef(gridPosition).Tile;
-            return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
+            var gridId = coordinates.GetGridId(_entityManager);
+            var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
+            return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
         }
-
 
         /// <summary>
         ///     Calculates the normal vector for two colliding bodies

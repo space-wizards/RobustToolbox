@@ -101,11 +101,12 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
-        public GridCoordinates ToGridCoordinates(IMapManager mapManager, GridId gridId)
+        public EntityCoordinates ToGridCoordinates(IMapManager mapManager, GridId gridId)
         {
-            var tile = mapManager.GetGrid(gridId).TileSize;
+            var grid = mapManager.GetGrid(gridId);
+            var tile = grid.TileSize;
 
-            return new GridCoordinates(X * tile, Y * tile, gridId);
+            return new EntityCoordinates(grid.GridEntityId, (X * tile, Y * tile));
         }
 
         /// <inheritdoc />

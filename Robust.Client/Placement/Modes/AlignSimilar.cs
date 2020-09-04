@@ -16,7 +16,8 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GridID);
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            var mapGrid = pManager.MapManager.GetGrid(gridId);
             CurrentTile = mapGrid.GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission!.IsTile)
@@ -29,11 +30,9 @@ namespace Robust.Client.Placement.Modes
                 return;
             }
 
-            var manager = IoCManager.Resolve<IClientEntityManager>();
-
-            var snapToEntities = manager.GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = pManager.EntityManager.GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapGrid.ParentMapId)
-                .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.MapManager)).LengthSquared)
+                .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -66,10 +65,10 @@ namespace Robust.Client.Placement.Modes
             var closestSide =
                 (from Vector2 side in sides orderby (side - MouseCoords.Position).LengthSquared select side).First();
 
-            MouseCoords = new GridCoordinates(closestSide, MouseCoords.GridID);
+            MouseCoords = new EntityCoordinates(MouseCoords.EntityId, MouseCoords.Position);
         }
 
-        public override bool IsValidPosition(GridCoordinates position)
+        public override bool IsValidPosition(EntityCoordinates position)
         {
             if (pManager.CurrentPermission!.IsTile)
             {

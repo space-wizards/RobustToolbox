@@ -183,71 +183,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public GridCoordinates GridPosition
-        {
-            get
-            {
-                if (_parent.IsValid())
-                {
-                    // transform _position from parent coords to world coords
-                    var worldPos = Parent!.WorldMatrix.Transform(_localPosition);
-                    return new GridCoordinates(worldPos, GridID);
-                }
-                else
-                {
-                    return new GridCoordinates(_localPosition, GridID);
-                }
-            }
-            set
-            {
-                if (!_parent.IsValid())
-                {
-                    DebugTools.Assert("Tried to move root node.");
-                    return;
-                }
-
-                // grid coords to world coords
-                var worldCoords = value.ToMapPos(_mapManager);
-
-                if (value.GridID != GridID)
-                {
-                    if (value.GridID != GridId.Invalid)
-                    {
-                        var newGrid = _mapManager.GetGrid(value.GridID);
-                        AttachParent(_entityManager.GetEntity(newGrid.GridEntityId));
-                    }
-                    else
-                    {
-                        var map = _mapManager.GetMapEntity(MapID);
-                        AttachParent(map);
-                    }
-                }
-
-                // world coords to parent coords
-                var newPos = Parent!.InvWorldMatrix.Transform(worldCoords);
-
-                // float rounding error guard, if the offset is less than 1mm ignore it
-                if ((newPos - _localPosition).LengthSquared < 10.0E-3)
-                    return;
-
-                SetPosition(newPos);
-
-                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                if (Running)
-                {
-                    RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, GridPosition, value));
-                }
-
-                Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
-            }
-        }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 WorldPosition
         {
             get
@@ -291,7 +226,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
             set
             {
-                var oldPosition = GridPosition;
+                var oldPosition = Coordinates;
 
                 if (value.EntityId != _parent)
                 {
@@ -306,7 +241,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 {
                     RebuildMatrices();
                     Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPosition, GridPosition));
+                        EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
                 }
 
                 Dirty();
@@ -330,14 +265,14 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
-                var oldGridPos = GridPosition;
+                var oldGridPos = Coordinates;
                 SetPosition(value);
                 RebuildMatrices();
                 Dirty();
                 UpdateEntityTree();
                 UpdatePhysicsTree();
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, oldGridPos, GridPosition));
+                    EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
             }
         }
 
@@ -717,11 +652,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 if (_localPosition != newState.LocalPosition)
                 {
-                    var oldPos = GridPosition;
+                    var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);
 
                     Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPos, GridPosition));
+                        EventSource.Local, new MoveEvent(Owner, oldPos, Coordinates));
                     rebuildMatrices = true;
                 }
 
@@ -808,7 +743,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         public string GetDebugString()
         {
-            return $"pos/rot/wpos/wrot: {GridPosition}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
+            return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
         private void ActivateLerp()
@@ -861,7 +796,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
     public class MoveEvent : EntitySystemMessage
     {
-        public MoveEvent(IEntity sender, GridCoordinates oldPos, GridCoordinates newPos)
+        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos)
         {
             Sender = sender;
             OldPosition = oldPos;
@@ -869,7 +804,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         public IEntity Sender { get; }
-        public GridCoordinates OldPosition { get; }
-        public GridCoordinates NewPosition { get; }
+        public EntityCoordinates OldPosition { get; }
+        public EntityCoordinates NewPosition { get; }
     }
 }

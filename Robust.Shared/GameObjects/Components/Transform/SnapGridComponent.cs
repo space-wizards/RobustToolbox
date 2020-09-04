@@ -85,7 +85,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return $"ofs/pos: {Offset}/{Position}";
         }
 
-        public GridCoordinates DirectionToGrid(Direction direction)
+        public EntityCoordinates DirectionToGrid(Direction direction)
         {
             var ownerGrid = _mapManager.GetGrid(Owner.Transform.GridID);
             var grid = ownerGrid.GridTileToLocal(SnapGridPosAt(direction));
@@ -166,7 +166,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             IsSet = true;
 
             var oldPos = Position;
-            Position = grid.SnapGridCellFor(Owner.Transform.GridPosition, Offset);
+            Position = grid.SnapGridCellFor(Owner.Transform.Coordinates, Offset);
             _lastGrid = Owner.Transform.GridID;
             grid.AddToSnapGridCell(Position, Offset, this);
 

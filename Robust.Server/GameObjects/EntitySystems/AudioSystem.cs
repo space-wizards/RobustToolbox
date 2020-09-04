@@ -113,7 +113,7 @@ namespace Robust.Server.GameObjects.EntitySystems
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
-                Coordinates = entity.Transform.GridPosition,
+                Coordinates = entity.Transform.Coordinates,
                 EntityUid = entity.Uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
@@ -125,7 +125,7 @@ namespace Robust.Server.GameObjects.EntitySystems
                 return new AudioSourceServer(this, id);
             }
 
-            var players = range > 0.0f ? _playerManager.GetPlayersInRange(entity.Transform.GridPosition, range) : _playerManager.GetAllPlayers();
+            var players = range > 0.0f ? _playerManager.GetPlayersInRange(entity.Transform.Coordinates, range) : _playerManager.GetAllPlayers();
 
             for (var i = players.Count - 1; i >= 0; i--)
             {
@@ -150,7 +150,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="audioParams"></param>
         /// <param name="range">The max range at which the audio will be heard. Less than or equal to 0 to send to every player.</param>
         /// <param name="excludedSession">Session that won't receive the audio message.</param>
-        public AudioSourceServer PlayAtCoords(string filename, GridCoordinates coordinates, AudioParams? audioParams = null, int range = AudioDistanceRange, IPlayerSession? excludedSession = null)
+        public AudioSourceServer PlayAtCoords(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null, int range = AudioDistanceRange, IPlayerSession? excludedSession = null)
         {
             var id = CacheIdentifier();
             var msg = new PlayAudioPositionalMessage
@@ -216,7 +216,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams"></param>
         [Obsolete("Deprecated. Use PlayAtCoords instead.")]
-        public void Play(string filename, GridCoordinates coordinates, AudioParams? audioParams = null)
+        public void Play(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
             PlayAtCoords(filename, coordinates, audioParams);
         }

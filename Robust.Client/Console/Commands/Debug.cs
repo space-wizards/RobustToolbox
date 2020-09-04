@@ -55,7 +55,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
-                console.AddLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.GridPosition}.", Color.White);
+                console.AddLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.", Color.White);
             }
 
             return false;

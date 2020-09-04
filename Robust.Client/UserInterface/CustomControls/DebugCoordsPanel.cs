@@ -8,6 +8,7 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Player;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Timing;
 
@@ -71,7 +72,7 @@ namespace Robust.Client.UserInterface.CustomControls
             var screenSize = _displayManager.ScreenSize;
 
             MapCoordinates mouseWorldMap;
-            GridCoordinates mouseGridPos;
+            EntityCoordinates mouseGridPos;
             TileRef tile;
 
             mouseWorldMap = eyeManager.ScreenToMap(mouseScreenPos);
@@ -83,7 +84,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                mouseGridPos = new GridCoordinates(mouseWorldMap.Position, GridId.Invalid);
+                mouseGridPos = new EntityCoordinates(EntityUid.Invalid, mouseWorldMap.Position);
                 tile = default;
             }
 

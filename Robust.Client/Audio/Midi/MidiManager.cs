@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using JetBrains.Annotations;
 using NFluidsynth;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -68,9 +66,9 @@ namespace Robust.Client.Audio.Midi
 
     internal class MidiManager : IDisposable, IMidiManager
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public bool IsAvailable
         {
@@ -280,7 +278,7 @@ namespace Robust.Client.Audio.Midi
                     MapCoordinates? mapPos = null;
                     if (renderer.TrackingCoordinates != null)
                     {
-                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_mapManager);
+                        mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
                     }
                     else if (renderer.TrackingEntity != null)
                     {

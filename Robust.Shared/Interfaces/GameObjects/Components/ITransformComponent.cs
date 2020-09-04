@@ -23,11 +23,6 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         Vector2 LocalPosition { get; set; }
 
         /// <summary>
-        ///     Position offset of this entity relative to the grid it's on.
-        /// </summary>
-        GridCoordinates GridPosition { get; set; }
-
-        /// <summary>
         ///     Position offset of this entity relative to its parent.
         /// </summary>
         EntityCoordinates Coordinates { get; set; }

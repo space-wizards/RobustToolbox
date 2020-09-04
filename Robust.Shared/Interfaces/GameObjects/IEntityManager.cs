@@ -33,7 +33,7 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         IEntity CreateEntityUninitialized(string? prototypeName);
 
-        IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates);
+        IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
 
         IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
@@ -43,7 +43,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity(string? protoName, GridCoordinates coordinates);
+        IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -62,7 +62,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates);
+        IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
@@ -154,7 +154,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="position"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false);
 
         /// <summary>
         /// Gets entities that intersect with this entity
@@ -169,7 +169,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="position"></param>
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
-        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
@@ -205,7 +205,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="arcWidth"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
 
         #endregion
 

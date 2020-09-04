@@ -38,12 +38,12 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect position relative to the emit position
         /// </summary>
-        public GridCoordinates Coordinates { get; set; }
+        public EntityCoordinates Coordinates { get; set; }
 
         /// <summary>
         /// Where the emitter was when the effect was first emitted
         /// </summary>
-        public GridCoordinates EmitterCoordinates { get; set; }
+        public EntityCoordinates EmitterCoordinates { get; set; }
 
         /// <summary>
         /// Effect's x/y velocity

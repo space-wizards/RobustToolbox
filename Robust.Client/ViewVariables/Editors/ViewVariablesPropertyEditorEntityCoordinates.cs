@@ -1,16 +1,20 @@
 using System.Globalization;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Map;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class ViewVariablesPropertyEditorGridLocalCoordinates : ViewVariablesPropertyEditor
+    public class ViewVariablesPropertyEditorEntityCoordinates : ViewVariablesPropertyEditor
     {
         protected override Control MakeUI(object? value)
         {
-            var coords = (GridCoordinates) value!;
+            var coords = (EntityCoordinates) value!;
             var hBoxContainer = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(240, 0),
@@ -18,13 +22,15 @@ namespace Robust.Client.ViewVariables.Editors
 
             hBoxContainer.AddChild(new Label {Text = "grid: "});
 
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            
             var gridId = new LineEdit
             {
                 Editable = !ReadOnly,
                 SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
                 PlaceHolder = "Grid ID",
                 ToolTip = "Grid ID",
-                Text = coords.GridID.ToString()
+                Text = coords.GetGridId(entityManager).ToString()
             };
 
             hBoxContainer.AddChild(gridId);
@@ -56,10 +62,17 @@ namespace Robust.Client.ViewVariables.Editors
             void OnEntered(LineEdit.LineEditEventArgs e)
             {
                 var gridVal = int.Parse(gridId.Text, CultureInfo.InvariantCulture);
+                var mapManager = IoCManager.Resolve<IMapManager>();
                 var xVal = float.Parse(x.Text, CultureInfo.InvariantCulture);
                 var yVal = float.Parse(y.Text, CultureInfo.InvariantCulture);
+                
+                if (!mapManager.TryGetGrid(new GridId(gridVal), out var grid))
+                {
+                    ValueChanged(new EntityCoordinates(EntityUid.Invalid, (xVal, yVal)));
+                    return;
+                }
 
-                ValueChanged(new GridCoordinates(xVal, yVal, new GridId(gridVal)));
+                ValueChanged(new EntityCoordinates(grid.GridEntityId, (xVal, yVal)));
             }
 
             if (!ReadOnly)

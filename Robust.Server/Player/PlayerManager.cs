@@ -10,6 +10,7 @@ using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
@@ -37,6 +38,7 @@ namespace Robust.Server.Player
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 
@@ -223,15 +225,16 @@ namespace Robust.Server.Player
         /// <param name="worldPos">Position of the circle in world-space.</param>
         /// <param name="range">Radius of the circle in world units.</param>
         /// <returns></returns>
-        public List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range)
+        public List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range)
         {
             _sessionsLock.EnterReadLock();
             //TODO: This needs to be moved to the PVS system.
             try
             {
                 return
-                    _sessions.Values.Where(x => x.AttachedEntity != null &&
-                                                worldPos.InRange(_mapManager, x.AttachedEntity.Transform.GridPosition, range))
+                    _sessions.Values.Where(x =>
+                            x.AttachedEntity != null && worldPos.InRange(_entityManager,
+                                x.AttachedEntity.Transform.Coordinates, range))
                         .Cast<IPlayerSession>()
                         .ToList();
             }

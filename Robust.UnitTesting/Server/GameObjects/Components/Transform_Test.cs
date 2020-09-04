@@ -2,6 +2,7 @@
 using System.Reflection;
 using NUnit.Framework;
 using Robust.Server.Interfaces.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -43,7 +44,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private MapId MapB;
         private IMapGrid GridB = default!;
 
-        private static readonly GridCoordinates InitialPos = new GridCoordinates(0,0,new GridId(1));
+        private static readonly EntityCoordinates InitialPos = new EntityCoordinates(new EntityUid(1), (0, 0));
 
         [OneTimeSetUp]
         public void Setup()
@@ -90,8 +91,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var childTrans = child.Transform;
 
             // that are not on the same map
-            parentTrans.GridPosition = new GridCoordinates(5, 5, GridA);
-            childTrans.GridPosition = new GridCoordinates(4, 4, GridB);
+            parentTrans.Coordinates = new EntityCoordinates(GridA.GridEntityId, (5, 5));
+            childTrans.Coordinates = new EntityCoordinates(GridB.GridEntityId, (4, 4));
 
             // if they are parented, the child keeps its world position, but moves to the parents map
             childTrans.AttachParent(parentTrans);
@@ -101,7 +102,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             {
                 Assert.That(childTrans.MapID, Is.EqualTo(parentTrans.MapID));
                 Assert.That(childTrans.GridID, Is.EqualTo(parentTrans.GridID));
-                Assert.That(childTrans.GridPosition, Is.EqualTo(new GridCoordinates(4, 4, GridA)));
+                Assert.That(childTrans.Coordinates, Is.EqualTo(new EntityCoordinates(GridA.GridEntityId, (4, 4))));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(4, 4)));
             });
 
@@ -112,7 +113,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-1, -1)));
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
-            var oldLpos = childTrans.GridPosition;
+            var oldLpos = childTrans.Coordinates;
             var oldWpos = childTrans.WorldPosition;
 
             childTrans.AttachToGridOrMap();
@@ -121,7 +122,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(childTrans.GridPosition.Position, Is.EqualTo(oldLpos.Position));
+                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLpos.Position));
                 Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
             });
         }

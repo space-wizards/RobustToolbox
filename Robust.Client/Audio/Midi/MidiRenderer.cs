@@ -139,7 +139,7 @@ namespace Robust.Client.Audio.Midi
         ///     This is only used if <see cref="Mono"/> is set to True
         ///     and <see cref="TrackingEntity"/> is null.
         /// </summary>
-        GridCoordinates? TrackingCoordinates { get; set; }
+        EntityCoordinates? TrackingCoordinates { get; set; }
 
         /// <summary>
         ///     Send a midi event for the renderer to play.
@@ -255,7 +255,7 @@ namespace Robust.Client.Audio.Midi
         }
 
         public IEntity? TrackingEntity { get; set; } = null;
-        public GridCoordinates? TrackingCoordinates { get; set; } = null;
+        public EntityCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal bool Free { get; set; } = false;
 

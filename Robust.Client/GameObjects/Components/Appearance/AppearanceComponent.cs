@@ -10,13 +10,16 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.GameObjects
 {
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
+        [ViewVariables]
         private Dictionary<object, object> data = new Dictionary<object, object>();
+        [ViewVariables]
         internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

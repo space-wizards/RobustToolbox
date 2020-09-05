@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Appearance;
+using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,6 +9,7 @@ namespace Robust.Server.GameObjects
 {
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
+        [ViewVariables]
         readonly Dictionary<object, object> data = new Dictionary<object, object>();
 
         public override void SetData(string key, object value)

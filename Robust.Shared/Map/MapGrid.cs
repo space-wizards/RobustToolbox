@@ -538,6 +538,12 @@ namespace Robust.Shared.Map
             return true;
         }
 
+        /// <inheritdoc />
+        public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
+        {
+            return TryGetTileRef(CoordinatesToTile(coords), out tile);
+        }
+
         #endregion Transforms
     }
 }

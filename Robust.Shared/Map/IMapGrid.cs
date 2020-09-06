@@ -139,6 +139,13 @@ namespace Robust.Shared.Map
         #region Transforms
 
         /// <summary>
+        ///     Transforms EntityCoordinates to a local tile location.
+        /// </summary>
+        /// <param name="coords"></param>
+        /// <returns></returns>
+        MapIndices CoordinatesToTile(EntityCoordinates coords);
+
+        /// <summary>
         ///     Transforms world-space coordinates from the global origin to the grid local origin.
         /// </summary>
         /// <param name="posWorld">The world-space coordinates with global origin.</param>
@@ -191,6 +198,14 @@ namespace Robust.Shared.Map
         /// <param name="tile"></param>
         /// <returns></returns>
         bool TryGetTileRef(MapIndices indices, out TileRef tile);
+
+        /// <summary>
+        ///     Transforms grid indices into a tile reference, returns false if no tile is found.
+        /// </summary>
+        /// <param name="indices">The Grid Tile indices.</param>
+        /// <param name="tile"></param>
+        /// <returns></returns>
+        bool TryGetTileRef(EntityCoordinates coords, out TileRef tile);
 
         /// <summary>
         /// Transforms grid tile indices to chunk indices.

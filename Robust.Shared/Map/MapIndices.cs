@@ -101,7 +101,7 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
-        public EntityCoordinates ToGridCoordinates(IMapManager mapManager, GridId gridId)
+        public EntityCoordinates ToEntityCoordinates(IMapManager mapManager, GridId gridId)
         {
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;

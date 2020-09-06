@@ -86,7 +86,7 @@ namespace Robust.Server.Placement
 
             //TODO: Distance check, so you can't place things off of screen.
 
-            var coordinates = msg.GridCoordinates;
+            var coordinates = msg.EntityCoordinates;
 
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing

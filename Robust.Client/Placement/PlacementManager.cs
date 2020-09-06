@@ -605,7 +605,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.GridCoordinates = coordinates;
+            message.EntityCoordinates = coordinates;
 
             message.DirRcv = Direction;
 

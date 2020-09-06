@@ -183,9 +183,9 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTileRef(EntityCoordinates worldPos)
+        public TileRef GetTileRef(EntityCoordinates coords)
         {
-            return GetTileRef(WorldToTile(worldPos));
+            return GetTileRef(CoordinatesToTile(coords));
         }
 
         /// <inheritdoc />
@@ -219,7 +219,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTile(EntityCoordinates worldPos, Tile tile)
         {
-            var localTile = WorldToTile(worldPos);
+            var localTile = CoordinatesToTile(worldPos);
             SetTile(new MapIndices(localTile.X, localTile.Y), tile);
         }
 
@@ -281,19 +281,19 @@ namespace Robust.Shared.Map
             {
                 var local = GridTileToLocal(tile.GridIndices);
                 var gridId = tile.GridIndex;
-                
+
                 if (!_mapManager.TryGetGrid(gridId, out var grid))
                 {
                     continue;
                 }
-                
+
                 var to = new EntityCoordinates(grid.GridEntityId, worldArea.Position);
 
                 if (!local.TryDistance(_entityManager, to, out var distance))
                 {
                     continue;
                 }
-                
+
                 if (distance <= worldArea.Radius)
                 {
                     if (predicate == null || predicate(tile))
@@ -440,7 +440,7 @@ namespace Robust.Shared.Map
             {
                 return new EntityCoordinates(EntityUid.Invalid, (posWorld.X, posWorld.Y));
             }
-            
+
             return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));
         }
 
@@ -454,7 +454,7 @@ namespace Robust.Shared.Map
             {
                 return new EntityCoordinates(EntityUid.Invalid, (posLocal.X, posLocal.Y));
             }
-            
+
             return new EntityCoordinates(grid.GridEntityId, (posLocal.X, posLocal.Y));
         }
 
@@ -473,11 +473,11 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Transforms global world coordinates to tile indices relative to grid origin.
+        ///     Transforms entity coordinates to tile indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToTile(EntityCoordinates gridPos)
+        public MapIndices CoordinatesToTile(EntityCoordinates coords)
         {
-            var local = WorldToLocal(gridPos.ToMapPos(_entityManager));
+            var local = WorldToLocal(coords.ToMapPos(_entityManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new MapIndices(x, y);

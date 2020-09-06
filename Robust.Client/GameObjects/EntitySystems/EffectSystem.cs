@@ -59,9 +59,9 @@ namespace Robust.Client.GameObjects
         {
             if (message.AttachedEntityUid != null && message.Coordinates != default)
             {
-                Logger.Warning("Set both an AttachedEntityUid and GridCoordinates on an EffectSystemMessage for sprite {0} which is not supported!", message.EffectSprite);
+                Logger.Warning("Set both an AttachedEntityUid and EntityCoordinates on an EffectSystemMessage for sprite {0} which is not supported!", message.EffectSprite);
             }
-            
+
             var gameTime = gameTiming.CurTime;
             if (gameTime > message.DeathTime) //Did we already die in transit? That's pretty troubling isn't it
             {
@@ -121,14 +121,14 @@ namespace Robust.Client.GameObjects
             /// Entity that the effect is attached to
             /// </summary>
             public IEntity? AttachedEntity { get; set; }
-            
+
             public EntityUid? AttachedEntityUid { get; }
-            
+
             /// <summary>
             /// Offset relative to the attached entity
             /// </summary>
             public Vector2 AttachedOffset { get; }
-            
+
             /// <summary>
             /// Effect position relative to the emit position
             /// </summary>
@@ -342,7 +342,7 @@ namespace Robust.Client.GameObjects
         private sealed class EffectOverlay : Overlay
         {
             private readonly IPlayerManager _playerManager;
-            
+
             public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -371,7 +371,7 @@ namespace Robust.Client.GameObjects
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&  
+                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
                         _mapManager.GetGrid(effect.Coordinates.GetGridId(_entityManager)).ParentMapId != map)
                     {
                         continue;
@@ -386,9 +386,9 @@ namespace Robust.Client.GameObjects
                     }
 
                     var effectSprite = effect.EffectSprite;
-                    var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ?? 
+                    var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ??
                                                effect.Coordinates.ToMapPos(_entityManager);
-                    
+
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
 
                     var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);

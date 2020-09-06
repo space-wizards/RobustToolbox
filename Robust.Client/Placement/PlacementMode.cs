@@ -145,6 +145,7 @@ namespace Robust.Client.Placement
             }
         }
 
+        // This name is a nice reminder of our origins. Never forget.
         public IEnumerable<EntityCoordinates> GridCoordinates()
         {
             var placementdiff = MouseCoords.ToMapPos(pManager.EntityManager) - pManager.StartPoint.ToMapPos(pManager.EntityManager);

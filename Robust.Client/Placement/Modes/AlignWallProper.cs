@@ -25,7 +25,7 @@ namespace Robust.Client.Placement.Modes
                 return;
             }
 
-            var tileGridCoordinates = grid.GridTileToLocal(CurrentTile.GridIndices);
+            var tileCoordinates = grid.GridTileToLocal(CurrentTile.GridIndices);
 
             var offsets = new Vector2[]
             {
@@ -36,7 +36,7 @@ namespace Robust.Client.Placement.Modes
             };
 
             var closestNode = offsets
-                .Select(o => tileGridCoordinates.Offset(o))
+                .Select(o => tileCoordinates.Offset(o))
                 .OrderBy(node => node.TryDistance(pManager.EntityManager, MouseCoords, out var distance) ? distance : (float?) null)
                 .First(f => f != null);
 

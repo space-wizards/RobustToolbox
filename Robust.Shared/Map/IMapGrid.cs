@@ -76,9 +76,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
         /// </summary>
-        /// <param name="worldPos">The location of the tile in coordinates.</param>
+        /// <param name="coords">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
-        TileRef GetTileRef(EntityCoordinates worldPos);
+        TileRef GetTileRef(EntityCoordinates coords);
 
         /// <summary>
         ///     Gets a tile a the given grid indices. This will not create a new chunk.

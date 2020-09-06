@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -169,9 +170,9 @@ namespace Robust.Shared.GameObjects
             }
 
 #endif
-
             Initialized = true;
             Initializing = false;
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
         }
 
         /// <summary>

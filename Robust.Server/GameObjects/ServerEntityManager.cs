@@ -5,12 +5,14 @@ using System.Threading;
 using Prometheus;
 using Robust.Server.GameObjects.Components;
 using Robust.Server.GameObjects.Components.Container;
+using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -123,7 +125,7 @@ namespace Robust.Server.GameObjects
             {
                 entity.RunMapInit();
             }
-
+            
             return entity;
         }
 
@@ -701,7 +703,7 @@ namespace Robust.Server.GameObjects
         public override void DeleteEntity(IEntity e)
         {
             base.DeleteEntity(e);
-
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(e));
             _deletionHistory.Add((CurrentTick, e.Uid));
         }
 

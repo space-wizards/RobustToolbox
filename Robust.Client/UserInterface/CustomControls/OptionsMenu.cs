@@ -111,25 +111,24 @@ namespace Robust.Client.UserInterface.CustomControls
         }
         private void SetConfigLightingQuality(int value)
         {
-            if (value == 0)
+            switch (value)
             {
-                configManager.SetCVar("display.lightmapdivider", 8);
-                configManager.SetCVar("display.softshadows", false);
-            }
-            else if (value == 1)
-            {
-                configManager.SetCVar("display.lightmapdivider", 2);
-                configManager.SetCVar("display.softshadows", false);
-            }
-            else if (value == 2)
-            {
-                configManager.SetCVar("display.lightmapdivider", 2);
-                configManager.SetCVar("display.softshadows", true);
-            }
-            else
-            {
-                configManager.SetCVar("display.lightmapdivider", 1);
-                configManager.SetCVar("display.softshadows", true);
+                case 0:
+                    configManager.SetCVar("display.lightmapdivider", 8);
+                    configManager.SetCVar("display.softshadows", false);
+                    break;
+                case 1:
+                    configManager.SetCVar("display.lightmapdivider", 2);
+                    configManager.SetCVar("display.softshadows", false);
+                    break;
+                case 2:
+                    configManager.SetCVar("display.lightmapdivider", 2);
+                    configManager.SetCVar("display.softshadows", true);
+                    break;
+                case 3:
+                    configManager.SetCVar("display.lightmapdivider", 1);
+                    configManager.SetCVar("display.softshadows", true);
+                    break;
             }
         }
     }

@@ -1,7 +1,6 @@
-﻿using System;
-using Robust.Client.Interfaces.Graphics;
+﻿using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -20,11 +19,8 @@ namespace Robust.Client.Graphics.ClientEye
         /// </summary>
         public const int PixelsPerMeter = 32;
 
-#pragma warning disable 649, CS8618
-        // ReSharper disable twice NotNullMemberIsNotInitialized
-        [Dependency] private readonly IMapManager _mapManager;
-        [Dependency] private readonly IClyde _displayManager;
-#pragma warning restore 649, CS8618
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         // We default to this when we get set to a null eye.
         private readonly FixedEye _defaultEye = new FixedEye();
@@ -102,10 +98,9 @@ namespace Robust.Client.Graphics.ClientEye
         }
 
         /// <inheritdoc />
-        public ScreenCoordinates WorldToScreen(GridCoordinates point)
+        public ScreenCoordinates CoordinatesToScreen(EntityCoordinates point)
         {
-            var worldCoords = _mapManager.GetGrid(point.GridID).LocalToWorld(point);
-            return new ScreenCoordinates(WorldToScreen(worldCoords.Position));
+            return MapToScreen(point.ToMap(_entityManager));
         }
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)

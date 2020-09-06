@@ -101,19 +101,19 @@ namespace Robust.Shared.GameObjects
         public abstract IEntity CreateEntityUninitialized(string? prototypeName);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
 
         /// <inheritdoc />
         public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntity(string? protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
 
         /// <inheritdoc />
         public abstract IEntity SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <inheritdoc />
-        public abstract IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates);
+        public abstract IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
@@ -156,8 +156,8 @@ namespace Robust.Shared.GameObjects
             foreach (var entity in _entityTreesPerMap[mapId].Query(position, approximate))
             {
                 var transform = entity.Transform;
-                if (MathHelper.CloseTo(transform.GridPosition.X, position.X) &&
-                    MathHelper.CloseTo(transform.GridPosition.Y, position.Y))
+                if (MathHelper.CloseTo(transform.Coordinates.X, position.X) &&
+                    MathHelper.CloseTo(transform.Coordinates.Y, position.Y))
                 {
                     yield return entity;
                 }
@@ -424,9 +424,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false)
         {
-            var mapPos = position.ToMap(_mapManager);
+            var mapPos = position.ToMap(this);
             return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, approximate);
         }
 
@@ -438,7 +438,7 @@ namespace Robust.Shared.GameObjects
                 return GetEntitiesIntersecting(entity.Transform.MapID, component.WorldAABB, approximate);
             }
 
-            return GetEntitiesIntersecting(entity.Transform.GridPosition, approximate);
+            return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
         }
 
         /// <inheritdoc />
@@ -470,11 +470,12 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false)
         {
-            var aabb = new Box2(position.Position - new Vector2(range / 2, range / 2),
-                position.Position + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GridID).ParentMapId, aabb, approximate);
+            var mapPosition = position.ToMapPos(this);
+            var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
+                mapPosition + new Vector2(range / 2, range / 2));
+            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GetGridId(this)).ParentMapId, aabb, approximate);
         }
 
         /// <inheritdoc />
@@ -499,14 +500,14 @@ namespace Robust.Shared.GameObjects
                 return GetEntitiesInRange(entity.Transform.MapID, component.WorldAABB, range, approximate);
             }
 
-            return GetEntitiesInRange(entity.Transform.GridPosition, range, approximate);
+            return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction,
+        public IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
             float arcWidth, bool approximate = false)
         {
-            var position = coordinates.ToMap(_mapManager).Position;
+            var position = coordinates.ToMap(this).Position;
 
             foreach (var entity in GetEntitiesInRange(coordinates, range * 2, approximate))
             {

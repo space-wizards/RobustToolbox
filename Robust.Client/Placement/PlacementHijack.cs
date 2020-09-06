@@ -7,12 +7,12 @@ namespace Robust.Client.Placement
     {
         public PlacementManager Manager { get; internal set; } = default!;
 
-        public virtual bool HijackPlacementRequest(GridCoordinates coordinates)
+        public virtual bool HijackPlacementRequest(EntityCoordinates coordinates)
         {
             return false;
         }
 
-        public virtual bool HijackDeletion(GridCoordinates coordinates)
+        public virtual bool HijackDeletion(EntityCoordinates coordinates)
         {
             return false;
         }

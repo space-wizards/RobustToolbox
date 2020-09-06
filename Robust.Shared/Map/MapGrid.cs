@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -55,6 +56,7 @@ namespace Robust.Shared.Map
         private readonly Dictionary<MapIndices, IMapChunkInternal> _chunks = new Dictionary<MapIndices, IMapChunkInternal>();
 
         private readonly IMapManagerInternal _mapManager;
+        private readonly IEntityManager _entityManager;
         private bool _hasGravity;
 
         /// <summary>
@@ -65,10 +67,11 @@ namespace Robust.Shared.Map
         /// <param name="chunkSize">The dimension of this square chunk.</param>
         /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
         /// <param name="parentMapId">Parent map identifier.</param>
-        internal MapGrid(IMapManagerInternal mapManager, GridId gridIndex, ushort chunkSize, float snapSize,
+        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, float snapSize,
             MapId parentMapId)
         {
             _mapManager = mapManager;
+            _entityManager = entityManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
             SnapSize = snapSize;
@@ -180,9 +183,9 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <inheritdoc />
-        public TileRef GetTileRef(GridCoordinates worldPos)
+        public TileRef GetTileRef(EntityCoordinates coords)
         {
-            return GetTileRef(WorldToTile(worldPos));
+            return GetTileRef(CoordinatesToTile(coords));
         }
 
         /// <inheritdoc />
@@ -214,9 +217,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(GridCoordinates worldPos, Tile tile)
+        public void SetTile(EntityCoordinates coords, Tile tile)
         {
-            var localTile = WorldToTile(worldPos);
+            var localTile = CoordinatesToTile(coords);
             SetTile(new MapIndices(localTile.X, localTile.Y), tile);
         }
 
@@ -274,9 +277,24 @@ namespace Robust.Shared.Map
         {
             var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius, worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
 
-            foreach(var tile in GetTilesIntersecting(aabb, ignoreEmpty))
+            foreach (var tile in GetTilesIntersecting(aabb, ignoreEmpty))
             {
-                if (GridTileToLocal(tile.GridIndices).Distance(_mapManager, new GridCoordinates(worldArea.Position,tile.GridIndex)) <= worldArea.Radius)
+                var local = GridTileToLocal(tile.GridIndices);
+                var gridId = tile.GridIndex;
+
+                if (!_mapManager.TryGetGrid(gridId, out var grid))
+                {
+                    continue;
+                }
+
+                var to = new EntityCoordinates(grid.GridEntityId, worldArea.Position);
+
+                if (!local.TryDistance(_entityManager, to, out var distance))
+                {
+                    continue;
+                }
+
+                if (distance <= worldArea.Radius)
                 {
                     if (predicate == null || predicate(tile))
                     {
@@ -326,9 +344,9 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset)
+        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset)
         {
-            return GetSnapGridCell(SnapGridCellFor(worldPos, offset), offset);
+            return GetSnapGridCell(SnapGridCellFor(coords, offset), offset);
         }
 
         /// <inheritdoc />
@@ -339,11 +357,11 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices SnapGridCellFor(GridCoordinates gridPos, SnapGridOffset offset)
+        public MapIndices SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
         {
-            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(gridPos.GridID).ParentMapId);
+            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(coords.GetGridId(_entityManager)).ParentMapId);
 
-            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridCellFor(local, offset);
         }
 
@@ -376,9 +394,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
         {
-            AddToSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            AddToSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
         }
 
         /// <inheritdoc />
@@ -389,9 +407,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(GridCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
         {
-            RemoveFromSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            RemoveFromSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
         }
 
         private (IMapChunk, MapIndices) ChunkAndOffsetForTile(MapIndices pos)
@@ -413,19 +431,17 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public GridCoordinates MapToGrid(MapCoordinates posWorld)
+        public EntityCoordinates MapToGrid(MapCoordinates posWorld)
         {
             if(posWorld.MapId != ParentMapId)
                 throw new ArgumentException($"Grid {Index} is on map {ParentMapId}, but coords are on map {posWorld.MapId}.", nameof(posWorld));
 
-            return new GridCoordinates(WorldToLocal(posWorld.Position), Index);
-        }
+            if (!_mapManager.TryGetGrid(Index, out var grid))
+            {
+                return new EntityCoordinates(EntityUid.Invalid, (posWorld.X, posWorld.Y));
+            }
 
-        /// <inheritdoc />
-        public GridCoordinates LocalToWorld(GridCoordinates posLocal)
-        {
-            return new GridCoordinates(posLocal.Position + WorldPosition,
-                _mapManager.GetDefaultGridId(_mapManager.GetGrid(posLocal.GridID).ParentMapId));
+            return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));
         }
 
         /// <inheritdoc />
@@ -443,11 +459,11 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Transforms global world coordinates to tile indices relative to grid origin.
+        ///     Transforms entity coordinates to tile indices relative to grid origin.
         /// </summary>
-        public MapIndices WorldToTile(GridCoordinates gridPos)
+        public MapIndices CoordinatesToTile(EntityCoordinates coords)
         {
-            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            var local = WorldToLocal(coords.ToMapPos(_entityManager));
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new MapIndices(x, y);
@@ -456,9 +472,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Transforms global world coordinates to chunk indices relative to grid origin.
         /// </summary>
-        public MapIndices LocalToChunkIndices(GridCoordinates gridPos)
+        public MapIndices LocalToChunkIndices(EntityCoordinates gridPos)
         {
-            var local = WorldToLocal(gridPos.ToMapPos(_mapManager));
+            var local = WorldToLocal(gridPos.ToMapPos(_entityManager));
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new MapIndices(x, y);
@@ -489,9 +505,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public GridCoordinates GridTileToLocal(MapIndices gridTile)
+        public EntityCoordinates GridTileToLocal(MapIndices gridTile)
         {
-            return new GridCoordinates(gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f), this);
+            return new EntityCoordinates(GridEntityId, (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 
         public Vector2 GridTileToWorldPos(MapIndices gridTile)

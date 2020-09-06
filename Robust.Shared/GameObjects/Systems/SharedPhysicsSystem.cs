@@ -341,8 +341,8 @@ namespace Robust.Shared.GameObjects.Systems
                 return (0f, 0f);
 
             var location = body.Owner.Transform;
-            var grid = _mapManager.GetGrid(location.GridPosition.GridID);
-            var tile = grid.GetTileRef(location.GridPosition);
+            var grid = _mapManager.GetGrid(location.Coordinates.GetGridId(EntityManager));
+            var tile = grid.GetTileRef(location.Coordinates);
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
             return (tileDef.Friction, grid.HasGravity ? 9.8f : 0f);
         }

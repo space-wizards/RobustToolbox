@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -47,7 +48,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestCreation()
         {
-            var entity = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
+            var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
             var container = ContainerManagerComponent.Create<Container>("dummy", entity);
 
@@ -84,8 +85,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestInsertion()
         {
-            var owner = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
-            var inserted = EntityManager.SpawnEntity("dummy", new GridCoordinates(0,0,new GridId(1)));
+            var owner = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var inserted = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var transform = inserted.Transform;
 
             var container = ContainerManagerComponent.Create<Container>("dummy", owner);
@@ -110,10 +111,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestNestedRemoval()
         {
-            var owner = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
-            var inserted = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var owner = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
+            var inserted = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var transform = inserted.Transform;
-            var entity = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var entity = EntityManager.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
             var container = ContainerManagerComponent.Create<Container>("dummy", owner);
             Assert.That(container.Insert(inserted), Is.True);
@@ -134,10 +135,11 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [Test]
         public void TestNestedRemovalWithDenial()
         {
-            var entityOne = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
-            var entityTwo = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
-            var entityThree = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
-            var entityItem = EntityManager.SpawnEntity("dummy", new GridCoordinates(0, 0, new GridId(1)));
+            var coordinates = new EntityCoordinates(new EntityUid(1), (0, 0));
+            var entityOne = EntityManager.SpawnEntity("dummy", coordinates);
+            var entityTwo = EntityManager.SpawnEntity("dummy", coordinates);
+            var entityThree = EntityManager.SpawnEntity("dummy", coordinates);
+            var entityItem = EntityManager.SpawnEntity("dummy", coordinates);
 
             var container = ContainerManagerComponent.Create<Container>("dummy", entityOne);
             var container2 = ContainerManagerComponent.Create<ContainerOnlyContainer>("dummy", entityTwo);

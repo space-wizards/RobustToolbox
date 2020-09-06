@@ -174,9 +174,9 @@ namespace Robust.Client.ViewVariables
                 return new ViewVariablesPropertyEditorUIBox2(ViewVariablesPropertyEditorUIBox2.BoxType.UIBox2i);
             }
 
-            if (type == typeof(GridCoordinates))
+            if (type == typeof(EntityCoordinates))
             {
-                return new ViewVariablesPropertyEditorGridLocalCoordinates();
+                return new ViewVariablesPropertyEditorEntityCoordinates();
             }
 
             if (type == typeof(EntityUid))

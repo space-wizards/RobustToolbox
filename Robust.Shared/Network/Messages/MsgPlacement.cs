@@ -23,7 +23,7 @@ namespace Robust.Shared.Network.Messages
         public bool IsTile { get; set; }
         public ushort TileType { get; set; }
         public string EntityTemplateName { get; set; }
-        public GridCoordinates GridCoordinates { get; set; }
+        public EntityCoordinates EntityCoordinates { get; set; }
         public Direction DirRcv { get; set; }
         public EntityUid EntityUid { get; set; }
 
@@ -43,7 +43,7 @@ namespace Robust.Shared.Network.Messages
                     if (IsTile) TileType = buffer.ReadUInt16();
                     else EntityTemplateName = buffer.ReadString();
 
-                    GridCoordinates = buffer.ReadGridLocalCoordinates();
+                    EntityCoordinates = buffer.ReadEntityCoordinates();
                     DirRcv = (Direction)buffer.ReadByte();
                     break;
                 case PlacementManagerMessage.StartPlacement:
@@ -73,7 +73,7 @@ namespace Robust.Shared.Network.Messages
                     if(IsTile) buffer.Write(TileType);
                     else buffer.Write(EntityTemplateName);
 
-                    buffer.Write(GridCoordinates);
+                    buffer.Write(EntityCoordinates);
                     buffer.Write((byte)DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:

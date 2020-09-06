@@ -157,7 +157,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapManager.CreateMap();
             var grid = mapManager.CreateGrid(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
-            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
             // Grids aren't parented to other grids.
             Assert.That(gridEnt.Transform.Coordinates.GetGridId(entityManager), Is.EqualTo(GridId.Invalid));
@@ -188,7 +188,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapManager.CreateMap();
             var grid = mapManager.CreateGrid(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
-            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
             Assert.That(gridEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
             Assert.That(newEnt.Transform.Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
@@ -204,7 +204,7 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGrid(mapId);
             var mapEnt = mapManager.GetMapEntity(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
-            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
             Assert.That(mapEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
             Assert.That(gridEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
@@ -226,7 +226,7 @@ namespace Robust.UnitTesting.Shared.Map
             var grid = mapManager.CreateGrid(mapId);
             var mapEnt = mapManager.GetMapEntity(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
-            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(Vector2.Zero, grid.Index));
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
             Assert.That(mapEnt.Transform.Coordinates.TryGetParent(entityManager, out var mapEntParent), Is.EqualTo(true));
             Assert.That(mapEntParent, Is.EqualTo(mapEnt));
@@ -274,13 +274,50 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapManager.CreateMap();
             var grid = mapManager.CreateGrid(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
-            var newEnt = entityManager.CreateEntityUninitialized("dummy", new GridCoordinates(entPos, grid.Index));
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, entPos));
 
             Assert.That(newEnt.Transform.Coordinates.ToMap(entityManager), Is.EqualTo(new MapCoordinates(entPos, mapId)));
 
             gridEnt.Transform.LocalPosition += gridPos;
 
             Assert.That(newEnt.Transform.Coordinates.ToMap(entityManager), Is.EqualTo(new MapCoordinates(entPos + gridPos, mapId)));
+        }
+
+        [Test]
+        public void WithEntityId()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapManager = IoCManager.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var mapEnt = mapManager.GetMapEntity(mapId);
+            var grid = mapManager.CreateGrid(mapId);
+            var gridEnt = entityManager.GetEntity(grid.GridEntityId);
+            var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
+
+            Assert.That(newEnt.Transform.Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.Zero));
+
+            newEnt.Transform.LocalPosition = Vector2.One;
+
+            Assert.That(newEnt.Transform.Coordinates.Position, Is.EqualTo(Vector2.One));
+            Assert.That(newEnt.Transform.Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.One));
+
+            gridEnt.Transform.LocalPosition = Vector2.One;
+
+            Assert.That(newEnt.Transform.Coordinates.Position, Is.EqualTo(Vector2.One));
+            Assert.That(newEnt.Transform.Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(new Vector2(2, 2)));
+
+            var newEntTwo = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(newEnt.Uid, Vector2.Zero));
+
+            Assert.That(newEntTwo.Transform.Coordinates.Position, Is.EqualTo(Vector2.Zero));
+            Assert.That(newEntTwo.Transform.Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(newEnt.Transform.Coordinates.WithEntityId(mapEnt).Position));
+            Assert.That(newEntTwo.Transform.Coordinates.WithEntityId(gridEnt).Position, Is.EqualTo(newEnt.Transform.Coordinates.Position));
+
+            newEntTwo.Transform.LocalPosition = -Vector2.One;
+
+            Assert.That(newEntTwo.Transform.Coordinates.Position, Is.EqualTo(-Vector2.One));
+            Assert.That(newEntTwo.Transform.Coordinates.WithEntityId(mapEnt).Position, Is.EqualTo(Vector2.One));
+            Assert.That(newEntTwo.Transform.Coordinates.WithEntityId(gridEnt).Position, Is.EqualTo(Vector2.Zero));
         }
     }
 }

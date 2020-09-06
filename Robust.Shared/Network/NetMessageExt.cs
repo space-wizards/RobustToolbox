@@ -8,17 +8,17 @@ namespace Robust.Shared.Network
 {
     public static class NetMessageExt
     {
-        public static GridCoordinates ReadGridLocalCoordinates(this NetIncomingMessage message)
+        public static EntityCoordinates ReadEntityCoordinates(this NetIncomingMessage message)
         {
-            var gridId = new GridId(message.ReadInt32());
+            var entityUid = new EntityUid(message.ReadInt32());
             var vector = message.ReadVector2();
 
-            return new GridCoordinates(vector, gridId);
+            return new EntityCoordinates(entityUid, vector);
         }
 
-        public static void Write(this NetOutgoingMessage message, GridCoordinates coordinates)
+        public static void Write(this NetOutgoingMessage message, EntityCoordinates coordinates)
         {
-            message.Write(coordinates.GridID.Value);
+            message.Write(coordinates.EntityId);
             message.Write(coordinates.Position);
         }
 

@@ -5,6 +5,7 @@ using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -228,9 +229,11 @@ namespace Robust.Server.Console.Commands
             if(player?.AttachedEntity == null)
                 return;
 
-            var pos = player.AttachedEntity.Transform.GridPosition;
+            var pos = player.AttachedEntity.Transform.Coordinates;
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var gridId = pos.GetGridId(entityManager);
 
-            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(pos.GridID).ParentMapId} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(gridId).ParentMapId} GridID:{gridId} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 

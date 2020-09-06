@@ -17,7 +17,7 @@ namespace Robust.Server.Console.Commands
             var ent = IoCManager.Resolve<IServerEntityManager>();
             if (player?.AttachedEntity != null)
             {
-                ent.SpawnEntity(args[0], player.AttachedEntity.Transform.GridPosition);
+                ent.SpawnEntity(args[0], player.AttachedEntity.Transform.Coordinates);
             }
         }
     }

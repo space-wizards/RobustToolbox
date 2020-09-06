@@ -150,11 +150,11 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             return results;
         }
 
-        private HashSet<GridTileLookupNode> GetOrCreateNodes(GridCoordinates coordinates, Box2 box)
+        private HashSet<GridTileLookupNode> GetOrCreateNodes(EntityCoordinates coordinates, Box2 box)
         {
             var results = new HashSet<GridTileLookupNode>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(_mapManager.GetGrid(coordinates.GridID).ParentMapId, box))
+            foreach (var grid in _mapManager.FindGridsIntersecting(_mapManager.GetGrid(coordinates.GetGridId(EntityManager)).ParentMapId, box))
             {
                 foreach (var tile in grid.GetTilesIntersecting(box))
                 {
@@ -210,7 +210,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                 return new Box2(collidableComponent.WorldAABB.BottomLeft + 0.01f, collidableComponent.WorldAABB.TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
-            return Box2.CenteredAround(entity.Transform.GridPosition.Position, Vector2.One / 2);
+            return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
         }
 
         public override void Initialize()
@@ -324,7 +324,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         /// <param name="moveEvent"></param>
         private void HandleEntityMove(MoveEvent moveEvent)
         {
-            if (moveEvent.Sender.Deleted || moveEvent.NewPosition.GridID == GridId.Invalid)
+            if (moveEvent.Sender.Deleted || moveEvent.NewPosition.GetGridId(EntityManager) == GridId.Invalid || !moveEvent.NewPosition.IsValid(EntityManager))
             {
                 HandleEntityRemove(moveEvent.Sender);
                 return;

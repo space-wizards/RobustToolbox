@@ -24,14 +24,14 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
     public sealed class GridTileLookupSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        
-        private readonly Dictionary<GridId, Dictionary<MapIndices, GridTileLookupChunk>> _graph = 
+
+        private readonly Dictionary<GridId, Dictionary<MapIndices, GridTileLookupChunk>> _graph =
                      new Dictionary<GridId, Dictionary<MapIndices, GridTileLookupChunk>>();
 
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
-        private readonly Dictionary<IEntity, HashSet<GridTileLookupNode>> _lastKnownNodes = 
+        private readonly Dictionary<IEntity, HashSet<GridTileLookupNode>> _lastKnownNodes =
                      new Dictionary<IEntity, HashSet<GridTileLookupNode>>();
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 throw new InvalidOperationException("Can't get grid tile intersecting entities for invalid grid");
             }
-            
+
             if (!_graph.TryGetValue(gridId, out var chunks))
             {
                 throw new InvalidOperationException($"Unable to find grid {gridId} for TileLookup");
@@ -83,7 +83,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         public List<MapIndices> GetIndices(IEntity entity)
         {
             var results = new List<MapIndices>();
-            
+
             if (!_lastKnownNodes.TryGetValue(entity, out var nodes))
             {
                 return results;
@@ -129,7 +129,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 throw new InvalidOperationException($"Can't get nodes for deleted entity {entity.Name}!");
             }
-            
+
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))
             {
                 return nodes;
@@ -153,7 +153,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         private HashSet<GridTileLookupNode> GetOrCreateNodes(GridCoordinates coordinates, Box2 box)
         {
             var results = new HashSet<GridTileLookupNode>();
-            
+
             foreach (var grid in _mapManager.FindGridsIntersecting(_mapManager.GetGrid(coordinates.GridID).ParentMapId, box))
             {
                 foreach (var tile in grid.GetTilesIntersecting(box))
@@ -161,7 +161,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                     results.Add(GetOrCreateNode(grid.Index, tile.GridIndices));
                 }
             }
-            
+
             return results;
         }
 
@@ -187,7 +187,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         {
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<MapIndices>>();
-            
+
             foreach (var grid in _mapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
             {
                 var indices = new List<MapIndices>();
@@ -196,10 +196,10 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                 {
                     indices.Add(tile.GridIndices);
                 }
-                
+
                 results[grid.Index] = indices;
             }
-            
+
             return results;
         }
 
@@ -222,7 +222,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             _mapManager.OnGridRemoved += HandleGridRemoval;
             _mapManager.TileChanged += HandleTileChanged;
         }
-        
+
         public override void Shutdown()
         {
             base.Shutdown();
@@ -254,10 +254,10 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         private void HandleGridRemoval(GridId gridId)
         {
             var toRemove = new List<IEntity>();
-            
+
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if (entity.Transform.GridID == gridId)
+                if (entity.Deleted || entity.Transform.GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -265,7 +265,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 _lastKnownNodes.Remove(entity);
             }
-            
+
             _graph.Remove(gridId);
         }
 
@@ -283,7 +283,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 
             var entityNodes = GetOrCreateNodes(entity);
             var newIndices = new Dictionary<GridId, List<MapIndices>>();
-            
+
             foreach (var node in entityNodes)
             {
                 node.AddEntity(entity);
@@ -292,7 +292,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                     existing = new List<MapIndices>();
                     newIndices[node.ParentChunk.GridId] = existing;
                 }
-                
+
                 existing.Add(node.Indices);
             }
 
@@ -350,7 +350,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 return;
             }
-            
+
             var toRemove = oldNodes.Where(oldNode => !newNodes.Contains(oldNode));
             var toAdd = newNodes.Where(newNode => !oldNodes.Contains(newNode));
 
@@ -372,7 +372,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                     existing = new List<MapIndices>();
                     newIndices[node.ParentChunk.GridId] = existing;
                 }
-                
+
                 existing.Add(node.Indices);
             }
 

@@ -96,6 +96,12 @@ namespace Robust.Shared.Interfaces.Network
         void ServerSendToMany(NetMessage message, List<INetChannel> recipients);
 
         /// <summary>
+        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        void ClientSendMessage(NetMessage message);
+
+        /// <summary>
         ///     An incoming connection is being received.
         /// </summary>
         event EventHandler<NetConnectingArgs> Connecting;
@@ -137,5 +143,6 @@ namespace Robust.Shared.Interfaces.Network
         T CreateNetMessage<T>() where T : NetMessage;
 
         #endregion StringTable
+
     }
 }

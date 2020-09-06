@@ -374,7 +374,7 @@ namespace Robust.Shared.Map
                 return new MapIndices();
 
             var gridId = GetGridId(entityManager);
-            
+
             if (gridId != GridId.Invalid)
             {
                 return mapManager.GetGrid(gridId).GetTileRef(this).GridIndices;
@@ -394,6 +394,37 @@ namespace Robust.Shared.Map
         public EntityCoordinates WithPosition(Vector2 newPosition)
         {
             return new EntityCoordinates(EntityId, newPosition);
+        }
+
+        /// <summary>
+        ///     Returns a new set of EntityCoordinates local to a new entity.
+        /// </summary>
+        /// <param name="entityManager">The Entity Manager holding this entity</param>
+        /// <param name="entityId">The entity that the new coordinates will be local to</param>
+        /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
+        public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
+        {
+            if(!entityManager.TryGetEntity(entityId, out var entity))
+                return new EntityCoordinates(entityId, Vector2.Zero);
+
+            return WithEntityId(entity);
+        }
+
+        /// <summary>
+        ///     Returns a new set of EntityCoordinates local to a new entity.
+        /// </summary>
+        /// <param name="entity">The entity that the new coordinates will be local to</param>
+        /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
+        public EntityCoordinates WithEntityId(IEntity entity)
+        {
+            var entityManager = entity.EntityManager;
+            var mapPos = ToMap(entity.EntityManager);
+
+            if(!IsValid(entityManager) || entity.Transform.MapID != mapPos.MapId)
+                return new EntityCoordinates(entity.Uid, Vector2.Zero);
+
+            var localPos = entity.Transform.InvWorldMatrix.Transform(mapPos.Position);
+            return new EntityCoordinates(entity.Uid, localPos);
         }
 
         /// <summary>

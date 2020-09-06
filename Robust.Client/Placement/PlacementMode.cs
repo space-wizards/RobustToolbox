@@ -111,7 +111,7 @@ namespace Robust.Client.Placement
             var size = SpriteToDraw!.Size;
             foreach (var coordinate in locationcollection)
             {
-                var worldPos = pManager.MapManager.GetGrid(coordinate.GetGridId(pManager.EntityManager)).LocalToWorld(coordinate).Position;
+                var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 handle.DrawTexture(SpriteToDraw, pos, color);

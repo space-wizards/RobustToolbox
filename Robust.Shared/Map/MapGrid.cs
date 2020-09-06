@@ -217,9 +217,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void SetTile(EntityCoordinates worldPos, Tile tile)
+        public void SetTile(EntityCoordinates coords, Tile tile)
         {
-            var localTile = CoordinatesToTile(worldPos);
+            var localTile = CoordinatesToTile(coords);
             SetTile(new MapIndices(localTile.X, localTile.Y), tile);
         }
 
@@ -344,9 +344,9 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
-        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset)
+        public IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset)
         {
-            return GetSnapGridCell(SnapGridCellFor(worldPos, offset), offset);
+            return GetSnapGridCell(SnapGridCellFor(coords, offset), offset);
         }
 
         /// <inheritdoc />
@@ -357,11 +357,11 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public MapIndices SnapGridCellFor(EntityCoordinates gridPos, SnapGridOffset offset)
+        public MapIndices SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
         {
-            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(gridPos.GetGridId(_entityManager)).ParentMapId);
+            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(coords.GetGridId(_entityManager)).ParentMapId);
 
-            var local = WorldToLocal(gridPos.ToMapPos(_entityManager));
+            var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridCellFor(local, offset);
         }
 
@@ -394,9 +394,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void AddToSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+        public void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
         {
-            AddToSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            AddToSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
         }
 
         /// <inheritdoc />
@@ -407,9 +407,9 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void RemoveFromSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap)
+        public void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap)
         {
-            RemoveFromSnapGridCell(SnapGridCellFor(worldPos, offset), offset, snap);
+            RemoveFromSnapGridCell(SnapGridCellFor(coords, offset), offset, snap);
         }
 
         private (IMapChunk, MapIndices) ChunkAndOffsetForTile(MapIndices pos)
@@ -442,20 +442,6 @@ namespace Robust.Shared.Map
             }
 
             return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));
-        }
-
-        /// <inheritdoc />
-        public EntityCoordinates LocalToWorld(EntityCoordinates posLocal)
-        {
-            var mapId = posLocal.GetMapId(_entityManager);
-            var defaultGridId = _mapManager.GetDefaultGridId(mapId);
-
-            if (!_mapManager.TryGetGrid(defaultGridId, out var grid))
-            {
-                return new EntityCoordinates(EntityUid.Invalid, (posLocal.X, posLocal.Y));
-            }
-
-            return new EntityCoordinates(grid.GridEntityId, (posLocal.X, posLocal.Y));
         }
 
         /// <inheritdoc />

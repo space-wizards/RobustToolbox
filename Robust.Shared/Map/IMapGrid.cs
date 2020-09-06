@@ -96,9 +96,9 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Replaces a single tile inside of the grid.
         /// </summary>
-        /// <param name="worldPos"></param>
+        /// <param name="coords"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(EntityCoordinates worldPos, Tile tile);
+        void SetTile(EntityCoordinates coords, Tile tile);
 
         /// <summary>
         ///     Modifies a single tile inside of the chunk.
@@ -122,17 +122,17 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
-        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset);
         IEnumerable<SnapGridComponent> GetSnapGridCell(MapIndices pos, SnapGridOffset offset);
 
-        MapIndices SnapGridCellFor(EntityCoordinates gridPos, SnapGridOffset offset);
+        MapIndices SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset);
         MapIndices SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
         MapIndices SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
 
         void AddToSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
-        void AddToSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
         void RemoveFromSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(EntityCoordinates worldPos, SnapGridOffset offset, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
 
         #endregion SnapGridAccess
 
@@ -149,13 +149,6 @@ namespace Robust.Shared.Map
         /// Transforms map coordinates to grid coordinates.
         /// </summary>
         EntityCoordinates MapToGrid(MapCoordinates posWorld);
-
-        /// <summary>
-        ///     Transforms world-space coordinates from the local grid origin to the global origin.
-        /// </summary>
-        /// <param name="posLocal">The world-space coordinates with local grid origin.</param>
-        /// <returns>The world-space coordinates with global origin.</returns>
-        EntityCoordinates LocalToWorld(EntityCoordinates posLocal);
 
         /// <summary>
         ///     Transforms local vectors into world space vectors

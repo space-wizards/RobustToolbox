@@ -307,6 +307,18 @@ namespace Lidgren.Network
 			m_readPosition = wasReadPosition;
 			return retval;
 		}
+
+		/// <summary>
+		/// Reads the string byte size prefix without advancing the read pointer.
+		/// Take note that this is the size in bytes, not the character length of the string.
+		/// </summary>
+		public int PeekStringSize()
+		{
+			int wasReadPosition = m_readPosition;
+			int byteLen = (int)ReadVariableUInt32();
+			m_readPosition = wasReadPosition;
+			return byteLen;
+		}
 	}
 }
 

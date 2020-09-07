@@ -74,7 +74,7 @@ namespace Robust.Client.Graphics.Clyde
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
         public override Vector2i ScreenSize => _framebufferSize;
-
+        public Vector2 DefaultWindowScale => _windowScale;
         public Vector2 MouseScreenPosition => _lastMousePos;
 
         public string GetKeyName(Keyboard.Key key)

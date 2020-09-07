@@ -65,6 +65,7 @@ namespace Robust.Client.UserInterface
         public PopupContainer ModalRoot { get; private set; } = default!;
         public Control? CurrentlyHovered { get; private set; } = default!;
         public float UIScale { get; private set; } = 1;
+        public float DefaultUIScale => _displayManager.DefaultWindowScale.X;
         public Control RootControl { get; private set; } = default!;
         public LayoutContainer WindowRoot { get; private set; } = default!;
         public LayoutContainer PopupRoot { get; private set; } = default!;
@@ -87,7 +88,7 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
-            UIScale = _configurationManager.GetCVar<float>("display.uiScale");
+            _uiScaleChanged(_configurationManager.GetCVar<float>("display.uiScale"));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -725,12 +726,12 @@ namespace Robust.Client.UserInterface
 
         void IPostInjectInit.PostInject()
         {
-            _configurationManager.RegisterCVar("display.uiScale", 1f, CVar.ARCHIVE, _uiScaleChanged);
+            _configurationManager.RegisterCVar("display.uiScale", 0f, CVar.ARCHIVE, _uiScaleChanged);
         }
 
         private void _uiScaleChanged(float newValue)
         {
-            UIScale = newValue;
+            UIScale = newValue == 0f ? DefaultUIScale : newValue;
 
             if (RootControl == null)
             {

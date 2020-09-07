@@ -33,6 +33,11 @@ namespace Robust.Client.Interfaces.UserInterface
         Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
+        /// <summary>
+        ///     Gets the default UIScale that we will use if <c>display.uiScale</c> gets set to 0.
+        ///     Based on the OS-assigned window scale factor.
+        /// </summary>
+        float DefaultUIScale { get; }
 
         /// <summary>
         ///     The "root" control to which all other controls are parented,

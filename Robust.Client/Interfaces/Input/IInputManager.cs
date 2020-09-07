@@ -1,7 +1,6 @@
-﻿using Robust.Shared;
-using Robust.Shared.IoC;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Input;
@@ -9,6 +8,8 @@ using Robust.Shared.Input.Binding;
 
 namespace Robust.Client.Interfaces.Input
 {
+    public delegate void KeyEventAction(KeyEventArgs keyEvent, KeyEventType type);
+
     /// <summary>
     ///     Manages key bindings, input commands and other misc. input systems.
     /// </summary>
@@ -23,30 +24,32 @@ namespace Robust.Client.Interfaces.Input
         IInputContextContainer Contexts { get; }
 
         void Initialize();
+        void SaveToUserData();
 
         void KeyDown(KeyEventArgs e);
         void KeyUp(KeyEventArgs e);
 
-        /// <summary>
-        /// Registers a new key binding in the input manager.
-        /// </summary>
-        /// <param name="function">The function the key binding is bound to.</param>
-        /// <param name="bindingType"></param>
-        /// <param name="baseKey"></param>
-        /// <param name="mod1"></param>
-        /// <param name="mod2"></param>
-        /// <param name="mod3"></param>
-        void RegisterBinding(BoundKeyFunction function, KeyBindingType bindingType,
-            Keyboard.Key baseKey, Keyboard.Key? mod1, Keyboard.Key? mod2, Keyboard.Key? mod3);
+        IKeyBinding RegisterBinding(in KeyBindingRegistration reg, bool markModified=true);
+
+        void RemoveBinding(IKeyBinding binding, bool markModified=true);
 
         /// <summary>
         ///     Gets a key binding according to the function it is bound to.
         /// </summary>
+        /// <remarks>
+        ///     Which keybind is returned if there are multiple for a key function is unspecified.
+        /// </remarks>
         /// <param name="function">The function the key binding is bound to.</param>
         /// <returns>The key binding.</returns>
+        /// <exception cref="KeyNotFoundException">
+        ///     Thrown if no there is no keybind for the specified function.
+        /// </exception>
         IKeyBinding GetKeyBinding(BoundKeyFunction function);
 
-        bool TryGetKeyBinding(BoundKeyFunction function, out IKeyBinding binding);
+        /// <remarks>
+        ///     Which keybind is returned if there are multiple for a key function is unspecified.
+        /// </remarks>
+        bool TryGetKeyBinding(BoundKeyFunction function, [NotNullWhen(true)] out IKeyBinding? binding);
 
         /// <summary>
         ///     Returns the input command bound to a key function.
@@ -79,5 +82,41 @@ namespace Robust.Client.Interfaces.Input
         ///     of buttons is bound to the specified key function.
         /// </summary>
         string GetKeyFunctionButtonString(BoundKeyFunction function);
+
+        /// <summary>
+        ///     Gets all the key bindings currently registered into the manager.
+        /// </summary>
+        IEnumerable<IKeyBinding> AllBindings { get; }
+
+        /// <summary>
+        ///     An event that gets fired before everything else when a key event comes in.
+        ///     For key down events, the event can be handled to block it.
+        /// </summary>
+        /// <remarks>
+        ///     Do not use this for regular input handling.
+        ///     This is a low-level API intended solely for stuff like the key rebinding menu.
+        /// </remarks>
+        event KeyEventAction FirstChanceOnKeyEvent;
+
+        event Action<IKeyBinding> OnKeyBindingAdded;
+        event Action<IKeyBinding> OnKeyBindingRemoved;
+
+        /// <summary>
+        ///     Gets all the keybinds bound to a specific function.
+        /// </summary>
+        IReadOnlyList<IKeyBinding> GetKeyBindings(BoundKeyFunction function);
+
+        /// <summary>
+        ///     Resets the bindings for a specific BoundKeyFunction to the defaults from the resource files.
+        /// </summary>
+        /// <param name="function">The key function to reset the bindings for.</param>
+        void ResetBindingsFor(BoundKeyFunction function);
+
+        /// <summary>
+        ///     Resets ALL the keybinds to the defaults from the resource files.
+        /// </summary>
+        void ResetAllBindings();
+
+        bool IsKeyFunctionModified(BoundKeyFunction function);
     }
 }

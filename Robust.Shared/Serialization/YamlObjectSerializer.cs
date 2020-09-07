@@ -724,7 +724,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
+                var instance = (ISelfSerialize) obj!;
                 return instance.Serialize();
             }
 

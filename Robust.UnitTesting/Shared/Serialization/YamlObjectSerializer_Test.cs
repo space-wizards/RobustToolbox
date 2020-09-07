@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using NUnit.Framework;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -236,6 +238,36 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(YamlObjectSerializer.IsSerializedEqual(dict, dict2), Is.True);
         }
 
+        [Test]
+        public void TestSelfSerialize()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            var field = new SelfSerializeTest {Value = 456};
+
+            reader.DataField(ref field, "foo", default);
+
+            Assert.That(mapping["foo"].AsString(), Is.EqualTo("456"));
+        }
+
+        [Test]
+        public void TestSelfDeserialize()
+        {
+            var dict = new YamlMappingNode
+            {
+                {"foo", "123"}
+            };
+
+            var reader = YamlObjectSerializer.NewReader(dict);
+
+            SelfSerializeTest field = default;
+
+            reader.DataField(ref field, "foo", default);
+
+            Assert.That(field.Value, Is.EqualTo(123));
+        }
+
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
@@ -285,6 +317,21 @@ namespace Robust.UnitTesting.Shared.Serialization
             public int Foo { get; set; }
             public string Bar { get; set; } = default!;
             public Color Baz { get; set; } = Color.Orange;
+        }
+
+        private struct SelfSerializeTest : ISelfSerialize
+        {
+            public int Value;
+
+            public void Deserialize(string value)
+            {
+                Value = int.Parse(value, CultureInfo.InvariantCulture);
+            }
+
+            public string Serialize()
+            {
+                return Value.ToString(CultureInfo.InvariantCulture);
+            }
         }
     }
 }

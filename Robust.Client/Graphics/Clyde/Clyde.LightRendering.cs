@@ -35,7 +35,8 @@ namespace Robust.Client.Graphics.Clyde
         // Various shaders used in the light rendering process.
         // We keep ClydeHandles into the _loadedShaders dict so they can be reloaded.
         // They're all .swsl now.
-        private ClydeHandle _lightShaderHandle;
+        private ClydeHandle _lightSoftShaderHandle;
+        private ClydeHandle _lightHardShaderHandle;
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
         private ClydeHandle _wallBleedBlurShaderHandle;
@@ -187,7 +188,8 @@ namespace Robust.Client.Graphics.Clyde
             }
 
 
-            _lightShaderHandle = LoadShaderHandle("/Shaders/Internal/light.swsl");
+            _lightSoftShaderHandle = LoadShaderHandle("/Shaders/Internal/light-soft.swsl");
+            _lightHardShaderHandle = LoadShaderHandle("/Shaders/Internal/light-hard.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
@@ -378,7 +380,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.Viewport(0, 0, lightW, lightH);
             CheckGlError();
 
-            var lightShader = _loadedShaders[_lightShaderHandle].Program;
+            var lightShader = _loadedShaders[_enableSoftShadows ? _lightSoftShaderHandle : _lightHardShaderHandle].Program;
             lightShader.Use();
 
             SetupGlobalUniformsImmediate(lightShader, ShadowTexture);
@@ -920,24 +922,29 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private Vector2i GetLightMapSize(Vector2i screenSize, bool? overrideSetting = null)
+        private Vector2i GetLightMapSize(Vector2i screenSize, bool furtherDivide = false)
         {
-            var setting = overrideSetting ?? _quartResLights;
-            if (!setting)
+            var divider = (float) _lightmapDivider;
+            if (furtherDivide)
             {
-                return screenSize;
+                divider *= 2;
             }
 
-            var w = (int) Math.Ceiling(screenSize.X / 2f);
-            var h = (int) Math.Ceiling(screenSize.Y / 2f);
+            var w = (int) Math.Ceiling(screenSize.X / divider);
+            var h = (int) Math.Ceiling(screenSize.Y / divider);
 
             return (w, h);
         }
 
-        protected override void HighResLightsChanged(bool newValue)
+        protected override void LightmapDividerChanged(int newValue)
         {
-            _quartResLights = !newValue;
+            _lightmapDivider = newValue;
             RegenAllLightRts();
+        }
+
+        protected override void SoftShadowsChanged(bool newValue)
+        {
+            _enableSoftShadows = newValue;
         }
     }
 }

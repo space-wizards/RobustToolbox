@@ -12,7 +12,6 @@ using Robust.Server.Interfaces.Timing;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -65,7 +64,7 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntityServer(prototypeName);
-            
+
             if (TryGetEntity(coordinates.EntityId, out var entity))
             {
                 newEntity.Transform.AttachParent(entity);
@@ -118,14 +117,14 @@ namespace Robust.Server.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            
+
             InitializeAndStartEntity((Entity) entity);
-            
+
             if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this)))
             {
                 entity.RunMapInit();
             }
-            
+
             return entity;
         }
 
@@ -957,9 +956,9 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override void Update(float frameTime)
+        public override void Update(float frameTime, Histogram? histogram)
         {
-            base.Update(frameTime);
+            base.Update(frameTime, histogram);
 
             EntitiesCount.Set(AllEntities.Count);
         }

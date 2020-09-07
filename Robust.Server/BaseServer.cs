@@ -61,6 +61,14 @@ namespace Robust.Server
             "robust_server_curtick",
             "The IGameTiming.CurTick of the server.");
 
+        private static readonly Histogram TickUsage = Metrics.CreateHistogram(
+            "robust_server_update_usage",
+            "Time usage of the main loop Update()s",
+            new HistogramConfiguration
+            {
+                LabelNames = new[] {"area"},
+                Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
+            });
 
         [Dependency] private readonly IConfigurationManager _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
@@ -208,10 +216,7 @@ namespace Robust.Server
                 _log.RootSawmill.AddHandler(_logHandler!);
             }
 
-            SelfLog.Enable(s =>
-            {
-                System.Console.WriteLine("SERILOG ERROR: {0}", s);
-            });
+            SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });
 
             if (!SetupLoki())
             {
@@ -242,9 +247,9 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir =  LoadConfigAndUserData ?
-                _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data") :
-                null;
+            var dataDir = LoadConfigAndUserData
+                ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
+                : null;
 
             // Set up the VFS
             _resources.Initialize(dataDir);
@@ -544,17 +549,38 @@ namespace Robust.Server
 
             UpdateTitle();
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            using (TickUsage.WithLabels("PreEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
 
-            timerManager.UpdateTimers(frameEventArgs);
-            _taskManager.ProcessPendingTasks();
+            using (TickUsage.WithLabels("Timers").NewTimer())
+            {
+                timerManager.UpdateTimers(frameEventArgs);
+            }
 
-            _components.CullRemovedComponents();
-            _entities.Update(frameEventArgs.DeltaSeconds);
+            using (TickUsage.WithLabels("AsyncTasks").NewTimer())
+            {
+                _taskManager.ProcessPendingTasks();
+            }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            using (TickUsage.WithLabels("ComponentCull").NewTimer())
+            {
+                _components.CullRemovedComponents();
+            }
 
-            _stateManager.SendGameStateUpdate();
+            // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
+            _entities.Update(frameEventArgs.DeltaSeconds, TickUsage);
+
+            using (TickUsage.WithLabels("PostEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("GameState").NewTimer())
+            {
+                _stateManager.SendGameStateUpdate();
+            }
 
             _watchdogApi.Heartbeat();
         }

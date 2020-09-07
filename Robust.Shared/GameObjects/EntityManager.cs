@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Prometheus;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
@@ -82,12 +83,27 @@ namespace Robust.Shared.GameObjects
             _componentManager.Clear();
         }
 
-        public virtual void Update(float frameTime)
+        public virtual void Update(float frameTime, Histogram? histogram)
         {
-            EntityNetworkManager.Update();
-            EntitySystemManager.Update(frameTime);
-            _eventBus.ProcessEventQueue();
-            CullDeletedEntities();
+            using (histogram?.WithLabels("EntityNet").NewTimer())
+            {
+                EntityNetworkManager.Update();
+            }
+
+            using (histogram?.WithLabels("EntitySystems").NewTimer())
+            {
+                EntitySystemManager.Update(frameTime);
+            }
+
+            using (histogram?.WithLabels("EntityEventBus").NewTimer())
+            {
+                _eventBus.ProcessEventQueue();
+            }
+
+            using (histogram?.WithLabels("EntityCull").NewTimer())
+            {
+                CullDeletedEntities();
+            }
         }
 
         public virtual void FrameUpdate(float frameTime)

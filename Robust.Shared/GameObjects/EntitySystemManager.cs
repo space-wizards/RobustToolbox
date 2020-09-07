@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Prometheus;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
@@ -14,6 +15,13 @@ namespace Robust.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
+        private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
+            "Amount of time spent processing each entity system", new HistogramConfiguration
+            {
+                LabelNames = new[] {"system"},
+                Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
+            });
+
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
@@ -21,6 +29,8 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore 649
 
         private readonly List<Type> _extraLoadedTypes = new List<Type>();
+
+        private readonly Stopwatch _stopwatch = new Stopwatch();
 
         /// <summary>
         /// Maps system types to instances.
@@ -218,11 +228,13 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var system in _updateOrder)
             {
+                _stopwatch.Restart();
+                var label = _tickUsageHistogram.WithLabels(system.GetType().Name);
 #if EXCEPTION_TOLERANCE
                 try
                 {
 #endif
-                system.Update(frameTime);
+                    system.Update(frameTime);
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)
@@ -230,6 +242,13 @@ namespace Robust.Shared.GameObjects
                     Logger.ErrorS("entsys", e.ToString());
                 }
 #endif
+
+                var elapsedTotalSeconds = _stopwatch.Elapsed.TotalSeconds;
+                if (system.GetType().Name == "PhysicsSystem")
+                {
+                    System.Console.WriteLine("{0}, {1}", elapsedTotalSeconds, _stopwatch.Elapsed.TotalMilliseconds);
+                }
+                label.Observe(elapsedTotalSeconds);
             }
         }
 

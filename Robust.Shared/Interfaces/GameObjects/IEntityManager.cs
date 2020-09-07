@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -17,7 +18,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
-        void Update(float frameTime);
+        void Update(float frameTime, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.

@@ -243,12 +243,7 @@ namespace Robust.Shared.GameObjects
                 }
 #endif
 
-                var elapsedTotalSeconds = _stopwatch.Elapsed.TotalSeconds;
-                if (system.GetType().Name == "PhysicsSystem")
-                {
-                    System.Console.WriteLine("{0}, {1}", elapsedTotalSeconds, _stopwatch.Elapsed.TotalMilliseconds);
-                }
-                label.Observe(elapsedTotalSeconds);
+                label.Observe(_stopwatch.Elapsed.TotalSeconds);
             }
         }
 

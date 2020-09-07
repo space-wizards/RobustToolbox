@@ -84,12 +84,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
+                var oldRotation = _localRotation;
+
                 if (_localRotation == value)
                     return;
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 SetRotation(value);
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
                 RebuildMatrices();
                 Dirty();
                 UpdateEntityTree();
@@ -803,5 +807,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
+    }
+
+    public class RotateEvent : EntitySystemMessage
+    {
+        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation)
+        {
+            Sender = sender;
+            OldRotation = oldRotation;
+            NewRotation = newRotation;
+        }
+
+        public IEntity Sender { get; }
+        public Angle OldRotation { get; }
+        public Angle NewRotation { get; }
     }
 }

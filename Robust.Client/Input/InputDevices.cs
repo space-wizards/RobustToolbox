@@ -181,6 +181,11 @@ namespace Robust.Client.Input
             Pause,
         }
 
+        public static bool IsMouseKey(this Key key)
+        {
+            return key >= Key.MouseLeft && key <= Key.MouseButton9;
+        }
+
         internal static Key ConvertGlfwKey(GlfwKey key)
         {
             if (_glfwKeyMap.TryGetValue(key, out var result))

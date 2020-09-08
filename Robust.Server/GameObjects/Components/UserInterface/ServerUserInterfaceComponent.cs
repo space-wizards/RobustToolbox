@@ -173,39 +173,14 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
         public void Toggle(IPlayerSession session)
         {
-            if (session == null)
+            if (_subscribedSessions.Contains(session))
             {
-                throw new ArgumentNullException(nameof(session));
+                Close(session);
             }
-
-            if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
-            {
-                throw new ArgumentException("Invalid session status.", nameof(session));
-            }
-
-            _subscribedSessions.Add(session);
-
-            SendMessage(new OpenBoundInterfaceMessage(), session);
-            if (_lastState != null)
-            {
-                SendMessage(new UpdateBoundStateMessage(_lastState));
-            }
-
-            if (!_isActive)
-            {
-                _isActive = true;
-                EntitySystem.Get<UserInterfaceSystem>()
-                    .ActivateInterface(this);
-            }
-
             else
             {
-                var msg = new CloseBoundInterfaceMessage();
-                SendMessage(msg, session);
-                CloseShared(session);
+                Open(session);
             }
-
-            session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
         }
 
         

@@ -20,11 +20,13 @@ namespace Robust.Client.Graphics
         /// </summary>
         [ViewVariables]
         public Vector2i Size { get; private set; }
+        [ViewVariables]
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
 
         /// <summary>
         ///     The original path of this RSI or null.
         /// </summary>
+        [ViewVariables]
         public ResourcePath? Path { get; }
 
         public State this[StateId key] => States[key];

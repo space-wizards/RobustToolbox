@@ -1508,22 +1508,30 @@ namespace Robust.Client.GameObjects
 
         private class Layer : ISpriteLayer
         {
-            private readonly SpriteComponent _parent;
+            [ViewVariables] private readonly SpriteComponent _parent;
 
-            public ShaderInstance? Shader;
-            public Texture? Texture;
+            [ViewVariables] public ShaderInstance? Shader;
+            [ViewVariables] public Texture? Texture;
 
-            public RSI? RSI;
-            public RSI.StateId State;
-            public float AnimationTimeLeft;
-            public float AnimationTime;
-            public int AnimationFrame;
+            [ViewVariables] public RSI? RSI;
+            [ViewVariables] public RSI.StateId State;
+            [ViewVariables] public float AnimationTimeLeft;
+            [ViewVariables] public float AnimationTime;
+            [ViewVariables] public int AnimationFrame;
+
+            [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale { get; set; } = Vector2.One;
+            [ViewVariables(VVAccess.ReadWrite)]
             public Angle Rotation { get; set; }
+            [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+            [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
+            [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated = true;
+            [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
+            [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
             public Layer(SpriteComponent parent)

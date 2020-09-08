@@ -15,6 +15,7 @@ namespace Robust.Server.GameObjects
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";
+        [ViewVariables]
         private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
 
         private bool _visible;

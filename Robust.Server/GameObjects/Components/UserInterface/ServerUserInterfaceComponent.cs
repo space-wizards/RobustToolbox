@@ -162,6 +162,54 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             _stateDirty = true;
         }
 
+        
+        /// <summary>
+        ///     Switches between closed and open for a specific client.
+        /// </summary>
+        /// <param name="session">The player session to toggle the UI on.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the session's status is <c>Connecting</c> or <c>Disconnected</c>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
+        public void Toggle(IPlayerSession session)
+        {
+            if (session == null)
+            {
+                throw new ArgumentNullException(nameof(session));
+            }
+
+            if (session.Status == SessionStatus.Connecting || session.Status == SessionStatus.Disconnected)
+            {
+                throw new ArgumentException("Invalid session status.", nameof(session));
+            }
+
+            _subscribedSessions.Add(session);
+
+            SendMessage(new OpenBoundInterfaceMessage(), session);
+            if (_lastState != null)
+            {
+                SendMessage(new UpdateBoundStateMessage(_lastState));
+            }
+
+            if (!_isActive)
+            {
+                _isActive = true;
+                EntitySystem.Get<UserInterfaceSystem>()
+                    .ActivateInterface(this);
+            }
+
+            else
+            {
+                var msg = new CloseBoundInterfaceMessage();
+                SendMessage(msg, session);
+                CloseShared(session);
+            }
+
+            session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
+        }
+
+        
+        
         /// <summary>
         ///     Opens this interface for a specific client.
         /// </summary>

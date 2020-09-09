@@ -24,8 +24,10 @@ namespace Robust.Client.GameObjects
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
+        [ViewVariables]
         private static bool _didRegisterSerializer;
 
+        [ViewVariables]
         private bool _appearanceDirty;
 
         public override void SetData(string key, object value)

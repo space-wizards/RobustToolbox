@@ -92,7 +92,7 @@ namespace Robust.Client.GameObjects
         private Color color = Color.White;
 
         [Animatable]
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => color;
@@ -105,7 +105,7 @@ namespace Robust.Client.GameObjects
         ///     Rotation transformations on individual layers still apply.
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Directional
         {
             get => _directional;
@@ -116,7 +116,7 @@ namespace Robust.Client.GameObjects
 
         private RSI? _baseRsi;
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -151,12 +151,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded { get; set; }
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();

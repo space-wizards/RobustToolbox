@@ -435,11 +435,11 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_isGLKhrDebugESExtension)
             {
-                GL.Khr.ObjectLabel(identifier, name, label.Length, label);
+                GL.Khr.ObjectLabel((ObjectIdentifier) identifier, name, label.Length, label);
             }
             else
             {
-                GL.ObjectLabel((ObjectIdentifier) identifier, name, label.Length, label);
+                GL.ObjectLabel(identifier, name, label.Length, label);
             }
         }
 

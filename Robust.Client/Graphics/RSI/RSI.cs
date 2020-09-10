@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
         /// <summary>
         ///     The size of this RSI, width x height.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
+        [ViewVariables]
         public Vector2i Size { get; private set; }
         [ViewVariables]
         private Dictionary<StateId, State> States = new Dictionary<StateId, State>();

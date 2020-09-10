@@ -24,7 +24,6 @@ namespace Robust.Client.GameObjects
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
-        [ViewVariables]
         private static bool _didRegisterSerializer;
 
         [ViewVariables]

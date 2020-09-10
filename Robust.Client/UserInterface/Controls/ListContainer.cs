@@ -329,20 +329,9 @@ namespace Robust.Client.UserInterface.Controls
             _list.Add(newChild);
             RecalculateListHeight(_list.Count - 1);
 
-            //AddItem(newChild);
             newChild.OnMinimumSizeChanged += OnChildMinimumSizeChanged;
 
             _updateChildren = true;
-            //if (_vScrollBar?.MaxValue > Height)
-            //{
-            //    _disableListRemove = true;
-            //    RemoveChild(newChild);
-            //    _disableListRemove = false;
-            //}
-        }
-
-        public void AddItem(Control newChild)
-        {
         }
 
         protected override void ChildRemoved(Control child)

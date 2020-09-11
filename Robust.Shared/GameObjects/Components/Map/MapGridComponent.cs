@@ -41,6 +41,7 @@ namespace Robust.Shared.GameObjects.Components.Map
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
 
         public void ClearGridId()

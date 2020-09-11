@@ -246,9 +246,9 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
-            //TODO: needs world -> local -> tile translations.
-            var gridTileLb = new MapIndices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Bottom));
-            var gridTileRt = new MapIndices((int)Math.Floor(worldArea.Right), (int)Math.Floor(worldArea.Top));
+            var localArea = new Box2(WorldToLocal(worldArea.BottomLeft), WorldToLocal(worldArea.TopRight));
+            var gridTileLb = new MapIndices((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
+            var gridTileRt = new MapIndices((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
             var tiles = new List<TileRef>();
 

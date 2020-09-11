@@ -20,7 +20,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
-        private readonly ILocalizationManager _loc;
 
         private VBoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
@@ -60,6 +59,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2? CustomSize => (250, 300);
 
+        [Obsolete]
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache,
@@ -69,9 +69,7 @@ namespace Robust.Client.UserInterface.CustomControls
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
 
-            _loc = loc;
-
-            Title = _loc.GetString("Entity Spawn Panel");
+            Title = Loc.GetString("Entity Spawn Panel");
 
             Contents.AddChild(MainVBox = new VBoxContainer
             {
@@ -84,13 +82,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = _loc.GetString("Search")
+                                PlaceHolder = Loc.GetString("Search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = _loc.GetString("Clear"),
+                                Text = Loc.GetString("Clear"),
                             })
                         }
                     },
@@ -110,13 +108,91 @@ namespace Robust.Client.UserInterface.CustomControls
                             (EraseButton = new Button
                             {
                                 ToggleMode = true,
-                                Text = _loc.GetString("Erase Mode")
+                                Text = Loc.GetString("Erase Mode")
                             }),
 
                             (OverrideMenu = new OptionButton
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                ToolTip = _loc.GetString("Override placement")
+                                ToolTip = Loc.GetString("Override placement")
+                            })
+                        }
+                    },
+                    (MeasureButton = new EntitySpawnButton {Visible = false})
+                }
+            });
+
+            for (var i = 0; i < initOpts.Length; i++)
+            {
+                OverrideMenu.AddItem(initOpts[i], i);
+            }
+
+            EraseButton.Pressed = placementManager.Eraser;
+            EraseButton.OnToggled += OnEraseButtonToggled;
+            OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
+            SearchBar.OnTextChanged += OnSearchBarTextChanged;
+            ClearButton.OnPressed += OnClearButtonPressed;
+
+            BuildEntityList();
+
+            this.placementManager.PlacementChanged += OnPlacementCanceled;
+            SearchBar.GrabKeyboardFocus();
+        }
+
+        public EntitySpawnWindow(IPlacementManager placementManager,
+            IPrototypeManager prototypeManager,
+            IResourceCache resourceCache)
+        {
+            this.placementManager = placementManager;
+            this.prototypeManager = prototypeManager;
+            this.resourceCache = resourceCache;
+
+            Title = Loc.GetString("Entity Spawn Panel");
+
+            Contents.AddChild(MainVBox = new VBoxContainer
+            {
+                Children =
+                {
+                    new HBoxContainer
+                    {
+                        Children =
+                        {
+                            (SearchBar = new LineEdit
+                            {
+                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                PlaceHolder = Loc.GetString("Search")
+                            }),
+
+                            (ClearButton = new Button
+                            {
+                                Disabled = true,
+                                Text = Loc.GetString("Clear"),
+                            })
+                        }
+                    },
+                    new ScrollContainer
+                    {
+                        CustomMinimumSize = new Vector2(200.0f, 0.0f),
+                        SizeFlagsVertical = SizeFlags.FillExpand,
+                        Children =
+                        {
+                            (PrototypeList = new PrototypeListContainer())
+                        }
+                    },
+                    new HBoxContainer
+                    {
+                        Children =
+                        {
+                            (EraseButton = new Button
+                            {
+                                ToggleMode = true,
+                                Text = Loc.GetString("Erase Mode")
+                            }),
+
+                            (OverrideMenu = new OptionButton
+                            {
+                                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                                ToolTip = Loc.GetString("Override placement")
                             })
                         }
                     },

@@ -126,6 +126,8 @@ namespace Robust.Shared.Network
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
 
+        public bool IsAuthEnabled => _config.GetCVar<bool>("auth.enabled");
+
         public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
 
         /// <inheritdoc />
@@ -228,18 +230,27 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
             _config.RegisterCVar("net.verbose", false, CVar.ARCHIVE, NetVerboseChanged);
 
-            if (!isServer)
+            if (isServer)
+            {
+                // That's comma-separated, btw.
+                _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
+                _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
+
+                _config.RegisterCVar("auth.enabled", false);
+                _config.RegisterCVar("auth.server", "http://localhost:5000/");
+            }
+            else
             {
                 _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
                 _config.RegisterCVar("net.updaterate", 20, CVar.ARCHIVE);
                 _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
                 _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
-            }
-            else
-            {
-                // That's comma-separated, btw.
-                _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
-                _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
+
+                // For connecting to an auth-enabled server:
+                // public key of the server we are connecting to
+                _config.RegisterCVar("auth.serverpubkey", "");
+                // auth JWT token the launcher got us from the auth server
+                _config.RegisterCVar("auth.token", "");
             }
 
 #if DEBUG

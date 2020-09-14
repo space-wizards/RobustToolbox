@@ -722,9 +722,10 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            var mgr = IoCManager.Resolve<IEye>();
-            mgr.DrawFov = !mgr.DrawFov;
-            return false;
+          var mgr = IoCManager.Resolve<IEyeManager>();
+          if (mgr.CurrentEye != null)
+              mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+          return false;
         }
     }
 

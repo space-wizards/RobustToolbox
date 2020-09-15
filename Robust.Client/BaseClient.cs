@@ -4,7 +4,6 @@ using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
-using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
 using Robust.Shared.Enums;
@@ -16,7 +15,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
 using Robust.Shared.Utility;
 
 namespace Robust.Client
@@ -175,16 +173,18 @@ namespace Robust.Client
             }
 
             info.ServerMaxPlayers = msg.ServerMaxPlayers;
-            info.SessionId = msg.PlayerSessionId;
             info.TickRate = msg.TickRate;
             _timing.TickRate = msg.TickRate;
             Logger.InfoS("client", $"Tickrate changed to: {msg.TickRate}");
 
-            _discord.Update(info.ServerName, info.SessionId.Username, info.ServerMaxPlayers.ToString());
+            var userName = msg.MsgChannel.UserName;
+            var userId = msg.MsgChannel.UserId;
+            _discord.Update(info.ServerName, userName, info.ServerMaxPlayers.ToString());
             // start up player management
             _playMan.Startup(_net.ServerChannel!);
 
-            _playMan.LocalPlayer!.SessionId = info.SessionId;
+            _playMan.LocalPlayer!.UserId = userId;
+            _playMan.LocalPlayer.Name = userName;
 
             _playMan.LocalPlayer.StatusChanged += OnLocalStatusChanged;
         }
@@ -312,7 +312,5 @@ namespace Robust.Client
         public int ServerMaxPlayers { get; set; }
 
         public byte TickRate { get; internal set; }
-
-        public NetSessionId SessionId { get; set; }
     }
 }

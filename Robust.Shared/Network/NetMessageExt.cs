@@ -1,3 +1,4 @@
+using System;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -54,6 +55,20 @@ namespace Robust.Shared.Network
         public static void Write(this NetOutgoingMessage message, GameTick tick)
         {
             message.Write(tick.Value);
+        }
+
+        public static Guid ReadGuid(this NetIncomingMessage message)
+        {
+            Span<byte> span = stackalloc byte[16];
+            message.ReadBytes(span);
+            return new Guid(span);
+        }
+
+        public static void Write(this NetOutgoingMessage message, Guid guid)
+        {
+            Span<byte> span = stackalloc byte[16];
+            guid.TryWriteBytes(span);
+            message.Write(span);
         }
     }
 }

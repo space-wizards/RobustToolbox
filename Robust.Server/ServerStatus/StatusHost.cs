@@ -19,6 +19,7 @@ using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
@@ -43,6 +44,7 @@ namespace Robust.Server.ServerStatus
         private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IServerNetManager _netManager = default!;
 
         private KestrelServer _server = default!;
 

@@ -36,7 +36,7 @@ namespace Robust.Client.Player
         [ViewVariables] public IEntity? ControlledEntity { get; private set; }
 
 
-        [ViewVariables] public NetSessionId SessionId { get; set; }
+        [ViewVariables] public NetUserId UserId { get; set; }
 
         /// <summary>
         ///     Session of the local client.
@@ -49,7 +49,8 @@ namespace Robust.Client.Player
         /// <summary>
         ///     OOC name of the local player.
         /// </summary>
-        [ViewVariables] public string Name => SessionId.Username;
+        [ViewVariables]
+        public string Name { get; set; } = default!;
 
         /// <summary>
         ///     The status of the client's session has changed.

@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
@@ -62,20 +64,134 @@ namespace Robust.Shared.Network
 
             Logger.DebugS("net", "Attempting to connect to {0} port {1}", host, port);
 
-            // Get list of potential IP addresses for the domain.
-            var endPoints = await ResolveDnsAsync(host);
-
-            if (mainCancelToken.IsCancellationRequested)
+            var resolveResult = await CCResolveHost(host, mainCancelToken);
+            if (resolveResult == null)
             {
                 ClientConnectState = ClientConnectionState.NotConnecting;
                 return;
             }
 
+            var (first, second) = resolveResult.Value;
+
+            ClientConnectState = ClientConnectionState.EstablishingConnection;
+
+            Logger.DebugS("net", "First attempt IP address is {0}, second attempt {1}", first, second);
+
+            var result = await CCHappyEyeballs(port, first, second, mainCancelToken);
+
+            if (result == null)
+            {
+                ClientConnectState = ClientConnectionState.NotConnecting;
+                return;
+            }
+
+            var (winningPeer, winningConnection) = result.Value;
+
+            ClientConnectState = ClientConnectionState.Handshake;
+
+            // We're connected start handshaking.
+
+            try
+            {
+                await CCDoHandshake(winningPeer, winningConnection, userNameRequest, mainCancelToken);
+            }
+            catch (TaskCanceledException)
+            {
+                winningPeer.Peer.Shutdown("Cancelled");
+                _toCleanNetPeers.Add(winningPeer.Peer);
+                ClientConnectState = ClientConnectionState.NotConnecting;
+                return;
+            }
+            catch (Exception e)
+            {
+                OnConnectFailed(e.Message);
+                Logger.ErrorS("net", "Exception during handshake: {0}", e);
+                winningPeer.Peer.Shutdown("Something happened.");
+                _toCleanNetPeers.Add(winningPeer.Peer);
+                ClientConnectState = ClientConnectionState.NotConnecting;
+                return;
+            }
+
+            ClientConnectState = ClientConnectionState.Connected;
+            Logger.DebugS("net", "Handshake completed, connection established.");
+        }
+
+        private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
+            CancellationToken cancel)
+        {
+            var authToken = _config.GetCVar<string>("auth.token");
+            var pubKey = _config.GetCVar<string>("auth.serverpubkey");
+
+            var authenticate = !string.IsNullOrEmpty(authToken);
+
+            byte[]? aesKey = null;
+            var msgLogin = new MsgLogin
+            {
+                UsernameRequest = userNameRequest,
+                Auth = authenticate
+            };
+
+            if (authenticate)
+            {
+                msgLogin.AuthToken = Convert.FromBase64String(authToken);
+
+                var encrypt = _config.GetCVar<bool>("net.encrypt");
+                if (encrypt)
+                {
+                    // Generate AES key.
+                    aesKey = new byte[AesKeyLength];
+                    RandomNumberGenerator.Fill(aesKey);
+
+                    // Encrypt AES key with server's public RSA key.
+                    var serverRsa = RSA.Create();
+                    serverRsa.ImportRSAPublicKey(Convert.FromBase64String(pubKey), out _);
+                    var encryptedKey = serverRsa.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
+
+                    msgLogin.EncryptionKey = encryptedKey;
+                }
+                else
+                {
+                    msgLogin.EncryptionKey = Array.Empty<byte>();
+                }
+            }
+
+            var outLoginMsg = peer.Peer.CreateMessage();
+            msgLogin.WriteToBuffer(outLoginMsg);
+            peer.Peer.SendMessage(outLoginMsg, connection, NetDeliveryMethod.ReliableOrdered);
+
+            var response = await AwaitData(connection, cancel);
+            var msgResp = new MsgLoginResp();
+            msgResp.ReadFromBuffer(response);
+
+            var channel = new NetChannel(this, connection, new NetUserId(msgResp.UserId), msgResp.UserName);
+            _channels.Add(connection, channel);
+            peer.AddChannel(channel);
+
+            if (msgResp.Encrypt)
+            {
+                Logger.DebugS("auth", "Encrypting connection!");
+                DebugTools.Assert(aesKey != null);
+
+                var encryption = new NetAESEncryption(peer.Peer, aesKey, 0, aesKey!.Length);
+                _clientEncryption = encryption;
+            }
+        }
+
+        private async Task<(IPAddress first, IPAddress? second)?>
+            CCResolveHost(string host, CancellationToken mainCancelToken)
+        {
+            // Get list of potential IP addresses for the domain.
+            var endPoints = await ResolveDnsAsync(host);
+
+            if (mainCancelToken.IsCancellationRequested)
+            {
+                return null;
+            }
+
             if (endPoints == null)
             {
                 OnConnectFailed($"Unable to resolve domain '{host}'");
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
+                return null;
             }
 
             // Try to get an IPv6 and IPv4 address.
@@ -85,11 +201,8 @@ namespace Robust.Shared.Network
             if (ipv4 == null && ipv6 == null)
             {
                 OnConnectFailed($"Domain '{host}' has no associated IP addresses");
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
+                return null;
             }
-
-            ClientConnectState = ClientConnectionState.EstablishingConnection;
 
             IPAddress first;
             IPAddress? second = null;
@@ -104,8 +217,12 @@ namespace Robust.Shared.Network
                 first = ipv4!;
             }
 
-            Logger.DebugS("net", "First attempt IP address is {0}, second attempt {1}", first, second);
+            return (first, second);
+        }
 
+        private async Task<(NetPeerData winningPeer, NetConnection winningConnection)?>
+            CCHappyEyeballs(int port, IPAddress first, IPAddress? second, CancellationToken mainCancelToken)
+        {
             NetPeerData CreatePeerForIp(IPAddress address)
             {
                 var config = _getBaseNetPeerConfig();
@@ -249,8 +366,7 @@ namespace Robust.Shared.Network
                     _toCleanNetPeers.Add(secondPeer.Peer);
                 }
 
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
+                return null;
             }
 
             // winningPeer can still be failed at this point.
@@ -260,48 +376,10 @@ namespace Robust.Shared.Network
                 winningPeer!.Peer.Shutdown("You failed");
                 _toCleanNetPeers.Add(winningPeer.Peer);
                 OnConnectFailed((secondReason ?? firstReason)!);
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
+                return null;
             }
 
-            ClientConnectState = ClientConnectionState.Handshake;
-
-            // We're connected start handshaking.
-
-            var userNameRequestMsg = winningPeer!.Peer.CreateMessage(userNameRequest);
-            winningPeer.Peer.SendMessage(userNameRequestMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
-
-            try
-            {
-                // Await response.
-                var response = await AwaitData(winningConnection, mainCancelToken);
-                var receivedUsername = response.ReadString();
-                var channel = new NetChannel(this, winningConnection, new NetSessionId(receivedUsername));
-                _channels.Add(winningConnection, channel);
-                winningPeer.AddChannel(channel);
-
-                var confirmConnectionMsg = winningPeer.Peer.CreateMessage("ok");
-                winningPeer.Peer.SendMessage(confirmConnectionMsg, winningConnection, NetDeliveryMethod.ReliableOrdered);
-            }
-            catch (TaskCanceledException)
-            {
-                winningPeer.Peer.Shutdown("Cancelled");
-                _toCleanNetPeers.Add(secondPeer!.Peer);
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
-            }
-            catch (Exception e)
-            {
-                OnConnectFailed(e.Message);
-                Logger.ErrorS("net", "Exception during handshake: {0}", e);
-                winningPeer.Peer.Shutdown("Something happened.");
-                _toCleanNetPeers.Add(secondPeer!.Peer);
-                ClientConnectState = ClientConnectionState.NotConnecting;
-                return;
-            }
-
-            ClientConnectState = ClientConnectionState.Connected;
-            Logger.DebugS("net", "Handshake completed, connection established.");
+            return (winningPeer!, winningConnection);
         }
 
         private Task<string> AwaitStatusChange(NetConnection connection, CancellationToken cancellationToken = default)
@@ -333,6 +411,9 @@ namespace Robust.Shared.Network
             {
                 throw new InvalidOperationException("Cannot await data twice.");
             }
+
+            DebugTools.Assert(!_channels.ContainsKey(connection),
+                "AwaitData cannot be used once a proper channel for the connection has been constructed, as it does not support encryption.");
 
             var tcs = new TaskCompletionSource<NetIncomingMessage>();
             CancellationTokenRegistration reg = default;
@@ -379,6 +460,5 @@ namespace Robust.Shared.Network
                 return null;
             }
         }
-
     }
 }

@@ -32,7 +32,7 @@ namespace Robust.Client.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private readonly Dictionary<NetSessionId, IPlayerSession> _sessions = new Dictionary<NetSessionId, IPlayerSession>();
+        private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new Dictionary<NetUserId, IPlayerSession>();
 
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
@@ -47,7 +47,7 @@ namespace Robust.Client.Player
         [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict => _sessions;
+        public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;
 
         /// <inheritdoc />
         public event EventHandler? PlayerListUpdated;
@@ -96,7 +96,7 @@ namespace Robust.Client.Player
             DebugTools.Assert(LocalPlayer != null, "Call Startup()");
             DebugTools.Assert(LocalPlayer!.Session != null, "Received player state before Session finished setup.");
 
-            var myState = list.FirstOrDefault(s => s.SessionId == LocalPlayer.SessionId);
+            var myState = list.FirstOrDefault(s => s.UserId == LocalPlayer.UserId);
 
             if (myState != null)
             {
@@ -151,13 +151,13 @@ namespace Robust.Client.Player
         {
             var dirty = false;
 
-            var hitSet = new List<NetSessionId>();
+            var hitSet = new List<NetUserId>();
 
             foreach (var state in remotePlayers)
             {
-                hitSet.Add(state.SessionId);
+                hitSet.Add(state.UserId);
 
-                if (_sessions.TryGetValue(state.SessionId, out var local))
+                if (_sessions.TryGetValue(state.UserId, out var local))
                 {
                     // Exists, update data.
                     if (local.Name == state.Name && local.Status == state.Status && local.Ping == state.Ping)
@@ -173,14 +173,14 @@ namespace Robust.Client.Player
                     // New, give him a slot.
                     dirty = true;
 
-                    var newSession = new PlayerSession(state.SessionId)
+                    var newSession = new PlayerSession(state.UserId)
                     {
                         Name = state.Name,
                         Status = state.Status,
                         Ping = state.Ping
                     };
-                    _sessions.Add(state.SessionId, newSession);
-                    if (state.SessionId == LocalPlayer!.SessionId)
+                    _sessions.Add(state.UserId, newSession);
+                    if (state.UserId == LocalPlayer!.UserId)
                     {
                         LocalPlayer.InternalSession = newSession;
 
@@ -195,7 +195,7 @@ namespace Robust.Client.Player
                 // clear slot, player left
                 if (!hitSet.Contains(existing))
                 {
-                    DebugTools.Assert(LocalPlayer!.SessionId != existing, "I'm still connected to the server, but i left?");
+                    DebugTools.Assert(LocalPlayer!.UserId != existing, "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);
                     dirty = true;
                 }

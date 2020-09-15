@@ -37,18 +37,20 @@ namespace Robust.Shared.Network
         /// <summary>
         /// The IP of the incoming connection.
         /// </summary>
-        public readonly NetSessionId SessionId;
+        public readonly NetUserId UserId;
 
         public readonly IPEndPoint IP;
+        public readonly string UserName;
 
         /// <summary>
         /// Constructs a new instance.
         /// </summary>
-        /// <param name="sessionId">The session ID of the incoming connection.</param>
-        public NetConnectingArgs(NetSessionId sessionId, IPEndPoint ip)
+        /// <param name="userId">The session ID of the incoming connection.</param>
+        public NetConnectingArgs(NetUserId userId, IPEndPoint ip, string userName)
         {
-            SessionId = sessionId;
+            UserId = userId;
             IP = ip;
+            UserName = userName;
         }
     }
 

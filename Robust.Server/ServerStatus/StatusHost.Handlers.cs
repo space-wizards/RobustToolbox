@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -113,9 +114,18 @@ namespace Robust.Server.ServerStatus
                 };
             }
 
+            var authInfo = new JObject
+            {
+                ["mode"] = _netManager.Auth.ToString(),
+                ["public_key"] = _netManager.RsaPublicKey != null
+                    ? Convert.ToBase64String(_netManager.RsaPublicKey)
+                    : null
+            };
+
             var jObject = new JObject
             {
                 ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress"),
+                ["auth"] = authInfo,
                 ["build"] = buildInfo
             };
 
@@ -131,7 +141,6 @@ namespace Robust.Server.ServerStatus
 
             return true;
         }
-
     }
 
 }

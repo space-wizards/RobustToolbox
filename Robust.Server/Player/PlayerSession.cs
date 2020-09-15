@@ -22,12 +22,13 @@ namespace Robust.Server.Player
         public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerData data)
         {
             _playerManager = playerManager;
-            SessionId = client.SessionId;
+            UserId = client.UserId;
+            Name = client.UserName;
             _data = data;
 
             PlayerState = new PlayerState
             {
-                SessionId = client.SessionId,
+                UserId = client.UserId,
             };
 
             ConnectedClient = client;
@@ -44,7 +45,7 @@ namespace Robust.Server.Player
         private SessionStatus _status = SessionStatus.Connecting;
 
         /// <inheritdoc />
-        public string Name => SessionId.Username;
+        public string Name { get; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -73,7 +74,7 @@ namespace Robust.Server.Player
 
         /// <inheritdoc />
         [ViewVariables]
-        public NetSessionId SessionId { get; }
+        public NetUserId UserId { get; }
 
         private readonly PlayerData _data;
         [ViewVariables] public IPlayerData Data => _data;
@@ -176,7 +177,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public override string ToString()
         {
-            return SessionId.ToString();
+            return Name;
         }
     }
 }

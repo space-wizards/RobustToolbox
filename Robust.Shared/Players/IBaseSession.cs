@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Network;
+﻿using System;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.Players
 {
@@ -10,7 +11,7 @@ namespace Robust.Shared.Players
         /// <summary>
         ///     The UID of this session.
         /// </summary>
-        NetSessionId SessionId { get; }
+        NetUserId UserId { get; }
 
         /// <summary>
         ///     Current name of this player.

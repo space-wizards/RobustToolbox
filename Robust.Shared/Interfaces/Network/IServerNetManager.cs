@@ -1,4 +1,6 @@
 ﻿
+using Robust.Shared.Network;
+
 namespace Robust.Shared.Interfaces.Network
 {
     /// <summary>
@@ -6,6 +8,9 @@ namespace Robust.Shared.Interfaces.Network
     /// </summary>
     public interface IServerNetManager : INetManager
     {
+        byte[]? RsaPublicKey { get; }
+        AuthMode Auth { get; }
+
         /// <summary>
         ///     Disconnects this channel from the remote peer.
         /// </summary>

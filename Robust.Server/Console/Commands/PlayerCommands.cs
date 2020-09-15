@@ -117,12 +117,9 @@ namespace Robust.Server.Console.Commands
 
             var name = args[0];
 
-            var index = new NetSessionId(name);
-
-            if (players.ValidSessionId(index))
+            if (players.TryGetSessionByUsername(name, out var target))
             {
                 var network = IoCManager.Resolve<IServerNetManager>();
-                var targetPlyr = players.GetSessionById(index);
 
                 var reason = "Kicked by console.";
                 if (args.Length >= 2)
@@ -130,7 +127,7 @@ namespace Robust.Server.Console.Commands
                     reason = reason + args[1];
                 }
 
-                network.DisconnectChannel(targetPlyr.ConnectedClient, reason);
+                network.DisconnectChannel(target.ConnectedClient, reason);
             }
         }
     }

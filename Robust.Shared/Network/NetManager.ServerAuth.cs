@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
-using System.Security.Claims;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.IdentityModel.Tokens;
+using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
+using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
+using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
 namespace Robust.Shared.Network
 {
@@ -36,11 +34,166 @@ namespace Robust.Shared.Network
             Logger.DebugS("auth", "Public RSA key is {0}", Convert.ToBase64String(RsaPublicKey));
         }
 
-        private byte[] SADecryptSharedSecret(byte[] keyData)
+        private async void HandleHandshake(NetPeerData peer, NetConnection connection)
         {
-            DebugTools.AssertNotNull(_authRsaPrivateKey);
+            try
+            {
+                var incPacket = await AwaitData(connection);
 
-            return _authRsaPrivateKey!.Decrypt(keyData, RSAEncryptionPadding.OaepSHA256);
+                var msgLogin = new MsgLoginStart();
+                msgLogin.ReadFromBuffer(incPacket);
+
+                var ip = connection.RemoteEndPoint.Address;
+                var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar<bool>("auth.allowlocal");
+                var canAuth = msgLogin.CanAuth;
+                var needPk = msgLogin.NeedPubKey;
+                var authServer = _config.GetSecureCVar<string>("auth.server");
+
+
+                if (Auth == AuthMode.Required && !isLocal)
+                {
+                    if (!canAuth)
+                    {
+                        connection.Disconnect("Connecting to this server requires authentication");
+                        return;
+                    }
+                }
+
+                NetEncryption? encryption = null;
+                NetUserId userId;
+                string userName;
+                var padSuccessMessage = true;
+
+                if (canAuth && Auth != AuthMode.Disabled)
+                {
+                    var verifyToken = new byte[4];
+                    RandomNumberGenerator.Fill(verifyToken);
+                    var msgEncReq = new MsgEncryptionRequest
+                    {
+                        PublicKey = needPk ? RsaPublicKey : Array.Empty<byte>(),
+                        VerifyToken = verifyToken
+                    };
+
+                    var outMsgEncReq = peer.Peer.CreateMessage();
+                    outMsgEncReq.Write(false);
+                    outMsgEncReq.WritePadBits();
+                    msgEncReq.WriteToBuffer(outMsgEncReq);
+                    peer.Peer.SendMessage(outMsgEncReq, connection, NetDeliveryMethod.ReliableOrdered);
+
+                    incPacket = await AwaitData(connection);
+
+                    var msgEncResponse = new MsgEncryptionResponse();
+                    msgEncResponse.ReadFromBuffer(incPacket);
+
+                    var verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
+                        msgEncResponse.VerifyToken,
+                        RSAEncryptionPadding.OaepSHA256);
+                    var sharedSecret = _authRsaPrivateKey!.Decrypt(
+                        msgEncResponse.SharedSecret,
+                        RSAEncryptionPadding.OaepSHA256);
+
+                    if (!verifyToken.SequenceEqual(verifyTokenCheck))
+                    {
+                        connection.Disconnect("Verify token is invalid");
+                        return;
+                    }
+
+                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+
+                    var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
+                    var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
+
+                    var client = new HttpClient();
+                    var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
+                    var joinedResp = await client.GetAsync(url);
+
+                    joinedResp.EnsureSuccessStatusCode();
+
+                    var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(
+                        await joinedResp.Content.ReadAsStringAsync());
+
+                    if (!joinedRespJson.IsValid)
+                    {
+                        connection.Disconnect("Failed to validate login");
+                        return;
+                    }
+
+                    userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                    userName = joinedRespJson.UserData.UserName;
+                    padSuccessMessage = false;
+                }
+                else
+                {
+                    var reqUserName = msgLogin.UserName;
+
+                    if (!UsernameHelpers.IsNameValid(reqUserName, out var reason))
+                    {
+                        connection.Disconnect($"Username is invalid ({reason.ToText()}).");
+                        return;
+                    }
+
+                    // If auth is set to "optional" we need to avoid conflicts between real accounts and guests,
+                    // so we explicitly prefix guests.
+                    var origName = Auth == AuthMode.Disabled
+                        ? reqUserName
+                        : (isLocal ? $"localhost@{reqUserName}" : $"guest@{reqUserName}");
+                    var name = origName;
+                    var iterations = 1;
+
+                    while (_assignedUsernames.ContainsKey(name))
+                    {
+                        // This is shit but I don't care.
+                        name = $"{origName}_{++iterations}";
+                    }
+
+                    userName = name;
+
+                    // Just generate a random new GUID.
+                    userId = new NetUserId(Guid.NewGuid());
+                }
+
+                var endPoint = connection.RemoteEndPoint;
+
+                if (!OnConnecting(endPoint, userId, userName))
+                {
+                    connection.Disconnect("Sorry, denied. Why? Couldn't tell you, I didn't implement a deny reason.");
+                    return;
+                }
+
+                var msg = peer.Peer.CreateMessage();
+                var msgResp = new MsgLoginSuccess
+                {
+                    UserId = userId.UserId,
+                    UserName = userName
+                };
+                if (padSuccessMessage)
+                {
+                    msg.Write(true);
+                    msg.WritePadBits();
+                }
+
+                msgResp.WriteToBuffer(msg);
+                encryption?.Encrypt(msg);
+                peer.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
+
+                Logger.InfoS("net",
+                    "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
+                    connection.RemoteEndPoint, userName, userId);
+
+                // Handshake complete!
+                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption);
+            }
+            catch (ClientDisconnectedException)
+            {
+                Logger.InfoS("net",
+                    $"Peer {NetUtility.ToHexString(connection.RemoteUniqueIdentifier)} disconnected while handshake was in-progress.");
+            }
+            catch (Exception e)
+            {
+                connection.Disconnect("Unknown server error occured during handshake.");
+                Logger.ErrorS("net", "Exception during handshake with peer {0}:\n{1}",
+                    NetUtility.ToHexString(connection.RemoteUniqueIdentifier), e);
+            }
         }
 
         private sealed class HasJoinedResponse

@@ -27,11 +27,15 @@ First the client sends `MsgLoginStart`. This contains the client's username, whe
 
 The server can then choose to do block the client, let the client authenticate, or let the client in as guest. If it lets the client in as guest it skips straight to sending `MsgLoginSuccess` (see below). Otherwise it will send an `MsgEncryptionRequest` to the client to initiate authentication.
 
-`MsgEncryptionRequest` contains a random verify token sent by the server, aswell as the server's public RSA key (if requested).
+`MsgEncryptionRequest` contains a random verify token sent by the server, as well as the server's public RSA key (if requested).
 
 When the client receives `MsgEncryptionRequest`, it will generate a 32-byte random secret. It will then generate an SHA-256 hash of this secret and the server's public key. This hash is POSTed to `api/session/join` (along with login token in `Authorization` header) on the auth server. The shared secret and verify token are separately encrypted with the server's RSA key, then sent along with the client's account GUID to the server in `MsgEncryptionResponse`.
 
 The server will then decrypt the verify token and shared secret with its private RSA key. If the verify token does not match then drop the client (to check if the client is using the correct key). Then the server will generate the same hash as mentioned earlier and GET it to `api/session/hasJoined?hash=<hash>&userId=<userId>` to check if the user did indeed authenticate correctly. And also gets the user's username and GUID again because why not.
+
+From this point on, if authenticating, all messages sent between client and server will be AES encrypted with the shared secret generated earlier.
+
+Then the server shall reply with `MsgLoginSuccess` with the assigned username/userID if login is successful.
 
 I think that was everything.
 

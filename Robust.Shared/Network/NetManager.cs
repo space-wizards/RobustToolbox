@@ -20,13 +20,11 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
-using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
 namespace Robust.Shared.Network
 {
-   /// <summary>
+    /// <summary>
     ///     Callback for registered NetMessages.
     /// </summary>
     /// <param name="message">The message received.</param>
@@ -99,13 +97,16 @@ namespace Robust.Shared.Network
         private readonly Dictionary<NetConnection, NetChannel> _channels = new Dictionary<NetConnection, NetChannel>();
 
         private readonly Dictionary<string, NetConnection> _assignedUsernames = new Dictionary<string, NetConnection>();
-        private readonly Dictionary<NetUserId, NetConnection> _assignedUserIds = new Dictionary<NetUserId, NetConnection>();
+
+        private readonly Dictionary<NetUserId, NetConnection> _assignedUserIds =
+            new Dictionary<NetUserId, NetConnection>();
 
         // Used for processing incoming net messages.
         private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
         // Used for processing outgoing net messages.
-        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions = new Dictionary<Type, Func<NetMessage>>();
+        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
+            new Dictionary<Type, Func<NetMessage>>();
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
 
@@ -246,7 +247,7 @@ namespace Robust.Shared.Network
                 _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
                 _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
 
-                _config.RegisterCVar("auth.mode", (int) AuthMode.Required, onValueChanged: v => Auth = (AuthMode)v);
+                _config.RegisterCVar("auth.mode", (int) AuthMode.Required, onValueChanged: v => Auth = (AuthMode) v);
                 // Always allow localhost to connect, without requiring auth.
                 _config.RegisterCVar("auth.allowlocal", true);
             }
@@ -269,13 +270,11 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, FakeDuplicatesChanged);
 #endif
 
-            _strings.Initialize(() =>
-            {
-                Logger.InfoS("net","Message string table loaded.");
-            }, UpdateNetMessageFunctions);
+            _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
+                UpdateNetMessageFunctions);
             _serializer.ClientHandshakeComplete += () =>
             {
-                Logger.InfoS("net","Client completed serializer handshake.");
+                Logger.InfoS("net", "Client completed serializer handshake.");
                 OnConnected(ServerChannel!);
             };
 
@@ -508,6 +507,7 @@ namespace Robust.Shared.Network
             {
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             }
+
             Shutdown(reason);
         }
 
@@ -668,168 +668,6 @@ namespace Robust.Shared.Network
         }
         */
 
-        private async void HandleHandshake(NetPeerData peer, NetConnection connection)
-        {
-            NetIncomingMessage incPacket;
-            try
-            {
-                incPacket = await AwaitData(connection);
-            }
-            catch (ClientDisconnectedException)
-            {
-                return;
-            }
-
-            var msgLogin = new MsgLoginStart();
-            msgLogin.ReadFromBuffer(incPacket);
-
-            var ip = connection.RemoteEndPoint.Address;
-            var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar<bool>("auth.allowlocal");
-            var canAuth = msgLogin.CanAuth;
-            var needPk = msgLogin.NeedPubKey;
-            var authServer = _config.GetSecureCVar<string>("auth.server");
-
-
-            if (Auth == AuthMode.Required && !isLocal)
-            {
-                if (!canAuth)
-                {
-                    connection.Disconnect("Connecting to this server requires authentication");
-                    return;
-                }
-            }
-
-            NetEncryption? encryption = null;
-            NetUserId userId;
-            string userName;
-            var padSuccessMessage = true;
-
-            if (canAuth && Auth != AuthMode.Disabled)
-            {
-                var verifyToken = new byte[4];
-                RandomNumberGenerator.Fill(verifyToken);
-                var msgEncReq = new MsgEncryptionRequest
-                {
-                    PublicKey = needPk ? RsaPublicKey : Array.Empty<byte>(),
-                    VerifyToken = verifyToken
-                };
-
-                var outMsgEncReq = peer.Peer.CreateMessage();
-                outMsgEncReq.Write(false);
-                outMsgEncReq.WritePadBits();
-                msgEncReq.WriteToBuffer(outMsgEncReq);
-                peer.Peer.SendMessage(outMsgEncReq, connection, NetDeliveryMethod.ReliableOrdered);
-
-                try
-                {
-                    incPacket = await AwaitData(connection);
-                }
-                catch (ClientDisconnectedException)
-                {
-                    return;
-                }
-
-                var msgEncResponse = new MsgEncryptionResponse();
-                msgEncResponse.ReadFromBuffer(incPacket);
-
-                var verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
-                    msgEncResponse.VerifyToken,
-                    RSAEncryptionPadding.OaepSHA256);
-                var sharedSecret = _authRsaPrivateKey!.Decrypt(
-                    msgEncResponse.SharedSecret,
-                    RSAEncryptionPadding.OaepSHA256);
-
-                if (!verifyToken.SequenceEqual(verifyTokenCheck))
-                {
-                    connection.Disconnect("Verify token is invalid");
-                    return;
-                }
-
-                encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
-
-                var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
-                var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
-
-                var client = new HttpClient();
-                var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                var joinedResp = await client.GetAsync(url);
-
-                joinedResp.EnsureSuccessStatusCode();
-
-                var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(
-                    await joinedResp.Content.ReadAsStringAsync());
-
-                if (!joinedRespJson.IsValid)
-                {
-                    connection.Disconnect("Failed to validate login");
-                    return;
-                }
-
-                userId = new NetUserId(joinedRespJson.UserData!.UserId);
-                userName = joinedRespJson.UserData.UserName;
-                padSuccessMessage = false;
-            }
-            else
-            {
-                var reqUserName = msgLogin.UserName;
-
-                if (!UsernameHelpers.IsNameValid(reqUserName, out var reason))
-                {
-                    connection.Disconnect($"Username is invalid ({reason.ToText()}).");
-                    return;
-                }
-
-                // If auth is set to "optional" we need to avoid conflicts between real accounts and guests,
-                // so we explicitly prefix guests.
-                var origName = Auth == AuthMode.Disabled
-                    ? reqUserName
-                    : (isLocal ? $"localhost@{reqUserName}" : $"guest@{reqUserName}");
-                var name = origName;
-                var iterations = 1;
-
-                while (_assignedUsernames.ContainsKey(name))
-                {
-                    // This is shit but I don't care.
-                    name = $"{origName}_{++iterations}";
-                }
-
-                userName = name;
-
-                // Just generate a random new GUID.
-                userId = new NetUserId(Guid.NewGuid());
-            }
-
-            var endPoint = connection.RemoteEndPoint;
-
-            if (!OnConnecting(endPoint, userId, userName))
-            {
-                connection.Disconnect("Sorry, denied. Why? Couldn't tell you, I didn't implement a deny reason.");
-                return;
-            }
-
-            var msg = peer.Peer.CreateMessage();
-            var msgResp = new MsgLoginSuccess
-            {
-                UserId = userId.UserId,
-                UserName = userName
-            };
-            if (padSuccessMessage)
-            {
-                msg.Write(true);
-                msg.WritePadBits();
-            }
-            msgResp.WriteToBuffer(msg);
-            encryption?.Encrypt(msg);
-            peer.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
-
-            Logger.InfoS("net",
-                "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
-                connection.RemoteEndPoint, userName, userId);
-
-            // Handshake complete!
-            HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption);
-        }
-
         private async void HandleInitialHandshakeComplete(
             NetPeerData peer,
             NetConnection sender,
@@ -866,7 +704,8 @@ namespace Robust.Shared.Network
         {
             var channel = _channels[connection];
 
-            Logger.InfoS("net", "{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint, reason);
+            Logger.InfoS("net", "{ConnectionEndpoint}: Disconnected ({DisconnectReason})", channel.RemoteEndPoint,
+                reason);
             _assignedUsernames.Remove(channel.UserName);
             _assignedUserIds.Remove(channel.UserId);
 
@@ -956,7 +795,7 @@ namespace Robust.Shared.Network
             var instance = entry.CreateFunction(channel);
             instance.MsgChannel = channel;
 
-            #if DEBUG
+#if DEBUG
 
             if (!_bandwidthUsage.TryGetValue(type, out var bandwidth))
             {
@@ -965,7 +804,7 @@ namespace Robust.Shared.Network
 
             _bandwidthUsage[type] = bandwidth + msg.LengthBytes;
 
-            #endif
+#endif
 
             try
             {
@@ -996,6 +835,7 @@ namespace Robust.Shared.Network
                 Logger.ErrorS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: exception in message handler for {type.Name}:\n{e}");
             }
+
             return true;
         }
 
@@ -1020,7 +860,8 @@ namespace Robust.Shared.Network
 
             DebugTools.AssertNotNull(constructor);
 
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[]{typeof(INetChannel)}, packetType, false);
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{name}", typeof(NetMessage), new[] {typeof(INetChannel)},
+                packetType, false);
 
             dynamicMethod.DefineParameter(1, ParameterAttributes.In, "channel");
 
@@ -1079,7 +920,8 @@ namespace Robust.Shared.Network
 
             DebugTools.AssertNotNull(constructor);
 
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(), type, false);
+            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
+                type, false);
             var gen = dynamicMethod.GetILGenerator();
             gen.Emit(OpCodes.Ldnull);
             gen.Emit(OpCodes.Newobj, constructor);
@@ -1130,6 +972,7 @@ namespace Robust.Shared.Network
             {
                 packet.Encrypt(channel.Encryption);
             }
+
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
         }
@@ -1236,7 +1079,9 @@ namespace Robust.Shared.Network
         private class NetPeerData
         {
             public readonly NetPeer Peer;
+
             public readonly List<NetChannel> Channels = new List<NetChannel>();
+
             // So that we can do ServerSendToAll without a list copy.
             public readonly List<NetConnection> ConnectionsWithChannels = new List<NetConnection>();
 

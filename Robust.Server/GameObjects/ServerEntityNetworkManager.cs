@@ -120,7 +120,7 @@ namespace Robust.Server.GameObjects
                 if (msgT < cT && _logLateMsgs)
                 {
                     Logger.WarningS("net.ent", "Got late MsgEntity! Diff: {0}, msgT: {2}, cT: {3}, player: {1}",
-                        (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserId, msgT, cT);
+                        (int) msgT.Value - (int) cT.Value, message.MsgChannel.UserName, msgT, cT);
                 }
 
                 DispatchEntityNetworkMessage(message);

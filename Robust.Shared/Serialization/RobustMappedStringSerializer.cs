@@ -328,7 +328,7 @@ namespace Robust.Shared.Serialization
             DebugTools.Assert(_dict.Locked);
 
             var channel = msgMapStr.MsgChannel;
-            LogSzr.Debug($"Received handshake from {channel.UserId}.");
+            LogSzr.Debug($"Received handshake from {channel.UserName}.");
 
             if (!_incompleteHandshakes.TryGetValue(channel, out var handshake))
             {
@@ -338,7 +338,7 @@ namespace Robust.Shared.Serialization
 
             if (!msgMapStr.NeedsStrings)
             {
-                LogSzr.Debug($"Completing handshake with {channel.UserId}.");
+                LogSzr.Debug($"Completing handshake with {channel.UserName}.");
 
                 handshake.Tcs.SetResult(null);
                 _incompleteHandshakes.Remove(channel);
@@ -356,7 +356,7 @@ namespace Robust.Shared.Serialization
             var strings = _net.CreateNetMessage<MsgMapStrStrings>();
             strings.Package = _mappedStringsPackage;
             LogSzr.Debug(
-                $"Sending {_mappedStringsPackage!.Length} bytes sized mapped strings package to {channel.UserId}.");
+                $"Sending {_mappedStringsPackage!.Length} bytes sized mapped strings package to {channel.UserName}.");
 
             _net.ServerSendMessage(strings, channel);
         }

@@ -176,7 +176,7 @@ namespace Robust.Shared.Network
                 var encryptedSecret = rsaKey.Encrypt(sharedSecret, RSAEncryptionPadding.OaepSHA256);
                 var encryptedVerifyToken = rsaKey.Encrypt(encRequest.VerifyToken, RSAEncryptionPadding.OaepSHA256);
 
-                var authHashBytes = MakeAuthHash(sharedSecret, encRequest.PublicKey);
+                var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
                 var authHash = Convert.ToBase64String(authHashBytes);
 
                 var joinReq = new JoinRequest {Hash = authHash};
@@ -216,6 +216,8 @@ namespace Robust.Shared.Network
 
         private static byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)
         {
+            Logger.DebugS("auth", "shared: {0}, pk: {1}", Convert.ToBase64String(sharedSecret), Convert.ToBase64String(pkBytes));
+
             var incHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             incHash.AppendData(sharedSecret);
             incHash.AppendData(pkBytes);

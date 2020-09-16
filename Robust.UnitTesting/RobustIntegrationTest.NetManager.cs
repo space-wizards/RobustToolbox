@@ -247,6 +247,9 @@ namespace Robust.UnitTesting
                 return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
             }
 
+            public byte[]? RsaPublicKey => null;
+            public AuthMode Auth => AuthMode.Disabled;
+
             public void DisconnectChannel(INetChannel channel, string reason)
             {
                 channel.Disconnect(reason);

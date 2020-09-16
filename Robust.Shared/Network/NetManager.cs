@@ -703,6 +703,8 @@ namespace Robust.Shared.Network
 
             var ip = connection.RemoteEndPoint.Address;
             var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar<bool>("auth.allowlocal");
+            var hasAuthToken = !_authBroken && msgLogin.AuthToken.Length != 0;
+            var encrypt = msgLogin.EncryptionKey.Length != 0;
 
             if (Auth == AuthMode.Required && !isLocal)
             {
@@ -713,22 +715,16 @@ namespace Robust.Shared.Network
                     return;
                 }
 
-                if (!msgLogin.Auth)
+                if (!hasAuthToken)
                 {
                     connection.Disconnect("Connecting to this server requires authentication");
                     return;
                 }
             }
 
-            if (_authBroken)
-            {
-                msgLogin.Auth = false;
-            }
-
             NetUserId userId;
             string userName;
-            bool encrypt;
-            if (msgLogin.Auth && Auth != AuthMode.Disabled)
+            if (hasAuthToken && Auth != AuthMode.Disabled)
             {
                 var token = msgLogin.AuthToken;
                 var decrypted = SADecryptAuthToken(token);
@@ -742,8 +738,6 @@ namespace Robust.Shared.Network
 
                 userName = tokenContents.Value.userName;
                 userId = new NetUserId(tokenContents.Value.userId);
-
-                encrypt = msgLogin.EncryptionKey.Length != 0;
             }
             else
             {
@@ -771,8 +765,6 @@ namespace Robust.Shared.Network
 
                 // Just generate a random new GUID.
                 userId = new NetUserId(Guid.NewGuid());
-
-                encrypt = false;
             }
 
             var endPoint = connection.RemoteEndPoint;

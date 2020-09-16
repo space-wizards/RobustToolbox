@@ -122,37 +122,40 @@ namespace Robust.Shared.Network
             var authToken = _config.GetCVar<string>("auth.token");
             var pubKey = _config.GetCVar<string>("auth.serverpubkey");
 
+            var encrypt = !string.IsNullOrEmpty(pubKey) && _config.GetCVar<bool>("net.encrypt");
             var authenticate = !string.IsNullOrEmpty(authToken);
 
             byte[]? aesKey = null;
             var msgLogin = new MsgLogin
             {
-                UsernameRequest = userNameRequest,
-                Auth = authenticate
+                UsernameRequest = userNameRequest
             };
 
             if (authenticate)
             {
                 msgLogin.AuthToken = Convert.FromBase64String(authToken);
+            }
+            else
+            {
+                msgLogin.AuthToken = Array.Empty<byte>();
+            }
 
-                var encrypt = _config.GetCVar<bool>("net.encrypt");
-                if (encrypt)
-                {
-                    // Generate AES key.
-                    aesKey = new byte[AesKeyLength];
-                    RandomNumberGenerator.Fill(aesKey);
+            if (encrypt)
+            {
+                // Generate AES key.
+                aesKey = new byte[AesKeyLength];
+                RandomNumberGenerator.Fill(aesKey);
 
-                    // Encrypt AES key with server's public RSA key.
-                    var serverRsa = RSA.Create();
-                    serverRsa.ImportRSAPublicKey(Convert.FromBase64String(pubKey), out _);
-                    var encryptedKey = serverRsa.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
+                // Encrypt AES key with server's public RSA key.
+                var serverRsa = RSA.Create();
+                serverRsa.ImportRSAPublicKey(Convert.FromBase64String(pubKey), out _);
+                var encryptedKey = serverRsa.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
 
-                    msgLogin.EncryptionKey = encryptedKey;
-                }
-                else
-                {
-                    msgLogin.EncryptionKey = Array.Empty<byte>();
-                }
+                msgLogin.EncryptionKey = encryptedKey;
+            }
+            else
+            {
+                msgLogin.EncryptionKey = Array.Empty<byte>();
             }
 
             var outLoginMsg = peer.Peer.CreateMessage();

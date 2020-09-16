@@ -14,7 +14,6 @@ namespace Robust.Shared.Network.Messages
         }
 
         public string UsernameRequest { get; set; }
-        public bool Auth { get; set; }
         public byte[] AuthToken { get; set; }
         public byte[] EncryptionKey { get; set; }
 
@@ -22,13 +21,6 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             UsernameRequest = buffer.ReadString();
-            Auth = buffer.ReadBoolean();
-            if (!Auth)
-            {
-                return;
-            }
-
-            buffer.ReadPadBits();
             var tokenLength = buffer.ReadVariableInt32();
             AuthToken = buffer.ReadBytes(tokenLength);
             var keyLength = buffer.ReadVariableInt32();
@@ -38,13 +30,6 @@ namespace Robust.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write(UsernameRequest);
-            buffer.Write(Auth);
-            if (!Auth)
-            {
-                return;
-            }
-
-            buffer.WritePadBits();
             buffer.WriteVariableInt32(AuthToken.Length);
             buffer.Write(AuthToken);
             buffer.WriteVariableInt32(EncryptionKey.Length);

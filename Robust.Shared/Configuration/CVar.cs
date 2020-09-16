@@ -41,6 +41,11 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Changing this var on the server notifies all clients, does nothing client-side.
         /// </summary>
-        NOTIFY = 32
+        NOTIFY = 32,
+
+        /// <summary>
+        /// This var has to kept secure and may not be accessed by content.
+        /// </summary>
+        SECURE = 64
     }
 }

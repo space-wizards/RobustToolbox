@@ -33,6 +33,7 @@ namespace Robust.Shared
         {
             IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
+            IoCManager.Register<IConfigurationManagerInternal, ConfigurationManager>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IGameTiming, GameTiming>();

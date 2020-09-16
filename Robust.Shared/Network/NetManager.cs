@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Newtonsoft.Json;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
@@ -40,7 +43,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public partial class NetManager : IClientNetManager, IServerNetManager, IDisposable
     {
-        internal const int AesKeyLength = 32; // So AES-256
+        internal const int AesKeyLength = 32;
 
         [Dependency] private readonly IRobustSerializer _serializer = default!;
 
@@ -106,7 +109,7 @@ namespace Robust.Shared.Network
 
         private readonly Dictionary<Type, long> _bandwidthUsage = new Dictionary<Type, long>();
 
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
 
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
@@ -209,11 +212,6 @@ namespace Robust.Shared.Network
 
         private bool _initialized;
 
-        // Allowing this to be changed live is more trouble than it's worth
-        // because of the auth server signing key download.
-        // Sooooo....
-        private bool _authBroken;
-
         public NetManager()
         {
             _strings = new StringTable(this);
@@ -240,19 +238,17 @@ namespace Robust.Shared.Network
             _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
             _config.RegisterCVar("net.verbose", false, CVar.ARCHIVE, NetVerboseChanged);
 
+            _config.RegisterCVar("auth.server", "http://localhost:5000/", CVar.SECURE);
+
             if (isServer)
             {
                 // That's comma-separated, btw.
                 _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
                 _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
 
-                _config.RegisterCVar("auth.mode", (int) AuthMode.Required);
-                _config.RegisterCVar("auth.server", "http://localhost:5000/");
-                // Always allow localhost to connect, no matter what.
+                _config.RegisterCVar("auth.mode", (int) AuthMode.Required, onValueChanged: v => Auth = (AuthMode)v);
+                // Always allow localhost to connect, without requiring auth.
                 _config.RegisterCVar("auth.allowlocal", true);
-                // Pins the private RSA key of the server.
-                // I swear to god only use this for debugging purposes or I will come to your house.
-                _config.RegisterCVar("auth.privkey", "");
             }
             else
             {
@@ -261,13 +257,9 @@ namespace Robust.Shared.Network
                 _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
                 _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
 
-                // For connecting to an auth-enabled server:
-                // public key of the server we are connecting to
-                _config.RegisterCVar("auth.serverpubkey", "");
-                // auth JWT token the launcher got us from the auth server
-                _config.RegisterCVar("auth.token", "");
-                // Encrypt the network connection if possible.
-                _config.RegisterCVar("net.encrypt", true);
+                _config.RegisterCVar("auth.serverpubkey", "", CVar.SECURE);
+                _config.RegisterCVar("auth.token", "", CVar.SECURE);
+                _config.RegisterCVar("auth.userid", "", CVar.SECURE);
             }
 
 #if DEBUG
@@ -292,12 +284,7 @@ namespace Robust.Shared.Network
             if (IsServer)
             {
                 Auth = (AuthMode) _config.GetCVar<int>("auth.mode");
-
-                if (Auth != AuthMode.Disabled)
-                {
-                    SAGenerateRsaKeys();
-                    _authKeysTask = SAFetchAuthKey();
-                }
+                SAGenerateRsaKeys();
             }
         }
 
@@ -683,65 +670,108 @@ namespace Robust.Shared.Network
 
         private async void HandleHandshake(NetPeerData peer, NetConnection connection)
         {
-            NetIncomingMessage loginPacket;
+            NetIncomingMessage incPacket;
             try
             {
-                loginPacket = await AwaitData(connection);
+                incPacket = await AwaitData(connection);
             }
             catch (ClientDisconnectedException)
             {
                 return;
             }
 
-            var msgLogin = new MsgLogin();
-            msgLogin.ReadFromBuffer(loginPacket);
-
-            if (Auth != AuthMode.Disabled && !_authKeysTask!.IsCompleted)
-            {
-                await _authKeysTask;
-            }
+            var msgLogin = new MsgLoginStart();
+            msgLogin.ReadFromBuffer(incPacket);
 
             var ip = connection.RemoteEndPoint.Address;
             var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar<bool>("auth.allowlocal");
-            var hasAuthToken = !_authBroken && msgLogin.AuthToken.Length != 0;
-            var encrypt = msgLogin.EncryptionKey.Length != 0;
+            var canAuth = msgLogin.CanAuth;
+            var needPk = msgLogin.NeedPubKey;
+            var authServer = _config.GetSecureCVar<string>("auth.server");
+
 
             if (Auth == AuthMode.Required && !isLocal)
             {
-                if (_authBroken)
-                {
-                    connection.Disconnect(
-                        "Server has broken connection to authentication server, unable to log you in.");
-                    return;
-                }
-
-                if (!hasAuthToken)
+                if (!canAuth)
                 {
                     connection.Disconnect("Connecting to this server requires authentication");
                     return;
                 }
             }
 
+            NetEncryption? encryption = null;
             NetUserId userId;
             string userName;
-            if (hasAuthToken && Auth != AuthMode.Disabled)
-            {
-                var token = msgLogin.AuthToken;
-                var decrypted = SADecryptAuthToken(token);
-                var tokenContents = SAReadToken(decrypted);
+            var padSuccessMessage = true;
 
-                if (tokenContents == null)
+            if (canAuth && Auth != AuthMode.Disabled)
+            {
+                var verifyToken = new byte[4];
+                RandomNumberGenerator.Fill(verifyToken);
+                var msgEncReq = new MsgEncryptionRequest
                 {
-                    connection.Disconnect("Authentication token is invalid or expired.");
+                    PublicKey = needPk ? RsaPublicKey : Array.Empty<byte>(),
+                    VerifyToken = verifyToken
+                };
+
+                var outMsgEncReq = peer.Peer.CreateMessage();
+                outMsgEncReq.Write(false);
+                outMsgEncReq.WritePadBits();
+                msgEncReq.WriteToBuffer(outMsgEncReq);
+                peer.Peer.SendMessage(outMsgEncReq, connection, NetDeliveryMethod.ReliableOrdered);
+
+                try
+                {
+                    incPacket = await AwaitData(connection);
+                }
+                catch (ClientDisconnectedException)
+                {
                     return;
                 }
 
-                userName = tokenContents.Value.userName;
-                userId = new NetUserId(tokenContents.Value.userId);
+                var msgEncResponse = new MsgEncryptionResponse();
+                msgEncResponse.ReadFromBuffer(incPacket);
+
+                var verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
+                    msgEncResponse.VerifyToken,
+                    RSAEncryptionPadding.OaepSHA256);
+                var sharedSecret = _authRsaPrivateKey!.Decrypt(
+                    msgEncResponse.SharedSecret,
+                    RSAEncryptionPadding.OaepSHA256);
+
+                if (!verifyToken.SequenceEqual(verifyTokenCheck))
+                {
+                    connection.Disconnect("Verify token is invalid");
+                    return;
+                }
+
+                encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+
+                var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
+                var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
+
+                var client = new HttpClient();
+                var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
+                var joinedResp = await client.GetAsync(url);
+
+                joinedResp.EnsureSuccessStatusCode();
+
+                var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(
+                    await joinedResp.Content.ReadAsStringAsync());
+
+                if (!joinedRespJson.IsValid)
+                {
+                    connection.Disconnect("Failed to validate login");
+                    return;
+                }
+
+                userId = new NetUserId(joinedRespJson.UserData!.UserId);
+                userName = joinedRespJson.UserData.UserName;
+                padSuccessMessage = false;
             }
             else
             {
-                var reqUserName = msgLogin.UsernameRequest;
+                var reqUserName = msgLogin.UserName;
 
                 if (!UsernameHelpers.IsNameValid(reqUserName, out var reason))
                 {
@@ -751,7 +781,9 @@ namespace Robust.Shared.Network
 
                 // If auth is set to "optional" we need to avoid conflicts between real accounts and guests,
                 // so we explicitly prefix guests.
-                var origName = Auth == AuthMode.Disabled ? reqUserName : (isLocal ? $"localhost@{reqUserName}" : $"guest@{reqUserName}");
+                var origName = Auth == AuthMode.Disabled
+                    ? reqUserName
+                    : (isLocal ? $"localhost@{reqUserName}" : $"guest@{reqUserName}");
                 var name = origName;
                 var iterations = 1;
 
@@ -775,24 +807,23 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            var msg = connection.Peer.CreateMessage();
-            var msgResp = new MsgLoginResp
+            var msg = peer.Peer.CreateMessage();
+            var msgResp = new MsgLoginSuccess
             {
-                Encrypt = encrypt,
                 UserId = userId.UserId,
                 UserName = userName
             };
-            msgResp.WriteToBuffer(msg);
-            connection.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
-
-            NetEncryption? encryption = null;
-            if (encrypt)
+            if (padSuccessMessage)
             {
-                var key = SADecryptAesKey(msgLogin.EncryptionKey);
-                encryption = new NetAESEncryption(peer.Peer, key, 0, key.Length);
+                msg.Write(true);
+                msg.WritePadBits();
             }
+            msgResp.WriteToBuffer(msg);
+            encryption?.Encrypt(msg);
+            peer.Peer.SendMessage(msg, connection, NetDeliveryMethod.ReliableOrdered);
 
-            Logger.InfoS("net", "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
+            Logger.InfoS("net",
+                "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
                 connection.RemoteEndPoint, userName, userId);
 
             // Handshake complete!
@@ -817,6 +848,7 @@ namespace Robust.Shared.Network
 
             try
             {
+                await Task.Delay(1000);
                 await _serializer.Handshake(channel);
             }
             catch (TaskCanceledException)

@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Newtonsoft.Json;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
@@ -119,65 +123,103 @@ namespace Robust.Shared.Network
         private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
             CancellationToken cancel)
         {
-            var authToken = _config.GetCVar<string>("auth.token");
-            var pubKey = _config.GetCVar<string>("auth.serverpubkey");
+            var authToken = _config.GetSecureCVar<string>("auth.token");
+            var pubKey = _config.GetSecureCVar<string>("auth.serverpubkey");
+            var authServer = _config.GetSecureCVar<string>("auth.server");
+            var userIdStr = _config.GetSecureCVar<string>("auth.userid");
 
-            var encrypt = !string.IsNullOrEmpty(pubKey) && _config.GetCVar<bool>("net.encrypt");
+            var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
             byte[]? aesKey = null;
-            var msgLogin = new MsgLogin
+            var msgLogin = new MsgLoginStart
             {
-                UsernameRequest = userNameRequest
+                UserName = userNameRequest,
+                CanAuth = authenticate,
+                NeedPubKey = !hasPubKey
             };
-
-            if (authenticate)
-            {
-                msgLogin.AuthToken = Convert.FromBase64String(authToken);
-            }
-            else
-            {
-                msgLogin.AuthToken = Array.Empty<byte>();
-            }
-
-            if (encrypt)
-            {
-                // Generate AES key.
-                aesKey = new byte[AesKeyLength];
-                RandomNumberGenerator.Fill(aesKey);
-
-                // Encrypt AES key with server's public RSA key.
-                var serverRsa = RSA.Create();
-                serverRsa.ImportRSAPublicKey(Convert.FromBase64String(pubKey), out _);
-                var encryptedKey = serverRsa.Encrypt(aesKey, RSAEncryptionPadding.OaepSHA256);
-
-                msgLogin.EncryptionKey = encryptedKey;
-            }
-            else
-            {
-                msgLogin.EncryptionKey = Array.Empty<byte>();
-            }
 
             var outLoginMsg = peer.Peer.CreateMessage();
             msgLogin.WriteToBuffer(outLoginMsg);
             peer.Peer.SendMessage(outLoginMsg, connection, NetDeliveryMethod.ReliableOrdered);
 
+            NetEncryption? encryption = null;
             var response = await AwaitData(connection, cancel);
-            var msgResp = new MsgLoginResp();
-            msgResp.ReadFromBuffer(response);
+            var loginSuccess = response.ReadBoolean();
+            response.ReadPadBits();
+            if (!loginSuccess)
+            {
+                // Need to authenticate, packet is MsgEncryptionRequest
+                var encRequest = new MsgEncryptionRequest();
+                encRequest.ReadFromBuffer(response);
 
-            var channel = new NetChannel(this, connection, new NetUserId(msgResp.UserId), msgResp.UserName);
+                var sharedSecret = new byte[AesKeyLength];
+                RandomNumberGenerator.Fill(sharedSecret);
+
+                encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+
+                byte[] keyBytes;
+                if (hasPubKey)
+                {
+                    // public key provided by launcher.
+                    keyBytes = Convert.FromBase64String(pubKey);
+                }
+                else
+                {
+                    // public key is gotten from handshake.
+                    keyBytes = encRequest.PublicKey;
+                }
+
+                var rsaKey = RSA.Create();
+                rsaKey.ImportRSAPublicKey(keyBytes, out _);
+
+                var encryptedSecret = rsaKey.Encrypt(sharedSecret, RSAEncryptionPadding.OaepSHA256);
+                var encryptedVerifyToken = rsaKey.Encrypt(encRequest.VerifyToken, RSAEncryptionPadding.OaepSHA256);
+
+                var authHashBytes = MakeAuthHash(sharedSecret, encRequest.PublicKey);
+                var authHash = Convert.ToBase64String(authHashBytes);
+
+                var joinReq = new JoinRequest {Hash = authHash};
+                var httpClient = new HttpClient();
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SS14Auth", authToken);
+                var joinJson = JsonConvert.SerializeObject(joinReq);
+                var joinResp = await httpClient.PostAsync(authServer + "api/session/join",
+                    new StringContent(joinJson, EncodingHelpers.UTF8, MediaTypeNames.Application.Json), cancel);
+
+                joinResp.EnsureSuccessStatusCode();
+
+                var encryptionResponse = new MsgEncryptionResponse
+                {
+                    SharedSecret = encryptedSecret,
+                    VerifyToken = encryptedVerifyToken,
+                    UserId = new Guid(userIdStr)
+                };
+
+                var outEncRespMsg = peer.Peer.CreateMessage();
+                encryptionResponse.WriteToBuffer(outEncRespMsg);
+                peer.Peer.SendMessage(outEncRespMsg, connection, NetDeliveryMethod.ReliableOrdered);
+
+                // Expect login success here.
+                response = await AwaitData(connection, cancel);
+                encryption.Decrypt(response);
+            }
+
+            var msgSuc = new MsgLoginSuccess();
+            msgSuc.ReadFromBuffer(response);
+
+            var channel = new NetChannel(this, connection, new NetUserId(msgSuc.UserId), msgSuc.UserName);
             _channels.Add(connection, channel);
             peer.AddChannel(channel);
 
-            if (msgResp.Encrypt)
-            {
-                Logger.DebugS("auth", "Encrypting connection!");
-                DebugTools.Assert(aesKey != null);
+            _clientEncryption = encryption;
+        }
 
-                var encryption = new NetAESEncryption(peer.Peer, aesKey, 0, aesKey!.Length);
-                _clientEncryption = encryption;
-            }
+        private static byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)
+        {
+            var incHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+            incHash.AppendData(sharedSecret);
+            incHash.AppendData(pkBytes);
+            return incHash.GetHashAndReset();
         }
 
         private async Task<(IPAddress first, IPAddress? second)?>
@@ -462,6 +504,11 @@ namespace Robust.Shared.Network
             {
                 return null;
             }
+        }
+
+        private sealed class JoinRequest
+        {
+            public string Hash = default!;
         }
     }
 }

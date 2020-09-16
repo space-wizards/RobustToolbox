@@ -309,7 +309,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = true;
             }
 
-            var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            var tex = SpriteComponent.GetPrototypeIcon(prototype, resourceCache);
             var rect = button.EntityTextureRect;
             if (tex != null)
             {

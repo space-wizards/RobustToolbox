@@ -1782,5 +1782,93 @@ namespace Robust.Client.GameObjects
                     throw new ArgumentException($"Unknown layer property '{layerProp}'");
             }
         }
+
+        public static string? GetDefaultState(ObjectSerializer serializer)
+        {
+            var stateId = serializer.ReadDataField<string?>("state", null);
+            if (string.IsNullOrWhiteSpace(stateId))
+            {
+                var layerData =
+                    serializer.ReadDataField("layers", new List<PrototypeLayerData>());
+                if (layerData.Count == 0) return stateId;
+
+                stateId = layerData.First().State; //todo maybe add an additional "icon_state"/"preview_state" field to override just picking the first layer
+            }
+
+            return stateId;
+        }
+
+        const string SerializationCache = "sprite";
+
+        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
+        {
+            DebugTools.Assert(serializer.Reading);
+
+            if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
+            {
+                return dirTex;
+            }
+
+            var tex = serializer.ReadDataField<string?>("texture", null);
+            if (!string.IsNullOrWhiteSpace(tex))
+            {
+                dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            RSI rsi;
+
+            var rsiPath = serializer.ReadDataField<string?>("sprite", null);
+
+            if (string.IsNullOrWhiteSpace(rsiPath))
+            {
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            var path = SpriteComponent.TextureRoot / rsiPath;
+
+            try
+            {
+                rsi = resourceCache.GetResource<RSIResource>(path).RSI;
+            }
+            catch
+            {
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            var stateId = GetDefaultState(serializer);
+            if (string.IsNullOrWhiteSpace(stateId))
+            {
+                Logger.ErrorS(LogCategory, "No state specified.");
+                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
+                serializer.SetCacheData(SerializationCache, dirTex);
+                return dirTex;
+            }
+
+            if (rsi.TryGetState(stateId, out var state))
+            {
+                serializer.SetCacheData(SerializationCache, state);
+                return state;
+            }
+            else
+            {
+                Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", stateId);
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+        }
+
+        public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        {
+            if (!prototype.Components.TryGetValue("Sprite", out var mapping))
+            {
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+            return TextureForConfig(YamlObjectSerializer.NewReader(mapping), resourceCache);
+        }
     }
 }

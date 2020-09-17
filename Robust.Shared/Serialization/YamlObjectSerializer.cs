@@ -518,17 +518,18 @@ namespace Robust.Shared.Serialization
 
                 return newDict;
             }
-            
+
             // HashSet<T>
             if (TryGenericHashSetType(type, out var setType))
             {
                 var setNode = (YamlSequenceNode)node;
-                var newSet = (HashSet<object>)Activator.CreateInstance(type, setNode.Children.Count)!;
+                var newSet = Activator.CreateInstance(type, setNode.Children.Count)!;
 
                 foreach (var entryNode in setNode)
                 {
                     var value = NodeToType(setType, entryNode);
-                    newSet.Add(value);
+                    var method = type.GetMethod("Add")!;
+                    method.Invoke(newSet, new[] {value});
                 }
 
                 return newSet;

@@ -60,6 +60,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _placementManager.PlacementChanged += OnPlacementCanceled;
 
             Title = "Place Tiles";
+            SearchBar.GrabKeyboardFocus();
         }
 
         protected override void Dispose(bool disposing)

@@ -63,80 +63,8 @@ namespace Robust.Client.UserInterface.CustomControls
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache,
-            ILocalizationManager loc)
+            ILocalizationManager loc) : this(placementManager, prototypeManager, resourceCache)
         {
-            this.placementManager = placementManager;
-            this.prototypeManager = prototypeManager;
-            this.resourceCache = resourceCache;
-
-            Title = Loc.GetString("Entity Spawn Panel");
-
-            Contents.AddChild(MainVBox = new VBoxContainer
-            {
-                Children =
-                {
-                    new HBoxContainer
-                    {
-                        Children =
-                        {
-                            (SearchBar = new LineEdit
-                            {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = Loc.GetString("Search")
-                            }),
-
-                            (ClearButton = new Button
-                            {
-                                Disabled = true,
-                                Text = Loc.GetString("Clear"),
-                            })
-                        }
-                    },
-                    new ScrollContainer
-                    {
-                        CustomMinimumSize = new Vector2(200.0f, 0.0f),
-                        SizeFlagsVertical = SizeFlags.FillExpand,
-                        Children =
-                        {
-                            (PrototypeList = new PrototypeListContainer())
-                        }
-                    },
-                    new HBoxContainer
-                    {
-                        Children =
-                        {
-                            (EraseButton = new Button
-                            {
-                                ToggleMode = true,
-                                Text = Loc.GetString("Erase Mode")
-                            }),
-
-                            (OverrideMenu = new OptionButton
-                            {
-                                SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                ToolTip = Loc.GetString("Override placement")
-                            })
-                        }
-                    },
-                    (MeasureButton = new EntitySpawnButton {Visible = false})
-                }
-            });
-
-            for (var i = 0; i < initOpts.Length; i++)
-            {
-                OverrideMenu.AddItem(initOpts[i], i);
-            }
-
-            EraseButton.Pressed = placementManager.Eraser;
-            EraseButton.OnToggled += OnEraseButtonToggled;
-            OverrideMenu.OnItemSelected += OnOverrideMenuItemSelected;
-            SearchBar.OnTextChanged += OnSearchBarTextChanged;
-            ClearButton.OnPressed += OnClearButtonPressed;
-
-            BuildEntityList();
-
-            this.placementManager.PlacementChanged += OnPlacementCanceled;
-            SearchBar.GrabKeyboardFocus();
         }
 
         public EntitySpawnWindow(IPlacementManager placementManager,

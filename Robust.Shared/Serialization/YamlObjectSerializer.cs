@@ -523,7 +523,7 @@ namespace Robust.Shared.Serialization
             if (TryGenericHashSetType(type, out var setType))
             {
                 var setNode = (YamlSequenceNode)node;
-                var newSet = (HashSet<object>)Activator.CreateInstance(type, setNode.Children.Count)!;
+                var newSet = (HashSet<dynamic>)Activator.CreateInstance(type, setNode.Children.Count)!;
 
                 foreach (var entryNode in setNode)
                 {
@@ -855,8 +855,8 @@ namespace Robust.Shared.Serialization
 
             if (TryGenericHashSetType(type!, out _))
             {
-                var setA = (HashSet<object>) a;
-                var setB = (HashSet<object>) b!;
+                var setA = (HashSet<dynamic>) a;
+                var setB = (HashSet<dynamic>) b!;
 
                 if (setA.Count != setB.Count)
                 {
@@ -865,7 +865,7 @@ namespace Robust.Shared.Serialization
 
                 foreach (var elementA in setA)
                 {
-                    if (!setB.TryGetValue(elementA, out var elementB))
+                    if (!setB.TryGetValue(elementA, out dynamic? elementB))
                     {
                         return false;
                     }

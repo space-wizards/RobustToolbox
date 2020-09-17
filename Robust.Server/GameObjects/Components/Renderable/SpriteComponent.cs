@@ -27,7 +27,7 @@ namespace Robust.Server.GameObjects
         private string? _baseRSIPath;
         private Angle _rotation;
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public int DrawDepth
         {
             get => _drawDepth;

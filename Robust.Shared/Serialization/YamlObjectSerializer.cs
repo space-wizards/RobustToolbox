@@ -518,6 +518,21 @@ namespace Robust.Shared.Serialization
 
                 return newDict;
             }
+            
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var setNode = (YamlSequenceNode)node;
+                var newSet = (HashSet<object>)Activator.CreateInstance(type, setNode.Children.Count)!;
+
+                foreach (var entryNode in setNode)
+                {
+                    var value = NodeToType(setType, entryNode);
+                    newSet.Add(value);
+                }
+
+                return newSet;
+            }
 
             // Hand it to the context.
             if (_context != null && _context.TryNodeToType(node, type, out var contextObj))
@@ -694,6 +709,30 @@ namespace Robust.Shared.Serialization
                 return node;
             }
 
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var node = new YamlSequenceNode();
+                node.Tag = TagSkipTag;
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside hashset.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(setType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+            
             // Hand it to the context.
             if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {
@@ -811,6 +850,32 @@ namespace Robust.Shared.Serialization
                     }
                 }
 
+                return true;
+            }
+
+            if (TryGenericHashSetType(type!, out _))
+            {
+                var setA = (HashSet<object>) a;
+                var setB = (HashSet<object>) b!;
+
+                if (setA.Count != setB.Count)
+                {
+                    return false;
+                }
+
+                foreach (var elementA in setA)
+                {
+                    if (!setB.TryGetValue(elementA, out var elementB))
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(elementA, elementB))
+                    {
+                        return false;
+                    }
+                }
+                
                 return true;
             }
 
@@ -936,6 +1001,20 @@ namespace Robust.Shared.Serialization
 
             keyType = default;
             valType = default;
+            return false;
+        }
+
+        private static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
+        {
+            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+            if (isSet)
+            {
+                setType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            setType = default;
             return false;
         }
 

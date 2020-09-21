@@ -25,6 +25,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Linq;
 using Robust.Shared.ViewVariables;
+using YamlDotNet.RepresentationModel;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
@@ -32,6 +33,8 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
+        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
+
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1012,22 +1015,7 @@ namespace Robust.Client.GameObjects
                 // TODO: Implement layer-specific rotation and scale.
                 // Oh and when you do update Layer.LocalToLayer so content doesn't break.
 
-                var texture = layer.Texture;
-
-                if (layer.State.IsValid)
-                {
-                    // Pull texture from RSI state instead.
-                    var rsi = layer.RSI ?? BaseRSI;
-                    if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                    {
-                        state = GetFallbackState();
-                    }
-
-                    var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
-                    texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
-                }
-
-                texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+                var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
 
                 if (layer.Shader != null)
                 {
@@ -1042,6 +1030,27 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(null);
                 }
             }
+        }
+
+        private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
+        {
+            var texture = layer.Texture;
+
+            if (layer.State.IsValid)
+            {
+                // Pull texture from RSI state instead.
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
+                texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+            }
+
+            texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+            return texture;
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -1783,92 +1792,24 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public static string? GetDefaultState(ObjectSerializer serializer)
+        public static Texture GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            var stateId = serializer.ReadDataField<string?>("state", null);
-            if (string.IsNullOrWhiteSpace(stateId))
-            {
-                var layerData =
-                    serializer.ReadDataField("layers", new List<PrototypeLayerData>());
-                if (layerData.Count == 0) return stateId;
-
-                stateId = layerData.First().State; //todo maybe add an additional "icon_state"/"preview_state" field to override just picking the first layer
-            }
-
-            return stateId;
-        }
-
-        const string SerializationCache = "sprite";
-
-        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
-        {
-            DebugTools.Assert(serializer.Reading);
-
-            if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
-            {
-                return dirTex;
-            }
-
-            var tex = serializer.ReadDataField<string?>("texture", null);
-            if (!string.IsNullOrWhiteSpace(tex))
-            {
-                dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
-                return dirTex;
-            }
-
-            RSI rsi;
-
-            var rsiPath = serializer.ReadDataField<string?>("sprite", null);
-
-            if (string.IsNullOrWhiteSpace(rsiPath))
-            {
-                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
-                return dirTex;
-            }
-
-            var path = SpriteComponent.TextureRoot / rsiPath;
-
-            try
-            {
-                rsi = resourceCache.GetResource<RSIResource>(path).RSI;
-            }
-            catch
-            {
-                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
-                return dirTex;
-            }
-
-            var stateId = GetDefaultState(serializer);
-            if (string.IsNullOrWhiteSpace(stateId))
-            {
-                Logger.ErrorS(LogCategory, "No state specified.");
-                dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
-                return dirTex;
-            }
-
-            if (rsi.TryGetState(stateId, out var state))
-            {
-                serializer.SetCacheData(SerializationCache, state);
-                return state;
-            }
-            else
-            {
-                Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", stateId);
-                return resourceCache.GetFallback<TextureResource>().Texture;
-            }
-        }
-
-        public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
-        {
-            if (!prototype.Components.TryGetValue("Sprite", out var mapping))
+            if (!prototype.Components.TryGetValue("Sprite", out var dataNode))
             {
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
-            return TextureForConfig(YamlObjectSerializer.NewReader(mapping), resourceCache);
+
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
+
+            newComponent.ExposeData(YamlObjectSerializer.NewReader(dataNode));
+
+            if (newComponent.Layers.Count == 0)
+            {
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+
+            return newComponent.GetRenderTexture(newComponent.Layers[0], Angle.Zero, null);;
         }
     }
 }

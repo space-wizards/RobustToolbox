@@ -1792,6 +1792,8 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public Texture? Icon => Layers.Count == 0 ? null : GetRenderTexture(Layers[0], Angle.Zero, null);
+
         public static Texture GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Sprite", out var dataNode))
@@ -1809,7 +1811,7 @@ namespace Robust.Client.GameObjects
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
-            return newComponent.GetRenderTexture(newComponent.Layers[0], Angle.Zero, null);;
+            return newComponent.Icon!;
         }
     }
 }

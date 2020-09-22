@@ -16,7 +16,22 @@ namespace Robust.Server.AI
         /// <summary>
         ///     Entity this AI is controlling.
         /// </summary>
-        public IEntity SelfEntity { get; set; } = default!;
+        public IEntity SelfEntity
+        {
+            get => _selfEntity;
+            set
+            {
+                if (_selfEntity == value)
+                    return;
+                
+                if (_selfEntity != default)
+                    throw new InvalidOperationException();
+
+                _selfEntity = value;
+            }
+        }
+
+        private IEntity _selfEntity = default!;
 
         /// <summary>
         ///     One-Time setup when the processor is created.
@@ -40,7 +55,9 @@ namespace Robust.Server.AI
         }
         public override int GetHashCode()
         {
-            return GetType().GetHashCode();
+            // SelfEntity should never be set after the initial one anyway.
+            // Long-term more stuff will be moved to yaml and this is subject to a refactor.
+            return SelfEntity.Uid.GetHashCode();
         }
     }
 }

@@ -1,11 +1,12 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
+﻿using System;
+using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Server.AI
 {
     /// <summary>
     ///     Base class for all AI Processors.
     /// </summary>
-    public abstract class AiLogicProcessor
+    public abstract class AiLogicProcessor : IEquatable<AiLogicProcessor>
     {
         /// <summary>
         ///     Radius in meters that the AI can "see".
@@ -32,5 +33,14 @@ namespace Robust.Server.AI
         /// </summary>
         /// <param name="frameTime">Time since last update in seconds.</param>
         public abstract void Update(float frameTime);
+
+        public bool Equals(AiLogicProcessor other)
+        {
+            return SelfEntity.Uid.Equals(other.SelfEntity.Uid);
+        }
+        public override int GetHashCode()
+        {
+            return GetType().GetHashCode();
+        }
     }
 }

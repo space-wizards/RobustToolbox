@@ -21,7 +21,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
-        private readonly ILocalizationManager _loc;
 
         private VBoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
@@ -61,18 +60,23 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2? CustomSize => (250, 300);
 
+        [Obsolete]
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache,
-            ILocalizationManager loc)
+            ILocalizationManager loc) : this(placementManager, prototypeManager, resourceCache)
+        {
+        }
+
+        public EntitySpawnWindow(IPlacementManager placementManager,
+            IPrototypeManager prototypeManager,
+            IResourceCache resourceCache)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
 
-            _loc = loc;
-
-            Title = _loc.GetString("Entity Spawn Panel");
+            Title = Loc.GetString("Entity Spawn Panel");
 
             Contents.AddChild(MainVBox = new VBoxContainer
             {
@@ -85,13 +89,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = _loc.GetString("Search")
+                                PlaceHolder = Loc.GetString("Search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = _loc.GetString("Clear"),
+                                Text = Loc.GetString("Clear"),
                             })
                         }
                     },
@@ -111,13 +115,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (EraseButton = new Button
                             {
                                 ToggleMode = true,
-                                Text = _loc.GetString("Erase Mode")
+                                Text = Loc.GetString("Erase Mode")
                             }),
 
                             (OverrideMenu = new OptionButton
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                ToolTip = _loc.GetString("Override placement")
+                                ToolTip = Loc.GetString("Override placement")
                             })
                         }
                     },

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -309,16 +310,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = true;
             }
 
-            var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             var rect = button.EntityTextureRect;
-            if (tex != null)
-            {
-                rect.Texture = tex.Default;
-            }
-            else
-            {
-                rect.Dispose();
-            }
+            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache);
 
             PrototypeList.AddChild(button);
             if (insertFirst)

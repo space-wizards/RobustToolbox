@@ -25,6 +25,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Linq;
 using Robust.Shared.ViewVariables;
+using YamlDotNet.RepresentationModel;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
@@ -32,6 +33,8 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
+        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
+
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1012,22 +1015,7 @@ namespace Robust.Client.GameObjects
                 // TODO: Implement layer-specific rotation and scale.
                 // Oh and when you do update Layer.LocalToLayer so content doesn't break.
 
-                var texture = layer.Texture;
-
-                if (layer.State.IsValid)
-                {
-                    // Pull texture from RSI state instead.
-                    var rsi = layer.RSI ?? BaseRSI;
-                    if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                    {
-                        state = GetFallbackState();
-                    }
-
-                    var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
-                    texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
-                }
-
-                texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+                var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
 
                 if (layer.Shader != null)
                 {
@@ -1042,6 +1030,27 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(null);
                 }
             }
+        }
+
+        private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
+        {
+            var texture = layer.Texture;
+
+            if (layer.State.IsValid)
+            {
+                // Pull texture from RSI state instead.
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
+                texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+            }
+
+            texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+            return texture;
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -1781,6 +1790,28 @@ namespace Robust.Client.GameObjects
                 default:
                     throw new ArgumentException($"Unknown layer property '{layerProp}'");
             }
+        }
+
+        public Texture? Icon => Layers.Count == 0 ? null : GetRenderTexture(Layers[0], Angle.Zero, null);
+
+        public static Texture GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        {
+            if (!prototype.Components.TryGetValue("Sprite", out var dataNode))
+            {
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
+
+            newComponent.ExposeData(YamlObjectSerializer.NewReader(dataNode));
+
+            if (newComponent.Layers.Count == 0)
+            {
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+
+            return newComponent.Icon!;
         }
     }
 }

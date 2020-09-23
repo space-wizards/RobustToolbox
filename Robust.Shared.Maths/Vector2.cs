@@ -239,6 +239,12 @@ namespace Robust.Shared.Maths
             );
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 Abs(in Vector2 a)
+        {
+            return new Vector2(Math.Abs(a.X), Math.Abs(a.Y));
+        }
+
         /// <summary>
         ///     Calculates the dot product of two vectors.
         /// </summary>
@@ -246,6 +252,32 @@ namespace Robust.Shared.Maths
         public static float Dot(Vector2 a, Vector2 b)
         {
             return a.X * b.X + a.Y * b.Y;
+        }
+
+        /// <summary>
+        ///     Perform the cross product on two vectors. In 2D this produces a scalar.
+        /// </summary>
+        public static float Cross(in Vector2 a, in Vector2 b)
+        {
+            return a.X * b.Y - a.Y * b.X;
+        }
+
+        /// <summary>
+        /// Perform the cross product on a vector and a scalar. In 2D this produces
+        /// a vector.
+        /// </summary>
+        public static Vector2 Cross(in Vector2 a, float s)
+        {
+            return new Vector2(s * a.Y, -s * a.X);
+        }
+
+        /// <summary>
+        /// Perform the cross product on a scalar and a vector. In 2D this produces
+        /// a vector.
+        /// </summary>
+        public static Vector2 Cross(float s, in Vector2 a)
+        {
+            return new Vector2(-s * a.Y, s * a.X);
         }
 
         /// <summary>

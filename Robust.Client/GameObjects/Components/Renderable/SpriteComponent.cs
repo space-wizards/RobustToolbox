@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Robust.Client.GameObjects.EntitySystems;
@@ -1872,7 +1873,7 @@ namespace Robust.Client.GameObjects
                 return null!;
             }
 
-            public bool TryGetComponent<T>(out T? component) where T : class
+            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
                 return false;
@@ -1883,7 +1884,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            public bool TryGetComponent(Type type, out IComponent? component)
+            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
             {
                 component = null;
                 return false;
@@ -1894,7 +1895,7 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            public bool TryGetComponent(uint netId, out IComponent? component)
+            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
             {
                 component = null;
                 return false;

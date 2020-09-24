@@ -250,13 +250,10 @@ namespace Robust.Shared.Physics
         private static readonly QueryCallbackDelegate<QueryCallbackDelegate> EasyQueryCallback =
             (ref QueryCallbackDelegate s, in T v) => s(v);
 
-        public void QueryRay<TState>(ref TState state, RayQueryCallbackDelegate<TState> callback, in Vector2 start, in Vector2 dir, bool approx = false)
+        public void QueryRay<TState>(ref TState state, RayQueryCallbackDelegate<TState> callback, in Ray ray, bool approx = false)
         {
-            var sourceRay = new Ray(start, dir);
-
-            var tuple = (state, callback, _b2Tree, approx ? null : _extractAabb, sourceRay);
-            _b2Tree.RayCast(ref tuple,
-                DelegateCache<TState>.RayQueryState, sourceRay, 1);
+            var tuple = (state, callback, _b2Tree, approx ? null : _extractAabb, ray);
+            _b2Tree.RayCast(ref tuple, DelegateCache<TState>.RayQueryState, ray);
             state = tuple.state;
         }
 
@@ -275,28 +272,26 @@ namespace Robust.Shared.Physics
             return tuple.callback(ref tuple.state, item);
         }
 
-        private static float RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, in Ray ray, float fraction, Proxy proxy)
+        private static bool RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, Proxy proxy, in Vector2 hitPos, float distance)
         {
             var item = tuple.tree.GetUserData(proxy)!;
-            var hit = ray.Position + ray.Direction * fraction;
-            var distance = ray.Direction.Length * fraction;
+            var hit = hitPos;
 
             if (tuple.extract != null)
             {
                 var precise = tuple.extract(item);
                 if (!tuple.srcRay.Intersects(precise, out distance, out hit))
                 {
-                    return fraction;
+                    return true;
                 }
             }
 
-            var c = tuple.callback(ref tuple.state, item, hit, distance);
-            return c ? fraction : 0;
+            return tuple.callback(ref tuple.state, item, hit, distance);
         }
 
-        public void QueryRay(RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false)
+        public void QueryRay(RayQueryCallbackDelegate callback, in Ray ray, bool approx = false)
         {
-            QueryRay(ref callback, RayQueryDelegateCallbackInst, start, dir, approx);
+            QueryRay(ref callback, RayQueryDelegateCallbackInst, ray, approx);
         }
 
         private static readonly RayQueryCallbackDelegate<RayQueryCallbackDelegate> RayQueryDelegateCallbackInst = RayQueryDelegateCallback;

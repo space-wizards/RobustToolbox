@@ -77,13 +77,13 @@ namespace Robust.Shared.Physics {
             return _tree.QueryPoint(point, approx);
         }
 
-        public void QueryRay(DynamicTree<IPhysBody>.RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false) =>
-            _tree.QueryRay(callback, in start, in dir, approx);
+        public void QueryRay(DynamicTree<IPhysBody>.RayQueryCallbackDelegate callback, in Ray ray, bool approx = false) =>
+            _tree.QueryRay(callback, ray, approx);
 
-        public void QueryRay<TState>(ref TState state, DynamicTree<IPhysBody>.RayQueryCallbackDelegate<TState> callback, in Vector2 start, in Vector2 dir,
+        public void QueryRay<TState>(ref TState state, DynamicTree<IPhysBody>.RayQueryCallbackDelegate<TState> callback, in Ray ray,
             bool approx = false)
         {
-            _tree.QueryRay(ref state, callback, start, dir, approx);
+            _tree.QueryRay(ref state, callback, ray, approx);
         }
 
         public bool IsReadOnly => _tree.IsReadOnly;

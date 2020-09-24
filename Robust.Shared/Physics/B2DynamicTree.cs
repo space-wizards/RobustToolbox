@@ -25,6 +25,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics
 {
@@ -42,9 +43,9 @@ namespace Robust.Shared.Physics
     /// <typeparam name="T"></typeparam>
     public sealed class B2DynamicTree<T> : DynamicTree
     {
-        public delegate float RayQueryCallback<TState>(ref TState state, in Ray ray, float fraction, Proxy proxy);
+        public delegate bool RayQueryCallback<TState>(ref TState state, Proxy proxy, in Vector2 hitPos, float distance);
 
-        public delegate float RayQueryCallback(in Ray ray, float fraction, Proxy proxy);
+        public delegate bool RayQueryCallback(Proxy proxy, in Vector2 hitPos, float distance);
 
         public delegate bool QueryCallback(Proxy proxy);
 
@@ -904,93 +905,58 @@ namespace Robust.Shared.Physics
         }
 
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
-            (ref RayQueryCallback callback, in Ray ray, float fraction, Proxy proxy) => callback(ray, fraction, proxy);
+            (ref RayQueryCallback callback, Proxy proxy, in Vector2 hitPos, float distance) => callback(proxy, hitPos, distance);
 
-        public void RayCast(RayQueryCallback callback, in Ray input, float inputFraction)
+        public void RayCast(RayQueryCallback callback, in Ray input)
         {
-            RayCast(ref callback, EasyRayQueryCallback, input, inputFraction);
+            RayCast(ref callback, EasyRayQueryCallback, input);
         }
 
-        public void RayCast<TState>(ref TState state, RayQueryCallback<TState> callback, in Ray input, float inputFraction)
+        public void RayCast<TState>(ref TState state, RayQueryCallback<TState> callback, in Ray input)
         {
-            var p1 = input.Position;
-            var p2 = input.Direction;
-            var r = p2 - p1;
-            Assert(r.LengthSquared > 0);
-            r = r.Normalized;
-
-            // v is perpendicular to the segment.
-            var v = Vector2.Cross(1.0f, r);
-            var absV = Vector2.Abs(v);
-
-            // Separating axis for segment (Gino, p80).
-            // |dot(v, p1 - c)| > dot(|v|, h)
-            var maxFraction = inputFraction;
-
-            Box2 segmentAabb;
-            {
-                var t = p1 * maxFraction * (p2 - p1);
-                segmentAabb = new Box2(
-                    Vector2.ComponentMin(p1, t),
-                    Vector2.ComponentMax(p1, t));
-            }
+            // NOTE: This is not Box2D's normal ray cast function, since our rays have infinite length.
 
             using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
+
             stack.Push(_root);
 
             ref var baseRef = ref _nodes[0];
-            while (stack.GetCount() != 0)
+            while (stack.GetCount() > 0)
             {
-                var nodeId = stack.Pop();
-                if (nodeId == Proxy.Free)
+                var proxy = stack.Pop();
+
+                if (proxy == Proxy.Free)
                 {
                     continue;
                 }
 
-                // Skip bounds check with Unsafe.Add().
-                ref var node = ref Unsafe.Add(ref baseRef, nodeId);
-                if (node.Aabb.Intersects(segmentAabb) == false)
-                {
-                    continue;
-                }
+                ref var node = ref Unsafe.Add(ref baseRef, proxy);
 
-                // Separating axis for segment (Gino, p80).
-                // |dot(v, p1 - c)| > dot(|v|, h)
-                var c = node.Aabb.Center;
-                var h = node.Aabb.Extents;
-                var separation = Math.Abs(Vector2.Dot(v, p1 - c)) - Vector2.Dot(absV, h);
-
-                if (separation > 0)
+                if (!input.Intersects(node.Aabb, out var dist, out var hit))
                 {
                     continue;
                 }
 
                 if (node.IsLeaf)
                 {
-                    var subInput = input;
+                    var carryOn = callback(ref state, proxy, hit, dist);
 
-                    var value = callback(ref state, subInput, maxFraction, nodeId);
-
-                    if (value == 0f)
+                    if (!carryOn)
                     {
-                        // The client has terminated the ray cast.
                         return;
-                    }
-
-                    if (value > 0)
-                    {
-                        // Update segment bounding box.
-                        maxFraction = value;
-                        var t = p1 + (p2 - p1) * maxFraction;
-                        segmentAabb = new Box2(
-                            Vector2.ComponentMin(p1, t),
-                            Vector2.ComponentMax(p1, t));
                     }
                 }
                 else
                 {
-                    stack.Push(node.Child1);
-                    stack.Push(node.Child2);
+                    if (node.Child1 != Proxy.Free)
+                    {
+                        stack.Push(node.Child1);
+                    }
+
+                    if (node.Child2 != Proxy.Free)
+                    {
+                        stack.Push(node.Child2);
+                    }
                 }
             }
         }

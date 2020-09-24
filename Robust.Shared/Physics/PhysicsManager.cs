@@ -290,7 +290,7 @@ namespace Robust.Shared.Physics
                 results.Add(result);
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
                 return true;
-            }, ray.Position, ray.Direction);
+            }, ray);
             if (results.Count == 0)
             {
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
@@ -332,7 +332,7 @@ namespace Robust.Shared.Physics
                     penetration += (point - exitPoint).Length;
                 }
                 return true;
-            }, ray.Position, ray.Direction);
+            }, ray);
 
             return penetration;
         }

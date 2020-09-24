@@ -60,15 +60,13 @@ namespace Robust.Shared.Physics {
 
         void QueryRay(
             DynamicTree<T>.RayQueryCallbackDelegate callback,
-            in Vector2 start,
-            in Vector2 dir,
+            in Ray ray,
             bool approx = false);
 
         void QueryRay<TState>(
             ref TState state,
             DynamicTree<T>.RayQueryCallbackDelegate<TState> callback,
-            in Vector2 start,
-            in Vector2 dir,
+            in Ray ray,
             bool approx = false);
     }
 }

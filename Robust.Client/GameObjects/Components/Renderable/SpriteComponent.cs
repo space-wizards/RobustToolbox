@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Robust.Client.GameObjects.EntitySystems;
@@ -24,6 +25,9 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Linq;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -1801,8 +1805,10 @@ namespace Robust.Client.GameObjects
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
+            var dummy = new DummyIconEntity {Prototype = prototype};
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
+            newComponent.Owner = dummy;
 
             newComponent.ExposeData(YamlObjectSerializer.NewReader(dataNode));
 
@@ -1813,5 +1819,123 @@ namespace Robust.Client.GameObjects
 
             return newComponent.Icon!;
         }
+
+        #region DummyIconEntity
+        private class DummyIconEntity : IEntity
+        {
+            public GameTick LastModifiedTick { get; } = GameTick.Zero;
+            public IEntityManager EntityManager { get; } = null!;
+            public string Name { get; set; } = string.Empty;
+            public EntityUid Uid { get; } = EntityUid.Invalid;
+            public bool Initialized { get; } = false;
+            public bool Initializing { get; } = false;
+            public bool Deleted { get; } = true;
+            public EntityPrototype? Prototype { get; set; }
+            public string Description { get; set; } = string.Empty;
+            public bool IsValid()
+            {
+                return false;
+            }
+
+            public ITransformComponent Transform { get; } = null!;
+            public IMetaDataComponent MetaData { get; } = null!;
+            public T AddComponent<T>() where T : Component, new()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void RemoveComponent<T>()
+            {
+            }
+
+            public bool HasComponent<T>()
+            {
+                return false;
+            }
+
+            public bool HasComponent(Type type)
+            {
+                return false;
+            }
+
+            public T GetComponent<T>()
+            {
+                return default!;
+            }
+
+            public IComponent GetComponent(Type type)
+            {
+                return null!;
+            }
+
+            public IComponent GetComponent(uint netID)
+            {
+                return null!;
+            }
+
+            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
+            {
+                component = null;
+                return false;
+            }
+
+            public T? GetComponentOrNull<T>() where T : class
+            {
+                return null;
+            }
+
+            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
+            {
+                component = null;
+                return false;
+            }
+
+            public IComponent? GetComponentOrNull(Type type)
+            {
+                return null;
+            }
+
+            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
+            {
+                component = null;
+                return false;
+            }
+
+            public IComponent? GetComponentOrNull(uint netId)
+            {
+                return null;
+            }
+
+            public void Shutdown()
+            {
+            }
+
+            public void Delete()
+            {
+            }
+
+            public IEnumerable<IComponent> GetAllComponents()
+            {
+                return Enumerable.Empty<IComponent>();
+            }
+
+            public IEnumerable<T> GetAllComponents<T>()
+            {
+                return Enumerable.Empty<T>();
+            }
+
+            public void SendMessage(IComponent? owner, ComponentMessage message)
+            {
+            }
+
+            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
+            {
+            }
+
+            public void Dirty()
+            {
+            }
+        }
+        #endregion
     }
 }

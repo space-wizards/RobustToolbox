@@ -7,6 +7,8 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.ResourceManagement.ResourceTypes;
+using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -723,15 +725,17 @@ namespace Robust.Client.Graphics.Clyde
             try
             {
                 var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-                var occluderTree = renderingTreeSystem.GetOccluderTreeForMap(map);
+                var occluderSystem = _entitySystemManager.GetEntitySystem<OccluderSystem>();
+                var occluderTree = occluderSystem.GetOccluderTreeForMap(map);
 
                 var ai = 0;
                 var ami = 0;
                 var ii = 0;
                 var imi = 0;
 
-                occluderTree.QueryAabb((in ClientOccluderComponent occluder) =>
+                occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
                 {
+                    var occluder = (ClientOccluderComponent) sOccluder;
                     var transform = occluder.Owner.Transform;
                     if (!occluder.Enabled)
                     {

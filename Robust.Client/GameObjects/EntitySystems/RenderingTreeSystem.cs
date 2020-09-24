@@ -25,17 +25,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         private readonly Dictionary<MapId, MapTrees> _mapTrees = new Dictionary<MapId, MapTrees>();
 
         private readonly List<SpriteComponent> _spriteQueue = new List<SpriteComponent>();
-        private readonly List<ClientOccluderComponent> _occluderQueue = new List<ClientOccluderComponent>();
         private readonly List<PointLightComponent> _lightQueue = new List<PointLightComponent>();
 
         internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map)
         {
             return _mapTrees[map].SpriteTree;
-        }
-
-        internal DynamicTree<ClientOccluderComponent> GetOccluderTreeForMap(MapId map)
-        {
-            return _mapTrees[map].OccluderTree;
         }
 
         internal DynamicTree<PointLightComponent> GetLightTreeForMap(MapId map)
@@ -57,22 +51,15 @@ namespace Robust.Client.GameObjects.EntitySystems
             SubscribeLocalEvent<EntMapIdChangedMessage>(EntMapIdChanged);
             SubscribeLocalEvent<MoveEvent>(EntMoved);
             SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
-            SubscribeLocalEvent<OccluderBoundingBoxChangedMessage>(OccluderBoundingBoxChanged);
             SubscribeLocalEvent<PointLightRadiusChangedMessage>(PointLightRadiusChanged);
             SubscribeLocalEvent<RenderTreeRemoveSpriteMessage>(RemoveSprite);
             SubscribeLocalEvent<RenderTreeRemoveLightMessage>(RemoveLight);
-            SubscribeLocalEvent<RenderTreeRemoveOccluderMessage>(RemoveOccluder);
         }
 
-        // For these next 3 methods (the Remove* ones):
-        // If the Transform is removed BEFORE the Sprite/Light/Occluder,
+        // For these next 2 methods (the Remove* ones):
+        // If the Transform is removed BEFORE the Sprite/Light,
         // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
         // Otherwise these will still have their past MapId and that's all we need..
-        private void RemoveOccluder(RenderTreeRemoveOccluderMessage ev)
-        {
-            _mapTrees[ev.Map].OccluderTree.Remove(ev.Occluder);
-        }
-
         private void RemoveLight(RenderTreeRemoveLightMessage ev)
         {
             _mapTrees[ev.Map].LightTree.Remove(ev.Light);
@@ -86,11 +73,6 @@ namespace Robust.Client.GameObjects.EntitySystems
         private void PointLightRadiusChanged(PointLightRadiusChangedMessage ev)
         {
             QueueUpdateLight(ev.PointLightComponent);
-        }
-
-        private void OccluderBoundingBoxChanged(OccluderBoundingBoxChangedMessage ev)
-        {
-            QueueUpdateOccluder(ev.Occluder);
         }
 
         private void EntParentChanged(EntParentChangedMessage ev)
@@ -115,11 +97,6 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
 
-            if (entity.TryGetComponent(out ClientOccluderComponent? occluder))
-            {
-                QueueUpdateOccluder(occluder);
-            }
-
             if (entity.TryGetComponent(out PointLightComponent? light))
             {
                 QueueUpdateLight(light);
@@ -141,16 +118,6 @@ namespace Robust.Client.GameObjects.EntitySystems
             }
         }
 
-        private void QueueUpdateOccluder(ClientOccluderComponent occluder)
-        {
-            if (!occluder.TreeUpdateQueued)
-            {
-                occluder.TreeUpdateQueued = true;
-
-                _occluderQueue.Add(occluder);
-            }
-        }
-
         private void EntMapIdChanged(EntMapIdChangedMessage ev)
         {
             // Nullspace is a valid map ID for stuff to have but we also aren't gonna bother indexing it.
@@ -164,14 +131,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 newMapTrees?.SpriteTree.AddOrUpdate(sprite);
             }
-
-            if (ev.Entity.TryGetComponent(out ClientOccluderComponent? occluder))
-            {
-                oldMapTrees?.OccluderTree.Remove(occluder);
-
-                newMapTrees?.OccluderTree.AddOrUpdate(occluder);
-            }
-
+            
             if (ev.Entity.TryGetComponent(out PointLightComponent? light))
             {
                 oldMapTrees?.LightTree.Remove(light);
@@ -225,36 +185,19 @@ namespace Robust.Client.GameObjects.EntitySystems
                 queuedUpdateLight.TreeUpdateQueued = false;
             }
 
-            foreach (var queuedUpdateOccluder in _occluderQueue)
-            {
-                var transform = queuedUpdateOccluder.Owner.Transform;
-                var map = transform.MapID;
-                if (map == MapId.Nullspace)
-                {
-                    continue;
-                }
-                var updateMapTree = _mapTrees[map].OccluderTree;
-
-                updateMapTree.AddOrUpdate(queuedUpdateOccluder);
-                queuedUpdateOccluder.TreeUpdateQueued = false;
-            }
-
             _spriteQueue.Clear();
             _lightQueue.Clear();
-            _occluderQueue.Clear();
         }
 
         private sealed class MapTrees
         {
             public readonly DynamicTree<SpriteComponent> SpriteTree;
             public readonly DynamicTree<PointLightComponent> LightTree;
-            public readonly DynamicTree<ClientOccluderComponent> OccluderTree;
 
             public MapTrees()
             {
                 SpriteTree = new DynamicTree<SpriteComponent>(SpriteAabbFunc);
                 LightTree = new DynamicTree<PointLightComponent>(LightAabbFunc);
-                OccluderTree = new DynamicTree<ClientOccluderComponent>(OccluderAabbFunc);
             }
 
             private static Box2 SpriteAabbFunc(in SpriteComponent value)
@@ -270,13 +213,6 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 var boxSize = value.Radius * 2;
                 return Box2.CenteredAround(worldPos, (boxSize, boxSize));
-            }
-
-            private static Box2 OccluderAabbFunc(in ClientOccluderComponent value)
-            {
-                var worldPos = value.Owner.Transform.WorldPosition;
-
-                return value.BoundingBox.Translated(worldPos);
             }
         }
     }
@@ -302,18 +238,6 @@ namespace Robust.Client.GameObjects.EntitySystems
         }
 
         public PointLightComponent Light { get; }
-        public MapId Map { get; }
-    }
-
-    internal struct RenderTreeRemoveOccluderMessage
-    {
-        public RenderTreeRemoveOccluderMessage(ClientOccluderComponent occluder, MapId map)
-        {
-            Occluder = occluder;
-            Map = map;
-        }
-
-        public ClientOccluderComponent Occluder { get; }
         public MapId Map { get; }
     }
 }

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Systems;
@@ -11,7 +13,14 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
-    internal sealed class OccluderSystem : EntitySystem
+    // NOTE: this class handles both snap grid updates of occluders, as well as occluder tree updates (via its parent).
+    // This seems like it's doing somewhat double work because it already has an update queue for occluders but...
+    // See the thing is the snap grid stuff was coded earlier
+    // and technically it only cares about changes in the entity's SNAP GRID position.
+    // Whereas the tree stuff is precise.
+    // Also I just realized this and I cba to refactor this again.
+    [UsedImplicitly]
+    internal sealed class ClientOccluderSystem : OccluderSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -22,6 +31,9 @@ namespace Robust.Client.GameObjects.EntitySystems
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesAfter.Add(typeof(TransformSystem));
+            UpdatesAfter.Add(typeof(PhysicsSystem));
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
         }

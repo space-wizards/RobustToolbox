@@ -32,17 +32,22 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public bool TryCollideRect(Box2 collider, MapId map)
         {
-            foreach (var body in this[map].Query(collider))
+            var state = (collider, map, found: false);
+            this[map].QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in IPhysBody body) =>
             {
                 if (!body.CanCollide || body.CollisionLayer == 0x0)
-                    continue;
-
-                if (body.MapID == map &&
-                    body.WorldAABB.Intersects(collider))
                     return true;
-            }
 
-            return false;
+                if (body.MapID == state.map &&
+                    body.WorldAABB.Intersects(state.collider))
+                {
+                    state.found = true;
+                    return false;
+                }
+                return true;
+            }, collider, true);
+
+            return state.found;
         }
 
         public bool IsWeightless(EntityCoordinates coordinates)
@@ -115,35 +120,47 @@ namespace Robust.Shared.Physics
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
             var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();
-            foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB, approximate))
+            var entities = new List<IEntity>();
+
+            var state = (physBody, modifiers, entities);
+
+            this[physBody.MapID].QueryAabb(ref state,
+                (ref (IPhysBody physBody, IEnumerable<ICollideSpecial> modifiers, List<IEntity> entities) state,
+                    in IPhysBody body) =>
             {
                 if (body.Entity.Deleted) {
-                    continue;
+                    return true;
                 }
 
-                if (CollidesOnMask(physBody, body))
+                if (CollidesOnMask(state.physBody, body))
                 {
                     var preventCollision = false;
                     var otherModifiers = body.Entity.GetAllComponents<ICollideSpecial>();
-                    foreach (var modifier in modifiers)
+                    foreach (var modifier in state.modifiers)
                     {
                         preventCollision |= modifier.PreventCollide(body);
                     }
                     foreach (var modifier in otherModifiers)
                     {
-                        preventCollision |= modifier.PreventCollide(physBody);
+                        preventCollision |= modifier.PreventCollide(state.physBody);
                     }
 
-                    if (preventCollision) continue;
-                    yield return body.Entity;
+                    if (preventCollision)
+                    {
+                        return true;
+                    }
+                    state.entities.Add(body.Entity);
                 }
-            }
+                return true;
+            }, physBody.WorldAABB, approximate);
+
+            return entities;
         }
 
         /// <inheritdoc />
         public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
         {
-            return this[mapId].Query(worldBox, false);
+            return this[mapId].QueryAabb(worldBox, false);
         }
 
         public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
@@ -244,7 +261,7 @@ namespace Robust.Shared.Physics
         {
             List<RayCastResults> results = new List<RayCastResults>();
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
 
                 if (returnOnFirstHit && results.Count > 0) return true;
@@ -292,7 +309,7 @@ namespace Robust.Shared.Physics
         {
             var penetration = 0f;
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
                 if (distFromOrigin > maxLength)
                 {

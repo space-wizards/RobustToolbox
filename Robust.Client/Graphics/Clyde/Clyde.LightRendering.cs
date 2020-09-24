@@ -486,8 +486,6 @@ namespace Robust.Client.Graphics.Clyde
         private ((PointLightComponent light, Vector2 pos)[] lights, int count, Box2 expandedBounds)
             GetLightsToRender(MapId map, in Box2 worldBounds)
         {
-            var count = 0;
-
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
             // As they could still affect the shadows of (large) light sources.
             // We expand the world bounds so that it encompasses the center of every light source.
@@ -498,37 +496,41 @@ namespace Robust.Client.Graphics.Clyde
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
             var lightTree = renderingTreeSystem.GetLightTreeForMap(map);
 
-            foreach (var component in lightTree.Query(worldBounds))
+            var state = (this, expandedBounds, count: 0);
+
+            lightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 expandedBounds, int count) state, in PointLightComponent light) =>
             {
-                var transform = component.Owner.Transform;
+                var transform = light.Owner.Transform;
 
-                if (!component.Enabled || component.ContainerOccluded)
+                if (!light.Enabled || light.ContainerOccluded)
                 {
-                    continue;
+                    return true;
                 }
 
-                var lightPos = transform.WorldMatrix.Transform(component.Offset);
+                var lightPos = transform.WorldMatrix.Transform(light.Offset);
 
-                var circle = new Circle(lightPos, component.Radius);
+                var circle = new Circle(lightPos, light.Radius);
 
-                if (!circle.Intersects(worldBounds))
+                if (!circle.Intersects(state.expandedBounds))
                 {
-                    continue;
+                    return true;
                 }
 
-                _lightsToRenderList[count] = (component, lightPos);
-                count += 1;
+                state.clyde._lightsToRenderList[state.count] = (light, lightPos);
+                state.count += 1;
 
-                expandedBounds = expandedBounds.ExtendToContain(lightPos);
+                state.expandedBounds = state.expandedBounds.ExtendToContain(lightPos);
 
-                if (count == MaxLightsPerScene)
+                if (state.count == MaxLightsPerScene)
                 {
                     // TODO: Allow more than MaxLightsPerScene lights.
-                    break;
+                    return false;
                 }
-            }
 
-            return (_lightsToRenderList, count, expandedBounds);
+                return true;
+            }, expandedBounds);
+
+            return (_lightsToRenderList, state.count, state.expandedBounds);
         }
 
         private void BlurOntoWalls(Viewport viewport, IEye eye)
@@ -728,12 +730,12 @@ namespace Robust.Client.Graphics.Clyde
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var occluder in occluderTree.Query(expandedBounds))
+                occluderTree.QueryAabb((in ClientOccluderComponent occluder) =>
                 {
                     var transform = occluder.Owner.Transform;
                     if (!occluder.Enabled)
                     {
-                        continue;
+                        return true;
                     }
 
                     var worldTransform = transform.WorldMatrix;
@@ -854,7 +856,9 @@ namespace Robust.Client.Graphics.Clyde
 
                     ai += 8;
                     ami += 4;
-                }
+
+                    return true;
+                }, expandedBounds);
 
                 _occlusionDataLength = ii;
                 _occlusionMaskDataLength = imi;

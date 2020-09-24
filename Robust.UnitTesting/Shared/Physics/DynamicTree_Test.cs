@@ -280,7 +280,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 .Where(x => aabbs1[x].Contains(point))
                 .OrderBy(x => x).ToArray();
 
-            var results = dt.Query(point)
+            var results = dt.QueryPoint(point)
                 .OrderBy(x => x).ToArray();
 
             Assert.Multiple(() =>

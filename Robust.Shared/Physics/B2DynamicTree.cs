@@ -42,10 +42,13 @@ namespace Robust.Shared.Physics
     /// <typeparam name="T"></typeparam>
     public sealed class B2DynamicTree<T> : DynamicTree
     {
-        public delegate float RayQueryCallback<in TState>(TState state, in Ray ray, float fraction, Proxy proxy);
+        public delegate float RayQueryCallback<TState>(ref TState state, in Ray ray, float fraction, Proxy proxy);
+
         public delegate float RayQueryCallback(in Ray ray, float fraction, Proxy proxy);
+
         public delegate bool QueryCallback(Proxy proxy);
-        public delegate bool QueryCallback<in TState>(TState state, Proxy proxy);
+
+        public delegate bool QueryCallback<TState>(ref TState state, Proxy proxy);
 
         private struct Node
         {
@@ -151,10 +154,13 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public B2DynamicTree() : base(0.1f, null)
+        public B2DynamicTree(float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null) :
+            base(aabbExtendSize, growthFunc)
         {
+            capacity = Math.Max(DynamicTree.MinimumCapacity, capacity);
+
             _root = Proxy.Free;
-            _nodes = new Node[16];
+            _nodes = new Node[capacity];
 
             // Build a linked list for the free list.
             ref var node = ref _nodes[0];
@@ -248,7 +254,10 @@ namespace Robust.Shared.Physics
             node.Child1 = Proxy.Free;
             node.Child2 = Proxy.Free;
 #endif
-            node.UserData = default!;
+            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
+            {
+                node.UserData = default!;
+            }
             _freeNodes = proxy;
             --_nodeCount;
         }
@@ -268,6 +277,15 @@ namespace Robust.Shared.Physics
 
             InsertLeaf(proxyId);
             return proxyId;
+        }
+
+        public void DestroyProxy(Proxy proxy)
+        {
+            Assert(0 <= proxy && proxy < Capacity);
+            Assert(_nodes[proxy].IsLeaf);
+
+            RemoveLeaf(proxy);
+            FreeNode(proxy);
         }
 
         public bool MoveProxy(Proxy proxy, in Box2 aabb, Vector2 displacement)
@@ -320,7 +338,7 @@ namespace Robust.Shared.Physics
                 // The huge AABB is larger than the new fat AABB.
                 var hugeAabb = new Box2(
                     fatAabb.BottomLeft - (4, 4) * ext,
-                    fatAabb.BottomLeft + (4, 4) * ext);
+                    fatAabb.TopRight + (4, 4) * ext);
 
                 if (hugeAabb.Contains(treeAabb))
                 {
@@ -409,7 +427,7 @@ namespace Robust.Shared.Physics
             }
             else
             {
-                _root = Proxy.Free;
+                _root = sibling;
                 siblingNode.Parent = Proxy.Free;
                 FreeNode(parent);
             }
@@ -842,14 +860,15 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private static readonly QueryCallback<QueryCallback> EasyQueryCallback = (callback, proxy) => callback(proxy);
+        private static readonly QueryCallback<QueryCallback> EasyQueryCallback =
+            (ref QueryCallback callback, Proxy proxy) => callback(proxy);
 
         public void Query(QueryCallback callback, in Box2 aabb)
         {
-            Query(callback, EasyQueryCallback, aabb);
+            Query(ref callback, EasyQueryCallback, aabb);
         }
 
-        public void Query<TState>(TState state, QueryCallback<TState> callback, in Box2 aabb)
+        public void Query<TState>(ref TState state, QueryCallback<TState> callback, in Box2 aabb)
         {
             using var stack = new GrowableStack<Proxy>(stackalloc Proxy[256]);
             stack.Push(_root);
@@ -869,7 +888,7 @@ namespace Robust.Shared.Physics
                 {
                     if (node.IsLeaf)
                     {
-                        var proceed = callback(state, nodeId);
+                        var proceed = callback(ref state, nodeId);
                         if (proceed == false)
                         {
                             return;
@@ -885,14 +904,14 @@ namespace Robust.Shared.Physics
         }
 
         private static readonly RayQueryCallback<RayQueryCallback> EasyRayQueryCallback =
-            (RayQueryCallback callback, in Ray ray, float fraction, Proxy proxy) => callback(ray, fraction, proxy);
+            (ref RayQueryCallback callback, in Ray ray, float fraction, Proxy proxy) => callback(ray, fraction, proxy);
 
         public void RayCast(RayQueryCallback callback, in Ray input, float inputFraction)
         {
-            Raycast(callback, EasyRayQueryCallback, input, inputFraction);
+            RayCast(ref callback, EasyRayQueryCallback, input, inputFraction);
         }
 
-        public void Raycast<TState>(TState state, RayQueryCallback<TState> callback, in Ray input, float inputFraction)
+        public void RayCast<TState>(ref TState state, RayQueryCallback<TState> callback, in Ray input, float inputFraction)
         {
             var p1 = input.Position;
             var p2 = input.Direction;
@@ -950,7 +969,7 @@ namespace Robust.Shared.Physics
                 {
                     var subInput = input;
 
-                    var value = callback(state, subInput, maxFraction, nodeId);
+                    var value = callback(ref state, subInput, maxFraction, nodeId);
 
                     if (value == 0f)
                     {

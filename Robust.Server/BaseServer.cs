@@ -171,6 +171,9 @@ namespace Robust.Server
                 }
             }
 
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
+
             _config.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
@@ -279,6 +282,9 @@ namespace Robust.Server
                 Logger.FatalS("eng", "Could not load any Server DLL.");
                 return true;
             }
+
+            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
+            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 

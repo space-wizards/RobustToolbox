@@ -144,6 +144,11 @@ namespace Robust.Shared.ContentPack
             InitMod<T>(assembly);
         }
 
+        public Assembly GetAssembly(string name)
+        {
+            return _mods.Select(p => p.GameAssembly).Single(p => p.GetName().Name == name);
+        }
+
         protected void InitMod<T>(Assembly assembly) where T : GameShared
         {
             var mod = new ModInfo(assembly);

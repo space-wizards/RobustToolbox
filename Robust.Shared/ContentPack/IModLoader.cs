@@ -24,6 +24,8 @@ namespace Robust.Shared.ContentPack
         void LoadGameAssembly<T>(string diskPath)
             where T : GameShared;
 
+        Assembly GetAssembly(string name);
+
         /// <summary>
         ///     Broadcasts a run level change to all loaded entry point.
         /// </summary>

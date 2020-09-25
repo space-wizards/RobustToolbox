@@ -92,6 +92,8 @@ namespace Robust.Client
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
 
+            _configurationManager.Initialize(false);
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");

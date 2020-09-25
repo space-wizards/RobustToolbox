@@ -106,7 +106,7 @@ namespace Robust.Server
         private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         /// <inheritdoc />
-        public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
+        public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
 
         /// <inheritdoc />
         public string ServerName => _config.GetCVar<string>("game.hostname");
@@ -146,6 +146,8 @@ namespace Robust.Server
         /// <inheritdoc />
         public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
+            _config.Initialize(true);
+
             if (LoadConfigAndUserData)
             {
                 // Sets up the configMgr
@@ -484,7 +486,6 @@ namespace Robust.Server
             });
 
             cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
             cfgMgr.RegisterCVar("game.type", GameType.Game);
 
             _time.TickRate = (byte) _config.GetCVar<int>("net.tickrate");

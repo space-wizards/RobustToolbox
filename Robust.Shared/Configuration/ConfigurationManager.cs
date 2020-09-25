@@ -247,7 +247,7 @@ namespace Robust.Shared.Configuration
             foreach (var defField in assembly
                 .GetTypes()
                 .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
-                .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)))
+                .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
             {
                 var fieldType = defField.FieldType;
                 if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))

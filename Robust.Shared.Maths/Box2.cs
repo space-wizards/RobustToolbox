@@ -78,6 +78,12 @@ namespace Robust.Shared.Maths
             get => BottomLeft + Size * .5f;
         }
 
+        public Vector2 Extents
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => (TopRight - BottomLeft) * 0.5f;
+        }
+
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
         /// </summary>

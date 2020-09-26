@@ -714,6 +714,21 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ToggleFOV : IConsoleCommand
+    {
+        public string Command => "togglefov";
+        public string Description => "Toggles fov for client.";
+        public string Help => "togglefov";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+          var mgr = IoCManager.Resolve<IEyeManager>();
+          if (mgr.CurrentEye != null)
+              mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+          return false;
+        }
+    }
+
     internal class ToggleShadows : IConsoleCommand
     {
         public string Command => "toggleshadows";

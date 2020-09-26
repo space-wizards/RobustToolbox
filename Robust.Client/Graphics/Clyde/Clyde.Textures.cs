@@ -104,8 +104,10 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // TODO: Does it make sense to default to 1 for RGB parameters?
                     // It might make more sense to pass some options to change swizzling.
-                    var swizzle = stackalloc[] {(int) All.One, (int) All.One, (int) All.One, (int) All.Red};
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.One);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.One);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.One);
+                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.Red);
                 }
             }
             else if (pixelType == typeof(L8) && !actualParams.Srgb)
@@ -122,11 +124,10 @@ namespace Robust.Client.Graphics.Clyde
                 pixelDataFormat = PixelFormat.Red;
                 pixelDataType = PixelType.UnsignedByte;
 
-                unsafe
-                {
-                    var swizzle = stackalloc[] {(int) All.Red, (int) All.Red, (int) All.Red, (int) All.One};
-                    GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleRgba, swizzle);
-                }
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int) All.Red);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int) All.Red);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int) All.Red);
+                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.One);
             }
             else
             {

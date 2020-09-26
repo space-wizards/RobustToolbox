@@ -31,17 +31,16 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             var mapTree = renderTreeSystem.GetSpriteTreeForMap(currentMap);
 
-            var pvsEntities = mapTree.Query(pvsBounds, true);
-
-            foreach (var sprite in pvsEntities)
+            mapTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
             {
-                if (sprite.IsInert)
+                if (value.IsInert)
                 {
-                    continue;
+                    return true;
                 }
 
-                sprite.FrameUpdate(frameTime);
-            }
+                value.FrameUpdate(state);
+                return true;
+            }, pvsBounds, approx: true);
         }
     }
 }

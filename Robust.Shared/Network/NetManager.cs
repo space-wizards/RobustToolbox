@@ -233,41 +233,16 @@ namespace Robust.Shared.Network
 
             IsServer = isServer;
 
-            _config.RegisterCVar("net.port", 1212, CVar.ARCHIVE);
-
-            _config.RegisterCVar("net.sendbuffersize", 131071, CVar.ARCHIVE);
-            _config.RegisterCVar("net.receivebuffersize", 131071, CVar.ARCHIVE);
-            _config.RegisterCVar("net.verbose", false, CVar.ARCHIVE, NetVerboseChanged);
-
-            _config.RegisterCVar("auth.server", "http://localhost:5000/", CVar.SECURE);
-
+            _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             if (isServer)
             {
-                // That's comma-separated, btw.
-                _config.RegisterCVar("net.bindto", "0.0.0.0,::", CVar.ARCHIVE);
-                _config.RegisterCVar("net.dualstack", false, CVar.ARCHIVE);
-
-                _config.RegisterCVar("auth.mode", (int) AuthMode.Required, onValueChanged: v => Auth = (AuthMode) v);
-                // Always allow localhost to connect, without requiring auth.
-                _config.RegisterCVar("auth.allowlocal", true);
+                _config.OnValueChanged(CVars.AuthMode, i => Auth = (AuthMode) i, invokeImmediately: true);
             }
-            else
-            {
-                _config.RegisterCVar("net.server", "127.0.0.1", CVar.ARCHIVE);
-                _config.RegisterCVar("net.updaterate", 20, CVar.ARCHIVE);
-                _config.RegisterCVar("net.cmdrate", 30, CVar.ARCHIVE);
-                _config.RegisterCVar("net.rate", 10240, CVar.REPLICATED | CVar.ARCHIVE);
-
-                _config.RegisterCVar("auth.serverpubkey", "", CVar.SECURE);
-                _config.RegisterCVar("auth.token", "", CVar.SECURE);
-                _config.RegisterCVar("auth.userid", "", CVar.SECURE);
-            }
-
 #if DEBUG
-            _config.RegisterCVar("net.fakeloss", 0.0f, CVar.CHEAT, _fakeLossChanged);
-            _config.RegisterCVar("net.fakelagmin", 0.0f, CVar.CHEAT, _fakeLagMinChanged);
-            _config.RegisterCVar("net.fakelagrand", 0.0f, CVar.CHEAT, _fakeLagRandomChanged);
-            _config.RegisterCVar("net.fakeduplicates", 0.0f, CVar.CHEAT, FakeDuplicatesChanged);
+            _config.OnValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
+            _config.OnValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
+            _config.OnValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
+            _config.OnValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
 #endif
 
             _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
@@ -282,7 +257,6 @@ namespace Robust.Shared.Network
 
             if (IsServer)
             {
-                Auth = (AuthMode) _config.GetCVar<int>("auth.mode");
                 SAGenerateRsaKeys();
             }
         }
@@ -313,8 +287,8 @@ namespace Robust.Shared.Network
             DebugTools.Assert(IsServer);
             DebugTools.Assert(!IsRunning);
 
-            var binds = _config.GetCVar<string>("net.bindto").Split(',');
-            var dualStack = _config.GetCVar<bool>("net.dualstack");
+            var binds = _config.GetCVar(CVars.NetBindTo).Split(',');
+            var dualStack = _config.GetCVar(CVars.NetDualStack);
 
             var foundIpv6 = false;
 
@@ -518,16 +492,16 @@ namespace Robust.Shared.Network
             // ping the client once per second.
             netConfig.PingInterval = 1f;
 
-            netConfig.SendBufferSize = _config.GetCVar<int>("net.sendbuffersize");
-            netConfig.ReceiveBufferSize = _config.GetCVar<int>("net.receivebuffersize");
+            netConfig.SendBufferSize = _config.GetCVar(CVars.NetSendBufferSize);
+            netConfig.ReceiveBufferSize = _config.GetCVar(CVars.NetReceiveBufferSize);
             netConfig.MaximumHandshakeAttempts = 5;
 
-            var verbose = _config.GetCVar<bool>("net.verbose");
+            var verbose = _config.GetCVar(CVars.NetVerbose);
             netConfig.SetMessageTypeEnabled(NetIncomingMessageType.VerboseDebugMessage, verbose);
 
             if (IsServer)
             {
-                netConfig.MaximumConnections = _config.GetCVar<int>("game.maxplayers");
+                netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
             }
 
 #if DEBUG

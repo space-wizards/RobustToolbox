@@ -26,6 +26,7 @@ namespace Robust.Client.GameObjects
 
         private static bool _didRegisterSerializer;
 
+        [ViewVariables]
         private bool _appearanceDirty;
 
         public override void SetData(string key, object value)

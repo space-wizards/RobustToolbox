@@ -92,6 +92,8 @@ namespace Robust.Client
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
 
+            _configurationManager.Initialize(false);
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");
@@ -106,6 +108,9 @@ namespace Robust.Client
                     _configurationManager.SetSaveFile(configFile);
                 }
             }
+
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
@@ -154,6 +159,10 @@ namespace Robust.Client
                 Logger.FatalS("eng", "Could not load any Client DLL.");
                 throw new NotSupportedException("Cannot load client without content assembly");
             }
+
+
+            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
+            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);

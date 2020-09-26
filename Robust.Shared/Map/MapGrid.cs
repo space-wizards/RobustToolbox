@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
@@ -16,11 +17,13 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Game tick that the map was created.
         /// </summary>
+        [ViewVariables]
         public GameTick CreatedTick { get; }
 
         /// <summary>
         ///     Last game tick that the map was modified.
         /// </summary>
+        [ViewVariables]
         public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
@@ -31,10 +34,13 @@ namespace Robust.Shared.Map
         public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
 
         /// <inheritdoc />
+        [ViewVariables]
         public MapId ParentMapId { get; set; }
 
+        [ViewVariables]
         public EntityUid GridEntityId { get; internal set; }
 
+        [ViewVariables]
         public bool HasGravity
         {
             get => _hasGravity;
@@ -89,28 +95,35 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        [ViewVariables]
         public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
 
         /// <inheritdoc />
+        [ViewVariables]
         public Box2 LocalBounds { get; private set; }
 
         public bool SuppressCollisionRegeneration { get; set; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public ushort ChunkSize { get; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public float SnapSize { get; }
 
         /// <inheritdoc />
+        [ViewVariables]
         public GridId Index { get; }
 
         /// <summary>
         ///     The length of the side of a square tile in world units.
         /// </summary>
+        [ViewVariables]
         public ushort TileSize { get; } = 1;
 
         /// <inheritdoc />
+        [ViewVariables]
         public Vector2 WorldPosition
         {
             get
@@ -233,9 +246,9 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
-            //TODO: needs world -> local -> tile translations.
-            var gridTileLb = new MapIndices((int)Math.Floor(worldArea.Left), (int)Math.Floor(worldArea.Bottom));
-            var gridTileRt = new MapIndices((int)Math.Floor(worldArea.Right), (int)Math.Floor(worldArea.Top));
+            var localArea = new Box2(WorldToLocal(worldArea.BottomLeft), WorldToLocal(worldArea.TopRight));
+            var gridTileLb = new MapIndices((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
+            var gridTileRt = new MapIndices((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
             var tiles = new List<TileRef>();
 

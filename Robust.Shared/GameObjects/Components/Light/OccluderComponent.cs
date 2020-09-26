@@ -1,4 +1,6 @@
 using System;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -13,6 +15,8 @@ namespace Robust.Shared.GameObjects
         private bool _enabled = true;
         private Box2 _boundingBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
 
+        [ViewVariables] internal bool TreeUpdateQueued;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 BoundingBox
         {
@@ -25,8 +29,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected virtual void BoundingBoxChanged()
+        private void BoundingBoxChanged()
         {
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new OccluderBoundingBoxChangedMessage(this));
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -46,6 +51,18 @@ namespace Robust.Shared.GameObjects
 
             serializer.DataField(ref _enabled, "enabled", true);
             serializer.DataField(ref _boundingBox, "boundingBox", new Box2(-0.5f, -0.5f, 0.5f, 0.5f));
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var map = Owner.Transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new OccluderTreeRemoveOccluderMessage(this, map));
+            }
         }
 
         public override ComponentState GetComponentState()
@@ -77,6 +94,16 @@ namespace Robust.Shared.GameObjects
                 Enabled = enabled;
                 BoundingBox = boundingBox;
             }
+        }
+    }
+
+    internal struct OccluderBoundingBoxChangedMessage
+    {
+        public OccluderComponent Occluder;
+
+        public OccluderBoundingBoxChangedMessage(OccluderComponent occluder)
+        {
+            Occluder = occluder;
         }
     }
 }

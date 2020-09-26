@@ -130,6 +130,9 @@ namespace Robust.Shared.Network
         // Client connect happens during status changed and such callbacks, so we need to defer deletion of these.
         private readonly List<NetPeer> _toCleanNetPeers = new List<NetPeer>();
 
+        private readonly Dictionary<NetConnection, TaskCompletionSource<object?>> _awaitingDisconnect
+            = new Dictionary<NetConnection, TaskCompletionSource<object?>>();
+
         /// <inheritdoc />
         public int Port => _config.GetCVar<int>("net.port");
 
@@ -622,6 +625,11 @@ namespace Robust.Shared.Network
                     if (_channels.ContainsKey(sender))
                     {
                         HandleDisconnect(peer, sender, reason);
+                    }
+
+                    if (_awaitingDisconnect.TryGetValue(sender, out var tcs))
+                    {
+                        tcs.TrySetResult(null);
                     }
 
                     break;

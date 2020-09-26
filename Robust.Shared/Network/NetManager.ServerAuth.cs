@@ -3,6 +3,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
@@ -160,6 +161,14 @@ namespace Robust.Shared.Network
                     return;
                 }
 
+                // Well they're in. Kick a connected client with the same GUID if we have to.
+                if (_assignedUserIds.TryGetValue(userId, out var existing))
+                {
+                    existing.Disconnect("Another connection has been made with your account.");
+                    // Have to wait until they're properly off the server to avoid any collisions.
+                    await AwaitDisconnectAsync(existing);
+                }
+
                 var msg = peer.Peer.CreateMessage();
                 var msgResp = new MsgLoginSuccess
                 {
@@ -194,6 +203,13 @@ namespace Robust.Shared.Network
                 Logger.ErrorS("net", "Exception during handshake with peer {0}:\n{1}",
                     NetUtility.ToHexString(connection.RemoteUniqueIdentifier), e);
             }
+        }
+
+        private Task AwaitDisconnectAsync(NetConnection connection)
+        {
+            var tcs = new TaskCompletionSource<object?>();
+            _awaitingDisconnect.Add(connection, tcs);
+            return tcs.Task;
         }
 
         private sealed class HasJoinedResponse

@@ -161,7 +161,7 @@ namespace Robust.Client
             }
 
 
-            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
+            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Client"));
             _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             // Call Init in game assemblies.

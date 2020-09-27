@@ -178,13 +178,11 @@ namespace Robust.Client.GameObjects
         public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
-            var gridId = coordinates.GetGridId(this);
-            
-            if (coordinates.GetGridId(this) != GridId.Invalid)
+
+            if (TryGetEntity(coordinates.EntityId, out var entity))
             {
-                var gridEntityId = _mapManager.GetGrid(gridId).GridEntityId;
-                newEntity.Transform.AttachParent(GetEntity(gridEntityId));
-                newEntity.Transform.LocalPosition = coordinates.Position;
+                newEntity.Transform.AttachParent(entity);
+                newEntity.Transform.Coordinates = coordinates;
             }
 
             return newEntity;

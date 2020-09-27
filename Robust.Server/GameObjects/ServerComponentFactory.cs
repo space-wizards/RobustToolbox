@@ -29,7 +29,6 @@ namespace Robust.Server.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            RegisterIgnore("Icon");
             RegisterIgnore("Eye");
 
             Register<BasicActorComponent>();

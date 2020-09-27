@@ -552,7 +552,7 @@ namespace Robust.Client.Placement
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
-            CurrentBaseSprite = IconComponent.GetPrototypeIcon(prototype, ResourceCache);
+            CurrentBaseSprite = SpriteComponent.GetPrototypeIcon(prototype, ResourceCache);
             CurrentPrototype = prototype;
 
             IsActive = true;

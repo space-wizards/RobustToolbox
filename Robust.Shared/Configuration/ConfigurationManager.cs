@@ -4,6 +4,8 @@ using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Robust.Shared.Configuration
 {
@@ -15,12 +17,18 @@ namespace Robust.Shared.Configuration
         private const char TABLE_DELIMITER = '.';
         private readonly Dictionary<string, ConfigVar> _configVars = new Dictionary<string, ConfigVar>();
         private string? _configFile;
+        private bool _isServer;
 
         /// <summary>
         ///     Constructs a new ConfigurationManager.
         /// </summary>
         public ConfigurationManager()
         {
+        }
+
+        public void Initialize(bool isServer)
+        {
+            _isServer = isServer;
         }
 
         /// <inheritdoc />
@@ -169,13 +177,27 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null) where T : notnull
         {
             Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
             {
                 valueChangedDelegate = v => onValueChanged((T) v);
             }
+
+            RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
+        }
+
+        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
+        {
+            var only = _isServer ? CVar.CLIENTONLY : CVar.SERVERONLY;
+
+            if ((flags & only) != 0)
+            {
+                // Ignored on this side.
+                return;
+            }
+
             if (_configVars.TryGetValue(name, out var cVar))
             {
                 if (cVar.Registered)
@@ -184,11 +206,11 @@ namespace Robust.Shared.Configuration
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
-                cVar.ValueChanged = valueChangedDelegate;
+                cVar.ValueChanged = onValueChanged;
 
                 if (cVar.OverrideValue != null)
                 {
-                    cVar.OverrideValueParsed = ParseOverrideValue(cVar.OverrideValue, typeof(T));
+                    cVar.OverrideValueParsed = ParseOverrideValue(cVar.OverrideValue, type);
                 }
 
                 return;
@@ -198,8 +220,57 @@ namespace Robust.Shared.Configuration
             {
                 Registered = true,
                 Value = defaultValue,
-                ValueChanged = valueChangedDelegate
+                ValueChanged = onValueChanged
             });
+        }
+
+        public void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            OnValueChanged(cVar.Name, onValueChanged, invokeImmediately);
+        }
+
+        public void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull
+        {
+            var reg = _configVars[name];
+            reg.ValueChanged += o => onValueChanged((T) o);
+
+            if (invokeImmediately)
+            {
+                onValueChanged((T) reg.Value!);
+            }
+        }
+
+        public void LoadCVarsFromAssembly(Assembly assembly)
+        {
+            foreach (var defField in assembly
+                .GetTypes()
+                .Where(p => Attribute.IsDefined(p, typeof(CVarDefsAttribute)))
+                .SelectMany(p => p.GetFields(BindingFlags.Public | BindingFlags.Static)))
+            {
+                var fieldType = defField.FieldType;
+                if (!fieldType.IsGenericType || fieldType.GetGenericTypeDefinition() != typeof(CVarDef<>))
+                {
+                    continue;
+                }
+
+                var type = fieldType.GetGenericArguments()[0];
+
+                if (!defField.IsInitOnly)
+                {
+                    throw new InvalidOperationException($"Found CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' that is not readonly. Please mark it as readonly.");
+                }
+
+                var def = (CVarDef?) defField.GetValue(null);
+
+                if (def == null)
+                {
+                    throw new InvalidOperationException($"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
+                }
+
+                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags, null);
+            }
         }
 
         /// <inheritdoc />
@@ -235,13 +306,18 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public T GetCVar<T>(string name)
+        public T GetCVar<T>(string name) where T : notnull
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
                 return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+        }
+
+        public T GetCVar<T>(CVarDef<T> def) where T : notnull
+        {
+            return GetCVar<T>(def.Name);
         }
 
         public Type GetCVarType(string name)

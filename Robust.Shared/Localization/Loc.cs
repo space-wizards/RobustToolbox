@@ -1,3 +1,4 @@
+using System.Globalization;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 
@@ -81,6 +82,15 @@ namespace Robust.Shared.Localization
             params object[] args)
         {
             return LocalizationManager.GetParticularString(context, text, pluralText, n, args);
+        }
+
+        /// <summary>
+        ///     Load data for a culture.
+        /// </summary>
+        /// <param name="culture"></param>
+        public static void LoadCulture(CultureInfo culture)
+        {
+            LocalizationManager.LoadCulture(culture);
         }
     }
 }

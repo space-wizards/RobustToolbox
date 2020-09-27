@@ -1798,9 +1798,12 @@ namespace Robust.Client.GameObjects
 
         public Texture? Icon => Layers.Count == 0 ? null : GetRenderTexture(Layers[0], Angle.Zero, null);
 
-        public static Texture GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static Texture? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            if (!prototype.Components.TryGetValue("Sprite", out var dataNode))
+            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            if (icon != null) return icon.Default;
+
+            if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
             {
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
@@ -1810,14 +1813,14 @@ namespace Robust.Client.GameObjects
             var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
             newComponent.Owner = dummy;
 
-            newComponent.ExposeData(YamlObjectSerializer.NewReader(dataNode));
+            newComponent.ExposeData(YamlObjectSerializer.NewReader(spriteNode));
 
             if (newComponent.Layers.Count == 0)
             {
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
-            return newComponent.Icon!;
+            return newComponent.Layers.Count == 0 ? null : newComponent.GetRenderTexture(newComponent.Layers[0], Angle.Zero, null);
         }
 
         #region DummyIconEntity

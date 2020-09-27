@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Newtonsoft.Json;
 using Prometheus;
-using Robust.Shared.Configuration;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Serialization;
@@ -650,14 +646,14 @@ namespace Robust.Shared.Network
         }
         */
 
-        private async void HandleInitialHandshakeComplete(
-            NetPeerData peer,
+        private async void HandleInitialHandshakeComplete(NetPeerData peer,
             NetConnection sender,
             NetUserId userId,
             string userName,
-            NetEncryption? encryption)
+            NetEncryption? encryption,
+            LoginType loginType)
         {
-            var channel = new NetChannel(this, sender, userId, userName);
+            var channel = new NetChannel(this, sender, userId, userName, loginType);
             _assignedUserIds.Add(userId, sender);
             _assignedUsernames.Add(userName, sender);
             _channels.Add(sender, channel);

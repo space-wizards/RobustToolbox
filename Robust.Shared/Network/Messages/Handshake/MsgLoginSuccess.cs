@@ -15,17 +15,20 @@ namespace Robust.Shared.Network.Messages
 
         public string UserName;
         public Guid UserId;
+        public LoginType Type;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             UserName = buffer.ReadString();
             UserId = buffer.ReadGuid();
+            Type = (LoginType) buffer.ReadByte();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             buffer.Write(UserName);
             buffer.Write(UserId);
+            buffer.Write((byte) Type);
         }
     }
 }

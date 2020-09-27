@@ -1,4 +1,6 @@
 ﻿
+using System;
+using System.Threading.Tasks;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Interfaces.Network
@@ -9,7 +11,8 @@ namespace Robust.Shared.Interfaces.Network
     public interface IServerNetManager : INetManager
     {
         byte[]? RsaPublicKey { get; }
-        AuthMode Auth { get; }
+        AuthMode Auth { get;  }
+        Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
 
         /// <summary>
         ///     Disconnects this channel from the remote peer.

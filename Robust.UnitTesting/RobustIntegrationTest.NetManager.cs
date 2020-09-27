@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
@@ -249,6 +250,7 @@ namespace Robust.UnitTesting
 
             public byte[]? RsaPublicKey => null;
             public AuthMode Auth => AuthMode.Disabled;
+            public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
 
             public void DisconnectChannel(INetChannel channel, string reason)
             {
@@ -328,6 +330,7 @@ namespace Robust.UnitTesting
                 public IPEndPoint RemoteEndPoint { get; } = new IPEndPoint(IPAddress.Loopback, 1212);
                 public NetUserId UserId { get; }
                 public string UserName { get; }
+                public LoginType AuthType => LoginType.Guest;
                 public short Ping => default;
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,

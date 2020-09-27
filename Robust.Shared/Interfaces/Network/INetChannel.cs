@@ -32,6 +32,8 @@ namespace Robust.Shared.Interfaces.Network
 
         string UserName { get; }
 
+        LoginType AuthType { get; }
+
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.
         /// </summary>

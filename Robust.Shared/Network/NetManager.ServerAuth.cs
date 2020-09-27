@@ -8,6 +8,7 @@ using Lidgren.Network;
 using Newtonsoft.Json;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
@@ -22,6 +23,8 @@ namespace Robust.Shared.Network
 
         public byte[]? RsaPublicKey { get; private set; }
         public AuthMode Auth { get; private set; }
+
+        public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
 
         private void SAGenerateRsaKeys()
         {
@@ -63,6 +66,7 @@ namespace Robust.Shared.Network
                 NetEncryption? encryption = null;
                 NetUserId userId;
                 string userName;
+                LoginType type;
                 var padSuccessMessage = true;
 
                 if (canAuth && Auth != AuthMode.Disabled)
@@ -122,6 +126,7 @@ namespace Robust.Shared.Network
                     userId = new NetUserId(joinedRespJson.UserData!.UserId);
                     userName = joinedRespJson.UserData.UserName;
                     padSuccessMessage = false;
+                    type = LoginType.LoggedIn;
                 }
                 else
                 {
@@ -149,8 +154,7 @@ namespace Robust.Shared.Network
 
                     userName = name;
 
-                    // Just generate a random new GUID.
-                    userId = new NetUserId(Guid.NewGuid());
+                    (userId, type) = await AssignUserIdAsync(name);
                 }
 
                 var endPoint = connection.RemoteEndPoint;
@@ -173,7 +177,8 @@ namespace Robust.Shared.Network
                 var msgResp = new MsgLoginSuccess
                 {
                     UserId = userId.UserId,
-                    UserName = userName
+                    UserName = userName,
+                    Type = type
                 };
                 if (padSuccessMessage)
                 {
@@ -190,7 +195,7 @@ namespace Robust.Shared.Network
                     connection.RemoteEndPoint, userName, userId);
 
                 // Handshake complete!
-                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption);
+                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption, type);
             }
             catch (ClientDisconnectedException)
             {
@@ -203,6 +208,25 @@ namespace Robust.Shared.Network
                 Logger.ErrorS("net", "Exception during handshake with peer {0}:\n{1}",
                     NetUtility.ToHexString(connection.RemoteUniqueIdentifier), e);
             }
+        }
+
+        private async Task<(NetUserId, LoginType)> AssignUserIdAsync(string username)
+        {
+            if (AssignUserIdCallback == null)
+            {
+                goto unassigned;
+            }
+
+            var assigned = await AssignUserIdCallback(username);
+            if (assigned != null)
+            {
+                return (assigned.Value, LoginType.GuestAssigned);
+            }
+
+            unassigned:
+            // Just generate a random new GUID.
+            var uid = new NetUserId(Guid.NewGuid());
+            return (uid, LoginType.Guest);
         }
 
         private Task AwaitDisconnectAsync(NetConnection connection)

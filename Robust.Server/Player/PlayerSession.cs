@@ -162,6 +162,8 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
+        public LoginType AuthType => ConnectedClient.AuthType;
+
         private void UpdatePlayerState()
         {
             PlayerState.Status = Status;

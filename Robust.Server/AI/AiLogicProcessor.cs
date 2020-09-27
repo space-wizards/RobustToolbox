@@ -49,8 +49,11 @@ namespace Robust.Server.AI
         /// <param name="frameTime">Time since last update in seconds.</param>
         public abstract void Update(float frameTime);
 
-        public bool Equals(AiLogicProcessor other)
+        public bool Equals(AiLogicProcessor? other)
         {
+            if (other == null)
+                return false;
+            
             return SelfEntity.Uid.Equals(other.SelfEntity.Uid);
         }
         public override int GetHashCode()

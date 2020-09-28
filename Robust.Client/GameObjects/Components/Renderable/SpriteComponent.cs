@@ -1796,12 +1796,34 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public Texture? Icon => Layers.Count == 0 ? null : GetRenderTexture(Layers[0], Angle.Zero, null);
+        public IDirectionalTextureProvider? Icon
+        {
+            get
+            {
+                if (Layers.Count == 0) return null;
 
-        public static Texture? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+                var layer = Layers[0];
+
+                var texture = layer.Texture;
+
+                if (!layer.State.IsValid) return null;
+
+                // Pull texture from RSI state instead.
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                return state;
+
+            }
+        }
+
+        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null) return icon.Default;
+            if (icon != null) return icon;
 
             if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
             {
@@ -1815,12 +1837,7 @@ namespace Robust.Client.GameObjects
 
             newComponent.ExposeData(YamlObjectSerializer.NewReader(spriteNode));
 
-            if (newComponent.Layers.Count == 0)
-            {
-                return resourceCache.GetFallback<TextureResource>().Texture;
-            }
-
-            return newComponent.Layers.Count == 0 ? null : newComponent.GetRenderTexture(newComponent.Layers[0], Angle.Zero, null);
+            return newComponent.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
 
         #region DummyIconEntity

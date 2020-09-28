@@ -43,6 +43,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             IoCManager.InitThread(container);
 
+            IoCManager.Resolve<IConfigurationManager>()
+                .LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
+            
             container.Resolve<INetManager>().Initialize(true);
 
             var serializer = container.Resolve<IRobustSerializer>();

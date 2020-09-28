@@ -982,9 +982,13 @@ namespace Robust.Shared.Network
 
         #region Events
 
-        private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserId userId, string userName)
+        private async Task<NetConnectingArgs> OnConnecting(
+            IPEndPoint ip,
+            NetUserId userId,
+            string userName,
+            LoginType loginType)
         {
-            var args = new NetConnectingArgs(userId, ip, userName);
+            var args = new NetConnectingArgs(userId, ip, userName, loginType);
             foreach (var conn in _connectingEvent)
             {
                 await conn(args);

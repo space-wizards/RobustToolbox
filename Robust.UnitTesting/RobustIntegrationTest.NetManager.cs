@@ -107,9 +107,11 @@ namespace Robust.UnitTesting
                                 var sessionId = new NetUserId(Guid.NewGuid());
                                 var userName = $"integration_{uid}";
 
-                                var args = await OnConnecting(new IPEndPoint(IPAddress.IPv6Loopback, 0),
+                                var args = await OnConnecting(
+                                    new IPEndPoint(IPAddress.IPv6Loopback, 0),
                                     sessionId,
-                                    userName);
+                                    userName,
+                                    LoginType.Guest);
                                 if (args.IsDenied)
                                 {
                                     writer.TryWrite(new DeniedConnectMessage());
@@ -202,9 +204,13 @@ namespace Robust.UnitTesting
                 }
             }
 
-            private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserId userId, string userName)
+            private async Task<NetConnectingArgs> OnConnecting(
+                IPEndPoint ip,
+                NetUserId userId,
+                string userName,
+                LoginType loginType)
             {
-                var args = new NetConnectingArgs(userId, ip, userName);
+                var args = new NetConnectingArgs(userId, ip, userName, loginType);
                 foreach (var conn in _connectingEvent)
                 {
                     await conn(args);

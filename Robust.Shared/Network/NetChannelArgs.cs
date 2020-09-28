@@ -40,6 +40,7 @@ namespace Robust.Shared.Network
 
         public readonly IPEndPoint IP;
         public readonly string UserName;
+        public readonly LoginType AuthType;
 
         public void Deny(string reason)
         {
@@ -50,11 +51,12 @@ namespace Robust.Shared.Network
         /// Constructs a new instance.
         /// </summary>
         /// <param name="userId">The session ID of the incoming connection.</param>
-        public NetConnectingArgs(NetUserId userId, IPEndPoint ip, string userName)
+        public NetConnectingArgs(NetUserId userId, IPEndPoint ip, string userName, LoginType authType)
         {
             UserId = userId;
             IP = ip;
             UserName = userName;
+            AuthType = authType;
         }
     }
 

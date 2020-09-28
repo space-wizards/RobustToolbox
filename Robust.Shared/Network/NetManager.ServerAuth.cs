@@ -159,7 +159,7 @@ namespace Robust.Shared.Network
                 }
 
                 var endPoint = connection.RemoteEndPoint;
-                var connect = await OnConnecting(endPoint, userId, userName);
+                var connect = await OnConnecting(endPoint, userId, userName, type);
                 if (connect.IsDenied)
                 {
                     connection.Disconnect($"Connection denied: {connect.DenyReason}");

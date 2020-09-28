@@ -405,11 +405,10 @@ namespace Robust.Shared.Network
                                 msg.ReadString());
                             break;
 
-                        /*
                         case NetIncomingMessageType.ConnectionApproval:
                             HandleApproval(msg);
+                            recycle = false;
                             break;
-                            */
 
                         case NetIncomingMessageType.Data:
                             recycle = DispatchNetMessage(msg);
@@ -500,8 +499,10 @@ namespace Robust.Shared.Network
 
             if (IsServer)
             {
+                netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
                 netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
             }
+
 
 #if DEBUG
             //Simulate Latency
@@ -631,20 +632,6 @@ namespace Robust.Shared.Network
                     break;
             }
         }
-
-        /*
-        private void HandleApproval(NetIncomingMessage message)
-        {
-            // TODO: Maybe preemptively refuse connections here in some cases?
-            if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
-            {
-                // This can happen if the approval message comes in after the state changes to disconnected.
-                // In that case just ignore it.
-                return;
-            }
-            message.SenderConnection.Approve();
-        }
-        */
 
         private async void HandleInitialHandshakeComplete(NetPeerData peer,
             NetConnection sender,
@@ -995,31 +982,41 @@ namespace Robust.Shared.Network
 
         #region Events
 
-        protected virtual bool OnConnecting(IPEndPoint ip, NetUserId userId, string userName)
+        private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserId userId, string userName)
         {
             var args = new NetConnectingArgs(userId, ip, userName);
-            Connecting?.Invoke(this, args);
-            return !args.Deny;
+            foreach (var conn in _connectingEvent)
+            {
+                await conn(args);
+            }
+            return args;
         }
 
-        protected virtual void OnConnectFailed(string reason)
+        private void OnConnectFailed(string reason)
         {
             var args = new NetConnectFailArgs(reason);
             ConnectFailed?.Invoke(this, args);
         }
 
-        protected virtual void OnConnected(INetChannel channel)
+        private void OnConnected(INetChannel channel)
         {
             Connected?.Invoke(this, new NetChannelArgs(channel));
         }
 
-        protected virtual void OnDisconnected(INetChannel channel, string reason)
+        private void OnDisconnected(INetChannel channel, string reason)
         {
             Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, reason));
         }
 
+        private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
+            = new List<Func<NetConnectingArgs, Task>>();
+
         /// <inheritdoc />
-        public event EventHandler<NetConnectingArgs>? Connecting;
+        public event Func<NetConnectingArgs, Task> Connecting
+        {
+            add => _connectingEvent.Add(value);
+            remove => _connectingEvent.Remove(value);
+        }
 
         /// <inheritdoc />
         public event EventHandler<NetConnectFailArgs>? ConnectFailed;

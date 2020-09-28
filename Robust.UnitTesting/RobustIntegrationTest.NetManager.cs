@@ -98,25 +98,31 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsServer);
 
-                            var writer = connect.ChannelWriter;
 
-                            var uid = _genConnectionUid();
-                            var sessionId = new NetUserId(Guid.NewGuid());
-                            var userName = $"integration_{uid}";
-
-                            var connectArgs =
-                                new NetConnectingArgs(sessionId, new IPEndPoint(IPAddress.IPv6Loopback, 0), userName);
-                            Connecting?.Invoke(this, connectArgs);
-                            if (connectArgs.Deny)
+                            async void DoConnect()
                             {
-                                writer.TryWrite(new DeniedConnectMessage());
-                                continue;
+                                var writer = connect.ChannelWriter;
+
+                                var uid = _genConnectionUid();
+                                var sessionId = new NetUserId(Guid.NewGuid());
+                                var userName = $"integration_{uid}";
+
+                                var args = await OnConnecting(new IPEndPoint(IPAddress.IPv6Loopback, 0),
+                                    sessionId,
+                                    userName);
+                                if (args.IsDenied)
+                                {
+                                    writer.TryWrite(new DeniedConnectMessage());
+                                    return;
+                                }
+
+                                writer.TryWrite(new ConfirmConnectMessage(uid, sessionId, userName));
+                                var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId,
+                                    connect.Uid, userName);
+                                _channels.Add(uid, channel);
+                                Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
 
-                            writer.TryWrite(new ConfirmConnectMessage(uid, sessionId, userName));
-                            var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId, connect.Uid, userName);
-                            _channels.Add(uid, channel);
-                            Connected?.Invoke(this, new NetChannelArgs(channel));
                             break;
                         }
 
@@ -196,6 +202,16 @@ namespace Robust.UnitTesting
                 }
             }
 
+            private async Task<NetConnectingArgs> OnConnecting(IPEndPoint ip, NetUserId userId, string userName)
+            {
+                var args = new NetConnectingArgs(userId, ip, userName);
+                foreach (var conn in _connectingEvent)
+                {
+                    await conn(args);
+                }
+                return args;
+            }
+
             public void ServerSendToAll(NetMessage message)
             {
                 DebugTools.Assert(IsServer);
@@ -224,7 +240,16 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public event EventHandler<NetConnectingArgs>? Connecting;
+
+            private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
+                = new List<Func<NetConnectingArgs, Task>>();
+
+            public event Func<NetConnectingArgs, Task> Connecting
+            {
+                add => _connectingEvent.Add(value);
+                remove => _connectingEvent.Remove(value);
+            }
+
             public event EventHandler<NetChannelArgs>? Connected;
             public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
@@ -251,6 +276,7 @@ namespace Robust.UnitTesting
             public byte[]? RsaPublicKey => null;
             public AuthMode Auth => AuthMode.Disabled;
             public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
+            public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
 
             public void DisconnectChannel(INetChannel channel, string reason)
             {
@@ -259,6 +285,7 @@ namespace Robust.UnitTesting
 
             INetChannel IClientNetManager.ServerChannel => ServerChannel;
             public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
+
             public event Action<ClientConnectionState>? ClientConnectStateChanged
             {
                 add { }

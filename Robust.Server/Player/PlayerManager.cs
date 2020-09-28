@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
@@ -338,10 +339,14 @@ namespace Robust.Server.Player
             }
         }
 
-        private void OnConnecting(object? sender, NetConnectingArgs args)
+        private Task OnConnecting(NetConnectingArgs args)
         {
             if (PlayerCount >= _baseServer.MaxPlayers)
-                args.Deny = true;
+            {
+                args.Deny("The server is full.");
+            }
+
+            return Task.CompletedTask;
         }
 
         /// <summary>

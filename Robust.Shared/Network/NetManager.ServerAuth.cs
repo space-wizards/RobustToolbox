@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
+using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
@@ -25,6 +25,7 @@ namespace Robust.Shared.Network
         public AuthMode Auth { get; private set; }
 
         public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
+        public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
 
         private void SAGenerateRsaKeys()
         {
@@ -158,10 +159,10 @@ namespace Robust.Shared.Network
                 }
 
                 var endPoint = connection.RemoteEndPoint;
-
-                if (!OnConnecting(endPoint, userId, userName))
+                var connect = await OnConnecting(endPoint, userId, userName);
+                if (connect.IsDenied)
                 {
-                    connection.Disconnect("Sorry, denied. Why? Couldn't tell you, I didn't implement a deny reason.");
+                    connection.Disconnect($"Connection denied: {connect.DenyReason}");
                     return;
                 }
 
@@ -234,6 +235,30 @@ namespace Robust.Shared.Network
             var tcs = new TaskCompletionSource<object?>();
             _awaitingDisconnect.Add(connection, tcs);
             return tcs.Task;
+        }
+
+        private async void HandleApproval(NetIncomingMessage message)
+        {
+            // TODO: Maybe preemptively refuse connections here in some cases?
+            if (message.SenderConnection.Status != NetConnectionStatus.RespondedAwaitingApproval)
+            {
+                // This can happen if the approval message comes in after the state changes to disconnected.
+                // In that case just ignore it.
+                return;
+            }
+
+            if (HandleApprovalCallback != null)
+            {
+                var approval = await HandleApprovalCallback(new NetApprovalEventArgs(message.SenderConnection));
+
+                if (!approval.IsApproved)
+                {
+                    message.SenderConnection.Deny(approval.DenyReason);
+                    return;
+                }
+            }
+
+            message.SenderConnection.Approve();
         }
 
         private sealed class HasJoinedResponse

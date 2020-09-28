@@ -29,10 +29,9 @@ namespace Robust.Shared.Network
     /// </summary>
     public class NetConnectingArgs : EventArgs
     {
-        /// <summary>
-        /// If this is set to true, deny the incoming connection.
-        /// </summary>
-        public bool Deny { get; set; } = false;
+        public bool IsDenied => DenyReason != null;
+
+        public string? DenyReason { get; private set; }
 
         /// <summary>
         /// The IP of the incoming connection.
@@ -41,6 +40,11 @@ namespace Robust.Shared.Network
 
         public readonly IPEndPoint IP;
         public readonly string UserName;
+
+        public void Deny(string reason)
+        {
+            DenyReason = reason;
+        }
 
         /// <summary>
         /// Constructs a new instance.

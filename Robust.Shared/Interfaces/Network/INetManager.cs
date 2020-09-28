@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Interfaces.Network
@@ -104,7 +105,7 @@ namespace Robust.Shared.Interfaces.Network
         /// <summary>
         ///     An incoming connection is being received.
         /// </summary>
-        event EventHandler<NetConnectingArgs> Connecting;
+        event Func<NetConnectingArgs, Task> Connecting;
 
         /// <summary>
         ///     A client has just connected to the server.

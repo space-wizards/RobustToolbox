@@ -63,7 +63,7 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <typeparam name="T">The Type of the CVar value.</typeparam>
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>
-        T GetCVar<T>(string name) where T : notnull;
+        T GetCVar<T>(string name);
 
         /// <summary>
         ///     Gets the type of a value stored in a CVar.

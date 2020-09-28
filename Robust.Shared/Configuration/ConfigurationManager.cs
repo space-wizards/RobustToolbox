@@ -306,7 +306,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public T GetCVar<T>(string name) where T : notnull
+        public T GetCVar<T>(string name)
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.

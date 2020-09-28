@@ -315,7 +315,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             var rect = button.EntityTextureRect;
-            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache);
+            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache)?.Default;
 
             PrototypeList.AddChild(button);
             if (insertFirst)

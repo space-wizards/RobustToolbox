@@ -104,7 +104,6 @@ Mouse Pos:
             if (playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 stringBuilder.AppendLine("No attached entity.");
-
             }
             else
             {
@@ -138,7 +137,14 @@ Mouse Pos:
                 return;
             }
 
-            handle.DrawRect(_uiBox, Color.Red, false);
+            var (x, y) = GlobalPixelPosition;
+            var renderBox = new UIBox2(
+                _uiBox.Left - x,
+                _uiBox.Top - y,
+                _uiBox.Right - x,
+                _uiBox.Bottom - y);
+
+            handle.DrawRect(renderBox, Color.Red, false);
         }
 
         protected override Vector2 CalculateMinimumSize()

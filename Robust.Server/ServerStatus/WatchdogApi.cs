@@ -177,8 +177,8 @@ namespace Robust.Server.ServerStatus
             var tok = _configurationManager.GetCVar<string>("watchdog.token");
             var key = _configurationManager.GetCVar<string>("watchdog.key");
             var baseUrl = _configurationManager.GetCVar<string>("watchdog.baseUrl");
-            _watchdogToken = string.IsNullOrEmpty(_watchdogToken) ? null : tok;
-            _watchdogKey = string.IsNullOrEmpty(_watchdogKey) ? null : key;
+            _watchdogToken = string.IsNullOrEmpty(tok) ? null : tok;
+            _watchdogKey = string.IsNullOrEmpty(key) ? null : key;
             _baseUri = string.IsNullOrEmpty(baseUrl) ? null : new Uri(baseUrl);
 
             if (_watchdogKey != null && _watchdogToken != null)

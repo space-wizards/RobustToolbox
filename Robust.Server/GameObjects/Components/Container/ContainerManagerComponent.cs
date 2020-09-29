@@ -50,10 +50,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
         public static T Ensure<T>(string id, IEntity entity, out bool alreadyExisted) where T : IContainer
         {
-            if (!entity.TryGetComponent<IContainerManager>(out var containerManager))
-            {
-                containerManager = entity.AddComponent<ContainerManagerComponent>();
-            }
+            var containerManager = entity.EnsureComponent<ContainerManagerComponent>();
 
             if (!containerManager.TryGetContainer(id, out var existing))
             {

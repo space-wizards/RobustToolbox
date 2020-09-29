@@ -60,14 +60,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected override Vector2? CustomSize => (250, 300);
 
-        [Obsolete]
-        public EntitySpawnWindow(IPlacementManager placementManager,
-            IPrototypeManager prototypeManager,
-            IResourceCache resourceCache,
-            ILocalizationManager loc) : this(placementManager, prototypeManager, resourceCache)
-        {
-        }
-
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
             IResourceCache resourceCache)
@@ -315,7 +307,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             var rect = button.EntityTextureRect;
-            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache);
+            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache)?.Default;
 
             PrototypeList.AddChild(button);
             if (insertFirst)

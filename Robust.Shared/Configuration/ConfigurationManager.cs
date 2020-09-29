@@ -177,7 +177,7 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null) where T : notnull
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
         {
             Action<object>? valueChangedDelegate = null;
             if (onValueChanged != null)
@@ -188,7 +188,7 @@ namespace Robust.Shared.Configuration
             RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
         }
 
-        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
+        private void RegisterCVar(string name, Type type, object? defaultValue, CVar flags, Action<object>? onValueChanged)
         {
             var only = _isServer ? CVar.CLIENTONLY : CVar.SERVERONLY;
 
@@ -308,7 +308,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public T GetCVar<T>(string name) where T : notnull
+        public T GetCVar<T>(string name)
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
                 //TODO: Make flags work, required non-derpy net system.

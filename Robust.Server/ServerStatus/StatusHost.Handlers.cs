@@ -89,7 +89,7 @@ namespace Robust.Server.ServerStatus
 
             JObject? buildInfo;
 
-            if (downloadUrlWindows == null)
+            if (string.IsNullOrEmpty(downloadUrlWindows))
             {
                 buildInfo = null;
             }

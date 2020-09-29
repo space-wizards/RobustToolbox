@@ -415,7 +415,7 @@ namespace Robust.Server.Player
             Dirty();
         }
 
-        private async void HandleWelcomeMessageReq(MsgServerInfoReq message)
+        private void HandleWelcomeMessageReq(MsgServerInfoReq message)
         {
             var channel = message.MsgChannel;
             var netMsg = channel.CreateNetMessage<MsgServerInfo>();

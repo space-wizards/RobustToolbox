@@ -98,7 +98,6 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsServer);
 
-
                             async void DoConnect()
                             {
                                 var writer = connect.ChannelWriter;
@@ -124,6 +123,8 @@ namespace Robust.UnitTesting
                                 _channels.Add(uid, channel);
                                 Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
+
+                            DoConnect();
 
                             break;
                         }

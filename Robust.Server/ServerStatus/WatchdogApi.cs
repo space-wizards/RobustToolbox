@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -14,7 +13,6 @@ using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 
 #nullable enable
 
@@ -42,8 +40,8 @@ namespace Robust.Server.ServerStatus
             _statusHost.AddHandler(UpdateHandler);
             _statusHost.AddHandler(ShutdownHandler);
 
-            _configurationManager.RegisterCVar<string?>("watchdog.token", null, onValueChanged: _ => UpdateToken());
-            _configurationManager.RegisterCVar<string?>("watchdog.key", null, onValueChanged: _ => UpdateToken());
+            _configurationManager.RegisterCVar("watchdog.token", "", onValueChanged: _ => UpdateToken());
+            _configurationManager.RegisterCVar("watchdog.key", "", onValueChanged: _ => UpdateToken());
             _configurationManager.RegisterCVar("watchdog.baseUrl", "http://localhost:5000");
         }
 
@@ -176,10 +174,12 @@ namespace Robust.Server.ServerStatus
 
         private void UpdateToken()
         {
-            _watchdogToken = _configurationManager.GetCVar<string?>("watchdog.token");
-            _watchdogKey = _configurationManager.GetCVar<string?>("watchdog.key");
-            var baseUrl = _configurationManager.GetCVar<string?>("watchdog.baseUrl");
-            _baseUri = baseUrl != null ? new Uri(baseUrl) : null;
+            var tok = _configurationManager.GetCVar<string>("watchdog.token");
+            var key = _configurationManager.GetCVar<string>("watchdog.key");
+            var baseUrl = _configurationManager.GetCVar<string>("watchdog.baseUrl");
+            _watchdogToken = string.IsNullOrEmpty(_watchdogToken) ? null : tok;
+            _watchdogKey = string.IsNullOrEmpty(_watchdogKey) ? null : key;
+            _baseUri = string.IsNullOrEmpty(baseUrl) ? null : new Uri(baseUrl);
 
             if (_watchdogKey != null && _watchdogToken != null)
             {

@@ -131,7 +131,6 @@ namespace Robust.Shared.Network
             var hasPubKey = !string.IsNullOrEmpty(pubKey);
             var authenticate = !string.IsNullOrEmpty(authToken);
 
-            byte[]? aesKey = null;
             var msgLogin = new MsgLoginStart
             {
                 UserName = userNameRequest,

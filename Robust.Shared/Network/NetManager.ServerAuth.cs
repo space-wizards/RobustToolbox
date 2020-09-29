@@ -263,6 +263,7 @@ namespace Robust.Shared.Network
 
         private sealed class HasJoinedResponse
         {
+#pragma warning disable 649
             public bool IsValid;
             public HasJoinedUserData? UserData;
 
@@ -271,6 +272,7 @@ namespace Robust.Shared.Network
                 public string UserName = default!;
                 public Guid UserId = default!;
             }
+#pragma warning restore 649
         }
     }
 }

@@ -173,16 +173,16 @@ namespace Robust.Server.ServerStatus
 
             _configurationManager.RegisterCVar("status.enabled", true, CVar.ARCHIVE);
             _configurationManager.RegisterCVar("status.bind", "*:1212", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar<string?>("status.connectaddress", null, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("status.connectaddress", "", CVar.ARCHIVE);
 
-            _configurationManager.RegisterCVar("build.fork_id", info?.ForkId, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.version", info?.Version, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_windows", info?.Downloads.Windows, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_macos", info?.Downloads.MacOS, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_linux", info?.Downloads.Linux, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_windows", info?.Hashes.Windows, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_macos", info?.Hashes.MacOS, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_linux", info?.Hashes.Linux, CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.fork_id", info?.ForkId ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.version", info?.Version ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_windows", info?.Downloads.Windows ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_macos", info?.Downloads.MacOS ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.download_url_linux", info?.Downloads.Linux ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_windows", info?.Hashes.Windows ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_macos", info?.Hashes.MacOS ?? "", CVar.ARCHIVE);
+            _configurationManager.RegisterCVar("build.hash_linux", info?.Hashes.Linux ?? "", CVar.ARCHIVE);
         }
 
         [JsonObject(ItemRequired = Required.DisallowNull)]

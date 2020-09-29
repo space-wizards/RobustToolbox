@@ -16,14 +16,12 @@ namespace Robust.Shared.Network.Messages
         public string ServerName { get; set; }
         public int ServerMaxPlayers { get; set; }
         public byte TickRate { get; set; }
-        public NetSessionId PlayerSessionId { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             ServerName = buffer.ReadString();
             ServerMaxPlayers = buffer.ReadInt32();
             TickRate = buffer.ReadByte();
-            PlayerSessionId = new NetSessionId(buffer.ReadString());
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -31,7 +29,6 @@ namespace Robust.Shared.Network.Messages
             buffer.Write(ServerName);
             buffer.Write(ServerMaxPlayers);
             buffer.Write(TickRate);
-            buffer.Write(PlayerSessionId.Username);
         }
     }
 }

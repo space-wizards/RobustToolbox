@@ -99,9 +99,9 @@ namespace Robust.Shared.Network
                     case MsgGroups.Entity:
                         return NetDeliveryMethod.Unreliable;
                     case MsgGroups.Core:
-                    case MsgGroups.String:
                     case MsgGroups.Command:
                         return NetDeliveryMethod.ReliableUnordered;
+                    case MsgGroups.String:
                     case MsgGroups.EntityEvent:
                         return NetDeliveryMethod.ReliableOrdered;
                     default:

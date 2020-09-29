@@ -2,7 +2,6 @@
 using System.Net;
 using Lidgren.Network;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network
 {
@@ -20,6 +19,9 @@ namespace Robust.Shared.Network
         /// <inheritdoc />
         public INetManager NetPeer => _manager;
 
+        public string UserName { get; }
+        public LoginType AuthType { get; }
+
         /// <inheritdoc />
         public short Ping => (short) Math.Round(_connection.AverageRoundtripTime * 1000);
 
@@ -34,18 +36,23 @@ namespace Robust.Shared.Network
         /// </summary>
         public NetConnection Connection => _connection;
 
-        public NetSessionId SessionId { get; }
+        public NetUserId UserId { get; }
+
+        // Only used on server, contains the encryption to use for this channel.
+        public NetEncryption? Encryption { get; set; }
 
         /// <summary>
         ///     Creates a new instance of a NetChannel.
         /// </summary>
         /// <param name="manager">The server this channel belongs to.</param>
         /// <param name="connection">The raw NetConnection to the remote peer.</param>
-        internal NetChannel(NetManager manager, NetConnection connection, NetSessionId sessionId)
+        internal NetChannel(NetManager manager, NetConnection connection, NetUserId userId, string userName, LoginType loginType)
         {
             _manager = manager;
             _connection = connection;
-            SessionId = sessionId;
+            UserId = userId;
+            UserName = userName;
+            AuthType = loginType;
         }
 
         /// <inheritdoc />

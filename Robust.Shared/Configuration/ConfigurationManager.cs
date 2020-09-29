@@ -12,7 +12,7 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    public class ConfigurationManager : IConfigurationManager
+    public class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
         private readonly Dictionary<string, ConfigVar> _configVars = new Dictionary<string, ConfigVar>();
@@ -276,20 +276,22 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public bool IsCVarRegistered(string name)
         {
-            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered;
+            return _configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0;
         }
 
         /// <inheritdoc />
         public IEnumerable<string> GetRegisteredCVars()
         {
-            return _configVars.Keys;
+            return _configVars
+                .Where(p => (p.Value.Flags & CVar.SECURE) == 0)
+                .Select(p => p.Key);
         }
 
         /// <inheritdoc />
         public void SetCVar(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
             {
                 if (!Equals(cVar.Value, value))
                 {
@@ -308,6 +310,15 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {
+            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
+                //TODO: Make flags work, required non-derpy net system.
+                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
+
+            throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
+        }
+
+        public T GetSecureCVar<T>(string name)
+        {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
                 return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
@@ -322,7 +333,10 @@ namespace Robust.Shared.Configuration
 
         public Type GetCVarType(string name)
         {
-            var cVar = _configVars[name];
+            if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered || (cVar.Flags & CVar.SECURE) != 0)
+            {
+                throw new InvalidConfigurationException($"Trying to get type of unregistered variable '{name}'");
+            }
 
             // If it's null it's a string, since the rest is primitives which aren't null.
             return cVar.Value?.GetType() ?? typeof(string);

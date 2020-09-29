@@ -11,7 +11,8 @@ namespace Robust.Shared
             throw new InvalidOperationException("This class must not be instantiated");
         }
 
-        public static readonly CVarDef<int> NetPort = CVarDef.Create("net.port", 1212, CVar.ARCHIVE);
+        public static readonly CVarDef<int> NetPort =
+            CVarDef.Create("net.port", 1212, CVar.ARCHIVE);
 
         public static readonly CVarDef<int> NetSendBufferSize =
             CVarDef.Create("net.sendbuffersize", 131071, CVar.ARCHIVE);
@@ -43,6 +44,24 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> GameMaxPlayers =
             CVarDef.Create("game.maxplayers", 32, CVar.ARCHIVE | CVar.SERVERONLY);
+
+        public static readonly CVarDef<int> AuthMode =
+            CVarDef.Create("auth.mode", (int) Network.AuthMode.Optional, CVar.SERVERONLY);
+
+        public static readonly CVarDef<bool> AuthAllowLocal =
+            CVarDef.Create("auth.allowlocal", true, CVar.SERVERONLY);
+
+        public static readonly CVarDef<string> AuthServerPubKey =
+            CVarDef.Create("auth.serverpubkey", "", CVar.SECURE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> AuthToken =
+            CVarDef.Create("auth.token", "", CVar.SECURE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> AuthUserId =
+            CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<string> AuthServer =
+            CVarDef.Create("auth.server", "http://localhost:5000/", CVar.SECURE);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);

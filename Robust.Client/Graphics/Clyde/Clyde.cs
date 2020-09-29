@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
             _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             // This cvar does not modify the actual GL version requested or anything,
             // it overrides the version we detect to detect GL features.
-            _configurationManager.RegisterCVar<string?>("display.ogl_override_version", null);
+            _configurationManager.RegisterCVar("display.ogl_override_version", "");
             RegisterBlockCVars();
         }
 
@@ -240,8 +240,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar<string?>("display.ogl_override_version");
-            if (overrideGLVersion == null)
+            var overrideGLVersion = _configurationManager.GetCVar<string>("display.ogl_override_version");
+            if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;
             }

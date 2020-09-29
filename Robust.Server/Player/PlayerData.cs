@@ -6,13 +6,13 @@ namespace Robust.Server.Player
 {
     class PlayerData : IPlayerData
     {
-        public PlayerData(NetSessionId sessionId)
+        public PlayerData(NetUserId userId)
         {
-            SessionId = sessionId;
+            UserId = userId;
         }
 
         [ViewVariables]
-        public NetSessionId SessionId { get; }
+        public NetUserId UserId { get; }
 
         [ViewVariables]
         public object? ContentDataUncast { get; set; }

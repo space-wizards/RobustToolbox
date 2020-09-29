@@ -28,7 +28,11 @@ namespace Robust.Shared.Interfaces.Network
         ///     On the server, this is the session ID for this client.
         ///     On the client, this is the session ID for the client.
         /// </summary>
-        NetSessionId SessionId { get; }
+        NetUserId UserId { get; }
+
+        string UserName { get; }
+
+        LoginType AuthType { get; }
 
         /// <summary>
         ///     Average round trip time in milliseconds between the remote peer and us.

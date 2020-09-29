@@ -33,11 +33,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var container = new DependencyCollection();
             container.Register<ILogManager, LogManager>();
             container.Register<IConfigurationManager, ConfigurationManager>();
+            container.Register<IConfigurationManagerInternal, ConfigurationManager>();
             container.Register<INetManager, NetManager>();
             container.Register<IReflectionManager, ServerReflectionManager>();
             container.Register<IRobustSerializer, RobustSerializer>();
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.BuildGraph();
+
+            container.Resolve<IConfigurationManager>().Initialize(true);
+            container.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly);
 
             container.Resolve<IReflectionManager>().LoadAssemblies(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
 

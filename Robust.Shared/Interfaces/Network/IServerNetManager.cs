@@ -1,4 +1,8 @@
 ﻿
+using System;
+using System.Threading.Tasks;
+using Robust.Shared.Network;
+
 namespace Robust.Shared.Interfaces.Network
 {
     /// <summary>
@@ -6,6 +10,13 @@ namespace Robust.Shared.Interfaces.Network
     /// </summary>
     public interface IServerNetManager : INetManager
     {
+        public delegate Task<NetApproval> NetApprovalDelegate(NetApprovalEventArgs eventArgs);
+
+        byte[]? RsaPublicKey { get; }
+        AuthMode Auth { get;  }
+        Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
+        NetApprovalDelegate? HandleApprovalCallback { get; set; }
+
         /// <summary>
         ///     Disconnects this channel from the remote peer.
         /// </summary>

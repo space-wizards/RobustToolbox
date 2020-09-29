@@ -58,5 +58,10 @@ namespace Robust.Shared.Configuration
         ///     This is intended to aid shared code.
         /// </remarks>
         CLIENTONLY = 128,
+
+        /// <summary>
+        /// This var has to kept secure and may not be accessed by content.
+        /// </summary>
+        SECURE = 256
     }
 }

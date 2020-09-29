@@ -16,7 +16,7 @@ namespace Robust.Server.Interfaces.Player
         /// <summary>
         ///     The session ID of the player owning this data.
         /// </summary>
-        NetSessionId SessionId { get; }
+        NetUserId UserId { get; }
 
         /// <summary>
         ///     Custom field that content can assign anything to.

@@ -451,6 +451,16 @@ namespace Robust.Shared.Serialization
                 return StringToType(type, node.ToString());
             }
 
+            // nullable val primitives
+            var nullableType = Nullable.GetUnderlyingType(type);
+            if (nullableType != null)
+            {
+                if (nullableType.IsPrimitive || nullableType == typeof(decimal))
+                {
+                    return StringToType(type, node.ToString());
+                }
+            }
+
             // array
             if (type.IsArray)
             {
@@ -616,6 +626,19 @@ namespace Robust.Shared.Serialization
                 // Need it for the culture overload.
                 var convertible = (IConvertible) obj;
                 return convertible.ToString(CultureInfo.InvariantCulture);
+            }
+
+            // nullable val primitives
+            var nullableType = Nullable.GetUnderlyingType(type);
+            if (nullableType != null)
+            {
+                if (nullableType.IsPrimitive || nullableType == typeof(decimal))
+                {
+                    // All primitives implement IConvertible.
+                    // Need it for the culture overload.
+                    var convertible = (IConvertible) obj;
+                    return convertible.ToString(CultureInfo.InvariantCulture);
+                }
             }
 
             // array

@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
@@ -522,15 +521,17 @@ namespace Robust.Shared.Serialization
             // HashSet<T>
             if (TryGenericHashSetType(type, out var setType))
             {
-                var setNode = (YamlSequenceNode)node;
-                var newSet = Activator.CreateInstance(type, setNode.Children.Count)!;
+                var setNode = (YamlSequenceNode) node;
+                var values = setNode.Select(entryNode => NodeToType(setType, entryNode)).ToArray();
+                var valuesArray = Array.CreateInstance(setType, new[] {values.Length})!;
 
-                foreach (var entryNode in setNode)
+                for (var i = 0; i < values.Length; i++)
                 {
-                    var value = NodeToType(setType, entryNode);
-                    var method = type.GetMethod("Add")!;
-                    method.Invoke(newSet, new[] {value});
+                    var value = values[i];
+                    valuesArray.SetValue(value, i);
                 }
+
+                var newSet = Activator.CreateInstance(type, valuesArray)!;
 
                 return newSet;
             }
@@ -856,25 +857,23 @@ namespace Robust.Shared.Serialization
 
             if (TryGenericHashSetType(type!, out _))
             {
-                var setA = (HashSet<object>) a;
-                var setB = (HashSet<object>) b!;
+                var setA = ((IEnumerable) a).GetEnumerator();
+                var setB = ((IEnumerable) b!).GetEnumerator();
 
-                if (setA.Count != setB.Count)
+                bool nextA;
+                var nextB = false;
+                
+                while ((nextA = setA.MoveNext()) && (nextB = setB.MoveNext()))
                 {
-                    return false;
+                    if (!IsSerializedEqual(setA.Current, setB.Current))
+                    {
+                        return false;
+                    }
                 }
 
-                foreach (var elementA in setA)
+                if (nextA || nextB)
                 {
-                    if (!setB.TryGetValue(elementA, out var elementB))
-                    {
-                        return false;
-                    }
-
-                    if (!IsSerializedEqual(elementA, elementB))
-                    {
-                        return false;
-                    }
+                    return false;
                 }
                 
                 return true;

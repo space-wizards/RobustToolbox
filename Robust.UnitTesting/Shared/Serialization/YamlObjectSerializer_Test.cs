@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
@@ -271,6 +272,38 @@ namespace Robust.UnitTesting.Shared.Serialization
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
+        [Test]
+        public void SerializeHashSetTest()
+        {
+            var mapping = new YamlMappingNode();
+            var set = SerializableSet;
+
+            var writer = YamlObjectSerializer.NewWriter(mapping);
+
+            writer.DataField(ref set, "dataSet", new HashSet<int>(0));
+
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedSetYaml));
+        }
+
+        [Test]
+        public void DeserializeHashSetTest()
+        {
+            HashSet<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedSetYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataSet", new HashSet<int>(0));
+
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableSet.Count));
+            for (var i = 0; i < SerializableSet.Count; i++)
+                Assert.That(data.ElementAt(i), Is.EqualTo(SerializableSet.ElementAt(i)));
+        }
+
+        private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
+        private readonly HashSet<int> SerializableSet = new HashSet<int> { 1, 2, 3 };
+        
         // serializes a node tree into text
         internal static string NodeToYamlText(YamlNode root)
         {

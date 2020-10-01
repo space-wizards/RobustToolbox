@@ -301,6 +301,24 @@ namespace Robust.UnitTesting.Shared.Serialization
                 Assert.That(data.ElementAt(i), Is.EqualTo(SerializableSet.ElementAt(i)));
         }
 
+        [Test]
+        public void SerializedEqualHashSetTest()
+        {
+            var set = new HashSet<string> {"A", "B", "C", "D", "E"};
+            var set2 = new HashSet<string>(set);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(set, set2), Is.True);
+        }
+
+        [Test]
+        public void SerializedNotEqualHashSetTest()
+        {
+            var set = new HashSet<string> {"A"};
+            var set2 = new HashSet<string> {"B"};
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(set, set2), Is.False);
+        }
+
         private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
         private readonly HashSet<int> SerializableSet = new HashSet<int> { 1, 2, 3 };
         

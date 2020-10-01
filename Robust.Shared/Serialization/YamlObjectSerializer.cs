@@ -859,22 +859,24 @@ namespace Robust.Shared.Serialization
                 var setA = ((IEnumerable) a).GetEnumerator();
                 var setB = ((IEnumerable) b!).GetEnumerator();
 
-                bool nextA;
-                var nextB = false;
-                
-                while ((nextA = setA.MoveNext()) && (nextB = setB.MoveNext()))
+                while (setA.MoveNext())
                 {
+                    if (!setB.MoveNext())
+                    {
+                        return false;
+                    }
+
                     if (!IsSerializedEqual(setA.Current, setB.Current))
                     {
                         return false;
                     }
                 }
 
-                if (nextA || nextB)
+                if (setB.MoveNext())
                 {
                     return false;
                 }
-                
+
                 return true;
             }
 

@@ -521,13 +521,12 @@ namespace Robust.Shared.Serialization
             // HashSet<T>
             if (TryGenericHashSetType(type, out var setType))
             {
-                var setNode = (YamlSequenceNode) node;
-                var values = setNode.Select(entryNode => NodeToType(setType, entryNode)).ToArray();
-                var valuesArray = Array.CreateInstance(setType, new[] {values.Length})!;
+                var nodes = ((YamlSequenceNode) node).Children;
+                var valuesArray = Array.CreateInstance(setType, new[] {nodes.Count})!;
 
-                for (var i = 0; i < values.Length; i++)
+                for (var i = 0; i < nodes.Count; i++)
                 {
-                    var value = values[i];
+                    var value = NodeToType(setType, nodes[i]);
                     valuesArray.SetValue(value, i);
                 }
 

@@ -271,6 +271,93 @@ namespace Robust.UnitTesting.Shared.Serialization
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
 
+        [Test]
+        public void NullablePrimitiveSerializeNullTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(mapping.Children.Count, Is.Zero);
+        }
+        
+        [Test]
+        public void NullablePrimitiveSerializeValueTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            int? value = 5;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(mapping["foo"].AsInt(), Is.EqualTo(5));
+        }
+        
+        [Test]
+        public void NullablePrimitiveDeserializeNullTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", "null"}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+        
+        [Test]
+        public void NullablePrimitiveDeserializeEmptyTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", ""}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+        
+        [Test]
+        public void NullablePrimitiveDeserializeNothingTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+        
+        [Test]
+        public void NullablePrimitiveDeserializeValueTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", "5"}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.EqualTo(5));
+        }
+
         // serializes a node tree into text
         internal static string NodeToYamlText(YamlNode root)
         {

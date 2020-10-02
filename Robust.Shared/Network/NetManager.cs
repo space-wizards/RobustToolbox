@@ -47,7 +47,7 @@ namespace Robust.Shared.Network
 
         private static readonly Counter RecvPacketsMetrics = Metrics.CreateCounter(
             "robust_net_recv_packets",
-            "Number of packets sent since server startup.");
+            "Number of packets received since server startup.");
 
         private static readonly Counter SentMessagesMetrics = Metrics.CreateCounter(
             "robust_net_sent_messages",
@@ -55,7 +55,7 @@ namespace Robust.Shared.Network
 
         private static readonly Counter RecvMessagesMetrics = Metrics.CreateCounter(
             "robust_net_recv_messages",
-            "Number of messages sent since server startup.");
+            "Number of messages received since server startup.");
 
         private static readonly Counter SentBytesMetrics = Metrics.CreateCounter(
             "robust_net_sent_bytes",
@@ -63,7 +63,7 @@ namespace Robust.Shared.Network
 
         private static readonly Counter RecvBytesMetrics = Metrics.CreateCounter(
             "robust_net_recv_bytes",
-            "Number of bytes sent since server startup.");
+            "Number of bytes received since server startup.");
 
         private static readonly Counter MessagesResentDelayMetrics = Metrics.CreateCounter(
             "robust_net_resent_delay",
@@ -79,7 +79,7 @@ namespace Robust.Shared.Network
 
         private static readonly Gauge MessagesStoredMetrics = Metrics.CreateGauge(
             "robust_net_stored",
-            "Number of stores messages for reliable resending (if necessary).");
+            "Number of stored messages for reliable resending (if necessary).");
 
         private static readonly Gauge MessagesUnsentMetrics = Metrics.CreateGauge(
             "robust_net_unsent",

@@ -441,24 +441,16 @@ namespace Robust.Shared.Serialization
 
         public object NodeToType(Type type, YamlNode node)
         {
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
             // special snowflake string
             if (type == typeof(String))
                 return node.ToString();
 
             // val primitives
-            if (type.IsPrimitive || type == typeof(decimal))
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
             {
                 return StringToType(type, node.ToString());
-            }
-
-            // nullable val primitives
-            var nullableType = Nullable.GetUnderlyingType(type);
-            if (nullableType != null)
-            {
-                if (nullableType.IsPrimitive || nullableType == typeof(decimal))
-                {
-                    return StringToType(type, node.ToString());
-                }
             }
 
             // array
@@ -618,6 +610,7 @@ namespace Robust.Shared.Serialization
                 return s;
 
             var type = obj.GetType();
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // val primitives and val enums
             if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
@@ -626,19 +619,6 @@ namespace Robust.Shared.Serialization
                 // Need it for the culture overload.
                 var convertible = (IConvertible) obj;
                 return convertible.ToString(CultureInfo.InvariantCulture);
-            }
-
-            // nullable val primitives
-            var nullableType = Nullable.GetUnderlyingType(type);
-            if (nullableType != null)
-            {
-                if (nullableType.IsPrimitive || nullableType == typeof(decimal))
-                {
-                    // All primitives implement IConvertible.
-                    // Need it for the culture overload.
-                    var convertible = (IConvertible) obj;
-                    return convertible.ToString(CultureInfo.InvariantCulture);
-                }
             }
 
             // array

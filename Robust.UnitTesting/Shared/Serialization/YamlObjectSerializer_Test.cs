@@ -321,7 +321,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
         private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
         private readonly HashSet<int> SerializableSet = new HashSet<int> { 1, 2, 3 };
-        
+
         [Test]
         public void NullablePrimitiveSerializeNullTest()
         {
@@ -334,7 +334,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(mapping.Children.Count, Is.Zero);
         }
-        
+
         [Test]
         public void NullablePrimitiveSerializeValueTest()
         {
@@ -347,13 +347,13 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(mapping["foo"].AsInt(), Is.EqualTo(5));
         }
-        
+
         [Test]
         public void NullablePrimitiveDeserializeNullTest()
         {
             var mapping = new YamlMappingNode
             {
-                {"foo", "null"}
+                {"foo", null!}
             };
             var reader = YamlObjectSerializer.NewReader(mapping);
 
@@ -363,7 +363,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(value, Is.Null);
         }
-        
+
         [Test]
         public void NullablePrimitiveDeserializeEmptyTest()
         {
@@ -379,7 +379,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(value, Is.Null);
         }
-        
+
         [Test]
         public void NullablePrimitiveDeserializeNothingTest()
         {
@@ -392,7 +392,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             Assert.That(value, Is.Null);
         }
-        
+
         [Test]
         public void NullablePrimitiveDeserializeValueTest()
         {

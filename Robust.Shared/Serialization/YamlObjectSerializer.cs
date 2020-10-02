@@ -905,15 +905,8 @@ namespace Robust.Shared.Serialization
         }
 
 
-        private static object StringToType(Type type, string str)
+        private static object? StringToType(Type type, string str)
         {
-            // TypeConverter.ConvertFromInvariantString uses the underlying type of a nullable
-            // type for conversion, causing an exception when nullable primitives are used
-            if (str.Equals("null", StringComparison.InvariantCultureIgnoreCase))
-            {
-                return null!;
-            }
-            
             var foo = TypeDescriptor.GetConverter(type);
             return foo.ConvertFromInvariantString(str);
         }

@@ -440,12 +440,14 @@ namespace Robust.Shared.Serialization
 
         public object NodeToType(Type type, YamlNode node)
         {
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
             // special snowflake string
             if (type == typeof(String))
                 return node.ToString();
 
             // val primitives
-            if (type.IsPrimitive || type == typeof(decimal))
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
             {
                 return StringToType(type, node.ToString());
             }
@@ -624,6 +626,7 @@ namespace Robust.Shared.Serialization
                 return s;
 
             var type = obj.GetType();
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // val primitives and val enums
             if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))

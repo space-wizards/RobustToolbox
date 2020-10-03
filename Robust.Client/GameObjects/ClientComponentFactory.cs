@@ -39,9 +39,6 @@ namespace Robust.Client.GameObjects
 
             Register<InputComponent>();
 
-            Register<SpriteComponent>();
-            RegisterReference<SpriteComponent, ISpriteComponent>();
-
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();
 

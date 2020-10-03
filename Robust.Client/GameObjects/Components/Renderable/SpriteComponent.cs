@@ -29,7 +29,6 @@ using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
-using YamlDotNet.RepresentationModel;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects

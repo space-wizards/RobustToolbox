@@ -29,8 +29,25 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _lineEdit.Text = value.ToString();
+                ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
             }
         }
+
+        /// <summary>
+        /// Overrides the value of the spinbox without calling the event.
+        /// Still applies validity-checks
+        /// </summary>
+        /// <param name="value">the new value</param>
+        public void OverrideValue(int value)
+        {
+            if (IsValid != null && !IsValid(value))
+            {
+                return;
+            }
+            _lineEdit.Text = value.ToString();
+        }
+
+        public event EventHandler<ValueChangedEventArgs> ValueChanged = null!;
 
         public SpinBox() : base()
         {
@@ -127,6 +144,16 @@ namespace Robust.Client.UserInterface.Controls
                 Value += _stepSize;
             else if (args.Delta.Y < 0)
                 Value -= _stepSize;
+        }
+    }
+
+    public class ValueChangedEventArgs : EventArgs
+    {
+        public readonly int Value;
+
+        public ValueChangedEventArgs(int value)
+        {
+            Value = value;
         }
     }
 }

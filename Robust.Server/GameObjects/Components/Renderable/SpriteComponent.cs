@@ -12,7 +12,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    [RegisterComponent]
     [ComponentReference(typeof(SharedSpriteComponent))]
     [ComponentReference(typeof(ISpriteRenderableComponent))]
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent

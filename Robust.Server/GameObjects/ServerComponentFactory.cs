@@ -40,6 +40,7 @@ namespace Robust.Server.GameObjects
             Register<OccluderComponent>();
 
             RegisterIgnore("Input");
+            Register<SpriteComponent>();
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();

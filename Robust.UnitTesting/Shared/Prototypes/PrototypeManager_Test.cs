@@ -19,7 +19,6 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.Register<TestBasicPrototypeComponent>();
-            factory.DoAutoRegistrations();
 
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.LoadFromStream(new StringReader(DOCUMENT));

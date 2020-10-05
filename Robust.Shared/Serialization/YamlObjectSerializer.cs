@@ -552,7 +552,7 @@ namespace Robust.Shared.Serialization
             {
                 if (!(node is YamlMappingNode mapNode))
                 {
-                    throw new InvalidOperationException("Cannot read from IExposeData on non-mapping node.");
+                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
                 }
 
                 var concreteType = type;
@@ -736,7 +736,7 @@ namespace Robust.Shared.Serialization
 
                 return node;
             }
-            
+
             // Hand it to the context.
             if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {

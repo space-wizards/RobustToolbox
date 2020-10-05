@@ -595,6 +595,7 @@ namespace Robust.Client.UserInterface.Controls
             public bool Selectable { get; set; } = true;
             public bool TooltipEnabled { get; set; } = true;
             public UIBox2? Region { get; set; }
+            public object? Metadata { get; set; }
 
             public bool Disabled
             {

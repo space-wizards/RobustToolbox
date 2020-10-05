@@ -413,9 +413,9 @@ namespace Robust.Client.Placement
             else Clear();
         }
 
-        public void BeginPlacing(PlacementInformation info)
+        public void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null)
         {
-            BeginHijackedPlacing(info);
+            BeginHijackedPlacing(info, hijack);
         }
 
         public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack? hijack = null)

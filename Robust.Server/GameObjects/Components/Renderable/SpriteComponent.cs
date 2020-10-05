@@ -12,8 +12,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteRenderableComponent))]
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";

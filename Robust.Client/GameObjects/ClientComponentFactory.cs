@@ -6,6 +6,7 @@ using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -40,6 +41,7 @@ namespace Robust.Client.GameObjects
             Register<InputComponent>();
 
             Register<SpriteComponent>();
+            RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
 
             Register<ClientOccluderComponent>();

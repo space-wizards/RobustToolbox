@@ -34,8 +34,6 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
-    [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteComponent))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {

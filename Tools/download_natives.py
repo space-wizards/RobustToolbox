@@ -104,7 +104,7 @@ class DepGlfw(SimpleDependency):
     def __init__(self):
         super().__init__()
 
-        self.version = "3.3"
+        self.version = "3.3.2"
         self.name = "glfw"
 
         base_url = "https://github.com/space-wizards/build-dependencies" \
@@ -163,9 +163,13 @@ class DepOpenAL(SimpleDependency):
         self.name = "openal"
 
         self.windows_target_filename = "openal32.dll"
+        self.linux_target_filename = "libopenal.so.1"
 
-        self.windows_download_url = "https://github.com/space-wizards/build-dependencies/blob/master/natives/openal/" \
-                                    "1.20.1/openal32.dll?raw=true"
+        base_url = "https://github.com/space-wizards/build-dependencies" \
+                   f"/raw/master/natives/openal/{self.version}/{{0}}"
+
+        self.windows_download_url = str.format(base_url, self.windows_target_filename)
+        self.linux_download_url = str.format(base_url, "libopenal.so")
 
 
 class DepFluidsynth(NativeDependency):

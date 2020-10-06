@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface.Controls
 
             Value = 0;
 
-            _lineEdit.IsValid = (str) => int.TryParse(str, out int i);
+            _lineEdit.IsValid = (str) => int.TryParse(str, out var i) && (IsValid == null || IsValid(i));
         }
 
         /// <summary>
@@ -111,6 +111,32 @@ namespace Robust.Client.UserInterface.Controls
             foreach (var num in rightButtons)
             {
                 AddRightButton(num, num.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Changes the editability of the lineedit-field
+        /// </summary>
+        /// <param name="disabled"></param>
+        public void SetLineEditDisabled(bool disabled)
+        {
+            _lineEdit.Editable = !disabled;
+        }
+
+        /// <summary>
+        /// Changes the editability of the buttons
+        /// </summary>
+        /// <param name="disabled"></param>
+        public void SetButtonDisabled(bool disabled)
+        {
+            foreach (var leftButton in _leftButtons)
+            {
+                leftButton.Disabled = disabled;
+            }
+
+            foreach (var rightButton in _rightButtons)
+            {
+                rightButton.Disabled = disabled;
             }
         }
 

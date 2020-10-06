@@ -33,9 +33,6 @@ namespace Robust.Client.UserInterface.CustomControls
         // We keep track of frame times in a ring buffer.
         private readonly float[] _frameTimes = new float[TrackedFrames];
 
-        // Height and color of frames
-        private readonly (float, Color)[] _frames = new (float,Color)[TrackedFrames];
-
         // Position of the last frame in the ring buffer.
         private int _frameIndex;
 
@@ -66,8 +63,17 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 var currentFrameIndex = MathHelper.Mod(_frameIndex - 1 - i, TrackedFrames);
                 var frameTime = _frameTimes[currentFrameIndex];
-                _frames[i].Item1 = FrameHeight * (frameTime * TargetFrameRate); ;
-                maxHeight = System.Math.Max(maxHeight, _frames[i].Item1);
+                maxHeight = System.Math.Max(maxHeight, FrameHeight * (frameTime * TargetFrameRate));
+            }
+
+            float ratio = maxHeight > PixelHeight ? PixelHeight / maxHeight : 1;
+            for(int i = 0; i < _frameTimes.Length; i++)
+            {
+                var currentFrameIndex = MathHelper.Mod(_frameIndex - 1 - i, TrackedFrames);
+                var frameTime = _frameTimes[currentFrameIndex];
+                var frameHeight = FrameHeight * (frameTime * TargetFrameRate);
+                var x = FrameWidth * UserInterfaceManager.UIScale * (TrackedFrames - 1 - i);
+                var rect = new UIBox2(x, PixelHeight - (frameHeight * ratio), x + FrameWidth * UserInterfaceManager.UIScale, PixelHeight);
 
                 Color color;
                 if (frameTime > 1f / (TargetFrameRate / 2 - 1))
@@ -82,15 +88,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     color = Color.Lime;
                 }
-                _frames[i].Item2 = color;
-            }
-
-            float ratio = maxHeight > PixelHeight ? PixelHeight / maxHeight : 1;
-            for(int i = 0; i < _frames.Length; i++)
-            {
-                var x = FrameWidth * UserInterfaceManager.UIScale * (TrackedFrames - 1 - i);
-                var rect = new UIBox2(x, PixelHeight - (_frames[i].Item1 * ratio), x + FrameWidth * UserInterfaceManager.UIScale, PixelHeight);
-                handle.DrawRect(rect, _frames[i].Item2);
+                handle.DrawRect(rect, color);
             }
         }
     }

@@ -196,11 +196,11 @@ class DepFluidsynth(NativeDependency):
         if targetOS != OS_WINDOWS:
             return
 
-        print("FLUIDSYNTH FOR WINDOWS")
+        #print("FLUIDSYNTH FOR WINDOWS")
         os_dep_dir = os.path.join(dep_dir, targetOS)
 
         if self.check_version(dep_dir):
-            print("MUST UPDATE")
+            #print("MUST UPDATE")
             os.makedirs(os_dep_dir, exist_ok=True)
             # Download new version
 
@@ -208,16 +208,57 @@ class DepFluidsynth(NativeDependency):
                 url = DepFluidsynth.BASE_URL + filename + "?raw=true"
                 urllib.request.urlretrieve(url, os.path.join(os_dep_dir, filename))
 
-        print("COPYING")
+        #print("COPYING")
         for file in os.listdir(os_dep_dir):
             source_file_path = os.path.join(os_dep_dir, file)
             target_file_path = os.path.join(output_dir, file)
 
-            print(file, source_file_path, target_file_path)
+            #print(file, source_file_path, target_file_path)
 
             if not os.path.exists(target_file_path) or \
                     os.stat(source_file_path).st_mtime > os.stat(target_file_path).st_mtime:
-                print("COPY")
+                #print("COPY")
+                shutil.copy2(source_file_path, target_file_path)
+
+class DepAngle(NativeDependency):
+    BASE_URL = "https://github.com/space-wizards/build-dependencies/tree/master/natives/ANGLE/2020-05-15-1/"
+
+    FILES = [
+        "libGLESv2.dll",
+        "libEGL.dll"
+    ]
+
+    def __init__(self):
+        super().__init__()
+
+        self.name = "ANGLE"
+        self.version = "2020-05-15-1"
+
+    def run(self, dep_dir: str, targetOS: str, output_dir: str):
+        if targetOS != OS_WINDOWS:
+            return
+
+        print("ANGLE FOR WINDOWS")
+        os_dep_dir = os.path.join(dep_dir, targetOS)
+
+        if self.check_version(dep_dir):
+            os.makedirs(os_dep_dir, exist_ok=True)
+            # Download new version
+
+            for filename in DepAngle.FILES:
+                url = DepAngle.BASE_URL + filename + "?raw=true"
+                urllib.request.urlretrieve(url, os.path.join(os_dep_dir, filename))
+
+        #print("COPYING")
+        for file in os.listdir(os_dep_dir):
+            source_file_path = os.path.join(os_dep_dir, file)
+            target_file_path = os.path.join(output_dir, file)
+
+            #print(file, source_file_path, target_file_path)
+
+            if not os.path.exists(target_file_path) or \
+                    os.stat(source_file_path).st_mtime > os.stat(target_file_path).st_mtime:
+                #print("COPY")
                 shutil.copy2(source_file_path, target_file_path)
 
 
@@ -226,7 +267,8 @@ NATIVES: List[SimpleDependency] = [
     DepSwnfd(),
     DepFreetype(),
     DepOpenAL(),
-    DepFluidsynth()
+    DepFluidsynth(),
+    DepAngle()
 ]
 
 

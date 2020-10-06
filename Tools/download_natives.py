@@ -221,7 +221,7 @@ class DepFluidsynth(NativeDependency):
                 shutil.copy2(source_file_path, target_file_path)
 
 class DepAngle(NativeDependency):
-    BASE_URL = "https://github.com/space-wizards/build-dependencies/tree/master/natives/ANGLE/2020-05-15-1/"
+    BASE_URL = "https://github.com/space-wizards/build-dependencies/blob/master/natives/ANGLE/2020-05-15-1/"
 
     FILES = [
         "libGLESv2.dll",
@@ -232,7 +232,7 @@ class DepAngle(NativeDependency):
         super().__init__()
 
         self.name = "ANGLE"
-        self.version = "2020-05-15-1"
+        self.version = "2020-05-15-1-fix"
 
     def run(self, dep_dir: str, targetOS: str, output_dir: str):
         if targetOS != OS_WINDOWS:

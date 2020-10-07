@@ -77,6 +77,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        public bool DeferUpdates { get; set; }
+        
+        // Deferred fields
+        private Angle? _oldLocalRotation;
+        private EntityCoordinates? _oldCoords;
+
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
         public Angle LocalRotation
@@ -92,12 +99,20 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 SetRotation(value);
-                Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
-                RebuildMatrices();
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
+                }
+                else
+                {
+                    _oldLocalRotation ??= oldRotation;
+                }
             }
         }
 
@@ -239,18 +254,25 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 _localPosition = value.Position;
-
-                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                if (Running)
-                {
-                    RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
-                }
-
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                    if (Running)
+                    {
+                        RebuildMatrices();
+                        Owner.EntityManager.EventBus.RaiseEvent(
+                            EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
+                    }
+                    
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                }
+                else
+                {
+                    _oldCoords ??= oldPosition;
+                }
             }
         }
 
@@ -268,12 +290,42 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 _nextPosition = null;
                 var oldGridPos = Coordinates;
                 SetPosition(value);
-                RebuildMatrices();
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                }
+                else
+                {
+                    _oldCoords ??= oldGridPos;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public void RunCollidableDeferred()
+        {
+            RebuildMatrices();
+            UpdateEntityTree();
+            UpdatePhysicsTree();
+
+            if (_oldCoords != null)
+            {
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
+                _oldCoords = null;
+            }
+
+            if (_oldLocalRotation != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
+                _oldLocalRotation = null;
             }
         }
 

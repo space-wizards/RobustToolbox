@@ -73,17 +73,14 @@ namespace Robust.Shared.GameObjects.Systems
         private void ProcessQueue()
         {
             // At this stage only the dynamictree cares about asleep bodies
-            
+            // Implicitly awake bodies so don't need to check .Awake again
+            // Controllers should wake their body up (inside)
             foreach (var collidable in _queuedUpdates)
             {
-                if (collidable.Awake)
-                {
-                    if (collidable.Predict)
-                        _predictedAwakeBodies.Add(collidable);
-                    
-                    _awakeBodies.Add(collidable);
-                    
-                }
+                if (collidable.Predict)
+                    _predictedAwakeBodies.Add(collidable);
+                
+                _awakeBodies.Add(collidable);
 
                 if (collidable.Controllers.Count > 0 && !_controllers.ContainsKey(collidable))
                     _controllers.Add(collidable, collidable.Controllers.Values);

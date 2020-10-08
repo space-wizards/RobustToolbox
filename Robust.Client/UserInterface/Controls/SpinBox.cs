@@ -47,7 +47,7 @@ namespace Robust.Client.UserInterface.Controls
             _lineEdit.Text = value.ToString();
         }
 
-        public event EventHandler<ValueChangedEventArgs> ValueChanged = null!;
+        public event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
         public SpinBox() : base()
         {
@@ -117,10 +117,10 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Changes the editability of the lineedit-field
         /// </summary>
-        /// <param name="disabled"></param>
-        public void SetLineEditDisabled(bool disabled)
+        public bool LineEditDisabled
         {
-            _lineEdit.Editable = !disabled;
+            get => !_lineEdit.Editable;
+            set => _lineEdit.Editable = !value;
         }
 
         /// <summary>

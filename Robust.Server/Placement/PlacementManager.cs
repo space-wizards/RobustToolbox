@@ -152,7 +152,13 @@ namespace Robust.Server.Placement
             if (closest != null) // stick to existing grid
             {
                 // round to nearest cardinal dir
-                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec();
+                var deltaVec = position - intersect.Center;
+                var normal = new Vector2(0,0);
+                if (deltaVec != Vector2.Zero)
+                {
+                    normal = new Angle(deltaVec).GetCardinalDir().ToVec();
+                }
+
 
                 // round coords to center of tile
                 var tileIndices = closest.WorldToTile(intersect.Center);

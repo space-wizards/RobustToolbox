@@ -85,6 +85,17 @@ namespace Robust.Shared.Maths
             return ang;
         }
 
+        private static Vector2[] directionVectors = new[]
+        {
+            new Vector2(1, 0),
+            new Vector2(1, 1).Normalized,
+            new Vector2(0, 1),
+            new Vector2(-1, 1).Normalized,
+            new Vector2(-1, 0),
+            new Vector2(-1, -1).Normalized,
+            new Vector2(0, -1),
+            new Vector2(1, -1).Normalized
+        };
         /// <summary>
         /// Converts a Direction to a normalized Direction vector.
         /// </summary>
@@ -92,7 +103,7 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static Vector2 ToVec(this Direction dir)
         {
-            return dir.ToAngle().ToVec();
+            return directionVectors[(int) dir];
         }
 
         /// <summary>

@@ -332,7 +332,20 @@ namespace Robust.Shared.GameObjects.Components
         public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Predict { get; set; }
+        public bool Predict
+        {
+            get => _predict;
+            set
+            {
+                if (_predict == value)
+                    return;
+
+                _predict = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+            }
+        }
+
+        private bool _predict;
 
         Dictionary<Type, VirtualController> ICollidableComponent.Controllers
         {

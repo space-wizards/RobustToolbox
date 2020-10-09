@@ -96,10 +96,25 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Returns the index of the grid which this object is on
         /// </summary>
         GridId GridID { get; }
+        
+        /// <summary>
+        ///     Whether external system updates should run or not (e.g. EntityTree, Matrices, PhysicsTree).
+        ///     These should be manually run later.
+        /// </summary>
+        bool DeferUpdates { get; set; }
 
         void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
+        
+        /// <summary>
+        ///     Run the updates marked as deferred (UpdateEntityTree and movement events).
+        ///     Don't call this unless you REALLY need to.
+        /// </summary>
+        /// <remarks>
+        ///    Physics optimisation so these aren't spammed during physics updates.
+        /// </remarks>
+        void RunCollidableDeferred();
 
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }

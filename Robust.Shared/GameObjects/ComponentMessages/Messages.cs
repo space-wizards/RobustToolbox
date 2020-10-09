@@ -14,11 +14,6 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public class EntityMovementMessage : ComponentMessage
-    {
-        public EntityMovementMessage() { }
-    }
-
     /// <summary>
     ///     The entity transform parent has been changed.
     /// </summary>

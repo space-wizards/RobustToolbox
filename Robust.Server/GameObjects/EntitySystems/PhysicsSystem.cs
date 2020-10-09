@@ -11,11 +11,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         /// <inheritdoc />
         public override void Update(float frameTime)
         {
-            var collidableComponents = EntityManager.ComponentManager
-                .EntityQuery<ICollidableComponent>()
-                .ToList();
-
-            SimulateWorld(frameTime, collidableComponents, false);
+            SimulateWorld(frameTime, false);
         }
     }
 }

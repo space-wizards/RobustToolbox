@@ -6,7 +6,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -24,28 +23,95 @@ namespace Robust.Shared.GameObjects.Systems
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
+        
+        /// <summary>
+        ///     Collidable objects that are awake and usable for world simulation.
+        /// </summary>
         private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
 
         /// <summary>
-        /// Simulates the physical world for a given amount of time.
+        ///     Collidable objects that are awake and predicted and usable for world simulation.
+        /// </summary>
+        private readonly HashSet<ICollidableComponent> _predictedAwakeBodies = new HashSet<ICollidableComponent>();
+
+        /// <summary>
+        ///     VirtualControllers on applicable ICollidableComponents
+        /// </summary>
+        private Dictionary<ICollidableComponent, IEnumerable<VirtualController>> _controllers = 
+            new Dictionary<ICollidableComponent, IEnumerable<VirtualController>>();
+        
+        // We'll defer changes to ICollidable until each step is done.
+        private readonly List<ICollidableComponent> _queuedDeletions = new List<ICollidableComponent>();
+        private readonly List<ICollidableComponent> _queuedUpdates = new List<ICollidableComponent>();
+        
+        /// <summary>
+        ///     Updates to EntityTree etc. that are deferred until the end of physics.
+        /// </summary>
+        private readonly HashSet<ICollidableComponent> _deferredUpdates = new HashSet<ICollidableComponent>();
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<CollidableUpdateMessage>(HandleCollidableUpdateMessage);
+        }
+
+        private void HandleCollidableUpdateMessage(CollidableUpdateMessage message)
+        {
+            if (message.Component.Deleted || !message.Component.Awake)
+            {
+                _queuedDeletions.Add(message.Component);
+            }
+            else
+            {
+                _queuedUpdates.Add(message.Component);
+            }
+        }
+
+        /// <summary>
+        ///     Process the changes to cached ICollidables
+        /// </summary>
+        private void ProcessQueue()
+        {
+            // At this stage only the dynamictree cares about asleep bodies
+            // Implicitly awake bodies so don't need to check .Awake again
+            // Controllers should wake their body up (inside)
+            foreach (var collidable in _queuedUpdates)
+            {
+                if (collidable.Predict)
+                    _predictedAwakeBodies.Add(collidable);
+                
+                _awakeBodies.Add(collidable);
+
+                if (collidable.Controllers.Count > 0 && !_controllers.ContainsKey(collidable))
+                    _controllers.Add(collidable, collidable.Controllers.Values);
+
+            }
+            
+            _queuedUpdates.Clear();
+
+            foreach (var collidable in _queuedDeletions)
+            {
+                _awakeBodies.Remove(collidable);
+                _predictedAwakeBodies.Remove(collidable);
+                _controllers.Remove(collidable);
+            }
+            
+            _queuedDeletions.Clear();
+        }
+
+        /// <summary>
+        ///     Simulates the physical world for a given amount of time.
         /// </summary>
         /// <param name="deltaTime">Delta Time in seconds of how long to simulate the world.</param>
-        /// <param name="physicsComponents">List of all possible physics bodes </param>
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
-        protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
+        protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            _awakeBodies.Clear();
-
-            foreach (var body in physicsComponents)
+            var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
+            
+            ProcessQueue();
+            
+            foreach (var body in simulatedBodies)
             {
-                if(prediction && !body.Predict)
-                    continue;
-
-                if(!body.Awake)
-                    continue;
-
-                _awakeBodies.Add(body);
-
                 // running prediction updates will not cause a body to go to sleep.
                 if(!prediction)
                     body.SleepAccumulator++;
@@ -80,27 +146,27 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // Calculate collisions and store them in the cache
-            ProcessCollisions(physicsComponents);
-
+            ProcessCollisions(_awakeBodies);
+            
             // Remove all entities that were deleted during collision handling
-            physicsComponents.RemoveAll(p => p.Deleted);
+            ProcessQueue();
 
             // Process frictional forces
-            foreach (var physics in physicsComponents)
+            foreach (var physics in _awakeBodies)
             {
                 ProcessFriction(physics, deltaTime);
             }
-
-            foreach (var physics in physicsComponents)
+            
+            foreach (var (_, controllers) in _controllers)
             {
-                foreach (var controller in physics.Controllers.Values)
+                foreach (var controller in controllers)
                 {
                     controller.UpdateAfterProcessing();
                 }
             }
-
+            
             // Remove all entities that were deleted due to the controller
-            physicsComponents.RemoveAll(p => p.Deleted);
+            ProcessQueue();
 
             const int solveIterationsAt60 = 4;
 
@@ -116,14 +182,10 @@ namespace Robust.Shared.GameObjects.Systems
 
             for (var i = 0; i < divisions; i++)
             {
-                foreach (var physics in physicsComponents)
+                foreach (var collidable in simulatedBodies)
                 {
-                    // TODO: Remove this once we are not sending *every* body to the solver
-                    if(prediction && !physics.Predict)
-                        continue;
-
-                    if(physics.Awake && physics.CanMove())
-                        UpdatePosition(physics, deltaTime / divisions);
+                    if(collidable.CanMove())
+                        UpdatePosition(collidable, deltaTime / divisions);
                 }
 
                 for (var j = 0; j < divisions; ++j)
@@ -134,18 +196,25 @@ namespace Robust.Shared.GameObjects.Systems
                     }
                 }
             }
+
+            // As we also defer the updates for the _collisionCache we need to update all entities
+            foreach (var collidable in _deferredUpdates)
+            {
+                var transform = collidable.Owner.Transform;
+                transform.DeferUpdates = false;
+                transform.RunCollidableDeferred();
+            }
+            
+            _deferredUpdates.Clear();
         }
 
         // Runs collision behavior and updates cache
-        private void ProcessCollisions(IEnumerable<ICollidableComponent> bodies)
+        private void ProcessCollisions(IEnumerable<ICollidableComponent> awakeBodies)
         {
             _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var aCollidable in bodies)
+            foreach (var aCollidable in awakeBodies)
             {
-                if(!aCollidable.Awake)
-                    continue;
-
                 foreach (var b in _physicsManager.GetCollidingEntities(aCollidable, Vector2.Zero))
                 {
                     var aUid = aCollidable.Entity.Uid;
@@ -281,29 +350,28 @@ namespace Robust.Shared.GameObjects.Systems
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private static void UpdatePosition(IPhysBody body, float frameTime)
+        private void UpdatePosition(ICollidableComponent collidable, float frameTime)
         {
-            var ent = body.Entity;
+            var ent = collidable.Entity;
 
-            if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
+            if (!collidable.CanMove() || (collidable.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(collidable.AngularVelocity) < Epsilon))
                 return;
 
-            if (body.LinearVelocity != Vector2.Zero)
+            if (collidable.LinearVelocity != Vector2.Zero)
             {
-                var entityMoveMessage = new EntityMovementMessage();
-                ent.SendMessage(ent.Transform, entityMoveMessage);
-
                 if (ContainerHelpers.IsInContainer(ent))
                 {
                     var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
                     ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
                     // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                    body.LinearVelocity = Vector2.Zero;
+                    collidable.LinearVelocity = Vector2.Zero;
                 }
             }
-
-            body.WorldRotation += body.AngularVelocity * frameTime;
-            body.WorldPosition += body.LinearVelocity * frameTime;
+            
+            collidable.Owner.Transform.DeferUpdates = true;
+            _deferredUpdates.Add(collidable);
+            collidable.WorldRotation += collidable.AngularVelocity * frameTime;
+            collidable.WorldPosition += collidable.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
@@ -327,9 +395,18 @@ namespace Robust.Shared.GameObjects.Systems
                 done = false;
                 var correction = collision.Normal * Math.Abs(penetration) * percent;
                 if (collision.A.CanMove())
+                {
+                    collision.A.Owner.Transform.DeferUpdates = true;
+                    _deferredUpdates.Add(collision.A);
                     collision.A.Owner.Transform.WorldPosition -= correction;
+                }
+
                 if (collision.B.CanMove())
+                {
+                    collision.B.Owner.Transform.DeferUpdates = true;
+                    _deferredUpdates.Add(collision.B);
                     collision.B.Owner.Transform.WorldPosition += correction;
+                }
             }
 
             return done;

@@ -28,9 +28,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// Cache of Dynamic methods to retreive all added components-dependencies from a component
         /// </summary>
         private readonly Dictionary<Type, RetrieverDelegate> _componentRetrievers = new Dictionary<Type, RetrieverDelegate>(); //todo null entries for types that done have anything
-
-        private Type? _nullableAttributeType;
-
+        
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
         {
@@ -68,10 +66,10 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 //it is, so we first retreive all values, change the corresponding one and inject
 
-                var retreiver = GetRetriever(compType);
+                var retrieverDelegate = GetRetriever(compType);
 
                 //getting all current values
-                IComponent?[] currentValues = (IComponent?[]) retreiver(entityComponent);
+                IComponent?[] currentValues = (IComponent?[]) retrieverDelegate(entityComponent);
 
                 currentValues[fieldIndex] = newComp;
 

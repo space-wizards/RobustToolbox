@@ -28,56 +28,14 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// Cache of Dynamic methods to retreive all added components-dependencies from a component
         /// </summary>
         private readonly Dictionary<Type, RetrieverDelegate> _componentRetrievers = new Dictionary<Type, RetrieverDelegate>(); //todo null entries for types that done have anything
-        
+
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
         {
-            InjectIntoEntityComponents(entity, newComp);
+            SetDependencyForEntityComponents(entity, newComp.GetType(), newComp);
             InjectIntoComponent(entity, newComp);
         }
 
-        /// <inheritdoc />
-        public void InjectIntoEntityComponents(IEntity entity, IComponent newComp)
-        {
-            var newCompType = newComp.GetType();
-
-            //get all present component in entity
-            var entityComponents = entity.GetAllComponents();
-
-            //check if any are requesting our component as a dependency
-            foreach (var entityComponent in entityComponents)
-            {
-                var compType = entityComponent.GetType();
-
-                //get entry for out entityComponent
-                var (injectorDelegate, query) = GetInjector(compType);
-
-                //check if our new component is in entityComponents queries
-                int fieldIndex = -1;
-                for (int i = 0; i < query.Length; i++)
-                {
-                    if (query[i] == newCompType)
-                    {
-                        fieldIndex = i;
-                        break;
-                    }
-                }
-                if (fieldIndex == -1) continue;
-
-                //it is, so we first retreive all values, change the corresponding one and inject
-
-                var retrieverDelegate = GetRetriever(compType);
-
-                //getting all current values
-                IComponent?[] currentValues = (IComponent?[]) retrieverDelegate(entityComponent);
-
-                currentValues[fieldIndex] = newComp;
-
-                injectorDelegate!(entityComponent, currentValues);
-            }
-        }
-
-        /// <inheritdoc />
         public void InjectIntoComponent(IEntity entity, IComponent newComp)
         {
             var compType = newComp.GetType();
@@ -109,31 +67,27 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         public void OnComponentRemove(IEntity entity, IComponent removedComp)
         {
             ClearRemovedComponentDependencies(removedComp);
-            ClearDependencyInEntityComponents(entity, removedComp);
+            SetDependencyForEntityComponents(entity, removedComp.GetType(), null);
         }
 
-        /// <inheritdoc />
-        public void ClearDependencyInEntityComponents(IEntity entity, IComponent removedComp)
+        private void SetDependencyForEntityComponents(IEntity entity, Type compType, IComponent? comp)
         {
-            //todo basically just InjectIntoEntityComponents but injecting null, optimize
-            var newCompType = removedComp.GetType();
-
             //get all present component in entity
             var entityComponents = entity.GetAllComponents();
 
             //check if any are requesting our component as a dependency
             foreach (var entityComponent in entityComponents)
             {
-                var compType = entityComponent.GetType();
+                var entityCompType = entityComponent.GetType();
 
                 //get entry for out entityComponent
-                var (injectorDelegate, query) = GetInjector(compType);
+                var (injectorDelegate, query) = GetInjector(entityCompType);
 
                 //check if our new component is in entityComponents queries
                 int fieldIndex = -1;
                 for (int i = 0; i < query.Length; i++)
                 {
-                    if (query[i] == newCompType)
+                    if (query[i] == compType)
                     {
                         fieldIndex = i;
                         break;
@@ -143,18 +97,17 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 //it is, so we first retreive all values, change the corresponding one and inject
 
-                var retreiver = GetRetriever(compType);
+                var retrieverDelegate = GetRetriever(entityCompType);
 
                 //getting all current values
-                IComponent?[] currentValues = (IComponent?[]) retreiver(entityComponent);
+                IComponent?[] currentValues = (IComponent?[]) retrieverDelegate(entityComponent);
 
-                currentValues[fieldIndex] = null;
+                currentValues[fieldIndex] = comp;
 
                 injectorDelegate!(entityComponent, currentValues);
             }
         }
 
-        /// <inheritdoc />
         public void ClearRemovedComponentDependencies(IComponent comp)
         {
             var (injectionDelegate, queries) = GetInjector(comp.GetType());

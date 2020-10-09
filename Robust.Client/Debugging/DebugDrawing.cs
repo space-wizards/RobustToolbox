@@ -103,7 +103,7 @@ namespace Robust.Client.Debugging
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
-                _font = new VectorFont(cache.GetResource<FontResource>("/Textures/Interface/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
+                _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
             }
 
             /// <inheritdoc />

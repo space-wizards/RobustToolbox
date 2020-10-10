@@ -33,7 +33,8 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             private int? i;
             private double? d;
-            //todo find out why this doesn't work -> private object? o;
+            private object? o;
+            private ITestInterace? Itest;
             private NullableTestClass? nTc;
             private char? c;
         }
@@ -43,8 +44,11 @@ namespace Robust.UnitTesting.Shared.Utility
             private int i;
             private double d;
             private object o = null!;
+            private ITestInterace Itest = null!;
             private NullableTestClass nTc = null!;
             private char c;
         }
+
+        private interface ITestInterace{}
     }
 }

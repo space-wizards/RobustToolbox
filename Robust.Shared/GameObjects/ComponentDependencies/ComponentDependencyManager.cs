@@ -203,7 +203,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 generator.Emit(OpCodes.Dup);
 
                 //setting the index for our arrayinsertion
-                generator.Emit(OpCodes.Ldc_I4, i);
+                generator.Emit(OpCodes.Ldc_I4, i++);
 
                 //getting the field value
                 generator.Emit(OpCodes.Ldarg_0);

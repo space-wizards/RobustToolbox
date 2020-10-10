@@ -29,7 +29,7 @@ namespace Robust.Shared.Utility
 
         private static byte[] GetNullableFlags(FieldInfo field)
         {
-            Assembly assembly = field.FieldType.Assembly;
+            Assembly assembly = field.Module.Assembly;
             if (!_nullableAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
             {
                 CacheGetNullableFlag(assembly);

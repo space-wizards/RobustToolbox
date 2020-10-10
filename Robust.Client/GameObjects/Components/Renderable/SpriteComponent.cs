@@ -1174,7 +1174,7 @@ namespace Robust.Client.GameObjects
                         else
                         {
                             Logger.ErrorS(LogCategory,
-                                "State not found in layer RSI: '{0}'.",
+                                $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
                                 stateid);
                         }
                     }

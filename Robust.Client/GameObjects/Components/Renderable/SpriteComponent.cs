@@ -1849,6 +1849,7 @@ namespace Robust.Client.GameObjects
             public bool Initialized { get; } = false;
             public bool Initializing { get; } = false;
             public bool Deleted { get; } = true;
+            public bool Paused { get; set; }
             public EntityPrototype? Prototype { get; set; }
             public string Description { get; set; } = string.Empty;
             public bool IsValid()

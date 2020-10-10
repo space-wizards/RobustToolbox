@@ -31,6 +31,11 @@ namespace Robust.Shared.Interfaces.GameObjects
         string Name { get; }
 
         /// <summary>
+        ///     Whether the Owner has been paused.
+        /// </summary>
+        bool Paused { get; }
+        
+        /// <summary>
         ///     Whether the client should synchronize component additions and removals.
         ///     If this is false and the component gets added or removed server side, the client will not do the same.
         ///     If this is true and the server adds or removes the component, the client will do as such too.

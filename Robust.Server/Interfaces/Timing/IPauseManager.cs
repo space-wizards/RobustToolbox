@@ -1,7 +1,4 @@
 ﻿using JetBrains.Annotations;
-using Robust.Server.GameObjects.Components.Markers;
-using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 
 namespace Robust.Server.Interfaces.Timing
@@ -28,14 +25,5 @@ namespace Robust.Server.Interfaces.Timing
 
         [Pure]
         bool IsMapInitialized(MapId mapId);
-    }
-
-    public static class PauseManagerExt
-    {
-        [Pure]
-        public static bool IsEntityPaused(this IPauseManager manager, IEntity entity)
-        {
-            return !entity.HasComponent<IgnorePauseComponent>() && manager.IsGridPaused(entity.Transform.GridID);
-        }
     }
 }

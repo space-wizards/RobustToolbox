@@ -230,7 +230,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
                 //    return;
-
+                
                 LocalPosition = newPos;
             }
         }
@@ -288,6 +288,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
+
+                if (_localPosition == value)
+                    return;
+                
                 var oldGridPos = Coordinates;
                 SetPosition(value);
                 Dirty();

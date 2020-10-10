@@ -5,19 +5,20 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects.ComponentDependencies
 {
     public class ComponentDependencyManager : IComponentDependencyManager
     {
-        private static readonly Type[] InjectorParameters = {typeof(IComponent), typeof(IComponent?[])};
-        private delegate void InjectorDelegate(IComponent target, IComponent?[] components);
+        [Dependency] private readonly IComponentFactory _componentFactory = null!;
 
-        private static readonly Type[] RetrieverParameters = {typeof(IComponent)};
-        private delegate object?[] RetrieverDelegate(IComponent target);
+        private static readonly Type[] InjectorParameters = {typeof(object), typeof(object?[])};
+        private delegate void InjectorDelegate(object target, object?[] components);
+
+        private static readonly Type[] RetrieverParameters = {typeof(object)};
+        private delegate object?[] RetrieverDelegate(object target);
 
         /// <summary>
         /// Cache of Dynamic methods to inject component-dependencies into Type
@@ -36,12 +37,25 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             InjectIntoComponent(entity, newComp);
         }
 
+        /// <summary>
+        /// Filling the dependencies of newComp by iterating over entity's components
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="newComp"></param>
         public void InjectIntoComponent(IEntity entity, IComponent newComp)
         {
             var compType = newComp.GetType();
 
             //get all present components in entity
-            Dictionary<Type, IComponent> entityComponents = entity.GetAllComponents().ToDictionary(comp => comp.GetType());
+            Dictionary<Type, object> entityComponents = new Dictionary<Type, object>();
+            foreach (var entityComp in entity.GetAllComponents())
+            {
+                var entityCompReg = _componentFactory.GetRegistration(entityComp);
+                foreach (var reference in entityCompReg.References)
+                {
+                    entityComponents.Add(reference, entityComp);
+                }
+            }
 
             //get entry
             var (injectorDelegate, query) = GetInjector(compType);
@@ -51,7 +65,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 return;
             }
 
-            var componentsToInject = new IComponent?[query.Length];
+            var componentsToInject = new object?[query.Length];
             for (int i = 0; i < componentsToInject.Length; i++)
             {
                 if (entityComponents.TryGetValue(query[i], out var value))
@@ -70,10 +84,18 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             SetDependencyForEntityComponents(entity, removedComp.GetType(), null);
         }
 
+        /// <summary>
+        /// Sets all dependencies onto compType's references, which are present in entity, to the value of comp
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="compType"></param>
+        /// <param name="comp"></param>
         private void SetDependencyForEntityComponents(IEntity entity, Type compType, IComponent? comp)
         {
             //get all present component in entity
             var entityComponents = entity.GetAllComponents();
+
+            var compReg = _componentFactory.GetRegistration(compType);
 
             //check if any are requesting our component as a dependency
             foreach (var entityComponent in entityComponents)
@@ -84,25 +106,28 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 var (injectorDelegate, query) = GetInjector(entityCompType);
 
                 //check if our new component is in entityComponents queries
-                int fieldIndex = -1;
+                List<int> fieldIndexes = new List<int>();
                 for (int i = 0; i < query.Length; i++)
                 {
-                    if (query[i] == compType)
+                    if (compReg.References.Contains(query[i]))
                     {
-                        fieldIndex = i;
-                        break;
+                        fieldIndexes.Add(i);
+                        continue;
                     }
                 }
-                if (fieldIndex == -1) continue;
+                if (fieldIndexes.Count == 0) continue;
 
                 //it is, so we first retreive all values, change the corresponding one and inject
 
                 var retrieverDelegate = GetRetriever(entityCompType);
 
                 //getting all current values
-                IComponent?[] currentValues = (IComponent?[]) retrieverDelegate(entityComponent);
+                object?[] currentValues = retrieverDelegate(entityComponent);
 
-                currentValues[fieldIndex] = comp;
+                foreach (var fieldIndex in fieldIndexes)
+                {
+                    currentValues[fieldIndex] = comp;
+                }
 
                 injectorDelegate!(entityComponent, currentValues);
             }
@@ -111,7 +136,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         public void ClearRemovedComponentDependencies(IComponent comp)
         {
             var (injectionDelegate, queries) = GetInjector(comp.GetType());
-            injectionDelegate(comp, new IComponent?[queries.Length]); //just clear all values
+            injectionDelegate(comp, new object?[queries.Length]); //just clear all values
         }
 
         private (InjectorDelegate, Type[]) GetInjector(Type type)
@@ -146,10 +171,10 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                     throw new Exception($"Field {field} of Type {type} is marked as ComponentDependecy, but does not have ?(Nullable)-Flag!");
                 }
 
-                if (!field.FieldType.IsSubclassOf(typeof(Component)))
+                /*if (!field.FieldType.IsSubclassOf(typeof(Component)))
                 {
                     throw new Exception($"Field {field} of Type {type} is marked as ComponentDependency, even though its type isn't a subclass of Component!");
-                }
+                }*/
 
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldarg_1);
@@ -189,7 +214,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
             //create the return array
             generator.Emit(OpCodes.Ldc_I4, attributeFields.Length);
-            generator.Emit(OpCodes.Newarr, typeof(Component));
+            generator.Emit(OpCodes.Newarr, typeof(object));
 
             int i = 0;
             foreach (var field in attributeFields)
@@ -210,7 +235,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 generator.Emit(OpCodes.Ldfld, field);
 
                 //inserting the field value into the array
-                generator.Emit(OpCodes.Stelem, typeof(Component));
+                generator.Emit(OpCodes.Stelem, typeof(object));
             }
 
             generator.Emit(OpCodes.Ret);

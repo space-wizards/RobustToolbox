@@ -77,6 +77,9 @@ namespace Robust.Shared.Network
             "robust_net_dropped",
             "Number of incoming messages that have been dropped.");
 
+        // TODO: Disabled for now since calculating these from Lidgren is way too expensive.
+        // Need to go through and have Lidgren properly keep track of counters for these.
+        /*
         private static readonly Gauge MessagesStoredMetrics = Metrics.CreateGauge(
             "robust_net_stored",
             "Number of stored messages for reliable resending (if necessary).");
@@ -84,6 +87,7 @@ namespace Robust.Shared.Network
         private static readonly Gauge MessagesUnsentMetrics = Metrics.CreateGauge(
             "robust_net_unsent",
             "Number of queued (unsent) messages that have yet to be sent.");
+        */
 
         private readonly Dictionary<Type, ProcessMessage> _callbacks = new Dictionary<Type, ProcessMessage>();
 
@@ -374,8 +378,10 @@ namespace Robust.Shared.Network
             var resentDelays = 0L;
             var resentHoles = 0L;
             var dropped = 0L;
+            /*
             var unsent = 0L;
             var stored = 0L;
+            */
 
             foreach (var peer in _netPeers)
             {
@@ -440,13 +446,15 @@ namespace Robust.Shared.Network
                 recvBytes += statistics.ReceivedBytes;
                 sentPackets += statistics.SentPackets;
                 recvPackets += statistics.ReceivedPackets;
-                resentDelays += statistics.ResentMessagesDueToDelays;
-                resentHoles += statistics.ResentMessagesDueToHoles;
+                resentDelays += statistics.ResentMessagesDueToDelay;
+                resentHoles += statistics.ResentMessagesDueToHole;
                 dropped += statistics.DroppedMessages;
 
-                statistics.GetUnsentAndStoredMessages(out var pUnsent, out var pStored);
+                /*
+                statistics.CalculateUnsentAndStoredMessages(out var pUnsent, out var pStored);
                 unsent += pUnsent;
                 stored += pStored;
+                */
             }
 
             if (_toCleanNetPeers.Count != 0)
@@ -467,8 +475,10 @@ namespace Robust.Shared.Network
             MessagesResentHoleMetrics.IncTo(resentHoles);
             MessagesDroppedMetrics.IncTo(dropped);
 
+            /*
             MessagesUnsentMetrics.Set(unsent);
             MessagesStoredMetrics.Set(stored);
+            */
         }
 
         /// <inheritdoc />

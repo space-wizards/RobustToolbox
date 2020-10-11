@@ -206,8 +206,8 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out ICollidableComponent? collidableComponent))
-                return new Box2(collidableComponent.WorldAABB.BottomLeft + 0.01f, collidableComponent.WorldAABB.TopRight - 0.01f);
+            if (entity.TryGetComponent(out IPhysicsComponent? physics))
+                return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
             return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);

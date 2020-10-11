@@ -149,7 +149,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    ICollidableComponent _ => 1,
+                    IPhysicsComponent _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -188,7 +188,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    ICollidableComponent _ => 1,
+                    IPhysicsComponent _ => 1,
                     _ => int.MaxValue
                 });
 

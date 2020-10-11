@@ -35,8 +35,8 @@ namespace Robust.Server.GameObjects
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();
 
-            Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, ICollidableComponent>();
+            Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             Register<PointLightComponent>();
             Register<OccluderComponent>();
 

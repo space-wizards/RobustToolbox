@@ -27,27 +27,27 @@ namespace Robust.Shared.GameObjects.Systems
         /// <summary>
         ///     Collidable objects that are awake and usable for world simulation.
         /// </summary>
-        private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
+        private readonly HashSet<IPhysicsComponent> _awakeBodies = new HashSet<IPhysicsComponent>();
 
         /// <summary>
         ///     Collidable objects that are awake and predicted and usable for world simulation.
         /// </summary>
-        private readonly HashSet<ICollidableComponent> _predictedAwakeBodies = new HashSet<ICollidableComponent>();
+        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new HashSet<IPhysicsComponent>();
 
         /// <summary>
-        ///     VirtualControllers on applicable ICollidableComponents
+        ///     VirtualControllers on applicable <see cref="IPhysicsComponent"/>s
         /// </summary>
-        private Dictionary<ICollidableComponent, IEnumerable<VirtualController>> _controllers = 
-            new Dictionary<ICollidableComponent, IEnumerable<VirtualController>>();
+        private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers = 
+            new Dictionary<IPhysicsComponent, IEnumerable<VirtualController>>();
         
         // We'll defer changes to ICollidable until each step is done.
-        private readonly List<ICollidableComponent> _queuedDeletions = new List<ICollidableComponent>();
-        private readonly List<ICollidableComponent> _queuedUpdates = new List<ICollidableComponent>();
+        private readonly List<IPhysicsComponent> _queuedDeletions = new List<IPhysicsComponent>();
+        private readonly List<IPhysicsComponent> _queuedUpdates = new List<IPhysicsComponent>();
         
         /// <summary>
         ///     Updates to EntityTree etc. that are deferred until the end of physics.
         /// </summary>
-        private readonly HashSet<ICollidableComponent> _deferredUpdates = new HashSet<ICollidableComponent>();
+        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
 
         public override void Initialize()
         {
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects.Systems
         }
 
         // Runs collision behavior and updates cache
-        private void ProcessCollisions(IEnumerable<ICollidableComponent> awakeBodies)
+        private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies)
         {
             _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
@@ -232,7 +232,7 @@ namespace Robust.Shared.GameObjects.Systems
                         continue;
                     }
 
-                    var bCollidable = b.GetComponent<ICollidableComponent>();
+                    var bCollidable = b.GetComponent<IPhysicsComponent>();
                     _collisionCache.Add(new Manifold(aCollidable, bCollidable, aCollidable.Hard && bCollidable.Hard));
                 }
             }
@@ -325,7 +325,7 @@ namespace Robust.Shared.GameObjects.Systems
             return false;
         }
 
-        private void ProcessFriction(ICollidableComponent body, float deltaTime)
+        private void ProcessFriction(IPhysicsComponent body, float deltaTime)
         {
             if (body.LinearVelocity == Vector2.Zero) return;
 
@@ -350,28 +350,28 @@ namespace Robust.Shared.GameObjects.Systems
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private void UpdatePosition(ICollidableComponent collidable, float frameTime)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
         {
-            var ent = collidable.Entity;
+            var ent = physics.Entity;
 
-            if (!collidable.CanMove() || (collidable.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(collidable.AngularVelocity) < Epsilon))
+            if (!physics.CanMove() || (physics.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(physics.AngularVelocity) < Epsilon))
                 return;
 
-            if (collidable.LinearVelocity != Vector2.Zero)
+            if (physics.LinearVelocity != Vector2.Zero)
             {
                 if (ContainerHelpers.IsInContainer(ent))
                 {
                     var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
                     ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
                     // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                    collidable.LinearVelocity = Vector2.Zero;
+                    physics.LinearVelocity = Vector2.Zero;
                 }
             }
             
-            collidable.Owner.Transform.DeferUpdates = true;
-            _deferredUpdates.Add(collidable);
-            collidable.WorldRotation += collidable.AngularVelocity * frameTime;
-            collidable.WorldPosition += collidable.LinearVelocity * frameTime;
+            physics.Owner.Transform.DeferUpdates = true;
+            _deferredUpdates.Add(physics);
+            physics.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.WorldPosition += physics.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
@@ -412,7 +412,7 @@ namespace Robust.Shared.GameObjects.Systems
             return done;
         }
 
-        private (float friction, float gravity) GetFriction(ICollidableComponent body)
+        private (float friction, float gravity) GetFriction(IPhysicsComponent body)
         {
             if (!body.OnGround)
                 return (0f, 0f);

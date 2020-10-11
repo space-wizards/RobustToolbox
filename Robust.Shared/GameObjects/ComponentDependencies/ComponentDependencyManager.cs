@@ -66,7 +66,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         }
 
         /// <summary>
-        /// Sets all dependencies onto compType's references, which are present in entity, to the value of comp
+        /// Updates all dependencies to type compType on the entity (in fields on components), to the value of comp
         /// </summary>
         /// <param name="entity"></param>
         /// <param name="compType"></param>

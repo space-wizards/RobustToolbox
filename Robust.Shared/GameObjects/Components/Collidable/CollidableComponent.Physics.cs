@@ -353,13 +353,6 @@ namespace Robust.Shared.GameObjects.Components
             set => _controllers = value;
         }
 
-        [Obsolete("This only exists for legacy reasons.")]
-        public bool CanMove([NotNullWhen(true)]IPhysicsComponent physics)
-        {
-            // Cursed method
-            return Owner.TryGetComponent(out physics!) && !Anchored;
-        }
-
         /// <inheritdoc />
         public T AddController<T>() where T : VirtualController, new()
         {

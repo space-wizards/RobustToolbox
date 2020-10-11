@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
 {
@@ -22,7 +23,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Positional indices of this tile on the grid.
         /// </summary>
-        public readonly MapIndices GridIndices;
+        public readonly Vector2i GridIndices;
 
         /// <summary>
         ///     Actual data of this Tile.
@@ -38,7 +39,7 @@ namespace Robust.Shared.Map
         /// <param name="yIndex">Positional Y index of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
         internal TileRef(MapId mapId, GridId gridId, int xIndex, int yIndex, Tile tile)
-            : this(mapId, gridId, new MapIndices(xIndex, yIndex), tile) { }
+            : this(mapId, gridId, new Vector2i(xIndex, yIndex), tile) { }
 
         /// <summary>
         ///     Constructs a new instance of TileRef.
@@ -47,7 +48,7 @@ namespace Robust.Shared.Map
         /// <param name="gridId">Identifier of the grid this tile belongs to.</param>
         /// <param name="gridIndices">Positional indices of this tile on the grid.</param>
         /// <param name="tile">Actual data of this tile.</param>
-        internal TileRef(MapId mapId, GridId gridId, MapIndices gridIndices, Tile tile)
+        internal TileRef(MapId mapId, GridId gridId, Vector2i gridIndices, Tile tile)
         {
             MapIndex = mapId;
             GridIndex = gridId;

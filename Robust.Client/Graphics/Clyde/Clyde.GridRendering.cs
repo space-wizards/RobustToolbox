@@ -14,8 +14,8 @@ namespace Robust.Client.Graphics.Clyde
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly Dictionary<GridId, Dictionary<MapIndices, MapChunkData>> _mapChunkData =
-            new Dictionary<GridId, Dictionary<MapIndices, MapChunkData>>();
+        private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
+            new Dictionary<GridId, Dictionary<Vector2i, MapChunkData>>();
 
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
@@ -182,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
         }
 
-        public void _setChunkDirty(IMapGrid grid, MapIndices chunk)
+        public void _setChunkDirty(IMapGrid grid, Vector2i chunk)
         {
             var data = _mapChunkData[grid.Index];
             if (data.TryGetValue(chunk, out var datum))
@@ -205,13 +205,13 @@ namespace Robust.Client.Graphics.Clyde
         private void _updateTileMapOnUpdate(object? sender, TileChangedEventArgs args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
-            var chunk = grid.GridTileToChunkIndices(new MapIndices(args.NewTile.X, args.NewTile.Y));
+            var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
         private void _updateOnGridCreated(GridId gridId)
         {
-            _mapChunkData.Add(gridId, new Dictionary<MapIndices, MapChunkData>());
+            _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(GridId gridId)

@@ -305,7 +305,7 @@ namespace Robust.Client.Console.Commands
     internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x<int>,y<int>.";
+        public string Help => "sggcell <gridID> <vector2i> [offset]\nThat vector2i param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
         public bool Execute(IDebugConsole console, params string[] args)
@@ -349,7 +349,7 @@ namespace Robust.Client.Console.Commands
             {
                 foreach (var entity in
                     mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
-                        new MapIndices(
+                        new Vector2i(
                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
                         selectedOffset))

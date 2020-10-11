@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public event Action? OnPositionChanged;
 
         private GridId _lastGrid;
-        public MapIndices Position { get; private set; }
+        public Vector2i Position { get; private set; }
         public SnapGridOffset Offset => _offset;
 
         /// <inheritdoc />
@@ -93,26 +93,26 @@ namespace Robust.Shared.GameObjects.Components.Transform
             return grid;
         }
 
-        MapIndices SnapGridPosAt(Direction dir, int dist = 1)
+        Vector2i SnapGridPosAt(Direction dir, int dist = 1)
         {
             switch (dir)
             {
                 case Direction.East:
-                    return Position + new MapIndices(dist, 0);
+                    return Position + new Vector2i(dist, 0);
                 case Direction.SouthEast:
-                    return Position + new MapIndices(dist, -dist);
+                    return Position + new Vector2i(dist, -dist);
                 case Direction.South:
-                    return Position + new MapIndices(0, -dist);
+                    return Position + new Vector2i(0, -dist);
                 case Direction.SouthWest:
-                    return Position + new MapIndices(-dist, -dist);
+                    return Position + new Vector2i(-dist, -dist);
                 case Direction.West:
-                    return Position + new MapIndices(-dist, 0);
+                    return Position + new Vector2i(-dist, 0);
                 case Direction.NorthWest:
-                    return Position + new MapIndices(-dist, dist);
+                    return Position + new Vector2i(-dist, dist);
                 case Direction.North:
-                    return Position + new MapIndices(0, dist);
+                    return Position + new Vector2i(0, dist);
                 case Direction.NorthEast:
-                    return Position + new MapIndices(dist, dist);
+                    return Position + new Vector2i(dist, dist);
                 default:
                     throw new NotImplementedException();
             }
@@ -123,13 +123,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
             var grid = _mapManager.GetGrid(Owner.Transform.GridID);
             foreach (var cell in grid.GetSnapGridCell(Position, Offset))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(0, 1), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, 1), Offset))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(0, -1), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(0, -1), Offset))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(1, 0), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(1, 0), Offset))
                 yield return cell;
-            foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(-1, 0), Offset))
+            foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(-1, 0), Offset))
                 yield return cell;
         }
 
@@ -139,7 +139,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             for (var y = -n; y <= n; ++y)
             for (var x = -n; x <= n; ++x)
             {
-                foreach (var cell in grid.GetSnapGridCell(Position + new MapIndices(x, y), Offset))
+                foreach (var cell in grid.GetSnapGridCell(Position + new Vector2i(x, y), Offset))
                     yield return cell;
             }
         }

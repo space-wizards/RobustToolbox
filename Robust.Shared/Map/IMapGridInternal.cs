@@ -34,12 +34,12 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunkInternal GetChunk(MapIndices chunkIndices);
+        IMapChunkInternal GetChunk(Vector2i chunkIndices);
 
         /// <summary>
         ///     Returns all chunks in this grid. This will not generate new chunks.
         /// </summary>
         /// <returns>All chunks in the grid.</returns>
-        IReadOnlyDictionary<MapIndices, IMapChunkInternal> GetMapChunks();
+        IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks();
     }
 }

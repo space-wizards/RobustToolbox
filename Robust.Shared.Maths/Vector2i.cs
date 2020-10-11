@@ -7,6 +7,7 @@ namespace Robust.Shared.Maths
     [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
+    // ReSharper disable once InconsistentNaming
     public readonly struct Vector2i : IEquatable<Vector2i>
     {
         public static readonly Vector2i Zero = (0, 0);
@@ -61,7 +62,7 @@ namespace Robust.Shared.Maths
         public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Vector2i && Equals((Vector2i) obj);
+            return obj is Vector2i vector && Equals(vector);
         }
 
         /// <summary>
@@ -129,6 +130,16 @@ namespace Robust.Shared.Maths
         public static Vector2 operator /(Vector2i a, float scale)
         {
             return new Vector2(a.X / scale, a.Y / scale);
+        }
+
+        public static bool operator ==(Vector2i a, Vector2i b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Vector2i a, Vector2i b)
+        {
+            return !a.Equals(b);
         }
 
         public void Deconstruct(out int x, out int y)

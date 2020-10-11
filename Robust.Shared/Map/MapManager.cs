@@ -645,12 +645,12 @@ namespace Robust.Shared.Map
         /// </summary>
         public IMapGrid Grid { get; }
 
-        public IReadOnlyCollection<(MapIndices position, Tile tile)> Modified { get; }
+        public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
 
         /// <summary>
         ///     Creates a new instance of this class.
         /// </summary>
-        public GridChangedEventArgs(IMapGrid grid, IReadOnlyCollection<(MapIndices position, Tile tile)> modified)
+        public GridChangedEventArgs(IMapGrid grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
         {
             Grid = grid;
             Modified = modified;

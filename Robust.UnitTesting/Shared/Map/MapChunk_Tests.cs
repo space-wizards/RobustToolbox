@@ -282,7 +282,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             var result = chunk.ToString();
 
-            Assert.That(result, Is.EqualTo("Chunk {7,9}"));
+            Assert.That(result, Is.EqualTo("Chunk (7, 9)"));
         }
 
         [Test]

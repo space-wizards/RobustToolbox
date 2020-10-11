@@ -129,7 +129,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _status, "status", BodyStatus.OnGround);
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
-            serializer.DataField(ref _anchored, "anchored", true);
+            serializer.DataField(ref _anchored, "anchored", false);
         }
 
         /// <inheritdoc />

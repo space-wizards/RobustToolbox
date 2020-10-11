@@ -10,7 +10,7 @@ namespace Robust.Shared.Utility
     public static class NullableHelper
     {
         private delegate byte[] GetNullableFlagDelegate(Attribute t);
-        private static Dictionary<Assembly, (Type, GetNullableFlagDelegate)> _nullableAttributeTypeCache = new Dictionary<Assembly, (Type, GetNullableFlagDelegate)>();
+        private static Dictionary<Assembly, (Type, FieldInfo)> _nullableAttributeTypeCache = new Dictionary<Assembly, (Type, FieldInfo)>();
 
         /// <summary>
         /// Checks if the field has a nullable annotation [?]
@@ -32,21 +32,20 @@ namespace Robust.Shared.Utility
             Assembly assembly = field.Module.Assembly;
             if (!_nullableAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
             {
-                CacheGetNullableFlag(assembly);
+                CacheNullableFlagFieldInfo(assembly);
             }
-
             assemblyNullableEntry = _nullableAttributeTypeCache[assembly];
 
             var nullableAttribute = field.GetCustomAttribute(assemblyNullableEntry.Item1);
             if (nullableAttribute == null)
             {
-                return new byte[]{};
+                return new byte[0];
             }
 
-            return assemblyNullableEntry.Item2!(nullableAttribute);
+            return assemblyNullableEntry.Item2.GetValue(nullableAttribute) as byte[] ?? new byte[0];
         }
 
-        private static void CacheGetNullableFlag(Assembly assembly)
+        private static void CacheNullableFlagFieldInfo(Assembly assembly)
         {
             var nullableAttributeType = assembly.GetType("System.Runtime.CompilerServices.NullableAttribute");
             if (nullableAttributeType == null)
@@ -54,23 +53,12 @@ namespace Robust.Shared.Utility
                 throw new Exception($"No System.Runtime.CompilerServices.NullableAttribute found in Assembly {assembly}");
             }
 
-            var dynamicMethod = new DynamicMethod($"_getter<>nullableAttributeByte", typeof(byte[]), new Type[]{typeof(object)}, typeof(NullableHelper), true);
-
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "attribute");
-
-            var generator = dynamicMethod.GetILGenerator();
-
-            generator.Emit(OpCodes.Ldarg_0);
             var field = nullableAttributeType.GetField("NullableFlags");
             if (field == null)
             {
                 throw new Exception("NullableFlags field not found");
             }
-            generator.Emit(OpCodes.Ldfld, field);
-            generator.Emit(OpCodes.Ret);
-
-            var @delegate = (GetNullableFlagDelegate)dynamicMethod.CreateDelegate(typeof(GetNullableFlagDelegate));
-            _nullableAttributeTypeCache.Add(assembly, (nullableAttributeType, @delegate));
+            _nullableAttributeTypeCache.Add(assembly, (nullableAttributeType, field));
         }
     }
 }

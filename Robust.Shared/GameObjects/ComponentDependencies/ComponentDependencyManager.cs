@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// <summary>
         /// Cache of queries and their corresponding field offsets
         /// </summary>
-        private readonly Dictionary<Type, (Type, int)[]> _componentDependencyFieldOffsets = new Dictionary<Type, (Type, int)[]>();
+        private readonly Dictionary<Type, (Type, int)[]> _componentDependencyQueries = new Dictionary<Type, (Type, int)[]>();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
@@ -34,9 +34,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// <param name="newComp"></param>
         public void InjectIntoComponent(IEntity entity, IComponent newComp)
         {
-            var offsets = GetPointerOffsets(newComp);
+            var queries = GetPointerQueries(newComp);
 
-            if (offsets.Length == 0)
+            if (queries.Length == 0)
             {
                 return;
             }
@@ -47,11 +47,11 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
                 {
-                    foreach (var offset in offsets)
+                    foreach (var (type, offset) in queries)
                     {
-                        if (offset.Item1 == reference)
+                        if (type == reference)
                         {
-                            SetField(newComp, offset.Item2, entityComp);
+                            SetField(newComp, offset, entityComp);
                         }
                     }
                 }
@@ -79,15 +79,15 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             foreach (var entityComponent in entity.GetAllComponents())
             {
                 //get entry for out entityComponent
-                var offsets = GetPointerOffsets(entityComponent);
+                var queries = GetPointerQueries(entityComponent);
 
                 //check if our new component is in entityComponents queries
-                for (var i = 0; i < offsets.Length; i++)
+                for (var i = 0; i < queries.Length; i++)
                 {
                     //it is
-                    if (compReg.References.Contains(offsets[i].Item1))
+                    if (compReg.References.Contains(queries[i].Item1))
                     {
-                        SetField(entityComponent, offsets[i].Item2, comp);
+                        SetField(entityComponent, queries[i].Item2, comp);
                     }
                 }
             }
@@ -95,8 +95,8 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
         private void ClearRemovedComponentDependencies(IComponent comp)
         {
-            var offsets = GetPointerOffsets(comp);
-            foreach (var (_, offset) in offsets)
+            var queries = GetPointerQueries(comp);
+            foreach (var (_, offset) in queries)
             {
                 SetField(comp, offset, null);
             }
@@ -110,17 +110,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             oRef = value;
         }
 
-        private object GetField(object o, int offset)
+        private (Type, int)[] GetPointerQueries(object obj)
         {
-            var asDummy = Unsafe.As<FieldOffsetDummy>(o);
-            ref var @ref = ref Unsafe.Add(ref asDummy.A, offset);
-            ref var oRef = ref Unsafe.As<byte, object>(ref @ref);
-            return oRef;
-        }
-
-        private (Type, int)[] GetPointerOffsets(object obj)
-        {
-            return !_componentDependencyFieldOffsets.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
+            return !_componentDependencyQueries.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
         }
 
         private (Type, int)[] CreateAndCachePointerOffsets(object obj)
@@ -191,7 +183,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 offsets[j] = (typeArray[j], unlabeledOffsets[j]);
             }
 
-            _componentDependencyFieldOffsets.Add(objType, offsets);
+            _componentDependencyQueries.Add(objType, offsets);
             return offsets;
         }
 

@@ -436,7 +436,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // An entity with TestFive.
             try
             {
-                var dummyFour = entityManager.CreateEntityUninitialized("dummyFive");
+                entityManager.CreateEntityUninitialized("dummyFive");
             }
             catch (ComponentDependencyValueTypeException e)
             {
@@ -454,7 +454,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // An entity with TestSix.
             try
             {
-                var dummyFour = entityManager.CreateEntityUninitialized("dummySix");
+                entityManager.CreateEntityUninitialized("dummySix");
             }
             catch (ComponentDependencyNotNullableException e)
             {

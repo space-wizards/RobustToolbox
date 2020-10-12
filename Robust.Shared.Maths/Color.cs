@@ -43,32 +43,32 @@ namespace Robust.Shared.Maths
     ///     Represents a color with 4 floating-point components (R, G, B, A).
     /// </summary>
     [Serializable]
-    public readonly struct Color : IEquatable<Color>
+    public struct Color : IEquatable<Color>
     {
         /// <summary>
         ///     The red component of this Color4 structure.
         /// </summary>
-        public readonly float R;
+        public float R;
 
         /// <summary>
         ///     The green component of this Color4 structure.
         /// </summary>
-        public readonly float G;
+        public float G;
 
         /// <summary>
         ///     The blue component of this Color4 structure.
         /// </summary>
-        public readonly float B;
+        public float B;
 
         /// <summary>
         ///     The alpha component of this Color4 structure.
         /// </summary>
-        public readonly float A;
+        public float A;
 
-        public byte RByte => (byte) (R * byte.MaxValue);
-        public byte GByte => (byte) (G * byte.MaxValue);
-        public byte BByte => (byte) (B * byte.MaxValue);
-        public byte AByte => (byte) (A * byte.MaxValue);
+        public readonly byte RByte => (byte) (R * byte.MaxValue);
+        public readonly byte GByte => (byte) (G * byte.MaxValue);
+        public readonly byte BByte => (byte) (B * byte.MaxValue);
+        public readonly byte AByte => (byte) (A * byte.MaxValue);
 
         /// <summary>
         ///     Constructs a new Color4 structure from the specified components.
@@ -108,7 +108,7 @@ namespace Robust.Shared.Maths
         ///     This method is intended only for compatibility with System.Drawing. It compresses the color into 8 bits per
         ///     channel, which means color information is lost.
         /// </remarks>
-        public int ToArgb()
+        public readonly int ToArgb()
         {
             var value =
                 ((uint) (A * byte.MaxValue) << 24) |
@@ -161,7 +161,7 @@ namespace Robust.Shared.Maths
             return new Color(tuple.r, tuple.g, tuple.b);
         }
 
-        public void Deconstruct(out float r, out float g, out float b, out float a)
+        public readonly void Deconstruct(out float r, out float g, out float b, out float a)
         {
             r = R;
             g = G;
@@ -169,7 +169,7 @@ namespace Robust.Shared.Maths
             a = A;
         }
 
-        public void Deconstruct(out float r, out float g, out float b)
+        public readonly void Deconstruct(out float r, out float g, out float b)
         {
             r = R;
             g = G;
@@ -210,7 +210,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">An object to compare to.</param>
         /// <returns>True obj is a Color4 structure with the same components as this Color4; false otherwise.</returns>
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (!(obj is Color))
                 return false;
@@ -222,7 +222,7 @@ namespace Robust.Shared.Maths
         ///     Calculates the hash code for this Color4 structure.
         /// </summary>
         /// <returns>A System.Int32 containing the hash code of this Color4 structure.</returns>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             return ToArgb();
         }
@@ -231,47 +231,47 @@ namespace Robust.Shared.Maths
         ///     Creates a System.String that describes this Color4 structure.
         /// </summary>
         /// <returns>A System.String that describes this Color4 structure.</returns>
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"{{(R, G, B, A) = ({R}, {G}, {B}, {A})}}";
         }
 
-        public Color WithRed(float newR)
+        public readonly Color WithRed(float newR)
         {
             return new Color(newR, G, B, A);
         }
 
-        public Color WithGreen(float newG)
+        public readonly Color WithGreen(float newG)
         {
             return new Color(R, newG, B, A);
         }
 
-        public Color WithBlue(float newB)
+        public readonly Color WithBlue(float newB)
         {
             return new Color(R, G, newB, A);
         }
 
-        public Color WithAlpha(float newA)
+        public readonly Color WithAlpha(float newA)
         {
             return new Color(R, G, B, newA);
         }
 
-        public Color WithRed(byte newR)
+        public readonly Color WithRed(byte newR)
         {
             return new Color((float) newR / byte.MaxValue, G, B, A);
         }
 
-        public Color WithGreen(byte newG)
+        public readonly Color WithGreen(byte newG)
         {
             return new Color(R, (float) newG / byte.MaxValue, B, A);
         }
 
-        public Color WithBlue(byte newB)
+        public readonly Color WithBlue(byte newB)
         {
             return new Color(R, G, (float) newB / byte.MaxValue, A);
         }
 
-        public Color WithAlpha(byte newA)
+        public readonly Color WithAlpha(byte newA)
         {
             return new Color(R, G, B, (float) newA / byte.MaxValue);
         }
@@ -973,7 +973,7 @@ namespace Robust.Shared.Maths
             return new Color(a.R * b.R, a.G * b.G, a.B * b.B, a.A * b.A);
         }
 
-        public string ToHex()
+        public readonly string ToHex()
         {
             var hexColor = 0;
             hexColor += RByte << 24;
@@ -984,7 +984,7 @@ namespace Robust.Shared.Maths
             return $"#{hexColor:X8}";
         }
 
-        public string ToHexNoAlpha()
+        public readonly string ToHexNoAlpha()
         {
             var hexColor = 0;
             hexColor += RByte << 16;
@@ -999,7 +999,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="other">The Color4 structure to compare to.</param>
         /// <returns>True if both Color4 structures contain the same components; false otherwise.</returns>
-        public bool Equals(Color other)
+        public readonly bool Equals(Color other)
         {
             return
                 MathHelper.CloseTo(R, other.R) &&
@@ -1880,7 +1880,7 @@ namespace Robust.Shared.Maths
         private static readonly Dictionary<Color, string> DefaultColorsInverted =
             DefaultColors.ToLookup(pair => pair.Value).ToDictionary(i => i.Key, i => i.First().Key);
 
-        public string? Name()
+        public readonly string? Name()
         {
             return DefaultColorsInverted.TryGetValue(this, out var name) ? name : null;
         }

@@ -39,7 +39,7 @@ namespace Robust.Shared.Network.Messages
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
 
                 var length = buffer.ReadVariableInt32();
-                using var stream = buffer.ReadAsStream(length);
+                using var stream = buffer.ReadAlignedMemory(length);
                 serializer.DeserializeDirect(stream, out Echo);
                 serializer.DeserializeDirect(stream, out Response);
             }

@@ -189,7 +189,7 @@ namespace Robust.Shared.GameObjects
                 {
                     ITransformComponent _ => 0,
                     IMetaDataComponent _ => 1,
-                    ICollidableComponent _ => 2,
+                    IPhysicsComponent _ => 2,
                     _ => int.MaxValue
                 };
 

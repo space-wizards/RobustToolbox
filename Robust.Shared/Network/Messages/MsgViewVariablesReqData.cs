@@ -47,7 +47,7 @@ namespace Robust.Shared.Network.Messages
             SessionId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
-            using var stream = buffer.ReadAsStream(length);
+            using var stream = buffer.ReadAlignedMemory(length);
             RequestMeta = serializer.Deserialize<ViewVariablesRequest>(stream);
         }
 

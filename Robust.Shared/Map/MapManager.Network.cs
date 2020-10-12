@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -152,7 +153,7 @@ namespace Robust.Shared.Map
 
                     grid.WorldPosition = gridDatum.Coordinates.Position;
 
-                    var modified = new List<(MapIndices position, Tile tile)>();
+                    var modified = new List<(Vector2i position, Tile tile)>();
                     foreach (var chunkData in gridDatum.ChunkData)
                     {
                         var chunk = grid.GetChunk(chunkData.Index);
@@ -168,7 +169,7 @@ namespace Robust.Shared.Map
                                 if (chunk.GetTileRef(x, y).Tile != tile)
                                 {
                                     chunk.SetTile(x, y, tile);
-                                    modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                                    modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
                                 }
                             }
                         }

@@ -6,24 +6,24 @@ namespace Robust.Shared.Maths
     ///     This type contains a <see cref="Box2"/> and a rotation <see cref="Angle"/> in world space.
     /// </summary>
     [Serializable]
-    public readonly struct Box2Rotated : IEquatable<Box2Rotated>
+    public struct Box2Rotated : IEquatable<Box2Rotated>
     {
-        public readonly Box2 Box;
-        public readonly Angle Rotation;
+        public Box2 Box;
+        public Angle Rotation;
         /// <summary>
         /// The point about which the rotation occurs.
         /// </summary>
-        public readonly Vector2 Origin;
+        public Vector2 Origin;
 
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
         public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
 
-        public Vector2 BottomRight => Origin + Rotation.RotateVec(Box.BottomRight - Origin);
-        public Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
-        public Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
-        public Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
+        public readonly Vector2 BottomRight => Origin + Rotation.RotateVec(Box.BottomRight - Origin);
+        public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);
+        public readonly Vector2 TopRight => Origin + Rotation.RotateVec(Box.TopRight - Origin);
+        public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
             : this(new Box2(bottomLeft, topRight)) { }
@@ -44,7 +44,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
         /// </summary>
-        public Box2 CalcBoundingBox()
+        public readonly Box2 CalcBoundingBox()
         {
             // https://stackoverflow.com/a/19830964
 
@@ -69,20 +69,20 @@ namespace Robust.Shared.Maths
         #region Equality
 
         /// <inheritdoc />
-        public bool Equals(Box2Rotated other)
+        public readonly bool Equals(Box2Rotated other)
         {
             return Box.Equals(other.Box) && Rotation.Equals(other.Rotation);
         }
 
         /// <inheritdoc />
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Box2Rotated other && Equals(other);
         }
 
         /// <inheritdoc />
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -111,7 +111,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns a string representation of this type.
         /// </summary>
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"{Box.ToString()}, {Rotation.ToString()}";
         }

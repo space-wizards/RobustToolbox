@@ -7,7 +7,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects.Components
 {
     [Serializable, NetSerializable]
-    public class CollidableComponentState : ComponentState
+    public class PhysicsComponentState : ComponentState
     {
         public readonly bool CanCollide;
         public readonly BodyStatus Status;
@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="anchored">Whether or not the entity is anchored in place.</param>
-        public CollidableComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
+        public PhysicsComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
             : base(NetIDs.COLLIDABLE)
         {
             CanCollide = canCollide;

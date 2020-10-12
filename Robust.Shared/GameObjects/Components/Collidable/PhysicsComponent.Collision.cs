@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects.Components
         bool PreventCollide(IPhysBody collidedwith);
     }
 
-    public partial interface ICollidableComponent : IComponent, IPhysBody
+    public partial interface IPhysicsComponent : IComponent, IPhysBody
     {
         public new bool Hard { get; set; }
         bool IsColliding(Vector2 offset, bool approximate = true);
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects.Components
         void AddedToPhysicsTree(MapId mapId);
     }
 
-    public partial class CollidableComponent : Component, ICollidableComponent
+    public partial class PhysicsComponent : Component, IPhysicsComponent
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -114,7 +114,7 @@ namespace Robust.Shared.GameObjects.Components
             SleepAccumulator = 0;
         }
 
-        public CollidableComponent()
+        public PhysicsComponent()
         {
             PhysicsShapes = new PhysShapeList(this);
         }
@@ -135,7 +135,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
+            return new PhysicsComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
         }
 
         /// <inheritdoc />
@@ -144,7 +144,7 @@ namespace Robust.Shared.GameObjects.Components
             if (curState == null)
                 return;
 
-            var newState = (CollidableComponentState) curState;
+            var newState = (PhysicsComponentState) curState;
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
@@ -398,9 +398,9 @@ namespace Robust.Shared.GameObjects.Components
         // To hook into their OnDataChanged event correctly.
         private sealed class PhysShapeList : IList<IPhysShape>
         {
-            private readonly CollidableComponent _owner;
+            private readonly PhysicsComponent _owner;
 
-            public PhysShapeList(CollidableComponent owner)
+            public PhysShapeList(PhysicsComponent owner)
             {
                 _owner = owner;
             }
@@ -513,9 +513,9 @@ namespace Robust.Shared.GameObjects.Components
     /// </summary>
     public sealed class CollidableUpdateMessage : EntitySystemMessage
     {
-        public ICollidableComponent Component { get; }
+        public IPhysicsComponent Component { get; }
 
-        public CollidableUpdateMessage(ICollidableComponent component)
+        public CollidableUpdateMessage(IPhysicsComponent component)
         {
             Component = component;
         }

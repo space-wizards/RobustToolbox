@@ -597,7 +597,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            ICollidableComponent? collider;
+            IPhysicsComponent? collider;
 
             if (oldId != MapId.Nullspace)
             {
@@ -794,7 +794,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
 
         private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out ICollidableComponent? collider) && collider.UpdatePhysicsTree();
+            Owner.TryGetComponent(out IPhysicsComponent? collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

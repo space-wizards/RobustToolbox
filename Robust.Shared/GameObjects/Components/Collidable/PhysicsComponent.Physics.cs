@@ -9,7 +9,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
 {
-    public partial interface ICollidableComponent
+    public partial interface IPhysicsComponent
     {
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -159,9 +159,9 @@ namespace Robust.Shared.GameObjects.Components
         new bool CanMove();
     }
 
-    partial class CollidableComponent : ICollidableComponent
+    partial class PhysicsComponent : IPhysicsComponent
     {
-        [Dependency] private IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
         private float _mass = 1;
         private float _angularMass = 1;
@@ -347,17 +347,10 @@ namespace Robust.Shared.GameObjects.Components
 
         private bool _predict;
 
-        Dictionary<Type, VirtualController> ICollidableComponent.Controllers
+        Dictionary<Type, VirtualController> IPhysicsComponent.Controllers
         {
             get => _controllers;
             set => _controllers = value;
-        }
-
-        [Obsolete("This only exists for legacy reasons.")]
-        public bool CanMove([NotNullWhen(true)]IPhysicsComponent physics)
-        {
-            // Cursed method
-            return Owner.TryGetComponent(out physics!) && !Anchored;
         }
 
         /// <inheritdoc />

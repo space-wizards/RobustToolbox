@@ -3,20 +3,20 @@
 namespace Robust.Shared.Maths
 {
     [Serializable]
-    public readonly struct UIBox2i : IEquatable<UIBox2i>
+    public struct UIBox2i : IEquatable<UIBox2i>
     {
-        public readonly int Left;
-        public readonly int Right;
-        public readonly int Top;
-        public readonly int Bottom;
+        public int Left;
+        public int Right;
+        public int Top;
+        public int Bottom;
 
-        public Vector2i BottomRight => new Vector2i(Right, Bottom);
-        public Vector2i TopLeft => new Vector2i(Left, Top);
-        public Vector2i TopRight => new Vector2i(Right, Top);
-        public Vector2i BottomLeft => new Vector2i(Left, Bottom);
-        public int Width => Math.Abs(Right - Left);
-        public int Height => Math.Abs(Top - Bottom);
-        public Vector2i Size => new Vector2i(Width, Height);
+        public readonly Vector2i BottomRight => new Vector2i(Right, Bottom);
+        public readonly Vector2i TopLeft => new Vector2i(Left, Top);
+        public readonly Vector2i TopRight => new Vector2i(Right, Top);
+        public readonly Vector2i BottomLeft => new Vector2i(Left, Bottom);
+        public readonly int Width => Math.Abs(Right - Left);
+        public readonly int Height => Math.Abs(Top - Bottom);
+        public readonly Vector2i Size => new Vector2i(Width, Height);
 
         public UIBox2i(Vector2i topLeft, Vector2i bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y)
         {
@@ -40,12 +40,12 @@ namespace Robust.Shared.Maths
             return FromDimensions(position.X, position.Y, size.X, size.Y);
         }
 
-        public bool Contains(int x, int y)
+        public readonly bool Contains(int x, int y)
         {
             return Contains(new Vector2i(x, y));
         }
 
-        public bool Contains(Vector2i point, bool closedRegion = true)
+        public readonly bool Contains(Vector2i point, bool closedRegion = true)
         {
             var xOk = closedRegion
                 ? point.X >= Left ^ point.X > Right
@@ -57,7 +57,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
-        public UIBox2i Translated(Vector2i point)
+        public readonly UIBox2i Translated(Vector2i point)
         {
             return new UIBox2i(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
@@ -70,7 +70,7 @@ namespace Robust.Shared.Maths
         /// <returns>
         ///     <c>null</c> if there is no intersection, otherwise the smallest region that fits in both boxes.
         /// </returns>
-        public UIBox2i? Intersection(in UIBox2i other)
+        public readonly UIBox2i? Intersection(in UIBox2i other)
         {
             if (!Intersects(other))
             {
@@ -81,14 +81,14 @@ namespace Robust.Shared.Maths
                 Vector2i.ComponentMin(BottomRight, other.BottomRight));
         }
 
-        public bool Intersects(in UIBox2i other)
+        public readonly bool Intersects(in UIBox2i other)
         {
             return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
         }
 
         // override object.Equals
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (obj is UIBox2i box)
             {
@@ -98,13 +98,13 @@ namespace Robust.Shared.Maths
             return false;
         }
 
-        public bool Equals(UIBox2i other)
+        public readonly bool Equals(UIBox2i other)
         {
             return other.Left == Left && other.Right == Right && other.Bottom == Bottom && other.Top == Top;
         }
 
         // override object.GetHashCode
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             var code = Left.GetHashCode();
             code = (code * 929) ^ Right.GetHashCode();
@@ -130,7 +130,7 @@ namespace Robust.Shared.Maths
             return new UIBox2i(box.Left + lo, box.Top + to, box.Right + ro, box.Bottom + bo);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
         }

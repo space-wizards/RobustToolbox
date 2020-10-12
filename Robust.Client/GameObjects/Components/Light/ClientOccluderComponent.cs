@@ -12,7 +12,7 @@ namespace Robust.Client.GameObjects
     {
         internal SnapGridComponent? SnapGrid { get; private set; }
 
-        [ViewVariables] private (GridId, MapIndices) _lastPosition;
+        [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
         [ViewVariables] internal uint UpdateGeneration { get; set; }
 

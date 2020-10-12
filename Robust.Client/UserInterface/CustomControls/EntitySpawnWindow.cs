@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
@@ -149,10 +150,12 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Dispose(disposing);
 
-            if (disposing)
-            {
-                placementManager.PlacementChanged -= OnPlacementCanceled;
-            }
+            if (!disposing) return;
+
+            if(EraseButton.Pressed)
+                placementManager.Clear();
+
+            placementManager.PlacementChanged -= OnPlacementCanceled;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)

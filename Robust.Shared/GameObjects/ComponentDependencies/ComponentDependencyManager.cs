@@ -124,22 +124,8 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 .Where(f => Attribute.IsDefined(f, typeof(ComponentDependencyAttribute))).ToArray();
             var attributeFieldsLength = attributeFields.Length;
 
-            var dynamicMethod = new DynamicMethod(
-                $"_fieldOffsetCalc<>{objType}",
-                typeof(int[]),
-                new[] {typeof(object)},
-                objType,
-                true);
 
-            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-
-            var generator = dynamicMethod.GetILGenerator();
-
-            var typeArray = new Type[attributeFieldsLength];
-
-            //create the return array
-            generator.Emit(OpCodes.Ldc_I4, attributeFieldsLength);
-            generator.Emit(OpCodes.Newarr, typeof(int));
+            var queries = new (Type, int)[attributeFieldsLength];
 
             int i = 0;
             foreach (var field in attributeFields)
@@ -149,13 +135,14 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                     throw new Exception($"Field {field} of Type {objType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!");
                 }
 
-                typeArray[i] = field.FieldType;
-
-                //duplicates the array ontop of the eval stack so stelem doesn't clear it
-                generator.Emit(OpCodes.Dup);
-
-                //setting the index for our arrayinsertion
-                generator.Emit(OpCodes.Ldc_I4, i++);
+                var dynamicMethod = new DynamicMethod(
+                    $"_fieldOffsetCalc<>{objType}<>{field}",
+                    typeof(int),
+                    new[] {typeof(object)},
+                    objType,
+                    true);
+                dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
+                var generator = dynamicMethod.GetILGenerator();
 
                 //getting the field pointer
                 generator.Emit(OpCodes.Ldarg_0);
@@ -168,23 +155,17 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 //calculating offset
                 generator.Emit(OpCodes.Sub);
 
-                //inserting the offset into the array
-                generator.Emit(OpCodes.Stelem, typeof(int));
+                //return offset
+                generator.Emit(OpCodes.Ret);
+
+                var @delegate = (Func<object, int>)dynamicMethod.CreateDelegate(typeof(Func<object, int>));
+                var offset = @delegate(obj);
+
+                queries[i++] = (field.FieldType, offset);
             }
 
-            generator.Emit(OpCodes.Ret);
-
-            var @delegate = (Func<object, int[]>)dynamicMethod.CreateDelegate(typeof(Func<object, int[]>));
-            var unlabeledOffsets = @delegate(obj);
-
-            var offsets = new (Type, int)[attributeFieldsLength];
-            for (int j = 0; j < attributeFieldsLength; j++)
-            {
-                offsets[j] = (typeArray[j], unlabeledOffsets[j]);
-            }
-
-            _componentDependencyQueries.Add(objType, offsets);
-            return offsets;
+            _componentDependencyQueries.Add(objType, queries);
+            return queries;
         }
 
         private sealed class FieldOffsetDummy

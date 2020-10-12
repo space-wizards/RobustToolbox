@@ -41,6 +41,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     True if the entity has been deleted.
         /// </summary>
         bool Deleted { get; }
+        
+        bool Paused { get; set; }
 
         /// <summary>
         ///     The prototype that was used to create this entity.

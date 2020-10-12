@@ -166,6 +166,18 @@ namespace Robust.Shared.GameObjects
             return query.Match(this);
         }
 
+        public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
+        {
+            if (!_entityTreesPerMap.TryGetValue(mapId, out var trees))
+                yield break;
+
+            foreach (var entity in trees)
+            {
+                if (!entity.Deleted)
+                    yield return entity;
+            }
+        }
+
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false)
         {

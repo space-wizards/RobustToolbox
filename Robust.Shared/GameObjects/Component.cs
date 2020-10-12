@@ -38,6 +38,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public IEntity Owner { get; set; } = default!;
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool Paused => Owner.Paused;
+
         /// <summary>
         ///     True if this entity is a client-only entity.
         ///     That is, it does not exist on the server, only THIS client.

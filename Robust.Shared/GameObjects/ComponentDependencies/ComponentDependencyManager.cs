@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// <summary>
         /// Cache of queries and their corresponding field offsets
         /// </summary>
-        private readonly Dictionary<Type, (Type, int)[]> _componentDependencyQueries = new Dictionary<Type, (Type, int)[]>();
+        private readonly Dictionary<Type, (Type Query, int FieldMemoryOffset)[]> _componentDependencyQueries = new Dictionary<Type, (Type Query, int FieldMemoryOffset)[]>();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
@@ -85,9 +85,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 for (var i = 0; i < queries.Length; i++)
                 {
                     //it is
-                    if (compReg.References.Contains(queries[i].Item1))
+                    if (compReg.References.Contains(queries[i].Query))
                     {
-                        SetField(entityComponent, queries[i].Item2, comp);
+                        SetField(entityComponent, queries[i].FieldMemoryOffset, comp);
                     }
                 }
             }
@@ -110,12 +110,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             oRef = value;
         }
 
-        private (Type, int)[] GetPointerQueries(object obj)
+        private (Type Query, int FieldMemoryOffset)[] GetPointerQueries(object obj)
         {
             return !_componentDependencyQueries.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
         }
 
-        private (Type, int)[] CreateAndCachePointerOffsets(object obj)
+        private (Type Query, int FieldMemoryOffset)[] CreateAndCachePointerOffsets(object obj)
         {
             var fieldOffsetField = typeof(FieldOffsetDummy).GetField("A")!;
             var objType = obj.GetType();
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             {
                 if (!NullableHelper.IsMarkedAsNullable(field))
                 {
-                    throw new Exception($"Field {field} of Type {objType} is marked as ComponentDependecy, but does not have ?(Nullable)-Flag!");
+                    throw new Exception($"Field {field} of Type {objType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!");
                 }
 
                 typeArray[i] = field.FieldType;

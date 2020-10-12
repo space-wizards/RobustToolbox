@@ -126,7 +126,7 @@ namespace Robust.Client.ViewVariables
 
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerialzable<>).MakeGenericType(type))!;
+                return (ViewVariablesPropertyEditor)Activator.CreateInstance(typeof(ViewVariablesPropertyEditorISelfSerializable<>).MakeGenericType(type))!;
             }
 
             if (type.IsEnum)

@@ -21,19 +21,19 @@ namespace Robust.Client.Console.Commands
                     break;
 
                 case 1:
-                    string commandname = args[0];
-                    if (!console.Commands.ContainsKey(commandname))
+                    string commandName = args[0];
+                    if (!console.Commands.ContainsKey(commandName))
                     {
                         if (!IoCManager.Resolve<IClientNetManager>().IsConnected)
                         {
                             // No server so nothing to respond with unknown command.
-                            console.AddLine("Unknown command: " + commandname, Color.Red);
+                            console.AddLine("Unknown command: " + commandName, Color.Red);
                             return false;
                         }
                         // TODO: Maybe have a server side help?
                         return false;
                     }
-                    IConsoleCommand command = console.Commands[commandname];
+                    IConsoleCommand command = console.Commands[commandName];
                     console.AddLine(string.Format("{0} - {1}", command.Command, command.Description));
                     console.AddLine(command.Help);
                     break;

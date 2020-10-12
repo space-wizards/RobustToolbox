@@ -91,25 +91,25 @@ namespace Robust.Client.Placement
                 DebugTools.AssertNotNull(SpriteToDraw);
             }
 
-            IEnumerable<EntityCoordinates> locationcollection;
+            IEnumerable<EntityCoordinates> locationCollection;
             switch (pManager.PlacementType)
             {
                 case PlacementManager.PlacementTypes.None:
-                    locationcollection = SingleCoordinate();
+                    locationCollection = SingleCoordinate();
                     break;
                 case PlacementManager.PlacementTypes.Line:
-                    locationcollection = LineCoordinates();
+                    locationCollection = LineCoordinates();
                     break;
                 case PlacementManager.PlacementTypes.Grid:
-                    locationcollection = GridCoordinates();
+                    locationCollection = GridCoordinates();
                     break;
                 default:
-                    locationcollection = SingleCoordinate();
+                    locationCollection = SingleCoordinate();
                     break;
             }
 
             var size = SpriteToDraw!.Size;
-            foreach (var coordinate in locationcollection)
+            foreach (var coordinate in locationCollection)
             {
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
                 var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
@@ -202,15 +202,15 @@ namespace Robust.Client.Placement
         public bool IsColliding(EntityCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
-            var worldcoords = coordinates.ToMapPos(pManager.EntityManager);
+            var worldCoords = coordinates.ToMapPos(pManager.EntityManager);
 
-            var collisionbox = Box2.FromDimensions(
-                bounds.Left + worldcoords.X,
-                bounds.Bottom + worldcoords.Y,
+            var collisionBox = Box2.FromDimensions(
+                bounds.Left + worldCoords.X,
+                bounds.Bottom + worldCoords.Y,
                 bounds.Width,
                 bounds.Height);
 
-            if (pManager.PhysicsManager.TryCollideRect(collisionbox, pManager.MapManager.GetGrid(coordinates.GetGridId(pManager.EntityManager)).ParentMapId))
+            if (pManager.PhysicsManager.TryCollideRect(collisionBox, pManager.MapManager.GetGrid(coordinates.GetGridId(pManager.EntityManager)).ParentMapId))
                 return true;
 
             return false;

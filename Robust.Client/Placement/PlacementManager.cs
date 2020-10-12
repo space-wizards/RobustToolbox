@@ -67,7 +67,7 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
         /// </summary>
-        private bool _placenextframe;
+        private bool _placeNextFrame;
 
         /// <summary>
         /// Allows various types of placement as singular, line, or grid placement where placement mode allows this type of placement
@@ -215,21 +215,21 @@ namespace Robust.Client.Placement
                         }
                         else
                         {
-                            _placenextframe = true;
+                            _placeNextFrame = true;
                         }
 
                         return true;
                     },
                     (session, coords, uid) =>
                     {
-                        if (!IsActive || Eraser || !_placenextframe)
+                        if (!IsActive || Eraser || !_placeNextFrame)
                             return false;
 
                         //Places objects for non-tile entities
                         if (!CurrentPermission!.IsTile)
                             HandlePlacement();
 
-                        _placenextframe = false;
+                        _placeNextFrame = false;
                         return true;
                     }))
                 .Bind(EngineKeyFunctions.EditorRotateObject, InputCmdHandler.FromDelegate(
@@ -316,7 +316,7 @@ namespace Robust.Client.Placement
             CurrentPermission = null;
             CurrentMode = null;
             DeactivateSpecialPlacement();
-            _placenextframe = false;
+            _placeNextFrame = false;
             IsActive = false;
             Eraser = false;
             PlacementOffset = Vector2i.Zero;
@@ -482,7 +482,7 @@ namespace Robust.Client.Placement
             _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
 
             // continues tile placement but placement of entities only occurs on mouseUp
-            if (_placenextframe && CurrentPermission!.IsTile)
+            if (_placeNextFrame && CurrentPermission!.IsTile)
                 HandlePlacement();
         }
 

@@ -109,25 +109,25 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public bool Insert(IEntity toinsert)
+        public bool Insert(IEntity toInsert)
         {
             DebugTools.Assert(!Deleted);
 
             //Verify we can insert and that the object got properly removed from its current location
-            if (!CanInsert(toinsert))
+            if (!CanInsert(toInsert))
                 return false;
 
-            var transform = toinsert.Transform;
+            var transform = toInsert.Transform;
 
             if (transform.Parent == null) // Only true if Parent is the map entity
                 return false;
 
-            if(ContainerHelpers.TryGetContainerMan(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toinsert))
+            if(ContainerHelpers.TryGetContainerMan(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toInsert))
             {
                 // Can't remove from existing container, can't insert.
                 return false;
             }
-            InternalInsert(toinsert);
+            InternalInsert(toInsert);
             transform.AttachParent(Owner.Transform);
 
             // spatially move the object to the location of the container. If you don't want this functionality, the
@@ -151,38 +151,38 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public virtual bool CanInsert(IEntity toinsert)
+        public virtual bool CanInsert(IEntity toInsert)
         {
             DebugTools.Assert(!Deleted);
 
             // cannot insert into itself.
-            if (Owner == toinsert)
+            if (Owner == toInsert)
                 return false;
 
             // Crucial, prevent circular insertion.
-            return !toinsert.Transform.ContainsEntity(Owner.Transform);
+            return !toInsert.Transform.ContainsEntity(Owner.Transform);
 
             //Improvement: Traverse the entire tree to make sure we are not creating a loop.
         }
 
         /// <inheritdoc />
-        public bool Remove(IEntity toremove)
+        public bool Remove(IEntity toRemove)
         {
             DebugTools.Assert(!Deleted);
 
-            if (toremove == null)
+            if (toRemove == null)
                 return true;
 
-            if (!CanRemove(toremove))
+            if (!CanRemove(toRemove))
             {
                 return false;
             }
-            InternalRemove(toremove);
+            InternalRemove(toRemove);
 
-            if (!toremove.IsValid())
+            if (!toRemove.IsValid())
                 return true;
 
-            ContainerHelpers.AttachParentToContainerOrGrid(toremove.Transform);
+            ContainerHelpers.AttachParentToContainerOrGrid(toRemove.Transform);
             return true;
         }
 
@@ -212,10 +212,10 @@ namespace Robust.Server.GameObjects.Components.Container
         }
 
         /// <inheritdoc />
-        public virtual bool CanRemove(IEntity toremove)
+        public virtual bool CanRemove(IEntity toRemove)
         {
             DebugTools.Assert(!Deleted);
-            return Contains(toremove);
+            return Contains(toRemove);
         }
 
         /// <inheritdoc />

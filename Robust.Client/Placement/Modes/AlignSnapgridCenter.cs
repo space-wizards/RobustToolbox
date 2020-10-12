@@ -23,16 +23,16 @@ namespace Robust.Client.Placement.Modes
 
                 var position = pManager.eyeManager.ScreenToMap(Vector2.Zero);
 
-                var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
+                var gridStart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
                     (float)(MathF.Round(position.X / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize,
                     (float)(MathF.Round(position.Y / snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * snapSize));
-                for (var a = gridstart.X; a < viewportSize.X; a += snapSize * 32) //Iterate through screen creating gridlines
+                for (var a = gridStart.X; a < viewportSize.X; a += snapSize * 32) //Iterate through screen creating gridlines
                 {
                     var from = ScreenToWorld(new Vector2(a, 0));
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
                     handle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
-                for (var a = gridstart.Y; a < viewportSize.Y; a += snapSize * 32)
+                for (var a = gridStart.Y; a < viewportSize.Y; a += snapSize * 32)
                 {
                     var from = ScreenToWorld(new Vector2(0, a));
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a));

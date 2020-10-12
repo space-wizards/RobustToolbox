@@ -32,22 +32,22 @@ namespace Robust.Client.GameObjects.Components.Containers
             [ViewVariables]
             public bool OccludesLight { get; set; }
 
-            public bool CanInsert(IEntity toinsert)
+            public bool CanInsert(IEntity toInsert)
             {
                 return false;
             }
 
-            public bool Insert(IEntity toinsert)
+            public bool Insert(IEntity toInsert)
             {
                 return false;
             }
 
-            public bool CanRemove(IEntity toremove)
+            public bool CanRemove(IEntity toRemove)
             {
                 return false;
             }
 
-            public bool Remove(IEntity toremove)
+            public bool Remove(IEntity toRemove)
             {
                 return false;
             }

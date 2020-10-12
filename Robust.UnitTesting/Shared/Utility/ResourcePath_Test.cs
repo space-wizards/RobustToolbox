@@ -34,8 +34,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public void InputClean_Test([ValueSource(nameof(InputClean_Values))] (string input, string expected) path)
         {
-            var respath = new ResourcePath(path.input);
-            Assert.That(respath.ToString(), Is.EqualTo(path.expected));
+            var resPath = new ResourcePath(path.input);
+            Assert.That(resPath.ToString(), Is.EqualTo(path.expected));
         }
 
         public static List<(string, string)> Extension_Values = new List<(string, string)>
@@ -51,8 +51,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public void Extension_Test([ValueSource(nameof(Extension_Values))] (string path, string expected) data)
         {
-            var respath = new ResourcePath(data.path);
-            Assert.That(respath.Extension, Is.EqualTo(data.expected));
+            var resPath = new ResourcePath(data.path);
+            Assert.That(resPath.Extension, Is.EqualTo(data.expected));
         }
 
         public static List<(string, string)> Filename_Values = new List<(string, string)>
@@ -67,8 +67,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public void Filename_Test([ValueSource(nameof(Filename_Values))] (string path, string expected) data)
         {
-            var respath = new ResourcePath(data.path);
-            Assert.That(respath.Filename, Is.EqualTo(data.expected));
+            var resPath = new ResourcePath(data.path);
+            Assert.That(resPath.Filename, Is.EqualTo(data.expected));
         }
 
         public static List<(string, string)> FilenameWithoutExtension_Values = new List<(string, string)>
@@ -84,8 +84,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public void FilenameWithoutExtension_Test([ValueSource(nameof(FilenameWithoutExtension_Values))] (string path, string expected) data)
         {
-            var respath = new ResourcePath(data.path);
-            Assert.That(respath.FilenameWithoutExtension, Is.EqualTo(data.expected));
+            var resPath = new ResourcePath(data.path);
+            Assert.That(resPath.FilenameWithoutExtension, Is.EqualTo(data.expected));
         }
 
         [TestCase(@"", ExpectedResult = @".")]
@@ -100,15 +100,15 @@ namespace Robust.UnitTesting.Shared.Utility
         [Test]
         public void ChangeSeparator_Test()
         {
-            var respath = new ResourcePath("a/b/c").ChangeSeparator("👏");
-            Assert.That(respath.ToString(), Is.EqualTo("a👏b👏c"));
+            var resPath = new ResourcePath("a/b/c").ChangeSeparator("👏");
+            Assert.That(resPath.ToString(), Is.EqualTo("a👏b👏c"));
         }
 
         [Test]
         public void ChangeSeparatorRooted_Test()
         {
-            var respath = new ResourcePath("/a/b/c").ChangeSeparator("👏");
-            Assert.That(respath.ToString(), Is.EqualTo("👏a👏b👏c"));
+            var resPath = new ResourcePath("/a/b/c").ChangeSeparator("👏");
+            Assert.That(resPath.ToString(), Is.EqualTo("👏a👏b👏c"));
         }
 
         [Test]

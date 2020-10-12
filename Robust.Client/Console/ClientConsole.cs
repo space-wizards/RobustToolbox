@@ -144,18 +144,18 @@ namespace Robust.Client.Console
 
             CommandParsing.ParseArguments(text, args);
 
-            var commandname = args[0];
+            var commandName = args[0];
 
             var forward = true;
-            if (_commands.ContainsKey(commandname))
+            if (_commands.ContainsKey(commandName))
             {
-                var command = _commands[commandname];
+                var command = _commands[commandName];
                 args.RemoveAt(0);
                 forward = command.Execute(this, args.ToArray());
             }
             else if (!_network.IsConnected)
             {
-                AddLine("Unknown command: " + commandname, Color.Red);
+                AddLine("Unknown command: " + commandName, Color.Red);
                 return;
             }
 

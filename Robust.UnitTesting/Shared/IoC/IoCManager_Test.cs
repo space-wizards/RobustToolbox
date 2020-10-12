@@ -85,7 +85,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
 
         [Test]
-        public void IoCTestDuplicateResgisterWithoutBuildingGraph()
+        public void IoCTestDuplicateRegisterWithoutBuildingGraph()
         {
             IoCManager.Register<IIoCFailInterface, TestFailImplementation>();
             IoCManager.BuildGraph();
@@ -95,7 +95,7 @@ namespace Robust.UnitTesting.Shared.IoC
         }
 
         [Test]
-        public void IoCTestDumplicateRegisterThrows()
+        public void IoCTestDuplicateRegisterThrows()
         {
             IoCManager.Register<IIoCFailInterface, TestFailImplementation>();
 

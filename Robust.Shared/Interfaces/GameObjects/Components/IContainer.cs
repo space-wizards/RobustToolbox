@@ -58,9 +58,9 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <summary>
         /// Checks if the entity can be inserted into this container.
         /// </summary>
-        /// <param name="toinsert">The entity to attempt to insert.</param>
+        /// <param name="toInsert">The entity to attempt to insert.</param>
         /// <returns>True if the entity can be inserted, false otherwise.</returns>
-        bool CanInsert(IEntity toinsert);
+        bool CanInsert(IEntity toInsert);
 
         /// <summary>
         /// Attempts to insert the entity into this container.
@@ -69,27 +69,27 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// If the insertion is successful, the inserted entity will end up parented to the
         /// container entity, and the inserted entity's local position will be set to the zero vector.
         /// </remarks>
-        /// <param name="toinsert">The entity to insert.</param>
+        /// <param name="toInsert">The entity to insert.</param>
         /// <returns>False if the entity could not be inserted.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(IEntity toinsert);
+        bool Insert(IEntity toInsert);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
         /// </summary>
-        /// <param name="toremove">The entity to check.</param>
+        /// <param name="toRemove">The entity to check.</param>
         /// <returns>True if the entity can be removed, false otherwise.</returns>
-        bool CanRemove(IEntity toremove);
+        bool CanRemove(IEntity toRemove);
 
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
-        /// <param name="toremove">The entity to attempt to remove.</param>
+        /// <param name="toRemove">The entity to attempt to remove.</param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(IEntity toremove);
+        bool Remove(IEntity toRemove);
 
         void ForceRemove(IEntity toRemove);
 

@@ -102,8 +102,8 @@ namespace Robust.Client.GameStates
 
                 // draw the payload size
                 var xOff = leftMargin + i;
-                var yoff = height - state.Payload / BytesPerPixel;
-                handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yoff), Color.LightGreen.WithAlpha(0.8f));
+                var yOff = height - state.Payload / BytesPerPixel;
+                handle.DrawLine(new Vector2(xOff, height), new Vector2(xOff, yOff), Color.LightGreen.WithAlpha(0.8f));
 
                 // second tick marks
                 if (state.Tick.Value % _gameTiming.TickRate == 0)
@@ -112,10 +112,10 @@ namespace Robust.Client.GameStates
                 }
 
                 // lag data
-                var lagYoff = height + LowerGraphOffset - state.lag / MsPerPixel;
-                lastLagY = lagYoff - 1;
+                var lagYOff = height + LowerGraphOffset - state.lag / MsPerPixel;
+                lastLagY = lagYOff - 1;
                 lastLagMs = state.lag;
-                handle.DrawLine(new Vector2(xOff, lagYoff - 2), new Vector2(xOff, lagYoff - 1), Color.Blue.WithAlpha(0.8f));
+                handle.DrawLine(new Vector2(xOff, lagYOff - 2), new Vector2(xOff, lagYOff - 1), Color.Blue.WithAlpha(0.8f));
 
                 // interp data
                 Color interpColor;
@@ -130,16 +130,16 @@ namespace Robust.Client.GameStates
             }
 
             // top payload warning line
-            var warnYoff = height - _warningPayloadSize / BytesPerPixel;
-            handle.DrawLine(new Vector2(leftMargin, warnYoff), new Vector2(leftMargin + width, warnYoff), Color.DarkGray.WithAlpha(0.8f));
+            var warnYOff = height - _warningPayloadSize / BytesPerPixel;
+            handle.DrawLine(new Vector2(leftMargin, warnYOff), new Vector2(leftMargin + width, warnYOff), Color.DarkGray.WithAlpha(0.8f));
 
             // mid payload line
-            var midYoff = height - _midrangePayloadSize / BytesPerPixel;
-            handle.DrawLine(new Vector2(leftMargin, midYoff), new Vector2(leftMargin + width, midYoff), Color.DarkGray.WithAlpha(0.8f));
+            var midYOff = height - _midrangePayloadSize / BytesPerPixel;
+            handle.DrawLine(new Vector2(leftMargin, midYOff), new Vector2(leftMargin + width, midYOff), Color.DarkGray.WithAlpha(0.8f));
 
             // payload text
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, warnYoff), "56K");
-            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, midYoff), "33.6K");
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, warnYOff), "56K");
+            DrawString((DrawingHandleScreen)handle, _font, new Vector2(leftMargin + width, midYOff), "33.6K");
 
             // interp text info
             if(lastLagY != -1)

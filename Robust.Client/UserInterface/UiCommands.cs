@@ -11,7 +11,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
-    class ChangeSceneCommpand : IConsoleCommand
+    class ChangeSceneCommand : IConsoleCommand
     {
         public string Command => "scene";
         public string Help => "scene <className>";

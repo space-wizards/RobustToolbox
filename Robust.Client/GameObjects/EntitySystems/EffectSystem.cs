@@ -92,7 +92,7 @@ namespace Robust.Client.GameObjects
                 effect.Update(frameTime);
 
                 //These effects have died
-                if (effect.Age > effect.Deathtime)
+                if (effect.Age > effect.DeathTime)
                 {
                     //Remove from the effects list and decrement the iterator
                     _Effects.Remove(effect);
@@ -212,48 +212,48 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Time after which the effect will "die"
             /// </summary>
-            public TimeSpan Deathtime = TimeSpan.FromSeconds(1);
+            public TimeSpan DeathTime = TimeSpan.FromSeconds(1);
 
             private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
 
-            public Effect(EffectSystemMessage effectcreation, IResourceCache resourceCache, IMapManager mapManager, IEntityManager entityManager)
+            public Effect(EffectSystemMessage effectCreation, IResourceCache resourceCache, IMapManager mapManager, IEntityManager entityManager)
             {
-                if (effectcreation.RsiState != null)
+                if (effectCreation.RsiState != null)
                 {
                     var rsi = resourceCache
-                        .GetResource<RSIResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite)
+                        .GetResource<RSIResource>(new ResourcePath("/Textures/") / effectCreation.EffectSprite)
                         .RSI;
-                    RsiState = rsi[effectcreation.RsiState];
+                    RsiState = rsi[effectCreation.RsiState];
                     EffectSprite = RsiState.Frame0;
                 }
                 else
                 {
                     EffectSprite = resourceCache
-                        .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectcreation.EffectSprite)
+                        .GetResource<TextureResource>(new ResourcePath("/Textures/") / effectCreation.EffectSprite)
                         .Texture;
                 }
 
-                AnimationLoops = effectcreation.AnimationLoops;
-                AttachedEntityUid = effectcreation.AttachedEntityUid;
-                AttachedOffset = effectcreation.AttachedOffset;
-                Coordinates = effectcreation.Coordinates;
-                EmitterCoordinates = effectcreation.EmitterCoordinates;
-                Velocity = effectcreation.Velocity;
-                Acceleration = effectcreation.Acceleration;
-                RadialVelocity = effectcreation.RadialVelocity;
-                RadialAcceleration = effectcreation.RadialAcceleration;
-                TangentialVelocity = effectcreation.TangentialVelocity;
-                TangentialAcceleration = effectcreation.TangentialAcceleration;
-                Age = effectcreation.Born;
-                Deathtime = effectcreation.DeathTime;
-                Rotation = effectcreation.Rotation;
-                RotationRate = effectcreation.RotationRate;
-                Size = effectcreation.Size;
-                SizeDelta = effectcreation.SizeDelta;
-                Color = effectcreation.Color;
-                ColorDelta = effectcreation.ColorDelta;
-                Shaded = effectcreation.Shaded;
+                AnimationLoops = effectCreation.AnimationLoops;
+                AttachedEntityUid = effectCreation.AttachedEntityUid;
+                AttachedOffset = effectCreation.AttachedOffset;
+                Coordinates = effectCreation.Coordinates;
+                EmitterCoordinates = effectCreation.EmitterCoordinates;
+                Velocity = effectCreation.Velocity;
+                Acceleration = effectCreation.Acceleration;
+                RadialVelocity = effectCreation.RadialVelocity;
+                RadialAcceleration = effectCreation.RadialAcceleration;
+                TangentialVelocity = effectCreation.TangentialVelocity;
+                TangentialAcceleration = effectCreation.TangentialAcceleration;
+                Age = effectCreation.Born;
+                DeathTime = effectCreation.DeathTime;
+                Rotation = effectCreation.Rotation;
+                RotationRate = effectCreation.RotationRate;
+                Size = effectCreation.Size;
+                SizeDelta = effectCreation.SizeDelta;
+                Color = effectCreation.Color;
+                ColorDelta = effectCreation.ColorDelta;
+                Shaded = effectCreation.Shaded;
                 _mapManager = mapManager;
                 _entityManager = entityManager;
             }
@@ -261,7 +261,7 @@ namespace Robust.Client.GameObjects
             public void Update(float frameTime)
             {
                 Age += TimeSpan.FromSeconds(frameTime);
-                if (Age >= Deathtime)
+                if (Age >= DeathTime)
                     return;
 
                 Velocity += Acceleration * frameTime;

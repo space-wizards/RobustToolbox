@@ -113,8 +113,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-2, -2)));
 
             // if we detach parent, the child should be left where it was, still relative to parents grid
-            var oldLpos = new Vector2(-2, -2);
-            var oldWpos = childTrans.WorldPosition;
+            var oldLPos = new Vector2(-2, -2);
+            var oldWPos = childTrans.WorldPosition;
 
             childTrans.AttachToGridOrMap();
 
@@ -122,8 +122,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLpos));
-                Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWpos));
+                Assert.That(childTrans.Coordinates.Position, Is.EqualTo(oldLPos));
+                Assert.That(childTrans.WorldPosition, Is.EqualTo(oldWPos));
             });
         }
 
@@ -142,12 +142,12 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             childTrans.WorldPosition = new Vector2(6, 6);
 
             // Act
-            var oldWpos = childTrans.WorldPosition;
+            var oldWPos = childTrans.WorldPosition;
             childTrans.AttachParent(parentTrans);
-            var newWpos = childTrans.WorldPosition;
+            var newWPos = childTrans.WorldPosition;
 
             // Assert
-            Assert.That(oldWpos == newWpos);
+            Assert.That(oldWPos == newWPos);
         }
 
         /// <summary>
@@ -266,7 +266,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             node3Trans.AttachParent(node2Trans);
 
             // Act
-            var oldWpos = node3Trans.WorldPosition;
+            var oldWPos = node3Trans.WorldPosition;
 
             for (var i = 0; i < 10000; i++)
             {
@@ -276,13 +276,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 node3Trans.WorldPosition += new Vector2(dx, dx);
             }
 
-            var newWpos = node3Trans.WorldPosition;
+            var newWPos = node3Trans.WorldPosition;
 
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y), newWpos.ToString);
-                Assert.That(MathHelper.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
+                Assert.That(MathHelper.CloseTo(oldWPos.X, newWPos.Y), newWPos.ToString);
+                Assert.That(MathHelper.CloseTo(oldWPos.Y, newWPos.Y), newWPos.ToString);
             });
         }
 
@@ -311,7 +311,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             node3Trans.AttachParent(node2Trans);
 
             // Act
-            var oldWpos = node3Trans.WorldPosition;
+            var oldWPos = node3Trans.WorldPosition;
 
             for (var i = 0; i < 100; i++)
             {
@@ -320,7 +320,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 node3Trans.LocalRotation += new Angle(MathHelper.Pi);
             }
 
-            var newWpos = node3Trans.WorldPosition;
+            var newWPos = node3Trans.WorldPosition;
 
             //NOTE: Yes, this does cause a non-zero error
 
@@ -328,8 +328,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y));
-                Assert.That(MathHelper.CloseTo(oldWpos.Y, newWpos.Y));
+                Assert.That(MathHelper.CloseTo(oldWPos.X, newWPos.Y));
+                Assert.That(MathHelper.CloseTo(oldWPos.Y, newWPos.Y));
             });
         }
 

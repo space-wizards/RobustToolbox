@@ -190,9 +190,9 @@ namespace Robust.Shared.Maths
                 (int) (color.B * byte.MaxValue));
         }
 
-        public static Color FromName(string colorname)
+        public static Color FromName(string colorName)
         {
-            return DefaultColors[colorname.ToLower()];
+            return DefaultColors[colorName.ToLower()];
         }
 
         public static bool TryFromName(string colorName, out Color color)

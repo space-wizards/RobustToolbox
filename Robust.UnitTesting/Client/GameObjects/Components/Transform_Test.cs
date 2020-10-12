@@ -80,13 +80,13 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             // World pos should be 6, 6 now.
 
             // Act
-            var oldWpos = childTrans.WorldPosition;
+            var oldWPos = childTrans.WorldPosition;
             compState = new TransformComponent.TransformComponentState(new Vector2(1, 1), new Angle(0), parent.Uid);
             childTrans.HandleComponentState(compState, null);
-            var newWpos = childTrans.WorldPosition;
+            var newWPos = childTrans.WorldPosition;
 
             // Assert
-            Assert.That(newWpos, Is.EqualTo(oldWpos));
+            Assert.That(newWPos, Is.EqualTo(oldWPos));
         }
 
         /// <summary>
@@ -96,10 +96,10 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         public void WorldRotationTest()
         {
             // Arrange
-            var initalPos = new EntityCoordinates(GridA.GridEntityId, (0, 0));
-            var node1 = EntityManager.SpawnEntity("dummy", initalPos);
-            var node2 = EntityManager.SpawnEntity("dummy", initalPos);
-            var node3 = EntityManager.SpawnEntity("dummy", initalPos);
+            var initialPos = new EntityCoordinates(GridA.GridEntityId, (0, 0));
+            var node1 = EntityManager.SpawnEntity("dummy", initialPos);
+            var node2 = EntityManager.SpawnEntity("dummy", initialPos);
+            var node3 = EntityManager.SpawnEntity("dummy", initialPos);
 
             node1.Name = "node1_dummy";
             node2.Name = "node2_dummy";

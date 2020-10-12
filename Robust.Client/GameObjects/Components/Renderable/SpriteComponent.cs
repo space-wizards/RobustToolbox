@@ -957,8 +957,8 @@ namespace Robust.Client.GameObjects
                 return null;
             }
 
-            var thelayer = Layers[layer];
-            return thelayer.State;
+            var theLayer = Layers[layer];
+            return theLayer.State;
         }
 
         public RSI? LayerGetActualRSI(int layer)
@@ -1164,9 +1164,9 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        var stateid = new RSI.StateId(layerDatum.State);
-                        layer.State = stateid;
-                        if (theRsi.TryGetState(stateid, out var state))
+                        var stateId = new RSI.StateId(layerDatum.State);
+                        layer.State = stateId;
+                        if (theRsi.TryGetState(stateId, out var state))
                         {
                             // Always use south because this layer will be cached in the serializer.
                             layer.AnimationTimeLeft = state.GetDelay(0);
@@ -1174,8 +1174,8 @@ namespace Robust.Client.GameObjects
                         else
                         {
                             Logger.ErrorS(LogCategory,
-                                $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
-                                stateid);
+                                $"State '{stateId}' not found in RSI: '{theRsi.Path}'.",
+                                stateId);
                         }
                     }
                 }
@@ -1314,20 +1314,20 @@ namespace Robust.Client.GameObjects
             if (curState == null)
                 return;
 
-            var thestate = (SpriteComponentState) curState;
+            var theState = (SpriteComponentState) curState;
 
-            Visible = thestate.Visible;
-            DrawDepth = thestate.DrawDepth;
-            Scale = thestate.Scale;
-            Rotation = thestate.Rotation;
-            Offset = thestate.Offset;
-            Color = thestate.Color;
-            Directional = thestate.Directional;
-            RenderOrder = thestate.RenderOrder;
+            Visible = theState.Visible;
+            DrawDepth = theState.DrawDepth;
+            Scale = theState.Scale;
+            Rotation = theState.Rotation;
+            Offset = theState.Offset;
+            Color = theState.Color;
+            Directional = theState.Directional;
+            RenderOrder = theState.RenderOrder;
 
-            if (thestate.BaseRsiPath != null && BaseRSI != null)
+            if (theState.BaseRsiPath != null && BaseRSI != null)
             {
-                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / thestate.BaseRsiPath, out var res))
+                if (resourceCache.TryGetResource<RSIResource>(TextureRoot / theState.BaseRsiPath, out var res))
                 {
                     if (BaseRSI != res.RSI)
                     {
@@ -1336,45 +1336,45 @@ namespace Robust.Client.GameObjects
                 }
                 else
                 {
-                    Logger.ErrorS(LogCategory, "Hey server, RSI '{0}' doesn't exist.", thestate.BaseRsiPath);
+                    Logger.ErrorS(LogCategory, "Hey server, RSI '{0}' doesn't exist.", theState.BaseRsiPath);
                 }
             }
 
             // Maybe optimize this to NOT full clear.
             Layers.Clear();
-            for (var i = 0; i < thestate.Layers.Count; i++)
+            for (var i = 0; i < theState.Layers.Count; i++)
             {
-                var netlayer = thestate.Layers[i];
+                var netLayer = theState.Layers[i];
                 var layer = new Layer(this)
                 {
                     // These are easy so do them here.
-                    Scale = netlayer.Scale,
-                    Rotation = netlayer.Rotation,
-                    Visible = netlayer.Visible,
-                    Color = netlayer.Color
+                    Scale = netLayer.Scale,
+                    Rotation = netLayer.Rotation,
+                    Visible = netLayer.Visible,
+                    Color = netLayer.Color
                 };
                 Layers.Add(layer);
 
                 // Using the public API to handle errors.
                 // Probably slow as crap.
                 // Who am I kidding, DEFINITELY.
-                if (netlayer.Shader != null)
+                if (netLayer.Shader != null)
                 {
-                    LayerSetShader(i, netlayer.Shader);
+                    LayerSetShader(i, netLayer.Shader);
                 }
 
-                if (netlayer.RsiPath != null)
+                if (netLayer.RsiPath != null)
                 {
-                    LayerSetRSI(i, netlayer.RsiPath);
+                    LayerSetRSI(i, netLayer.RsiPath);
                 }
 
-                if (netlayer.TexturePath != null)
+                if (netLayer.TexturePath != null)
                 {
-                    LayerSetTexture(i, netlayer.TexturePath);
+                    LayerSetTexture(i, netLayer.TexturePath);
                 }
-                else if (netlayer.State != null)
+                else if (netLayer.State != null)
                 {
-                    LayerSetState(i, netlayer.State);
+                    LayerSetState(i, netLayer.State);
                 }
             }
         }

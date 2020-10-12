@@ -52,12 +52,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // getting ESystemA type by its exact type should work fine,
             // even though EsystemC is a subtype - it should return an instance of ESystemA
-            var esysA = esm.GetEntitySystem<ESystemA>();
-            Assert.That(esysA, Is.TypeOf<ESystemA>());
-            Assert.That(esysA, Is.Not.TypeOf<ESystemC>());
+            var eSysA = esm.GetEntitySystem<ESystemA>();
+            Assert.That(eSysA, Is.TypeOf<ESystemA>());
+            Assert.That(eSysA, Is.Not.TypeOf<ESystemC>());
 
-            var esysC = esm.GetEntitySystem<ESystemC>();
-            Assert.That(esysC, Is.TypeOf<ESystemC>());
+            var eSysC = esm.GetEntitySystem<ESystemC>();
+            Assert.That(eSysC, Is.TypeOf<ESystemC>());
 
             // this should not work - it's abstract and there are multiple
             // concrete subtypes

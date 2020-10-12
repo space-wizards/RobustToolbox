@@ -22,15 +22,15 @@ namespace Robust.Client.Console.Commands
             }
 
             var name = args[0];
-            var levelname = args[1];
+            var levelName = args[1];
             LogLevel? level;
-            if (levelname == "null")
+            if (levelName == "null")
             {
                 level = null;
             }
             else
             {
-                if (!Enum.TryParse<LogLevel>(levelname, out var result))
+                if (!Enum.TryParse<LogLevel>(levelName, out var result))
                 {
                     console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
                     return false;
@@ -60,9 +60,9 @@ namespace Robust.Client.Console.Commands
             }
 
             var name = args[0];
-            var levelname = args[1];
+            var levelName = args[1];
             var message = args[2]; // yes this doesn't support spaces idgaf.
-            if (!Enum.TryParse<LogLevel>(levelname, out var result))
+            if (!Enum.TryParse<LogLevel>(levelName, out var result))
             {
                 console.AddLine("Failed to parse 2nd argument. Must be one of the values of the LogLevel enum.");
                 return false;

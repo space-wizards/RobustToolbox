@@ -572,7 +572,7 @@ namespace Robust.Client.Placement
         private void RequestPlacement(EntityCoordinates coordinates)
         {
             var gridId = coordinates.GetGridId(EntityManager);
-            if (MapManager.GetGrid(gridId).ParentMapId == MapId.Nullspace) return;
+            if (!gridId.IsValid() || MapManager.GetGrid(gridId).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode!.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;

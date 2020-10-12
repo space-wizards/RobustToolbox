@@ -324,6 +324,9 @@ namespace Robust.Client.Placement
 
         public void Rotate()
         {
+            if (Hijack != null && !Hijack.CanRotate)
+                return;
+
             switch (Direction)
             {
                 case Direction.North:

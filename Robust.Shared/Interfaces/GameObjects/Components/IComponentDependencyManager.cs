@@ -1,6 +1,4 @@
-﻿using Robust.Shared.GameObjects;
-
-namespace Robust.Shared.Interfaces.GameObjects.Components
+﻿namespace Robust.Shared.Interfaces.GameObjects.Components
 {
     public interface IComponentDependencyManager
     {

@@ -127,6 +127,9 @@ namespace Robust.Server.GameObjects
             }
         }
 
+        [ViewVariables]
+        public int LayerCount => Layers.Count;
+
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {
             var layer = PrototypeLayerData.New();

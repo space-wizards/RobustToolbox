@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.ComponentDependencies;
@@ -50,7 +51,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
   id: dummyFour
   components:
   - type: TestInterface
-  - type: TestFour";
+  - type: TestFour
+
+- type: entity
+  name: dummy
+  id: dummyFive
+  components:
+  - type: TestFive
+
+- type: entity
+  name: dummy
+  id: dummySix
+  components:
+  - type: TestSix
+";
 
         private class TestOneComponent : Component
         {
@@ -86,7 +100,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         private interface ITestInterfaceInterface : IComponent { }
-        
+
         private interface ITestInterfaceUnreferenced : IComponent { }
 
         private class TestInterfaceComponent : Component, ITestInterfaceInterface, ITestInterfaceUnreferenced
@@ -103,6 +117,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
             [ComponentDependency] public readonly ITestInterfaceUnreferenced? TestInterfaceUnreferenced = default!;
         }
 
+        private class TestFiveComponent : Component
+        {
+            public override string Name => "TestFive";
+
+            [ComponentDependency] public bool? thing;
+        }
+
+        private class TestSixComponent : Component
+        {
+            public override string Name => "TestSix";
+
+            [ComponentDependency] public TestFiveComponent thing = null!;
+        }
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -113,6 +141,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestInterfaceComponent>();
             componentFactory.RegisterReference<TestInterfaceComponent, ITestInterfaceInterface>();
             componentFactory.Register<TestFourComponent>();
+            componentFactory.Register<TestFiveComponent>();
+            componentFactory.Register<TestSixComponent>();
 
             var componentManager = IoCManager.Resolve<IComponentManager>();
             componentManager.Initialize();
@@ -169,7 +199,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // This dependency should be unresolved.
             Assert.That(dummyThreeComp.TestOne, Is.Null);
-            
+
             // Dummy with TestInterface and TestFour.
             var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
 
@@ -217,7 +247,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // TestFour should not be resolved.
             Assert.That(dummyOneComp.TestFour, Is.Null);
-            
+
             dummyThree.AddComponent<TestFourComponent>();
 
             // TestFour should now be resolved
@@ -265,17 +295,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // It should have TestFour and TestInterface.
             Assert.That(dummyComp.TestFour, Is.Not.Null);
             Assert.That(dummyComp.TestFour!.TestInterface, Is.Not.Null);
-            
+
             // Remove the interface.
             dummyOne.RemoveComponent<TestInterfaceComponent>();
-            
+
             // TestInterface should now be null, but TestFour should not be.
             Assert.That(dummyComp.TestFour, Is.Not.Null);
             Assert.That(dummyComp.TestFour.TestInterface, Is.Null);
-            
+
             // Remove TestFour.
             dummyOne.RemoveComponent<TestFourComponent>();
-            
+
             // TestFour should now be null.
             Assert.That(dummyComp.TestFour, Is.Null);
         }
@@ -342,17 +372,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             Assert.That(testTwo.TestTwo, Is.Not.Null);
             Assert.That(testTwo.TestTwo, Is.EqualTo(testTwo));
-            
+
             // Add test four.
             dummy.AddComponent<TestFourComponent>();
-            
+
             // TestFour should not be null, but TestInterface should be.
             Assert.That(testOne.TestFour, Is.Not.Null);
             Assert.That(testOne.TestFour!.TestInterface, Is.Null);
-            
+
             // Remove test four
             dummy.RemoveComponent<TestFourComponent>();
-            
+
             // Now the dependency is null.
             Assert.That(testOne.TestFour, Is.Null);
         }
@@ -368,10 +398,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(dummyFour, Is.Not.Null);
 
             var dummyComp = dummyFour.GetComponent<TestFourComponent>();
-            
+
             // TestInterface must be resolved.
             Assert.That(dummyComp.TestInterface, Is.Not.Null);
-            
+
             // TestInterfaceUnreferenced should not be.
             Assert.That(dummyComp.TestInterfaceUnreferenced, Is.Null);
         }
@@ -387,15 +417,51 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(dummyFour, Is.Not.Null);
 
             var dummyComp = dummyFour.GetComponent<TestFourComponent>();
-            
+
             // TestInterface must be resolved.
             Assert.That(dummyComp.TestInterface, Is.Not.Null);
-            
+
             // Remove TestInterface through its referenced interface.
             dummyFour.RemoveComponent<ITestInterfaceInterface>();
-            
+
             // TestInterface must be null.
             Assert.That(dummyComp.TestInterface, Is.Null);
+        }
+
+        [Test]
+        public void ValueTypeFieldTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            // An entity with TestFive.
+            try
+            {
+                var dummyFour = entityManager.CreateEntityUninitialized("dummyFive");
+            }
+            catch (ComponentDependencyValueTypeException e)
+            {
+                Assert.NotNull(e);
+                return;
+            }
+            Assert.Fail("No exception thrown");
+        }
+
+        [Test]
+        public void NotNullableFieldTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            // An entity with TestSix.
+            try
+            {
+                var dummyFour = entityManager.CreateEntityUninitialized("dummySix");
+            }
+            catch (ComponentDependencyNotNullableException e)
+            {
+                Assert.NotNull(e);
+                return;
+            }
+            Assert.Fail("No exception thrown");
         }
     }
 }

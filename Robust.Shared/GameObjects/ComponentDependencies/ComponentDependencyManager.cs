@@ -5,6 +5,8 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using JetBrains.Annotations;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Utility;
@@ -117,7 +119,6 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
         private (Type Query, int FieldMemoryOffset)[] CreateAndCachePointerOffsets(object obj)
         {
-            var fieldOffsetField = typeof(FieldOffsetDummy).GetField("A")!;
             var objType = obj.GetType();
 
             var attributeFields = objType.GetAllFields()
@@ -127,45 +128,56 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
             var queries = new (Type, int)[attributeFieldsLength];
 
-            int i = 0;
-            foreach (var field in attributeFields)
+            for (var i = 0; i < attributeFields.Length; i++)
             {
-                if (!NullableHelper.IsMarkedAsNullable(field))
+                var field = attributeFields[i];
+                if (field.FieldType.IsValueType)
                 {
-                    throw new Exception($"Field {field} of Type {objType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!");
+                    throw new ComponentDependencyValueTypeException(objType, field);
                 }
 
-                var dynamicMethod = new DynamicMethod(
-                    $"_fieldOffsetCalc<>{objType}<>{field}",
-                    typeof(int),
-                    new[] {typeof(object)},
-                    objType,
-                    true);
-                dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
-                var generator = dynamicMethod.GetILGenerator();
+                if (!NullableHelper.IsMarkedAsNullable(field))
+                {
+                    throw new ComponentDependencyNotNullableException(objType, field); //todo test
+                }
 
-                //getting the field pointer
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldflda, field);
+                var offset = GetFieldOffset(objType, field);
 
-                //getting our "anchor"-pointer
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldflda, fieldOffsetField);
-
-                //calculating offset
-                generator.Emit(OpCodes.Sub);
-
-                //return offset
-                generator.Emit(OpCodes.Ret);
-
-                var @delegate = (Func<object, int>)dynamicMethod.CreateDelegate(typeof(Func<object, int>));
-                var offset = @delegate(obj);
-
-                queries[i++] = (field.FieldType, offset);
+                queries[i] = (field.FieldType, offset);
             }
 
             _componentDependencyQueries.Add(objType, queries);
             return queries;
+        }
+
+        private int GetFieldOffset(Type type, FieldInfo field)
+        {
+            var fieldOffsetField = typeof(FieldOffsetDummy).GetField("A")!;
+            var dynamicMethod = new DynamicMethod(
+                $"_fieldOffsetCalc<>{type}<>{field}",
+                typeof(int),
+                new[] {typeof(object)},
+                type,
+                true);
+            dynamicMethod.DefineParameter(1, ParameterAttributes.In, "obj");
+            var generator = dynamicMethod.GetILGenerator();
+
+            //getting the field pointer
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldflda, field);
+
+            //getting our "anchor"-pointer
+            generator.Emit(OpCodes.Ldarg_0);
+            generator.Emit(OpCodes.Ldflda, fieldOffsetField);
+
+            //calculating offset
+            generator.Emit(OpCodes.Sub);
+
+            //return offset
+            generator.Emit(OpCodes.Ret);
+
+            var @delegate = (Func<object, int>)dynamicMethod.CreateDelegate(typeof(Func<object, int>));
+            return @delegate(type);
         }
 
         private sealed class FieldOffsetDummy
@@ -173,6 +185,30 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 #pragma warning disable 649
             public byte A;
 #pragma warning restore 649
+        }
+    }
+
+    public class ComponentDependencyValueTypeException : Exception
+    {
+        public Type ComponentType;
+        public FieldInfo FieldInfo;
+
+        public ComponentDependencyValueTypeException(Type componentType, FieldInfo fieldInfo) : base($"Field {fieldInfo} of Type {componentType} is marked as ComponentDependency but is a value Type")
+        {
+            ComponentType = componentType;
+            FieldInfo = fieldInfo;
+        }
+    }
+
+    public class ComponentDependencyNotNullableException : Exception
+    {
+        public Type ComponentType;
+        public FieldInfo Field;
+
+        public ComponentDependencyNotNullableException(Type componentType, FieldInfo field) : base($"Field {field} of Type {componentType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!")
+        {
+            ComponentType = componentType;
+            Field = field;
         }
     }
 }

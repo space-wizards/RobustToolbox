@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Interfaces.GameObjects.Components
+﻿using Robust.Shared.GameObjects;
+
+namespace Robust.Shared.Interfaces.GameObjects.Components
 {
     public interface IComponentDependencyManager
     {

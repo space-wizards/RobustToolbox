@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -126,10 +127,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
             var queries = new (Type, int)[attributeFieldsLength];
 
-            for (var i = 0; i < attributeFields.Length; i++)
+            int i = 0;
+            foreach (var field in attributeFields)
             {
-                var field = attributeFields[i];
-
                 if (!NullableHelper.IsMarkedAsNullable(field))
                 {
                     throw new Exception($"Field {field} of Type {objType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!");

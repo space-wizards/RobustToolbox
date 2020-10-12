@@ -84,7 +84,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <param name="controller">The controller if found or null otherwise.</param>
         /// <typeparam name="T">The type of the controller to find.</typeparam>
         /// <returns>True if the controller was found, false otherwise.</returns>
-        bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+        bool TryGetController<T>([NotNullWhen(true)] out T? controller) where T : VirtualController;
 
         /// <summary>
         ///     Checks if this component has a controller of type <see cref="T"/>.
@@ -136,7 +136,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </param>
         /// <typeparam name="T">The type of the controller to remove</typeparam>
         /// <returns>True if the component was removed, false otherwise.</returns>
-        bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController;
+        bool TryRemoveController<T>([NotNullWhen(true)] out T? controller) where T : VirtualController;
 
         /// <summary>
         ///     Removes all controllers from this component.
@@ -395,7 +395,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public bool TryGetController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        public bool TryGetController<T>([NotNullWhen(true)] out T? controller) where T : VirtualController
         {
             controller = null!;
 
@@ -451,7 +451,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <inheritdoc />
-        public bool TryRemoveController<T>([NotNullWhen(true)] out T controller) where T : VirtualController
+        public bool TryRemoveController<T>([NotNullWhen(true)] out T? controller) where T : VirtualController
         {
             controller = null!;
             var removed = _controllers.Remove(typeof(T), out var virtualController);

@@ -231,7 +231,7 @@ namespace Robust.Client.Placement
             var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
             if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
             {
-                grid = pManager.MapManager.GetDefaultGrid(mapCoords.MapId);
+                return EntityCoordinates.FromMap(pManager.EntityManager, pManager.MapManager, mapCoords);
             }
 
             return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);

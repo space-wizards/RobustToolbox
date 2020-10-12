@@ -30,10 +30,6 @@ namespace Robust.Shared.Map
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
 
         /// <inheritdoc />
-        [Obsolete("The concept of 'default grids' is being removed.")]
-        public bool IsDefaultGrid => _mapManager.GetDefaultGridId(ParentMapId) == Index;
-
-        /// <inheritdoc />
         [ViewVariables]
         public MapId ParentMapId { get; set; }
 
@@ -128,9 +124,6 @@ namespace Robust.Shared.Map
         {
             get
             {
-                if(IsDefaultGrid) // Default grids cannot be moved.
-                    return Vector2.Zero;
-
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
                     return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
@@ -138,9 +131,6 @@ namespace Robust.Shared.Map
             }
             set
             {
-                if (IsDefaultGrid) // Default grids cannot be moved.
-                    return;
-
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }

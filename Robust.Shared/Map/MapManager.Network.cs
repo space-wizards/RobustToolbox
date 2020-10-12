@@ -60,17 +60,16 @@ namespace Robust.Shared.Map
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
+                .Select(kv => kv.Key).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
-                    grid.IsDefaultGrid));
+                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
 
             // no point sending empty collections
-            if (gridDatums.Count        == 0) gridDatums        = default;
-            if (gridDeletionsData.Count == 0) gridDeletionsData = default;
-            if (mapDeletionsData.Count  == 0) mapDeletionsData  = default;
-            if (mapCreations.Count      == 0) mapCreations      = default;
-            if (gridCreations.Count     == 0) gridCreations     = default;
+            if (gridDatums.Count        == 0)  gridDatums        = default;
+            if (gridDeletionsData.Count == 0)  gridDeletionsData = default;
+            if (mapDeletionsData.Count  == 0)  mapDeletionsData  = default;
+            if (mapCreations.Length     == 0)  mapCreations      = default;
+            if (gridCreations.Count     == 0)  gridCreations     = default;
 
             // no point even creating an empty map state if no data
             if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
@@ -103,17 +102,14 @@ namespace Robust.Shared.Map
             {
                 DebugTools.AssertNotNull(createdGrids);
 
-                foreach (var (mapId, gridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     if (_maps.Contains(mapId))
                     {
                         continue;
                     }
 
-                    var gridCreation = createdGrids![gridId];
-                    DebugTools.Assert(gridCreation.IsTheDefault);
-
-                    CreateMap(mapId, gridId);
+                    CreateMap(mapId);
                 }
             }
 
@@ -128,7 +124,7 @@ namespace Robust.Shared.Map
 
                 foreach (var (gridId, creationDatum) in data.CreatedGrids)
                 {
-                    if (creationDatum.IsTheDefault || _grids.ContainsKey(gridId))
+                    if (_grids.ContainsKey(gridId))
                     {
                         continue;
                     }
@@ -200,7 +196,7 @@ namespace Robust.Shared.Map
             // and delete the client entities
             if (data.CreatedMaps != null)
             {
-                foreach (var (mapId, defaultGridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     // CreateMap should have set this
                     DebugTools.Assert(_mapEntities.ContainsKey(mapId));

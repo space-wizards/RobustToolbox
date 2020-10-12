@@ -4,9 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.ComponentDependencies;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
@@ -30,6 +28,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
   - type: TestOne
   - type: TestTwo
   - type: TestThree
+  - type: TestInterface
+  - type: TestFour
 
 - type: entity
   name: dummy
@@ -43,7 +43,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
   id: dummyThree
   components:
   - type: Transform
-  - type: TestThree";
+  - type: TestThree
+
+- type: entity
+  name: dummy
+  id: dummyFour
+  components:
+  - type: TestInterface
+  - type: TestFour";
 
         private class TestOneComponent : Component
         {
@@ -54,6 +61,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             [ComponentDependency]
             public readonly TestThreeComponent? TestThree = default!;
+
+            [ComponentDependency] public readonly TestFourComponent? TestFour = default!;
         }
 
         private class TestTwoComponent : Component
@@ -76,6 +85,24 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public readonly TestOneComponent? TestOne = default!;
         }
 
+        private interface ITestInterfaceInterface : IComponent { }
+        
+        private interface ITestInterfaceUnreferenced : IComponent { }
+
+        private class TestInterfaceComponent : Component, ITestInterfaceInterface, ITestInterfaceUnreferenced
+        {
+            public override string Name => "TestInterface";
+        }
+
+        private class TestFourComponent : Component
+        {
+            public override string Name => "TestFour";
+
+            [ComponentDependency] public readonly ITestInterfaceInterface? TestInterface = default!;
+
+            [ComponentDependency] public readonly ITestInterfaceUnreferenced? TestInterfaceUnreferenced = default!;
+        }
+
         [OneTimeSetUp]
         public void Setup()
         {
@@ -83,6 +110,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestOneComponent>();
             componentFactory.Register<TestTwoComponent>();
             componentFactory.Register<TestThreeComponent>();
+            componentFactory.Register<TestInterfaceComponent>();
+            componentFactory.RegisterReference<TestInterfaceComponent, ITestInterfaceInterface>();
+            componentFactory.Register<TestFourComponent>();
 
             var componentManager = IoCManager.Resolve<IComponentManager>();
             componentManager.Initialize();
@@ -139,6 +169,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // This dependency should be unresolved.
             Assert.That(dummyThreeComp.TestOne, Is.Null);
+            
+            // Dummy with TestInterface and TestFour.
+            var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
+
+            Assert.That(dummyFour, Is.Not.Null);
+
+            var dummyFourComp = dummyFour.GetComponent<TestFourComponent>();
+
+            // This dependency should be resolved.
+            Assert.That(dummyFourComp.TestInterface, Is.Not.Null);
         }
 
         [Test]
@@ -174,6 +214,21 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // And now it is resolved!
             Assert.That(dummyOneComp.TestTwo, Is.Not.Null);
+
+            // TestFour should not be resolved.
+            Assert.That(dummyOneComp.TestFour, Is.Null);
+            
+            dummyThree.AddComponent<TestFourComponent>();
+
+            // TestFour should now be resolved
+            Assert.That(dummyOneComp.TestFour, Is.Not.Null);
+
+            var dummyFourComp = dummyOneComp.TestFour;
+
+            dummyThree.AddComponent<TestInterfaceComponent>();
+
+            // This dependency should now be resolved.
+            Assert.That(dummyFourComp!.TestInterface, Is.Not.Null);
         }
 
         [Test]
@@ -206,6 +261,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // It should now be null!
             Assert.That(dummyComp.TestThree, Is.Null);
+
+            // It should have TestFour and TestInterface.
+            Assert.That(dummyComp.TestFour, Is.Not.Null);
+            Assert.That(dummyComp.TestFour!.TestInterface, Is.Not.Null);
+            
+            // Remove the interface.
+            dummyOne.RemoveComponent<TestInterfaceComponent>();
+            
+            // TestInterface should now be null, but TestFour should not be.
+            Assert.That(dummyComp.TestFour, Is.Not.Null);
+            Assert.That(dummyComp.TestFour.TestInterface, Is.Null);
+            
+            // Remove TestFour.
+            dummyOne.RemoveComponent<TestFourComponent>();
+            
+            // TestFour should now be null.
+            Assert.That(dummyComp.TestFour, Is.Null);
         }
 
         [Test]
@@ -270,6 +342,60 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             Assert.That(testTwo.TestTwo, Is.Not.Null);
             Assert.That(testTwo.TestTwo, Is.EqualTo(testTwo));
+            
+            // Add test four.
+            dummy.AddComponent<TestFourComponent>();
+            
+            // TestFour should not be null, but TestInterface should be.
+            Assert.That(testOne.TestFour, Is.Not.Null);
+            Assert.That(testOne.TestFour!.TestInterface, Is.Null);
+            
+            // Remove test four
+            dummy.RemoveComponent<TestFourComponent>();
+            
+            // Now the dependency is null.
+            Assert.That(testOne.TestFour, Is.Null);
+        }
+
+        [Test]
+        public void NoUnreferencedInterfaceTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            // An entity with TestFour.
+            var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
+
+            Assert.That(dummyFour, Is.Not.Null);
+
+            var dummyComp = dummyFour.GetComponent<TestFourComponent>();
+            
+            // TestInterface must be resolved.
+            Assert.That(dummyComp.TestInterface, Is.Not.Null);
+            
+            // TestInterfaceUnreferenced should not be.
+            Assert.That(dummyComp.TestInterfaceUnreferenced, Is.Null);
+        }
+
+        [Test]
+        public void RemoveInterfaceDependencyTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+
+            // An entity with TestFour.
+            var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
+
+            Assert.That(dummyFour, Is.Not.Null);
+
+            var dummyComp = dummyFour.GetComponent<TestFourComponent>();
+            
+            // TestInterface must be resolved.
+            Assert.That(dummyComp.TestInterface, Is.Not.Null);
+            
+            // Remove TestInterface through its referenced interface.
+            dummyFour.RemoveComponent<ITestInterfaceInterface>();
+            
+            // TestInterface must be null.
+            Assert.That(dummyComp.TestInterface, Is.Null);
         }
     }
 }

@@ -79,8 +79,8 @@ namespace Robust.Client.UserInterface
         public Vector2 RelativePixelPosition { get; internal set; }
 
         public GUIBoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation,
-            bool canFocus, Vector2 relativePosition, Vector2 relativePixelPosition)
-            : base(function, state, pointerLocation, canFocus)
+            bool canFocus, bool printable, Vector2 relativePosition, Vector2 relativePixelPosition)
+            : base(function, state, pointerLocation, canFocus, false)
         {
             RelativePosition = relativePosition;
             RelativePixelPosition = relativePixelPosition;

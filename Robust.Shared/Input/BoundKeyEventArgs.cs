@@ -30,6 +30,7 @@ namespace Robust.Shared.Input
 
         /// <summary>
         ///     Whether the Bound key is a printable character.
+        ///     Used for checking whether hotkey should be blocked so that hotkeys don't get triggered when using UserInterfaceManager.TextEntered.
         /// </summary>
         public bool Printable { get; internal set; }
 

@@ -287,7 +287,7 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.Printable, args.PointerLocation.Position / UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindDown(ev));
@@ -307,7 +307,7 @@ namespace Robust.Client.UserInterface
             }
 
             var guiArgs = new GUIBoundKeyEventArgs(args.Function, args.State, args.PointerLocation, args.CanFocus,
-                args.PointerLocation.Position / UIScale - control.GlobalPosition,
+                args.Printable, args.PointerLocation.Position / UIScale - control.GlobalPosition,
                 args.PointerLocation.Position - control.GlobalPixelPosition);
 
             _doGuiInput(control, guiArgs, (c, ev) => c.KeyBindUp(ev));

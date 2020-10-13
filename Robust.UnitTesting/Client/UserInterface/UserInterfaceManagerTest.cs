@@ -244,7 +244,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             var pos = new Robust.Shared.Map.ScreenCoordinates(30, 30);
 
             var mouseEvent = new GUIBoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
-                pos, true, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
+                pos, true, false, pos.Position / 1 - control.GlobalPosition, pos.Position - control.GlobalPixelPosition);
 
             _userInterfaceManager.KeyBindDown(mouseEvent);
 

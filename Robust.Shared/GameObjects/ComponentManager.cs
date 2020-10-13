@@ -192,7 +192,7 @@ namespace Robust.Shared.GameObjects
                 {
                     ITransformComponent _ => 0,
                     IMetaDataComponent _ => 1,
-                    ICollidableComponent _ => 2,
+                    IPhysicsComponent _ => 2,
                     _ => int.MaxValue
                 };
 
@@ -464,19 +464,19 @@ namespace Robust.Shared.GameObjects
         #region Join Functions
 
         /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>()
+        public IEnumerable<T> EntityQuery<T>(bool paused = false)
         {
             var comps = _entTraitDict[typeof(T)];
             foreach (var comp in comps.Values)
             {
-                if (comp.Deleted) continue;
+                if (comp.Deleted || paused && comp.Paused) continue;
 
                 yield return (T) (object) comp;
             }
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>()
+        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool paused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
@@ -489,7 +489,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
                     continue;
 
                 yield return ((TComp1) (object) kvComp.Value, (TComp2) (object) t2Comp);
@@ -497,7 +497,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>()
+        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool paused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -510,7 +510,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
                     continue;
 
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
@@ -523,7 +523,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>()
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool paused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -538,7 +538,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
                     continue;
 
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
@@ -557,12 +557,12 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type)
+        public IEnumerable<IComponent> GetAllComponents(Type type, bool paused = false)
         {
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)
             {
-                if (comp.Deleted) continue;
+                if (comp.Deleted || paused && comp.Paused) continue;
 
                 yield return comp;
             }

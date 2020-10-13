@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -69,6 +70,24 @@ namespace Robust.Shared.Network
             Span<byte> span = stackalloc byte[16];
             guid.TryWriteBytes(span);
             message.Write(span);
+        }
+
+        /// <summary>
+        ///     Reads byte-aligned data as a memory stream.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the current read position of the message is not byte-aligned.
+        /// </exception>
+        public static MemoryStream ReadAlignedMemory(this NetIncomingMessage message, int length)
+        {
+            if ((message.Position & 7) != 0)
+            {
+                throw new ArgumentException("Read position in message must be byte-aligned", nameof(message));
+            }
+
+            var stream = new MemoryStream(message.Data, message.PositionInBytes, length, false);
+            message.Position += length * 8;
+            return stream;
         }
     }
 }

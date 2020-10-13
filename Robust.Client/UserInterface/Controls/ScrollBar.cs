@@ -72,7 +72,7 @@ namespace Robust.Client.UserInterface.Controls
             else
             {
                 _updating = true;
-                Value = MathHelper.Lerp(Value, ValueTarget, args.DeltaSeconds * 15);
+                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
                 _updating = false;
             }
         }

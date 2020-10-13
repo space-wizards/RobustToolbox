@@ -85,7 +85,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="tileCoordinates">The location of the tile in coordinates.</param>
         /// <returns>The tile at the tile coordinates.</returns>
-        TileRef GetTileRef(MapIndices tileCoordinates);
+        TileRef GetTileRef(Vector2i tileCoordinates);
 
         /// <summary>
         ///     Returns all tiles in the grid, in row-major order [xTileIndex, yTileIndex].
@@ -105,7 +105,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="gridIndices"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
-        void SetTile(MapIndices gridIndices, Tile tile);
+        void SetTile(Vector2i gridIndices, Tile tile);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
@@ -123,15 +123,15 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         IEnumerable<SnapGridComponent> GetSnapGridCell(EntityCoordinates coords, SnapGridOffset offset);
-        IEnumerable<SnapGridComponent> GetSnapGridCell(MapIndices pos, SnapGridOffset offset);
+        IEnumerable<SnapGridComponent> GetSnapGridCell(Vector2i pos, SnapGridOffset offset);
 
-        MapIndices SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset);
-        MapIndices SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
-        MapIndices SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
+        Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset);
+        Vector2i SnapGridCellFor(MapCoordinates worldPos, SnapGridOffset offset);
+        Vector2i SnapGridCellFor(Vector2 localPos, SnapGridOffset offset);
 
-        void AddToSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
+        void AddToSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
         void AddToSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
-        void RemoveFromSnapGridCell(MapIndices pos, SnapGridOffset offset, SnapGridComponent snap);
+        void RemoveFromSnapGridCell(Vector2i pos, SnapGridOffset offset, SnapGridComponent snap);
         void RemoveFromSnapGridCell(EntityCoordinates coords, SnapGridOffset offset, SnapGridComponent snap);
 
         #endregion SnapGridAccess
@@ -143,7 +143,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="coords"></param>
         /// <returns></returns>
-        MapIndices CoordinatesToTile(EntityCoordinates coords);
+        Vector2i CoordinatesToTile(EntityCoordinates coords);
 
         /// <summary>
         ///     Transforms world-space coordinates from the global origin to the grid local origin.
@@ -169,7 +169,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="posWorld">Position in the world.</param>
         /// <returns>Indices of a tile on the grid.</returns>
-        MapIndices WorldToTile(Vector2 posWorld);
+        Vector2i WorldToTile(Vector2 posWorld);
 
         /// <summary>
         ///     Transforms grid-space tile indices to local coordinates.
@@ -177,19 +177,19 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="gridTile"></param>
         /// <returns></returns>
-        EntityCoordinates GridTileToLocal(MapIndices gridTile);
+        EntityCoordinates GridTileToLocal(Vector2i gridTile);
 
         /// <summary>
         ///     Transforms grid-space tile indices to map coordinate position.
         ///     The resulting coordinates are centered on the tile.
         /// </summary>
-        Vector2 GridTileToWorldPos(MapIndices gridTile);
+        Vector2 GridTileToWorldPos(Vector2i gridTile);
 
         /// <summary>
         ///     Transforms grid-space tile indices to map coordinates.
         ///     The resulting coordinates are centered on the tile.
         /// </summary>
-        MapCoordinates GridTileToWorld(MapIndices gridTile);
+        MapCoordinates GridTileToWorld(Vector2i gridTile);
 
         /// <summary>
         ///     Transforms grid indices into a tile reference, returns false if no tile is found.
@@ -197,12 +197,12 @@ namespace Robust.Shared.Map
         /// <param name="indices">The Grid Tile indices.</param>
         /// <param name="tile"></param>
         /// <returns></returns>
-        bool TryGetTileRef(MapIndices indices, out TileRef tile);
+        bool TryGetTileRef(Vector2i indices, out TileRef tile);
 
         /// <summary>
-        ///     Transforms grid indices into a tile reference, returns false if no tile is found.
+        ///     Transforms coordinates into a tile reference, returns false if no tile is found.
         /// </summary>
-        /// <param name="indices">The Grid Tile indices.</param>
+        /// <param name="coords">The coordinates.</param>
         /// <param name="tile"></param>
         /// <returns></returns>
         bool TryGetTileRef(EntityCoordinates coords, out TileRef tile);
@@ -210,18 +210,18 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Transforms grid tile indices to chunk indices.
         /// </summary>
-        MapIndices GridTileToChunkIndices(MapIndices gridTile);
+        Vector2i GridTileToChunkIndices(Vector2i gridTile);
 
         /// <summary>
         /// Transforms local grid coordinates to chunk indices.
         /// </summary>
-        MapIndices LocalToChunkIndices(EntityCoordinates gridPos);
+        Vector2i LocalToChunkIndices(EntityCoordinates gridPos);
 
         #endregion Transforms
 
         #region Collision
 
-        bool CollidesWithGrid(MapIndices indices);
+        bool CollidesWithGrid(Vector2i indices);
 
         #endregion
     }

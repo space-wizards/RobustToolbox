@@ -1,4 +1,5 @@
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 {
@@ -7,11 +8,11 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         internal const byte ChunkSize = 16;
 
         internal GridId GridId { get; }
-        internal MapIndices Indices { get; }
+        internal Vector2i Indices { get; }
         
         private GridTileLookupNode[,] _nodes = new GridTileLookupNode[ChunkSize,ChunkSize];
         
-        internal GridTileLookupChunk(GridId gridId, MapIndices indices)
+        internal GridTileLookupChunk(GridId gridId, Vector2i indices)
         {
             GridId = gridId;
             Indices = indices;
@@ -20,12 +21,12 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 for (var y = 0; y < ChunkSize; y++)
                 {
-                    _nodes[x, y] = new GridTileLookupNode(this, new MapIndices(Indices.X + x, Indices.Y + y));
+                    _nodes[x, y] = new GridTileLookupNode(this, new Vector2i(Indices.X + x, Indices.Y + y));
                 }
             }
         }
 
-        internal GridTileLookupNode GetNode(MapIndices nodeIndices)
+        internal GridTileLookupNode GetNode(Vector2i nodeIndices)
         {
             return _nodes[nodeIndices.X - Indices.X, nodeIndices.Y - Indices.Y];
         }

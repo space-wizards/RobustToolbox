@@ -110,7 +110,7 @@ namespace Robust.UnitTesting
                                     new IPEndPoint(IPAddress.IPv6Loopback, 0),
                                     sessionId,
                                     userName,
-                                    LoginType.Guest);
+                                    LoginType.GuestAssigned);
                                 if (args.IsDenied)
                                 {
                                     writer.TryWrite(new DeniedConnectMessage());
@@ -364,7 +364,7 @@ namespace Robust.UnitTesting
                 public IPEndPoint RemoteEndPoint { get; } = new IPEndPoint(IPAddress.Loopback, 1212);
                 public NetUserId UserId { get; }
                 public string UserName { get; }
-                public LoginType AuthType => LoginType.Guest;
+                public LoginType AuthType => LoginType.GuestAssigned;
                 public short Ping => default;
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,

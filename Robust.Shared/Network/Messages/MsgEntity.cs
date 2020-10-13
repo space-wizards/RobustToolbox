@@ -43,7 +43,7 @@ namespace Robust.Shared.Network.Messages
                 {
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
-                    using var stream = buffer.ReadAsStream(length);
+                    using var stream = buffer.ReadAlignedMemory(length);
                     SystemMessage = serializer.Deserialize<EntitySystemMessage>(stream);
                 }
                     break;
@@ -55,7 +55,7 @@ namespace Robust.Shared.Network.Messages
 
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
                     int length = buffer.ReadVariableInt32();
-                    using var stream = buffer.ReadAsStream(length);
+                    using var stream = buffer.ReadAlignedMemory(length);
                     ComponentMessage = serializer.Deserialize<ComponentMessage>(stream);
                 }
                     break;

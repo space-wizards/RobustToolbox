@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameStates
@@ -55,14 +56,14 @@ namespace Robust.Shared.GameStates
         [Serializable, NetSerializable]
         public struct ChunkDatum
         {
-            public readonly MapIndices Index;
+            public readonly Vector2i Index;
 
             // Definitely wasteful to send EVERY tile.
             // Optimize away future coder.
             // Also it's stored row-major.
             public readonly Tile[] TileData;
 
-            public ChunkDatum(MapIndices index, Tile[] tileData)
+            public ChunkDatum(Vector2i index, Tile[] tileData)
             {
                 Index = index;
                 TileData = tileData;

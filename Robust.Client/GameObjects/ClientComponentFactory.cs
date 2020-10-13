@@ -32,9 +32,9 @@ namespace Robust.Client.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, IPhysBody>();
-            RegisterReference<CollidableComponent, ICollidableComponent>();
+            Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
 

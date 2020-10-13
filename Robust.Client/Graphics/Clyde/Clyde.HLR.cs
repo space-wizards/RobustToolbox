@@ -267,7 +267,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var rt = _currentViewport.RenderTarget;
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(Color.Transparent);
+                ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);
 

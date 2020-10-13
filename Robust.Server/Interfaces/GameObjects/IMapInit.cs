@@ -18,7 +18,7 @@ namespace Robust.Server.Interfaces.GameObjects
     {
         public static void RunMapInit(this IEntity entity)
         {
-            foreach (var init in entity.GetAllComponents<IMapInit>().ToList())
+            foreach (var init in entity.GetAllComponents<IMapInit>())
             {
                 init.MapInit();
             }

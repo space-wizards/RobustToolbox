@@ -41,7 +41,7 @@ namespace Robust.Shared.Network.Messages
             RequestId = buffer.ReadUInt32();
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             var length = buffer.ReadInt32();
-            using var stream = buffer.ReadAsStream(length);
+            using var stream = buffer.ReadAlignedMemory(length);
             Blob = serializer.Deserialize<ViewVariablesBlob>(stream);
         }
 

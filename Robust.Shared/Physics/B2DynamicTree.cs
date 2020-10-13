@@ -304,31 +304,23 @@ namespace Robust.Shared.Physics
             // Predict AABB movement
             var d = displacement * AabbMultiplier;
 
-            // pls can we make math types mutable this sucks.
-            var l = fatAabb.Left;
-            var b = fatAabb.Bottom;
-            var r = fatAabb.Right;
-            var t = fatAabb.Top;
-
             if (d.X < 0)
             {
-                l += d.X;
+                fatAabb.Left += d.X;
             }
             else
             {
-                r += d.X;
+                fatAabb.Right += d.X;
             }
 
             if (d.Y < 0)
             {
-                b += d.Y;
+                fatAabb.Bottom += d.Y;
             }
             else
             {
-                t += d.Y;
+                fatAabb.Top += d.Y;
             }
-
-            fatAabb = new Box2(l, b, r, t);
 
             ref var treeAabb = ref leafNode.Aabb;
 

@@ -28,7 +28,7 @@ namespace Robust.Shared.GameObjects.Components
         bool PreventCollide(IPhysBody collidedwith);
     }
 
-    public partial interface ICollidableComponent : IComponent, IPhysBody
+    public partial interface IPhysicsComponent : IComponent, IPhysBody
     {
         public new bool Hard { get; set; }
         bool IsColliding(Vector2 offset, bool approximate = true);
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects.Components
         void AddedToPhysicsTree(MapId mapId);
     }
 
-    public partial class CollidableComponent : Component, ICollidableComponent
+    public partial class PhysicsComponent : Component, IPhysicsComponent
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -69,8 +69,22 @@ namespace Robust.Shared.GameObjects.Components
         public BodyType BodyType { get; set; } = BodyType.Static;
 
         /// <inheritdoc />
-        public int SleepAccumulator { get; set; }
+        public int SleepAccumulator
+        {
+            get => _sleepAccumulator;
+            set
+            {
+                if (_sleepAccumulator == value)
+                    return;
+                
+                _sleepAccumulator = value;
+                Awake = _physicsManager.SleepTimeThreshold > SleepAccumulator;
+            }
+        }
 
+        private int _sleepAccumulator;
+
+        // TODO: When SleepTimeThreshold updates we need to update Awake
         public int SleepThreshold
         {
             get => _physicsManager.SleepTimeThreshold;
@@ -79,7 +93,20 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Awake => _physicsManager.SleepTimeThreshold > SleepAccumulator;
+        public bool Awake
+        {
+            get => _awake;
+            private set
+            {
+                if (_awake == value)
+                    return;
+
+                _awake = value;
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+            }
+        }
+
+        private bool _awake = true;
 
         /// <inheritdoc />
         public void WakeBody()
@@ -87,7 +114,7 @@ namespace Robust.Shared.GameObjects.Components
             SleepAccumulator = 0;
         }
 
-        public CollidableComponent()
+        public PhysicsComponent()
         {
             PhysicsShapes = new PhysShapeList(this);
         }
@@ -108,7 +135,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new CollidableComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
+            return new PhysicsComponentState(_canCollide, _status, _physShapes, _isHard, _mass, LinearVelocity, AngularVelocity, Anchored);
         }
 
         /// <inheritdoc />
@@ -117,7 +144,7 @@ namespace Robust.Shared.GameObjects.Components
             if (curState == null)
                 return;
 
-            var newState = (CollidableComponentState) curState;
+            var newState = (PhysicsComponentState) curState;
 
             _canCollide = newState.CanCollide;
             _status = newState.Status;
@@ -280,6 +307,12 @@ namespace Robust.Shared.GameObjects.Components
                 new CollisionChangeMessage(Owner.Uid, _canCollide));
         }
 
+        public override void OnAdd()
+        {
+            base.OnAdd();
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+        }
+
         public override void OnRemove()
         {
             base.OnRemove();
@@ -292,6 +325,7 @@ namespace Robust.Shared.GameObjects.Components
 
             // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
         }
 
         private void ShapeAdded(IPhysShape shape)
@@ -364,9 +398,9 @@ namespace Robust.Shared.GameObjects.Components
         // To hook into their OnDataChanged event correctly.
         private sealed class PhysShapeList : IList<IPhysShape>
         {
-            private readonly CollidableComponent _owner;
+            private readonly PhysicsComponent _owner;
 
-            public PhysShapeList(CollidableComponent owner)
+            public PhysShapeList(PhysicsComponent owner)
             {
                 _owner = owner;
             }
@@ -472,5 +506,18 @@ namespace Robust.Shared.GameObjects.Components
     {
         OnGround,
         InAir
+    }
+
+    /// <summary>
+    ///     Sent whenever a collidable component is changed.
+    /// </summary>
+    public sealed class CollidableUpdateMessage : EntitySystemMessage
+    {
+        public IPhysicsComponent Component { get; }
+
+        public CollidableUpdateMessage(IPhysicsComponent component)
+        {
+            Component = component;
+        }
     }
 }

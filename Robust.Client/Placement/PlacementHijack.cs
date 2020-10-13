@@ -6,6 +6,7 @@ namespace Robust.Client.Placement
     public class PlacementHijack
     {
         public PlacementManager Manager { get; internal set; } = default!;
+        public virtual bool CanRotate { get; } = true;
 
         public virtual bool HijackPlacementRequest(EntityCoordinates coordinates)
         {

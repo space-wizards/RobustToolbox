@@ -19,6 +19,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -134,6 +135,8 @@ namespace Robust.Shared.GameObjects
 
             component.ExposeData(DefaultValueSerializer.Reader());
 
+            _componentDependencyManager.OnComponentAdd(entity, component);
+
             component.OnAdd();
 
             if (!entity.Initialized && !entity.Initializing) return;
@@ -160,14 +163,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, type), false);
+            RemoveComponentDeferred((Component) GetComponent(uid, type), uid, false);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, uint netId)
         {
-            RemoveComponentDeferred((Component) GetComponent(uid, netId), false);
+            RemoveComponentDeferred((Component) GetComponent(uid, netId), uid, false);
         }
 
         /// <inheritdoc />
@@ -179,7 +182,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred((Component) component, false);
+            RemoveComponentDeferred((Component) component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -205,7 +208,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, false);
+                RemoveComponentDeferred(comp, uid, false);
             }
         }
 
@@ -214,11 +217,11 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, true);
+                RemoveComponentDeferred(comp, uid, true);
             }
         }
 
-        private void RemoveComponentDeferred(Component component, bool removeProtected)
+        private void RemoveComponentDeferred(Component component, EntityUid uid, bool removeProtected)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
@@ -243,6 +246,7 @@ namespace Robust.Shared.GameObjects
 
                 component.Running = false;
                 component.OnRemove();
+                _componentDependencyManager.OnComponentRemove(_entityManager.GetEntity(uid), component);
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component));
 #if EXCEPTION_TOLERANCE
             }

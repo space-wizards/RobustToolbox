@@ -310,7 +310,9 @@ namespace Robust.Client.Input
             binding.State = state;
 
             var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
-                new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
+                new ScreenCoordinates(MouseScreenPosition), binding.CanFocus,
+                binding.Mod1 == Key.Unknown && binding.Mod2 == Key.Unknown && binding.Mod3 == Key.Unknown &&
+                Graphics.Clyde.Clyde.IsKeyPrintable(binding.BaseKey));
 
             UIKeyBindStateChanged?.Invoke(eventArgs);
             if (state == BoundKeyState.Up || !eventArgs.Handled && !uiOnly)

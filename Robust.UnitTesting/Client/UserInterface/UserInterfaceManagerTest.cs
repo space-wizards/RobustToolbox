@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Client.UserInterface
             control1.ForceRunLayoutUpdate();
 
             var mouseEvent = new BoundKeyEventArgs(EngineKeyFunctions.Use, BoundKeyState.Down,
-                new Robust.Shared.Map.ScreenCoordinates(30, 30), true);
+                new Robust.Shared.Map.ScreenCoordinates(30, 30), true, false);
 
             var control2Fired = false;
             var control3Fired = false;

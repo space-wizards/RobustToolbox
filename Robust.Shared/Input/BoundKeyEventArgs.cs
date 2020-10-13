@@ -28,6 +28,11 @@ namespace Robust.Shared.Input
         /// </summary>
         public bool CanFocus { get; internal set; }
 
+        /// <summary>
+        ///     Whether the Bound key is a printable character.
+        /// </summary>
+        public bool Printable { get; internal set; }
+
         public bool Handled { get; private set; }
 
         /// <summary>
@@ -36,12 +41,13 @@ namespace Robust.Shared.Input
         /// <param name="function">Bound key that that is changing.</param>
         /// <param name="state">New state of the function.</param>
         /// <param name="pointerLocation">Current Pointer location in screen coordinates.</param>
-        public BoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation, bool canFocus)
+        public BoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation, bool canFocus, bool printable)
         {
             Function = function;
             State = state;
             PointerLocation = pointerLocation;
             CanFocus = canFocus;
+            Printable = printable;
         }
 
         /// <summary>

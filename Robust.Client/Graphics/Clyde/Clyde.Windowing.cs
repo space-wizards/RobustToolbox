@@ -104,6 +104,18 @@ namespace Robust.Client.Graphics.Clyde
             return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
         }
 
+        public static bool IsKeyPrintable(Keyboard.Key key)
+        {
+            var glfwKey = Keyboard.ConvertGlfwKeyReverse(key);
+            if (glfwKey < 0)
+                return false;
+            var scancode = GLFW.GetKeyScancode(glfwKey);
+            if (scancode <= 0)
+                return false;
+            var name = GLFW.GetKeyName(glfwKey, scancode);
+            return name != null;
+        }
+
         private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
 

@@ -25,8 +25,8 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
-        private readonly Dictionary<uint, ViewVariablesSession>
-            _sessions = new Dictionary<uint, ViewVariablesSession>();
+        private readonly Dictionary<uint, ViewVariablesesSession>
+            _sessions = new Dictionary<uint, ViewVariablesesSession>();
 
         private uint _nextSessionId = 1;
 
@@ -190,7 +190,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesSession(message.MsgChannel.UserId, theObject, sessionId, this,
+            var session = new ViewVariablesesSession(message.MsgChannel.UserId, theObject, sessionId, this,
                 _robustSerializer);
 
             _sessions.Add(sessionId, session);

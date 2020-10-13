@@ -9,7 +9,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.ViewVariables
 {
-    internal sealed class ViewVariablesSession
+    internal sealed class ViewVariablesesSession : IViewVariablesSession
     {
         private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
         public IViewVariablesHost Host { get; }
@@ -25,7 +25,7 @@ namespace Robust.Server.ViewVariables
         ///     The session ID for this session. This is what the server and client use to talk about this session.
         /// </param>
         /// <param name="host">The view variables host owning this session.</param>
-        public ViewVariablesSession(NetUserId playerUser, object o, uint sessionId, IViewVariablesHost host,
+        public ViewVariablesesSession(NetUserId playerUser, object o, uint sessionId, IViewVariablesHost host,
             IRobustSerializer robustSerializer)
         {
             PlayerUser = playerUser;

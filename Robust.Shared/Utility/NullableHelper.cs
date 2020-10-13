@@ -37,84 +37,99 @@ namespace Robust.Shared.Utility
 
         private static byte[] GetNullableFlags(FieldInfo field)
         {
-            Assembly assembly = field.Module.Assembly;
-            if (!_nullableAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
+            lock (_nullableAttributeTypeCache)
             {
-                CacheNullableFieldInfo(assembly);
-            }
-            assemblyNullableEntry = _nullableAttributeTypeCache[assembly];
+                Assembly assembly = field.Module.Assembly;
+                if (!_nullableAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
+                {
+                    CacheNullableFieldInfo(assembly);
+                }
+                assemblyNullableEntry = _nullableAttributeTypeCache[assembly];
 
-            if (assemblyNullableEntry == null)
-            {
-                return new byte[]{0};
-            }
+                if (assemblyNullableEntry == null)
+                {
+                    return new byte[]{0};
+                }
 
-            var nullableAttribute = field.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
-            if (nullableAttribute == null)
-            {
-                return new byte[]{1};
-            }
+                var nullableAttribute = field.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
+                if (nullableAttribute == null)
+                {
+                    return new byte[]{1};
+                }
 
-            return assemblyNullableEntry.Value.NullableFlagsField.GetValue(nullableAttribute) as byte[] ?? new byte[]{1};
+                return assemblyNullableEntry.Value.NullableFlagsField.GetValue(nullableAttribute) as byte[] ?? new byte[]{1};
+            }
         }
 
         private static byte GetNullableContextFlag(Type type)
         {
-            Assembly assembly = type.Assembly;
-            if (!_nullableContextAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
+            lock (_nullableContextAttributeTypeCache)
             {
-                CacheNullableContextFieldInfo(assembly);
-            }
-            assemblyNullableEntry = _nullableContextAttributeTypeCache[assembly];
+                Assembly assembly = type.Assembly;
+                if (!_nullableContextAttributeTypeCache.TryGetValue(assembly, out var assemblyNullableEntry))
+                {
+                    CacheNullableContextFieldInfo(assembly);
+                }
+                assemblyNullableEntry = _nullableContextAttributeTypeCache[assembly];
 
-            if (assemblyNullableEntry == null)
-            {
-                return 0;
-            }
+                if (assemblyNullableEntry == null)
+                {
+                    return 0;
+                }
 
-            var nullableAttribute = type.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
-            if (nullableAttribute == null)
-            {
-                return 1;
-            }
+                var nullableAttribute = type.GetCustomAttribute(assemblyNullableEntry.Value.AttributeType);
+                if (nullableAttribute == null)
+                {
+                    return 1;
+                }
 
-            return (byte) (assemblyNullableEntry.Value.FlagsField.GetValue(nullableAttribute) ?? 1);
+                return (byte) (assemblyNullableEntry.Value.FlagsField.GetValue(nullableAttribute) ?? 1);
+            }
         }
 
         private static void CacheNullableFieldInfo(Assembly assembly)
         {
-            var nullableAttributeType = assembly.GetType("System.Runtime.CompilerServices.NullableAttribute");
-            if (nullableAttributeType == null)
+            lock (_nullableAttributeTypeCache)
             {
-                _nullableAttributeTypeCache.Add(assembly, null);
-                return;
-            }
+                var nullableAttributeType = assembly.GetType("System.Runtime.CompilerServices.NullableAttribute");
+                if (nullableAttributeType == null)
+                {
+                    _nullableAttributeTypeCache.Add(assembly, null);
+                    return;
+                }
 
-            var field = nullableAttributeType.GetField("NullableFlags");
-            if (field == null)
-            {
-                _nullableAttributeTypeCache.Add(assembly, null);
-                return;
+                var field = nullableAttributeType.GetField("NullableFlags");
+                if (field == null)
+                {
+                    _nullableAttributeTypeCache.Add(assembly, null);
+                    return;
+                }
+
+                _nullableAttributeTypeCache.Add(assembly, (nullableAttributeType, field));
             }
-            _nullableAttributeTypeCache.Add(assembly, (nullableAttributeType, field));
         }
 
         private static void CacheNullableContextFieldInfo(Assembly assembly)
         {
-            var nullableContextAttributeType = assembly.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
-            if (nullableContextAttributeType == null)
+            lock (_nullableContextAttributeTypeCache)
             {
-                _nullableContextAttributeTypeCache.Add(assembly, null);
-                return;
-            }
+                var nullableContextAttributeType =
+                    assembly.GetType("System.Runtime.CompilerServices.NullableContextAttribute");
+                if (nullableContextAttributeType == null)
+                {
+                    _nullableContextAttributeTypeCache.Add(assembly, null);
+                    return;
+                }
 
-            var field = nullableContextAttributeType.GetField("Flag");
-            if (field == null)
-            {
-                _nullableContextAttributeTypeCache.Add(assembly, null);
-                return;
+                var field = nullableContextAttributeType.GetField("Flag");
+                if (field == null)
+                {
+                    _nullableContextAttributeTypeCache.Add(assembly, null);
+                    return;
+                }
+
+                _nullableContextAttributeTypeCache.Add(assembly, (nullableContextAttributeType, field));
             }
-            _nullableContextAttributeTypeCache.Add(assembly, (nullableContextAttributeType, field));
         }
     }
 }

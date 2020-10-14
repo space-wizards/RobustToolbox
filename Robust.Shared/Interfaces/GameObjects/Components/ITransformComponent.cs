@@ -114,7 +114,7 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// <remarks>
         ///    Physics optimisation so these aren't spammed during physics updates.
         /// </remarks>
-        void RunCollidableDeferred();
+        void RunPhysicsDeferred();
 
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }

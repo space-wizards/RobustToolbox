@@ -26,7 +26,7 @@
         string SpriteName { get; }
 
         /// <summary>
-        ///     Collidable objects that are interacting on this tile are slowed down by this float.
+        ///     Physics objects that are interacting on this tile are slowed down by this float.
         /// </summary>
         float Friction { get; }
 

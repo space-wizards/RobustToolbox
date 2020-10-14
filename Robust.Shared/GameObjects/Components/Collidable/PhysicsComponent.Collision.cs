@@ -51,10 +51,10 @@ namespace Robust.Shared.GameObjects.Components
         private List<IPhysShape> _physShapes = new List<IPhysShape>();
 
         /// <inheritdoc />
-        public override string Name => "Collidable";
+        public override string Name => "Physics";
 
         /// <inheritdoc />
-        public override uint? NetID => NetIDs.COLLIDABLE;
+        public override uint? NetID => NetIDs.PHYSICS;
 
         public IEntity Entity => Owner;
 
@@ -102,7 +102,7 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _awake = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
             }
         }
 
@@ -231,7 +231,7 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <summary>
-        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>
@@ -310,7 +310,7 @@ namespace Robust.Shared.GameObjects.Components
         public override void OnAdd()
         {
             base.OnAdd();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
         }
 
         public override void OnRemove()
@@ -325,7 +325,7 @@ namespace Robust.Shared.GameObjects.Components
 
             // Should we not call this if !_canCollide? PathfindingSystem doesn't care at least.
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(Owner.Uid, false));
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
         }
 
         private void ShapeAdded(IPhysShape shape)
@@ -509,13 +509,13 @@ namespace Robust.Shared.GameObjects.Components
     }
 
     /// <summary>
-    ///     Sent whenever a collidable component is changed.
+    ///     Sent whenever a <see cref="IPhysicsComponent"/> is changed.
     /// </summary>
-    public sealed class CollidableUpdateMessage : EntitySystemMessage
+    public sealed class PhysicsUpdateMessage : EntitySystemMessage
     {
         public IPhysicsComponent Component { get; }
 
-        public CollidableUpdateMessage(IPhysicsComponent component)
+        public PhysicsUpdateMessage(IPhysicsComponent component)
         {
             Component = component;
         }

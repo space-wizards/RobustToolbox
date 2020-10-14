@@ -63,6 +63,9 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", "http://localhost:5000/", CVar.SECURE);
 
+        public static readonly CVarDef<string> PlayerName =
+            CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE);
+
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
         public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);

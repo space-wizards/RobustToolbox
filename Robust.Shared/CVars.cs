@@ -63,6 +63,9 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", "http://localhost:5000/", CVar.SECURE);
 
+        public static readonly CVarDef<int> ConsoleDefaultGroup =
+            CVarDef.Create("console.defaultGroup", 1, CVar.ARCHIVE);
+        
         public static readonly CVarDef<string> PlayerName =
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE);
 

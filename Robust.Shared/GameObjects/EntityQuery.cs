@@ -122,9 +122,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool Match(IEntity entity)
         {
-            if(Entity.TryGetComponent<IPhysicsComponent>(out var collidable))
+            if(Entity.TryGetComponent<IPhysicsComponent>(out var physics))
             {
-                return collidable.MapID == entity.Transform.MapID && collidable.WorldAABB.Contains(entity.Transform.WorldPosition);
+                return physics.MapID == entity.Transform.MapID && physics.WorldAABB.Contains(entity.Transform.WorldPosition);
             }
             return false;
         }

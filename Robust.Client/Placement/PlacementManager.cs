@@ -127,7 +127,7 @@ namespace Robust.Client.Placement
                 {
                     PlacementOffset = value.PlacementOffset;
 
-                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Collidable"))
+                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Physics"))
                     {
                         var map = value.Components["BoundingBox"];
                         var serializer = YamlObjectSerializer.NewReader(map);

@@ -312,7 +312,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
-        public void RunCollidableDeferred()
+        public void RunPhysicsDeferred()
         {
             RebuildMatrices();
             UpdateEntityTree();

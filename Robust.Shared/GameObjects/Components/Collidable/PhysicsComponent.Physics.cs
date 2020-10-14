@@ -341,7 +341,7 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _predict = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
             }
         }
 

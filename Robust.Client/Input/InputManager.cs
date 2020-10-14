@@ -64,7 +64,7 @@ namespace Robust.Client.Input
         public IInputContextContainer Contexts { get; } = new InputContextContainer();
 
         /// <inheritdoc />
-        public event Action<BoundKeyEventArgs>? UIKeyBindStateChanged;
+        public event Func<BoundKeyEventArgs, bool>? UIKeyBindStateChanged;
 
         /// <inheritdoc />
         public event Action<BoundKeyEventArgs>? KeyBindStateChanged;
@@ -312,8 +312,10 @@ namespace Robust.Client.Input
             var eventArgs = new BoundKeyEventArgs(binding.Function, binding.State,
                 new ScreenCoordinates(MouseScreenPosition), binding.CanFocus);
 
-            UIKeyBindStateChanged?.Invoke(eventArgs);
-            if (state == BoundKeyState.Up || !eventArgs.Handled && !uiOnly)
+            var handled = UIKeyBindStateChanged?.Invoke(eventArgs);
+            if (state == BoundKeyState.Up
+                || !(handled == true || eventArgs.Handled)
+                && !uiOnly)
             {
                 var cmd = GetInputCommand(binding.Function);
                 // TODO: Allow input commands to still get forwarded to server if necessary.

@@ -307,6 +307,11 @@ namespace Robust.Shared.Configuration
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
         }
 
+        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            SetCVar(def.Name, value);
+        }
+
         /// <inheritdoc />
         public T GetCVar<T>(string name)
         {

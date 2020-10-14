@@ -213,6 +213,9 @@ namespace Robust.Shared
 
         public static readonly CVarDef<string> DisplayOGLOverrideVersion =
             CVarDef.Create("display.ogl_override_version", string.Empty);
+
+        public static readonly CVarDef<bool> DisplayOGLCheckErrors =
+            CVarDef.Create("display.ogl_check_errors", false);
         
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty);
@@ -238,6 +241,9 @@ namespace Robust.Shared
 
         public static readonly CVarDef<int> ConsoleHostGroup =
             CVarDef.Create("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
+
+        public static readonly CVarDef<bool> SignalsHandle =
+            CVarDef.Create("signals.handle", true);
 
 #if DEBUG
         public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);

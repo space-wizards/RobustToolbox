@@ -94,6 +94,8 @@ namespace Robust.Client.Graphics.Clyde
         public override bool Initialize()
         {
             base.Initialize();
+            
+            _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
 
             if (!InitWindowing())
             {
@@ -148,7 +150,6 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
 
-            _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             // This cvar does not modify the actual GL version requested or anything,
             // it overrides the version we detect to detect GL features.
             RegisterBlockCVars();

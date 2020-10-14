@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 
@@ -29,6 +30,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// An existing entity system has been unloaded from the manager.
         /// </summary>
         event EventHandler<SystemChangedArgs> SystemUnloaded;
+        
+        IReadOnlyCollection<IEntitySystem> AllSystems { get; }
 
         /// <summary>
         /// Get an entity system of the specified type.

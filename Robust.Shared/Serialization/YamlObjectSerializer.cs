@@ -49,6 +49,7 @@ namespace Robust.Shared.Serialization
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
+                { typeof(TimeSpan), new TimeSpanSerializer() },
             };
         }
 
@@ -1317,6 +1318,21 @@ namespace Robust.Shared.Serialization
                         return mapping;
                 }
                 throw new NotImplementedException();
+            }
+        }
+
+        class TimeSpanSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                var seconds = double.Parse(node.AsString(), CultureInfo.InvariantCulture);
+                return TimeSpan.FromSeconds(seconds);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var seconds = ((TimeSpan) obj).TotalSeconds;
+                return new YamlScalarNode(seconds.ToString(CultureInfo.InvariantCulture));
             }
         }
     }

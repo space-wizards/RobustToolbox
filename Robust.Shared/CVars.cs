@@ -66,6 +66,27 @@ namespace Robust.Shared
         public static readonly CVarDef<int> ConsoleDefaultGroup =
             CVarDef.Create("console.defaultGroup", 1, CVar.ARCHIVE);
         
+        public static readonly CVarDef<bool> DisplayVSync =
+            CVarDef.Create("display.vsync", true, CVar.ARCHIVE);
+
+        public static readonly CVarDef<int> DisplayWindowMode =
+            CVarDef.Create("display.windowmode", 0, CVar.ARCHIVE);
+        
+        public static readonly CVarDef<int> DisplayWidth =
+            CVarDef.Create("display.width", 1280);
+
+        public static readonly CVarDef<int> DisplayHeight =
+            CVarDef.Create("display.height", 720);
+
+        public static readonly CVarDef<int> DisplayLightMapDivider =
+            CVarDef.Create("display.lightmapdivider", 2);
+
+        public static readonly CVarDef<bool> DisplaySoftShadows =
+            CVarDef.Create("display.softshadows", true);
+        
+        public static readonly CVarDef<string> AudioDevice =
+            CVarDef.Create("audio.device", "");
+        
         public static readonly CVarDef<string> PlayerName =
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE);
 

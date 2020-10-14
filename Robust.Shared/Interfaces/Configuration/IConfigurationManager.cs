@@ -57,6 +57,8 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="value">The value to set.</param>
         void SetCVar(string name, object value);
 
+        void SetCVar<T>(CVarDef<T> def, T value) where T : notnull;
+
         /// <summary>
         /// Get the value of a CVar.
         /// </summary>
@@ -64,6 +66,8 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>
         T GetCVar<T>(string name);
+        
+        T GetCVar<T>(CVarDef<T> def) where T : notnull;
 
         /// <summary>
         ///     Gets the type of a value stored in a CVar.
@@ -81,6 +85,5 @@ namespace Robust.Shared.Interfaces.Configuration
             where T : notnull;
 
         void Initialize(bool isServer);
-        T GetCVar<T>(CVarDef<T> def) where T : notnull;
     }
 }

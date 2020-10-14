@@ -83,6 +83,9 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true);
+
+        public static readonly CVarDef<float> DisplayUIScale =
+            CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE);
         
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", "");

@@ -10,7 +10,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
@@ -88,7 +88,7 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
-            _uiScaleChanged(_configurationManager.GetCVar<float>("display.uiScale"));
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -726,7 +726,7 @@ namespace Robust.Client.UserInterface
 
         void IPostInjectInit.PostInject()
         {
-            _configurationManager.RegisterCVar("display.uiScale", 0f, CVar.ARCHIVE, _uiScaleChanged);
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
         }
 
         private void _uiScaleChanged(float newValue)

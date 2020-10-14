@@ -7,11 +7,11 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorNumeric : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorNumeric : VVPropEditor
     {
         private readonly NumberType _type;
 
-        public ViewVariablesPropertyEditorNumeric(NumberType type)
+        public VVPropEditorNumeric(NumberType type)
         {
             _type = type;
         }

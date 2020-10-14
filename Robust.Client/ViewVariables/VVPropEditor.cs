@@ -8,7 +8,7 @@ namespace Robust.Client.ViewVariables
     /// <summary>
     ///     An editor for the value of a property.
     /// </summary>
-    public abstract class ViewVariablesPropertyEditor
+    public abstract class VVPropEditor
     {
         /// <summary>
         ///     Invoked when the value was changed.

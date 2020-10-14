@@ -6,14 +6,14 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class ViewVariablesPropertyEditorKeyValuePair : ViewVariablesPropertyEditor
+    public class VVPropEditorKeyValuePair : VVPropEditor
     {
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariables = default!;
 
-        private ViewVariablesPropertyEditor? _propertyEditorK;
-        private ViewVariablesPropertyEditor? _propertyEditorV;
+        private VVPropEditor? _propertyEditorK;
+        private VVPropEditor? _propertyEditorV;
 
-        public ViewVariablesPropertyEditorKeyValuePair()
+        public VVPropEditorKeyValuePair()
         {
             IoCManager.InjectDependencies(this);
         }

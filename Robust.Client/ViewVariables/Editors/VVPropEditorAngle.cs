@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class ViewVariablesPropertyEditorAngle : ViewVariablesPropertyEditor
+    public class VVPropEditorAngle : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

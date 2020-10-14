@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorBoolean : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorBoolean : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

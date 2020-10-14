@@ -17,6 +17,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -29,7 +30,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IPostInjectInit
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -92,6 +93,8 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
+            base.Initialize();
+
             if (!InitWindowing())
             {
                 return false;
@@ -138,10 +141,8 @@ namespace Robust.Client.Graphics.Clyde
             RegenAllLightRts();
         }
 
-        public override void PostInject()
+        public void PostInject()
         {
-            base.PostInject();
-
             _mapManager.TileChanged += _updateTileMapOnUpdate;
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;

@@ -8,7 +8,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Utility
 {
-    internal sealed class DiscordRichPresence : IDiscordRichPresence, IPostInjectInit
+    internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
         private static readonly RichPresence _defaultPresence = new RichPresence
         {
@@ -33,6 +33,26 @@ namespace Robust.Client.Utility
 
         public void Initialize()
         {
+            _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
+            {
+                if (!_initialized)
+                {
+                    return;
+                }
+
+                if (newValue)
+                {
+                    if (_client == null || _client.IsDisposed)
+                    {
+                        _start();
+                    }
+                }
+                else
+                {
+                    _stop();
+                }
+            });
+            
             if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();
@@ -97,29 +117,6 @@ namespace Robust.Client.Utility
         public void Dispose()
         {
             _stop();
-        }
-
-        public void PostInject()
-        {
-            _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
-            {
-                if (!_initialized)
-                {
-                    return;
-                }
-
-                if (newValue)
-                {
-                    if (_client == null || _client.IsDisposed)
-                    {
-                        _start();
-                    }
-                }
-                else
-                {
-                    _stop();
-                }
-            }, true);
         }
 
         private sealed class NativeLogger : ILogger

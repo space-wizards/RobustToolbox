@@ -9,7 +9,7 @@ using Robust.Shared.Log;
 
 namespace Robust.Server.DataMetrics
 {
-    internal sealed class MetricsManager : IMetricsManager, IPostInjectInit, IDisposable
+    internal sealed class MetricsManager : IMetricsManager, IDisposable
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
@@ -20,15 +20,12 @@ namespace Robust.Server.DataMetrics
         public void Initialize()
         {
             _initialized = true;
-
-            Reload();
-        }
-
-        void IPostInjectInit.PostInject()
-        {
+            
             _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => Reload());
             _configurationManager.OnValueChanged(CVars.MetricsHost, _ => Reload());
             _configurationManager.OnValueChanged(CVars.MetricsPort, _ => Reload());
+
+            Reload();
         }
 
         private async void Stop()

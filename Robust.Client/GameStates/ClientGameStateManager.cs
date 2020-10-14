@@ -79,11 +79,11 @@ namespace Robust.Client.GameStates
             _client.RunLevelChanged += RunLevelChanged;
 
             _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
-            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i);
-            _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b);
-            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b);
-            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i);
-            _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i);
+            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
+            _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
+            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
+            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i, true);
+            _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);

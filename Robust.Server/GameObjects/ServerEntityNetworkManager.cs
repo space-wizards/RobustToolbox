@@ -20,7 +20,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// The server implementation of the Entity Network Manager.
     /// </summary>
-    public class ServerEntityNetworkManager : IServerEntityNetworkManager, IPostInjectInit
+    public class ServerEntityNetworkManager : IServerEntityNetworkManager
     {
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -47,7 +47,7 @@ namespace Robust.Server.GameObjects
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
-            _logLateMsgs = _configurationManager.GetCVar(CVars.NetLogLateMsg);
+            _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
 
         public void Update()
@@ -193,11 +193,6 @@ namespace Robust.Server.GameObjects
 
                 return y.Sequence.CompareTo(x.Sequence);
             }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
     }
 }

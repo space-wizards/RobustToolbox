@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Manages the game window, resolutions, fullscreen mode, VSync, etc...
     /// </summary>
-    internal abstract class ClydeBase : IPostInjectInit
+    internal abstract class ClydeBase
     {
         [Dependency] protected readonly IConfigurationManager _configurationManager = default!;
         [Dependency] protected readonly IGameControllerInternal _gameController = default!;
@@ -26,17 +26,18 @@ namespace Robust.Client.Graphics
         protected WindowMode WindowMode { get; private set; } = WindowMode.Windowed;
         protected bool VSync { get; private set; } = true;
 
-        public virtual void PostInject()
+        public abstract Vector2i ScreenSize { get; }
+        public abstract void SetWindowTitle(string title);
+
+        public virtual bool Initialize()
         {
             _configurationManager.OnValueChanged(CVars.DisplayVSync, _vSyncChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplayWindowMode, _windowModeChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplayLightMapDivider, LightmapDividerChanged, true);
             _configurationManager.OnValueChanged(CVars.DisplaySoftShadows, SoftShadowsChanged, true);
-        }
 
-        public abstract Vector2i ScreenSize { get; }
-        public abstract void SetWindowTitle(string title);
-        public abstract bool Initialize();
+            return true;
+        }
 
         protected virtual void ReloadConfig()
         {

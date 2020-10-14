@@ -40,9 +40,6 @@ namespace Robust.Server.ServerStatus
         {
             _statusHost.AddHandler(UpdateHandler);
             _statusHost.AddHandler(ShutdownHandler);
-
-            _configurationManager.OnValueChanged(CVars.WatchdogToken, _ => UpdateToken());
-            _configurationManager.OnValueChanged(CVars.WatchdogKey, _ => UpdateToken(), true);
         }
 
         private bool UpdateHandler(HttpMethod method, HttpRequest request, HttpResponse response)
@@ -169,14 +166,17 @@ namespace Robust.Server.ServerStatus
 
         public void Initialize()
         {
+            _configurationManager.OnValueChanged(CVars.WatchdogToken, _ => UpdateToken());
+            _configurationManager.OnValueChanged(CVars.WatchdogKey, _ => UpdateToken());
+
             UpdateToken();
         }
 
         private void UpdateToken()
         {
-            var tok = _configurationManager.GetCVar<string>(CVars.WatchdogToken);
-            var key = _configurationManager.GetCVar<string>(CVars.WatchdogKey);
-            var baseUrl = _configurationManager.GetCVar<string>(CVars.WatchdogBaseUrl);
+            var tok = _configurationManager.GetCVar(CVars.WatchdogToken);
+            var key = _configurationManager.GetCVar(CVars.WatchdogKey);
+            var baseUrl = _configurationManager.GetCVar(CVars.WatchdogBaseUrl);
             _watchdogToken = string.IsNullOrEmpty(tok) ? null : tok;
             _watchdogKey = string.IsNullOrEmpty(key) ? null : key;
             _baseUri = string.IsNullOrEmpty(baseUrl) ? null : new Uri(baseUrl);

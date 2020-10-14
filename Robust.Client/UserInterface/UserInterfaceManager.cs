@@ -25,7 +25,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
@@ -88,6 +88,8 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+
             _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
@@ -722,11 +724,6 @@ namespace Robust.Client.UserInterface
             {
                 LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
             }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
         }
 
         private void _uiScaleChanged(float newValue)

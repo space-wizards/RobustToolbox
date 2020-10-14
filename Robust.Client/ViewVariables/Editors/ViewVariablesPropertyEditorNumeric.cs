@@ -1,3 +1,4 @@
+﻿#nullable enable
 using System;
 using System.Globalization;
 using Robust.Client.UserInterface;
@@ -23,38 +24,39 @@ namespace Robust.Client.ViewVariables.Editors
                 Editable = !ReadOnly,
                 CustomMinimumSize = new Vector2(240, 0)
             };
-            lineEdit.OnTextEntered += e => ValueChanged(TextToNumber(e.Text, _type));
+            lineEdit.OnTextEntered += e =>
+            {
+                if (TryTextToNumber(e.Text, _type, out var val))
+                    ValueChanged(val);
+            };
             return lineEdit;
         }
 
-        private static object TextToNumber(string text, NumberType type)
+        private static bool TryTextToNumber(string text, NumberType type, out object? val)
         {
-            switch (type)
+            try
             {
-                case NumberType.Byte:
-                    return byte.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.SByte:
-                    return sbyte.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.UShort:
-                    return ushort.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Short:
-                    return short.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.UInt:
-                    return uint.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Int:
-                    return int.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.ULong:
-                    return ulong.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Long:
-                    return long.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Float:
-                    return float.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Double:
-                    return double.Parse(text, CultureInfo.InvariantCulture);
-                case NumberType.Decimal:
-                    return decimal.Parse(text, CultureInfo.InvariantCulture);
-                default:
-                    throw new ArgumentOutOfRangeException();
+                val = type switch
+                {
+                    NumberType.Byte => byte.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.SByte => sbyte.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.UShort => ushort.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Short => short.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.UInt => uint.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Int => int.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.ULong => ulong.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Long => long.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Float => float.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Double => double.Parse(text, CultureInfo.InvariantCulture),
+                    NumberType.Decimal => decimal.Parse(text, CultureInfo.InvariantCulture),
+                    _ => throw new ArgumentOutOfRangeException(),
+                };
+                return true;
+            }
+            catch (FormatException)
+            {
+                val = null;
+                return false;
             }
         }
 

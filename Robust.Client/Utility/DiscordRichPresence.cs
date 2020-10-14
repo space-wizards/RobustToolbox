@@ -1,6 +1,7 @@
 ﻿using DiscordRPC;
 using DiscordRPC.Logging;
 using Robust.Client.Interfaces.Utility;
+using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
@@ -32,7 +33,7 @@ namespace Robust.Client.Utility
 
         public void Initialize()
         {
-            if (_configurationManager.GetCVar<bool>("discord.enabled"))
+            if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();
             }
@@ -100,7 +101,7 @@ namespace Robust.Client.Utility
 
         public void PostInject()
         {
-            _configurationManager.RegisterCVar("discord.enabled", true, onValueChanged: newValue =>
+            _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
             {
                 if (!_initialized)
                 {
@@ -118,7 +119,7 @@ namespace Robust.Client.Utility
                 {
                     _stop();
                 }
-            });
+            }, true);
         }
 
         private sealed class NativeLogger : ILogger

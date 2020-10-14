@@ -12,6 +12,7 @@ using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
@@ -126,8 +127,8 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _lightmapDivider = _configurationManager.GetCVar<int>("display.lightmapdivider");
-            _enableSoftShadows = _configurationManager.GetCVar<bool>("display.softshadows");
+            _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
         protected override void ReloadConfig()
@@ -146,11 +147,9 @@ namespace Robust.Client.Graphics.Clyde
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
 
-            _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
             _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             // This cvar does not modify the actual GL version requested or anything,
             // it overrides the version we detect to detect GL features.
-            _configurationManager.RegisterCVar("display.ogl_override_version", "");
             RegisterBlockCVars();
         }
 
@@ -240,7 +239,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar<string>("display.ogl_override_version");
+            var overrideGLVersion = _configurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;

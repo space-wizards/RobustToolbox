@@ -1,5 +1,6 @@
 using System;
 using Prometheus;
+using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -25,9 +26,9 @@ namespace Robust.Server.DataMetrics
 
         void IPostInjectInit.PostInject()
         {
-            _configurationManager.RegisterCVar("metrics.enabled", false, onValueChanged: _ => Reload());
-            _configurationManager.RegisterCVar("metrics.host", "localhost", onValueChanged: _ => Reload());
-            _configurationManager.RegisterCVar("metrics.port", 44880, onValueChanged: _ => Reload());
+            _configurationManager.OnValueChanged(CVars.MetricsEnabled, _ => Reload());
+            _configurationManager.OnValueChanged(CVars.MetricsHost, _ => Reload());
+            _configurationManager.OnValueChanged(CVars.MetricsPort, _ => Reload());
         }
 
         private async void Stop()
@@ -58,14 +59,14 @@ namespace Robust.Server.DataMetrics
 
             Stop();
 
-            var enabled = _configurationManager.GetCVar<bool>("metrics.enabled");
+            var enabled = _configurationManager.GetCVar(CVars.MetricsEnabled);
             if (!enabled)
             {
                 return;
             }
 
-            var host = _configurationManager.GetCVar<string>("metrics.host");
-            var port = _configurationManager.GetCVar<int>("metrics.port");
+            var host = _configurationManager.GetCVar(CVars.MetricsHost);
+            var port = _configurationManager.GetCVar(CVars.MetricsPort);
 
             Logger.InfoS("metrics", "Prometheus metrics enabled, host: {1} port: {0}", port, host);
             _metricServer = new MetricServer(host, port);

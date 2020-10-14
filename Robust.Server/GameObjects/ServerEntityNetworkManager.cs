@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
+using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
@@ -46,7 +47,7 @@ namespace Robust.Server.GameObjects
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
-            _logLateMsgs = _configurationManager.GetCVar<bool>("net.log_late_msg");
+            _logLateMsgs = _configurationManager.GetCVar(CVars.NetLogLateMsg);
         }
 
         public void Update()
@@ -196,7 +197,7 @@ namespace Robust.Server.GameObjects
 
         void IPostInjectInit.PostInject()
         {
-            _configurationManager.RegisterCVar("net.log_late_msg", true, onValueChanged: b => _logLateMsgs = b);
+            _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
     }
 }

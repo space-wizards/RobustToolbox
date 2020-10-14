@@ -473,9 +473,9 @@ namespace Robust.Server
                 SendTickRateUpdateToClients(b);
             }, true);
             
-            cfgMgr.SetCVar(CVars.GameType, GameType.Game);
+            cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
 
-            _time.TickRate = (byte) _config.GetCVar<int>(CVars.NetTickrate);
+            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");

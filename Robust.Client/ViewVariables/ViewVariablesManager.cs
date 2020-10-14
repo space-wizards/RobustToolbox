@@ -189,6 +189,11 @@ namespace Robust.Client.ViewVariables
                 return new VVPropEditorColor();
             }
 
+            if (type == typeof(TimeSpan))
+            {
+                return new VVPropEditorTimeSpan();
+            }
+
             if (type == typeof(ViewVariablesBlobMembers.ServerKeyValuePairToken) ||
                 type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
             {

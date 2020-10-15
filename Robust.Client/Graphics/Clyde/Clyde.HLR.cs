@@ -8,6 +8,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -124,7 +125,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds)
+        private void DrawEntitiesAndWorldOverlay(Viewport viewport, Box2 worldBounds)
         {
             if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
             {
@@ -140,6 +141,19 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
 
+            var worldOverlays = new List<Overlay>();
+
+            foreach (var overlay in _overlayManager.AllOverlays)
+            {
+                if ((overlay.Space & OverlaySpace.WorldSpace) != 0)
+                {
+                    worldOverlays.Add(overlay);
+                }
+            }
+
+            worldOverlays.Sort(OverlayComparer.Instance);
+            worldOverlays.Reverse();
+
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
 
@@ -153,6 +167,21 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
+
+                for (var j = worldOverlays.Count - 1; j >= 0; j--)
+                {
+                    var overlay = worldOverlays[0];
+
+                    if (overlay.ZIndex <= entry.sprite.DrawDepth)
+                    {
+                        overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+                        worldOverlays.RemoveAt(0);
+                        continue;
+                    }
+
+                    break;
+                }
+
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
@@ -198,6 +227,13 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             _drawingSpriteList.Clear();
+            FlushRenderQueue();
+
+            // Cleanup remainders
+            foreach (var overlay in worldOverlays)
+            {
+                overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+            }
 
             FlushRenderQueue();
         }
@@ -290,12 +326,11 @@ namespace Robust.Client.Graphics.Clyde
                         _drawGrids(worldBounds);
                     }
 
+                    // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds);
+                        DrawEntitiesAndWorldOverlay(viewport, worldBounds);
                     }
-
-                    RenderOverlays(OverlaySpace.WorldSpace);
 
                     if (_lightManager.Enabled && eye.DrawFov)
                     {

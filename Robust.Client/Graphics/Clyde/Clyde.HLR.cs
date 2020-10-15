@@ -152,7 +152,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             worldOverlays.Sort(OverlayComparer.Instance);
-            worldOverlays.Reverse();
 
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
@@ -168,12 +167,14 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
 
-                for (var j = worldOverlays.Count - 1; j >= 0; j--)
+                
+                for (var j = 0; j < worldOverlays.Count; j++)
                 {
                     var overlay = worldOverlays[0];
 
                     if (overlay.ZIndex <= entry.sprite.DrawDepth)
                     {
+                        FlushRenderQueue();
                         overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
                         worldOverlays.RemoveAt(0);
                         continue;

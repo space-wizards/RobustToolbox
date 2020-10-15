@@ -166,15 +166,20 @@ namespace Robust.Client.Graphics.Clyde
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
+                var flushed = false;
 
-                
                 for (var j = 0; j < worldOverlays.Count; j++)
                 {
                     var overlay = worldOverlays[0];
 
                     if (overlay.ZIndex <= entry.sprite.DrawDepth)
                     {
-                        FlushRenderQueue();
+                        if (!flushed)
+                        {
+                            FlushRenderQueue();
+                            flushed = true;
+                        }
+
                         overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
                         worldOverlays.RemoveAt(0);
                         continue;

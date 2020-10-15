@@ -20,7 +20,11 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// <summary>
         /// Cache of queries and their corresponding field offsets
         /// </summary>
-        private readonly Dictionary<Type, (Type Query, int FieldMemoryOffset)[]> _componentDependencyQueries = new Dictionary<Type, (Type Query, int FieldMemoryOffset)[]>();
+        private readonly
+            Dictionary<Type, (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[]>
+            _componentDependencyQueries =
+                new Dictionary<Type, (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo?
+                    OnRemoveMethod)[]>();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
@@ -49,11 +53,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
                 {
-                    foreach (var (type, offset) in queries)
+                    foreach (var (type, offset, onAddMethod, _) in queries)
                     {
                         if (type == reference)
                         {
                             SetField(newComp, offset, entityComp);
+                            onAddMethod?.Invoke(newComp, null);
                         }
                     }
                 }
@@ -90,6 +95,14 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                     if (compReg.References.Contains(queries[i].Query))
                     {
                         SetField(entityComponent, queries[i].FieldMemoryOffset, comp);
+                        if (comp == null)
+                        {
+                            queries[i].OnRemoveMethod?.Invoke(entityComponent, null);
+                        }
+                        else
+                        {
+                            queries[i].OnAddMethod?.Invoke(entityComponent, null);
+                        }
                     }
                 }
             }
@@ -98,8 +111,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         private void ClearRemovedComponentDependencies(IComponent comp)
         {
             var queries = GetPointerQueries(comp);
-            foreach (var (_, offset) in queries)
+            foreach (var (_, offset, _, onRemoveMethod) in queries)
             {
+                onRemoveMethod?.Invoke(comp, null);
                 SetField(comp, offset, null);
             }
         }
@@ -112,25 +126,25 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             oRef = value;
         }
 
-        private (Type Query, int FieldMemoryOffset)[] GetPointerQueries(object obj)
+        private (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[] GetPointerQueries(object obj)
         {
             return !_componentDependencyQueries.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
         }
 
-        private (Type Query, int FieldMemoryOffset)[] CreateAndCachePointerOffsets(object obj)
+        private (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[] CreateAndCachePointerOffsets(object obj)
         {
             var objType = obj.GetType();
 
             var attributeFields = objType.GetAllFields()
-                .Where(f => Attribute.IsDefined(f, typeof(ComponentDependencyAttribute))).ToArray();
+                .Where(f => Attribute.IsDefined(f, typeof(ComponentDependencyAttribute))).Select(field => (field, attribute: field.GetCustomAttribute<ComponentDependencyAttribute>())).ToArray();
             var attributeFieldsLength = attributeFields.Length;
 
 
-            var queries = new (Type, int)[attributeFieldsLength];
+            var queries = new (Type, int, MethodInfo?, MethodInfo?)[attributeFieldsLength];
 
             for (var i = 0; i < attributeFields.Length; i++)
             {
-                var field = attributeFields[i];
+                var field = attributeFields[i].field;
                 if (field.FieldType.IsValueType)
                 {
                     throw new ComponentDependencyValueTypeException(objType, field);
@@ -138,12 +152,47 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 if (!NullableHelper.IsMarkedAsNullable(field))
                 {
-                    throw new ComponentDependencyNotNullableException(objType, field); //todo test
+                    throw new ComponentDependencyNotNullableException(objType, field);
                 }
 
                 var offset = GetFieldOffset(objType, field);
 
-                queries[i] = (field.FieldType, offset);
+                var attribute = attributeFields[i].attribute;
+
+                if (attribute == null)
+                {
+                    throw new NotImplementedException();//todo check if attribute null
+                }
+
+                var methods = objType.GetRuntimeMethods().ToArray();
+
+                MethodInfo? onAddMethod = null;
+                if (attribute.OnAddMethodName != null)
+                {
+                    var tempMethod = methods.FirstOrDefault(m => m.Name == attribute.OnAddMethodName && !m.IsStatic && !m.IsAbstract);
+
+                    if (tempMethod == null)
+                    {
+                        throw new Exception($"OnAddMethodName for {field} was invalid");
+                    }
+
+                    onAddMethod = tempMethod;
+                }
+
+                MethodInfo? onRemoveMethod = null;
+                if (attribute.OnRemoveMethodName != null)
+                {
+                    var tempMethod = methods.FirstOrDefault(m => m.Name == attribute.OnRemoveMethodName && !m.IsStatic && !m.IsAbstract);
+
+                    if (tempMethod == null)
+                    {
+                        throw new Exception($"OnRemoveMethodName for {field} was invalid");
+                    }
+
+                    onRemoveMethod = tempMethod;
+                }
+
+                queries[i] = (field.FieldType, offset, onAddMethod, onRemoveMethod);
             }
 
             _componentDependencyQueries.Add(objType, queries);

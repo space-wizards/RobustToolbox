@@ -467,7 +467,8 @@ namespace Robust.Client.Graphics.Clyde
                 _debugStats.TotalLights += 1;
             }
 
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            ResetBlendFunc();
+
             CheckGlError();
 
             ApplyLightingFovToBuffer(viewport, eye);

@@ -30,6 +30,8 @@ namespace Robust.UnitTesting
             IoCManager.InitThread();
             IoCManager.Clear();
 
+            RegisterIoC();
+
             var assemblies = new List<Assembly>(4);
             switch (Project)
             {
@@ -45,9 +47,7 @@ namespace Robust.UnitTesting
 
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
             assemblies.Add(Assembly.GetExecutingAssembly());
-            
-            RegisterIoC();
-            
+
             foreach (var assembly in assemblies)
             {
                 IoCManager.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(assembly);

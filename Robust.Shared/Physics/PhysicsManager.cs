@@ -112,6 +112,8 @@ namespace Robust.Shared.Physics
             // So why the 100.0f instead of 0.0f? Well, because the other object needs to have SOME mass value,
             // or otherwise the physics object can actually sink in slightly to the physics-less object.
             // (the 100.0f is equivalent to a mass of 0.01kg)
+            // TODO: If one of the objects has infinite mass then this should just cancel out their impulse.
+            // Needs further testing.
             impulse /= aP.InvMass + bP.InvMass;
 
             return manifold.Normal * impulse;

@@ -345,6 +345,11 @@ namespace Robust.Shared.GameObjects.Systems
             friction = Math.Min(fVelocity, body.LinearVelocity.Length);
 
             // No multiplication/division by mass here since that would be redundant.
+            if (friction == 0.0f)
+            {
+                return;
+            }
+
             var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
 
             body.LinearVelocity += frictionVelocityChange;

@@ -23,7 +23,7 @@ namespace Robust.Client.GameObjects
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize;
         private bool setDrawFovOnInitialize;
-        private Vector2 setZoomOnInitialize = Vector2.One;
+        private Vector2 setZoomOnInitialize = Vector2.One/2f;
         private Vector2 offset = Vector2.Zero;
 
         public IEye Eye => _eye;
@@ -153,7 +153,7 @@ namespace Robust.Client.GameObjects
         {
             base.ExposeData(serializer);
 
-            serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One);
+            serializer.DataFieldCached(ref setZoomOnInitialize, "zoom", Vector2.One/2f);
             serializer.DataFieldCached(ref setDrawFovOnInitialize, "drawFov", true);
         }
 

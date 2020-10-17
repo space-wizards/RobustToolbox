@@ -349,7 +349,7 @@ namespace Robust.Shared.GameObjects.Systems
                 return;
             }
 
-                // No multiplication/division by mass here since that would be redundant.
+            // No multiplication/division by mass here since that would be redundant.
             var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
 
             body.LinearVelocity += frictionVelocityChange;

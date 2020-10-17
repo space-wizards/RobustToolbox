@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics.ClientEye
     /// <inheritdoc />
     public class Eye : IEye
     {
-        private Vector2 _scale = Vector2.One;
+        private Vector2 _scale = Vector2.One/2f;
         private Angle _rotation = Angle.Zero;
         private MapCoordinates _coords;
 

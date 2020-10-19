@@ -157,23 +157,18 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 var offset = GetFieldOffset(objType, field);
 
-                var attribute = attributeFields[i].attribute;
-
-                if (attribute == null)
-                {
-                    throw new NotImplementedException();//todo check if attribute null
-                }
+                var attribute = attributeFields[i].attribute!;
 
                 var methods = objType.GetRuntimeMethods().ToArray();
 
                 MethodInfo? onAddMethod = null;
                 if (attribute.OnAddMethodName != null)
                 {
-                    var tempMethod = methods.FirstOrDefault(m => m.Name == attribute.OnAddMethodName && !m.IsStatic && !m.IsAbstract);
+                    var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName);
 
                     if (tempMethod == null)
                     {
-                        throw new Exception($"OnAddMethodName for {field} was invalid");
+                        throw new ComponentDependencyInvalidOnAddMethodName(field);
                     }
 
                     onAddMethod = tempMethod;
@@ -182,11 +177,11 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 MethodInfo? onRemoveMethod = null;
                 if (attribute.OnRemoveMethodName != null)
                 {
-                    var tempMethod = methods.FirstOrDefault(m => m.Name == attribute.OnRemoveMethodName && !m.IsStatic && !m.IsAbstract);
+                    var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName);
 
                     if (tempMethod == null)
                     {
-                        throw new Exception($"OnRemoveMethodName for {field} was invalid");
+                        throw new ComponentDependencyInvalidOnRemoveMethodName(field);
                     }
 
                     onRemoveMethod = tempMethod;
@@ -198,6 +193,8 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             _componentDependencyQueries.Add(objType, queries);
             return queries;
         }
+
+        private MethodInfo? GetEventMethod(MethodInfo[] methods, string methodName) => methods.FirstOrDefault(m => m.Name == methodName);
 
         private int GetFieldOffset(Type type, FieldInfo field)
         {
@@ -239,8 +236,8 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
     public class ComponentDependencyValueTypeException : Exception
     {
-        public Type ComponentType;
-        public FieldInfo FieldInfo;
+        public readonly Type ComponentType;
+        public readonly FieldInfo FieldInfo;
 
         public ComponentDependencyValueTypeException(Type componentType, FieldInfo fieldInfo) : base($"Field {fieldInfo} of Type {componentType} is marked as ComponentDependency but is a value Type")
         {
@@ -251,13 +248,37 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
     public class ComponentDependencyNotNullableException : Exception
     {
-        public Type ComponentType;
-        public FieldInfo Field;
+        public readonly Type ComponentType;
+        public readonly FieldInfo Field;
 
         public ComponentDependencyNotNullableException(Type componentType, FieldInfo field) : base($"Field {field} of Type {componentType} is marked as ComponentDependency, but does not have ?(Nullable)-Flag!")
         {
             ComponentType = componentType;
             Field = field;
         }
+    }
+
+    public abstract class ComponentDependencyInvalidMethodName : Exception
+    {
+        public readonly string MethodTarget;
+        public readonly FieldInfo Field;
+
+        protected ComponentDependencyInvalidMethodName(string methodTarget, FieldInfo field) : base($"{methodTarget}MethodName for {field} was invalid")
+        {
+            MethodTarget = methodTarget;
+            Field = field;
+        }
+    }
+
+    public class ComponentDependencyInvalidOnAddMethodName : ComponentDependencyInvalidMethodName
+    {
+        public ComponentDependencyInvalidOnAddMethodName([NotNull] FieldInfo field) : base("OnAdd", field)
+        {}
+    }
+
+    public class ComponentDependencyInvalidOnRemoveMethodName : ComponentDependencyInvalidMethodName
+    {
+        public ComponentDependencyInvalidOnRemoveMethodName([NotNull] FieldInfo field) : base("OnRemove", field)
+        {}
     }
 }

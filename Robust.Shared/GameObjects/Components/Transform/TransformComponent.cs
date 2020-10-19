@@ -539,7 +539,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 return;
 
             DebugTools.Assert(newParent != this,
-                "The new parent and this component must be different.");
+                $"Can't parent a {nameof(ITransformComponent)} to itself.");
 
             // That's already our parent, don't bother attaching again.
             var newParentEnt = newParent.Owner;

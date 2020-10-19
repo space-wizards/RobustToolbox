@@ -11,7 +11,10 @@ attribute vec4 aPos;
 // x: deflection(0=A/1=B) y: height
 attribute vec2 subVertex;
 
-varying vec2 pos;
+// xy: A, zw: B
+varying vec4 fragPos;
+// x: actual angle, y: horizontal (1) / vertical (-1)
+varying vec2 fragAngle;
 
 // Note: This is *not* the standard projectionMatrix!
 uniform vec2 shadowLightCentre;
@@ -22,58 +25,48 @@ uniform float shadowOverlapSide;
 // also deal with the reference to it in shadow_cast_shared
 const highp float PI = 3.1415926535897932384626433;
 
-float calcX(vec2 rel)
-{
-    return atan(rel.y, -rel.x) / PI;
-}
-
 void main()
 {
     // aPos is clockwise, but we need anticlockwise so swap it here
     vec2 pA = aPos.zw - shadowLightCentre;
     vec2 pB = aPos.xy - shadowLightCentre;
-    float xA = calcX(pA);
-    float xB = calcX(pB);
+    float xA = atan(pA.y, -pA.x);
+    float xB = atan(pB.y, -pB.x);
 
     // We need to reliably detect a clip, as opposed to, say, a backdrawn face.
     // So a clip is when the angular area is >= 180 degrees (which is not possible with a quad and always occurs when wrapping)
-    if (abs(xA - xB) >= 1.0)
+    if (abs(xA - xB) >= PI)
     {
         // Oh no! It clipped...
-        if (xA > xB)
+
+        // If such that xA is on the right side and xB is on the left:
+        //  Pass 1: Adjust left boundary past left edge
+        //  Pass 2: Adjust right boundary past right edge
+
+        // If such that xA is on the left side and xB is on the right!
+        //  Pass 1: Adjust left boundary past right edge
+        //  Pass 2: Adjust right boundary past left edge
+
+        if (shadowOverlapSide < 0.5)
         {
-            // ...such that xA is on the right side and xB is on the left!
-            if (shadowOverlapSide > 0.5)
-            {
-                // ...move the left boundary past the left edge!
-                xA -= 2.0;
-            }
-            else
-            {
-                // ...move the right boundary past the right edge!
-                xB += 2.0;
-            }
+            // ...and we're adjusting the left edge...
+            xA += sign(xB - xA) * PI * 2.0;
         }
         else
         {
-            // ...such that xA is on the left side and xB is on the right!
-            if (shadowOverlapSide > 0.5)
-            {
-                // ...move the left boundary past the right edge!
-                xA += 2.0;
-            }
-            else
-            {
-                // ...move the right boundary past the left edge!
-                xB -= 2.0;
-            }
+            // ...and we're adjusting the right edge...
+            xB += sign(xA - xB) * PI * 2.0;
         }
     }
 
-    pos = mix(pA, pB, subVertex.x);
+    fragPos = vec4(pA, pB);
+    fragAngle = vec2(mix(xA, xB, subVertex.x), abs(pA.x - pB.x) - abs(pA.y - pB.y));
 
-    // Implement a depth divide here for now
-    float depth = 1.0 - (1.0 / length(pos));
+    // Depth divide MUST be implemented here no matter what,
+    //  because GLES SL 1.00 doesn't have gl_FragDepth.
+    // Keep in mind: Ultimately, this doesn't matter, because we use the colour buffer for actual casting,
+    //  and we don't really need to have correction
+    float depth = 1.0 - (1.0 / length(mix(pA, pB, subVertex.x)));
 
-    gl_Position = vec4(mix(xA, xB, subVertex.x), mix(1.0, -1.0, subVertex.y), depth, 1.0);
+    gl_Position = vec4(mix(xA, xB, subVertex.x) / PI, mix(1.0, -1.0, subVertex.y), depth, 1.0);
 }

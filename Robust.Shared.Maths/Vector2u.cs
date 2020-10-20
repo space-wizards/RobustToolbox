@@ -7,17 +7,17 @@ namespace Robust.Shared.Maths
     [JsonObject(MemberSerialization.Fields)]
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct Vector2u : IEquatable<Vector2u>
+    public struct Vector2u : IEquatable<Vector2u>
     {
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>
-        public readonly uint X;
+        public uint X;
 
         /// <summary>
         /// The Y component of the Vector2i.
         /// </summary>
-        public readonly uint Y;
+        public uint Y;
 
         /// <summary>
         /// Construct a vector from its coordinates.
@@ -30,7 +30,7 @@ namespace Robust.Shared.Maths
             Y = y;
         }
 
-        public void Deconstruct(out uint x, out uint y)
+        public readonly void Deconstruct(out uint x, out uint y)
         {
             x = X;
             y = Y;
@@ -41,7 +41,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="other">Other vector to check.</param>
         /// <returns>True if the two vectors are equal.</returns>
-        public bool Equals(Vector2u other)
+        public readonly bool Equals(Vector2u other)
         {
             return X == other.X && Y == other.Y;
         }
@@ -51,7 +51,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Vector2u vec && Equals(vec);
@@ -61,7 +61,7 @@ namespace Robust.Shared.Maths
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {

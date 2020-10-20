@@ -3,8 +3,10 @@ using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.ComponentDependencies;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -52,6 +54,7 @@ namespace Robust.Shared
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<ITextMacroFactory, TextMacroFactory>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
+            IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
         }
     }
 }

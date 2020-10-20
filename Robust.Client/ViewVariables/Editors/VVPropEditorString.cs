@@ -3,7 +3,7 @@ using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorString : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorString : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

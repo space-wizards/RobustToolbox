@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="anchored">Whether or not the entity is anchored in place.</param>
         public PhysicsComponentState(bool canCollide, BodyStatus status, List<IPhysShape> physShapes, bool hard, float mass, Vector2 linearVelocity, float angularVelocity, bool anchored)
-            : base(NetIDs.COLLIDABLE)
+            : base(NetIDs.PHYSICS)
         {
             CanCollide = canCollide;
             Status = status;

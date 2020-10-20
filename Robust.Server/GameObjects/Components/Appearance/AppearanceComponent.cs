@@ -14,12 +14,18 @@ namespace Robust.Server.GameObjects
 
         public override void SetData(string key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value))
+                return;
+
             data[key] = value;
             Dirty();
         }
 
         public override void SetData(Enum key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value))
+                return;
+
             data[key] = value;
             Dirty();
         }

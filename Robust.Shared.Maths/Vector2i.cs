@@ -8,7 +8,7 @@ namespace Robust.Shared.Maths
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
     // ReSharper disable once InconsistentNaming
-    public readonly struct Vector2i : IEquatable<Vector2i>
+    public struct Vector2i : IEquatable<Vector2i>
     {
         public static readonly Vector2i Zero = (0, 0);
         public static readonly Vector2i One = (1, 1);
@@ -16,12 +16,12 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// The X component of the Vector2i.
         /// </summary>
-        public readonly int X;
+        public int X;
 
         /// <summary>
         /// The Y component of the Vector2i.
         /// </summary>
-        public readonly int Y;
+        public int Y;
 
         /// <summary>
         /// Construct a vector from its coordinates.
@@ -49,7 +49,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="other">Other vector to check.</param>
         /// <returns>True if the two vectors are equal.</returns>
-        public bool Equals(Vector2i other)
+        public readonly bool Equals(Vector2i other)
         {
             return X == other.X && Y == other.Y;
         }
@@ -59,7 +59,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             return obj is Vector2i vector && Equals(vector);
@@ -69,7 +69,7 @@ namespace Robust.Shared.Maths
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -142,7 +142,7 @@ namespace Robust.Shared.Maths
             return !a.Equals(b);
         }
 
-        public void Deconstruct(out int x, out int y)
+        public readonly void Deconstruct(out int x, out int y)
         {
             x = X;
             y = Y;
@@ -167,7 +167,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns a string that represents the current Vector2i.
         /// </summary>
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({X}, {Y})";
         }

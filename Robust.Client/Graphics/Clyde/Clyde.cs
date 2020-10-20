@@ -207,7 +207,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            ResetBlendFunc();
+
             CheckGlError();
 
             // Primitive Restart's presence or lack thereof changes the amount of required memory.

@@ -1,16 +1,26 @@
-varying highp vec2 pos;
+
+// xy: A, zw: B
+varying highp vec4 fragPos;
+// x: actual angle, y: horizontal (1) / vertical (-1)
+varying highp vec2 fragAngle;
 
 void main()
 {
-    highp vec2 adjustedPos = pos;
-    if (!gl_FrontFacing)
-    {
-        // Slightly bias back faces inwards.
-        // This fixes being able to see a few no-lighting pixels (like space)
-        // "behind" walls at certain angles/positions.
-        //adjustedPos -= sign(adjustedPos) * 1.5/32.0;
+    // Stuff that needs to be inferred to avoid interpolation issues.
+    highp vec2 rayNormal = vec2(cos(fragAngle.x), -sin(fragAngle.x));
+
+    // Depth calculation accounting for interpolation.
+    highp float dist;
+
+    if (fragAngle.y > 0.0) {
+        // Line is horizontal
+        dist = abs(fragPos.y / rayNormal.y);
+    } else {
+        // Line is vertical
+        dist = abs(fragPos.x / rayNormal.x);
     }
-    highp float dist = length(adjustedPos);
+
+    // Main body.
 #ifdef HAS_DFDX
     highp float dx = dFdx(dist);
     highp float dy = dFdy(dist); // I'm aware derivative of y makes no sense here but oh well.

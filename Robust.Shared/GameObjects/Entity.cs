@@ -76,6 +76,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
+        
+        [ViewVariables]
+        public bool Paused { get; set; }
 
         private ITransformComponent? _transform;
 

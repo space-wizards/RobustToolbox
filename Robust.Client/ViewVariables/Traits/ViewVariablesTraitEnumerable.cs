@@ -150,10 +150,10 @@ namespace Robust.Client.ViewVariables.Traits
             for (var i = page * ElementsPerPage; i < ElementsPerPage * (page + 1) && i < _cache.Count; i++)
             {
                 var element = _cache[i];
-                ViewVariablesPropertyEditor editor;
+                VVPropEditor editor;
                 if (element == null)
                 {
-                    editor = new ViewVariablesPropertyEditorDummy();
+                    editor = new VVPropEditorDummy();
                 }
                 else
                 {

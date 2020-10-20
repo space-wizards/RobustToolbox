@@ -312,7 +312,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
-        public void RunCollidableDeferred()
+        public void RunPhysicsDeferred()
         {
             RebuildMatrices();
             UpdateEntityTree();
@@ -537,6 +537,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             // nothing to attach to.
             if (newParent == null)
                 return;
+
+            DebugTools.Assert(newParent != this,
+                $"Can't parent a {nameof(ITransformComponent)} to itself.");
 
             // That's already our parent, don't bother attaching again.
             var newParentEnt = newParent.Owner;

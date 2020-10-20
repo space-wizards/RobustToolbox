@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
         private readonly List<IEntitySystem> _updateOrder = new List<IEntitySystem>();
 
         [ViewVariables]
-        private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
+        public IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
         /// <inheritdoc />
         public event EventHandler<SystemChangedArgs>? SystemLoaded;

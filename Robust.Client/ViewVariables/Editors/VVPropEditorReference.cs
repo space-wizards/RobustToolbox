@@ -6,7 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorReference : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorReference : VVPropEditor
     {
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;

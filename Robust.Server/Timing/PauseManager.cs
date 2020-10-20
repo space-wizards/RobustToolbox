@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared.Interfaces.GameObjects;
@@ -23,10 +24,19 @@ namespace Robust.Server.Timing
             if (paused)
             {
                 _pausedMaps.Add(mapId);
+                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                {
+                    if (entity.HasComponent<IgnorePauseComponent>()) continue;
+                    entity.Paused = true;
+                }
             }
             else
             {
                 _pausedMaps.Remove(mapId);
+                foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
+                {
+                    entity.Paused = false;
+                }
             }
         }
 
@@ -39,28 +49,25 @@ namespace Robust.Server.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in _entityManager.GetEntities())
+            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
             {
-                if (entity.Transform.MapID != mapId)
-                {
-                    continue;
-                }
-
                 entity.RunMapInit();
+                entity.Paused = false;
             }
         }
 
         public void DoGridMapInitialize(IMapGrid grid) => DoGridMapInitialize(grid.Index);
         public void DoGridMapInitialize(GridId gridId)
         {
-            foreach (var entity in _entityManager.GetEntities())
+            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+            
+            foreach (var entity in _entityManager.GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)
-                {
                     continue;
-                }
 
                 entity.RunMapInit();
+                entity.Paused = false;
             }
         }
 

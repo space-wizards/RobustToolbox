@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -66,7 +67,7 @@ namespace Robust.Shared.Physics
         bool Awake { get; }
 
         /// <summary>
-        ///     Non-hard collidables will not cause action collision (e.g. blocking of movement)
+        ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events.
         /// </summary>
         /// <remarks>

@@ -12,7 +12,7 @@ namespace Robust.Server.ViewVariables.Traits
         private readonly IEnumerable _enumerable;
         private bool Ended => _enumerator == null;
 
-        public ViewVariablesTraitEnumerable(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitEnumerable(IViewVariablesSession session) : base(session)
         {
             _enumerable = (IEnumerable) session.Object;
             _refresh();

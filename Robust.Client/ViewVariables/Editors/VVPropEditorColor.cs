@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class ViewVariablesPropertyEditorColor : ViewVariablesPropertyEditor
+    public class VVPropEditorColor : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

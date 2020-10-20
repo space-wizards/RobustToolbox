@@ -82,5 +82,30 @@ namespace Robust.Shared.Utility
                 }
             }
         }
+
+        internal static readonly IComparer<Type> TypeInheritanceComparer = new TypeInheritanceComparerImpl();
+
+        private sealed class TypeInheritanceComparerImpl : IComparer<Type>
+        {
+            public int Compare(Type? x, Type? y)
+            {
+                if (x == null || y == null || x == y)
+                {
+                    return 0;
+                }
+
+                if (x.IsAssignableFrom(y))
+                {
+                    return -1;
+                }
+
+                if (y.IsAssignableFrom(x))
+                {
+                    return 1;
+                }
+
+                return 0;
+            }
+        }
     }
 }

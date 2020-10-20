@@ -441,7 +441,7 @@ namespace Robust.Shared.Map
 
             if (!_mapManager.TryGetGrid(Index, out var grid))
             {
-                return new EntityCoordinates(EntityUid.Invalid, (posWorld.X, posWorld.Y));
+                return new EntityCoordinates(_mapManager.GetMapEntityId(posWorld.MapId), (posWorld.X, posWorld.Y));
             }
 
             return new EntityCoordinates(grid.GridEntityId, WorldToLocal(posWorld.Position));

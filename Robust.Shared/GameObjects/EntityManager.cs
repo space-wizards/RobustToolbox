@@ -513,10 +513,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false)
         {
-            var mapPosition = position.ToMapPos(this);
+            var mapCoordinates = position.ToMap(this);
+            var mapPosition = mapCoordinates.Position;
             var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
                 mapPosition + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(_mapManager.GetGrid(position.GetGridId(this)).ParentMapId, aabb, approximate);
+            return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, approximate);
         }
 
         /// <inheritdoc />

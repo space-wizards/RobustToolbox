@@ -164,6 +164,18 @@ namespace Robust.Client.Placement
             }
         }
 
+        /// <summary>
+        ///     Returns the tile ref for a grid, or a map.
+        /// </summary>
+        public TileRef GetTileRef(EntityCoordinates coordinates)
+        {
+            var mapCoords = coordinates.ToMap(pManager.EntityManager);
+            var gridId = coordinates.GetGridId(pManager.EntityManager);
+            return gridId.IsValid() ? pManager.MapManager.GetGrid(gridId).GetTileRef(MouseCoords)
+                : new TileRef(mapCoords.MapId, gridId,
+                    MouseCoords.ToVector2i(pManager.EntityManager, pManager.MapManager), Tile.Empty);
+        }
+
         public TextureResource GetSprite(string key)
         {
             return pManager.ResourceCache.GetResource<TextureResource>(new ResourcePath("/Textures/") / key);
@@ -202,18 +214,16 @@ namespace Robust.Client.Placement
         public bool IsColliding(EntityCoordinates coordinates)
         {
             var bounds = pManager.ColliderAABB;
-            var worldcoords = coordinates.ToMapPos(pManager.EntityManager);
+            var mapCoords = coordinates.ToMap(pManager.EntityManager);
+            var (x, y) = mapCoords.Position;
 
-            var collisionbox = Box2.FromDimensions(
-                bounds.Left + worldcoords.X,
-                bounds.Bottom + worldcoords.Y,
+            var collisionBox = Box2.FromDimensions(
+                bounds.Left + x,
+                bounds.Bottom + y,
                 bounds.Width,
                 bounds.Height);
 
-            if (pManager.PhysicsManager.TryCollideRect(collisionbox, pManager.MapManager.GetGrid(coordinates.GetGridId(pManager.EntityManager)).ParentMapId))
-                return true;
-
-            return false;
+            return pManager.PhysicsManager.TryCollideRect(collisionBox, mapCoords.MapId);
         }
 
         protected Vector2 ScreenToWorld(Vector2 point)

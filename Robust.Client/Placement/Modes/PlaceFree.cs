@@ -1,6 +1,4 @@
-﻿using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -11,8 +9,7 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            CurrentTile = gridId.IsValid() ? pManager.MapManager.GetGrid(gridId).GetTileRef(MouseCoords) : TileRef.Zero;
+            CurrentTile = GetTileRef(MouseCoords);
         }
 
         public override bool IsValidPosition(EntityCoordinates position)

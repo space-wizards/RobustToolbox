@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -68,6 +69,15 @@ namespace Robust.Shared.GameObjects.Components.Transform
         {
             var grid = _mapManager.GetGrid(Owner.Transform.GridID);
             var pos = SnapGridPosAt(dir);
+
+            return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
+        }
+
+        [Pure]
+        public IEnumerable<IEntity> GetOffset(Vector2i offset)
+        {
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+            var pos = Position + offset;
 
             return grid.GetSnapGridCell(pos, Offset).Select(s => s.Owner);
         }

@@ -13,47 +13,34 @@ namespace Robust.Client.ViewVariables.Editors
         protected override Control MakeUI(object? value)
         {
             DebugTools.Assert(value!.GetType().IsEnum);
-            var enumVal = (Enum)value;
             var enumType = value.GetType();
-            var enumStorageType = enumType.GetEnumUnderlyingType();
+            var enumList = Enum.GetValues(enumType);
 
             var hBox = new HBoxContainer
             {
                 CustomMinimumSize = new Vector2(200, 0)
             };
 
-            var lineEdit = new LineEdit
+            var optionButton = new OptionButton();
+            foreach (var val in enumList)
             {
-                Text = enumVal.ToString(),
-                Editable = !ReadOnly,
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand
-            };
+                if(val == null)
+                    continue;
+                optionButton.AddItem(val.ToString()!, (int)val!);
+            }
+
+            optionButton.SelectId((int)value);
+            optionButton.Disabled = ReadOnly;
 
             if (!ReadOnly)
             {
-                lineEdit.OnTextEntered += e =>
+                optionButton.OnItemSelected += e =>
                 {
-                    var parseSig = new []{typeof(string), typeof(NumberStyles), typeof(CultureInfo), enumStorageType.MakeByRefType()};
-                    var parseMethod = enumStorageType.GetMethod("TryParse", parseSig);
-                    DebugTools.AssertNotNull(parseMethod);
-
-                    var parameters = new object?[] {e.Text, NumberStyles.Integer, CultureInfo.InvariantCulture, null};
-                    var parseWorked = (bool)parseMethod!.Invoke(null, parameters)!;
-
-                    if (parseWorked) // textbox was the underlying type
-                    {
-                        DebugTools.AssertNotNull(parameters[3]);
-                        ValueChanged(parameters[3]);
-                    }
-                    else if(Enum.TryParse(enumType, e.Text, true, out var enumValue))
-                    {
-                        var underlyingVal = Convert.ChangeType(enumValue, enumStorageType);
-                        ValueChanged(underlyingVal);
-                    }
+                    ValueChanged(e.Id);
                 };
             }
 
-            hBox.AddChild(lineEdit);
+            hBox.AddChild(optionButton);
             return hBox;
         }
     }

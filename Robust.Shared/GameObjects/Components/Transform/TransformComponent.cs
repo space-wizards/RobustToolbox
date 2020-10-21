@@ -19,6 +19,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
 {
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
+        public enum testEnum
+        {
+            A, B, C, Mauff
+        }
+
+        [ViewVariables (VVAccess.ReadWrite)] public testEnum test = testEnum.C;
+
         private EntityUid _parent;
         private Vector2 _localPosition; // holds offset from grid, or offset from parent
         private Angle _localRotation; // local rotation
@@ -78,7 +85,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         public bool DeferUpdates { get; set; }
-        
+
         // Deferred fields
         private Angle? _oldLocalRotation;
         private EntityCoordinates? _oldCoords;
@@ -230,7 +237,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
                 //    return;
-                
+
                 LocalPosition = newPos;
             }
         }
@@ -265,7 +272,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         Owner.EntityManager.EventBus.RaiseEvent(
                             EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
-                    
+
                     UpdateEntityTree();
                     UpdatePhysicsTree();
                 }
@@ -291,7 +298,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 if (_localPosition == value)
                     return;
-                
+
                 var oldGridPos = Coordinates;
                 SetPosition(value);
                 Dirty();

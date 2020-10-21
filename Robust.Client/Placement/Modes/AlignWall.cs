@@ -12,8 +12,7 @@ namespace Robust.Client.Placement.Modes
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
-            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            CurrentTile = pManager.MapManager.GetGrid(gridId).GetTileRef(MouseCoords);
+            CurrentTile = GetTileRef(MouseCoords);
 
             if (pManager.CurrentPermission!.IsTile)
             {
@@ -35,7 +34,7 @@ namespace Robust.Client.Placement.Modes
                 nodes.Add(new Vector2(MouseCoords.X, CurrentTile.Y + 1.5f));
             }
 
-            Vector2 closestNode = (from Vector2 node in nodes
+            var closestNode = (from Vector2 node in nodes
                                    orderby (node - MouseCoords.Position).LengthSquared ascending
                                    select node).First();
 
@@ -45,16 +44,7 @@ namespace Robust.Client.Placement.Modes
 
         public override bool IsValidPosition(EntityCoordinates position)
         {
-            if (pManager.CurrentPermission!.IsTile)
-            {
-                return false;
-            }
-            else if (!RangeCheck(position))
-            {
-                return false;
-            }
-
-            return true;
+            return !pManager.CurrentPermission!.IsTile && RangeCheck(position);
         }
     }
 }

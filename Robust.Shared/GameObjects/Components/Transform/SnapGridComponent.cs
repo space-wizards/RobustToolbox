@@ -169,7 +169,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             if (!_mapManager.TryGetGrid(Owner.Transform.GridID, out var grid))
             {
-                Logger.WarningS(LogCategory, "Entity {0} snapgrid didn't find grid {1}. Race condition?", Owner.Uid, Owner.Transform.GridID);
+                // Either a race condition, or we're not on any grids.
                 return;
             }
 

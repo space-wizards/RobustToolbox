@@ -571,19 +571,22 @@ namespace Robust.Client.Placement
 
         private void RequestPlacement(EntityCoordinates coordinates)
         {
-            var gridId = coordinates.GetGridId(EntityManager);
-            if (MapManager.GetGrid(gridId).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode!.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {
-                var grid = MapManager.GetGrid(gridId);
+                var gridId = coordinates.GetGridId(EntityManager);
+                // If we have actually placed something on a valid grid...
+                if (gridId.IsValid())
+                {
+                    var grid = MapManager.GetGrid(gridId);
 
-                // no point changing the tile to the same thing.
-                if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
-                    return;
+                    // no point changing the tile to the same thing.
+                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                        return;
+                }
 
                 foreach (var tileChange in _pendingTileChanges)
                 {

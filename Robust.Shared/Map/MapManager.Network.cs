@@ -97,11 +97,8 @@ namespace Robust.Shared.Map
                 : null;
 
             // First we need to figure out all the NEW MAPS.
-            // And make their default grids too.
             if(data.CreatedMaps != null)
             {
-                DebugTools.AssertNotNull(createdGrids);
-
                 foreach (var mapId in data.CreatedMaps)
                 {
                     if (_maps.Contains(mapId))
@@ -113,7 +110,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            // Then make all the other grids.
+            // Then make all the grids.
             if(data.CreatedGrids != null)
             {
                 var gridData = data.GridData != null

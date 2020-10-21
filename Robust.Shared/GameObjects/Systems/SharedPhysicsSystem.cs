@@ -49,6 +49,9 @@ namespace Robust.Shared.GameObjects.Systems
         /// </summary>
         private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
 
+        // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
+        private float _speedLimit = 30.0f;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -375,6 +378,11 @@ namespace Robust.Shared.GameObjects.Systems
 
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
+
+            // Slow zone up in here
+            if (physics.LinearVelocity.Length > _speedLimit)
+                physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
+
             physics.WorldRotation += physics.AngularVelocity * frameTime;
             physics.WorldPosition += physics.LinearVelocity * frameTime;
         }

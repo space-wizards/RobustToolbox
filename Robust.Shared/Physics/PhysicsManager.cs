@@ -53,6 +53,13 @@ namespace Robust.Shared.Physics
         public bool IsWeightless(EntityCoordinates coordinates)
         {
             var gridId = coordinates.GetGridId(_entityManager);
+            if (!gridId.IsValid())
+            {
+                // Not on a grid = no gravity for now.
+                // In the future, may want to allow maps to override to always have gravity instead.
+                return true;
+            }
+
             var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
             return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
         }

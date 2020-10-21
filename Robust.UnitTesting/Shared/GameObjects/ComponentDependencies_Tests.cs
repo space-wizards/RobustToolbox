@@ -121,7 +121,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             public override string Name => "TestFive";
 
+#pragma warning disable 649
             [ComponentDependency] public bool? thing;
+#pragma warning restore 649
         }
 
         private class TestSixComponent : Component

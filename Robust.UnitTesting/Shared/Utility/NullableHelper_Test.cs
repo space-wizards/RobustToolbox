@@ -40,6 +40,8 @@ namespace Robust.UnitTesting.Shared.Utility
         }
     }
 
+#pragma warning disable 169
+#pragma warning disable 414
     public class NullableTestClass
     {
         private int? i;
@@ -59,6 +61,8 @@ namespace Robust.UnitTesting.Shared.Utility
         private NullableTestClass nTc = null!;
         private char c;
     }
+#pragma warning restore 414
+#pragma warning restore 169
 
     public interface INullableTestInterface{}
 }

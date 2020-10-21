@@ -225,9 +225,9 @@ namespace Robust.Server.Console.Commands
 
             var pos = player.AttachedEntity.Transform.Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var gridId = pos.GetGridId(entityManager);
 
-            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(gridId).ParentMapId} GridID:{gridId} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player,
+                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 

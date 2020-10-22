@@ -25,6 +25,12 @@ uniform float shadowOverlapSide;
 // also deal with the reference to it in shadow_cast_shared
 const highp float PI = 3.1415926535897932384626433;
 
+// expands wall edges a little to prevent holes
+const highp float DEPTH_LEFTRIGHT_EXPAND_BIAS = 0.001;
+// added to zbufferDepth BEFORE divide
+// really just keep at 1.0 (keeps it away from the near clipping plane)
+const highp float DEPTH_ZBUFFER_PREDIV_BIAS = 1.0;
+
 void main()
 {
     // aPos is clockwise, but we need anticlockwise so swap it here
@@ -32,6 +38,11 @@ void main()
     vec2 pB = aPos.xy - shadowLightCentre;
     float xA = atan(pA.y, -pA.x);
     float xB = atan(pB.y, -pB.x);
+
+    // expand bias
+    float lrSignBias = sign(xB - xA) * DEPTH_LEFTRIGHT_EXPAND_BIAS;
+    xA -= lrSignBias;
+    xB += lrSignBias;
 
     // We need to reliably detect a clip, as opposed to, say, a backdrawn face.
     // So a clip is when the angular area is >= 180 degrees (which is not possible with a quad and always occurs when wrapping)
@@ -66,7 +77,7 @@ void main()
     //  because GLES SL 1.00 doesn't have gl_FragDepth.
     // Keep in mind: Ultimately, this doesn't matter, because we use the colour buffer for actual casting,
     //  and we don't really need to have correction
-    float depth = 1.0 - (1.0 / length(mix(pA, pB, subVertex.x)));
+    float zbufferDepth = 1.0 - (1.0 / (length(mix(pA, pB, subVertex.x)) + DEPTH_ZBUFFER_PREDIV_BIAS));
 
-    gl_Position = vec4(mix(xA, xB, subVertex.x) / PI, mix(1.0, -1.0, subVertex.y), depth, 1.0);
+    gl_Position = vec4(mix(xA, xB, subVertex.x) / PI, mix(1.0, -1.0, subVertex.y), zbufferDepth, 1.0);
 }

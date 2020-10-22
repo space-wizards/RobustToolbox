@@ -73,17 +73,6 @@ namespace Robust.Client.Graphics.Clyde
 
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
-            _mainViewport.Eye = _eyeManager.CurrentEye;
-            RenderViewport(_mainViewport);
-
-            {
-                var handle = _renderHandle.DrawingHandleScreen;
-                var tex = _mainViewport.RenderTarget.Texture;
-
-                handle.DrawTexture(tex, (0, 0));
-                FlushRenderQueue();
-            }
-
             TakeScreenshot(ScreenshotType.BeforeUI);
 
             RenderOverlays(OverlaySpace.ScreenSpace);

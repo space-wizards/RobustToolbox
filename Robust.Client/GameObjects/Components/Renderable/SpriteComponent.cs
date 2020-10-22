@@ -36,8 +36,6 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
-        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
-
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]

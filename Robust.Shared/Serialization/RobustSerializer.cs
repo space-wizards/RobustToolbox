@@ -18,7 +18,6 @@ namespace Robust.Shared.Serialization
     public partial class RobustSerializer : IRobustSerializer
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _mappedStringSerializer = default!;
 
         private readonly Lazy<ISawmill> _lazyLogSzr = new Lazy<ISawmill>(() => Logger.GetSawmill("szr"));

@@ -161,6 +161,7 @@ namespace Robust.Client.Graphics.Clyde
                 indexList[i] = i;
             }
 
+            var overlayIndex = 0;
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
             for (var i = 0; i < _drawingSpriteList.Count; i++)
@@ -168,9 +169,9 @@ namespace Robust.Client.Graphics.Clyde
                 ref var entry = ref _drawingSpriteList[indexList[i]];
                 var flushed = false;
 
-                for (var j = 0; j < worldOverlays.Count; j++)
+                for (var j = overlayIndex; j < worldOverlays.Count; j++)
                 {
-                    var overlay = worldOverlays[0];
+                    var overlay = worldOverlays[j];
 
                     if (overlay.ZIndex <= entry.sprite.DrawDepth)
                     {
@@ -181,7 +182,7 @@ namespace Robust.Client.Graphics.Clyde
                         }
 
                         overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
-                        worldOverlays.RemoveAt(0);
+                        overlayIndex = j;
                         continue;
                     }
 

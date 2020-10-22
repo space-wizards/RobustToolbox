@@ -1,9 +1,12 @@
 ﻿using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 ﻿using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Map;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -26,12 +29,14 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
+        // -- Handlers: Out --
+
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
             if (OwnsViewport)
             {
-                Viewport.Render();
+                Viewport?.Render();
             }
             if (Viewport == null)
             {
@@ -52,5 +57,57 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
+        // -- Handlers: In --
+
+        // -- Utils / S2M-M2S Base --
+
+        public MapCoordinates LocalPixelToMap(Vector2 point)
+        {
+            if (Viewport?.Eye == null)
+                return MapCoordinates.Nullspace;
+
+            var eye = (IEye) Viewport.Eye;
+            var newPoint = point;
+
+            // (inlined version of UiProjMatrix^-1)
+            newPoint -= Viewport.Size / 2f;
+            newPoint *= new Vector2(1, -1) / EyeManager.PixelsPerMeter;
+
+            // view matrix
+            eye.GetViewMatrixInv(out var viewMatrixInv);
+            newPoint = viewMatrixInv * newPoint;
+
+            return new MapCoordinates(newPoint, eye.Position.MapId);
+        }
+
+        public Vector2 WorldToLocalPixel(Vector2 point)
+        {
+            if (Viewport?.Eye == null)
+                return (0, 0);
+
+            var eye = (IEye) Viewport.Eye;
+            var newPoint = point;
+
+            eye.GetViewMatrix(out var viewMatrix);
+            newPoint = viewMatrix * newPoint;
+
+            // (inlined version of UiProjMatrix)
+            newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
+            newPoint += Viewport.Size / 2f;
+
+            return newPoint;
+        }
+
+        // -- Utils / S2M-M2S Extended --
+
+        public MapCoordinates ScreenToMap(Vector2 point)
+        {
+            return LocalPixelToMap(point - GlobalPixelPosition);
+        }
+
+        public Vector2 WorldToScreen(Vector2 point)
+        {
+            return WorldToLocalPixel(point) + GlobalPixelPosition;
+        }
     }
 }

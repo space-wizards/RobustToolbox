@@ -5,7 +5,6 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Map;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -16,17 +15,26 @@ namespace Robust.Client.UserInterface.CustomControls
     public class ViewportContainer : Control
     {
         private readonly IClyde _displayManager;
-        public IClydeViewport? Viewport;
-        public readonly bool OwnsViewport;
+        public IClydeViewport Viewport = default!;
 
-        public ViewportContainer(bool owns)
+        private Vector2 _viewportResolution = (1.0f, 1.0f);
+
+        /// <summary>
+        ///     This controls the render target size, *as a fraction of the control size.*
+        ///     Combined with controlling the Eye, this allows downscaling the game.
+        /// </summary>
+        public Vector2 ViewportResolution {
+            get => _viewportResolution;
+            set {
+                _viewportResolution = value;
+                Resized();
+            }
+        }
+
+        public ViewportContainer()
         {
             _displayManager = IoCManager.Resolve<IClyde>();
-            OwnsViewport = owns;
-            if (owns)
-            {
-                Viewport = _displayManager.CreateViewport((1, 1), "ViewportContainerOwnedViewport");
-            }
+            Resized();
         }
 
         // -- Handlers: Out --
@@ -34,27 +42,21 @@ namespace Robust.Client.UserInterface.CustomControls
         protected internal override void Draw(DrawingHandleScreen handle)
         {
             base.Draw(handle);
-            if (OwnsViewport)
-            {
-                Viewport?.Render();
-            }
+            Viewport.Render();
             if (Viewport == null)
             {
                 handle.DrawRect(UIBox2.FromDimensions((0, 0), Size * UserInterfaceManager.UIScale), Color.Red);
             }
             else
             {
-                handle.DrawTextureRect(Viewport.RenderTarget.Texture, UIBox2.FromDimensions((0, 0), PixelSize));
+                handle.DrawTextureRect(Viewport.RenderTarget.Texture, UIBox2.FromDimensions((0, 0), (Vector2i) (Viewport.Size / _viewportResolution)));
             }
         }
 
         protected override void Resized()
         {
-            if (OwnsViewport)
-            {
-                Viewport?.Dispose();
-                Viewport = _displayManager.CreateViewport(Vector2i.ComponentMax((1, 1), PixelSize), "ViewportContainerOwnedViewport");
-            }
+            Viewport?.Dispose();
+            Viewport = _displayManager.CreateViewport(Vector2i.ComponentMax((1, 1), (Vector2i) (PixelSize * _viewportResolution)), "ViewportContainerViewport");
         }
 
         // -- Handlers: In --
@@ -63,11 +65,14 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public MapCoordinates LocalPixelToMap(Vector2 point)
         {
-            if (Viewport?.Eye == null)
+            if (Viewport.Eye == null)
                 return MapCoordinates.Nullspace;
 
             var eye = (IEye) Viewport.Eye;
             var newPoint = point;
+
+            // prescaler
+            newPoint *= _viewportResolution;
 
             // (inlined version of UiProjMatrix^-1)
             newPoint -= Viewport.Size / 2f;
@@ -82,7 +87,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public Vector2 WorldToLocalPixel(Vector2 point)
         {
-            if (Viewport?.Eye == null)
+            if (Viewport.Eye == null)
                 return (0, 0);
 
             var eye = (IEye) Viewport.Eye;
@@ -94,6 +99,9 @@ namespace Robust.Client.UserInterface.CustomControls
             // (inlined version of UiProjMatrix)
             newPoint *= new Vector2(1, -1) * EyeManager.PixelsPerMeter;
             newPoint += Viewport.Size / 2f;
+
+            // prescaler
+            newPoint /= _viewportResolution;
 
             return newPoint;
         }

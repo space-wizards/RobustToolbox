@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.CustomControls
     {
         private readonly IEyeManager _eyeManager;
 
-        public MainViewportContainer(IEyeManager eyeManager) : base(true)
+        public MainViewportContainer(IEyeManager eyeManager) : base()
         {
             _eyeManager = eyeManager;
         }

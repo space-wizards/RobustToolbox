@@ -224,6 +224,18 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return;
                 }
 
+                // Change parent if necessary
+                if (_mapManager.TryFindGridAt(MapID, value, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != Owner.Uid)
+                {
+                    AttachParent(Owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    AttachParent(_mapManager.GetMapEntity(MapID));
+                }
+
                 // world coords to parent coords
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
 
@@ -535,7 +547,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (newParent == null)
+            if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,

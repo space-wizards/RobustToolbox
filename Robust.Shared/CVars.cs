@@ -179,17 +179,17 @@ namespace Robust.Shared
             CVarDef.Create("auth.userid", "", CVar.SECURE | CVar.CLIENTONLY);
 
         public static readonly CVarDef<string> AuthServer =
-            CVarDef.Create("auth.server", "http://localhost:5000/", CVar.SECURE);
+            CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
 
         public static readonly CVarDef<int> ConsoleDefaultGroup =
             CVarDef.Create("console.defaultGroup", 1, CVar.ARCHIVE);
-        
+
         public static readonly CVarDef<bool> DisplayVSync =
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE);
 
         public static readonly CVarDef<int> DisplayWindowMode =
             CVarDef.Create("display.windowmode", 0, CVar.ARCHIVE);
-        
+
         public static readonly CVarDef<int> DisplayWidth =
             CVarDef.Create("display.width", 1280);
 
@@ -216,16 +216,16 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false);
-        
+
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty);
-        
+
         public static readonly CVarDef<string> PlayerName =
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE);
-        
+
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true);
-        
+
         public static readonly CVarDef<bool> ConsoleLoginLocal =
             CVarDef.Create("console.loginlocal", true, CVar.ARCHIVE);
 

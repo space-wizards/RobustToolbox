@@ -729,6 +729,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ToggleHardFOV : IConsoleCommand
+    {
+        public string Command => "togglehardfov";
+        public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
+        public string Help => "togglehardfov";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.DrawHardFov = !mgr.DrawHardFov;
+            return false;
+        }
+    }
+
     internal class ToggleShadows : IConsoleCommand
     {
         public string Command => "toggleshadows";

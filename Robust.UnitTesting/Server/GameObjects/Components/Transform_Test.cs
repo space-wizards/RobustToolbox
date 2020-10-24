@@ -107,8 +107,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             });
 
             // move the parent, and the child should move with it
-            childTrans.WorldPosition = new Vector2(6, 6);
-            parentTrans.WorldPosition += new Vector2(-8, -8);
+            childTrans.LocalPosition = new Vector2(6, 6);
+            parentTrans.WorldPosition = new Vector2(-8, -8);
 
             Assert.That(childTrans.WorldPosition, Is.EqualTo(new Vector2(-2, -2)));
 

@@ -471,7 +471,7 @@ namespace Robust.Server
 
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
                 SendTickRateUpdateToClients(b);
-            }, true);
+            });
             
             cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
 

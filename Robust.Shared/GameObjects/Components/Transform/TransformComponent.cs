@@ -224,20 +224,17 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     return;
                 }
 
-                if (!ContainerHelpers.IsInContainer(Owner))
+                // Change parent if necessary
+                if (_mapManager.TryFindGridAt(MapID, value, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != Owner.Uid)
                 {
-                    // Change parent if necessary
-                    if (_mapManager.TryFindGridAt(MapID, value, out var grid) &&
-                        grid.GridEntityId.IsValid() &&
-                        grid.GridEntityId != Owner.Uid)
-                    {
-                        if (grid.GridEntityId != ParentUid)
-                            AttachParent(Owner.EntityManager.GetEntity(grid.GridEntityId));
-                    }
-                    else
-                    {
-                        AttachParent(_mapManager.GetMapEntity(MapID));
-                    }
+                    if (grid.GridEntityId != ParentUid)
+                        AttachParent(Owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    AttachParent(_mapManager.GetMapEntity(MapID));
                 }
 
                 // world coords to parent coords

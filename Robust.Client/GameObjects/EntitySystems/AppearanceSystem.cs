@@ -18,6 +18,9 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         private static void UpdateComponent(AppearanceComponent component)
         {
+            if (component.Deleted)
+                return;
+
             foreach (var visualizer in component.Visualizers)
             {
                 switch (visualizer)

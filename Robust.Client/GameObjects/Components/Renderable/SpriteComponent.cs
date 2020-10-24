@@ -1817,6 +1817,49 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
+        {
+            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            if (icon != null) yield return icon;
+
+            if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
+            {
+                yield return resourceCache.GetFallback<TextureResource>().Texture;
+                yield break;
+            }
+
+            var dummy = IoCManager.Resolve<IEntityManager>().SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var spriteComponent = dummy.GetComponent<SpriteComponent>();
+            if (dummy.TryGetComponent(out AppearanceComponent? appearanceComponent))
+            {
+                foreach (var layer in appearanceComponent.Visualizers)
+                {
+                    layer.OnChangeData(appearanceComponent);
+                }
+            }
+
+            var anyTexture = false;
+            foreach (var layer in spriteComponent.AllLayers)
+            {
+                if (layer.Texture != null) yield return layer.Texture;
+                if (!layer.RsiState.IsValid || !layer.Visible) continue;
+
+                var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
+                if (rsi == null ||
+                    !rsi.TryGetState(layer.RsiState, out var state))
+                    continue;
+
+                yield return state;
+                anyTexture = true;
+            }
+
+            dummy.Delete();
+
+            if (!anyTexture)
+                yield return resourceCache.GetFallback<TextureResource>().Texture;
+
+        }
+
         public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
@@ -1827,133 +1870,11 @@ namespace Robust.Client.GameObjects
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
 
-            var dummy = new DummyIconEntity {Prototype = prototype};
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
-            var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
-            newComponent.Owner = dummy;
+            var dummy = IoCManager.Resolve<IEntityManager>().SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            dummy.TryGetComponent(out SpriteComponent? spriteComponent);
+            dummy.Delete();
 
-            newComponent.ExposeData(YamlObjectSerializer.NewReader(spriteNode));
-
-            return newComponent.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
+            return spriteComponent?.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
-
-        #region DummyIconEntity
-        private class DummyIconEntity : IEntity
-        {
-            public GameTick LastModifiedTick { get; } = GameTick.Zero;
-            public IEntityManager EntityManager { get; } = null!;
-            public string Name { get; set; } = string.Empty;
-            public EntityUid Uid { get; } = EntityUid.Invalid;
-            public bool Initialized { get; } = false;
-            public bool Initializing { get; } = false;
-            public bool Deleted { get; } = true;
-            public bool Paused { get; set; }
-            public EntityPrototype? Prototype { get; set; }
-            public string Description { get; set; } = string.Empty;
-            public bool IsValid()
-            {
-                return false;
-            }
-
-            public ITransformComponent Transform { get; } = null!;
-            public IMetaDataComponent MetaData { get; } = null!;
-            public T AddComponent<T>() where T : Component, new()
-            {
-                throw new NotImplementedException();
-            }
-
-            public void RemoveComponent<T>()
-            {
-            }
-
-            public bool HasComponent<T>()
-            {
-                return false;
-            }
-
-            public bool HasComponent(Type type)
-            {
-                return false;
-            }
-
-            public T GetComponent<T>()
-            {
-                return default!;
-            }
-
-            public IComponent GetComponent(Type type)
-            {
-                return null!;
-            }
-
-            public IComponent GetComponent(uint netID)
-            {
-                return null!;
-            }
-
-            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-            {
-                component = null;
-                return false;
-            }
-
-            public T? GetComponentOrNull<T>() where T : class
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
-            {
-                component = null;
-                return false;
-            }
-
-            public IComponent? GetComponentOrNull(Type type)
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
-            {
-                component = null;
-                return false;
-            }
-
-            public IComponent? GetComponentOrNull(uint netId)
-            {
-                return null;
-            }
-
-            public void Shutdown()
-            {
-            }
-
-            public void Delete()
-            {
-            }
-
-            public IEnumerable<IComponent> GetAllComponents()
-            {
-                return Enumerable.Empty<IComponent>();
-            }
-
-            public IEnumerable<T> GetAllComponents<T>()
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            public void SendMessage(IComponent? owner, ComponentMessage message)
-            {
-            }
-
-            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
-            {
-            }
-
-            public void Dirty()
-            {
-            }
-        }
-        #endregion
     }
 }

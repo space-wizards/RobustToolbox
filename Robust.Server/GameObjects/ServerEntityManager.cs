@@ -9,6 +9,7 @@ using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -42,7 +43,7 @@ namespace Robust.Server.GameObjects
         private float? _maxUpdateRangeCache;
 
         public float MaxUpdateRange => _maxUpdateRangeCache
-            ??= _configurationManager.GetCVar<float>("net.maxupdaterange");
+            ??= _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
 
         private int _nextServerEntityUid = (int) EntityUid.FirstUid;
 

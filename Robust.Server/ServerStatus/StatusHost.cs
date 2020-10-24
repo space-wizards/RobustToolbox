@@ -16,7 +16,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Robust.Server.Interfaces.ServerStatus;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -94,7 +94,7 @@ namespace Robust.Server.ServerStatus
         {
             RegisterCVars();
 
-            if (!_configurationManager.GetCVar<bool>("status.enabled"))
+            if (!_configurationManager.GetCVar(CVars.StatusEnabled))
             {
                 return;
             }
@@ -133,7 +133,7 @@ namespace Robust.Server.ServerStatus
 
         private IPEndPoint GetBinding()
         {
-            var binding = _configurationManager.GetCVar<string>("status.bind").Split(':');
+            var binding = _configurationManager.GetCVar(CVars.StatusBind).Split(':');
             var ipAddrStr = binding[0];
             if (ipAddrStr == "+" || ipAddrStr == "*")
             {
@@ -171,18 +171,14 @@ namespace Robust.Server.ServerStatus
             {
             }
 
-            _configurationManager.RegisterCVar("status.enabled", true, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("status.bind", "*:1212", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("status.connectaddress", "", CVar.ARCHIVE);
-
-            _configurationManager.RegisterCVar("build.fork_id", info?.ForkId ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.version", info?.Version ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_windows", info?.Downloads.Windows ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_macos", info?.Downloads.MacOS ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.download_url_linux", info?.Downloads.Linux ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_windows", info?.Hashes.Windows ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_macos", info?.Hashes.MacOS ?? "", CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("build.hash_linux", info?.Hashes.Linux ?? "", CVar.ARCHIVE);
+            _configurationManager.SetCVar(CVars.BuildForkId, info?.ForkId ?? "");
+            _configurationManager.SetCVar(CVars.BuildVersion, info?.Version ?? "");
+            _configurationManager.SetCVar(CVars.BuildDownloadUrlWindows, info?.Downloads.Windows ?? "");
+            _configurationManager.SetCVar(CVars.BuildDownloadUrlMacOS, info?.Downloads.MacOS ?? "");
+            _configurationManager.SetCVar(CVars.BuildDownloadUrlLinux, info?.Downloads.Linux ?? "");
+            _configurationManager.SetCVar(CVars.BuildHashWindows, info?.Hashes.Windows ?? "");
+            _configurationManager.SetCVar(CVars.BuildHashMacOS, info?.Hashes.MacOS ?? "");
+            _configurationManager.SetCVar(CVars.BuildHashLinux, info?.Hashes.Linux ?? "");
         }
 
         [JsonObject(ItemRequired = Required.DisallowNull)]

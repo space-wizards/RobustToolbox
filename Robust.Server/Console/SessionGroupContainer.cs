@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
@@ -24,8 +24,8 @@ namespace Robust.Server.Console
         /// </summary>
         public ConGroupIndex DefaultGroup
         {
-            get => new ConGroupIndex(_configMan.GetCVar<int>("console.defaultGroup"));
-            set => _configMan.SetCVar("console.defaultGroup", value.Index);
+            get => new ConGroupIndex(_configMan.GetCVar(CVars.ConsoleDefaultGroup));
+            set => _configMan.SetCVar(CVars.ConsoleDefaultGroup, value.Index);
         }
 
         /// <summary>
@@ -37,9 +37,6 @@ namespace Robust.Server.Console
         {
             _configMan = configMan;
             _logger = logger;
-
-            if(!_configMan.IsCVarRegistered("console.defaultGroup"))
-                _configMan.RegisterCVar("console.defaultGroup", 1, CVar.ARCHIVE);
         }
 
         /// <summary>

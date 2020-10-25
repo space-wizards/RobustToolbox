@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         /// <inheritdoc />
         public bool DeferUpdates { get; set; }
-        
+
         // Deferred fields
         private Angle? _oldLocalRotation;
         private EntityCoordinates? _oldCoords;
@@ -225,12 +225,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
+                var oldPos = Parent!.InvWorldMatrix.Transform(LocalPosition);
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
+
+                if (oldPos.EqualsApprox(newPos, 0.0001))
+                    return;
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
                 //    return;
-                
+
                 LocalPosition = newPos;
             }
         }
@@ -265,7 +269,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                         Owner.EntityManager.EventBus.RaiseEvent(
                             EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
                     }
-                    
+
                     UpdateEntityTree();
                     UpdatePhysicsTree();
                 }
@@ -286,12 +290,12 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
+                if (_localPosition.EqualsApprox(value, 0.001))
+                    return;
+
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
 
-                if (_localPosition == value)
-                    return;
-                
                 var oldGridPos = Coordinates;
                 SetPosition(value);
                 Dirty();
@@ -314,6 +318,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
         /// <inheritdoc />
         public void RunPhysicsDeferred()
         {
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
+            {
+                return;
+            }
+
             RebuildMatrices();
             UpdateEntityTree();
             UpdatePhysicsTree();

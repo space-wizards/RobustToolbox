@@ -11,6 +11,7 @@ using Robust.Shared.Timing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -338,7 +339,10 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
-            private protected override void SetStencilOpImpl(StencilOp op)
+            private protected override void SetParameterImpl(string name, TextureUnit value) {
+            }
+
+            private protected override void SetStencilOpImpl(Robust.Client.Graphics.Shaders.StencilOp op)
             {
             }
 

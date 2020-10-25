@@ -63,6 +63,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _lightmapDivider = 2;
         private bool _enableSoftShadows = true;
 
+
         private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
@@ -321,7 +322,6 @@ namespace Robust.Client.Graphics.Clyde
             EntityPostRenderTarget = CreateRenderTarget(Vector2i.One * 8 * EyeManager.PixelsPerMeter,
                 new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 name: nameof(EntityPostRenderTarget));
-
             CreateMainViewport();
         }
 

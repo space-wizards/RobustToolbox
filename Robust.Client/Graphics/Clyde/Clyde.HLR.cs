@@ -8,10 +8,12 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -26,6 +28,8 @@ namespace Robust.Client.Graphics.Clyde
             _drawingSpriteList
                 =
                 new RefList<(SpriteComponent, Matrix3, Angle, float)>();
+
+
 
         public void Render()
         {
@@ -46,7 +50,6 @@ namespace Robust.Client.Graphics.Clyde
             // This should make the renderer more robust
             // in case an exception got thrown during rendering of the previous frame.
             ClearRenderState();
-
             _debugStats.Reset();
 
             // Basic pre-render busywork.
@@ -99,10 +102,12 @@ namespace Robust.Client.Graphics.Clyde
             SwapBuffers();
         }
 
+
         private void RenderOverlays(OverlaySpace space)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
+
                 var list = new List<Overlay>();
 
                 foreach (var overlay in _overlayManager.AllOverlays)
@@ -121,6 +126,23 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 FlushRenderQueue();
+            }
+        }
+
+
+        private void SendBufferCopyToWorldSpaceOverlays(LoadedRenderTarget lrt) {
+            List<Overlay> oTargets = new List<Overlay>();
+            foreach (var overlay in _overlayManager.AllOverlays) {
+                if (overlay.RequestScreenTexture && overlay.Space == OverlaySpace.WorldSpace) {
+                    oTargets.Add(overlay);
+                }
+            }
+            if (oTargets.Count > 0) {
+                CopyTexture(TextureUnit.Texture5, lrt.TextureHandle);
+                foreach (Overlay overlay in oTargets) {
+                    overlay.ScreenTexture = TextureUnit.Texture5;
+                }
+                oTargets.Clear();
             }
         }
 
@@ -266,7 +288,8 @@ namespace Robust.Client.Graphics.Clyde
                 // Actual code that isn't just pushing/popping renderer state so we can return safely.
 
                 var rt = _currentViewport.RenderTarget;
-                BindRenderTargetFull(RtToLoaded(rt));
+                LoadedRenderTarget lrt = RtToLoaded(rt);
+                BindRenderTargetFull(lrt);
                 ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);
@@ -295,16 +318,15 @@ namespace Robust.Client.Graphics.Clyde
                         DrawEntities(viewport, worldBounds);
                     }
 
-                    RenderOverlays(OverlaySpace.WorldSpace);
-
                     if (_lightManager.Enabled && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }
                 }
 
-                _lightingReady = false;
 
+
+                _lightingReady = false;
                 if (DebugLayers == ClydeDebugLayers.Fov)
                 {
                     // I'm refactoring this code and I found this comment:
@@ -319,6 +341,10 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 
+                SendBufferCopyToWorldSpaceOverlays(RtToLoaded(_currentViewport.RenderTarget));
+                RenderOverlays(OverlaySpace.WorldSpace);
+
+
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {
                     _renderHandle.UseShader(null);
@@ -328,6 +354,8 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
             }
+
+
 
             PopRenderStateFull(state);
             _updateUniformConstants(oldVp?.Size ?? _framebufferSize);

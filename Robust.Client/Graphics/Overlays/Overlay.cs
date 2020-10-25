@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Client.Graphics.Clyde;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Timing;
 
@@ -27,6 +28,17 @@ namespace Robust.Client.Graphics.Overlays
         public bool Drawing { get; private set; }
 
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+        /// <summary>
+        ///     If set to true, <see cref="ScreenTexture"/> will be set to the current frame. This can be costly to performance, but
+        ///     some shaders will require it as a passed in uniform to operate.
+        /// </summary>
+        public virtual bool RequestScreenTexture => false;
+
+        /// <summary>
+        ///     If <see cref="RequestScreenTexture"> is true, then this will be set to the current frame. If false, it will always be null.
+        /// </summary>
+        public TextureUnit? ScreenTexture = null;
 
         protected IOverlayManager OverlayManager { get; }
 
@@ -65,6 +77,7 @@ namespace Robust.Client.Graphics.Overlays
 
         protected virtual void Dispose(bool disposing)
         {
+            ScreenTexture = null;
         }
 
         /// <summary>

@@ -418,6 +418,9 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
+                    case TextureUnit textureUnit:
+                        program.SetUniformTexture(name, textureUnit);
+                        break;
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");
                 }

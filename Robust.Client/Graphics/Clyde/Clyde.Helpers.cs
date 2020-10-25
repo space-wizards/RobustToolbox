@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -30,6 +30,16 @@ namespace Robust.Client.Graphics.Clyde
             GL.ActiveTexture(unit);
             CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
+            CheckGlError();
+        }
+
+        private void CopyTexture(TextureUnit unit, ClydeHandle textureId) {
+            var glHandle = _loadedTextures[textureId].OpenGLObject;
+            GL.ActiveTexture(unit);
+            CheckGlError();
+            GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
+            CheckGlError();
+            GL.CopyTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgb, 0, 0, ScreenSize.X, ScreenSize.Y, 0);
             CheckGlError();
         }
 

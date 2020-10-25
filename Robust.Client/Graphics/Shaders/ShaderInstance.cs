@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Maths;
+using OpenToolkit.Graphics.OpenGL4;
 
 namespace Robust.Client.Graphics.Shaders
 {
@@ -189,6 +190,12 @@ namespace Robust.Client.Graphics.Shaders
             SetParameterImpl(name, value);
         }
 
+        public void SetParameter(string name, TextureUnit value) {
+            EnsureAlive();
+            EnsureMutable();
+            SetParameterImpl(name, value);
+        }
+
         /// <summary>
         ///     Make this shader permanently immutable.
         /// </summary>
@@ -254,6 +261,7 @@ namespace Robust.Client.Graphics.Shaders
         private protected abstract void SetParameterImpl(string name, in Matrix3 value);
         private protected abstract void SetParameterImpl(string name, in Matrix4 value);
         private protected abstract void SetParameterImpl(string name, Texture value);
+        private protected abstract void SetParameterImpl(string name, TextureUnit value);
 
         private protected abstract void SetStencilOpImpl(StencilOp op);
         private protected abstract void SetStencilFuncImpl(StencilFunc func);

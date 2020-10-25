@@ -133,10 +133,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 var current = WorldRotation;
                 var diff = value - current;
-
-                if (diff < 0.0001)
-                    return;
-
                 LocalRotation += diff;
             }
         }

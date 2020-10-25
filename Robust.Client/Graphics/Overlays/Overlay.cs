@@ -5,7 +5,6 @@ using Robust.Shared.IoC;
 using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Graphics.Clyde;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Timing;
@@ -36,9 +35,9 @@ namespace Robust.Client.Graphics.Overlays
         public virtual bool RequestScreenTexture => false;
 
         /// <summary>
-        ///     If <see cref="RequestScreenTexture"> is true, then this will be set to the current frame. If false, it will always be null.
+        ///     If <see cref="RequestScreenTexture"> is true, then this will be set to the texture corresponding to the current frame. If false, it will always be null.
         /// </summary>
-        public TextureUnit? ScreenTexture = null;
+        public Texture? ScreenTexture = null;
 
         protected IOverlayManager OverlayManager { get; }
 

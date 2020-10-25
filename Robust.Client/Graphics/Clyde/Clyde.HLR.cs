@@ -129,7 +129,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-
+        private ClydeTexture ScreenBufferTexture;
         private void SendBufferCopyToWorldSpaceOverlays(LoadedRenderTarget lrt) {
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
@@ -138,9 +138,9 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
             if (oTargets.Count > 0) {
-                CopyTexture(TextureUnit.Texture5, lrt.TextureHandle);
+                CopyTextureFromFBO(lrt, ScreenBufferTexture.TextureId);
                 foreach (Overlay overlay in oTargets) {
-                    overlay.ScreenTexture = TextureUnit.Texture5;
+                    overlay.ScreenTexture = ScreenBufferTexture;
                 }
                 oTargets.Clear();
             }
@@ -325,7 +325,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
 
-
                 _lightingReady = false;
                 if (DebugLayers == ClydeDebugLayers.Fov)
                 {
@@ -343,7 +342,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 SendBufferCopyToWorldSpaceOverlays(RtToLoaded(_currentViewport.RenderTarget));
                 RenderOverlays(OverlaySpace.WorldSpace);
-
 
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {

@@ -33,14 +33,23 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private void CopyTexture(TextureUnit unit, ClydeHandle textureId) {
-            var glHandle = _loadedTextures[textureId].OpenGLObject;
-            GL.ActiveTexture(unit);
+        private void CopyTextureFromFBO(LoadedRenderTarget source, ClydeHandle target) {
+
+            bool pause = source != _currentBoundRenderTarget;
+            LoadedRenderTarget previousRenderTarget = _currentBoundRenderTarget;
+            if(pause)
+                BindRenderTargetFull(source);
+
+            var targetHandle = _loadedTextures[target].OpenGLObject;
+            GL.ActiveTexture(TextureUnit.Texture5);
+            GL.BindTexture(TextureTarget.Texture2D, targetHandle.Handle);
             CheckGlError();
-            GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
+            GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, _framebufferSize.X, _framebufferSize.Y);
+            //GL.CopyImageSubData(sourceHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, targetHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, ScreenSize.X, ScreenSize.Y, 0);
             CheckGlError();
-            GL.CopyTexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgb, 0, 0, ScreenSize.X, ScreenSize.Y, 0);
-            CheckGlError();
+
+            if(pause)
+                BindRenderTargetFull(previousRenderTarget);
         }
 
         private static long EstPixelSize(PixelInternalFormat format)

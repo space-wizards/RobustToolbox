@@ -376,6 +376,7 @@ namespace Robust.Client.Graphics.Clyde
 
             program.Use();
 
+            int textureUnitVal = 0;
             // Assign shader parameters to uniform since they may be dirty.
             foreach (var (name, value) in instance.Parameters)
             {
@@ -418,8 +419,12 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
-                    case TextureUnit textureUnit:
-                        program.SetUniformTexture(name, textureUnit);
+                    case Texture texture:
+                        TextureUnit target = TextureUnit.Texture0+textureUnitVal;
+                        GL.ActiveTexture(target);
+                        GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[((ClydeTexture)texture).TextureId].OpenGLObject.Handle);
+                        program.SetUniformTexture(name, target);
+                        textureUnitVal++;
                         break;
                     default:
                         throw new InvalidOperationException($"Unable to handle shader parameter {name}: {value}");

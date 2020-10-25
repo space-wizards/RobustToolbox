@@ -427,11 +427,7 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
-            private protected override void SetParameterImpl(string name, Texture value) {
-                throw new NotImplementedException();
-            }
-
-            private protected override void SetParameterImpl(string name, TextureUnit value)
+            private protected override void SetParameterImpl(string name, Texture value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;

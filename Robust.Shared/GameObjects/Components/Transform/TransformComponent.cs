@@ -133,6 +133,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 var current = WorldRotation;
                 var diff = value - current;
+
+                if (diff < 0.0001)
+                    return;
+
                 LocalRotation += diff;
             }
         }
@@ -225,7 +229,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
+                var oldPos = Parent!.InvWorldMatrix.Transform(LocalPosition);
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
+
+                if (oldPos.EqualsApprox(newPos, 0.0001))
+                    return;
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)

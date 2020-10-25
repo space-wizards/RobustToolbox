@@ -183,19 +183,13 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (_timing.InSimulation) divisions = 1;
 
-            var movedBodies = new Dictionary<IPhysicsComponent, (Vector2 WorldPosition, float WorldRotation)>();
-
             for (var i = 0; i < divisions; i++)
             {
                 foreach (var physics in simulatedBodies)
                 {
-                    if (collidable.CanMove())
+                    if (physics.CanMove())
                     {
-                        if (!movedBodies.ContainsKey(collidable))
-                        {
-                            movedBodies[collidable] = (collidable.WorldPosition, collidable.WorldRotation);
-                        }
-                        UpdatePosition(collidable, deltaTime / divisions);
+                        UpdatePosition(physics, deltaTime / divisions);
                     }
                 }
 
@@ -205,22 +199,6 @@ namespace Robust.Shared.GameObjects.Systems
                     {
                         break;
                     }
-                }
-            }
-
-            // Fix stuttering / floating point issues.
-            foreach (var (body, old) in movedBodies)
-            {
-                var (oldPosition, oldRotation) = old;
-
-                if (body.WorldPosition.EqualsApprox(oldPosition, 0.001))
-                {
-                    body.WorldPosition = oldPosition;
-                }
-
-                if (Math.Abs(body.WorldRotation - oldRotation) < 0.001)
-                {
-                    body.WorldRotation = oldRotation;
                 }
             }
 

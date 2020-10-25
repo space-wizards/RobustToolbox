@@ -55,8 +55,6 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
-            _config.RegisterCVar("player.name", "JoeGenero", CVar.ARCHIVE);
-
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
         }

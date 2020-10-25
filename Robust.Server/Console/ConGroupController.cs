@@ -2,6 +2,7 @@
 using System.Net;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
@@ -31,8 +32,6 @@ namespace Robust.Server.Console
         {
             var logger = _logManager.GetSawmill("con.groups");
 
-            _configurationManager.RegisterCVar("console.loginlocal", true, CVar.ARCHIVE);
-
             _netManager.RegisterNetMessage<MsgConGroupUpdate>(MsgConGroupUpdate.Name);
 
             _playerManager.PlayerStatusChanged += _onClientStatusChanged;
@@ -51,13 +50,14 @@ namespace Robust.Server.Console
         {
             _sessions.OnClientStatusChanged(sender, e);
 
-            if (e.NewStatus == SessionStatus.Connected && _configurationManager.GetCVar<bool>("console.loginlocal"))
+            if (e.NewStatus == SessionStatus.Connected &&
+                _configurationManager.GetCVar(CVars.ConsoleLoginLocal))
             {
                 var session = e.Session;
                 var address = session.ConnectedClient.RemoteEndPoint.Address;
                 if (Equals(address, IPAddress.Loopback) || Equals(address, IPAddress.IPv6Loopback))
                 {
-                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar<int>("console.hostGroup")));
+                    SetGroup(session, new ConGroupIndex(_configurationManager.GetCVar(CVars.ConsoleHostGroup)));
                     UpdateClientData(session);
                 }
             }

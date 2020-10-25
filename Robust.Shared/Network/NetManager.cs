@@ -134,7 +134,7 @@ namespace Robust.Shared.Network
             = new Dictionary<NetConnection, TaskCompletionSource<object?>>();
 
         /// <inheritdoc />
-        public int Port => _config.GetCVar<int>("net.port");
+        public int Port => _config.GetCVar(CVars.NetPort);
 
         public bool IsAuthEnabled => _config.GetCVar<bool>("auth.enabled");
 
@@ -516,10 +516,10 @@ namespace Robust.Shared.Network
 
 #if DEBUG
             //Simulate Latency
-            netConfig.SimulatedLoss = _config.GetCVar<float>("net.fakeloss");
-            netConfig.SimulatedMinimumLatency = _config.GetCVar<float>("net.fakelagmin");
-            netConfig.SimulatedRandomLatency = _config.GetCVar<float>("net.fakelagrand");
-            netConfig.SimulatedDuplicatesChance = _config.GetCVar<float>("net.fakeduplicates");
+            netConfig.SimulatedLoss = _config.GetCVar(CVars.NetFakeLoss);
+            netConfig.SimulatedMinimumLatency = _config.GetCVar(CVars.NetFakeLagMin);
+            netConfig.SimulatedRandomLatency = _config.GetCVar(CVars.NetFakeLagRand);
+            netConfig.SimulatedDuplicatesChance = _config.GetCVar(CVars.NetFakeDuplicates);
 
             netConfig.ConnectionTimeout = 30000f;
 #endif

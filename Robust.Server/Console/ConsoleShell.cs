@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Configuration;
@@ -59,21 +60,6 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            // register console admin global password. DO NOT ADD THE REPLICATED FLAG
-            if (!_configMan.IsCVarRegistered("console.password"))
-                _configMan.RegisterCVar("console.password", string.Empty,
-                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-
-            if (!_configMan.IsCVarRegistered("console.hostpassword"))
-                _configMan.RegisterCVar("console.hostpassword", string.Empty,
-                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-
-            if (!_configMan.IsCVarRegistered("console.adminGroup"))
-                _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
-
-            if (!_configMan.IsCVarRegistered("console.hostGroup"))
-                _configMan.RegisterCVar("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
-
             ReloadCommands();
 
             // setup networking with clients
@@ -185,8 +171,8 @@ namespace Robust.Server.Console
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
 
-            var realPass = _configMan.GetCVar<string>("console.password");
-            var hostPass = _configMan.GetCVar<string>("console.hostpassword");
+            var realPass = _configMan.GetCVar(CVars.ConsolePassword);
+            var hostPass = _configMan.GetCVar(CVars.ConsoleHostPassword);
 
             // password disabled
             if (string.IsNullOrWhiteSpace(realPass))
@@ -197,7 +183,7 @@ namespace Robust.Server.Console
                 return false;
 
             // success!
-            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.adminGroup")));
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar(CVars.ConsoleAdminGroup)));
 
             return true;
         }
@@ -238,7 +224,7 @@ namespace Robust.Server.Console
             if (session == null)
                 throw new ArgumentNullException(nameof(session));
 
-            var realPass = _configMan.GetCVar<string>("console.hostpassword");
+            var realPass = _configMan.GetCVar(CVars.ConsoleHostPassword);
 
             // password disabled
             if (string.IsNullOrWhiteSpace(realPass))
@@ -249,7 +235,7 @@ namespace Robust.Server.Console
                 return false;
 
             // success!
-            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.hostGroup")));
+            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar(CVars.ConsoleHostGroup)));
 
             return true;
         }

@@ -318,7 +318,7 @@ namespace Robust.Client.Graphics.Clyde
                         DrawEntities(viewport, worldBounds);
                     }
 
-                    if (_lightManager.Enabled && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }

@@ -67,6 +67,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
+            base.Initialize();
             return true;
         }
 

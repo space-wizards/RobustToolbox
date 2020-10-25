@@ -49,7 +49,7 @@ namespace Robust.Shared.Network
                 msgLogin.ReadFromBuffer(incPacket);
 
                 var ip = connection.RemoteEndPoint.Address;
-                var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar<bool>("auth.allowlocal");
+                var isLocal = IPAddress.IsLoopback(ip) && _config.GetCVar(CVars.AuthAllowLocal);
                 var canAuth = msgLogin.CanAuth;
                 var needPk = msgLogin.NeedPubKey;
                 var authServer = _config.GetSecureCVar<string>("auth.server");

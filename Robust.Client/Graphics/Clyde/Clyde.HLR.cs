@@ -29,8 +29,6 @@ namespace Robust.Client.Graphics.Clyde
                 =
                 new RefList<(SpriteComponent, Matrix3, Angle, float)>();
 
-
-
         public void Render()
         {
             CheckTransferringScreenshots();
@@ -50,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
             // This should make the renderer more robust
             // in case an exception got thrown during rendering of the previous frame.
             ClearRenderState();
+
             _debugStats.Reset();
 
             // Basic pre-render busywork.
@@ -102,12 +101,10 @@ namespace Robust.Client.Graphics.Clyde
             SwapBuffers();
         }
 
-
         private void RenderOverlays(OverlaySpace space)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
-
                 var list = new List<Overlay>();
 
                 foreach (var overlay in _overlayManager.AllOverlays)
@@ -129,7 +126,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private ClydeTexture ScreenBufferTexture;
+        private ClydeTexture? ScreenBufferTexture;
         private void SendBufferCopyToWorldSpaceOverlays(LoadedRenderTarget lrt) {
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
@@ -137,7 +134,7 @@ namespace Robust.Client.Graphics.Clyde
                     oTargets.Add(overlay);
                 }
             }
-            if (oTargets.Count > 0) {
+            if (oTargets.Count > 0 && ScreenBufferTexture != null) {
                 CopyTextureFromFBO(lrt, ScreenBufferTexture.TextureId);
                 foreach (Overlay overlay in oTargets) {
                     overlay.ScreenTexture = ScreenBufferTexture;
@@ -324,8 +321,8 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-
                 _lightingReady = false;
+
                 if (DebugLayers == ClydeDebugLayers.Fov)
                 {
                     // I'm refactoring this code and I found this comment:
@@ -352,8 +349,6 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
             }
-
-
 
             PopRenderStateFull(state);
             _updateUniformConstants(oldVp?.Size ?? _framebufferSize);

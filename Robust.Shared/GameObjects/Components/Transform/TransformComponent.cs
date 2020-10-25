@@ -294,11 +294,11 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
+                if (_localPosition.EqualsApprox(value, 0.001))
+                    return;
+
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
-
-                if (_localPosition == value)
-                    return;
 
                 var oldGridPos = Coordinates;
                 SetPosition(value);

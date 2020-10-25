@@ -61,9 +61,20 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            snapSize = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager)).SnapSize; //Find snap size.
+            snapSize = 1f;
+
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+            if (gridId.IsValid())
+            {
+                snapSize = pManager.MapManager.GetGrid(gridId).SnapSize; //Find snap size for the grid.
+                onGrid = true;
+            }
+            else
+            {
+                onGrid = false;
+            }
+
             GridDistancing = snapSize;
-            onGrid = true;
 
             var mouselocal = new Vector2( //Round local coordinates onto the snap grid
                 (float) MathF.Round(MouseCoords.X / snapSize, MidpointRounding.AwayFromZero) * snapSize,

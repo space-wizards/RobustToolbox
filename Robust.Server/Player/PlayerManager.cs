@@ -37,7 +37,6 @@ namespace Robust.Server.Player
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;

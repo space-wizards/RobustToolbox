@@ -238,7 +238,7 @@ namespace Robust.Shared.Configuration
 
             if (invokeImmediately)
             {
-                onValueChanged((T) reg.Value!);
+                onValueChanged((T) (reg.Value ?? reg.DefaultValue)!);
             }
         }
 
@@ -305,6 +305,11 @@ namespace Robust.Shared.Configuration
             }
             else
                 throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+        }
+
+        public void SetCVar<T>(CVarDef<T> def, T value) where T : notnull
+        {
+            SetCVar(def.Name, value);
         }
 
         /// <inheritdoc />

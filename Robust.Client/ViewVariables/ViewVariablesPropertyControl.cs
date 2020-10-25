@@ -61,13 +61,13 @@ namespace Robust.Client.ViewVariables
             TopContainer.AddChild(NameLabel);
         }
 
-        public ViewVariablesPropertyEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
+        public VVPropEditor SetProperty(ViewVariablesBlobMembers.MemberData member)
         {
             NameLabel.Text = member.Name;
             var type = Type.GetType(member.Type);
 
             _bottomLabel.Text = $"Type: {member.TypePretty}";
-            ViewVariablesPropertyEditor editor;
+            VVPropEditor editor;
             if (type == null)
             {
                 // Type is server-side only.
@@ -75,7 +75,7 @@ namespace Robust.Client.ViewVariables
                 if (member.Value is ViewVariablesBlobMembers.ServerValueTypeToken)
                 {
                     // Value type, just display it stringified read-only.
-                    editor = new ViewVariablesPropertyEditorDummy();
+                    editor = new VVPropEditorDummy();
                 }
                 else
                 {

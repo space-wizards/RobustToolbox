@@ -39,7 +39,7 @@ entities:
   - shapes:
     - !type:PhysShapeGrid
       grid: 0
-    type: Collidable
+    type: Physics
 - uid: 1
   type: MapDeserializeTest
   components:

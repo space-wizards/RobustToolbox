@@ -5,7 +5,7 @@ using System;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorISelfSerialzable<T> : ViewVariablesPropertyEditor where T : ISelfSerialize
+    internal sealed class VVPropEditorISelfSerialzable<T> : VVPropEditor where T : ISelfSerialize
     {
         protected override Control MakeUI(object? value)
         {

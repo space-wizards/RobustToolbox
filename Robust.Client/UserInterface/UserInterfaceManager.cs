@@ -10,7 +10,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
@@ -25,7 +25,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
@@ -88,7 +88,9 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
-            _uiScaleChanged(_configurationManager.GetCVar<float>("display.uiScale"));
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -724,11 +726,6 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.RegisterCVar("display.uiScale", 0f, CVar.ARCHIVE, _uiScaleChanged);
-        }
-
         private void _uiScaleChanged(float newValue)
         {
             UIScale = newValue == 0f ? DefaultUIScale : newValue;
@@ -761,13 +758,8 @@ namespace Robust.Client.UserInterface
         ///     Converts
         /// </summary>
         /// <param name="args">Event data values for a bound key state change.</param>
-        private void OnUIKeyBindStateChanged(BoundKeyEventArgs args)
+        private bool OnUIKeyBindStateChanged(BoundKeyEventArgs args)
         {
-            if (!args.CanFocus && KeyboardFocused != null)
-            {
-                args.Handle();
-            }
-
             if (args.State == BoundKeyState.Down)
             {
                 KeyBindDown(args);
@@ -776,6 +768,12 @@ namespace Robust.Client.UserInterface
             {
                 KeyBindUp(args);
             }
+
+            if (!args.CanFocus && KeyboardFocused != null)
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

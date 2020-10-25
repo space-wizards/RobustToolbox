@@ -4,11 +4,13 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -28,6 +30,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
+        [ViewVariables]
         private readonly List<Type> _extraLoadedTypes = new List<Type>();
 
         private readonly Stopwatch _stopwatch = new Stopwatch();
@@ -35,18 +38,23 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
+        [ViewVariables]
         private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
         /// <summary>
         /// Maps system supertypes to instances.
         /// </summary>
+        [ViewVariables]
         private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
 
         private bool _initialized;
 
-        private readonly List<IEntitySystem> _updateOrder = new List<IEntitySystem>();
+        [ViewVariables]
+        private IEntitySystem[] _updateOrder = Array.Empty<IEntitySystem>();
+        [ViewVariables]
+        private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
 
         [ViewVariables]
-        private IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
+        public IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
 
         /// <inheritdoc />
         public event EventHandler<SystemChangedArgs>? SystemLoaded;
@@ -137,12 +145,13 @@ namespace Robust.Shared.GameObjects
             }
 
             // Create update order for entity systems.
-            _updateOrder.AddRange(CalculateUpdateOrder(_systems.Values));
+            (_frameUpdateOrder, _updateOrder) = CalculateUpdateOrder(_systems.Values);
 
             _initialized = true;
         }
 
-        private static IEnumerable<IEntitySystem> CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
+        private static (IEntitySystem[] frameUpd, IEntitySystem[] upd)
+            CalculateUpdateOrder(Dictionary<Type, IEntitySystem>.ValueCollection systems)
         {
             var allNodes = new List<GraphNode>();
             var typeToNode = new Dictionary<Type, GraphNode>();
@@ -172,7 +181,11 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            return TopologicalSort(allNodes).Select(p => p.System);
+            var order = TopologicalSort(allNodes).Select(p => p.System).ToArray();
+            var frameUpdate = order.Where(p => NeedsFrameUpdate(p.GetType())).ToArray();
+            var update = order.Where(p => NeedsUpdate(p.GetType())).ToArray();
+
+            return (frameUpdate, update);
         }
 
         private static IEnumerable<GraphNode> TopologicalSort(IEnumerable<GraphNode> nodes)
@@ -218,7 +231,7 @@ namespace Robust.Shared.GameObjects
             }
 
             _systems.Clear();
-            _updateOrder.Clear();
+            _updateOrder = Array.Empty<IEntitySystem>();
             _supertypeSystems.Clear();
             _initialized = false;
         }
@@ -250,7 +263,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void FrameUpdate(float frameTime)
         {
-            foreach (var system in _updateOrder)
+            foreach (var system in _frameUpdateOrder)
             {
 #if EXCEPTION_TOLERANCE
                 try
@@ -276,6 +289,34 @@ namespace Robust.Shared.GameObjects
             }
 
             _extraLoadedTypes.Add(typeof(T));
+        }
+
+        private static bool NeedsUpdate(Type type)
+        {
+            if (!typeof(EntitySystem).IsAssignableFrom(type))
+            {
+                return true;
+            }
+
+            var mUpdate = type.GetMethod(nameof(EntitySystem.Update), new[] {typeof(float)});
+
+            DebugTools.AssertNotNull(mUpdate);
+
+            return mUpdate!.DeclaringType != typeof(EntitySystem);
+        }
+
+        private static bool NeedsFrameUpdate(Type type)
+        {
+            if (!typeof(EntitySystem).IsAssignableFrom(type))
+            {
+                return true;
+            }
+
+            var mFrameUpdate = type.GetMethod(nameof(EntitySystem.FrameUpdate), new[] {typeof(float)});
+
+            DebugTools.AssertNotNull(mFrameUpdate);
+
+            return mFrameUpdate!.DeclaringType != typeof(EntitySystem);
         }
 
         [DebuggerDisplay("GraphNode: {" + nameof(System) + "}")]

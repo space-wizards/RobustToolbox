@@ -7,6 +7,7 @@ using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameStates;
@@ -41,7 +42,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        public bool PvsEnabled => _configurationManager.GetCVar<bool>("net.pvs");
+        public bool PvsEnabled => _configurationManager.GetCVar(CVars.NetPVS);
 
         /// <inheritdoc />
         public void Initialize()
@@ -51,9 +52,6 @@ namespace Robust.Server.GameStates
 
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
-
-            _configurationManager.RegisterCVar("net.pvs", true, CVar.ARCHIVE);
-            _configurationManager.RegisterCVar("net.maxupdaterange", 12.5f, CVar.ARCHIVE);
         }
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)

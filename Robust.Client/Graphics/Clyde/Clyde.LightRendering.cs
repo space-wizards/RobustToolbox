@@ -44,10 +44,6 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _wallBleedBlurShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
 
-        // Projection matrix used while rendering FOV.
-        // We keep this around so we can reverse the effects while overlaying actual FOV.
-        private Matrix4 _fovProjection;
-
         // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
         // (it uses VSM unlike final FOV).
         private GLHandle _fovFilterSampler;
@@ -63,6 +59,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // Actual GL objects used for rendering.
         private GLBuffer _occlusionVbo = default!;
+        private GLBuffer _occlusionVIVbo = default!;
         private GLBuffer _occlusionEbo = default!;
         private GLHandle _occlusionVao;
 
@@ -91,8 +88,6 @@ namespace Robust.Client.Graphics.Clyde
         private readonly (PointLightComponent light, Vector2 pos)[] _lightsToRenderList
             = new (PointLightComponent light, Vector2 pos)[MaxLightsPerScene];
 
-        private readonly Matrix4[] _shadowMatrices = new Matrix4[MaxLightsPerScene];
-
         private unsafe void InitLighting()
         {
             LoadLightingShaders();
@@ -106,14 +101,24 @@ namespace Robust.Client.Graphics.Clyde
 
                 ObjectLabelMaybe(ObjectLabelIdentifier.VertexArray, _occlusionVao, nameof(_occlusionVao));
 
+                // aPos
                 _occlusionVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionVbo));
+                GL.VertexAttribPointer(0, 4, VertexAttribPointerType.Float, false, sizeof(Vector4), IntPtr.Zero);
+                GL.EnableVertexAttribArray(0);
 
+                CheckGlError();
+
+                // subVertex
+                _occlusionVIVbo = new GLBuffer(this, BufferTarget.ArrayBuffer, BufferUsageHint.DynamicDraw,
+                    nameof(_occlusionVIVbo));
+                GL.VertexAttribPointer(1, 2, VertexAttribPointerType.UnsignedByte, true, sizeof(byte) * 2, IntPtr.Zero);
+                GL.EnableVertexAttribArray(1);
+
+                // index
                 _occlusionEbo = new GLBuffer(this, BufferTarget.ElementArrayBuffer, BufferUsageHint.DynamicDraw,
                     nameof(_occlusionEbo));
 
-                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, sizeof(Vector3), IntPtr.Zero);
-                GL.EnableVertexAttribArray(0);
                 CheckGlError();
             }
 
@@ -167,7 +172,8 @@ namespace Robust.Client.Graphics.Clyde
             var depthFrag = ReadEmbeddedShader("shadow-depth.frag");
 
             (string, uint)[] attribLocations = {
-                ("aPos", 0)
+                ("aPos", 0),
+                ("subVertex", 1)
             };
 
             _fovCalculationProgram = _compileProgram(depthVert, depthFrag, attribLocations, "Shadow Depth Program");
@@ -216,12 +222,12 @@ namespace Robust.Client.Graphics.Clyde
                 GL.CullFace(CullFaceMode.Back);
                 CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 0);
 
                 GL.CullFace(CullFaceMode.Front);
                 CheckGlError();
 
-                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1, out _fovProjection);
+                DrawOcclusionDepth(eye.Position.Position, _fovRenderTarget.Size.X, maxDist, 1);
             }
 
             FinalizeDepthDraw();
@@ -234,72 +240,34 @@ namespace Robust.Client.Graphics.Clyde
         /// <param name="width">The width of the current framebuffer.</param>
         /// <param name="maxDist">The maximum distance of this light.</param>
         /// <param name="viewportY">Y index of the row to render the depth at in the framebuffer.</param>
-        /// <param name="projMatrix">
-        ///     Projection matrix necessary to later un-project the depth map when applying it.
         /// </param>
-        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY,
-            out Matrix4 projMatrix)
+        private void DrawOcclusionDepth(Vector2 lightPos, int width, float maxDist, int viewportY)
         {
-            projMatrix = default; // Gets overriden below.
-
-            var (posX, posY) = lightPos;
-            var lightMatrix = Matrix4.CreateTranslation(-posX, -posY, 0);
-
             // The light is now the center of the universe.
-            _fovCalculationProgram.SetUniform("shadowLightMatrix", lightMatrix, false);
+            _fovCalculationProgram.SetUniform("shadowLightCentre", lightPos);
 
-            var baseProj = Matrix4.CreatePerspectiveFieldOfView(
-                MathHelper.DegreesToRadians(90),
-                1,
-                maxDist / 1000,
-                maxDist * 1.1f);
+            // Shift viewport around so we write to the correct quadrant of the depth map.
+            GL.Viewport(0, viewportY, width, 1);
+            CheckGlError();
 
-            var step = width / 4;
-
-            GL.Disable(EnableCap.Blend);
-
-            for (var i = 0; i < 4; i++)
-            {
-                // The occlusion geometry has to be rotated for every orientation and also corrected
-                // so that the 2D coordinates make more sense in 3D.
-                // These quaternions do that.
-                // They're just two 90 degree rotations around (at most) 2 of the axes of rotation but uhhh.
-                // I couldn't get LookRotation to work, ok?
-                var orientation = i switch
-                {
-                    0 => new Quaternion(-0.707f, 0, 0, 0.707f),
-                    1 => new Quaternion(0.5f, -0.5f, -0.5f, -0.5f),
-                    2 => new Quaternion(0, 0.707f, 0.707f, 0),
-                    3 => new Quaternion(-0.5f, -0.5f, -0.5f, 0.5f),
-                    _ => default
-                };
-
-                var rotMatrix = Matrix4.Rotate(orientation);
-                var proj = rotMatrix * baseProj;
-
-                if (i == 0)
-                {
-                    // First projection matrix is necessary to undo the projection inside the application shader.
-                    // So store it.
-                    projMatrix = proj;
-                }
-
-                _fovCalculationProgram.SetUniform("shadowProjectionMatrix", proj, false);
-                // Shift viewport around so we write to the correct quadrant of the depth map.
-                GL.Viewport(step * i, viewportY, step, 1);
-                CheckGlError();
-
-                GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
-                CheckGlError();
-                _debugStats.LastGLDrawCalls += 1;
-            }
-
-            GL.Enable(EnableCap.Blend);
+            // Make two draw calls. This allows a faked "generation" of additional polygons.
+            _fovCalculationProgram.SetUniform("shadowOverlapSide", 0.0f);
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            CheckGlError();
+            _debugStats.LastGLDrawCalls += 1;
+            // Yup, it's the other draw call.
+            _fovCalculationProgram.SetUniform("shadowOverlapSide", 1.0f);
+            GL.DrawElements(GetQuadGLPrimitiveType(), _occlusionDataLength, DrawElementsType.UnsignedShort, 0);
+            CheckGlError();
+            _debugStats.LastGLDrawCalls += 1;
         }
 
         private void PrepareDepthDraw(LoadedRenderTarget target)
         {
             const float arbitraryDistanceMax = 1234;
+
+            GL.Disable(EnableCap.Blend);
+            CheckGlError();
 
             GL.Enable(EnableCap.DepthTest);
             CheckGlError();
@@ -317,7 +285,14 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             GL.ClearDepth(1);
             CheckGlError();
-            GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
+            if (_hasGLFloatFramebuffers)
+            {
+                GL.ClearColor(arbitraryDistanceMax, arbitraryDistanceMax * arbitraryDistanceMax, 0, 1);
+            }
+            else
+            {
+                GL.ClearColor(1, 1, 1, 1);
+            }
             CheckGlError();
             GL.Clear(ClearBufferMask.DepthBufferBit | ClearBufferMask.ColorBufferBit);
             CheckGlError();
@@ -332,9 +307,15 @@ namespace Robust.Client.Graphics.Clyde
 
         private void FinalizeDepthDraw()
         {
+            GL.Disable(EnableCap.CullFace);
+            CheckGlError();
+
+            GL.DepthMask(false);
+            CheckGlError();
             GL.Disable(EnableCap.DepthTest);
             CheckGlError();
-            GL.Disable(EnableCap.CullFace);
+
+            GL.Enable(EnableCap.Blend);
             CheckGlError();
         }
 
@@ -365,7 +346,7 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         var (light, lightPos) = lights[i];
 
-                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i, out _shadowMatrices[i]);
+                        DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
                     }
                 }
 
@@ -445,7 +426,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
                 lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
-                lightShader.SetUniformMaybe("shadowMatrix", _shadowMatrices[i], false);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 
@@ -467,7 +447,8 @@ namespace Robust.Client.Graphics.Clyde
                 _debugStats.TotalLights += 1;
             }
 
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            ResetBlendFunc();
+
             CheckGlError();
 
             ApplyLightingFovToBuffer(viewport, eye);
@@ -641,7 +622,6 @@ namespace Robust.Client.Graphics.Clyde
             SetTexture(TextureUnit.Texture0, FovTexture);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             DrawBlit(viewport, fovShader);
@@ -675,7 +655,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("shadowMatrix", _fovProjection, false);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             DrawBlit(viewport, fovShader);
@@ -712,11 +691,13 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Yes this function throws and index exception if you reach maxOccluders.
 
             const int maxOccluders = 2048;
-            const float polygonHeight = 500;
 
             using var _ = DebugGroup(nameof(UpdateOcclusionGeometry));
 
-            var arrayBuffer = ArrayPool<Vector3>.Shared.Rent(maxOccluders * 8);
+            // 16 = 4 vertices * 4 directions
+            var arrayBuffer = ArrayPool<Vector4>.Shared.Rent(maxOccluders * 4 * 4);
+            // multiplied by 2 (it's a vector2 of bytes)
+            var arrayVIBuffer = ArrayPool<byte>.Shared.Rent(maxOccluders * 2 * 4 * 4);
             var indexBuffer = ArrayPool<ushort>.Shared.Rent(maxOccluders * GetQuadBatchIndexCount() * 4);
 
             var arrayMaskBuffer = ArrayPool<Vector2>.Shared.Rent(maxOccluders * 4);
@@ -729,6 +710,7 @@ namespace Robust.Client.Graphics.Clyde
                 var occluderTree = occluderSystem.GetOccluderTreeForMap(map);
 
                 var ai = 0;
+                var avi = 0;
                 var ami = 0;
                 var ii = 0;
                 var imi = 0;
@@ -752,24 +734,11 @@ namespace Robust.Client.Graphics.Clyde
                     var (brX, brY) = worldTransform.Transform(box.TopRight);
                     var (blX, blY) = worldTransform.Transform(box.BottomRight);
 
-                    // Vertices used as main occlusion geometry.
-                    // We always send all of these (see below) to keep code complexity down.
-                    ushort vTLH = (ushort) (ai + 0);
-                    arrayBuffer[ai + 0] = new Vector3(tlX, tlY, polygonHeight);
-                    ushort vTLL = (ushort) (ai + 1);
-                    arrayBuffer[ai + 1] = new Vector3(tlX, tlY, -polygonHeight);
-                    ushort vTRH = (ushort) (ai + 2);
-                    arrayBuffer[ai + 2] = new Vector3(trX, trY, polygonHeight);
-                    ushort vTRL = (ushort) (ai + 3);
-                    arrayBuffer[ai + 3] = new Vector3(trX, trY, -polygonHeight);
-                    ushort vBRH = (ushort) (ai + 4);
-                    arrayBuffer[ai + 4] = new Vector3(brX, brY, polygonHeight);
-                    ushort vBRL = (ushort) (ai + 5);
-                    arrayBuffer[ai + 5] = new Vector3(brX, brY, -polygonHeight);
-                    ushort vBLH = (ushort) (ai + 6);
-                    arrayBuffer[ai + 6] = new Vector3(blX, blY, polygonHeight);
-                    ushort vBLL = (ushort) (ai + 7);
-                    arrayBuffer[ai + 7] = new Vector3(blX, blY, -polygonHeight);
+                    // Faces.
+                    var faceN = new Vector4(tlX, tlY, trX, trY);
+                    var faceE = new Vector4(trX, trY, brX, brY);
+                    var faceS = new Vector4(brX, brY, blX, blY);
+                    var faceW = new Vector4(blX, blY, tlX, tlY);
 
                     //
                     // Buckle up.
@@ -820,33 +789,49 @@ namespace Robust.Client.Graphics.Clyde
                     var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
 
                     // Handle faces, rules described above.
-                    // Note that faces are drawn with their 'normals' facing in the described direction in 3D space.
-                    // That is, they're clockwise "as viewed from the outside".
-                    // (When changing things to QuadBatchIndexWrite,
-                    // I described the behaviour correctly in this comment and then failed to implement it - 20kdc)
+                    // Note that "from above" it should be clockwise.
+                    // Further handling is in the shadow depth vertex shader.
+                    // (I have broken this so many times. - 20kdc)
+
+                    void WriteFaceOfBuffer(Vector4 vec)
+                    {
+                        var aiBase = ai;
+                        for (byte vi = 0; vi < 4; vi++)
+                        {
+                            arrayBuffer[ai++] = vec;
+                            // generates the sequence:
+                            // DddD
+                            // HHhh
+                            // deflection
+                            arrayVIBuffer[avi++] = (byte) ((((vi + 1) & 2) != 0) ? 0 : 255);
+                            // height
+                            arrayVIBuffer[avi++] = (byte) (((vi & 2) != 0) ? 0 : 255);
+                        }
+                        QuadBatchIndexWrite(indexBuffer, ref ii, (ushort) aiBase);
+                    }
 
                     // North face (TL/TR)
                     if (!no || !tlV && !trV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vTRH, vTLH, vTLL, vTRL);
+                        WriteFaceOfBuffer(faceN);
                     }
 
                     // East face (TR/BR)
                     if (!eo || !brV && !trV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vBRH, vTRH, vTRL, vBRL);
+                        WriteFaceOfBuffer(faceE);
                     }
 
                     // South face (BR/BL)
                     if (!so || !brV && !blV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vBLH, vBRH, vBRL, vBLL);
+                        WriteFaceOfBuffer(faceS);
                     }
 
                     // West face (BL/TL)
                     if (!wo || !blV && !tlV)
                     {
-                        QuadBatchIndexWrite(indexBuffer, ref ii, vTLH, vBLH, vBLL, vTLL);
+                        WriteFaceOfBuffer(faceW);
                     }
 
                     // Generate mask geometry.
@@ -858,7 +843,6 @@ namespace Robust.Client.Graphics.Clyde
                     // Generate mask indices.
                     QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort) ami);
 
-                    ai += 8;
                     ami += 4;
 
                     return true;
@@ -872,6 +856,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGlError();
 
                 _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
+                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(..avi));
                 _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
 
                 BindVertexArray(_occlusionMaskVao.Handle);
@@ -882,9 +867,10 @@ namespace Robust.Client.Graphics.Clyde
             }
             finally
             {
-                ArrayPool<Vector3>.Shared.Return(arrayBuffer);
-                ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
+                ArrayPool<Vector4>.Shared.Return(arrayBuffer);
+                ArrayPool<byte>.Shared.Return(arrayVIBuffer);
                 ArrayPool<ushort>.Shared.Return(indexBuffer);
+                ArrayPool<Vector2>.Shared.Return(arrayMaskBuffer);
                 ArrayPool<ushort>.Shared.Return(indexMaskBuffer);
             }
         }

@@ -47,12 +47,12 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager,
+                    _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(CollidableOverlay));
+                    _overlayManager.RemoveOverlay(nameof(PhysicsOverlay));
                 }
             }
         }
@@ -81,7 +81,7 @@ namespace Robust.Client.Debugging
             }
         }
 
-        private class CollidableOverlay : Overlay
+        private class PhysicsOverlay : Overlay
         {
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
@@ -94,8 +94,8 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
 
-            public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
-                : base(nameof(CollidableOverlay))
+            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
+                : base(nameof(PhysicsOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;

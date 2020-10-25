@@ -8,7 +8,7 @@ namespace Robust.Client.ViewVariables.Editors
     ///     Just writes out the ToString of the object.
     ///     The ultimate fallback.
     /// </summary>
-    internal sealed class ViewVariablesPropertyEditorDummy : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorDummy : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

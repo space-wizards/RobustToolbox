@@ -22,6 +22,11 @@ namespace Robust.Shared.GameObjects.Components
         Vector2 Momentum { get; set; }
 
         /// <summary>
+        ///     Apply an impulse to an entity. Velocity += impulse / InvMass.
+        /// </summary>
+        void ApplyImpulse(Vector2 impulse);
+
+        /// <summary>
         ///     The current status of the object
         /// </summary>
         BodyStatus Status { get; set; }
@@ -190,7 +195,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public float InvMass
         {
-            get => Mass > 0 ? 1f / Mass : 0f;
+            get => CanMove() ? Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
             set => Mass = value > 0 ? 1f / value : 0f;
         }
 
@@ -245,6 +250,11 @@ namespace Robust.Shared.GameObjects.Components
         {
             get => _friction;
             set => _friction = value;
+        }
+
+        public void ApplyImpulse(Vector2 impulse)
+        {
+            LinearVelocity += impulse * InvMass;
         }
 
         /// <summary>
@@ -341,7 +351,7 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _predict = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollidableUpdateMessage(this));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
             }
         }
 
@@ -495,7 +505,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public bool CanMove()
         {
-            return !Anchored && !Mass.Equals(0) && !Deleted;
+            return !Anchored && Mass > 0;
         }
     }
 }

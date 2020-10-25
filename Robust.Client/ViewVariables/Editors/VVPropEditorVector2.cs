@@ -6,11 +6,11 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    internal sealed class ViewVariablesPropertyEditorVector2 : ViewVariablesPropertyEditor
+    internal sealed class VVPropEditorVector2 : VVPropEditor
     {
         private readonly bool _intVec;
 
-        public ViewVariablesPropertyEditorVector2(bool intVec)
+        public VVPropEditorVector2(bool intVec)
         {
             _intVec = intVec;
         }

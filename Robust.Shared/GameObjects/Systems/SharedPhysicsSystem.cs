@@ -25,12 +25,12 @@ namespace Robust.Shared.GameObjects.Systems
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
 
         /// <summary>
-        ///     Collidable objects that are awake and usable for world simulation.
+        ///     Physics objects that are awake and usable for world simulation.
         /// </summary>
         private readonly HashSet<IPhysicsComponent> _awakeBodies = new HashSet<IPhysicsComponent>();
 
         /// <summary>
-        ///     Collidable objects that are awake and predicted and usable for world simulation.
+        ///     Physics objects that are awake and predicted and usable for world simulation.
         /// </summary>
         private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new HashSet<IPhysicsComponent>();
 
@@ -40,7 +40,7 @@ namespace Robust.Shared.GameObjects.Systems
         private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers =
             new Dictionary<IPhysicsComponent, IEnumerable<VirtualController>>();
 
-        // We'll defer changes to ICollidable until each step is done.
+        // We'll defer changes to IPhysicsComponent until each step is done.
         private readonly List<IPhysicsComponent> _queuedDeletions = new List<IPhysicsComponent>();
         private readonly List<IPhysicsComponent> _queuedUpdates = new List<IPhysicsComponent>();
 
@@ -49,13 +49,16 @@ namespace Robust.Shared.GameObjects.Systems
         /// </summary>
         private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
 
+        // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
+        private float _speedLimit = 30.0f;
+
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<CollidableUpdateMessage>(HandleCollidableUpdateMessage);
+            SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
         }
 
-        private void HandleCollidableUpdateMessage(CollidableUpdateMessage message)
+        private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
         {
             if (message.Component.Deleted || !message.Component.Awake)
             {
@@ -68,32 +71,32 @@ namespace Robust.Shared.GameObjects.Systems
         }
 
         /// <summary>
-        ///     Process the changes to cached ICollidables
+        ///     Process the changes to cached <see cref="IPhysicsComponent"/>s
         /// </summary>
         private void ProcessQueue()
         {
             // At this stage only the dynamictree cares about asleep bodies
             // Implicitly awake bodies so don't need to check .Awake again
             // Controllers should wake their body up (inside)
-            foreach (var collidable in _queuedUpdates)
+            foreach (var physics in _queuedUpdates)
             {
-                if (collidable.Predict)
-                    _predictedAwakeBodies.Add(collidable);
+                if (physics.Predict)
+                    _predictedAwakeBodies.Add(physics);
 
-                _awakeBodies.Add(collidable);
+                _awakeBodies.Add(physics);
 
-                if (collidable.Controllers.Count > 0 && !_controllers.ContainsKey(collidable))
-                    _controllers.Add(collidable, collidable.Controllers.Values);
+                if (physics.Controllers.Count > 0 && !_controllers.ContainsKey(physics))
+                    _controllers.Add(physics, physics.Controllers.Values);
 
             }
 
             _queuedUpdates.Clear();
 
-            foreach (var collidable in _queuedDeletions)
+            foreach (var physics in _queuedDeletions)
             {
-                _awakeBodies.Remove(collidable);
-                _predictedAwakeBodies.Remove(collidable);
-                _controllers.Remove(collidable);
+                _awakeBodies.Remove(physics);
+                _predictedAwakeBodies.Remove(physics);
+                _controllers.Remove(physics);
             }
 
             _queuedDeletions.Clear();
@@ -184,7 +187,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             for (var i = 0; i < divisions; i++)
             {
-                foreach (var collidable in simulatedBodies)
+                foreach (var physics in simulatedBodies)
                 {
                     if (collidable.CanMove())
                     {
@@ -222,11 +225,11 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // As we also defer the updates for the _collisionCache we need to update all entities
-            foreach (var collidable in _deferredUpdates)
+            foreach (var physics in _deferredUpdates)
             {
-                var transform = collidable.Owner.Transform;
+                var transform = physics.Owner.Transform;
                 transform.DeferUpdates = false;
-                transform.RunCollidableDeferred();
+                transform.RunPhysicsDeferred();
             }
 
             _deferredUpdates.Clear();
@@ -237,11 +240,11 @@ namespace Robust.Shared.GameObjects.Systems
         {
             _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var aCollidable in awakeBodies)
+            foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aCollidable, Vector2.Zero))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero))
                 {
-                    var aUid = aCollidable.Entity.Uid;
+                    var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
 
                     if (bUid.CompareTo(aUid) > 0)
@@ -256,8 +259,8 @@ namespace Robust.Shared.GameObjects.Systems
                         continue;
                     }
 
-                    var bCollidable = b.GetComponent<IPhysicsComponent>();
-                    _collisionCache.Add(new Manifold(aCollidable, bCollidable, aCollidable.Hard && bCollidable.Hard));
+                    var bPhysics = b.GetComponent<IPhysicsComponent>();
+                    _collisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
                 }
             }
 
@@ -271,12 +274,12 @@ namespace Robust.Shared.GameObjects.Systems
                 var impulse = _physicsManager.SolveCollisionImpulse(collision);
                 if (collision.A.CanMove())
                 {
-                    collision.A.Momentum -= impulse;
+                    collision.A.ApplyImpulse(-impulse);
                 }
 
                 if (collision.B.CanMove())
                 {
-                    collision.B.Momentum += impulse;
+                    collision.B.ApplyImpulse(impulse);
                 }
             }
 
@@ -368,6 +371,11 @@ namespace Robust.Shared.GameObjects.Systems
             // Clamp friction because friction can't make you accelerate backwards
             friction = Math.Min(fVelocity, body.LinearVelocity.Length);
 
+            if (friction == 0.0f)
+            {
+                return;
+            }
+
             // No multiplication/division by mass here since that would be redundant.
             var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
 
@@ -394,15 +402,21 @@ namespace Robust.Shared.GameObjects.Systems
 
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
+
+            // Slow zone up in here
+            if (physics.LinearVelocity.Length > _speedLimit)
+                physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
+
             physics.WorldRotation += physics.AngularVelocity * frameTime;
             physics.WorldPosition += physics.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
+        // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
-            const float allowance = 1 / 128f;
-            var percent = MathHelper.Clamp(1f / divisions, 0.01f, 1f);
+            const float allowance = 1 / 128.0f;
+            var percent = MathHelper.Clamp(0.4f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)
             {
@@ -417,19 +431,20 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
 
                 done = false;
-                var correction = collision.Normal * Math.Abs(penetration) * percent;
+                //var correction = collision.Normal * Math.Abs(penetration) * percent;
+                var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
                 if (collision.A.CanMove())
                 {
                     collision.A.Owner.Transform.DeferUpdates = true;
                     _deferredUpdates.Add(collision.A);
-                    collision.A.Owner.Transform.WorldPosition -= correction;
+                    collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
                 }
 
                 if (collision.B.CanMove())
                 {
                     collision.B.Owner.Transform.DeferUpdates = true;
                     _deferredUpdates.Add(collision.B);
-                    collision.B.Owner.Transform.WorldPosition += correction;
+                    collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
                 }
             }
 

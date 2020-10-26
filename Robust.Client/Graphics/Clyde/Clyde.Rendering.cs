@@ -285,7 +285,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         /// <summary>
-        ///     Flush the render handle, processing and re-pooling all the command lists.
+        ///     Flushes the render handle, processing and re-pooling all the command lists.
         /// </summary>
         private void FlushRenderQueue()
         {
@@ -420,9 +420,10 @@ namespace Robust.Client.Graphics.Clyde
                         program.SetUniform(name, matrix4);
                         break;
                     case Texture texture:
-                        TextureUnit target = TextureUnit.Texture0+textureUnitVal;
-                        GL.ActiveTexture(target);
-                        GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[((ClydeTexture)texture).TextureId].OpenGLObject.Handle);
+                        //This is important it starts at Texture6 since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
+                        //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too!
+                        TextureUnit target = TextureUnit.Texture6+textureUnitVal;
+                        SetTexture(target, ((ClydeTexture)texture).TextureId);
                         program.SetUniformTexture(name, target);
                         textureUnitVal++;
                         break;

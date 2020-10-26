@@ -14,6 +14,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
+using System.IO;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -127,7 +128,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private ClydeTexture? ScreenBufferTexture;
-        private void SendBufferCopyToWorldSpaceOverlays(LoadedRenderTarget lrt) {
+        private GLHandle screenBufferBase;
+        private void UpdateWorldSpaceOverlayScreenTexture(RenderTexture texture) {
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
                 if (overlay.RequestScreenTexture && overlay.Space == OverlaySpace.WorldSpace) {
@@ -135,7 +137,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
             if (oTargets.Count > 0 && ScreenBufferTexture != null) {
-                CopyTextureFromFBO(lrt, ScreenBufferTexture.TextureId);
+
+                GL.BindTexture(TextureTarget.Texture2D, screenBufferBase.Handle);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
+                    PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero); //Need to do this every frame in case the screen/framebuffer size changes. Small optimization: just do a vec2 check instead? 
+                                                                            //I don't think TexImage2D is very costly but I could be wrong.
+                CopyRenderTextureToTexture(texture, ScreenBufferTexture);
                 foreach (Overlay overlay in oTargets) {
                     overlay.ScreenTexture = ScreenBufferTexture;
                 }
@@ -285,8 +292,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Actual code that isn't just pushing/popping renderer state so we can return safely.
 
                 var rt = _currentViewport.RenderTarget;
-                LoadedRenderTarget lrt = RtToLoaded(rt);
-                BindRenderTargetFull(lrt);
+                BindRenderTargetFull(RtToLoaded(rt));
                 ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);
@@ -337,9 +343,6 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawingHandleScreen.DrawTextureRect(FovTexture, pos);
                 }
 
-                SendBufferCopyToWorldSpaceOverlays(RtToLoaded(_currentViewport.RenderTarget));
-                RenderOverlays(OverlaySpace.WorldSpace);
-
                 if (DebugLayers == ClydeDebugLayers.Light)
                 {
                     _renderHandle.UseShader(null);
@@ -348,6 +351,9 @@ namespace Robust.Client.Graphics.Clyde
                         viewport.WallBleedIntermediateRenderTarget2.Texture,
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
+
+                UpdateWorldSpaceOverlayScreenTexture(_mainViewport.RenderTarget);
+                RenderOverlays(OverlaySpace.WorldSpace);
             }
 
             PopRenderStateFull(state);

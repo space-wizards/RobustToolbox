@@ -33,23 +33,25 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private void CopyTextureFromFBO(LoadedRenderTarget source, ClydeHandle target) {
-
-            bool pause = source != _currentBoundRenderTarget;
-            LoadedRenderTarget previousRenderTarget = _currentBoundRenderTarget;
-            if(pause)
+        private void CopyRenderTextureToTexture(RenderTexture source, ClydeTexture target) {
+            LoadedRenderTarget sourceLoaded = RtToLoaded(source);
+            bool pause = sourceLoaded != _currentBoundRenderTarget;
+            FullStoredRendererState? store = null;
+            if (pause) {
+                store = PushRenderStateFull();
                 BindRenderTargetFull(source);
+                CheckGlError();
+            }
 
-            var targetHandle = _loadedTextures[target].OpenGLObject;
-            GL.ActiveTexture(TextureUnit.Texture5);
-            GL.BindTexture(TextureTarget.Texture2D, targetHandle.Handle);
+            GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[target.TextureId].OpenGLObject.Handle);
             CheckGlError();
             GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, _framebufferSize.X, _framebufferSize.Y);
             //GL.CopyImageSubData(sourceHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, targetHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, ScreenSize.X, ScreenSize.Y, 0);
             CheckGlError();
 
-            if(pause)
-                BindRenderTargetFull(previousRenderTarget);
+            if (pause && store != null) {
+                PopRenderStateFull((FullStoredRendererState)store);
+            }
         }
 
         private static long EstPixelSize(PixelInternalFormat format)

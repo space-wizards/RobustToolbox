@@ -325,10 +325,10 @@ namespace Robust.Client.Graphics.Clyde
 
             CreateMainViewport();
 
-            var texture = new GLHandle(GL.GenTexture());
-            GL.BindTexture(TextureTarget.Texture2D, texture.Handle);
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, _framebufferSize.X, _framebufferSize.Y, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero);
-            ScreenBufferTexture = GenTexture(texture, _framebufferSize, true, null);
+            screenBufferBase = new GLHandle(GL.GenTexture());
+            GL.BindTexture(TextureTarget.Texture2D, screenBufferBase.Handle);
+            ApplySampleParameters(TextureSampleParameters.Default);
+            ScreenBufferTexture = GenTexture(screenBufferBase, _framebufferSize, true, null);
         }
 
         private void CreateMainViewport()

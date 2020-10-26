@@ -91,10 +91,10 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                var oldRotation = _localRotation;
-
-                if (_localRotation == value)
+                if (_localRotation.EqualsApprox(value, 0.001))
                     return;
+
+                var oldRotation = _localRotation;
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
@@ -225,11 +225,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 // world coords to parent coords
-                var oldPos = Parent!.InvWorldMatrix.Transform(LocalPosition);
                 var newPos = Parent!.InvWorldMatrix.Transform(value);
-
-                if (oldPos.EqualsApprox(newPos, 0.0001))
-                    return;
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)

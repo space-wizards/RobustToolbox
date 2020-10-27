@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                if (_localRotation.EqualsApprox(value, 0.001))
+                if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
                 var oldRotation = _localRotation;
@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
-                if (_localPosition.EqualsApprox(value, 0.001))
+                if (_localPosition.EqualsApprox(value, 0.00001))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.

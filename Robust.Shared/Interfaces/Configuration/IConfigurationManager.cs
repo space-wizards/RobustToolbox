@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Robust.Shared.Configuration;
 
 namespace Robust.Shared.Interfaces.Configuration
@@ -34,7 +35,7 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="defaultValue">The default Value of the CVar.</param>
         /// <param name="flags">Optional flags to change behavior of the CVar.</param>
         /// <param name="onValueChanged">Invoked whenever the CVar value changes.</param>
-        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged=null);
+        void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null);
 
         /// <summary>
         /// Is the named CVar already registered?
@@ -56,6 +57,8 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="value">The value to set.</param>
         void SetCVar(string name, object value);
 
+        void SetCVar<T>(CVarDef<T> def, T value) where T : notnull;
+
         /// <summary>
         /// Get the value of a CVar.
         /// </summary>
@@ -63,6 +66,8 @@ namespace Robust.Shared.Interfaces.Configuration
         /// <param name="name">The name of the CVar.</param>
         /// <returns></returns>
         T GetCVar<T>(string name);
+        
+        T GetCVar<T>(CVarDef<T> def) where T : notnull;
 
         /// <summary>
         ///     Gets the type of a value stored in a CVar.
@@ -71,5 +76,14 @@ namespace Robust.Shared.Interfaces.Configuration
         Type GetCVarType(string name);
 
         void OverrideConVars(IEnumerable<(string key, string value)> cVars);
+        void LoadCVarsFromAssembly(Assembly assembly);
+
+        void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        void Initialize(bool isServer);
     }
 }

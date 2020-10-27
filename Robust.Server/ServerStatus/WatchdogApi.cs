@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -9,12 +8,12 @@ using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.ServerStatus;
+using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
 
 #nullable enable
 
@@ -41,10 +40,6 @@ namespace Robust.Server.ServerStatus
         {
             _statusHost.AddHandler(UpdateHandler);
             _statusHost.AddHandler(ShutdownHandler);
-
-            _configurationManager.RegisterCVar<string?>("watchdog.token", null, onValueChanged: _ => UpdateToken());
-            _configurationManager.RegisterCVar<string?>("watchdog.key", null, onValueChanged: _ => UpdateToken());
-            _configurationManager.RegisterCVar("watchdog.baseUrl", "http://localhost:5000");
         }
 
         private bool UpdateHandler(HttpMethod method, HttpRequest request, HttpResponse response)
@@ -171,15 +166,20 @@ namespace Robust.Server.ServerStatus
 
         public void Initialize()
         {
+            _configurationManager.OnValueChanged(CVars.WatchdogToken, _ => UpdateToken());
+            _configurationManager.OnValueChanged(CVars.WatchdogKey, _ => UpdateToken());
+
             UpdateToken();
         }
 
         private void UpdateToken()
         {
-            _watchdogToken = _configurationManager.GetCVar<string?>("watchdog.token");
-            _watchdogKey = _configurationManager.GetCVar<string?>("watchdog.key");
-            var baseUrl = _configurationManager.GetCVar<string?>("watchdog.baseUrl");
-            _baseUri = baseUrl != null ? new Uri(baseUrl) : null;
+            var tok = _configurationManager.GetCVar(CVars.WatchdogToken);
+            var key = _configurationManager.GetCVar(CVars.WatchdogKey);
+            var baseUrl = _configurationManager.GetCVar(CVars.WatchdogBaseUrl);
+            _watchdogToken = string.IsNullOrEmpty(tok) ? null : tok;
+            _watchdogKey = string.IsNullOrEmpty(key) ? null : key;
+            _baseUri = string.IsNullOrEmpty(baseUrl) ? null : new Uri(baseUrl);
 
             if (_watchdogKey != null && _watchdogToken != null)
             {

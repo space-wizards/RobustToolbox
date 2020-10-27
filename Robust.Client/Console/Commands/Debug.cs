@@ -305,7 +305,7 @@ namespace Robust.Client.Console.Commands
     internal class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
-        public string Help => "sggcell <gridID> <mapIndices> [offset]\nThat mapindices param is in the form x<int>,y<int>.";
+        public string Help => "sggcell <gridID> <vector2i> [offset]\nThat vector2i param is in the form x<int>,y<int>.";
         public string Description => "Lists entities on a snap grid cell.";
 
         public bool Execute(IDebugConsole console, params string[] args)
@@ -349,7 +349,7 @@ namespace Robust.Client.Console.Commands
             {
                 foreach (var entity in
                     mapMan.GetGrid(new GridId(int.Parse(gridId, CultureInfo.InvariantCulture))).GetSnapGridCell(
-                        new MapIndices(
+                        new Vector2i(
                             int.Parse(indices.Split(',')[0], CultureInfo.InvariantCulture),
                             int.Parse(indices.Split(',')[1], CultureInfo.InvariantCulture)),
                         selectedOffset))
@@ -710,6 +710,35 @@ namespace Robust.Client.Console.Commands
         {
             var mgr = IoCManager.Resolve<ILightManager>();
             mgr.Enabled = !mgr.Enabled;
+            return false;
+        }
+    }
+
+    internal class ToggleFOV : IConsoleCommand
+    {
+        public string Command => "togglefov";
+        public string Description => "Toggles fov for client.";
+        public string Help => "togglefov";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+          var mgr = IoCManager.Resolve<IEyeManager>();
+          if (mgr.CurrentEye != null)
+              mgr.CurrentEye.DrawFov = !mgr.CurrentEye.DrawFov;
+          return false;
+        }
+    }
+
+    internal class ToggleHardFOV : IConsoleCommand
+    {
+        public string Command => "togglehardfov";
+        public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
+        public string Help => "togglehardfov";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.DrawHardFov = !mgr.DrawHardFov;
             return false;
         }
     }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -17,7 +18,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
-        void Update(float frameTime);
+        void Update(float frameTime, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.
@@ -87,6 +88,13 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
         IEnumerable<IEntity> GetEntities();
+
+        /// <summary>
+        ///     Yields all of the entities on a particular map. faster than GetEntities()
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId);
 
         /// <summary>
         /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
@@ -170,7 +178,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
-
+        
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>

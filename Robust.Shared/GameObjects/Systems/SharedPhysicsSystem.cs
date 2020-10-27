@@ -6,7 +6,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -24,28 +23,98 @@ namespace Robust.Shared.GameObjects.Systems
         private const float Epsilon = 1.0e-6f;
 
         private readonly List<Manifold> _collisionCache = new List<Manifold>();
-        private readonly HashSet<ICollidableComponent> _awakeBodies = new HashSet<ICollidableComponent>();
 
         /// <summary>
-        /// Simulates the physical world for a given amount of time.
+        ///     Physics objects that are awake and usable for world simulation.
+        /// </summary>
+        private readonly HashSet<IPhysicsComponent> _awakeBodies = new HashSet<IPhysicsComponent>();
+
+        /// <summary>
+        ///     Physics objects that are awake and predicted and usable for world simulation.
+        /// </summary>
+        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new HashSet<IPhysicsComponent>();
+
+        /// <summary>
+        ///     VirtualControllers on applicable <see cref="IPhysicsComponent"/>s
+        /// </summary>
+        private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers =
+            new Dictionary<IPhysicsComponent, IEnumerable<VirtualController>>();
+
+        // We'll defer changes to IPhysicsComponent until each step is done.
+        private readonly List<IPhysicsComponent> _queuedDeletions = new List<IPhysicsComponent>();
+        private readonly List<IPhysicsComponent> _queuedUpdates = new List<IPhysicsComponent>();
+
+        /// <summary>
+        ///     Updates to EntityTree etc. that are deferred until the end of physics.
+        /// </summary>
+        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
+
+        // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
+        private float _speedLimit = 30.0f;
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+        }
+
+        private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
+        {
+            if (message.Component.Deleted || !message.Component.Awake)
+            {
+                _queuedDeletions.Add(message.Component);
+            }
+            else
+            {
+                _queuedUpdates.Add(message.Component);
+            }
+        }
+
+        /// <summary>
+        ///     Process the changes to cached <see cref="IPhysicsComponent"/>s
+        /// </summary>
+        private void ProcessQueue()
+        {
+            // At this stage only the dynamictree cares about asleep bodies
+            // Implicitly awake bodies so don't need to check .Awake again
+            // Controllers should wake their body up (inside)
+            foreach (var physics in _queuedUpdates)
+            {
+                if (physics.Predict)
+                    _predictedAwakeBodies.Add(physics);
+
+                _awakeBodies.Add(physics);
+
+                if (physics.Controllers.Count > 0 && !_controllers.ContainsKey(physics))
+                    _controllers.Add(physics, physics.Controllers.Values);
+
+            }
+
+            _queuedUpdates.Clear();
+
+            foreach (var physics in _queuedDeletions)
+            {
+                _awakeBodies.Remove(physics);
+                _predictedAwakeBodies.Remove(physics);
+                _controllers.Remove(physics);
+            }
+
+            _queuedDeletions.Clear();
+        }
+
+        /// <summary>
+        ///     Simulates the physical world for a given amount of time.
         /// </summary>
         /// <param name="deltaTime">Delta Time in seconds of how long to simulate the world.</param>
-        /// <param name="physicsComponents">List of all possible physics bodes </param>
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
-        protected void SimulateWorld(float deltaTime, List<ICollidableComponent> physicsComponents, bool prediction)
+        protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            _awakeBodies.Clear();
+            var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
 
-            foreach (var body in physicsComponents)
+            ProcessQueue();
+
+            foreach (var body in simulatedBodies)
             {
-                if(prediction && !body.Predict)
-                    continue;
-
-                if(!body.Awake)
-                    continue;
-
-                _awakeBodies.Add(body);
-
                 // running prediction updates will not cause a body to go to sleep.
                 if(!prediction)
                     body.SleepAccumulator++;
@@ -80,27 +149,27 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // Calculate collisions and store them in the cache
-            ProcessCollisions(physicsComponents);
+            ProcessCollisions(_awakeBodies);
 
             // Remove all entities that were deleted during collision handling
-            physicsComponents.RemoveAll(p => p.Deleted);
+            ProcessQueue();
 
             // Process frictional forces
-            foreach (var physics in physicsComponents)
+            foreach (var physics in _awakeBodies)
             {
                 ProcessFriction(physics, deltaTime);
             }
 
-            foreach (var physics in physicsComponents)
+            foreach (var (_, controllers) in _controllers)
             {
-                foreach (var controller in physics.Controllers.Values)
+                foreach (var controller in controllers)
                 {
                     controller.UpdateAfterProcessing();
                 }
             }
 
             // Remove all entities that were deleted due to the controller
-            physicsComponents.RemoveAll(p => p.Deleted);
+            ProcessQueue();
 
             const int solveIterationsAt60 = 4;
 
@@ -116,14 +185,12 @@ namespace Robust.Shared.GameObjects.Systems
 
             for (var i = 0; i < divisions; i++)
             {
-                foreach (var physics in physicsComponents)
+                foreach (var physics in simulatedBodies)
                 {
-                    // TODO: Remove this once we are not sending *every* body to the solver
-                    if(prediction && !physics.Predict)
-                        continue;
-
-                    if(physics.Awake && physics.CanMove())
+                    if (physics.CanMove())
+                    {
                         UpdatePosition(physics, deltaTime / divisions);
+                    }
                 }
 
                 for (var j = 0; j < divisions; ++j)
@@ -134,21 +201,28 @@ namespace Robust.Shared.GameObjects.Systems
                     }
                 }
             }
+
+            // As we also defer the updates for the _collisionCache we need to update all entities
+            foreach (var physics in _deferredUpdates)
+            {
+                var transform = physics.Owner.Transform;
+                transform.DeferUpdates = false;
+                transform.RunPhysicsDeferred();
+            }
+
+            _deferredUpdates.Clear();
         }
 
         // Runs collision behavior and updates cache
-        private void ProcessCollisions(IEnumerable<ICollidableComponent> bodies)
+        private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies)
         {
             _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
-            foreach (var aCollidable in bodies)
+            foreach (var aPhysics in awakeBodies)
             {
-                if(!aCollidable.Awake)
-                    continue;
-
-                foreach (var b in _physicsManager.GetCollidingEntities(aCollidable, Vector2.Zero))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero))
                 {
-                    var aUid = aCollidable.Entity.Uid;
+                    var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
 
                     if (bUid.CompareTo(aUid) > 0)
@@ -163,8 +237,8 @@ namespace Robust.Shared.GameObjects.Systems
                         continue;
                     }
 
-                    var bCollidable = b.GetComponent<ICollidableComponent>();
-                    _collisionCache.Add(new Manifold(aCollidable, bCollidable, aCollidable.Hard && bCollidable.Hard));
+                    var bPhysics = b.GetComponent<IPhysicsComponent>();
+                    _collisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
                 }
             }
 
@@ -178,12 +252,12 @@ namespace Robust.Shared.GameObjects.Systems
                 var impulse = _physicsManager.SolveCollisionImpulse(collision);
                 if (collision.A.CanMove())
                 {
-                    collision.A.Momentum -= impulse;
+                    collision.A.ApplyImpulse(-impulse);
                 }
 
                 if (collision.B.CanMove())
                 {
-                    collision.B.Momentum += impulse;
+                    collision.B.ApplyImpulse(impulse);
                 }
             }
 
@@ -256,7 +330,7 @@ namespace Robust.Shared.GameObjects.Systems
             return false;
         }
 
-        private void ProcessFriction(ICollidableComponent body, float deltaTime)
+        private void ProcessFriction(IPhysicsComponent body, float deltaTime)
         {
             if (body.LinearVelocity == Vector2.Zero) return;
 
@@ -275,42 +349,52 @@ namespace Robust.Shared.GameObjects.Systems
             // Clamp friction because friction can't make you accelerate backwards
             friction = Math.Min(fVelocity, body.LinearVelocity.Length);
 
+            if (friction == 0.0f)
+            {
+                return;
+            }
+
             // No multiplication/division by mass here since that would be redundant.
             var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
 
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private static void UpdatePosition(IPhysBody body, float frameTime)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
         {
-            var ent = body.Entity;
+            var ent = physics.Entity;
 
-            if (!body.CanMove() || (body.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(body.AngularVelocity) < Epsilon))
+            if (!physics.CanMove() || (physics.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(physics.AngularVelocity) < Epsilon))
                 return;
 
-            if (body.LinearVelocity != Vector2.Zero)
+            if (physics.LinearVelocity != Vector2.Zero)
             {
-                var entityMoveMessage = new EntityMovementMessage();
-                ent.SendMessage(ent.Transform, entityMoveMessage);
-
                 if (ContainerHelpers.IsInContainer(ent))
                 {
                     var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
                     ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
                     // This prevents redundant messages from being sent if solveIterations > 1 and also simulates the entity "colliding" against the locker door when it opens.
-                    body.LinearVelocity = Vector2.Zero;
+                    physics.LinearVelocity = Vector2.Zero;
                 }
             }
 
-            body.WorldRotation += body.AngularVelocity * frameTime;
-            body.WorldPosition += body.LinearVelocity * frameTime;
+            physics.Owner.Transform.DeferUpdates = true;
+            _deferredUpdates.Add(physics);
+
+            // Slow zone up in here
+            if (physics.LinearVelocity.Length > _speedLimit)
+                physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
+
+            physics.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.WorldPosition += physics.LinearVelocity * frameTime;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
+        // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
-            const float allowance = 1 / 128f;
-            var percent = MathHelper.Clamp(1f / divisions, 0.01f, 1f);
+            const float allowance = 1 / 128.0f;
+            var percent = MathHelper.Clamp(0.4f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)
             {
@@ -325,17 +409,27 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
 
                 done = false;
-                var correction = collision.Normal * Math.Abs(penetration) * percent;
+                //var correction = collision.Normal * Math.Abs(penetration) * percent;
+                var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
                 if (collision.A.CanMove())
-                    collision.A.Owner.Transform.WorldPosition -= correction;
+                {
+                    collision.A.Owner.Transform.DeferUpdates = true;
+                    _deferredUpdates.Add(collision.A);
+                    collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
+                }
+
                 if (collision.B.CanMove())
-                    collision.B.Owner.Transform.WorldPosition += correction;
+                {
+                    collision.B.Owner.Transform.DeferUpdates = true;
+                    _deferredUpdates.Add(collision.B);
+                    collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
+                }
             }
 
             return done;
         }
 
-        private (float friction, float gravity) GetFriction(ICollidableComponent body)
+        private (float friction, float gravity) GetFriction(IPhysicsComponent body)
         {
             if (!body.OnGround)
                 return (0f, 0f);

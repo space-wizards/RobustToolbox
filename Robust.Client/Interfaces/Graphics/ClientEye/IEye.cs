@@ -14,7 +14,7 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// <summary>
         /// Should the black FoV effect be drawn for this eye?
         /// </summary>
-        bool DrawFov { get; }
+        bool DrawFov { get; set; }
 
         /// <summary>
         /// Current position of the center of the eye in the game world.

@@ -23,6 +23,7 @@ namespace Robust.Client.Graphics.Clyde
         // Would it make sense to report a fake resolution like 720p here so code doesn't break? idk.
         public IRenderWindow MainWindowRenderTarget { get; }
         public override Vector2i ScreenSize { get; } = (1280, 720);
+        public Vector2 DefaultWindowScale => (1, 1);
 
         public ShaderInstance InstanceShader(ClydeHandle handle)
         {
@@ -65,6 +66,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
+            base.Initialize();
             return true;
         }
 

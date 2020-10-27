@@ -4,6 +4,8 @@ using System.Diagnostics;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
+using Robust.Client.Placement;
+using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -20,7 +22,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
-        private readonly ILocalizationManager _loc;
 
         private VBoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
@@ -62,16 +63,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public EntitySpawnWindow(IPlacementManager placementManager,
             IPrototypeManager prototypeManager,
-            IResourceCache resourceCache,
-            ILocalizationManager loc)
+            IResourceCache resourceCache)
         {
             this.placementManager = placementManager;
             this.prototypeManager = prototypeManager;
             this.resourceCache = resourceCache;
 
-            _loc = loc;
-
-            Title = _loc.GetString("Entity Spawn Panel");
+            Title = Loc.GetString("Entity Spawn Panel");
 
             Contents.AddChild(MainVBox = new VBoxContainer
             {
@@ -84,13 +82,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (SearchBar = new LineEdit
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                PlaceHolder = _loc.GetString("Search")
+                                PlaceHolder = Loc.GetString("Search")
                             }),
 
                             (ClearButton = new Button
                             {
                                 Disabled = true,
-                                Text = _loc.GetString("Clear"),
+                                Text = Loc.GetString("Clear"),
                             })
                         }
                     },
@@ -110,13 +108,13 @@ namespace Robust.Client.UserInterface.CustomControls
                             (EraseButton = new Button
                             {
                                 ToggleMode = true,
-                                Text = _loc.GetString("Erase Mode")
+                                Text = Loc.GetString("Erase Mode")
                             }),
 
                             (OverrideMenu = new OptionButton
                             {
                                 SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                ToolTip = _loc.GetString("Override placement")
+                                ToolTip = Loc.GetString("Override placement")
                             })
                         }
                     },
@@ -152,10 +150,12 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.Dispose(disposing);
 
-            if (disposing)
-            {
-                placementManager.PlacementChanged -= OnPlacementCanceled;
-            }
+            if (!disposing) return;
+
+            if(EraseButton.Pressed)
+                placementManager.Clear();
+
+            placementManager.PlacementChanged -= OnPlacementCanceled;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
@@ -309,16 +309,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = true;
             }
 
-            var tex = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             var rect = button.EntityTextureRect;
-            if (tex != null)
-            {
-                rect.Texture = tex.Default;
-            }
-            else
-            {
-                rect.Dispose();
-            }
+            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache)?.Default;
 
             PrototypeList.AddChild(button);
             if (insertFirst)

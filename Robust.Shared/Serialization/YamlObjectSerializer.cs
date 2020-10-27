@@ -5,7 +5,6 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
@@ -50,6 +49,7 @@ namespace Robust.Shared.Serialization
                 { typeof(GridId), new GridIdSerializer() },
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
+                { typeof(TimeSpan), new TimeSpanSerializer() },
             };
         }
 
@@ -441,12 +441,14 @@ namespace Robust.Shared.Serialization
 
         public object NodeToType(Type type, YamlNode node)
         {
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
             // special snowflake string
             if (type == typeof(String))
                 return node.ToString();
 
             // val primitives
-            if (type.IsPrimitive || type == typeof(decimal))
+            if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
             {
                 return StringToType(type, node.ToString());
             }
@@ -519,6 +521,23 @@ namespace Robust.Shared.Serialization
                 return newDict;
             }
 
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var nodes = ((YamlSequenceNode) node).Children;
+                var valuesArray = Array.CreateInstance(setType, new[] {nodes.Count})!;
+
+                for (var i = 0; i < nodes.Count; i++)
+                {
+                    var value = NodeToType(setType, nodes[i]);
+                    valuesArray.SetValue(value, i);
+                }
+
+                var newSet = Activator.CreateInstance(type, valuesArray)!;
+
+                return newSet;
+            }
+
             // Hand it to the context.
             if (_context != null && _context.TryNodeToType(node, type, out var contextObj))
             {
@@ -534,7 +553,7 @@ namespace Robust.Shared.Serialization
             {
                 if (!(node is YamlMappingNode mapNode))
                 {
-                    throw new InvalidOperationException("Cannot read from IExposeData on non-mapping node.");
+                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
                 }
 
                 var concreteType = type;
@@ -608,6 +627,7 @@ namespace Robust.Shared.Serialization
                 return s;
 
             var type = obj.GetType();
+            type = Nullable.GetUnderlyingType(type) ?? type;
 
             // val primitives and val enums
             if (type.IsPrimitive || type.IsEnum || type == typeof(decimal))
@@ -694,6 +714,30 @@ namespace Robust.Shared.Serialization
                 return node;
             }
 
+            // HashSet<T>
+            if (TryGenericHashSetType(type, out var setType))
+            {
+                var node = new YamlSequenceNode();
+                node.Tag = TagSkipTag;
+
+                foreach (var entry in (IEnumerable)obj)
+                {
+                    if (entry == null)
+                    {
+                        throw new ArgumentException("Cannot serialize null value inside hashset.");
+                    }
+
+                    var entryNode = TypeToNode(entry);
+
+                    // write the concrete type tag
+                    AssignTag<object?>(setType, entry, null, entryNode);
+
+                    node.Add(entryNode);
+                }
+
+                return node;
+            }
+
             // Hand it to the context.
             if (_context != null && _context.TryTypeToNode(obj, out var contextNode))
             {
@@ -724,7 +768,7 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(type))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
+                var instance = (ISelfSerialize) obj!;
                 return instance.Serialize();
             }
 
@@ -809,6 +853,32 @@ namespace Robust.Shared.Serialization
                     {
                         return false;
                     }
+                }
+
+                return true;
+            }
+
+            if (TryGenericHashSetType(type!, out _))
+            {
+                var setA = ((IEnumerable) a).GetEnumerator();
+                var setB = ((IEnumerable) b!).GetEnumerator();
+
+                while (setA.MoveNext())
+                {
+                    if (!setB.MoveNext())
+                    {
+                        return false;
+                    }
+
+                    if (!IsSerializedEqual(setA.Current, setB.Current))
+                    {
+                        return false;
+                    }
+                }
+
+                if (setB.MoveNext())
+                {
+                    return false;
                 }
 
                 return true;
@@ -936,6 +1006,20 @@ namespace Robust.Shared.Serialization
 
             keyType = default;
             valType = default;
+            return false;
+        }
+
+        private static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
+        {
+            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+            if (isSet)
+            {
+                setType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            setType = default;
             return false;
         }
 
@@ -1234,6 +1318,21 @@ namespace Robust.Shared.Serialization
                         return mapping;
                 }
                 throw new NotImplementedException();
+            }
+        }
+
+        class TimeSpanSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                var seconds = double.Parse(node.AsString(), CultureInfo.InvariantCulture);
+                return TimeSpan.FromSeconds(seconds);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var seconds = ((TimeSpan) obj).TotalSeconds;
+                return new YamlScalarNode(seconds.ToString(CultureInfo.InvariantCulture));
             }
         }
     }

@@ -77,6 +77,13 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         /// <inheritdoc />
+        public bool DeferUpdates { get; set; }
+
+        // Deferred fields
+        private Angle? _oldLocalRotation;
+        private EntityCoordinates? _oldCoords;
+
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
         public Angle LocalRotation
@@ -84,16 +91,28 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                if (_localRotation == value)
+                if (_localRotation.EqualsApprox(value, 0.001))
                     return;
+
+                var oldRotation = _localRotation;
 
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 SetRotation(value);
-                RebuildMatrices();
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new RotateEvent(Owner, oldRotation, _localRotation));
+                }
+                else
+                {
+                    _oldLocalRotation ??= oldRotation;
+                }
             }
         }
 
@@ -235,18 +254,25 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 }
 
                 _localPosition = value.Position;
-
-                //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
-                if (Running)
-                {
-                    RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
-                }
-
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
+                    if (Running)
+                    {
+                        RebuildMatrices();
+                        Owner.EntityManager.EventBus.RaiseEvent(
+                            EventSource.Local, new MoveEvent(Owner, oldPosition, Coordinates));
+                    }
+
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                }
+                else
+                {
+                    _oldCoords ??= oldPosition;
+                }
             }
         }
 
@@ -260,16 +286,57 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
+                if (_localPosition.EqualsApprox(value, 0.001))
+                    return;
+
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
                 _nextPosition = null;
+
                 var oldGridPos = Coordinates;
                 SetPosition(value);
-                RebuildMatrices();
                 Dirty();
-                UpdateEntityTree();
-                UpdatePhysicsTree();
+
+                if (!DeferUpdates)
+                {
+                    RebuildMatrices();
+                    UpdateEntityTree();
+                    UpdatePhysicsTree();
+                    Owner.EntityManager.EventBus.RaiseEvent(
+                        EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                }
+                else
+                {
+                    _oldCoords ??= oldGridPos;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public void RunPhysicsDeferred()
+        {
+            // if we resolved to (close enough) to the OG position then no update.
+            if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
+                (_oldLocalRotation == null || _oldLocalRotation.Equals(_localRotation)))
+            {
+                return;
+            }
+
+            RebuildMatrices();
+            UpdateEntityTree();
+            UpdatePhysicsTree();
+
+            if (_oldCoords != null)
+            {
                 Owner.EntityManager.EventBus.RaiseEvent(
-                    EventSource.Local, new MoveEvent(Owner, oldGridPos, Coordinates));
+                    EventSource.Local, new MoveEvent(Owner, _oldCoords.Value, Coordinates));
+                _oldCoords = null;
+            }
+
+            if (_oldLocalRotation != null)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(
+                    EventSource.Local, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation));
+                _oldLocalRotation = null;
             }
         }
 
@@ -478,6 +545,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
             if (newParent == null)
                 return;
 
+            DebugTools.Assert(newParent != this,
+                $"Can't parent a {nameof(ITransformComponent)} to itself.");
+
             // That's already our parent, don't bother attaching again.
             var newParentEnt = newParent.Owner;
             if (newParentEnt.Uid == _parent)
@@ -537,7 +607,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            ICollidableComponent? collider;
+            IPhysicsComponent? collider;
 
             if (oldId != MapId.Nullspace)
             {
@@ -734,7 +804,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
 
         private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out ICollidableComponent? collider) && collider.UpdatePhysicsTree();
+            Owner.TryGetComponent(out IPhysicsComponent? collider) && collider.UpdatePhysicsTree();
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 
@@ -803,5 +873,19 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
+    }
+
+    public class RotateEvent : EntitySystemMessage
+    {
+        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation)
+        {
+            Sender = sender;
+            OldRotation = oldRotation;
+            NewRotation = newRotation;
+        }
+
+        public IEntity Sender { get; }
+        public Angle OldRotation { get; }
+        public Angle NewRotation { get; }
     }
 }

@@ -110,6 +110,12 @@ namespace Robust.Shared.Interfaces.Resources
             return provider.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
+        public static StreamReader OpenText(this IWritableDirProvider provider, ResourcePath path)
+        {
+            var stream = OpenRead(provider, path);
+            return new StreamReader(stream, EncodingHelpers.UTF8);
+        }
+
         /// <summary>
         ///     Opens a file for writing.
         /// </summary>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Robust.Client.GameObjects.EntitySystems;
@@ -24,6 +25,9 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Linq;
+using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
@@ -92,7 +96,7 @@ namespace Robust.Client.GameObjects
         private Color color = Color.White;
 
         [Animatable]
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
             get => color;
@@ -105,7 +109,7 @@ namespace Robust.Client.GameObjects
         ///     Rotation transformations on individual layers still apply.
         ///     If false, all layers get locked to south and rotation is a transformation.
         /// </summary>
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Directional
         {
             get => _directional;
@@ -116,7 +120,7 @@ namespace Robust.Client.GameObjects
 
         private RSI? _baseRsi;
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -151,12 +155,13 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool ContainerOccluded { get; set; }
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool TreeUpdateQueued { get; set; }
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
         [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
@@ -1011,22 +1016,7 @@ namespace Robust.Client.GameObjects
                 // TODO: Implement layer-specific rotation and scale.
                 // Oh and when you do update Layer.LocalToLayer so content doesn't break.
 
-                var texture = layer.Texture;
-
-                if (layer.State.IsValid)
-                {
-                    // Pull texture from RSI state instead.
-                    var rsi = layer.RSI ?? BaseRSI;
-                    if (rsi == null || !rsi.TryGetState(layer.State, out var state))
-                    {
-                        state = GetFallbackState();
-                    }
-
-                    var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
-                    texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
-                }
-
-                texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+                var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
 
                 if (layer.Shader != null)
                 {
@@ -1041,6 +1031,27 @@ namespace Robust.Client.GameObjects
                     drawingHandle.UseShader(null);
                 }
             }
+        }
+
+        private Texture GetRenderTexture(Layer layer, Angle worldRotation, Direction? overrideDirection)
+        {
+            var texture = layer.Texture;
+
+            if (layer.State.IsValid)
+            {
+                // Pull texture from RSI state instead.
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                var layerSpecificDir = layer.EffectiveDirection(state, worldRotation, overrideDirection);
+                texture = state.GetFrame(layerSpecificDir, layer.AnimationFrame);
+            }
+
+            texture ??= resourceCache.GetFallback<TextureResource>().Texture;
+            return texture;
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -1161,7 +1172,7 @@ namespace Robust.Client.GameObjects
                         else
                         {
                             Logger.ErrorS(LogCategory,
-                                "State not found in layer RSI: '{0}'.",
+                                $"State '{stateid}' not found in RSI: '{theRsi.Path}'.",
                                 stateid);
                         }
                     }
@@ -1508,22 +1519,30 @@ namespace Robust.Client.GameObjects
 
         private class Layer : ISpriteLayer
         {
-            private readonly SpriteComponent _parent;
+            [ViewVariables] private readonly SpriteComponent _parent;
 
-            public ShaderInstance? Shader;
-            public Texture? Texture;
+            [ViewVariables] public ShaderInstance? Shader;
+            [ViewVariables] public Texture? Texture;
 
-            public RSI? RSI;
-            public RSI.StateId State;
-            public float AnimationTimeLeft;
-            public float AnimationTime;
-            public int AnimationFrame;
+            [ViewVariables] public RSI? RSI;
+            [ViewVariables] public RSI.StateId State;
+            [ViewVariables] public float AnimationTimeLeft;
+            [ViewVariables] public float AnimationTime;
+            [ViewVariables] public int AnimationFrame;
+
+            [ViewVariables(VVAccess.ReadWrite)]
             public Vector2 Scale { get; set; } = Vector2.One;
+            [ViewVariables(VVAccess.ReadWrite)]
             public Angle Rotation { get; set; }
+            [ViewVariables(VVAccess.ReadWrite)]
             public bool Visible = true;
+            [ViewVariables(VVAccess.ReadWrite)]
             public Color Color { get; set; } = Color.White;
+            [ViewVariables(VVAccess.ReadWrite)]
             public bool AutoAnimated = true;
+            [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
+            [ViewVariables]
             public RSI? ActualRsi => RSI ?? _parent.BaseRSI;
 
             public Layer(SpriteComponent parent)
@@ -1773,5 +1792,168 @@ namespace Robust.Client.GameObjects
                     throw new ArgumentException($"Unknown layer property '{layerProp}'");
             }
         }
+
+        public IDirectionalTextureProvider? Icon
+        {
+            get
+            {
+                if (Layers.Count == 0) return null;
+
+                var layer = Layers[0];
+
+                var texture = layer.Texture;
+
+                if (!layer.State.IsValid) return null;
+
+                // Pull texture from RSI state instead.
+                var rsi = layer.RSI ?? BaseRSI;
+                if (rsi == null || !rsi.TryGetState(layer.State, out var state))
+                {
+                    state = GetFallbackState();
+                }
+
+                return state;
+
+            }
+        }
+
+        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        {
+            var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
+            if (icon != null) return icon;
+
+            if (!prototype.Components.TryGetValue("Sprite", out var spriteNode))
+            {
+                return resourceCache.GetFallback<TextureResource>().Texture;
+            }
+
+            var dummy = new DummyIconEntity {Prototype = prototype};
+            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var newComponent = (SpriteComponent) compFactory.GetComponent("Sprite");
+            newComponent.Owner = dummy;
+
+            newComponent.ExposeData(YamlObjectSerializer.NewReader(spriteNode));
+
+            return newComponent.Icon ?? resourceCache.GetFallback<TextureResource>().Texture;
+        }
+
+        #region DummyIconEntity
+        private class DummyIconEntity : IEntity
+        {
+            public GameTick LastModifiedTick { get; } = GameTick.Zero;
+            public IEntityManager EntityManager { get; } = null!;
+            public string Name { get; set; } = string.Empty;
+            public EntityUid Uid { get; } = EntityUid.Invalid;
+            public bool Initialized { get; } = false;
+            public bool Initializing { get; } = false;
+            public bool Deleted { get; } = true;
+            public bool Paused { get; set; }
+            public EntityPrototype? Prototype { get; set; }
+            public string Description { get; set; } = string.Empty;
+            public bool IsValid()
+            {
+                return false;
+            }
+
+            public ITransformComponent Transform { get; } = null!;
+            public IMetaDataComponent MetaData { get; } = null!;
+            public T AddComponent<T>() where T : Component, new()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void RemoveComponent<T>()
+            {
+            }
+
+            public bool HasComponent<T>()
+            {
+                return false;
+            }
+
+            public bool HasComponent(Type type)
+            {
+                return false;
+            }
+
+            public T GetComponent<T>()
+            {
+                return default!;
+            }
+
+            public IComponent GetComponent(Type type)
+            {
+                return null!;
+            }
+
+            public IComponent GetComponent(uint netID)
+            {
+                return null!;
+            }
+
+            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
+            {
+                component = null;
+                return false;
+            }
+
+            public T? GetComponentOrNull<T>() where T : class
+            {
+                return null;
+            }
+
+            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
+            {
+                component = null;
+                return false;
+            }
+
+            public IComponent? GetComponentOrNull(Type type)
+            {
+                return null;
+            }
+
+            public bool TryGetComponent(uint netId, [NotNullWhen(true)]  out IComponent? component)
+            {
+                component = null;
+                return false;
+            }
+
+            public IComponent? GetComponentOrNull(uint netId)
+            {
+                return null;
+            }
+
+            public void Shutdown()
+            {
+            }
+
+            public void Delete()
+            {
+            }
+
+            public IEnumerable<IComponent> GetAllComponents()
+            {
+                return Enumerable.Empty<IComponent>();
+            }
+
+            public IEnumerable<T> GetAllComponents<T>()
+            {
+                return Enumerable.Empty<T>();
+            }
+
+            public void SendMessage(IComponent? owner, ComponentMessage message)
+            {
+            }
+
+            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
+            {
+            }
+
+            public void Dirty()
+            {
+            }
+        }
+        #endregion
     }
 }

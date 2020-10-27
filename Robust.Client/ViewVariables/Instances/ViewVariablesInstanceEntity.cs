@@ -1,12 +1,10 @@
 ﻿using System.Linq;
-using Robust.Client.Graphics;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.ViewVariables.Editors;
+using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
@@ -111,9 +109,18 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.AddChild(clientVBox);
             _tabs.SetTabTitle(TabClientVars, "Client Variables");
 
-            foreach (var control in LocalPropertyList(obj, ViewVariablesManager, _resourceCache))
+            var first = true;
+            foreach (var group in LocalPropertyList(obj, ViewVariablesManager, _resourceCache))
             {
-                clientVBox.AddChild(control);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(
+                    ref first,
+                    TypeAbbreviation.Abbreviate(group.Key),
+                    clientVBox);
+
+                foreach (var control in group)
+                {
+                    clientVBox.AddChild(control);
+                }
             }
 
             var clientComponents = new VBoxContainer {SeparationOverride = 0};
@@ -151,7 +158,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             _membersBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobMembers>(session, new ViewVariablesRequestMembers());
 
-            var uid = (EntityUid) _membersBlob.Members.Single(p => p.Name == "Uid").Value;
+            var uid = (EntityUid) _membersBlob.MemberGroups.SelectMany(p => p.Item2).Single(p => p.Name == "Uid").Value;
 
             var entity = _entityManager.GetEntity(uid);
             Initialize(window, entity);
@@ -196,16 +203,22 @@ namespace Robust.Client.ViewVariables.Instances
             }
 
             var otherStyle = false;
-            foreach (var propertyData in _membersBlob!.Members)
+            var first = true;
+            foreach (var (groupName, groupMembers) in _membersBlob!.MemberGroups)
             {
-                var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
-                propertyEdit.SetStyle(otherStyle = !otherStyle);
-                var editor = propertyEdit.SetProperty(propertyData);
-                var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
-                editor.OnValueChanged += o => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o);
-                editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);
+                ViewVariablesTraitMembers.CreateMemberGroupHeader(ref first, groupName, _serverVariables);
 
-                _serverVariables.AddChild(propertyEdit);
+                foreach (var propertyData in groupMembers)
+                {
+                    var propertyEdit = new ViewVariablesPropertyControl(ViewVariablesManager, _resourceCache);
+                    propertyEdit.SetStyle(otherStyle = !otherStyle);
+                    var editor = propertyEdit.SetProperty(propertyData);
+                    var selectorChain = new object[] {new ViewVariablesMemberSelector(propertyData.PropertyIndex)};
+                    editor.OnValueChanged += o => ViewVariablesManager.ModifyRemote(_entitySession, selectorChain, o);
+                    editor.WireNetworkSelector(_entitySession.SessionId, selectorChain);
+
+                    _serverVariables.AddChild(propertyEdit);
+                }
             }
 
             var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());

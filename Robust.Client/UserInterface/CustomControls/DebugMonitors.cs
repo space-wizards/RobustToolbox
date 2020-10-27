@@ -52,7 +52,7 @@ namespace Robust.Client.UserInterface.CustomControls
             _fpsCounter = new FpsCounter(gameTiming1);
             AddChild(_fpsCounter);
 
-            _debugCoordsPanel = new DebugCoordsPanel(playerManager, eyeManager, inputManager, stateManager, displayManager, mapManager);
+            _debugCoordsPanel = new DebugCoordsPanel();
             AddChild(_debugCoordsPanel);
 
             _debugNetPanel = new DebugNetPanel(netManager, gameTiming1);

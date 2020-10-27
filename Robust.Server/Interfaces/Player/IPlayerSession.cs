@@ -3,6 +3,7 @@ using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Network;
 using Robust.Shared.Players;
 
 namespace Robust.Server.Interfaces.Player
@@ -22,6 +23,8 @@ namespace Robust.Server.Interfaces.Player
         event EventHandler<SessionStatusEventArgs> PlayerStatusChanged;
 
         void JoinGame();
+
+        LoginType AuthType { get; }
 
         /// <summary>
         ///     Attaches this player to an entity.

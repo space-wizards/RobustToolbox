@@ -16,6 +16,7 @@ namespace Robust.Client.Input
             var common = contexts.GetContext(InputContextContainer.DefaultContextName);
             common.AddFunction(EngineKeyFunctions.Use);
             common.AddFunction(EngineKeyFunctions.UIClick);
+            common.AddFunction(EngineKeyFunctions.UIRightClick);
 
             common.AddFunction(EngineKeyFunctions.CloseModals);
             common.AddFunction(EngineKeyFunctions.EscapeMenu);

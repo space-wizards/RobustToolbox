@@ -122,8 +122,8 @@ namespace Robust.Shared.Interfaces.Physics
 
     public readonly struct Manifold
     {
-        public readonly ICollidableComponent A;
-        public readonly ICollidableComponent B;
+        public readonly IPhysicsComponent A;
+        public readonly IPhysicsComponent B;
 
         public readonly Vector2 Normal;
         public readonly bool Hard;
@@ -147,7 +147,7 @@ namespace Robust.Shared.Interfaces.Physics
 
         public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
 
-        public Manifold(ICollidableComponent a, ICollidableComponent b, bool hard)
+        public Manifold(IPhysicsComponent a, IPhysicsComponent b, bool hard)
         {
             A = a;
             B = b;

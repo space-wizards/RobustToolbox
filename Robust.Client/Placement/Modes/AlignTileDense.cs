@@ -15,9 +15,16 @@ namespace Robust.Client.Placement.Modes
         {
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
-            var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
-            CurrentTile = mapGrid.GetTileRef(MouseCoords);
-            float tileSize = mapGrid.TileSize; //convert from ushort to float
+            var tileSize = 1f;
+            var gridId = MouseCoords.GetGridId(pManager.EntityManager);
+
+            if (gridId.IsValid())
+            {
+                var mapGrid = pManager.MapManager.GetGrid(MouseCoords.GetGridId(pManager.EntityManager));
+                tileSize = mapGrid.TileSize; //convert from ushort to float
+            }
+
+            CurrentTile = GetTileRef(MouseCoords);
             GridDistancing = tileSize;
 
             if (pManager.CurrentPermission!.IsTile)
@@ -39,12 +46,8 @@ namespace Robust.Client.Placement.Modes
             {
                 return false;
             }
-            if (!pManager.CurrentPermission!.IsTile && !IsColliding(position))
-            {
-                return false;
-            }
 
-            return true;
+            return pManager.CurrentPermission!.IsTile || IsColliding(position);
         }
     }
 }

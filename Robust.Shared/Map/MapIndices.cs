@@ -12,6 +12,7 @@ namespace Robust.Shared.Map
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
+    [Obsolete("Use Vector2i instead")]
     public readonly struct MapIndices : IEquatable<MapIndices>
     {
         /// <summary>

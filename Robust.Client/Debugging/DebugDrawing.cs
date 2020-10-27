@@ -47,12 +47,12 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new CollidableOverlay(_componentManager, _eyeManager,
+                    _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(CollidableOverlay));
+                    _overlayManager.RemoveOverlay(nameof(PhysicsOverlay));
                 }
             }
         }
@@ -81,7 +81,7 @@ namespace Robust.Client.Debugging
             }
         }
 
-        private class CollidableOverlay : Overlay
+        private class PhysicsOverlay : Overlay
         {
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
@@ -94,8 +94,8 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
 
-            public CollidableOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
-                : base(nameof(CollidableOverlay))
+            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
+                : base(nameof(PhysicsOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
@@ -103,7 +103,7 @@ namespace Robust.Client.Debugging
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
-                _font = new VectorFont(cache.GetResource<FontResource>("/Textures/Interface/Nano/NotoSans/NotoSans-Regular.ttf"), 10);
+                _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
             }
 
             /// <inheritdoc />
@@ -141,7 +141,7 @@ namespace Robust.Client.Debugging
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((ICollidableComponent)body).Anchored}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((IPhysicsComponent)body).Anchored}");
                     row++;
                 }
 
@@ -158,7 +158,7 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.EntityQuery<ICollidableComponent>())
+                foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
                 {
                     var physBody = (IPhysBody) boundingBox;
 

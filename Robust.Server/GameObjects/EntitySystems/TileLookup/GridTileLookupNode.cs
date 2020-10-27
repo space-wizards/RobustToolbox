@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 {
@@ -8,7 +9,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
     {
         internal GridTileLookupChunk ParentChunk { get; }
         
-        internal MapIndices Indices { get; }
+        internal Vector2i Indices { get; }
 
         internal IEnumerable<IEntity> Entities
         {
@@ -24,7 +25,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 
         private readonly HashSet<IEntity> _entities = new HashSet<IEntity>();
 
-        internal GridTileLookupNode(GridTileLookupChunk parentChunk, MapIndices indices)
+        internal GridTileLookupNode(GridTileLookupChunk parentChunk, Vector2i indices)
         {
             ParentChunk = parentChunk;
             Indices = indices;

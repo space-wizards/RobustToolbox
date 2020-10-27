@@ -25,8 +25,8 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Dictionary<GridId, Dictionary<MapIndices, GridTileLookupChunk>> _graph =
-                     new Dictionary<GridId, Dictionary<MapIndices, GridTileLookupChunk>>();
+        private readonly Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>> _graph =
+                     new Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>>();
 
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
@@ -51,12 +51,12 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         }
 
         /// <summary>
-        ///     Yields all of the entities intersecting a particular MapIndices
+        ///     Yields all of the entities intersecting a particular Vector2i
         /// </summary>
         /// <param name="gridId"></param>
         /// <param name="gridIndices"></param>
         /// <returns></returns>
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridId gridId, MapIndices gridIndices)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices)
         {
             if (gridId == GridId.Invalid)
             {
@@ -80,9 +80,9 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             }
         }
 
-        public List<MapIndices> GetIndices(IEntity entity)
+        public List<Vector2i> GetIndices(IEntity entity)
         {
-            var results = new List<MapIndices>();
+            var results = new List<Vector2i>();
 
             if (!_lastKnownNodes.TryGetValue(entity, out var nodes))
             {
@@ -97,13 +97,13 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             return results;
         }
 
-        private GridTileLookupChunk GetOrCreateChunk(GridId gridId, MapIndices indices)
+        private GridTileLookupChunk GetOrCreateChunk(GridId gridId, Vector2i indices)
         {
             var chunkIndices = GetChunkIndices(indices);
 
             if (!_graph.TryGetValue(gridId, out var gridChunks))
             {
-                gridChunks = new Dictionary<MapIndices, GridTileLookupChunk>();
+                gridChunks = new Dictionary<Vector2i, GridTileLookupChunk>();
                 _graph[gridId] = gridChunks;
             }
 
@@ -116,9 +116,9 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             return chunk;
         }
 
-        private MapIndices GetChunkIndices(MapIndices indices)
+        private Vector2i GetChunkIndices(Vector2i indices)
         {
-            return new MapIndices(
+            return new Vector2i(
                 (int) (Math.Floor((float) indices.X / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize),
                 (int) (Math.Floor((float) indices.Y / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize));
         }
@@ -171,7 +171,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         /// <param name="gridId"></param>
         /// <param name="indices"></param>
         /// <returns></returns>
-        private GridTileLookupNode GetOrCreateNode(GridId gridId, MapIndices indices)
+        private GridTileLookupNode GetOrCreateNode(GridId gridId, Vector2i indices)
         {
             var chunk = GetOrCreateChunk(gridId, indices);
 
@@ -179,18 +179,18 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         }
 
         /// <summary>
-        ///     Get the relevant GridId and MapIndices for this entity for lookup.
+        ///     Get the relevant GridId and Vector2i for this entity for lookup.
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        private Dictionary<GridId, List<MapIndices>> GetEntityIndices(IEntity entity)
+        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(IEntity entity)
         {
             var entityBounds = GetEntityBox(entity);
-            var results = new Dictionary<GridId, List<MapIndices>>();
+            var results = new Dictionary<GridId, List<Vector2i>>();
 
             foreach (var grid in _mapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
             {
-                var indices = new List<MapIndices>();
+                var indices = new List<Vector2i>();
 
                 foreach (var tile in grid.GetTilesIntersecting(entityBounds))
                 {
@@ -206,8 +206,8 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         private Box2 GetEntityBox(IEntity entity)
         {
             // Need to clip the aabb as anything with an edge intersecting another tile might be picked up, such as walls.
-            if (entity.TryGetComponent(out ICollidableComponent? collidableComponent))
-                return new Box2(collidableComponent.WorldAABB.BottomLeft + 0.01f, collidableComponent.WorldAABB.TopRight - 0.01f);
+            if (entity.TryGetComponent(out IPhysicsComponent? physics))
+                return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
             return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
@@ -248,7 +248,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 
         private void HandleGridCreated(GridId gridId)
         {
-            _graph[gridId] = new Dictionary<MapIndices, GridTileLookupChunk>();
+            _graph[gridId] = new Dictionary<Vector2i, GridTileLookupChunk>();
         }
 
         private void HandleGridRemoval(GridId gridId)
@@ -282,14 +282,14 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             }
 
             var entityNodes = GetOrCreateNodes(entity);
-            var newIndices = new Dictionary<GridId, List<MapIndices>>();
+            var newIndices = new Dictionary<GridId, List<Vector2i>>();
 
             foreach (var node in entityNodes)
             {
                 node.AddEntity(entity);
                 if (!newIndices.TryGetValue(node.ParentChunk.GridId, out var existing))
                 {
-                    existing = new List<MapIndices>();
+                    existing = new List<Vector2i>();
                     newIndices[node.ParentChunk.GridId] = existing;
                 }
 
@@ -364,12 +364,12 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
                 node.AddEntity(moveEvent.Sender);
             }
 
-            var newIndices = new Dictionary<GridId, List<MapIndices>>();
+            var newIndices = new Dictionary<GridId, List<Vector2i>>();
             foreach (var node in newNodes)
             {
                 if (!newIndices.TryGetValue(node.ParentChunk.GridId, out var existing))
                 {
-                    existing = new List<MapIndices>();
+                    existing = new List<Vector2i>();
                     newIndices[node.ParentChunk.GridId] = existing;
                 }
 

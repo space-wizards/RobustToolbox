@@ -363,15 +363,15 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Converts this set of coordinates to MapIndices.
+        ///     Converts this set of coordinates to Vector2i.
         /// </summary>
         /// <param name="entityManager"></param>
         /// <param name="mapManager"></param>
         /// <returns></returns>
-        public MapIndices ToMapIndices(IEntityManager entityManager, IMapManager mapManager)
+        public Vector2i ToVector2i(IEntityManager entityManager, IMapManager mapManager)
         {
             if(!IsValid(entityManager))
-                return new MapIndices();
+                return new Vector2i();
 
             var gridId = GetGridId(entityManager);
 
@@ -382,7 +382,7 @@ namespace Robust.Shared.Map
 
             var (x, y) = ToMapPos(entityManager);
 
-            return new MapIndices((int) x, (int) y);
+            return new Vector2i((int)Math.Floor(x), (int)Math.Floor(y));
         }
 
         /// <summary>

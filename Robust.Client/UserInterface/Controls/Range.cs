@@ -11,6 +11,7 @@ namespace Robust.Client.UserInterface.Controls
         private float _minValue;
         private float _value;
         private float _page;
+        private bool _rounded;
 
         public event Action<Range>? OnValueChanged;
 
@@ -21,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetAsRatio(float value)
         {
-            Value = value * (_maxValue - _minValue) + _minValue;
+            Value = ClampValue(value * (_maxValue - _minValue) + _minValue);
         }
 
         [ViewVariables]
@@ -73,6 +74,17 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        [ViewVariables]
+        public virtual bool Rounded
+        {
+            get => _rounded;
+            set
+            {
+                _rounded = value;
+                _ensureValueClamped();
+            }
+        }
+
         private void _ensureValueClamped()
         {
             var newValue = ClampValue(_value);
@@ -86,6 +98,10 @@ namespace Robust.Client.UserInterface.Controls
         [Pure]
         protected float ClampValue(float value)
         {
+            if (_rounded)
+            {
+                value = MathF.Round(value);
+            }
             return MathHelper.Clamp(value, _minValue, _maxValue-_page);
         }
     }

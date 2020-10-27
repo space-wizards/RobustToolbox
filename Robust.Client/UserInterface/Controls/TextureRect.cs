@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Shaders;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -11,10 +12,13 @@ namespace Robust.Client.UserInterface.Controls
     public class TextureRect : Control
     {
         public const string StylePropertyTexture = "texture";
+        public const string StylePropertyShader = "shader";
 
         private bool _canShrink;
         private Texture? _texture;
         private Vector2 _textureScale = Vector2.One;
+
+        public ShaderInstance? ShaderOverride { get; set; }
 
         /// <summary>
         ///     The texture to draw.
@@ -72,6 +76,7 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var texture = _texture;
+            ShaderInstance? shader = null;
 
             if (texture == null)
             {
@@ -80,6 +85,20 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return;
                 }
+            }
+
+            if (ShaderOverride != null)
+            {
+                shader = ShaderOverride;
+            }
+            else if (TryGetStyleProperty(StylePropertyShader, out ShaderInstance? styleShader))
+            {
+                shader = styleShader;
+            }
+
+            if (shader != null)
+            {
+                handle.UseShader(shader);
             }
 
             switch (Stretch)

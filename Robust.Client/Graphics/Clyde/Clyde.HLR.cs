@@ -10,6 +10,7 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Clyde
@@ -209,25 +210,27 @@ namespace Robust.Client.Graphics.Clyde
 
             var tree = spriteSystem.GetSpriteTreeForMap(map);
 
-            var sprites = tree.Query(worldBounds, true);
-
-            foreach (var sprite in sprites)
+            tree.QueryAabb(ref list, ((
+                ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
+                in SpriteComponent value) =>
             {
-                if (sprite.ContainerOccluded || !sprite.Visible)
+                if (value.ContainerOccluded || !value.Visible)
                 {
-                    continue;
+                    return true;
                 }
 
-                var entity = sprite.Owner;
+                var entity = value.Owner;
                 var transform = entity.Transform;
 
-                ref var entry = ref list.AllocAdd();
-                entry.sprite = sprite;
+                ref var entry = ref state.AllocAdd();
+                entry.sprite = value;
                 entry.worldRot = transform.WorldRotation;
                 entry.matrix = transform.WorldMatrix;
                 var worldPos = entry.matrix.Transform(transform.LocalPosition);
                 entry.yWorldPos = worldPos.Y;
-            }
+                return true;
+
+            }), worldBounds, approx: true);
         }
 
         private void DrawSplash(IRenderHandle handle)
@@ -264,7 +267,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var rt = _currentViewport.RenderTarget;
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(Color.Transparent);
+                ClearFramebuffer(default);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(viewport.Size);
 
@@ -294,7 +297,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     RenderOverlays(OverlaySpace.WorldSpace);
 
-                    if (_lightManager.Enabled && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }

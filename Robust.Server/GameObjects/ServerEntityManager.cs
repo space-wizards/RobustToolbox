@@ -9,10 +9,10 @@ using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
-using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -43,7 +43,7 @@ namespace Robust.Server.GameObjects
         private float? _maxUpdateRangeCache;
 
         public float MaxUpdateRange => _maxUpdateRangeCache
-            ??= _configurationManager.GetCVar<float>("net.maxupdaterange");
+            ??= _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
 
         private int _nextServerEntityUid = (int) EntityUid.FirstUid;
 
@@ -65,7 +65,7 @@ namespace Robust.Server.GameObjects
         public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntityServer(prototypeName);
-            
+
             if (TryGetEntity(coordinates.EntityId, out var entity))
             {
                 newEntity.Transform.AttachParent(entity);
@@ -118,14 +118,14 @@ namespace Robust.Server.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            
+
             InitializeAndStartEntity((Entity) entity);
-            
+
             if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this)))
             {
                 entity.RunMapInit();
             }
-            
+
             return entity;
         }
 
@@ -374,7 +374,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (entity.TryGetComponent(out ICollidableComponent? body))
+                if (entity.TryGetComponent(out IPhysicsComponent? body))
                 {
                     if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
                     {
@@ -541,7 +541,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (!entity.TryGetComponent(out ICollidableComponent? body))
+                if (!entity.TryGetComponent(out IPhysicsComponent? body))
                 {
                     // can't be a mover w/o physics
                     continue;
@@ -795,7 +795,7 @@ namespace Robust.Server.GameObjects
                     {
                         addToMovers = true;
                     }
-                    else if (entity.TryGetComponent(out ICollidableComponent? physics)
+                    else if (entity.TryGetComponent(out IPhysicsComponent? physics)
                              && physics.LastModifiedTick >= currentTick)
                     {
                         addToMovers = true;
@@ -957,9 +957,9 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public override void Update(float frameTime)
+        public override void Update(float frameTime, Histogram? histogram)
         {
-            base.Update(frameTime);
+            base.Update(frameTime, histogram);
 
             EntitiesCount.Set(AllEntities.Count);
         }

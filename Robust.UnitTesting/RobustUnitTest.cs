@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -28,6 +29,7 @@ namespace Robust.UnitTesting
             // Clear state across tests.
             IoCManager.InitThread();
             IoCManager.Clear();
+
             RegisterIoC();
 
             var assemblies = new List<Assembly>(4);
@@ -45,6 +47,11 @@ namespace Robust.UnitTesting
 
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
             assemblies.Add(Assembly.GetExecutingAssembly());
+
+            foreach (var assembly in assemblies)
+            {
+                IoCManager.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(assembly);
+            }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 

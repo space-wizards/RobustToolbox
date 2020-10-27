@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
+    [RegisterComponent]
     public class IconComponent : Component
     {
         public override string Name => "Icon";
@@ -92,11 +93,11 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        public static IDirectionalTextureProvider GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
+        public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var mapping))
             {
-                return resourceCache.GetFallback<TextureResource>().Texture;
+                return null;
             }
             return TextureForConfig(YamlObjectSerializer.NewReader(mapping), resourceCache);
         }

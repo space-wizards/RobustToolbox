@@ -13,6 +13,12 @@ namespace Robust.Client.Interfaces.Graphics
         IRenderWindow MainWindowRenderTarget { get; }
 
         Vector2i ScreenSize { get; }
+
+        /// <summary>
+        ///     The default scale ratio for window contents, given to us by the OS.
+        /// </summary>
+        Vector2 DefaultWindowScale { get; }
+
         void SetWindowTitle(string title);
 
         /// <summary>

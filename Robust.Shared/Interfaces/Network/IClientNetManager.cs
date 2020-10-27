@@ -41,12 +41,6 @@ namespace Robust.Shared.Interfaces.Network
         /// </summary>
         /// <param name="reason">The reason why disconnect was called.</param>
         void ClientDisconnect(string reason);
-
-        /// <summary>
-        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
-        /// </summary>
-        /// <param name="message"></param>
-        void ClientSendMessage(NetMessage message);
     }
 
     public enum ClientConnectionState

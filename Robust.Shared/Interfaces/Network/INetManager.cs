@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Interfaces.Network
@@ -96,9 +97,15 @@ namespace Robust.Shared.Interfaces.Network
         void ServerSendToMany(NetMessage message, List<INetChannel> recipients);
 
         /// <summary>
+        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        void ClientSendMessage(NetMessage message);
+
+        /// <summary>
         ///     An incoming connection is being received.
         /// </summary>
-        event EventHandler<NetConnectingArgs> Connecting;
+        event Func<NetConnectingArgs, Task> Connecting;
 
         /// <summary>
         ///     A client has just connected to the server.
@@ -137,5 +144,6 @@ namespace Robust.Shared.Interfaces.Network
         T CreateNetMessage<T>() where T : NetMessage;
 
         #endregion StringTable
+
     }
 }

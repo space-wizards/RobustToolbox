@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -59,17 +60,16 @@ namespace Robust.Shared.Map
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .ToDictionary(kv => kv.Key, kv => _defaultGrids[kv.Key]);
+                .Select(kv => kv.Key).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize,
-                    grid.IsDefaultGrid));
+                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
 
             // no point sending empty collections
-            if (gridDatums.Count        == 0) gridDatums        = default;
-            if (gridDeletionsData.Count == 0) gridDeletionsData = default;
-            if (mapDeletionsData.Count  == 0) mapDeletionsData  = default;
-            if (mapCreations.Count      == 0) mapCreations      = default;
-            if (gridCreations.Count     == 0) gridCreations     = default;
+            if (gridDatums.Count        == 0)  gridDatums        = default;
+            if (gridDeletionsData.Count == 0)  gridDeletionsData = default;
+            if (mapDeletionsData.Count  == 0)  mapDeletionsData  = default;
+            if (mapCreations.Length     == 0)  mapCreations      = default;
+            if (gridCreations.Count     == 0)  gridCreations     = default;
 
             // no point even creating an empty map state if no data
             if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
@@ -97,26 +97,20 @@ namespace Robust.Shared.Map
                 : null;
 
             // First we need to figure out all the NEW MAPS.
-            // And make their default grids too.
             if(data.CreatedMaps != null)
             {
-                DebugTools.AssertNotNull(createdGrids);
-
-                foreach (var (mapId, gridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     if (_maps.Contains(mapId))
                     {
                         continue;
                     }
 
-                    var gridCreation = createdGrids![gridId];
-                    DebugTools.Assert(gridCreation.IsTheDefault);
-
-                    CreateMap(mapId, gridId);
+                    CreateMap(mapId);
                 }
             }
 
-            // Then make all the other grids.
+            // Then make all the grids.
             if(data.CreatedGrids != null)
             {
                 var gridData = data.GridData != null
@@ -127,7 +121,7 @@ namespace Robust.Shared.Map
 
                 foreach (var (gridId, creationDatum) in data.CreatedGrids)
                 {
-                    if (creationDatum.IsTheDefault || _grids.ContainsKey(gridId))
+                    if (_grids.ContainsKey(gridId))
                     {
                         continue;
                     }
@@ -152,7 +146,7 @@ namespace Robust.Shared.Map
 
                     grid.WorldPosition = gridDatum.Coordinates.Position;
 
-                    var modified = new List<(MapIndices position, Tile tile)>();
+                    var modified = new List<(Vector2i position, Tile tile)>();
                     foreach (var chunkData in gridDatum.ChunkData)
                     {
                         var chunk = grid.GetChunk(chunkData.Index);
@@ -168,7 +162,7 @@ namespace Robust.Shared.Map
                                 if (chunk.GetTileRef(x, y).Tile != tile)
                                 {
                                     chunk.SetTile(x, y, tile);
-                                    modified.Add((new MapIndices(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                                    modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
                                 }
                             }
                         }
@@ -199,7 +193,7 @@ namespace Robust.Shared.Map
             // and delete the client entities
             if (data.CreatedMaps != null)
             {
-                foreach (var (mapId, defaultGridId) in data.CreatedMaps)
+                foreach (var mapId in data.CreatedMaps)
                 {
                     // CreateMap should have set this
                     DebugTools.Assert(_mapEntities.ContainsKey(mapId));

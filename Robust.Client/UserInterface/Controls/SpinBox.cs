@@ -33,8 +33,25 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _lineEdit.Text = value.ToString();
+                ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
             }
         }
+
+        /// <summary>
+        /// Overrides the value of the spinbox without calling the event.
+        /// Still applies validity-checks
+        /// </summary>
+        /// <param name="value">the new value</param>
+        public void OverrideValue(int value)
+        {
+            if (IsValid != null && !IsValid(value))
+            {
+                return;
+            }
+            _lineEdit.Text = value.ToString();
+        }
+
+        public event EventHandler<ValueChangedEventArgs>? ValueChanged;
 
         public SpinBox() : base()
         {
@@ -49,7 +66,7 @@ namespace Robust.Client.UserInterface.Controls
 
             Value = 0;
 
-            _lineEdit.IsValid = (str) => int.TryParse(str, out int i);
+            _lineEdit.IsValid = (str) => int.TryParse(str, out var i) && (IsValid == null || IsValid(i));
         }
 
         /// <summary>
@@ -112,6 +129,32 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         /// <summary>
+        /// Changes the editability of the lineedit-field
+        /// </summary>
+        public bool LineEditDisabled
+        {
+            get => !_lineEdit.Editable;
+            set => _lineEdit.Editable = !value;
+        }
+
+        /// <summary>
+        /// Changes the editability of the buttons
+        /// </summary>
+        /// <param name="disabled"></param>
+        public void SetButtonDisabled(bool disabled)
+        {
+            foreach (var leftButton in _leftButtons)
+            {
+                leftButton.Disabled = disabled;
+            }
+
+            foreach (var rightButton in _rightButtons)
+            {
+                rightButton.Disabled = disabled;
+            }
+        }
+
+        /// <summary>
         ///     Removes all buttons inside the SpinBox.
         /// </summary>
         public void ClearButtons()
@@ -141,6 +184,16 @@ namespace Robust.Client.UserInterface.Controls
                 Value += _stepSize;
             else if (args.Delta.Y < 0)
                 Value -= _stepSize;
+        }
+    }
+
+    public class ValueChangedEventArgs : EventArgs
+    {
+        public readonly int Value;
+
+        public ValueChangedEventArgs(int value)
+        {
+            Value = value;
         }
     }
 }

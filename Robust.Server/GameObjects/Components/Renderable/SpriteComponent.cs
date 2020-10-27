@@ -15,6 +15,7 @@ namespace Robust.Server.GameObjects
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";
+        [ViewVariables]
         private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
 
         private bool _visible;
@@ -26,7 +27,7 @@ namespace Robust.Server.GameObjects
         private string? _baseRSIPath;
         private Angle _rotation;
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public int DrawDepth
         {
             get => _drawDepth;
@@ -125,6 +126,9 @@ namespace Robust.Server.GameObjects
                 Dirty();
             }
         }
+
+        [ViewVariables]
+        public int LayerCount => Layers.Count;
 
         public int AddLayerWithSprite(SpriteSpecifier specifier)
         {

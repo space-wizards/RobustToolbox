@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Channels;
+using System.Threading.Tasks;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
@@ -97,24 +98,34 @@ namespace Robust.UnitTesting
                         {
                             DebugTools.Assert(IsServer);
 
-                            var writer = connect.ChannelWriter;
-
-                            var uid = _genConnectionUid();
-                            var sessionId = new NetSessionId($"integration_{uid}");
-
-                            var connectArgs =
-                                new NetConnectingArgs(sessionId, new IPEndPoint(IPAddress.IPv6Loopback, 0));
-                            Connecting?.Invoke(this, connectArgs);
-                            if (connectArgs.Deny)
+                            async void DoConnect()
                             {
-                                writer.TryWrite(new DeniedConnectMessage());
-                                continue;
+                                var writer = connect.ChannelWriter;
+
+                                var uid = _genConnectionUid();
+                                var sessionId = new NetUserId(Guid.NewGuid());
+                                var userName = $"integration_{uid}";
+
+                                var args = await OnConnecting(
+                                    new IPEndPoint(IPAddress.IPv6Loopback, 0),
+                                    sessionId,
+                                    userName,
+                                    LoginType.GuestAssigned);
+                                if (args.IsDenied)
+                                {
+                                    writer.TryWrite(new DeniedConnectMessage());
+                                    return;
+                                }
+
+                                writer.TryWrite(new ConfirmConnectMessage(uid, sessionId, userName));
+                                var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId,
+                                    connect.Uid, userName);
+                                _channels.Add(uid, channel);
+                                Connected?.Invoke(this, new NetChannelArgs(channel));
                             }
 
-                            writer.TryWrite(new ConfirmConnectMessage(uid, sessionId));
-                            var channel = new IntegrationNetChannel(this, connect.ChannelWriter, uid, sessionId, connect.Uid);
-                            _channels.Add(uid, channel);
-                            Connected?.Invoke(this, new NetChannelArgs(channel));
+                            DoConnect();
+
                             break;
                         }
 
@@ -180,7 +191,7 @@ namespace Robust.UnitTesting
                             DebugTools.Assert(IsClient);
 
                             var channel = new IntegrationNetChannel(this, NextConnectChannel!, _clientConnectingUid,
-                                confirm.SessionId, confirm.AssignedUid);
+                                confirm.UserId, confirm.AssignedUid, confirm.AssignedName);
 
                             _channels.Add(channel.ConnectionUid, channel);
 
@@ -192,6 +203,20 @@ namespace Robust.UnitTesting
                             throw new ArgumentOutOfRangeException();
                     }
                 }
+            }
+
+            private async Task<NetConnectingArgs> OnConnecting(
+                IPEndPoint ip,
+                NetUserId userId,
+                string userName,
+                LoginType loginType)
+            {
+                var args = new NetConnectingArgs(userId, ip, userName, loginType);
+                foreach (var conn in _connectingEvent)
+                {
+                    await conn(args);
+                }
+                return args;
             }
 
             public void ServerSendToAll(NetMessage message)
@@ -222,7 +247,16 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public event EventHandler<NetConnectingArgs>? Connecting;
+
+            private readonly List<Func<NetConnectingArgs, Task>> _connectingEvent
+                = new List<Func<NetConnectingArgs, Task>>();
+
+            public event Func<NetConnectingArgs, Task> Connecting
+            {
+                add => _connectingEvent.Add(value);
+                remove => _connectingEvent.Remove(value);
+            }
+
             public event EventHandler<NetChannelArgs>? Connected;
             public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
@@ -246,6 +280,11 @@ namespace Robust.UnitTesting
                 return (T) Activator.CreateInstance(typeof(T), (INetChannel?) null)!;
             }
 
+            public byte[]? RsaPublicKey => null;
+            public AuthMode Auth => AuthMode.Disabled;
+            public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
+            public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
+
             public void DisconnectChannel(INetChannel channel, string reason)
             {
                 channel.Disconnect(reason);
@@ -253,6 +292,7 @@ namespace Robust.UnitTesting
 
             INetChannel IClientNetManager.ServerChannel => ServerChannel;
             public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
+
             public event Action<ClientConnectionState>? ClientConnectStateChanged
             {
                 add { }
@@ -322,21 +362,24 @@ namespace Robust.UnitTesting
 
                 // TODO: Should this port value make sense?
                 public IPEndPoint RemoteEndPoint { get; } = new IPEndPoint(IPAddress.Loopback, 1212);
-                public NetSessionId SessionId { get; }
+                public NetUserId UserId { get; }
+                public string UserName { get; }
+                public LoginType AuthType => LoginType.GuestAssigned;
                 public short Ping => default;
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,
-                    NetSessionId sessionId)
+                    NetUserId userId, string userName)
                 {
                     _owner = owner;
                     ConnectionUid = uid;
-                    SessionId = sessionId;
+                    UserId = userId;
+                    UserName = userName;
                     OtherChannel = otherChannel;
                     IsConnected = true;
                 }
 
                 public IntegrationNetChannel(IntegrationNetManager owner, ChannelWriter<object> otherChannel, int uid,
-                    NetSessionId sessionId, int remoteUid) : this(owner, otherChannel, uid, sessionId)
+                    NetUserId userId, int remoteUid, string userName) : this(owner, otherChannel, uid, userId, userName)
                 {
                     RemoteUid = uid;
                 }
@@ -371,14 +414,16 @@ namespace Robust.UnitTesting
 
             private sealed class ConfirmConnectMessage
             {
-                public ConfirmConnectMessage(int assignedUid, NetSessionId sessionId)
+                public ConfirmConnectMessage(int assignedUid, NetUserId userId, string assignedName)
                 {
                     AssignedUid = assignedUid;
-                    SessionId = sessionId;
+                    UserId = userId;
+                    AssignedName = assignedName;
                 }
 
                 public int AssignedUid { get; }
-                public NetSessionId SessionId { get; }
+                public NetUserId UserId { get; }
+                public string AssignedName { get; }
             }
 
             private sealed class DeniedConnectMessage

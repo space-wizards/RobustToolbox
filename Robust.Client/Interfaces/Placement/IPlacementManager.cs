@@ -21,9 +21,10 @@ namespace Robust.Client.Interfaces.Placement
         /// </summary>
         event EventHandler PlacementChanged;
 
-        void BeginPlacing(PlacementInformation info);
+        void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null);
         void Clear();
         void ToggleEraser();
+        void ToggleEraserHijacked(PlacementHijack hijack);
 
         void FrameUpdate(FrameEventArgs e);
     }

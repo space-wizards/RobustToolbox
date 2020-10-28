@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         private static Box2 ExtractAabbFunc(in OccluderComponent o)
         {
-            return o.BoundingBox.Translated(o.Owner.Transform.WorldPosition);
+            return o.BoundingBox.Translated(o.Owner.Transform.LocalPosition);
         }
 
         private void QueueUpdateOccluder(OccluderComponent occluder, EntityCoordinates coordinates)

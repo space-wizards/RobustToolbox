@@ -716,6 +716,18 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, expandedBounds, true))
                 {
                     var occluderTree = occluderSystem.GetOccluderTreeForGrid(map, gridId);
+                    Box2 gridBounds;
+
+                    if (gridId == GridId.Invalid)
+                    {
+                        gridBounds = expandedBounds;
+                    }
+                    else
+                    {
+                        // TODO: Ideally this would clamp to the outer border of what we can see
+                        var grid = _mapManager.GetGrid(gridId);
+                        gridBounds = expandedBounds.Translated(grid.WorldPosition);
+                    }
 
                     occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
                     {

@@ -522,9 +522,9 @@ namespace Robust.Shared.Map
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
-        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
+        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false)
         {
-            return _grids.Values.Where(g => g.ParentMapId == mapId && g.WorldBounds.Intersects(worldArea));
+            return _grids.Values.Where(g => g.ParentMapId == mapId && (includeInvalid && g.Index == GridId.Invalid || g.WorldBounds.Intersects(worldArea)));
         }
 
         public void DeleteGrid(GridId gridID)

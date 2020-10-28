@@ -57,11 +57,12 @@ namespace Robust.Shared.GameObjects
         {
             base.OnRemove();
 
-            var map = Owner.Transform.MapID;
+            var transform = Owner.Transform;
+            var map = transform.MapID;
             if (map != MapId.Nullspace)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new OccluderTreeRemoveOccluderMessage(this, map));
+                    new OccluderTreeRemoveOccluderMessage(this, map, transform.GridID));
             }
         }
 

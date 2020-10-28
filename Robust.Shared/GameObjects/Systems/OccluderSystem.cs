@@ -32,7 +32,6 @@ namespace Robust.Shared.GameObjects.Systems
             _mapManager.MapCreated += MapManagerOnMapCreated;
             _mapManager.MapDestroyed += MapManagerOnMapDestroyed;
 
-            SubscribeLocalEvent<EntityInitializedMessage>(EntInitialized);
             SubscribeLocalEvent<EntMapIdChangedMessage>(EntMapIdChanged);
             SubscribeLocalEvent<MoveEvent>(EntMoved);
             SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
@@ -106,11 +105,6 @@ namespace Robust.Shared.GameObjects.Systems
                 oldTree?.Remove(occluder);
                 newTree?.AddOrUpdate(occluder);
             }
-        }
-
-        private void EntInitialized(EntityInitializedMessage ev)
-        {
-            UpdateEntity(ev.Entity);
         }
 
         private void UpdateEntity(IEntity entity)

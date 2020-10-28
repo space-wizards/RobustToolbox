@@ -23,7 +23,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="milliseconds">The length of time, in milliseconds, to delay for.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The task that can be awaited.</returns>
-        public static Task Delay(this IEntity entity, int milliseconds, CancellationTokenSource? cancellationToken = default)
+        public static Task DelayTask(this IEntity entity, int milliseconds, CancellationTokenSource? cancellationToken = default)
         {
             return entity
                 .EnsureComponent<TimerComponent>()
@@ -38,7 +38,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="duration">The length of time to delay for.</param>
         /// <param name="cancellationToken"></param>
         /// <returns>The task that can be awaited.</returns>
-        public static Task Delay(this IEntity entity, TimeSpan duration, CancellationTokenSource? cancellationToken = default)
+        public static Task DelayTask(this IEntity entity, TimeSpan duration, CancellationTokenSource? cancellationToken = default)
         {
             return entity
                 .EnsureComponent<TimerComponent>()
@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="milliseconds">The length of time, in milliseconds, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken"></param>
-        public static void Spawn(this IEntity entity, int milliseconds, Action onFired, CancellationTokenSource? cancellationToken = null)
+        public static void SpawnTimer(this IEntity entity, int milliseconds, Action onFired, CancellationTokenSource? cancellationToken = null)
         {
             entity
                 .EnsureComponent<TimerComponent>()
@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="duration">The length of time, to wait before firing the action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken"></param>
-        public static void Spawn(this IEntity entity, TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken = default)
+        public static void SpawnTimer(this IEntity entity, TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken = default)
         {
             entity
                 .EnsureComponent<TimerComponent>()
@@ -82,7 +82,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="milliseconds">The length of time, in milliseconds, to delay before firing the repeated action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
-        public static void SpawnRepeating(this IEntity entity, int milliseconds, Action onFired, CancellationTokenSource? cancellationToken)
+        public static void SpawnRepeatingTimer(this IEntity entity, int milliseconds, Action onFired, CancellationTokenSource? cancellationToken)
         {
             entity
                 .EnsureComponent<TimerComponent>()
@@ -96,7 +96,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="duration">The length of time to delay before firing the repeated action.</param>
         /// <param name="onFired">The action to fire.</param>
         /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
-        public static void SpawnRepeating(this IEntity entity, TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken)
+        public static void SpawnRepeatingTimer(this IEntity entity, TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken)
         {
             entity
                 .EnsureComponent<TimerComponent>()

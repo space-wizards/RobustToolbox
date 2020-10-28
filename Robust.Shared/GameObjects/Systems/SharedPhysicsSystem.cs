@@ -383,8 +383,26 @@ namespace Robust.Shared.GameObjects.Systems
             if (physics.LinearVelocity.Length > _speedLimit)
                 physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
 
+            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var owner = physics.Owner;
+            var transform = owner.Transform;
+
+            // Change parent if necessary
+            // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
+            if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                grid.GridEntityId.IsValid() &&
+                grid.GridEntityId != owner.Uid)
+            {
+                if (grid.GridEntityId != transform.ParentUid)
+                    transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
+            }
+            else
+            {
+                transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+            }
+
             physics.WorldRotation += physics.AngularVelocity * frameTime;
-            physics.WorldPosition += physics.LinearVelocity * frameTime;
+            physics.WorldPosition = newPosition;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code

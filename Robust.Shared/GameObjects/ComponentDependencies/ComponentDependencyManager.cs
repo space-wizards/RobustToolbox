@@ -21,10 +21,9 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         /// Cache of queries and their corresponding field offsets
         /// </summary>
         private readonly
-            Dictionary<Type, (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[]>
+            Dictionary<Type, ComponentDependencyEntry[]>
             _componentDependencyQueries =
-                new Dictionary<Type, (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo?
-                    OnRemoveMethod)[]>();
+                new Dictionary<Type, ComponentDependencyEntry[]>();
 
         /// <inheritdoc />
         public void OnComponentAdd(IEntity entity, IComponent newComp)
@@ -53,12 +52,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
                 {
-                    foreach (var (type, offset, onAddMethod, _) in queries)
+                    foreach (var entry in queries)
                     {
-                        if (type == reference)
+                        if (entry.Query == reference)
                         {
-                            SetField(newComp, offset, entityComp);
-                            onAddMethod?.Invoke(newComp, null);
+                            SetField(newComp, entry.FieldMemoryOffset, entityComp);
+                            entry.OnAddMethod?.Invoke(newComp);
                         }
                     }
                 }
@@ -97,11 +96,11 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                         SetField(entityComponent, queries[i].FieldMemoryOffset, comp);
                         if (comp == null)
                         {
-                            queries[i].OnRemoveMethod?.Invoke(entityComponent, null);
+                            queries[i].OnRemoveMethod?.Invoke(entityComponent);
                         }
                         else
                         {
-                            queries[i].OnAddMethod?.Invoke(entityComponent, null);
+                            queries[i].OnAddMethod?.Invoke(entityComponent);
                         }
                     }
                 }
@@ -111,10 +110,10 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         private void ClearRemovedComponentDependencies(IComponent comp)
         {
             var queries = GetPointerQueries(comp);
-            foreach (var (_, offset, _, onRemoveMethod) in queries)
+            foreach (var entry in queries)
             {
-                onRemoveMethod?.Invoke(comp, null);
-                SetField(comp, offset, null);
+                entry.OnRemoveMethod?.Invoke(comp);
+                SetField(comp, entry.FieldMemoryOffset, null);
             }
         }
 
@@ -126,12 +125,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             oRef = value;
         }
 
-        private (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[] GetPointerQueries(object obj)
+        private ComponentDependencyEntry[] GetPointerQueries(object obj)
         {
             return !_componentDependencyQueries.TryGetValue(obj.GetType(), out var value) ? CreateAndCachePointerOffsets(obj) : value;
         }
 
-        private (Type Query, int FieldMemoryOffset, MethodInfo? OnAddMethod, MethodInfo? OnRemoveMethod)[] CreateAndCachePointerOffsets(object obj)
+        private ComponentDependencyEntry[] CreateAndCachePointerOffsets(object obj)
         {
             var objType = obj.GetType();
 
@@ -140,7 +139,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
             var attributeFieldsLength = attributeFields.Length;
 
 
-            var queries = new (Type, int, MethodInfo?, MethodInfo?)[attributeFieldsLength];
+            var queries = new ComponentDependencyEntry[attributeFieldsLength];
 
             for (var i = 0; i < attributeFields.Length; i++)
             {
@@ -161,40 +160,47 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 var methods = objType.GetRuntimeMethods().ToArray();
 
-                MethodInfo? onAddMethod = null;
+                Action<object>? onAddMethod = null;
+                MethodInfo? getterMethod = null;
                 if (attribute.OnAddMethodName != null)
                 {
-                    var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName);
+                    getterMethod = typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
+                        BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
+                    var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName, getterMethod);
 
-                    if (tempMethod == null)
-                    {
-                        throw new ComponentDependencyInvalidOnAddMethodName(field);
-                    }
-
-                    onAddMethod = tempMethod;
+                    onAddMethod = tempMethod ?? throw new ComponentDependencyInvalidOnAddMethodName(field);
                 }
 
-                MethodInfo? onRemoveMethod = null;
+                Action<object>? onRemoveMethod = null;
                 if (attribute.OnRemoveMethodName != null)
                 {
-                    var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName);
+                    getterMethod ??= typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
+                        BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
+                    var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName, getterMethod);
 
-                    if (tempMethod == null)
-                    {
-                        throw new ComponentDependencyInvalidOnRemoveMethodName(field);
-                    }
-
-                    onRemoveMethod = tempMethod;
+                    onRemoveMethod = tempMethod ?? throw new ComponentDependencyInvalidOnRemoveMethodName(field);
                 }
 
-                queries[i] = (field.FieldType, offset, onAddMethod, onRemoveMethod);
+                queries[i] = new ComponentDependencyEntry(field.FieldType, offset, onAddMethod, onRemoveMethod);
             }
 
             _componentDependencyQueries.Add(objType, queries);
             return queries;
         }
 
-        private MethodInfo? GetEventMethod(MethodInfo[] methods, string methodName) => methods.FirstOrDefault(m => m.Name == methodName);
+        private Action<object>? GetEventMethod(MethodInfo[] methods, string methodName, MethodInfo getterMethod)
+        {
+            var method = methods.FirstOrDefault(m => m.Name == methodName);
+            if (method == null) return null;
+
+            return (Action<object>?) getterMethod.Invoke(null, new object[]{method});
+        }
+
+        private static Action<object> GetEventMethodDelegate<T>(MethodInfo m)
+        {
+            var @delegate = (Action<T>) m.CreateDelegate(typeof(Action<T>));
+            return o => @delegate((T) o);
+        }
 
         private int GetFieldOffset(Type type, FieldInfo field)
         {
@@ -231,6 +237,22 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 #pragma warning disable 649
             public byte A;
 #pragma warning restore 649
+        }
+
+        private sealed class ComponentDependencyEntry
+        {
+            public readonly Type Query;
+            public readonly int FieldMemoryOffset;
+            public readonly Action<object>? OnAddMethod;
+            public readonly Action<object>? OnRemoveMethod;
+
+            public ComponentDependencyEntry(Type query, int fieldMemoryOffset, Action<object>? onAddMethod, Action<object>? onRemoveMethod)
+            {
+                Query = query;
+                FieldMemoryOffset = fieldMemoryOffset;
+                OnAddMethod = onAddMethod;
+                OnRemoveMethod = onRemoveMethod;
+            }
         }
     }
 

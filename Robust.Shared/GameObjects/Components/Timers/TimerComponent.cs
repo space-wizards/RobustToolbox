@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Timer = Robust.Shared.Timers.Timer;
@@ -17,7 +19,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
 
         public override void OnRemove()
         {
-            foreach (var (timer, token) in _timers)
+            foreach (var (_, token) in _timers)
             {
                 token?.Cancel();
             }
@@ -50,10 +52,84 @@ namespace Robust.Shared.GameObjects.Components.Timers
 
             _timers.RemoveAll(timer => !timer.Item1.IsActive || (timer.source?.IsCancellationRequested ?? false));
         }
-        
+
         public void AddTimer(Timer timer, CancellationTokenSource? cancellationToken = null)
         {
             _timers.Add((timer, cancellationToken));
+        }
+
+        /// <summary>
+        ///     Creates a task that will complete after a given delay.
+        ///     The task is resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="milliseconds">The length of time, in milliseconds, to delay for.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The task that can be awaited.</returns>
+        public Task Delay(int milliseconds, CancellationTokenSource? cancellationToken = default)
+        {
+            var tcs = new TaskCompletionSource<object?>();
+            Spawn(milliseconds, () => tcs.SetResult(null), cancellationToken);
+            return tcs.Task;
+        }
+
+        /// <summary>
+        ///     Creates a task that will complete after a given delay.
+        ///     The task is resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="duration">The length of time to delay for.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The task that can be awaited.</returns>
+        public Task Delay(TimeSpan duration, CancellationTokenSource? cancellationToken = default)
+        {
+            return Delay((int) duration.TotalMilliseconds, cancellationToken);
+        }
+
+        /// <summary>
+        ///     Schedule an action to be fired after a certain delay.
+        ///     The action will be resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="milliseconds">The length of time, in milliseconds, to wait before firing the action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken"></param>
+        public void Spawn(int milliseconds, Action onFired, CancellationTokenSource? cancellationToken = null)
+        {
+            var timer = new Timer(milliseconds, false, onFired);
+            AddTimer(timer, cancellationToken);
+        }
+
+        /// <summary>
+        ///     Schedule an action to be fired after a certain delay.
+        ///     The action will be resumed on the main game logic thread.
+        /// </summary>
+        /// <param name="duration">The length of time, to wait before firing the action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken"></param>
+        public void Spawn(TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken = default)
+        {
+            Spawn((int) duration.TotalMilliseconds, onFired, cancellationToken);
+        }
+
+        /// <summary>
+        ///     Schedule an action that repeatedly fires after a delay specified in milliseconds.
+        /// </summary>
+        /// <param name="milliseconds">The length of time, in milliseconds, to delay before firing the repeated action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
+        public void SpawnRepeating(int milliseconds, Action onFired, CancellationTokenSource? cancellationToken)
+        {
+            var timer = new Timer(milliseconds, true, onFired);
+            AddTimer(timer, cancellationToken);
+        }
+
+        /// <summary>
+        ///     Schedule an action that repeatedly fires after a delay.
+        /// </summary>
+        /// <param name="duration">The length of time to delay before firing the repeated action.</param>
+        /// <param name="onFired">The action to fire.</param>
+        /// <param name="cancellationToken">The CancellationToken for stopping the Timer.</param>
+        public void SpawnRepeating(TimeSpan duration, Action onFired, CancellationTokenSource? cancellationToken)
+        {
+            SpawnRepeating((int) duration.TotalMilliseconds, onFired, cancellationToken);
         }
     }
 }

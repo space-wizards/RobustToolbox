@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -39,6 +40,7 @@ namespace Robust.Shared.GameObjects.Systems
             _mapManager.OnGridRemoved += OnGridRemoved;
 
             SubscribeLocalEvent<MoveEvent>(EntMoved);
+            SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
             SubscribeLocalEvent<OccluderBoundingBoxChangedMessage>(OccluderBoundingBoxChanged);
             SubscribeLocalEvent<OccluderTreeRemoveOccluderMessage>(RemoveOccluder);
         }
@@ -82,8 +84,9 @@ namespace Robust.Shared.GameObjects.Systems
             foreach (var (occluder, coordinates) in _occluderAddQueue)
             {
                 if (coordinates.TryGetParent(EntityManager, out var parent) &&
-                    parent.HasComponent<MapGridComponent>())
+                    parent.HasComponent<MapGridComponent>() || occluder.Owner.Transform.GridID == GridId.Invalid)
                 {
+                    parent ??= EntityManager.GetEntity(occluder.Owner.Transform.ParentUid);
                     var gridTree = _gridTrees[parent.Transform.MapID][parent.Transform.GridID];
 
                     gridTree.AddOrUpdate(occluder);
@@ -116,6 +119,42 @@ namespace Robust.Shared.GameObjects.Systems
                 RemoveEntity(ev.Sender, ev.OldPosition);
 
             AddOrUpdateEntity(ev.Sender, ev.NewPosition);
+        }
+
+        private void EntParentChanged(EntParentChangedMessage message)
+        {
+            if (!message.Entity.TryGetComponent(out OccluderComponent? occluder))
+                return;
+
+            // Really only care if it's a map or grid
+            if (message.OldParent != null && message.OldParent.TryGetComponent(out MapGridComponent? oldGrid))
+            {
+                var map = message.OldParent.Transform.MapID;
+                if (_gridTrees[map].TryGetValue(oldGrid.GridIndex, out var tree))
+                {
+                    tree.Remove(occluder);
+                }
+            }
+
+            var newParent = EntityManager.GetEntity(message.Entity.Transform.ParentUid);
+
+            newParent.TryGetComponent(out MapGridComponent? newGrid);
+            var newGridIndex = newGrid?.GridIndex ?? GridId.Invalid;
+            var newMap = newParent.Transform.MapID;
+
+            if (!_gridTrees.TryGetValue(newMap, out var newMapGrids))
+            {
+                newMapGrids = new Dictionary<GridId, DynamicTree<OccluderComponent>>();
+                _gridTrees[newMap] = newMapGrids;
+            }
+
+            if (!newMapGrids.TryGetValue(newGridIndex, out var newTree))
+            {
+                newTree = new DynamicTree<OccluderComponent>(ExtractAabbFunc);
+                newMapGrids[newGridIndex] = newTree;
+            }
+
+            newTree.AddOrUpdate(occluder);
         }
 
         private void RemoveEntity(IEntity entity, EntityCoordinates coordinates)
@@ -170,8 +209,7 @@ namespace Robust.Shared.GameObjects.Systems
 
         private static Box2 ExtractAabbFunc(in OccluderComponent o)
         {
-            var coordinates = o.Owner.Transform.Coordinates;
-            return o.BoundingBox.Translated(coordinates.Position);
+            return o.BoundingBox.Translated(o.Owner.Transform.WorldPosition);
         }
 
         private void QueueUpdateOccluder(OccluderComponent occluder, EntityCoordinates coordinates)
@@ -190,9 +228,9 @@ namespace Robust.Shared.GameObjects.Systems
             var list = new List<RayCastResults>();
             var worldBox = new Box2();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(originMapId, worldBox, true))
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(originMapId, worldBox, true))
             {
-                var mapTree = _gridTrees[originMapId][grid.Index];
+                var mapTree = _gridTrees[originMapId][gridId];
 
                 mapTree.QueryRay(ref list,
                     (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>

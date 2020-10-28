@@ -713,10 +713,9 @@ namespace Robust.Client.Graphics.Clyde
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var grid in _mapManager.FindGridsIntersecting(map, expandedBounds, true))
+                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, expandedBounds, true))
                 {
-                    var occluderTree = occluderSystem.GetOccluderTreeForGrid(map, grid.Index);
-                    var gridBounds = expandedBounds.Translated(-grid.WorldPosition);
+                    var occluderTree = occluderSystem.GetOccluderTreeForGrid(map, gridId);
 
                     occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
@@ -849,7 +848,7 @@ namespace Robust.Client.Graphics.Clyde
                         ami += 4;
 
                         return true;
-                    }, gridBounds);
+                    }, expandedBounds);
                 }
 
                 _occlusionDataLength = ii;

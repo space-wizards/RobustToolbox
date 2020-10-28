@@ -107,7 +107,7 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void UpdateEntity(IEntity entity)
+        internal void UpdateEntity(IEntity entity)
         {
             if (entity.TryGetComponent(out OccluderComponent? occluder))
             {

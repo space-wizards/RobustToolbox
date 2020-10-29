@@ -693,17 +693,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 var newParentId = newState.ParentID;
                 var rebuildMatrices = false;
-                if (Parent?.Owner?.Uid != newParentId)
+                if (Parent?.Owner.Uid != newParentId)
                 {
                     if (newParentId != _parent)
                     {
-                        if (!newParentId.IsValid())
+                        if (!Owner.EntityManager.TryGetEntity(newParentId, out var newParent))
                         {
                             DetachParentToNull();
                         }
                         else
                         {
-                            var newParent = Owner.EntityManager.GetEntity(newParentId);
                             AttachParent(newParent.Transform);
                         }
                     }

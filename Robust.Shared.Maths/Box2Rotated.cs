@@ -46,8 +46,6 @@ namespace Robust.Shared.Maths
         /// </summary>
         public readonly Box2 CalcBoundingBox()
         {
-            // https://stackoverflow.com/a/19830964
-
             float[] allX = new float[4];
             float[] allY = new float[4];
             (allX[0], allY[0]) = BottomLeft;

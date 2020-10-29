@@ -65,7 +65,7 @@ namespace Robust.Server.Console.Commands
     public class TeleportToPlayerCommand : IClientCommand
     {
         public string Command => "tpto";
-        public string Description => "Teleports a player to the location of another player.";
+        public string Description => "Teleports the current player to the location of another player.";
         public string Help => "tpto <username>";
 
         public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)

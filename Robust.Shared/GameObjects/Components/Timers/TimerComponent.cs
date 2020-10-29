@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
                 timer.Update(frameTime, _runtimeLog);
             }
 
-            _timers.RemoveAll(timer => !timer.Item1.IsActive || timer.source.IsCancellationRequested);
+            _timers.RemoveAll(timer => !timer.Item1.IsActive || (timer.source.IsCancellationRequested));
         }
 
         public void AddTimer(Timer timer, CancellationToken cancellationToken = default)
@@ -54,18 +54,6 @@ namespace Robust.Shared.GameObjects.Components.Timers
             Spawn(milliseconds, () => tcs.SetResult(null), cancellationToken);
             return tcs.Task;
         }
-        
-        /// <summary>
-        ///     Creates a task that will complete after a given delay.
-        ///     The task is resumed on the main game logic thread.
-        /// </summary>
-        /// <param name="milliseconds">The length of time, in milliseconds, to delay for.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>The task that can be awaited.</returns>
-        public async Task DelayAsync(int milliseconds, CancellationToken cancellationToken = default)
-        {
-            await Delay(milliseconds, cancellationToken);
-        }
 
         /// <summary>
         ///     Creates a task that will complete after a given delay.
@@ -77,18 +65,6 @@ namespace Robust.Shared.GameObjects.Components.Timers
         public Task Delay(TimeSpan duration, CancellationToken cancellationToken = default)
         {
             return Delay((int) duration.TotalMilliseconds, cancellationToken);
-        }
-
-        /// <summary>
-        ///     Creates a task that will complete after a given delay.
-        ///     The task is resumed on the main game logic thread.
-        /// </summary>
-        /// <param name="duration">The length of time to delay for.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>The task that can be awaited.</returns>
-        public async Task DelayAsync(TimeSpan duration, CancellationToken cancellationToken = default)
-        {
-            await Delay((int) duration.TotalMilliseconds, cancellationToken);
         }
 
         /// <summary>

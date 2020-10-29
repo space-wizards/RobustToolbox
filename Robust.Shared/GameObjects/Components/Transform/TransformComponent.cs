@@ -717,7 +717,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     rebuildMatrices = true;
                 }
 
-                if (_localPosition != newState.LocalPosition)
+                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
                 {
                     var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);

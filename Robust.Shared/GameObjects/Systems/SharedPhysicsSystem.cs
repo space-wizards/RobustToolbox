@@ -187,8 +187,10 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 foreach (var physics in simulatedBodies)
                 {
-                    if(physics.CanMove())
+                    if (physics.CanMove())
+                    {
                         UpdatePosition(physics, deltaTime / divisions);
+                    }
                 }
 
                 for (var j = 0; j < divisions; ++j)

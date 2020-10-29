@@ -12,11 +12,10 @@ using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Graphics
 {
-    internal sealed class FontManager : IFontManagerInternal, IPostInjectInit
+    internal sealed class FontManager : IFontManagerInternal
     {
         [Dependency] private readonly IConfigurationManager _configuration = default!;
 
@@ -41,7 +40,7 @@ namespace Robust.Client.Graphics
 
         void IFontManagerInternal.Initialize()
         {
-            BaseFontDPI = (uint) _configuration.GetCVar<int>("display.fontdpi");
+            BaseFontDPI = (uint) _configuration.GetCVar(CVars.DisplayFontDpi);
         }
 
         public IFontInstanceHandle MakeInstance(IFontFaceHandle handle, int size)
@@ -400,11 +399,6 @@ namespace Robust.Client.Graphics
 
             // Maps glyph index to atlas.
             public Dictionary<uint, AtlasTexture> AtlasData { get; }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configuration.RegisterCVar("display.fontdpi", 96);
         }
     }
 }

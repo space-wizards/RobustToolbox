@@ -62,7 +62,7 @@ namespace Robust.Shared.ContentPack
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        private ModuleTestingCallbacks? _testingCallbacks;
+        private readonly List<ModuleTestingCallbacks> _testingCallbacks = new List<ModuleTestingCallbacks>();
 
         /// <summary>
         ///     Loaded assemblies.
@@ -268,7 +268,7 @@ namespace Robust.Shared.ContentPack
 
         public void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks)
         {
-            _testingCallbacks = testingCallbacks;
+            _testingCallbacks.Add(testingCallbacks);
         }
 
         private Assembly? ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)

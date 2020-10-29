@@ -531,20 +531,19 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId == mapId)
-                {
-                    var gridBounds = grid.WorldBounds;
-                    // If the worldArea is wholly contained within a grid then no need to get invalid
-                    if (gridBounds.Encloses(worldArea))
-                    {
-                        yield return grid.Index;
-                        yield break;
-                    }
+                if (grid.ParentMapId != mapId) continue;
 
-                    if (gridBounds.Intersects(worldArea))
-                    {
-                        yield return grid.Index;
-                    }
+                var gridBounds = grid.WorldBounds;
+                // If the worldArea is wholly contained within a grid then no need to get invalid
+                if (gridBounds.Encloses(worldArea))
+                {
+                    yield return grid.Index;
+                    yield break;
+                }
+
+                if (gridBounds.Intersects(worldArea))
+                {
+                    yield return grid.Index;
                 }
             }
 

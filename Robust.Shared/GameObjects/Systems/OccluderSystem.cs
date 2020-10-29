@@ -82,6 +82,8 @@ namespace Robust.Shared.GameObjects.Systems
 
             foreach (var (occluder, coordinates) in _occluderAddQueue)
             {
+                if (occluder.Deleted) continue;
+
                 if (coordinates.TryGetParent(EntityManager, out var parent) &&
                     parent.HasComponent<MapGridComponent>() || occluder.Owner.Transform.GridID == GridId.Invalid)
                 {
@@ -228,9 +230,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(originMapId, worldBox, true))
             {
-                var mapTree = _gridTrees[originMapId][gridId];
+                var gridTree = _gridTrees[originMapId][gridId];
 
-                mapTree.QueryRay(ref list,
+                gridTree.QueryRay(ref list,
                     (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
                     {
                         if (distFromOrigin > maxLength)

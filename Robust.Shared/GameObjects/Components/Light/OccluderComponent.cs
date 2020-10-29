@@ -45,6 +45,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        protected override void Startup()
+        {
+            base.Startup();
+
+            EntitySystem.Get<OccluderSystem>().UpdateEntity(Owner);
+        }
+
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);

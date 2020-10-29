@@ -5,6 +5,7 @@ using Robust.Client.GameObjects.Components.UserInterface;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -48,6 +49,7 @@ namespace Robust.Client.GameObjects
             RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
             Register<EyeComponent>();
+            RegisterReference<EyeComponent, SharedEyeComponent>();
 
             Register<AppearanceComponent>();
             Register<AppearanceTestComponent>();

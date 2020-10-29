@@ -1,9 +1,11 @@
 ﻿using Robust.Server.GameObjects.Components.Container;
+using Robust.Server.GameObjects.Components.Eye;
 using Robust.Server.GameObjects.Components.Markers;
 using Robust.Server.GameObjects.Components.UserInterface;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -30,7 +32,8 @@ namespace Robust.Server.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            RegisterIgnore("Eye");
+            Register<EyeComponent>();
+            RegisterReference<EyeComponent, SharedEyeComponent>();
 
             Register<BasicActorComponent>();
             RegisterReference<BasicActorComponent, IActorComponent>();

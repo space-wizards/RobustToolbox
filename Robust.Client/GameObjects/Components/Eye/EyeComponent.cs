@@ -1,6 +1,7 @@
 ﻿using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -10,7 +11,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    public class EyeComponent : Component
+    public class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
 
@@ -97,7 +98,7 @@ namespace Robust.Client.GameObjects
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool DrawFov
+        public override bool DrawFov
         {
             get => _eye?.DrawFov ?? setDrawFovOnInitialize;
             set
@@ -110,6 +111,8 @@ namespace Robust.Client.GameObjects
                 {
                     _eye.DrawFov = value;
                 }
+
+                Dirty();
             }
         }
 

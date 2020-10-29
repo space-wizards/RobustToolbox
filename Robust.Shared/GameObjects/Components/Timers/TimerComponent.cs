@@ -19,11 +19,6 @@ namespace Robust.Shared.GameObjects.Components.Timers
 
         public void Update(float frameTime)
         {
-            if (Owner.Paused)
-            {
-                return;
-            }
-            
             // Manual for loop so we can modify the list while enumerating.
             // ReSharper disable once ForCanBeConvertedToForeach
             for (var i = 0; i < _timers.Count; i++)

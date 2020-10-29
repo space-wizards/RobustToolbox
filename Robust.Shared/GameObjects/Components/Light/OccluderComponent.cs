@@ -49,7 +49,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Startup();
 
-            EntitySystem.Get<OccluderSystem>().UpdateEntity(Owner);
+            EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
         }
 
         public override void ExposeData(ObjectSerializer serializer)

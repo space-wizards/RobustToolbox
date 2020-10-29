@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void AddOrUpdateEntity(IEntity entity, EntityCoordinates coordinates)
+        internal void AddOrUpdateEntity(IEntity entity, EntityCoordinates coordinates)
         {
             if (entity.TryGetComponent(out OccluderComponent? occluder))
             {

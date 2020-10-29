@@ -48,22 +48,46 @@ namespace Robust.Shared.Maths
         {
             // https://stackoverflow.com/a/19830964
 
-            var (X0, Y0) = Box.BottomLeft;
-            var (X1, Y1) = Box.TopRight;
+            float[] allX = new float[4];
+            float[] allY = new float[4];
+            (allX[0], allY[0]) = BottomLeft;
+            (allX[1], allY[1]) = TopRight;
+            (allX[2], allY[2]) = TopLeft;
+            (allX[3], allY[3]) = BottomRight;
 
-            var Fi = Rotation.Theta;
+            var X0 = allX[0];
+            var X1 = allX[0];
+            for (int i = 1; i < allX.Length; i++)
+            {
+                if (allX[i] > X1)
+                {
+                    X1 = allX[i];
+                    continue;
+                }
 
-            var CX = (X0 + X1) / 2;  //Center point
-            var CY = (Y0 + Y1) / 2;
-            var WX = (X1 - X0) / 2;  //Half-width
-            var WY = (Y1 - Y0) / 2;
+                if (allX[i] < X0)
+                {
+                    X0 = allX[i];
+                }
+            }
 
-            var SF = Math.Sin(Fi);
-            var CF = Math.Cos(Fi);
+            var Y0 = allY[0];
+            var Y1 = allY[0];
+            for (int i = 1; i < allY.Length; i++)
+            {
+                if (allY[i] > Y1)
+                {
+                    Y1 = allY[i];
+                    continue;
+                }
 
-            var NH = Math.Abs(WX * SF) + Math.Abs(WY * CF);  //boundrect half-height
-            var NW = Math.Abs(WX * CF) + Math.Abs(WY * SF);  //boundrect half-width
-            return new Box2((float) (CX - NW), (float) (CY - NH), (float) (CX + NW), (float) (CY + NH)); //draw bound rectangle
+                if (allY[i] < Y0)
+                {
+                    Y0 = allY[i];
+                }
+            }
+
+            return new Box2(X0, Y0, X1, Y1);
         }
 
         #region Equality

@@ -123,22 +123,33 @@ namespace Robust.Shared.GameObjects.Systems
                 if(!body.CanMove())
                     continue;
 
+                var mt = body.InvMass * deltaTime;
+
                 var linearVelocity = Vector2.Zero;
 
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
+                    controller.LinearVelocity += controller.Force * mt;
+
+                    controller.LinearVelocity += controller.Impulse * body.InvMass;
+
                     linearVelocity += controller.LinearVelocity;
+                    
+                    // forces are instantaneous, so these properties are cleared
+                    // once integrated. If you want to apply a continuous force,
+                    // it has to be re-applied every tick.
+                    controller.Force = Vector2.Zero;
+                    controller.Impulse = Vector2.Zero;
                 }
 
                 // i'm not sure if this is the proper way to solve this, but
                 // these are not kinematic bodies, so we need to preserve the previous
                 // velocity.
                 //if (body.LinearVelocity.LengthSquared < linearVelocity.LengthSquared)
-                    body.LinearVelocity = linearVelocity;
+                body.LinearVelocity = linearVelocity;
 
                 // Integrate forces
-                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
                 body.AngularVelocity += body.Torque * body.InvI * deltaTime;
 
                 // forces are instantaneous, so these properties are cleared
@@ -332,8 +343,6 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void ProcessFriction(IPhysicsComponent body, float deltaTime)
         {
-            if (body.LinearVelocity == Vector2.Zero) return;
-
             // sliding friction coefficient, and current gravity at current location
             var (friction, gravity) = GetFriction(body);
 
@@ -346,18 +355,24 @@ namespace Robust.Shared.GameObjects.Systems
             // integrate acceleration
             var fVelocity = fAcceleration * deltaTime;
 
-            // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(fVelocity, body.LinearVelocity.Length);
-
-            if (friction == 0.0f)
+            foreach (var controller in body.Controllers.Values)
             {
-                return;
+                if (controller.LinearVelocity == Vector2.Zero || !controller.HasFriction)
+                    continue;
+
+                // Clamp friction because friction can't make you accelerate backwards
+                var clampedFriction = Math.Min(fVelocity, controller.LinearVelocity.Length);
+
+                if (clampedFriction == 0.0f)
+                {
+                    continue;
+                }
+
+                // No multiplication/division by mass here since that would be redundant.
+                var frictionVelocityChange = controller.LinearVelocity.Normalized * -clampedFriction;
+
+                controller.LinearVelocity += frictionVelocityChange;
             }
-
-            // No multiplication/division by mass here since that would be redundant.
-            var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
-
-            body.LinearVelocity += frictionVelocityChange;
         }
 
         private void UpdatePosition(IPhysicsComponent physics, float frameTime)

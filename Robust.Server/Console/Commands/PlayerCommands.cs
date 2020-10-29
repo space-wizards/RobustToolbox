@@ -4,6 +4,7 @@ using System.Text;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
@@ -58,6 +59,38 @@ namespace Robust.Server.Console.Commands
             }
 
             shell.SendText(player, $"Teleported {player} to {mapId}:{posX},{posY}.");
+        }
+    }
+
+    public class TeleportToPlayerCommand : IClientCommand
+    {
+        public string Command => "tpto";
+        public string Description => "Teleports a player to the location of another player.";
+        public string Help => "tpto <username>";
+
+        public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
+        {
+            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+                return;
+
+            if (args.Length < 1)
+                return;
+
+            var players = IoCManager.Resolve<IPlayerManager>();
+            var name = args[0];
+
+            if (players.TryGetSessionByUsername(name, out var target))
+            {
+                if (target.AttachedEntity == null)
+                    return;
+
+                var posX = target.AttachedEntity.Transform.Coordinates.X;
+                var posY = target.AttachedEntity.Transform.Coordinates.Y;
+                var mapId = target.AttachedEntity.Transform.Coordinates.GetMapId(IoCManager.Resolve<IEntityManager>())
+                    .ToString();
+
+                shell.ExecuteCommand(player, $"tp {posX} {posY} {mapId}");
+            }
         }
     }
 

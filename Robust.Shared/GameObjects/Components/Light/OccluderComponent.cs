@@ -15,8 +15,6 @@ namespace Robust.Shared.GameObjects
         private bool _enabled = true;
         private Box2 _boundingBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
 
-        [ViewVariables] internal bool TreeUpdateQueued;
-
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 BoundingBox
         {
@@ -40,6 +38,9 @@ namespace Robust.Shared.GameObjects
             get => _enabled;
             set
             {
+                if (_enabled == value)
+                    return;
+
                 _enabled = value;
                 Dirty();
             }

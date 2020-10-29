@@ -726,7 +726,7 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         // TODO: Ideally this would clamp to the outer border of what we can see
                         var grid = _mapManager.GetGrid(gridId);
-                        gridBounds = expandedBounds.Translated(grid.WorldPosition);
+                        gridBounds = expandedBounds.Translated(-grid.WorldPosition);
                     }
 
                     occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
@@ -860,7 +860,7 @@ namespace Robust.Client.Graphics.Clyde
                         ami += 4;
 
                         return true;
-                    }, expandedBounds);
+                    }, gridBounds);
                 }
 
                 _occlusionDataLength = ii;

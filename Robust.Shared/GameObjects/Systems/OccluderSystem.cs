@@ -75,7 +75,6 @@ namespace Robust.Shared.GameObjects.Systems
                     var gridTree = _gridTrees[parent.Transform.MapID][parent.Transform.GridID];
 
                     gridTree.Remove(occluder);
-                    occluder.TreeUpdateQueued = false;
                 }
             }
 
@@ -90,7 +89,6 @@ namespace Robust.Shared.GameObjects.Systems
                     var gridTree = _gridTrees[parent.Transform.MapID][parent.Transform.GridID];
 
                     gridTree.AddOrUpdate(occluder);
-                    occluder.TreeUpdateQueued = false;
                 }
             }
 

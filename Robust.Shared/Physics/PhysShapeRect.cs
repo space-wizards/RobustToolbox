@@ -21,7 +21,7 @@ namespace Robust.Shared.Physics
         [ViewVariables(VVAccess.ReadWrite)]
         private Dictionary<Angle, Box2> boundingBoxOverrides = new Dictionary<Angle, Box2>();
 
-        //this will result in a incosistency of up to 0,05729578°, which is acceptable imo since we cant expect someone to write down all 100000 decimal places of something in radians
+        //this will result in a inconsistency of up to 0,05729578°, which is acceptable imo since we cant expect someone to write down all 100000 decimal places of something in radians
         private Angle GetOverrideIndexAngle(Angle angle) => new Angle(Math.Round(angle.Theta, 3));
         private Box2? GetBoxOverride(Angle angle)
         {
@@ -78,8 +78,12 @@ namespace Robust.Shared.Physics
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
             float sleepPercent, Angle angle)
         {
-            handle.SetTransform(modelMatrix);
-            handle.DrawRect(GetBox2Rotated(angle.Opposite()), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
+            var m = Matrix3.Identity;
+            m.R0C2 = modelMatrix.R0C2;
+            m.R1C2 = modelMatrix.R1C2;
+
+            handle.SetTransform(m);
+            handle.DrawRect(CalculateLocalBounds(angle), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 
@@ -116,7 +120,7 @@ namespace Robust.Shared.Physics
                 if (!serializer.TryReadDataField("angle", out angle))
                 {
                     var dir = Direction.East;
-                    serializer.DataField(ref dir, "angle", Direction.East);
+                    serializer.DataField(ref dir, "dir", Direction.East);
                     angle = dir.ToAngle();
                 }
                 Angle = angle;

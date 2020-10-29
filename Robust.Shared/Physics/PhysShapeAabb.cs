@@ -59,7 +59,7 @@ namespace Robust.Shared.Physics
         public void ApplyState() { }
 
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
+            float sleepPercent, Angle angle)
         {
             var m = Matrix3.Identity;
             m.R0C2 = modelMatrix.R0C2;

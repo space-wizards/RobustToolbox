@@ -78,7 +78,7 @@ namespace Robust.Shared.Physics
         public void ApplyState() { }
 
         /// <inheritdoc />
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
+        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent, Angle angle)
         {
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));

@@ -10,8 +10,8 @@ namespace Robust.Shared.Physics
     {
         private int _collisionLayer;
         private int _collisionMask;
-        private Box2 _rectangle = Box2.UnitCentered;
 
+        private Box2 _rectangle = Box2.UnitCentered;
         public Box2 Rectangle
         {
             get => _rectangle;
@@ -21,6 +21,9 @@ namespace Robust.Shared.Physics
                 OnDataChanged?.Invoke();
             }
         }
+
+        public Box2Rotated GetBox2Rotated(Angle angle)
+            => new Box2Rotated(_rectangle, angle, Vector2.Zero);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -50,10 +53,10 @@ namespace Robust.Shared.Physics
         public void ApplyState() { }
 
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
+            float sleepPercent, Angle angle)
         {
             handle.SetTransform(modelMatrix);
-            handle.DrawRect(Rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
+            handle.DrawRect(GetBox2Rotated(angle.Opposite()), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 
@@ -69,8 +72,7 @@ namespace Robust.Shared.Physics
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            var rect = new Box2Rotated(_rectangle, rotation);
-            return rect.CalcBoundingBox();
+            return GetBox2Rotated(rotation.Opposite()).CalcBoundingBox();
         }
     }
 }

@@ -178,7 +178,7 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in physBody.PhysicsShapes)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold, transform.WorldRotation);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))
@@ -227,6 +227,11 @@ namespace Robust.Client.Debugging
                 }
 
                 public override void DrawRect(in Box2 box, in Color color)
+                {
+                    _handle.DrawRect(box, color);
+                }
+
+                public override void DrawRect(in Box2Rotated box, in Color color)
                 {
                     _handle.DrawRect(box, color);
                 }

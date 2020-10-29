@@ -49,7 +49,7 @@ namespace Robust.Shared.Map
         }
 
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
+            float sleepPercent, Angle angle)
         {
             handle.SetTransform(modelMatrix);
             foreach (var chunk in _mapGrid.GetMapChunks().Values)

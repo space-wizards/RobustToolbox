@@ -33,7 +33,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
                 timer.Update(frameTime, _runtimeLog);
             }
 
-            _timers.RemoveAll(timer => !timer.Item1.IsActive || (timer.source.IsCancellationRequested));
+            _timers.RemoveAll(timer => !timer.Item1.IsActive || timer.source.IsCancellationRequested);
         }
 
         public void AddTimer(Timer timer, CancellationToken cancellationToken = default)

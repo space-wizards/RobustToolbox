@@ -122,6 +122,9 @@ namespace Robust.Shared.Interfaces.Map
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+
+        IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false);
+
         void DeleteGrid(GridId gridID);
 
         /// <summary>

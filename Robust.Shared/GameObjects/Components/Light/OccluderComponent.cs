@@ -15,8 +15,6 @@ namespace Robust.Shared.GameObjects
         private bool _enabled = true;
         private Box2 _boundingBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
 
-        [ViewVariables] internal bool TreeUpdateQueued;
-
         [ViewVariables(VVAccess.ReadWrite)]
         public Box2 BoundingBox
         {
@@ -40,6 +38,9 @@ namespace Robust.Shared.GameObjects
             get => _enabled;
             set
             {
+                if (_enabled == value)
+                    return;
+
                 _enabled = value;
                 Dirty();
             }
@@ -49,7 +50,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Startup();
 
-            EntitySystem.Get<OccluderSystem>().UpdateEntity(Owner);
+            EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -64,11 +65,12 @@ namespace Robust.Shared.GameObjects
         {
             base.OnRemove();
 
-            var map = Owner.Transform.MapID;
+            var transform = Owner.Transform;
+            var map = transform.MapID;
             if (map != MapId.Nullspace)
             {
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new OccluderTreeRemoveOccluderMessage(this, map));
+                    new OccluderTreeRemoveOccluderMessage(this, map, transform.GridID));
             }
         }
 

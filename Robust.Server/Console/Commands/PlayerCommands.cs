@@ -84,12 +84,7 @@ namespace Robust.Server.Console.Commands
                 if (target.AttachedEntity == null)
                     return;
 
-                var posX = target.AttachedEntity.Transform.Coordinates.X;
-                var posY = target.AttachedEntity.Transform.Coordinates.Y;
-                var mapId = target.AttachedEntity.Transform.Coordinates.GetMapId(IoCManager.Resolve<IEntityManager>())
-                    .ToString();
-
-                shell.ExecuteCommand(player, $"tp {posX} {posY} {mapId}");
+                player.AttachedEntity.Transform.Coordinates = target.AttachedEntity.Transform.Coordinates;
             }
         }
     }

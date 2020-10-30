@@ -62,6 +62,11 @@ namespace Robust.Client.Audio.Midi
         bool DisablePercussionChannel { get; set; }
 
         /// <summary>
+        /// Whether to drop messages for program change events.
+        /// </summary>
+        bool DisableProgramChangeEvent { get; set; }
+
+        /// <summary>
         ///     Gets the total number of ticks possible for the MIDI player.
         /// </summary>
         int PlayerTotalTick { get; }

@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                if (_localRotation.EqualsApprox(value, 0.001))
+                if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
                 var oldRotation = _localRotation;
@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
-                if (_localPosition.EqualsApprox(value, 0.001))
+                if (_localPosition.EqualsApprox(value, 0.00001))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (newParent == null)
+            if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,
@@ -717,7 +717,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     rebuildMatrices = true;
                 }
 
-                if (_localPosition != newState.LocalPosition)
+                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
                 {
                     var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);

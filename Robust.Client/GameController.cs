@@ -64,7 +64,6 @@ namespace Robust.Client
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoader _modLoader = default!;
         [Dependency] private readonly ISignalHandler _signalHandler = default!;
-        [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -180,7 +179,6 @@ namespace Robust.Client
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
-            _conGroupController.Initialize();
             _scriptClient.Initialize();
 
             _client.Initialize();

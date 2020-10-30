@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (newParent == null)
+            if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,

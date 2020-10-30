@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Renderable;
+using Robust.Shared.GameObjects.Components.Timers;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -58,6 +59,8 @@ namespace Robust.Server.GameObjects
             RegisterReference<ServerUserInterfaceComponent, SharedUserInterfaceComponent>();
 
             Register<IgnorePauseComponent>();
+
+            Register<TimerComponent>();
 
             RegisterIgnore("AnimationPlayer");
 

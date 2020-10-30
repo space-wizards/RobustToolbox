@@ -22,7 +22,7 @@ namespace Robust.Shared.Physics
         private Dictionary<Angle, Box2> boundingBoxOverrides = new Dictionary<Angle, Box2>();
 
         //this will result in a inconsistency of up to 0,05729578°, which is acceptable imo since we cant expect someone to write down all 100000 decimal places of something in radians
-        private Angle GetOverrideIndexAngle(Angle angle) => new Angle(Math.Round(angle.Theta, 3));
+        private static Angle GetOverrideIndexAngle(Angle angle) => new Angle(Math.Round(angle.Theta, 3));
         private Box2? GetBoxOverride(Angle angle)
         {
             var roundedAngle = GetOverrideIndexAngle(angle);
@@ -116,14 +116,16 @@ namespace Robust.Shared.Physics
             public Angle Angle { get; private set; }
             public void ExposeData(ObjectSerializer serializer)
             {
-                Angle angle = new Angle();
-                if (!serializer.TryReadDataField("angle", out angle))
+                if (!serializer.TryReadDataField("angle", out double theta))
                 {
                     var dir = Direction.East;
                     serializer.DataField(ref dir, "dir", Direction.East);
-                    angle = dir.ToAngle();
+                    Angle = dir.ToAngle();
                 }
-                Angle = angle;
+                else
+                {
+                    Angle = GetOverrideIndexAngle(new Angle(theta));
+                }
 
                 var bounds = Box2.UnitCentered;
                 serializer.DataField(ref bounds, "bounds", Box2.UnitCentered);

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -265,11 +266,10 @@ namespace Robust.Shared.GameObjects.Systems
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = collision.A.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in aBehaviors)
+                foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.B.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {
@@ -280,11 +280,11 @@ namespace Robust.Shared.GameObjects.Systems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = collision.B.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in bBehaviors)
+
+                foreach (var behavior in collision.B.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.A.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {

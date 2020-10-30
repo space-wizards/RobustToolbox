@@ -168,7 +168,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                         BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
                     var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName, getterMethod);
 
-                    onAddMethod = tempMethod ?? throw new ComponentDependencyInvalidOnAddMethodName(field);
+                    onAddMethod = tempMethod ?? throw new ComponentDependencyInvalidOnAddMethodNameException(field);
                 }
 
                 Action<object>? onRemoveMethod = null;
@@ -178,7 +178,7 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                         BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
                     var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName, getterMethod);
 
-                    onRemoveMethod = tempMethod ?? throw new ComponentDependencyInvalidOnRemoveMethodName(field);
+                    onRemoveMethod = tempMethod ?? throw new ComponentDependencyInvalidOnRemoveMethodNameException(field);
                 }
 
                 queries[i] = new ComponentDependencyEntry(field.FieldType, offset, onAddMethod, onRemoveMethod);
@@ -280,27 +280,27 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
         }
     }
 
-    public abstract class ComponentDependencyInvalidMethodName : Exception
+    public abstract class ComponentDependencyInvalidMethodNameException : Exception
     {
         public readonly string MethodTarget;
         public readonly FieldInfo Field;
 
-        protected ComponentDependencyInvalidMethodName(string methodTarget, FieldInfo field) : base($"{methodTarget}MethodName for {field} was invalid")
+        protected ComponentDependencyInvalidMethodNameException(string methodTarget, FieldInfo field) : base($"{methodTarget}MethodName for {field} was invalid")
         {
             MethodTarget = methodTarget;
             Field = field;
         }
     }
 
-    public class ComponentDependencyInvalidOnAddMethodName : ComponentDependencyInvalidMethodName
+    public class ComponentDependencyInvalidOnAddMethodNameException : ComponentDependencyInvalidMethodNameException
     {
-        public ComponentDependencyInvalidOnAddMethodName([NotNull] FieldInfo field) : base("OnAdd", field)
+        public ComponentDependencyInvalidOnAddMethodNameException([NotNull] FieldInfo field) : base("OnAdd", field)
         {}
     }
 
-    public class ComponentDependencyInvalidOnRemoveMethodName : ComponentDependencyInvalidMethodName
+    public class ComponentDependencyInvalidOnRemoveMethodNameException : ComponentDependencyInvalidMethodNameException
     {
-        public ComponentDependencyInvalidOnRemoveMethodName([NotNull] FieldInfo field) : base("OnRemove", field)
+        public ComponentDependencyInvalidOnRemoveMethodNameException([NotNull] FieldInfo field) : base("OnRemove", field)
         {}
     }
 }

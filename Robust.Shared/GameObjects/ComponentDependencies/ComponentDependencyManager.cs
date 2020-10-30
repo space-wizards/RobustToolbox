@@ -160,12 +160,12 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
 
                 var methods = objType.GetRuntimeMethods().ToArray();
 
+                MethodInfo getterMethod = typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
+                    BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);;
+
                 Action<object>? onAddMethod = null;
-                MethodInfo? getterMethod = null;
                 if (attribute.OnAddMethodName != null)
                 {
-                    getterMethod = typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
-                        BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
                     var tempMethod = GetEventMethod(methods, attribute.OnAddMethodName, getterMethod);
 
                     onAddMethod = tempMethod ?? throw new ComponentDependencyInvalidOnAddMethodNameException(field);
@@ -174,8 +174,6 @@ namespace Robust.Shared.GameObjects.ComponentDependencies
                 Action<object>? onRemoveMethod = null;
                 if (attribute.OnRemoveMethodName != null)
                 {
-                    getterMethod ??= typeof(ComponentDependencyManager).GetMethod("GetEventMethodDelegate",
-                        BindingFlags.Static | BindingFlags.NonPublic)!.MakeGenericMethod(objType);
                     var tempMethod = GetEventMethod(methods, attribute.OnRemoveMethodName, getterMethod);
 
                     onRemoveMethod = tempMethod ?? throw new ComponentDependencyInvalidOnRemoveMethodNameException(field);

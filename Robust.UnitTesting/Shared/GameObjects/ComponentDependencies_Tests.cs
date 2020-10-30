@@ -147,7 +147,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             public override string Name => "TestSeven";
 
-            [ComponentDependency("ABCDEF")] public TestFiveComponent? thing;
+            [ComponentDependency("ABCDEF")] public TestFiveComponent? thing = null!;
         }
 
         [OneTimeSetUp]
@@ -511,7 +511,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 var t7comp = entity.AddComponent<TestSevenComponent>();
             }
-            catch (ComponentDependencyInvalidMethodName invEx)
+            catch (ComponentDependencyInvalidMethodNameException invEx)
             {
                 Assert.That(invEx, Is.Not.Null);
                 return;

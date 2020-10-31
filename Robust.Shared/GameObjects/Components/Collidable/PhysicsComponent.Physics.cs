@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.ViewVariables;
@@ -266,11 +267,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
-                if (_linVelocity == value)
+                if (value != Vector2.Zero)
+                    WakeBody();
+
+                if (_linVelocity.EqualsApprox(value, 0.0001))
                     return;
 
                 _linVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -284,11 +287,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _angVelocity;
             set
             {
-                if (_angVelocity.Equals(value))
+                if (value != 0.0f)
+                    WakeBody();
+
+                if (Math.Abs(_angVelocity - value) < 0.0001)
                     return;
 
                 _angVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -312,6 +317,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _status;
             set
             {
+                if (_status == value)
+                    return;
+
                 _status = value;
                 Dirty();
             }
@@ -333,6 +341,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _anchored;
             set
             {
+                if (_anchored == value)
+                    return;
+
                 _anchored = value;
                 AnchoredChanged?.Invoke();
                 Dirty();

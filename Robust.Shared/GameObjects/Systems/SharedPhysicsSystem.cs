@@ -221,7 +221,7 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero, false))
                 {
                     var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;

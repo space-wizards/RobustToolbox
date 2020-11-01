@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Physics
 {
     /// <summary>
-    /// A physics shape that represents an Axis-Aligned Bounding Box.
+    /// A physics shape that represents an OBB.
     /// This box DOES rotate with the entity, and will always be offset from the
     /// entity origin in world space.
     /// </summary>
@@ -93,9 +93,9 @@ namespace Robust.Shared.Physics
             serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
             serializer.DataField(ref _rectangle, "bounds", Box2.UnitCentered);
 
-            List<BoundingBoxOverridePrototype> overrides = new List<BoundingBoxOverridePrototype>();
+            var overrides = new List<BoundingBoxOverridePrototype>();
             serializer.DataField(ref overrides, "overrides", new List<BoundingBoxOverridePrototype>());
-            foreach (var boundingBoxOverridePrototype in overrides)
+            foreach (var boundingBoxOverridePrototype in overrides!)
             {
                 var roundedAngle = GetOverrideIndexAngle(boundingBoxOverridePrototype.Angle);
                 boundingBoxOverrides.Add(roundedAngle, boundingBoxOverridePrototype.Override);

@@ -382,7 +382,7 @@ namespace Robust.Shared.Map
 
             var (x, y) = ToMapPos(entityManager);
 
-            return new Vector2i((int) x, (int) y);
+            return new Vector2i((int)Math.Floor(x), (int)Math.Floor(y));
         }
 
         /// <summary>

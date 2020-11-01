@@ -54,15 +54,11 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapID">
         ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
         /// </param>
-        /// <param name="defaultGridID"></param>
-        /// <param name="defaultGapID">
-        ///     If provided, the new map will use this grid ID as default grid. If not provided, a new ID will be selected automatically.
-        /// </param>
         /// <returns>The new map.</returns>
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        MapId CreateMap(MapId? mapID = null, GridId? defaultGridID = null);
+        MapId CreateMap(MapId? mapID = null);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.
@@ -93,12 +89,6 @@ namespace Robust.Shared.Interfaces.Map
         IEntity GetMapEntity(MapId mapId);
 
         IEnumerable<MapId> GetAllMapIds();
-
-        [Obsolete("The concept of 'default grids' is being removed.")]
-        IMapGrid GetDefaultGrid(MapId mapID);
-
-        [Obsolete("The concept of 'default grids' is being removed.")]
-        GridId GetDefaultGridId(MapId mapID);
 
         void DeleteMap(MapId mapID);
 
@@ -132,6 +122,9 @@ namespace Robust.Shared.Interfaces.Map
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+
+        IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false);
+
         void DeleteGrid(GridId gridID);
 
         /// <summary>

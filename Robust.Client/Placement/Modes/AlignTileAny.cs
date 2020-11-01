@@ -18,17 +18,16 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            var mapGrid = pManager.MapManager.GetGrid(gridId);
 
-            if (mapGrid.IsDefaultGrid)
+            IMapGrid? mapGrid = null;
+
+            if (!gridId.IsValid() || !pManager.MapManager.TryGetGrid(gridId, out mapGrid))
             {
-                // check if we are on an edge of a grid
                 // create a box around the cursor
-                DebugTools.Assert(mapGrid.WorldPosition == Vector2.Zero); // assert that LocalPos == WorldPos
                 var gridSearchBox = Box2.UnitCentered.Scale(SearchBoxSize).Translated(MouseCoords.Position);
 
                 // find grids in search box
-                var gridsInArea = pManager.MapManager.FindGridsIntersecting(mapGrid.ParentMapId, gridSearchBox);
+                var gridsInArea = pManager.MapManager.FindGridsIntersecting(MouseCoords.GetMapId(pManager.EntityManager), gridSearchBox);
 
                 // find closest grid intersecting our search box.
                 IMapGrid? closest = null;
@@ -61,10 +60,13 @@ namespace Robust.Client.Placement.Modes
                     var newTilePos = tileCenterWorld + normal * closest.TileSize;
 
                     MouseCoords = new EntityCoordinates(closest.GridEntityId, closest.WorldToLocal(newTilePos));
+                    mapGrid = closest;
                 }
                 //else free place
             }
 
+            if (mapGrid == null)
+                return;
 
             CurrentTile = mapGrid.GetTileRef(MouseCoords);
             float tileSize = mapGrid.TileSize; //convert from ushort to float
@@ -72,12 +74,8 @@ namespace Robust.Client.Placement.Modes
 
             if (pManager.CurrentPermission!.IsTile)
             {
-                if(!mapGrid.IsDefaultGrid)
-                {
-                    MouseCoords = new EntityCoordinates(MouseCoords.EntityId, (CurrentTile.X + tileSize / 2,
-                        CurrentTile.Y + tileSize / 2));
-                }
-                // else we don't modify coords
+                MouseCoords = new EntityCoordinates(MouseCoords.EntityId, (CurrentTile.X + tileSize / 2,
+                    CurrentTile.Y + tileSize / 2));
             }
             else
             {

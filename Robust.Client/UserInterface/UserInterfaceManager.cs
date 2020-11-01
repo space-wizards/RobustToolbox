@@ -10,7 +10,7 @@ using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Player;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.Interfaces.Configuration;
@@ -25,7 +25,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface
 {
-    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal, IPostInjectInit
+    internal sealed class UserInterfaceManager : IDisposable, IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IClyde _displayManager = default!;
@@ -88,7 +88,9 @@ namespace Robust.Client.UserInterface
 
         public void Initialize()
         {
-            _uiScaleChanged(_configurationManager.GetCVar<float>("display.uiScale"));
+            _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+
+            _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
             ThemeDefaults = new UIThemeDummy();
 
             _initializeCommon();
@@ -722,11 +724,6 @@ namespace Robust.Client.UserInterface
             {
                 LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
             }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.RegisterCVar("display.uiScale", 0f, CVar.ARCHIVE, _uiScaleChanged);
         }
 
         private void _uiScaleChanged(float newValue)

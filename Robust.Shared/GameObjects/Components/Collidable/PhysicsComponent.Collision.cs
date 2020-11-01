@@ -76,7 +76,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 if (_sleepAccumulator == value)
                     return;
-                
+
                 _sleepAccumulator = value;
                 Awake = _physicsManager.SleepTimeThreshold > SleepAccumulator;
             }
@@ -111,7 +111,8 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public void WakeBody()
         {
-            SleepAccumulator = 0;
+            if (CanMove())
+                SleepAccumulator = 0;
         }
 
         public PhysicsComponent()
@@ -130,6 +131,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
+            serializer.DataField(ref _mass, "mass", 1.0f);
         }
 
         /// <inheritdoc />

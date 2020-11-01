@@ -12,10 +12,12 @@ using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Map;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Shared;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -28,7 +30,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio
+    internal sealed partial class Clyde : ClydeBase, IClydeInternal, IClydeAudio, IPostInjectInit
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -91,6 +93,10 @@ namespace Robust.Client.Graphics.Clyde
 
         public override bool Initialize()
         {
+            base.Initialize();
+            
+            _configurationManager.OnValueChanged(CVars.DisplayOGLCheckErrors, b => _checkGLErrors = b, true);
+
             if (!InitWindowing())
             {
                 return false;
@@ -126,8 +132,8 @@ namespace Robust.Client.Graphics.Clyde
         protected override void ReadConfig()
         {
             base.ReadConfig();
-            _lightmapDivider = _configurationManager.GetCVar<int>("display.lightmapdivider");
-            _enableSoftShadows = _configurationManager.GetCVar<bool>("display.softshadows");
+            _lightmapDivider = _configurationManager.GetCVar(CVars.DisplayLightMapDivider);
+            _enableSoftShadows = _configurationManager.GetCVar(CVars.DisplaySoftShadows);
         }
 
         protected override void ReloadConfig()
@@ -137,20 +143,15 @@ namespace Robust.Client.Graphics.Clyde
             RegenAllLightRts();
         }
 
-        public override void PostInject()
+        public void PostInject()
         {
-            base.PostInject();
-
             _mapManager.TileChanged += _updateTileMapOnUpdate;
             _mapManager.OnGridCreated += _updateOnGridCreated;
             _mapManager.OnGridRemoved += _updateOnGridRemoved;
             _mapManager.GridChanged += _updateOnGridModified;
 
-            _configurationManager.RegisterCVar("display.renderer", (int) Renderer.Default);
-            _configurationManager.RegisterCVar("display.ogl_check_errors", false, onValueChanged: b => _checkGLErrors = b);
             // This cvar does not modify the actual GL version requested or anything,
             // it overrides the version we detect to detect GL features.
-            _configurationManager.RegisterCVar("display.ogl_override_version", "");
             RegisterBlockCVars();
         }
 
@@ -207,7 +208,9 @@ namespace Robust.Client.Graphics.Clyde
             {
                 Logger.WarningS("clyde.ogl", "NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");
             }
-            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+
+            ResetBlendFunc();
+
             CheckGlError();
 
             // Primitive Restart's presence or lack thereof changes the amount of required memory.
@@ -240,7 +243,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private (int major, int minor)? ParseGLOverrideVersion()
         {
-            var overrideGLVersion = _configurationManager.GetCVar<string>("display.ogl_override_version");
+            var overrideGLVersion = _configurationManager.GetCVar(CVars.DisplayOGLOverrideVersion);
             if (string.IsNullOrEmpty(overrideGLVersion))
             {
                 return null;

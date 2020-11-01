@@ -9,24 +9,21 @@ using Robust.Shared.Log;
 
 namespace Robust.Shared
 {
-    internal abstract class SignalHandler : ISignalHandler, IDisposable, IPostInjectInit
+    internal abstract class SignalHandler : ISignalHandler, IDisposable
     {
         [Dependency] private readonly ITaskManager _taskManager = default!;
+#pragma warning disable 414
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+#pragma warning restore 414
 
         private Thread? _signalThread;
-
-        public void PostInject()
-        {
-            _configurationManager.RegisterCVar("signals.handle", true);
-        }
 
         public void MaybeStart()
         {
             // I actually did try to implement a onValueChanged handler but couldn't make it work well.
             // The problem is that shutting down the thread does not restore the default exit behavior.
 #if UNIX
-            if (_configurationManager.GetCVar<bool>("signals.handle"))
+            if (_configurationManager.GetCVar(CVars.SignalsHandle))
             {
                 Start();
             }

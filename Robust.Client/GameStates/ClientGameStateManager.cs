@@ -10,9 +10,8 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
@@ -79,18 +78,18 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            _config.RegisterCVar("net.interp", true, CVar.ARCHIVE, b => _processor.Interpolation = b);
-            _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
-            _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
-            _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
-            _config.RegisterCVar("net.predict_size", 1, CVar.ARCHIVE, i => PredictSize = i);
-            _config.RegisterCVar("net.state_buf_merge_threshold", 5, CVar.ARCHIVE, i => StateBufferMergeThreshold = i);
+            _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
+            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
+            _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
+            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
+            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i, true);
+            _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
-            _processor.Interpolation = _config.GetCVar<bool>("net.interp");
-            _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
-            _processor.Logging = _config.GetCVar<bool>("net.logging");
-            Predicting = _config.GetCVar<bool>("net.predict");
-            PredictSize = _config.GetCVar<int>("net.predict_size");
+            _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
+            _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
+            _processor.Logging = _config.GetCVar(CVars.NetLogging);
+            Predicting = _config.GetCVar(CVars.NetPredict);
+            PredictSize = _config.GetCVar(CVars.NetPredictSize);
         }
 
         /// <inheritdoc />
@@ -123,7 +122,7 @@ namespace Robust.Client.GameStates
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            Logger.DebugS("net.predict",
+            Logger.DebugS(CVars.NetPredict.Name,
                 $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
@@ -212,7 +211,7 @@ namespace Robust.Client.GameStates
 
                 if (_lastProcessedSeq < curState.LastProcessedInput)
                 {
-                    Logger.DebugS("net.predict", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
                     _lastProcessedSeq = curState.LastProcessedInput;
                 }
             }
@@ -231,7 +230,7 @@ namespace Robust.Client.GameStates
                 var inCmd = _pendingInputs.Dequeue();
 
                 _inputManager.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("net.predict",
+                Logger.DebugS(CVars.NetPredict.Name,
                     $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
@@ -249,7 +248,7 @@ namespace Robust.Client.GameStates
 
             if (_pendingInputs.Count > 0)
             {
-                Logger.DebugS("net.predict", "CL> Predicted:");
+                Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
             }
 
             var pendingInputEnumerator = _pendingInputs.GetEnumerator();
@@ -274,7 +273,7 @@ namespace Robust.Client.GameStates
 
                     _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
-                    Logger.DebugS("net.predict",
+                    Logger.DebugS(CVars.NetPredict.Name,
                         $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
 
@@ -315,7 +314,7 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                Logger.DebugS("net.predict", $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
 
                 if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
                 {
@@ -333,7 +332,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    Logger.DebugS("net.predict", $"  And also its component {comp.Name}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
                     comp.HandleComponentState(compState, null);
                 }

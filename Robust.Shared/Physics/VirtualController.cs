@@ -27,7 +27,6 @@ namespace Robust.Shared.Physics
                     return;
 
                 _linearVelocity = value;
-
                 ControlledComponent?.Dirty();
             }
         }

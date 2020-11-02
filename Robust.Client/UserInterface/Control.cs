@@ -650,7 +650,7 @@ namespace Robust.Client.UserInterface
         ///     Check if this control currently has keyboard focus.
         /// </summary>
         /// <returns></returns>
-        public bool HasKeyboardFocus()
+        public virtual bool HasKeyboardFocus()
         {
             return UserInterfaceManager.KeyboardFocused == this;
         }

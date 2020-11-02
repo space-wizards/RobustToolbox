@@ -90,15 +90,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _loadHistoryFromDisk();
 
-            CommandBar.OnKeyBindDown += args =>
-            {
-                if (args.Function == EngineKeyFunctions.ShowDebugConsole)
-                {
-                    Toggle();
-                    args.Handle();
-                }
-            };
-
             searchResults = new List<string>();
         }
 
@@ -202,10 +193,15 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void CommandBarOnOnKeyBindDown(GUIBoundKeyEventArgs args)
         {
-            if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+            if (args.Function == EngineKeyFunctions.ShowDebugConsole)
             {
                 Toggle();
-                return;
+                args.Handle();
+            }
+            else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+            {
+                Toggle();
+                args.Handle();
             }
             else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
             {
@@ -216,13 +212,11 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 NextCommand();
                 args.Handle();
-                return;
             }
             else if(args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
             {
                 PrevCommand();
                 args.Handle();
-                return;
             }
         }
 

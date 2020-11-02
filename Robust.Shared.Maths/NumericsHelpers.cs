@@ -7,7 +7,7 @@ namespace Robust.Shared.Maths
 {
     public static unsafe class NumericsHelpers
     {
-        // TODO: ARM when .NET 5.0 comes out.
+        // TODO: ARM support when .NET 5.0 comes out.
 
         #region Multiply
 
@@ -362,10 +362,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static float HorizontalAdd(float[] a)
         {
-            if (false && Sse.IsSupported)
-            {
-                return HorizontalAddSse(a);
-            }
+            // TODO: SSE for this.
 
             return HorizontalAddNaive(a);
         }
@@ -378,35 +375,6 @@ namespace Robust.Shared.Maths
             for (var i = 0; i < a.Length; i++)
             {
                 sum += a[i];
-            }
-
-            return sum;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static float HorizontalAddSse(float[] a)
-        {
-            var remainder = a.Length & 3;
-            var length = a.Length - remainder;
-
-            var sum = 0f;
-
-            fixed (float* ptr = a)
-            {
-                for (var i = 0; i < length; i += 4)
-                {
-                    var j = Sse.LoadVector128(ptr + i);
-
-                    Sse.Store(ptr + i, j);
-                }
-            }
-
-            if(remainder != 0)
-            {
-                for (var i = length; i < a.Length; i++)
-                {
-                    sum += a[i];
-                }
             }
 
             return sum;

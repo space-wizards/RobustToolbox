@@ -464,7 +464,7 @@ namespace Robust.Shared.GameObjects
         #region Join Functions
 
         /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
+        public IEnumerable<T> EntityQuery<T>(bool includePaused = true)
         {
             var comps = _entTraitDict[typeof(T)];
             foreach (var comp in comps.Values)
@@ -476,7 +476,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
+        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
@@ -497,7 +497,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
+        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -523,7 +523,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -557,7 +557,7 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
+        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = true)
         {
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)

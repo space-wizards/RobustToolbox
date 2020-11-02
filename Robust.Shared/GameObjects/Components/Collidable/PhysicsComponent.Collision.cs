@@ -305,6 +305,7 @@ namespace Robust.Shared.GameObjects.Components
                 controller.ControlledComponent = this;
             }
 
+            Dirty();
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                 new CollisionChangeMessage(Owner.Uid, _canCollide));
         }

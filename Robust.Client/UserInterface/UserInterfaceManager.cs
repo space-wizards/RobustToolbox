@@ -717,12 +717,12 @@ namespace Robust.Client.UserInterface
 
             if (right > RootControl.Size.X)
             {
-                LayoutContainer.SetPosition(_tooltip, (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y));
+                LayoutContainer.SetPosition(_tooltip, (MousePositionScaled.X - _tooltip.Size.X, _tooltip.Position.Y));
             }
 
             if (bottom > RootControl.Size.Y)
             {
-                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
+                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, MousePositionScaled.Y - _tooltip.Size.Y));
             }
         }
 

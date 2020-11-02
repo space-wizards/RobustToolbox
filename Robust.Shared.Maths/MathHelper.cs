@@ -172,7 +172,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static long NextMultipleOf(long value, long of)
         {
-            return (long)NextMultipleOf((double)value, of);
+            return ((value - 1) | (of - 1)) + 1;
         }
 
         /// <summary>
@@ -184,7 +184,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int NextMultipleOf(int value, int of)
         {
-            return (int)NextMultipleOf((float)value, of);
+            return ((value - 1) | (of - 1)) + 1;
         }
 
         #endregion

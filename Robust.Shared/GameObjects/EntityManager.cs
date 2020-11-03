@@ -322,7 +322,7 @@ namespace Robust.Shared.GameObjects
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
-                throw new EntityCreationException("Exception inside CreateEntity", e);
+                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototypeName}", e);
             }
         }
 

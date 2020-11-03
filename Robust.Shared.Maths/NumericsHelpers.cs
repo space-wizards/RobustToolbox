@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
@@ -25,37 +26,46 @@ namespace Robust.Shared.Maths
         #region Multiply
 
         /// <summary>
-        ///     Multiply a by b and stores the result in a.
+        ///     Multiplies a by b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Multiply(float[] a, float[] b)
+        public static void Multiply(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Multiply(a, b, a);
+        }
+
+        /// <summary>
+        ///     Multiplies a by b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Multiply(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MultiplySse(a, b);
+                    MultiplySse(a, b, s);
                     return;
                 }
             }
 
-            MultiplyNaive(a, b, 0, a.Length);
+            MultiplyNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(float[] a, float[] b, int start, int end)
+        private static void MultiplyNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] *= b[i];
+                s[i] = a[i] * b[i];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplySse(float[] a, float[] b)
+        private static void MultiplySse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -64,19 +74,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Multiply(j, k));
+                            Sse.Store(ptrS + i, Sse.Multiply(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                MultiplyNaive(a, b, length, a.Length);
+                MultiplyNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -88,31 +101,43 @@ namespace Robust.Shared.Maths
         ///     Multiply a by scalar b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Multiply(float[] a, float b)
+        public static void Multiply(Span<float> a, float b)
         {
+            Multiply(a, b, a);
+        }
+
+        /// <summary>
+        ///     Multiply a by scalar b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Multiply(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MultiplySse(a, b);
+                    MultiplySse(a, b, s);
                     return;
                 }
             }
 
-            MultiplyNaive(a, b, 0, a.Length);
+            MultiplyNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(float[] a, float b, int start, int end)
+        private static void MultiplyNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] *= b;
+                s[i] = a[i] * b;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplySse(float[] a, float b)
+        private static void MultiplySse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -121,17 +146,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Multiply(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Multiply(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                MultiplyNaive(a, b, length, a.Length);
+                MultiplyNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -143,34 +171,43 @@ namespace Robust.Shared.Maths
         ///     Divide a by b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Divide(float[] a, float[] b)
+        public static void Divide(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Divide(a, b, a);
+        }
+
+        /// <summary>
+        ///     Divide a by b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Divide(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    DivideSse(a, b);
+                    DivideSse(a, b, s);
                     return;
                 }
             }
 
-            DivideNaive(a, b, 0, a.Length);
+            DivideNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(float[] a, float[] b, int start, int end)
+        private static void DivideNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] /= b[i];
+                s[i] = a[i] / b[i];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideSse(float[] a, float[] b)
+        private static void DivideSse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -179,19 +216,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Divide(j, k));
+                            Sse.Store(ptrS + i, Sse.Divide(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                DivideNaive(a, b, length, a.Length);
+                DivideNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -203,31 +243,43 @@ namespace Robust.Shared.Maths
         ///     Divide a by scalar b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Divide(float[] a, float b)
+        public static void Divide(Span<float> a, float b)
         {
+            Divide(a, b, a);
+        }
+
+        /// <summary>
+        ///     Divide a by scalar b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Divide(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    DivideSse(a, b);
+                    DivideSse(a, b, s);
                     return;
                 }
             }
 
-            DivideNaive(a, b, 0, a.Length);
+            DivideNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(float[] a, float b, int start, int end)
+        private static void DivideNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] *= b;
+                s[i] = a[i] / b;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideSse(float[] a, float b)
+        private static void DivideSse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -236,17 +288,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Divide(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Divide(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                DivideNaive(a, b, length, a.Length);
+                DivideNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -255,37 +310,46 @@ namespace Robust.Shared.Maths
         #region Add
 
         /// <summary>
-        ///     Adds b to a and stores the result in a.
+        ///     Adds b to a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Add(float[] a, float[] b)
+        public static void Add(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Add(a, b, a);
+        }
+
+        /// <summary>
+        ///     Adds b to a and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Add(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    AddSse(a, b);
+                    AddSse(a, b, s);
                     return;
                 }
             }
 
-            AddNaive(a, b, 0, a.Length);
+            AddNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(float[] a, float[] b, int start, int end)
+        private static void AddNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] += b[i];
+                s[i] = a[i] + b[i];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddSse(float[] a, float[] b)
+        private static void AddSse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -294,19 +358,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Add(j, k));
+                            Sse.Store(ptrS + i, Sse.Add(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                AddNaive(a, b, length, a.Length);
+                AddNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -318,31 +385,43 @@ namespace Robust.Shared.Maths
         ///     Adds scalar b to a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Add(float[] a, float b)
+        public static void Add(Span<float> a, float b)
         {
+            Add(a, b, a);
+        }
+
+        /// <summary>
+        ///     Adds scalar b to a and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Add(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    AddSse(a, b);
+                    AddSse(a, b, s);
                     return;
                 }
             }
 
-            AddNaive(a, b, 0, a.Length);
+            AddNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(float[] a, float b, int start, int end)
+        private static void AddNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] += b;
+                s[i] = a[i] + b;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddSse(float[] a, float b)
+        private static void AddSse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -351,17 +430,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Add(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Add(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                AddNaive(a, b, length, a.Length);
+                AddNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -373,21 +455,56 @@ namespace Robust.Shared.Maths
         ///     Adds all elements of a and returns the value.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static float HorizontalAdd(float[] a)
+        public static float HorizontalAdd(Span<float> a)
         {
-            // TODO: SSE for this.
+            if (LengthValid(a.Length))
+            {
+                if (Sse3.IsSupported)
+                {
+                    return HorizontalAddSse(a);
+                }
+            }
 
             return HorizontalAddNaive(a, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static float HorizontalAddNaive(float[] a, int start, int end)
+        private static float HorizontalAddNaive(Span<float> a, int start, int end)
         {
             var sum = 0f;
 
             for (var i = start; i < end; i++)
             {
                 sum += a[i];
+            }
+
+            return sum;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static float HorizontalAddSse(Span<float> a)
+        {
+            var remainder = a.Length & 3;
+            var length = a.Length - remainder;
+
+            var accumulator = Vector128.Create(0f);
+
+            fixed (float* ptr = a)
+            {
+                for (var i = 0; i < length; i += 4)
+                {
+                    var j = Sse.LoadVector128(ptr + i);
+                    accumulator = Sse3.HorizontalAdd(accumulator, j);
+                }
+            }
+
+            var sum = 0f;
+            accumulator = Sse3.HorizontalAdd(Sse3.HorizontalAdd(accumulator, accumulator), accumulator);
+            Sse.StoreScalar(&sum, accumulator);
+
+            if(remainder != 0)
+            {
+                sum += HorizontalAddNaive(a, length, a.Length);
             }
 
             return sum;
@@ -401,34 +518,43 @@ namespace Robust.Shared.Maths
         ///     Subtracts b to a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Sub(float[] a, float[] b)
+        public static void Sub(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Sub(a, b, a);
+        }
+
+        /// <summary>
+        ///     Subtracts b to a and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Sub(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    SubSse(a, b);
+                    SubSse(a, b, s);
                     return;
                 }
             }
 
-            SubNaive(a, b, 0, a.Length);
+            SubNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(float[] a, float[] b, int start, int end)
+        private static void SubNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] -= b[i];
+                s[i] = a[i] - b[i];
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubSse(float[] a, float[] b)
+        private static void SubSse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -437,19 +563,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Subtract(j, k));
+                            Sse.Store(ptrS + i, Sse.Subtract(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                SubNaive(a, b, length, a.Length);
+                SubNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -461,31 +590,43 @@ namespace Robust.Shared.Maths
         ///     Subtracts scalar b to a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Sub(float[] a, float b)
+        public static void Sub(Span<float> a, float b)
         {
+            Sub(a, b, a);
+        }
+
+        /// <summary>
+        ///     Subtracts scalar b to a and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Sub(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    SubSse(a, b);
+                    SubSse(a, b, s);
                     return;
                 }
             }
 
-            SubNaive(a, b, 0, a.Length);
+            SubNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(float[] a, float b, int start, int end)
+        private static void SubNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] -= b;
+                s[i] = a[i] - b;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubSse(float[] a, float b)
+        private static void SubSse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -494,17 +635,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Subtract(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Subtract(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                SubNaive(a, b, length, a.Length);
+                SubNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -513,34 +657,46 @@ namespace Robust.Shared.Maths
         #region Abs
 
         /// <summary>
-        ///     Adds scalar b to a and stores the result in a.
+        ///     Does abs on a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Abs(float[] a)
+        public static void Abs(Span<float> a)
         {
+            Abs(a, a);
+        }
+
+        /// <summary>
+        ///     Does abs on a and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Abs(Span<float> a, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported && Sse2.IsSupported)
                 {
-                    AbsSse(a);
+                    AbsSse(a, s);
                     return;
                 }
             }
 
-            AbsNaive(a, 0, a.Length);
+            AbsNaive(a, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AbsNaive(float[] a, int start, int end)
+        private static void AbsNaive(Span<float> a, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] = MathF.Abs(a[i]);
+                s[i] = MathF.Abs(a[i]);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AbsSse(float[] a)
+        private static void AbsSse(Span<float> a, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -549,17 +705,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.And(mask, j));
+                        Sse.Store(ptrS + i, Sse.And(mask, j));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                AbsNaive(a, length, a.Length);
+                AbsNaive(a, s, length, a.Length);
             }
         }
 
@@ -571,34 +730,43 @@ namespace Robust.Shared.Maths
         ///     Gets the minimum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Min(float[] a, float[] b)
+        public static void Min(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Min(a, b, a);
+        }
+
+        /// <summary>
+        ///     Gets the minimum number between a and b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Min(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MinSse(a, b);
+                    MinSse(a, b, s);
                     return;
                 }
             }
 
-            MinNaive(a, b, 0, a.Length);
+            MinNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(float[] a, float[] b, int start, int end)
+        private static void MinNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] = MathF.Min(a[i], b[i]);
+                s[i] = MathF.Min(a[i], b[i]);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinSse(float[] a, float[] b)
+        private static void MinSse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -607,19 +775,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Min(j, k));
+                            Sse.Store(ptrS + i, Sse.Min(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                MinNaive(a, b, length, a.Length);
+                MinNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -631,31 +802,43 @@ namespace Robust.Shared.Maths
         ///     Gets the minimum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Min(float[] a, float b)
+        public static void Min(Span<float> a, float b)
         {
+            Min(a, b, a);
+        }
+
+        /// <summary>
+        ///     Gets the minimum number between a and b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Min(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MinSse(a, b);
+                    MinSse(a, b, s);
                     return;
                 }
             }
 
-            MinNaive(a, b, 0, a.Length);
+            MinNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(float[] a, float b, int start, int end)
+        private static void MinNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] = MathF.Min(a[i], b);
+                s[i] = MathF.Min(a[i], b);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinSse(float[] a, float b)
+        private static void MinSse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -664,17 +847,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Min(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Min(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                MinNaive(a, b, length, a.Length);
+                MinNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -683,37 +869,46 @@ namespace Robust.Shared.Maths
         #region Max
 
         /// <summary>
-        ///     Gets the minimum number between a and b and stores the result in a.
+        ///     Gets the maximum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Max(float[] a, float[] b)
+        public static void Max(Span<float> a, Span<float> b)
         {
-            if (a.Length != b.Length)
+            Max(a, b, a);
+        }
+
+        /// <summary>
+        ///     Gets the maximum number between a and b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Max(Span<float> a, Span<float> b, Span<float> s)
+        {
+            if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MaxSse(a, b);
+                    MaxSse(a, b, s);
                     return;
                 }
             }
 
-            MaxNaive(a, b, 0, a.Length);
+            MaxNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(float[] a, float[] b, int start, int end)
+        private static void MaxNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] = MathF.Max(a[i], b[i]);
+                s[i] = MathF.Max(a[i], b[i]);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxSse(float[] a, float[] b)
+        private static void MaxSse(Span<float> a, Span<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -722,19 +917,22 @@ namespace Robust.Shared.Maths
             {
                 fixed (float* ptrB = b)
                 {
-                    for (var i = 0; i < length; i += 4)
+                    fixed (float* ptrS = s)
                     {
-                        var j = Sse.LoadVector128(ptr + i);
-                        var k = Sse.LoadVector128(ptrB + i);
+                        for (var i = 0; i < length; i += 4)
+                        {
+                            var j = Sse.LoadVector128(ptr + i);
+                            var k = Sse.LoadVector128(ptrB + i);
 
-                        Sse.Store(ptr + i, Sse.Max(j, k));
+                            Sse.Store(ptrS + i, Sse.Max(j, k));
+                        }
                     }
                 }
             }
 
             if(remainder != 0)
             {
-                MaxNaive(a, b, length, a.Length);
+                MaxNaive(a, b, s, length, a.Length);
             }
         }
 
@@ -746,31 +944,43 @@ namespace Robust.Shared.Maths
         ///     Gets the maximum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Max(float[] a, float b)
+        public static void Max(Span<float> a, float b)
         {
+            Max(a, b, a);
+        }
+
+        /// <summary>
+        ///     Gets the maximum number between a and b and stores the result in s.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void Max(Span<float> a, float b, Span<float> s)
+        {
+            if (a.Length != s.Length)
+                throw new ArgumentException("Length of arrays must be the same!");
+
             if (LengthValid(a.Length))
             {
                 if (Sse.IsSupported)
                 {
-                    MaxSse(a, b);
+                    MaxSse(a, b, s);
                     return;
                 }
             }
 
-            MaxNaive(a, b, 0, a.Length);
+            MaxNaive(a, b, s, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(float[] a, float b, int start, int end)
+        private static void MaxNaive(Span<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
-                a[i] = MathF.Max(a[i], b);
+                s[i] = MathF.Max(a[i], b);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxSse(float[] a, float b)
+        private static void MaxSse(Span<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -779,17 +989,20 @@ namespace Robust.Shared.Maths
 
             fixed (float* ptr = a)
             {
-                for (var i = 0; i < length; i += 4)
+                fixed (float* ptrS = s)
                 {
-                    var j = Sse.LoadVector128(ptr + i);
+                    for (var i = 0; i < length; i += 4)
+                    {
+                        var j = Sse.LoadVector128(ptr + i);
 
-                    Sse.Store(ptr + i, Sse.Max(j, scalar));
+                        Sse.Store(ptrS + i, Sse.Max(j, scalar));
+                    }
                 }
             }
 
             if(remainder != 0)
             {
-                MaxNaive(a, b, length, a.Length);
+                MaxNaive(a, b, s, length, a.Length);
             }
         }
 

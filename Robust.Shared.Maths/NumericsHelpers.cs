@@ -10,6 +10,18 @@ namespace Robust.Shared.Maths
     {
         // TODO: ARM support when .NET 5.0 comes out.
 
+        #region Utils
+
+        /// <summary>
+        ///     Returns whether the specified array length is valid for doing SIMD.
+        /// </summary>
+        public static bool LengthValid(int arrayLength)
+        {
+            return arrayLength >= 4;
+        }
+
+        #endregion
+
         #region Multiply
 
         /// <summary>
@@ -21,10 +33,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MultiplySse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MultiplySse(a, b);
+                    return;
+                }
             }
 
             MultiplyNaive(a, b, 0, a.Length);
@@ -75,10 +90,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Multiply(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MultiplySse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MultiplySse(a, b);
+                    return;
+                }
             }
 
             MultiplyNaive(a, b, 0, a.Length);
@@ -130,10 +148,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                DivideSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    DivideSse(a, b);
+                    return;
+                }
             }
 
             DivideNaive(a, b, 0, a.Length);
@@ -184,10 +205,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Divide(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                DivideSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    DivideSse(a, b);
+                    return;
+                }
             }
 
             DivideNaive(a, b, 0, a.Length);
@@ -239,10 +263,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                AddSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    AddSse(a, b);
+                    return;
+                }
             }
 
             AddNaive(a, b, 0, a.Length);
@@ -293,10 +320,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Add(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                AddSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    AddSse(a, b);
+                    return;
+                }
             }
 
             AddNaive(a, b, 0, a.Length);
@@ -376,10 +406,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                SubSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    SubSse(a, b);
+                    return;
+                }
             }
 
             SubNaive(a, b, 0, a.Length);
@@ -430,10 +463,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Sub(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                SubSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    SubSse(a, b);
+                    return;
+                }
             }
 
             SubNaive(a, b, 0, a.Length);
@@ -482,10 +518,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Abs(float[] a)
         {
-            if (Sse.IsSupported && Sse2.IsSupported)
+            if (LengthValid(a.Length))
             {
-                AbsSse(a);
-                return;
+                if (Sse.IsSupported && Sse2.IsSupported)
+                {
+                    AbsSse(a);
+                    return;
+                }
             }
 
             AbsNaive(a, 0, a.Length);
@@ -537,10 +576,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MinSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MinSse(a, b);
+                    return;
+                }
             }
 
             MinNaive(a, b, 0, a.Length);
@@ -591,10 +633,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Min(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MinSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MinSse(a, b);
+                    return;
+                }
             }
 
             MinNaive(a, b, 0, a.Length);
@@ -646,10 +691,13 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MaxSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MaxSse(a, b);
+                    return;
+                }
             }
 
             MaxNaive(a, b, 0, a.Length);
@@ -700,10 +748,13 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void Max(float[] a, float b)
         {
-            if (Sse.IsSupported)
+            if (LengthValid(a.Length))
             {
-                MaxSse(a, b);
-                return;
+                if (Sse.IsSupported)
+                {
+                    MaxSse(a, b);
+                    return;
+                }
             }
 
             MaxNaive(a, b, 0, a.Length);

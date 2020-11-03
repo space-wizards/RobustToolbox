@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -26,13 +27,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MultiplyNaive(a, b);
+            MultiplyNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(float[] a, float[] b)
+        private static void MultiplyNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] *= b[i];
             }
@@ -60,10 +61,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] *= b[i];
-                }
+                MultiplyNaive(a, b, length, a.Length);
             }
         }
 
@@ -83,13 +81,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MultiplyNaive(a, b);
+            MultiplyNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(float[] a, float b)
+        private static void MultiplyNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] *= b;
             }
@@ -115,10 +113,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] *= b;
-                }
+                MultiplyNaive(a, b, length, a.Length);
             }
         }
 
@@ -141,13 +136,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            DivideNaive(a, b);
+            DivideNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(float[] a, float[] b)
+        private static void DivideNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] /= b[i];
             }
@@ -175,10 +170,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] /= b[i];
-                }
+                DivideNaive(a, b, length, a.Length);
             }
         }
 
@@ -198,13 +190,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            DivideNaive(a, b);
+            DivideNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(float[] a, float b)
+        private static void DivideNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] *= b;
             }
@@ -230,10 +222,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] /= b;
-                }
+                DivideNaive(a, b, length, a.Length);
             }
         }
 
@@ -256,13 +245,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            AddNaive(a, b);
+            AddNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(float[] a, float[] b)
+        private static void AddNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] += b[i];
             }
@@ -290,10 +279,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] += b[i];
-                }
+                AddNaive(a, b, length, a.Length);
             }
         }
 
@@ -313,13 +299,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            AddNaive(a, b);
+            AddNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(float[] a, float b)
+        private static void AddNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] += b;
             }
@@ -345,10 +331,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] += b;
-                }
+                AddNaive(a, b, length, a.Length);
             }
         }
 
@@ -364,15 +347,15 @@ namespace Robust.Shared.Maths
         {
             // TODO: SSE for this.
 
-            return HorizontalAddNaive(a);
+            return HorizontalAddNaive(a, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static float HorizontalAddNaive(float[] a)
+        private static float HorizontalAddNaive(float[] a, int start, int end)
         {
             var sum = 0f;
 
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 sum += a[i];
             }
@@ -399,13 +382,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            SubNaive(a, b);
+            SubNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(float[] a, float[] b)
+        private static void SubNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] -= b[i];
             }
@@ -433,10 +416,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] -= b[i];
-                }
+                SubNaive(a, b, length, a.Length);
             }
         }
 
@@ -456,13 +436,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            SubNaive(a, b);
+            SubNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(float[] a, float b)
+        private static void SubNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] -= b;
             }
@@ -488,10 +468,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] -= b;
-                }
+                SubNaive(a, b, length, a.Length);
             }
         }
 
@@ -511,13 +488,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            AbsNaive(a);
+            AbsNaive(a, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AbsNaive(float[] a)
+        private static void AbsNaive(float[] a, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] = MathF.Abs(a[i]);
             }
@@ -543,10 +520,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] = MathF.Abs(a[i]);
-                }
+                AbsNaive(a, length, a.Length);
             }
         }
 
@@ -569,13 +543,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MinNaive(a, b);
+            MinNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(float[] a, float[] b)
+        private static void MinNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] = MathF.Min(a[i], b[i]);
             }
@@ -603,10 +577,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] = MathF.Min(a[i], b[i]);
-                }
+                MinNaive(a, b, length, a.Length);
             }
         }
 
@@ -626,13 +597,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MinNaive(a, b);
+            MinNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(float[] a, float b)
+        private static void MinNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] = MathF.Min(a[i], b);
             }
@@ -658,10 +629,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] = MathF.Min(a[i], b);
-                }
+                MinNaive(a, b, length, a.Length);
             }
         }
 
@@ -684,13 +652,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MaxNaive(a, b);
+            MaxNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(float[] a, float[] b)
+        private static void MaxNaive(float[] a, float[] b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] = MathF.Max(a[i], b[i]);
             }
@@ -718,10 +686,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] = MathF.Max(a[i], b[i]);
-                }
+                MaxNaive(a, b, length, a.Length);
             }
         }
 
@@ -741,13 +706,13 @@ namespace Robust.Shared.Maths
                 return;
             }
 
-            MaxNaive(a, b);
+            MaxNaive(a, b, 0, a.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(float[] a, float b)
+        private static void MaxNaive(float[] a, float b, int start, int end)
         {
-            for (var i = 0; i < a.Length; i++)
+            for (var i = start; i < end; i++)
             {
                 a[i] = MathF.Max(a[i], b);
             }
@@ -773,10 +738,7 @@ namespace Robust.Shared.Maths
 
             if(remainder != 0)
             {
-                for (var i = length; i < a.Length; i++)
-                {
-                    a[i] = MathF.Max(a[i], b);
-                }
+                MaxNaive(a, b, length, a.Length);
             }
         }
 

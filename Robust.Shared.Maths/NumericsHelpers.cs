@@ -29,7 +29,7 @@ namespace Robust.Shared.Maths
         ///     Multiplies a by b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Multiply(Span<float> a, Span<float> b)
+        public static void Multiply(Span<float> a, ReadOnlySpan<float> b)
         {
             Multiply(a, b, a);
         }
@@ -38,7 +38,7 @@ namespace Robust.Shared.Maths
         ///     Multiplies a by b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Multiply(Span<float> a, Span<float> b, Span<float> s)
+        public static void Multiply(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -56,7 +56,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void MultiplyNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -65,7 +65,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplySse(Span<float> a, Span<float> b, Span<float> s)
+        private static void MultiplySse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -110,7 +110,7 @@ namespace Robust.Shared.Maths
         ///     Multiply a by scalar b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Multiply(Span<float> a, float b, Span<float> s)
+        public static void Multiply(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -128,7 +128,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplyNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void MultiplyNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -137,7 +137,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MultiplySse(Span<float> a, float b, Span<float> s)
+        private static void MultiplySse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -171,7 +171,7 @@ namespace Robust.Shared.Maths
         ///     Divide a by b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Divide(Span<float> a, Span<float> b)
+        public static void Divide(Span<float> a, ReadOnlySpan<float> b)
         {
             Divide(a, b, a);
         }
@@ -180,7 +180,7 @@ namespace Robust.Shared.Maths
         ///     Divide a by b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Divide(Span<float> a, Span<float> b, Span<float> s)
+        public static void Divide(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -198,7 +198,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void DivideNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -207,7 +207,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideSse(Span<float> a, Span<float> b, Span<float> s)
+        private static void DivideSse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -252,7 +252,7 @@ namespace Robust.Shared.Maths
         ///     Divide a by scalar b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Divide(Span<float> a, float b, Span<float> s)
+        public static void Divide(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -270,7 +270,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void DivideNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -279,7 +279,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void DivideSse(Span<float> a, float b, Span<float> s)
+        private static void DivideSse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -310,10 +310,10 @@ namespace Robust.Shared.Maths
         #region Add
 
         /// <summary>
-        ///     Adds b to a and stores the result in s.
+        ///     Adds b to a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Add(Span<float> a, Span<float> b)
+        public static void Add(Span<float> a, ReadOnlySpan<float> b)
         {
             Add(a, b, a);
         }
@@ -322,7 +322,7 @@ namespace Robust.Shared.Maths
         ///     Adds b to a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Add(Span<float> a, Span<float> b, Span<float> s)
+        public static void Add(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -340,7 +340,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void AddNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -349,7 +349,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddSse(Span<float> a, Span<float> b, Span<float> s)
+        private static void AddSse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -394,7 +394,7 @@ namespace Robust.Shared.Maths
         ///     Adds scalar b to a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Add(Span<float> a, float b, Span<float> s)
+        public static void Add(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -412,7 +412,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void AddNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -421,7 +421,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AddSse(Span<float> a, float b, Span<float> s)
+        private static void AddSse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -455,7 +455,7 @@ namespace Robust.Shared.Maths
         ///     Adds all elements of a and returns the value.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static float HorizontalAdd(Span<float> a)
+        public static float HorizontalAdd(ReadOnlySpan<float> a)
         {
             if (LengthValid(a.Length))
             {
@@ -469,7 +469,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static float HorizontalAddNaive(Span<float> a, int start, int end)
+        private static float HorizontalAddNaive(ReadOnlySpan<float> a, int start, int end)
         {
             var sum = 0f;
 
@@ -482,7 +482,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static float HorizontalAddSse(Span<float> a)
+        private static float HorizontalAddSse(ReadOnlySpan<float> a)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -518,7 +518,7 @@ namespace Robust.Shared.Maths
         ///     Subtracts b to a and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Sub(Span<float> a, Span<float> b)
+        public static void Sub(Span<float> a, ReadOnlySpan<float> b)
         {
             Sub(a, b, a);
         }
@@ -527,7 +527,7 @@ namespace Robust.Shared.Maths
         ///     Subtracts b to a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Sub(Span<float> a, Span<float> b, Span<float> s)
+        public static void Sub(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -545,7 +545,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void SubNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -554,7 +554,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubSse(Span<float> a, Span<float> b, Span<float> s)
+        private static void SubSse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -599,7 +599,7 @@ namespace Robust.Shared.Maths
         ///     Subtracts scalar b to a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Sub(Span<float> a, float b, Span<float> s)
+        public static void Sub(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -617,7 +617,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void SubNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -626,7 +626,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void SubSse(Span<float> a, float b, Span<float> s)
+        private static void SubSse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -669,7 +669,7 @@ namespace Robust.Shared.Maths
         ///     Does abs on a and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Abs(Span<float> a, Span<float> s)
+        public static void Abs(ReadOnlySpan<float> a, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -687,7 +687,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AbsNaive(Span<float> a, Span<float> s, int start, int end)
+        private static void AbsNaive(ReadOnlySpan<float> a, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -696,7 +696,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void AbsSse(Span<float> a, Span<float> s)
+        private static void AbsSse(ReadOnlySpan<float> a, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -730,7 +730,7 @@ namespace Robust.Shared.Maths
         ///     Gets the minimum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Min(Span<float> a, Span<float> b)
+        public static void Min(Span<float> a, ReadOnlySpan<float> b)
         {
             Min(a, b, a);
         }
@@ -739,7 +739,7 @@ namespace Robust.Shared.Maths
         ///     Gets the minimum number between a and b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Min(Span<float> a, Span<float> b, Span<float> s)
+        public static void Min(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -757,7 +757,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void MinNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -766,7 +766,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinSse(Span<float> a, Span<float> b, Span<float> s)
+        private static void MinSse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -811,7 +811,7 @@ namespace Robust.Shared.Maths
         ///     Gets the minimum number between a and b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Min(Span<float> a, float b, Span<float> s)
+        public static void Min(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -829,7 +829,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void MinNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -838,7 +838,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MinSse(Span<float> a, float b, Span<float> s)
+        private static void MinSse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -872,7 +872,7 @@ namespace Robust.Shared.Maths
         ///     Gets the maximum number between a and b and stores the result in a.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Max(Span<float> a, Span<float> b)
+        public static void Max(Span<float> a, ReadOnlySpan<float> b)
         {
             Max(a, b, a);
         }
@@ -881,7 +881,7 @@ namespace Robust.Shared.Maths
         ///     Gets the maximum number between a and b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Max(Span<float> a, Span<float> b, Span<float> s)
+        public static void Max(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -899,7 +899,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(Span<float> a, Span<float> b, Span<float> s, int start, int end)
+        private static void MaxNaive(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -908,7 +908,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxSse(Span<float> a, Span<float> b, Span<float> s)
+        private static void MaxSse(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;
@@ -953,7 +953,7 @@ namespace Robust.Shared.Maths
         ///     Gets the maximum number between a and b and stores the result in s.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void Max(Span<float> a, float b, Span<float> s)
+        public static void Max(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
@@ -971,7 +971,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxNaive(Span<float> a, float b, Span<float> s, int start, int end)
+        private static void MaxNaive(ReadOnlySpan<float> a, float b, Span<float> s, int start, int end)
         {
             for (var i = start; i < end; i++)
             {
@@ -980,7 +980,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        private static void MaxSse(Span<float> a, float b, Span<float> s)
+        private static void MaxSse(ReadOnlySpan<float> a, float b, Span<float> s)
         {
             var remainder = a.Length & 3;
             var length = a.Length - remainder;

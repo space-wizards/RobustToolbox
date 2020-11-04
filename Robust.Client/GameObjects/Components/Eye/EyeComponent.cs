@@ -19,7 +19,7 @@ namespace Robust.Client.GameObjects
         public override string Name => "Eye";
 
         [ViewVariables]
-        private Eye _eye = default!;
+        private Eye? _eye = default!;
 
         // Horrible hack to get around ordering issues.
         private bool setCurrentOnInitialize;
@@ -27,7 +27,7 @@ namespace Robust.Client.GameObjects
         private Vector2 setZoomOnInitialize = Vector2.One/2f;
         private Vector2 offset = Vector2.Zero;
 
-        public IEye Eye => _eye;
+        public IEye? Eye => _eye;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
@@ -55,8 +55,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Zoom
+        public override Vector2 Zoom
         {
             get => _eye?.Zoom ?? setZoomOnInitialize;
             set
@@ -72,10 +71,9 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Angle Rotation
+        public override Angle Rotation
         {
-            get => _eye.Rotation;
+            get => _eye?.Rotation ?? Angle.Zero;
             set
             {
                 if (_eye != null)
@@ -83,8 +81,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Offset
+        public override Vector2 Offset
         {
             get => offset;
             set
@@ -97,7 +94,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        [ViewVariables(VVAccess.ReadWrite)]
         public override bool DrawFov
         {
             get => _eye?.DrawFov ?? setDrawFovOnInitialize;
@@ -111,8 +107,6 @@ namespace Robust.Client.GameObjects
                 {
                     _eye.DrawFov = value;
                 }
-
-                Dirty();
             }
         }
 
@@ -144,6 +138,21 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
+        {
+            base.HandleComponentState(curState, nextState);
+
+            if (!(curState is EyeComponentState state))
+            {
+                return;
+            }
+
+            DrawFov = state.DrawFov;
+            Zoom = state.Zoom;
+            Offset = state.Offset;
+            Rotation = state.Rotation;
+        }
+
         public override void OnRemove()
         {
             base.OnRemove();
@@ -166,6 +175,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void UpdateEyePosition()
         {
+            if (_eye == null) return;
             var mapPos = Owner.Transform.MapPosition;
             _eye.Position = new MapCoordinates(mapPos.Position + offset, mapPos.MapId);
         }

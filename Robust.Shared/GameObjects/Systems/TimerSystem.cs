@@ -8,7 +8,7 @@ namespace Robust.Shared.GameObjects.Systems
         {
             base.Update(frameTime);
 
-            foreach (var timer in ComponentManager.EntityQuery<TimerComponent>(false))
+            foreach (var timer in ComponentManager.EntityQuery<TimerComponent>())
             {
                 timer.Update(frameTime);
             }

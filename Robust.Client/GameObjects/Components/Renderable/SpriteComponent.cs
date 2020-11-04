@@ -1957,7 +1957,9 @@ namespace Robust.Client.GameObjects
             public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
             {
                 component = null;
-                return false;
+                if (!_components.TryGetValue(typeof(T), out var value)) return false;
+                component = (T) value;
+                return true;
             }
 
             public T? GetComponentOrNull<T>() where T : class
@@ -1968,7 +1970,9 @@ namespace Robust.Client.GameObjects
             public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
             {
                 component = null;
-                return false;
+                if (!_components.TryGetValue(type, out var value)) return false;
+                component = value;
+                return true;
             }
 
             public IComponent? GetComponentOrNull(Type type)

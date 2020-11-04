@@ -693,6 +693,7 @@ namespace Robust.Client.UserInterface
         private void _clearTooltip()
         {
             _tooltip.Visible = false;
+            CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
         }
 
@@ -704,26 +705,20 @@ namespace Robust.Client.UserInterface
         private void _showTooltip()
         {
             var hovered = CurrentlyHovered;
-            if (hovered == null || string.IsNullOrWhiteSpace(hovered.ToolTip))
+            if (hovered == null)
             {
                 return;
             }
 
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, MousePositionScaled);
-
-            var (right, bottom) = _tooltip.Position + _tooltip.Size;
-
-            if (right > RootControl.Size.X)
+            // show simple tooltip if there is one
+            if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
             {
-                LayoutContainer.SetPosition(_tooltip, (MousePositionScaled.X - _tooltip.Size.X, _tooltip.Position.Y));
+                _tooltip.Visible = true;
+                _tooltip.Text = hovered.ToolTip;
+               Tooltips.PositionTooltip(_tooltip);
             }
 
-            if (bottom > RootControl.Size.Y)
-            {
-                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, MousePositionScaled.Y - _tooltip.Size.Y));
-            }
+            hovered.PerformShowTooltip();
         }
 
         private void _uiScaleChanged(float newValue)

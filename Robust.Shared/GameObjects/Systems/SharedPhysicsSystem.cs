@@ -390,17 +390,20 @@ namespace Robust.Shared.GameObjects.Systems
             var transform = owner.Transform;
 
             // Change parent if necessary
-            // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-            if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
-                grid.GridEntityId.IsValid() &&
-                grid.GridEntityId != owner.Uid)
+            if (!ContainerHelpers.IsInContainer(owner))
             {
-                if (grid.GridEntityId != transform.ParentUid)
-                    transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
-            }
-            else
-            {
-                transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
+                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != owner.Uid)
+                {
+                    if (grid.GridEntityId != transform.ParentUid)
+                        transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                }
             }
 
             physics.WorldRotation += physics.AngularVelocity * frameTime;

@@ -22,6 +22,7 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Timing;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using ServerProgram = Robust.Server.Program;
@@ -80,7 +81,7 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
-            private protected Thread InstanceThread = default!;
+            private protected Thread? InstanceThread = default!;
             private protected IDependencyCollection DependencyCollection = default!;
 
             private protected readonly ChannelReader<object> _toInstanceReader;
@@ -276,6 +277,42 @@ namespace Robust.UnitTesting
             }
 
             /// <summary>
+            ///     Performs post, <see cref="ticks"/> iterations of the main loop <see cref="post"/> and stops.
+            ///     Only works in non-threaded mode.
+            /// </summary>
+            public void Loop(Action post, int ticks)
+            {
+                if (InstanceThread?.IsAlive ?? false)
+                    throw new Exception("Cannot loop while the instance's thread is alive!");
+
+                _isSurelyIdle = true;
+                Post(post);
+                RunTicks(ticks);
+                Stop();
+
+                try
+                {
+                    var server = DependencyCollection.Resolve<IBaseServerInternal>();
+                    server.MainLoop();
+                    return;
+                }
+                catch (UnregisteredTypeException e)
+                {
+                }
+
+                try
+                {
+                    var client = DependencyCollection.Resolve<IGameControllerInternal>();
+                    client.MainLoop(GameController.DisplayMode.Headless);
+                }
+                catch (UnregisteredTypeException e)
+                {
+                    Console.WriteLine();
+                    throw;
+                }
+            }
+
+            /// <summary>
             ///     Queue for a delegate to be ran inside the main loop of the instance,
             ///     rethrowing any exceptions in <see cref="WaitIdleAsync"/>.
             /// </summary>
@@ -310,8 +347,16 @@ namespace Robust.UnitTesting
             internal ServerIntegrationInstance(ServerIntegrationOptions? options)
             {
                 _options = options;
-                InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 DependencyCollection = new DependencyCollection();
+
+                // Single-thread.
+                if (options?.NotThreaded ?? false)
+                {
+                    _serverMain();
+                    return;
+                }
+
+                InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
                 InstanceThread.Start();
             }
 
@@ -319,7 +364,7 @@ namespace Robust.UnitTesting
             {
                 try
                 {
-                    IoCManager.InitThread(DependencyCollection);
+                    IoCManager.InitThread(DependencyCollection, true);
                     ServerIoC.RegisterIoC();
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
@@ -373,7 +418,8 @@ namespace Robust.UnitTesting
                         _fromInstanceWriter, _toInstanceReader);
                     server.OverrideMainLoop(gameLoop);
 
-                    server.MainLoop();
+                    if(!_options?.NotThreaded ?? true)
+                        server.MainLoop();
                 }
                 catch (Exception e)
                 {
@@ -392,8 +438,16 @@ namespace Robust.UnitTesting
             internal ClientIntegrationInstance(ClientIntegrationOptions? options)
             {
                 _options = options;
-                InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 DependencyCollection = new DependencyCollection();
+
+                // Single-thread.
+                if (options?.NotThreaded ?? false)
+                {
+                    _clientMain();
+                    return;
+                }
+
+                InstanceThread = new Thread(_clientMain) {Name = "Client Instance Thread"};
                 InstanceThread.Start();
             }
 
@@ -461,7 +515,8 @@ namespace Robust.UnitTesting
                     var gameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                         _fromInstanceWriter, _toInstanceReader);
                     client.OverrideMainLoop(gameLoop);
-                    client.MainLoop(GameController.DisplayMode.Headless);
+                    if(!_options?.NotThreaded ?? true)
+                        client.MainLoop(GameController.DisplayMode.Headless);
                 }
                 catch (Exception e)
                 {
@@ -576,7 +631,7 @@ namespace Robust.UnitTesting
             public Action? BeforeStart { get; set; }
             public Assembly? SharedContentAssembly { get; set; }
             public string? ExtraPrototypes { get; set; }
-
+            public bool NotThreaded { get; set; }
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }
 

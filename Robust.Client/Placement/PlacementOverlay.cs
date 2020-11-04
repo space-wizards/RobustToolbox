@@ -1,5 +1,6 @@
 ﻿using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.Placement
 {
@@ -10,6 +11,7 @@ namespace Robust.Client.Placement
             private readonly PlacementManager _manager;
             public override bool AlwaysDirty => true;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            public override OverlayPriority Priority => OverlayPriority.P2;
 
             public PlacementOverlay(PlacementManager manager) : base("placement")
             {

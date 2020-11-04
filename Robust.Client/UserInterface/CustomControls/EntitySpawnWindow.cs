@@ -70,7 +70,7 @@ namespace Robust.Client.UserInterface.CustomControls
             this.resourceCache = resourceCache;
 
             Title = Loc.GetString("Entity Spawn Panel");
-
+              
             Contents.AddChild(MainVBox = new VBoxContainer
             {
                 Children =

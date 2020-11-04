@@ -5,6 +5,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp.PixelFormats;
 using ES20 = OpenToolkit.Graphics.ES20;
 
 namespace Robust.Client.Graphics.Clyde
@@ -31,6 +32,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             GL.BindTexture(TextureTarget.Texture2D, glHandle.Handle);
             CheckGlError();
+            GL.ActiveTexture(TextureUnit.Texture0);
         }
 
         private void CopyRenderTextureToTexture(RenderTexture source, ClydeTexture target) {
@@ -46,12 +48,44 @@ namespace Robust.Client.Graphics.Clyde
             GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[target.TextureId].OpenGLObject.Handle);
             CheckGlError();
             GL.CopyTexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 0, 0, _framebufferSize.X, _framebufferSize.Y);
-            //GL.CopyImageSubData(sourceHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, targetHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, ScreenSize.X, ScreenSize.Y, 0);
             CheckGlError();
 
             if (pause && store != null) {
                 PopRenderStateFull((FullStoredRendererState)store);
             }
+        }
+
+        private ClydeTexture AtlasToClydeTextureExpensive(AtlasTexture atlas) {
+            ClydeTexture parentTex = (ClydeTexture)atlas.SourceTexture;
+            int width = (int)atlas.SubRegion.Width;
+            int height = (int)atlas.SubRegion.Height;
+
+            Byte4[] pixels = new Byte4[parentTex.Width * parentTex.Height];
+            GL.BindTexture(TextureTarget.Texture2D, _loadedTextures[parentTex.TextureId].OpenGLObject.Handle);
+            CheckGlError();
+            GL.GetTexImage(TextureTarget.Texture2D, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
+            CheckGlError();
+
+            var newHandle = new GLHandle(GL.GenTexture());
+            CheckGlError();
+            GL.BindTexture(TextureTarget.Texture2D, newHandle.Handle);
+            CheckGlError();
+            ApplySampleParameters(TextureSampleParameters.Default);
+            CheckGlError();
+            ClydeTexture newTexture = GenTexture(newHandle, new Vector2i(width, height), true, null);
+            CheckGlError();
+
+            GL.BindTexture(TextureTarget.Texture2D, newHandle.Handle);
+            CheckGlError();
+            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, pixels);
+            CheckGlError();
+            //GL.GetTextureSubImage(newHandle.Handle, 0, 0, 0, 0, 32, 32, 0, PixelFormat.Rgba, PixelType.UnsignedByte, parentTex.Width * parentTex.Height, pixels);
+            //GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, 32, 32, PixelFormat.Rgba, PixelType.UnsignedByte, trimmedPixels);
+            GL.CopyImageSubData(_loadedTextures[parentTex.TextureId].OpenGLObject.Handle, ImageTarget.Texture2D, 0, (int)atlas.SubRegion.Left, Math.Abs((int)atlas.SubRegion.Bottom-atlas.SourceTexture.Height),
+                0, newHandle.Handle, ImageTarget.Texture2D, 0, 0, 0, 0, (int)atlas.SubRegion.Width, (int)atlas.SubRegion.Height, 1);
+            CheckGlError();
+
+            return newTexture;
         }
 
         private static long EstPixelSize(PixelInternalFormat format)

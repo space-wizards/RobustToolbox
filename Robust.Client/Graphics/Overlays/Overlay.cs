@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Timing;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Overlays
 {
@@ -27,6 +28,8 @@ namespace Robust.Client.Graphics.Overlays
         public bool Drawing { get; private set; }
 
         public virtual OverlaySpace Space => OverlaySpace.ScreenSpace;
+
+        public virtual OverlayPriority Priority => OverlayPriority.P5;
 
         /// <summary>
         ///     If set to true, <see cref="ScreenTexture"/> will be set to the current frame. This can be costly to performance, but
@@ -96,7 +99,7 @@ namespace Robust.Client.Graphics.Overlays
         internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
         {
             DrawingHandleBase handle;
-            if (currentSpace == OverlaySpace.WorldSpace)
+            if (currentSpace == OverlaySpace.WorldSpace || currentSpace == OverlaySpace.WorldSpaceFOVStencil)
                 handle = renderHandle.DrawingHandleWorld;
             else
                 handle = renderHandle.DrawingHandleScreen;
@@ -105,31 +108,4 @@ namespace Robust.Client.Graphics.Overlays
         }
     }
 
-
-    /// <summary>
-    ///     Determines in which canvas layers an overlay gets drawn.
-    /// </summary>
-    [Flags]
-    public enum OverlaySpace
-    {
-        /// <summary>
-        ///     Used for matching bit flags.
-        /// </summary>
-        None = 0b0000,
-
-        /// <summary>
-        ///     This overlay will be drawn in the UI root, thus being in screen space.
-        /// </summary>
-        ScreenSpace = 0b0001,
-
-        /// <summary>
-        ///     This overlay will be drawn in the world root, thus being in world space.
-        /// </summary>
-        WorldSpace = 0b0010,
-
-        /// <summary>
-        ///     Drawn in screen coordinates, but behind the world.
-        /// </summary>
-        ScreenSpaceBelowWorld = 0b0100,
-    }
 }

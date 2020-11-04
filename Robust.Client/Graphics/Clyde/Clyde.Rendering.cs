@@ -419,12 +419,19 @@ namespace Robust.Client.Graphics.Clyde
                     case Matrix4 matrix4:
                         program.SetUniform(name, matrix4);
                         break;
-                    case Texture texture:
+                    case ClydeTexture clydeTexture:
                         //This is important it starts at Texture6 since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
                         //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too!
-                        TextureUnit target = TextureUnit.Texture6+textureUnitVal;
-                        SetTexture(target, ((ClydeTexture)texture).TextureId);
-                        program.SetUniformTexture(name, target);
+                        TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
+                        SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
+                        program.SetUniformTexture(name, cTarget);
+                        textureUnitVal++;
+                        break;
+                    case AtlasTexture atlasTexture:
+                        TextureUnit aTarget = TextureUnit.Texture6+textureUnitVal;
+                        //This currently does a costly grab-and-copy operation every time an atlas texture is passed in. Really need to change this to cache it somehow!
+                        SetTexture(aTarget, AtlasToClydeTextureExpensive(atlasTexture).TextureId);
+                        program.SetUniformTexture(name, aTarget);
                         textureUnitVal++;
                         break;
                     default:

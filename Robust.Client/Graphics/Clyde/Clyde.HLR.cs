@@ -15,6 +15,7 @@ using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
 using System.IO;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -118,27 +119,28 @@ namespace Robust.Client.Graphics.Clyde
 
                 list.Sort(OverlayComparer.Instance);
 
-                foreach (var overlay in list)
-                {
-                    overlay.ClydeRender(_renderHandle, space);
+                for (OverlayPriority i = OverlayPriority.P1; i <= OverlayPriority.P9; i++) {
+                    foreach (var overlay in list) {
+                        if(i == overlay.Priority)
+                            overlay.ClydeRender(_renderHandle, space);
+                    }
                 }
-
                 FlushRenderQueue();
             }
         }
 
         private ClydeTexture? ScreenBufferTexture;
-        private GLHandle screenBufferBase;
-        private void UpdateWorldSpaceOverlayScreenTexture(RenderTexture texture) {
+        private GLHandle screenBufferHandle;
+        private void UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
-                if (overlay.RequestScreenTexture && overlay.Space == OverlaySpace.WorldSpace) {
+                if (overlay.RequestScreenTexture && overlay.Space == space) {
                     oTargets.Add(overlay);
                 }
             }
             if (oTargets.Count > 0 && ScreenBufferTexture != null) {
 
-                GL.BindTexture(TextureTarget.Texture2D, screenBufferBase.Handle);
+                GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Srgb8Alpha8, _framebufferSize.X, _framebufferSize.Y, 0,
                     PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero); //Need to do this every frame in case the screen/framebuffer size changes. Small optimization: just do a vec2 check instead? 
                                                                             //I don't think TexImage2D is very costly but I could be wrong.
@@ -323,6 +325,7 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
+
                         ApplyFovToBuffer(viewport, eye);
                     }
                 }
@@ -352,8 +355,13 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
 
-                UpdateWorldSpaceOverlayScreenTexture(_mainViewport.RenderTarget);
+                UpdateOverlayScreenTexture(OverlaySpace.WorldSpace, _mainViewport.RenderTarget);
                 RenderOverlays(OverlaySpace.WorldSpace);
+
+
+                UpdateOverlayScreenTexture(OverlaySpace.WorldSpaceFOVStencil, _mainViewport.RenderTarget);
+                RenderOverlays(OverlaySpace.WorldSpaceFOVStencil);
+
             }
 
             PopRenderStateFull(state);

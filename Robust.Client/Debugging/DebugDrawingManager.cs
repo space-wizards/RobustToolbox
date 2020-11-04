@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.Timing;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.Debugging
 {

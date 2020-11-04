@@ -21,6 +21,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
+using Robust.Shared.Enums;
 
 namespace Robust.Client.GameObjects
 {

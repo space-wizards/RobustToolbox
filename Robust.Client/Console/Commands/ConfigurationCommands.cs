@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Console;
 using Robust.Shared.Configuration;
@@ -24,7 +25,7 @@ namespace Robust.Client.Console.Commands
 
             if (name == "?")
             {
-                var cvars = configManager.GetRegisteredCVars();
+                var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
                 console.AddLine(string.Join("\n", cvars));
                 return false;
             }

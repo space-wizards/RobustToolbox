@@ -25,9 +25,7 @@ namespace Robust.Shared.Map
 
             var gridId = coords.GetGridId(entityManager);
 
-            IMapGrid? mapGrid = null;
-
-            if (!gridId.IsValid() || !mapManager.TryGetGrid(gridId, out mapGrid))
+            if (!gridId.IsValid() || !mapManager.TryGetGrid(gridId, out _))
             {
                 // create a box around the cursor
                 var gridSearchBox = Box2.UnitCentered.Scale(searchBoxSize).Translated(coords.Position);

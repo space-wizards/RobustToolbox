@@ -206,6 +206,8 @@ namespace Robust.Client.UserInterface
         /// should be shown. Can be used as an alternative to ToolTip to perform custom tooltip
         /// logic such as showing a more complex tooltip control.
         ///
+        /// Any custom tooltip controls should typically be added
+        /// as a child of UserInterfaceManager.PopupRoot
         /// Handlers can use <see cref="Tooltips.PositionTooltip(Control)"/> to assist with positioning
         /// custom tooltip controls.
         /// </summary>

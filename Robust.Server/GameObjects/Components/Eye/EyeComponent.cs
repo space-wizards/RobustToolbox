@@ -31,7 +31,7 @@ namespace Robust.Server.GameObjects.Components.Eye
             get => _zoom;
             set
             {
-                if (_zoom == value)
+                if (_zoom.EqualsApprox(value))
                     return;
 
                 _zoom = value;
@@ -44,7 +44,7 @@ namespace Robust.Server.GameObjects.Components.Eye
             get => _offset;
             set
             {
-                if (_offset == value)
+                if (_offset.EqualsApprox(value))
                     return;
 
                 _offset = value;
@@ -57,7 +57,7 @@ namespace Robust.Server.GameObjects.Components.Eye
             get => _rotation;
             set
             {
-                if(_rotation == value)
+                if(_rotation.EqualsApprox(value))
                     return;
 
                 _rotation = value;

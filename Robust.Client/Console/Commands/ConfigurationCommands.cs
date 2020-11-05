@@ -25,8 +25,7 @@ namespace Robust.Client.Console.Commands
 
             if (name == "?")
             {
-                var cvars = configManager.GetRegisteredCVars().ToList();
-                cvars.Sort();
+                var cvars = configManager.GetRegisteredCVars().OrderBy(c => c);
                 console.AddLine(string.Join("\n", cvars));
                 return false;
             }

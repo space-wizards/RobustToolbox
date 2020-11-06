@@ -402,6 +402,8 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+
             DisposeAllChildren();
             Parent?.RemoveChild(this);
 

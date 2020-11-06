@@ -697,6 +697,15 @@ namespace Robust.Client.UserInterface
             _resetTooltipTimer();
         }
 
+
+        public void HideTooltipFor(Control control)
+        {
+            if (CurrentlyHovered == control)
+            {
+                _clearTooltip();
+            }
+        }
+
         private void _resetTooltipTimer()
         {
             _tooltipTimer = TooltipDelay;

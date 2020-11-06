@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -76,6 +76,8 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 CommandBinds.Builder
                     .Bind(bkf, cHandlers)
                     .Register<TypeC>(registry);
+
+                theseHandlers.Reverse();
             }
 
 
@@ -99,6 +101,59 @@ namespace Robust.UnitTesting.Shared.Input.Binding
                 expectedHandlers.RemoveAll(handler => ((TestInputCmdHandler) handler).ForType == typeof(TypeB));
                 HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
                 CollectionAssert.AreEqual(returnedHandlers, expectedHandlers);
+            }
+        }
+
+        [TestCase(1,1)]
+        public void ResolvesHandlers_WhenNoDependenciesOrder(int handlersPerType, int numFunctions)
+        {
+            var registry = new CommandBindRegistry();
+            var handlers = new List<InputCmdHandler>();
+
+            var bkf = new BoundKeyFunction("One");
+
+            var aHandler = new TestInputCmdHandler(typeof(TypeA));
+            var bHandler = new TestInputCmdHandler(typeof(TypeB));
+            var cHandler = new TestInputCmdHandler(typeof(TypeC));
+            handlers.Add(aHandler);
+            handlers.Add(bHandler);
+            handlers.Add(cHandler);
+
+            CommandBinds.Builder
+                .Bind(bkf, aHandler)
+                .Register<TypeA>(registry);
+            CommandBinds.Builder
+                .Bind(bkf, bHandler)
+                .Register<TypeB>(registry);
+            CommandBinds.Builder
+                .Bind(bkf, cHandler)
+                .Register<TypeC>(registry);
+
+            handlers.Reverse();
+
+            HashSet<InputCmdHandler> returnedHandlers = registry.GetHandlers(bkf).ToHashSet();
+
+            CollectionAssert.AreEqual(returnedHandlers, handlers);
+
+            //order doesn't matter, just verify that all handlers are returned
+            var index = 0;
+            foreach (var handler in registry.GetHandlers(bkf))
+            {
+                switch (index)
+                {
+                    case 0:
+                        Assert.That(handler, Is.EqualTo(cHandler));
+                        index++;
+                        break;
+                    case 1:
+                        Assert.That(handler, Is.EqualTo(bHandler));
+                        index++;
+                        break;
+                    case 2:
+                        Assert.That(handler, Is.EqualTo(aHandler));
+                        index++;
+                        break;
+                }
             }
         }
 

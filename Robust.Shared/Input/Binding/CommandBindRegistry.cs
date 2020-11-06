@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
@@ -109,7 +109,7 @@ namespace Robust.Shared.Input.Binding
             List<GraphNode> allNodes = new List<GraphNode>();
             Dictionary<Type,List<GraphNode>> typeToNode = new Dictionary<Type, List<GraphNode>>();
             // build the dict for quick lookup on type
-            foreach (var binding in bindingsForFunction)
+            foreach (var binding in bindingsForFunction.Reverse<TypedCommandBind>())
             {
                 if (!typeToNode.ContainsKey(binding.ForType))
                 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Robust.Client.GameObjects;
 using Robust.Client.Interfaces.Placement;
 using Robust.Client.Interfaces.ResourceManagement;
@@ -10,6 +11,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Localization;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -309,8 +311,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 SelectedButton.ActualButton.Pressed = true;
             }
 
-            var rect = button.EntityTextureRect;
-            rect.Texture = SpriteComponent.GetPrototypeIcon(prototype, resourceCache)?.Default;
+            var rect = button.EntityTextureRects;
+            rect.Textures = SpriteComponent.GetPrototypeTextures(prototype, resourceCache).Select(o => o.Default).ToList();
 
             PrototypeList.AddChild(button);
             if (insertFirst)
@@ -455,7 +457,7 @@ namespace Robust.Client.UserInterface.CustomControls
             public EntityPrototype Prototype { get; set; } = default!;
             public Button ActualButton { get; private set; }
             public Label EntityLabel { get; private set; }
-            public TextureRect EntityTextureRect { get; private set; }
+            public LayeredTextureRect EntityTextureRects { get; private set; }
             public int Index { get; set; }
 
             public EntitySpawnButton()
@@ -471,7 +473,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     Children =
                     {
-                        (EntityTextureRect = new TextureRect
+                        (EntityTextureRects = new LayeredTextureRect
                         {
                             CustomMinimumSize = (32, 32),
                             SizeFlagsHorizontal = SizeFlags.ShrinkCenter,

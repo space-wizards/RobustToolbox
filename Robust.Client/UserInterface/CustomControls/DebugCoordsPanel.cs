@@ -107,7 +107,8 @@ Mouse Pos:
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
-    EntityUid: {3}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid);
+    EntId: {3}
+    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid, entityTransform.GridID);
             }
 
             if (controlHovered != null)

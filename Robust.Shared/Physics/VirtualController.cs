@@ -20,16 +20,14 @@ namespace Robust.Shared.Physics
             get => _linearVelocity;
             set
             {
-                if (_linearVelocity == value)
+                if (value != Vector2.Zero)
+                    ControlledComponent?.WakeBody();
+
+                if (_linearVelocity.EqualsApprox(value, 0.0001))
                     return;
 
                 _linearVelocity = value;
-
-                if (ControlledComponent != null)
-                {
-                    ControlledComponent.WakeBody();
-                    ControlledComponent.Dirty();
-                }
+                ControlledComponent?.Dirty();
             }
         }
 

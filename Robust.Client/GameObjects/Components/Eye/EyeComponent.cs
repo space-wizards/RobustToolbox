@@ -86,7 +86,7 @@ namespace Robust.Client.GameObjects
             get => _offset;
             set
             {
-                if(_offset == value)
+                if(_offset.EqualsApprox(value))
                     return;
 
                 _offset = value;

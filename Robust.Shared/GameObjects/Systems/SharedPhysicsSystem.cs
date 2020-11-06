@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -188,8 +189,10 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 foreach (var physics in simulatedBodies)
                 {
-                    if(physics.CanMove())
+                    if (physics.CanMove())
+                    {
                         UpdatePosition(physics, deltaTime / divisions);
+                    }
                 }
 
                 for (var j = 0; j < divisions; ++j)
@@ -219,7 +222,7 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero, false))
                 {
                     var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
@@ -268,11 +271,10 @@ namespace Robust.Shared.GameObjects.Systems
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = collision.A.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in aBehaviors)
+                foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.B.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {
@@ -283,11 +285,11 @@ namespace Robust.Shared.GameObjects.Systems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = collision.B.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in bBehaviors)
+
+                foreach (var behavior in collision.B.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.A.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {
@@ -386,8 +388,29 @@ namespace Robust.Shared.GameObjects.Systems
             if (physics.LinearVelocity.Length > _speedLimit)
                 physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
 
+            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var owner = physics.Owner;
+            var transform = owner.Transform;
+
+            // Change parent if necessary
+            if (!ContainerHelpers.IsInContainer(owner))
+            {
+                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
+                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != owner.Uid)
+                {
+                    if (grid.GridEntityId != transform.ParentUid)
+                        transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                }
+            }
+
             physics.WorldRotation += physics.AngularVelocity * frameTime;
-            physics.WorldPosition += physics.LinearVelocity * frameTime;
+            physics.WorldPosition = newPosition;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code

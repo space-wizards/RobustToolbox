@@ -27,7 +27,7 @@ namespace Robust.Client.UserInterface.Controls
         /// Opposite dimension of LimitedDimension
         /// </summary>
         public Dimension UnlimitedDimension => _limitDimension == Dimension.Column ? Dimension.Row : Dimension.Column;
-        
+
         /// <summary>
         /// The "normal" direction of expansion when the defined row or column limit is met
         /// is right (for row-limited) and down (for column-limited),

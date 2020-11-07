@@ -9,9 +9,7 @@ namespace Robust.Shared.GameObjects.Systems
         {
             base.Update(frameTime);
             // Avoid a collection was modified while enumerating.
-            var timers = ComponentManager.EntityQuery<TimerComponent>(false).ToList();
-
-            foreach (var timer in timers)
+            foreach (var timer in ComponentManager.EntityQuery<TimerComponent>(false).ToList())
             {
                 timer.Update(frameTime);
             }

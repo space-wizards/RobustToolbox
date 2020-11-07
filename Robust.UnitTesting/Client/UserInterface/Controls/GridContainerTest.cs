@@ -172,7 +172,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 
             grid.ForceRunLayoutUpdate();
 
-            Assert.That(grid.CombinedMinimumSize, Is.EqualTo(new Vector2(104, 158)));
+            Assert.That(grid.CombinedMinimumSize, Is.EqualTo(new Vector2(158, 104)));
 
             Assert.That(child1.Position, Is.EqualTo(new Vector2(108, 0)));
             Assert.That(child2.Position, Is.EqualTo(new Vector2(108, 54)));

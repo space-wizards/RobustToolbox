@@ -42,6 +42,7 @@ namespace Robust.Client.UserInterface.Controls
                 UpdateLayout();
             }
         }
+        private bool _expandBackwards;
 
         /// <summary>
         ///     The amount of columns to organize the children into. Setting this puts this grid
@@ -85,7 +86,6 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private int? _hSeparationOverride;
-        private bool _expandBackwards;
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public int? HSeparationOverride

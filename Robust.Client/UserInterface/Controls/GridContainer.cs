@@ -5,54 +5,58 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
-    ///     A container that lays out its children in a grid.
+    ///     A container that lays out its children in a grid. Can define specific amount of
+    ///     rows or specific amount of columns (not both), and will grow to fill in additional rows/columns within
+    ///     that limit.
     /// </summary>
     public class GridContainer : Container
     {
-        private int _columns = 1;
+        // limit - depending on mode, this is either rows or columns
+        private int _limitedDimensionAmount = 1;
+
+        private Dimension _limitDimension = Dimension.Column;
 
         /// <summary>
-        ///     The amount of columns to organize the children into.
+        /// Indicates whether row or column amount has been specified, and thus
+        /// how items will fill them out as they are added.
+        /// This is set depending on whether you have specified Columns or Rows.
+        /// </summary>
+        public Dimension LimitedDimension => _limitDimension;
+        /// <summary>
+        /// Opposite dimension of LimitedDimension
+        /// </summary>
+        public Dimension UnlimitedDimension => _limitDimension == Dimension.Column ? Dimension.Row : Dimension.Column;
+
+        /// <summary>
+        ///     The amount of columns to organize the children into. Setting this puts this grid
+        ///     into LimitMode.LimitColumns - items will be added to fill up the entire row, up to the defined
+        ///     limit of columns, and then create a second row.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
+        /// <returns>specified limit if LimitMode.LimitColums, otherwise the amount
+        /// of columns being used for the current amount of children.</returns>
         public int Columns
         {
-            get => _columns;
-            set
-            {
-                if (value <= 0)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
-                }
-
-                _columns = value;
-                MinimumSizeChanged();
-                UpdateLayout();
-            }
+            get => GetAmount(Dimension.Column);
+            set => SetAmount(Dimension.Column, value);
         }
 
         /// <summary>
-        ///     The amount of rows being used for the current amount of children.
+        ///     The amount of rows to organize the children into. Setting this puts this grid
+        ///     into LimitMode.LimitRows - items will be added to fill up the entire column, up to the defined
+        ///     limit of rows, and then create a second column.
         /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the value assigned is less than or equal to 0.
+        /// </exception>
+        /// <returns>specified limit if LimitMode.LimitRows, otherwise the amount
+        /// of rows being used for the current amount of children.</returns>
         public int Rows
         {
-            get
-            {
-                if (ChildCount == 0)
-                {
-                    return 1;
-                }
-
-                var div = ChildCount / Columns;
-                if (ChildCount % Columns != 0)
-                {
-                    div += 1;
-                }
-
-                return div;
-            }
+            get => GetAmount(Dimension.Row);
+            set => SetAmount(Dimension.Row, value);
         }
 
         private int? _vSeparationOverride;
@@ -75,15 +79,48 @@ namespace Robust.Client.UserInterface.Controls
 
         private Vector2i Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
 
+        private int GetAmount(Dimension forDimension)
+        {
+            if (forDimension == _limitDimension) return _limitedDimensionAmount;
+            if (ChildCount == 0)
+            {
+                return 1;
+            }
+
+            var divisor = (_limitDimension == Dimension.Column ? Columns : Rows);
+            var div = ChildCount / divisor;
+            if (ChildCount % divisor != 0)
+            {
+                div += 1;
+            }
+
+            return div;
+        }
+
+        private void SetAmount(Dimension forDimension, int value)
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
+            }
+
+            _limitDimension = forDimension;
+
+            _limitedDimensionAmount = value;
+            MinimumSizeChanged();
+            UpdateLayout();
+        }
+
         protected override Vector2 CalculateMinimumSize()
         {
-            var (wSep, hSep) = (Vector2i) (Separations * UIScale);
-            var rows = Rows;
+            var unlimitedDimensionAmount = GetAmount(UnlimitedDimension);
 
-            // Minimum width of the columns.
-            Span<int> columnWidths = stackalloc int[_columns];
-            // Minimum height of the rows.
-            Span<int> rowHeights = stackalloc int[rows];
+            // Minimum lateral size of the limited dimension
+            // (i.e. width of columns, height of rows).
+            Span<int> limitedSize = stackalloc int[_limitedDimensionAmount];
+            // Minimum lateral size of the unlimited dimension
+            // (i.e. width of columns, height of rows).
+            Span<int> unlimitedSize = stackalloc int[unlimitedDimensionAmount];
 
             var index = 0;
             foreach (var child in Children)
@@ -94,34 +131,44 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var limitedIdx = index % _limitedDimensionAmount;
+                var unlimitedIdx = index / _limitedDimensionAmount;
+
 
                 var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-                columnWidths[column] = Math.Max(minSizeX, columnWidths[column]);
-                rowHeights[row] = Math.Max(minSizeY, rowHeights[row]);
+                var minSizeLimited = _limitDimension == Dimension.Row ? minSizeY : minSizeX;
+                var minSizeUnlimited = UnlimitedDimension == Dimension.Row ? minSizeY : minSizeX;
+                limitedSize[limitedIdx] = Math.Max(minSizeLimited, limitedSize[limitedIdx]);
+                unlimitedSize[unlimitedIdx] = Math.Max(minSizeUnlimited, unlimitedSize[unlimitedIdx]);
 
                 index += 1;
             }
 
-            var minWidth = AccumSizes(columnWidths, wSep);
-            var minHeight = AccumSizes(rowHeights, hSep);
+            var (wSep, hSep) = (Vector2i) (Separations * UIScale);
+            var limitedDimensionSep = _limitDimension == Dimension.Row ? hSep : wSep;
+            var unlimitedDimensionSep = UnlimitedDimension == Dimension.Row ? hSep : wSep;
+            var minLimitedDimension = AccumSizes(limitedSize, limitedDimensionSep);
+            var minUnlimitedDimension = AccumSizes(unlimitedSize, unlimitedDimensionSep);
 
-            return new Vector2(minWidth, minHeight) / UIScale;
+            // the min of columns is width, the min of rows is height,
+            // so if we limited columns, the minLimitedDimension is our width, i.e. x coord
+            return new Vector2(
+                _limitDimension == Dimension.Column ? minLimitedDimension : minUnlimitedDimension,
+                _limitDimension == Dimension.Column ? minUnlimitedDimension : minLimitedDimension) / UIScale;
         }
 
         private static int AccumSizes(Span<int> sizes, int separator)
         {
             var totalSize = 0;
-            var firstColumn = true;
+            var first = true;
 
             foreach (var size in sizes)
             {
                 totalSize += size;
 
-                if (firstColumn)
+                if (first)
                 {
-                    firstColumn = false;
+                    first = false;
                 }
                 else
                 {
@@ -134,16 +181,20 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void LayoutUpdateOverride()
         {
-            var rows = Rows;
+            var unlimitedDimensionAmount = GetAmount(UnlimitedDimension);
 
-            // Minimum width of the columns.
-            Span<int> columnWidths = stackalloc int[_columns];
-            // Minimum height of the rows.
-            Span<int> rowHeights = stackalloc int[rows];
-            // Columns that are set to expand horizontally.
-            Span<bool> columnExpandWidth = stackalloc bool[_columns];
-            // Rows that are set to expand vertically.
-            Span<bool> rowExpandHeight = stackalloc bool[rows];
+            // Minimum lateral size of the limited dimension
+            // (i.e. width of columns, height of rows).
+            Span<int> limitedSize = stackalloc int[_limitedDimensionAmount];
+            // Minimum lateral size of the unlimited dimension
+            // (i.e. width of columns, height of rows).
+            Span<int> unlimitedSize = stackalloc int[unlimitedDimensionAmount];
+            // elements of the limited dimension that are set to expand laterally
+            // (i.e. if limited dimension is column, this is indicating which column
+            // is set to expand horizontally)
+            Span<bool> limitedExpandSize = stackalloc bool[_limitedDimensionAmount];
+            // elements of the unlimited dimension that are set to expand laterally
+            Span<bool> unlimitedExpandSize = stackalloc bool[unlimitedDimensionAmount];
 
             // Get minSize and size flag expand of each column and row.
             // All we need to apply the same logic BoxContainer does.
@@ -155,83 +206,96 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var limitedIdx = index % _limitedDimensionAmount;
+                var unlimitedIdx = index / _limitedDimensionAmount;
 
                 var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-                columnWidths[column] = Math.Max(minSizeX, columnWidths[column]);
-                rowHeights[row] = Math.Max(minSizeY, rowHeights[row]);
-                columnExpandWidth[column] = columnExpandWidth[column] || (child.SizeFlagsHorizontal & SizeFlags.Expand) != 0;
-                rowExpandHeight[row] = rowExpandHeight[row] || (child.SizeFlagsVertical & SizeFlags.Expand) != 0;
+                var minSizeLimited = _limitDimension == Dimension.Column ? minSizeX : minSizeY;
+                var minSizeUnlimited = UnlimitedDimension == Dimension.Column ? minSizeX : minSizeY;
+                limitedSize[limitedIdx] = Math.Max(minSizeLimited, limitedSize[limitedIdx]);
+                unlimitedSize[unlimitedIdx] = Math.Max(minSizeUnlimited, unlimitedSize[unlimitedIdx]);
+                var limitedSizeFlag = _limitDimension == Dimension.Column
+                    ? child.SizeFlagsHorizontal
+                    : child.SizeFlagsVertical;
+                var unlimitedSizeFlag = UnlimitedDimension == Dimension.Column
+                    ? child.SizeFlagsHorizontal
+                    : child.SizeFlagsVertical;
+                limitedExpandSize[limitedIdx] = limitedExpandSize[limitedIdx] || (limitedSizeFlag & SizeFlags.Expand) != 0;
+                unlimitedExpandSize[unlimitedIdx] = unlimitedExpandSize[unlimitedIdx] || (unlimitedSizeFlag & SizeFlags.Expand) != 0;
 
                 index += 1;
             }
 
             // Basically now we just apply BoxContainer logic on rows and columns.
-            var (vSep, hSep) = (Vector2i) (Separations * UIScale);
-            var stretchMinX = 0;
-            var stretchMinY = 0;
+            var stretchMinLimited = 0;
+            var stretchMinUnlimited = 0;
             // We do not use stretch ratios because Godot doesn't,
             // which makes sense since what happens if two things on the same column have a different stretch ratio?
             // Maybe there's an answer for that but I'm too lazy to think of a concrete solution
             // and it would make this code more complex so...
             // pass.
-            var stretchCountX = 0;
-            var stretchCountY = 0;
+            var stretchCountLimited = 0;
+            var stretchCountUnlimited = 0;
 
-            for (var i = 0; i < columnWidths.Length; i++)
+            for (var i = 0; i < limitedSize.Length; i++)
             {
-                if (!columnExpandWidth[i])
+                if (!limitedExpandSize[i])
                 {
-                    stretchMinX += columnWidths[i];
+                    stretchMinLimited += limitedSize[i];
                 }
                 else
                 {
-                    stretchCountX++;
+                    stretchCountLimited++;
                 }
             }
 
-            for (var i = 0; i < rowHeights.Length; i++)
+            for (var i = 0; i < unlimitedSize.Length; i++)
             {
-                if (!rowExpandHeight[i])
+                if (!unlimitedExpandSize[i])
                 {
-                    stretchMinY += rowHeights[i];
+                    stretchMinUnlimited += unlimitedSize[i];
                 }
                 else
                 {
-                    stretchCountY++;
+                    stretchCountUnlimited++;
                 }
             }
 
-            var stretchMaxX = Width - hSep * (_columns - 1);
-            var stretchMaxY = Height - vSep * (rows - 1);
+            var (vSep, hSep) = (Vector2i) (Separations * UIScale);
+            var limitedDimensionSep = _limitDimension == Dimension.Column ? hSep : vSep;
+            var unlimitedDimensionSep = UnlimitedDimension == Dimension.Column ? hSep : vSep;
+            var limitedDimSize = _limitDimension == Dimension.Column ? Width : Height;
+            var unlimitedDimSize = UnlimitedDimension == Dimension.Column ? Width : Height;
 
-            var stretchAvailX = Math.Max(0, stretchMaxX - stretchMinX);
-            var stretchAvailY = Math.Max(0, stretchMaxY - stretchMinY);
+            var stretchMaxLimited = limitedDimSize - limitedDimensionSep * (_limitedDimensionAmount - 1);
+            var stretchMaxUnlimited = unlimitedDimSize - unlimitedDimensionSep * (unlimitedDimensionAmount - 1);
 
-            for (var i = 0; i < columnWidths.Length; i++)
+            var stretchAvailLimited = Math.Max(0, stretchMaxLimited - stretchMinLimited);
+            var stretchAvailUnlimited = Math.Max(0, stretchMaxUnlimited - stretchMinUnlimited);
+
+            for (var i = 0; i < limitedSize.Length; i++)
             {
-                if (!columnExpandWidth[i])
+                if (!limitedExpandSize[i])
                 {
                     continue;
                 }
 
-                columnWidths[i] = (int) (stretchAvailX / stretchCountX);
+                limitedSize[i] = (int) (stretchAvailLimited / stretchCountLimited);
             }
 
-            for (var i = 0; i < rowHeights.Length; i++)
+            for (var i = 0; i < unlimitedSize.Length; i++)
             {
-                if (!rowExpandHeight[i])
+                if (!unlimitedExpandSize[i])
                 {
                     continue;
                 }
 
-                rowHeights[i] = (int) (stretchAvailY / stretchCountY);
+                unlimitedSize[i] = (int) (stretchAvailUnlimited / stretchCountUnlimited);
             }
 
             // Actually lay them out.
-            var vOffset = 0;
-            var hOffset = 0;
+            var limitedOffset = 0;
+            var unlimitedOffset = 0;
             index = 0;
             for (var i = 0; i < ChildCount; i++, index++)
             {
@@ -242,24 +306,35 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var limitedIdx = index % _limitedDimensionAmount;
+                var unlimitedIdx = index / _limitedDimensionAmount;
 
-                if (column == 0)
+                if (limitedIdx == 0)
                 {
-                    // Just started a new row.
-                    hOffset = 0;
-                    if (row != 0)
+                    // Just started a new row/col.
+                    limitedOffset = 0;
+                    if (unlimitedIdx != 0)
                     {
-                        vOffset += vSep + rowHeights[row - 1];
+                        unlimitedOffset += unlimitedDimensionSep + unlimitedSize[unlimitedIdx - 1];
                     }
                 }
 
-                var box = UIBox2i.FromDimensions(hOffset, vOffset, columnWidths[column], rowHeights[row]);
+                var left = _limitDimension == Dimension.Column ? limitedOffset : unlimitedOffset;
+                var top = UnlimitedDimension == Dimension.Column ? limitedOffset : unlimitedOffset;
+                var width = _limitDimension == Dimension.Column ? limitedSize[limitedIdx] : unlimitedSize[unlimitedIdx];
+                var height = UnlimitedDimension == Dimension.Column ? limitedSize[limitedIdx] : unlimitedSize[unlimitedIdx];
+
+                var box = UIBox2i.FromDimensions(left, top, width, height);
                 FitChildInPixelBox(child, box);
 
-                hOffset += columnWidths[column] + hSep;
+                limitedOffset += limitedSize[limitedIdx] + limitedDimensionSep;
             }
         }
+    }
+
+    public enum Dimension
+    {
+        Column,
+        Row
     }
 }

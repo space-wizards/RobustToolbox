@@ -113,14 +113,18 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override Vector2 CalculateMinimumSize()
         {
-            var unlimitedDimensionAmount = GetAmount(UnlimitedDimension);
+            // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
+            // rows and cols,
+            // but at the start of the method here we'll set those to what they actually are based
+            // on the limited dimension, which might involve swapping them.
+            // For the below convention, we pretend that columns have a limit defined, thus
+            // the amount of rows is not limited (unlimited).
 
-            // Minimum lateral size of the limited dimension
-            // (i.e. width of columns, height of rows).
-            Span<int> limitedSize = stackalloc int[_limitedDimensionAmount];
-            // Minimum lateral size of the unlimited dimension
-            // (i.e. width of columns, height of rows).
-            Span<int> unlimitedSize = stackalloc int[unlimitedDimensionAmount];
+            var rows = GetAmount(UnlimitedDimension);
+            var cols = _limitedDimensionAmount;
+
+            Span<int> minColWidth = stackalloc int[cols];
+            Span<int> minRowHeight = stackalloc int[rows];
 
             var index = 0;
             foreach (var child in Children)
@@ -131,30 +135,30 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var limitedIdx = index % _limitedDimensionAmount;
-                var unlimitedIdx = index / _limitedDimensionAmount;
+                var column = index % cols;
+                var row = index / cols;
 
-
-                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-                var minSizeLimited = _limitDimension == Dimension.Row ? minSizeY : minSizeX;
-                var minSizeUnlimited = UnlimitedDimension == Dimension.Row ? minSizeY : minSizeX;
-                limitedSize[limitedIdx] = Math.Max(minSizeLimited, limitedSize[limitedIdx]);
-                unlimitedSize[unlimitedIdx] = Math.Max(minSizeUnlimited, unlimitedSize[unlimitedIdx]);
+                // also converting here to our "pretend" scenario where columns have a limit defined
+                var (minSizeXActual, minSizeYActual) = child.CombinedPixelMinimumSize;
+                var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
+                var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
+                minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
+                minRowHeight[row] = Math.Max(minSizeY, minRowHeight[row]);
 
                 index += 1;
             }
 
-            var (wSep, hSep) = (Vector2i) (Separations * UIScale);
-            var limitedDimensionSep = _limitDimension == Dimension.Row ? hSep : wSep;
-            var unlimitedDimensionSep = UnlimitedDimension == Dimension.Row ? hSep : wSep;
-            var minLimitedDimension = AccumSizes(limitedSize, limitedDimensionSep);
-            var minUnlimitedDimension = AccumSizes(unlimitedSize, unlimitedDimensionSep);
+            // converting here to our "pretend" scenario where columns have a limit defined
+            var (wSepActual, hSepActual) = (Vector2i) (Separations * UIScale);
+            var wSep = _limitDimension == Dimension.Column ? wSepActual : hSepActual;
+            var hSep = _limitDimension == Dimension.Column ? hSepActual : wSepActual;
+            var minWidth = AccumSizes(minColWidth, wSep);
+            var minHeight = AccumSizes(minRowHeight, hSep);
 
-            // the min of columns is width, the min of rows is height,
-            // so if we limited columns, the minLimitedDimension is our width, i.e. x coord
+            // converting back from our pretend scenario where columns are limited
             return new Vector2(
-                _limitDimension == Dimension.Column ? minLimitedDimension : minUnlimitedDimension,
-                _limitDimension == Dimension.Column ? minUnlimitedDimension : minLimitedDimension) / UIScale;
+                _limitDimension == Dimension.Column ? minWidth : minHeight,
+                _limitDimension == Dimension.Column ? minHeight : minWidth) / UIScale;
         }
 
         private static int AccumSizes(Span<int> sizes, int separator)
@@ -181,20 +185,24 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void LayoutUpdateOverride()
         {
-            var unlimitedDimensionAmount = GetAmount(UnlimitedDimension);
+            // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
+            // rows and cols,
+            // but at the start of the method here we'll set those to what they actually are based
+            // on the limited dimension, which might involve swapping them.
+            // For the below convention, we pretend that columns have a limit defined, thus
+            // the amount of rows is not limited (unlimited).
 
-            // Minimum lateral size of the limited dimension
-            // (i.e. width of columns, height of rows).
-            Span<int> limitedSize = stackalloc int[_limitedDimensionAmount];
+            var rows = GetAmount(UnlimitedDimension);
+            var cols = _limitedDimensionAmount;
+
+            Span<int> minColWidth = stackalloc int[cols];
             // Minimum lateral size of the unlimited dimension
             // (i.e. width of columns, height of rows).
-            Span<int> unlimitedSize = stackalloc int[unlimitedDimensionAmount];
-            // elements of the limited dimension that are set to expand laterally
-            // (i.e. if limited dimension is column, this is indicating which column
-            // is set to expand horizontally)
-            Span<bool> limitedExpandSize = stackalloc bool[_limitedDimensionAmount];
-            // elements of the unlimited dimension that are set to expand laterally
-            Span<bool> unlimitedExpandSize = stackalloc bool[unlimitedDimensionAmount];
+            Span<int> minRowHeight = stackalloc int[rows];
+            // columns that are set to expand vertically
+            Span<bool> colExpand = stackalloc bool[cols];
+            // rows that are set to expand horizontally
+            Span<bool> rowExpand = stackalloc bool[rows];
 
             // Get minSize and size flag expand of each column and row.
             // All we need to apply the same logic BoxContainer does.
@@ -206,96 +214,98 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var limitedIdx = index % _limitedDimensionAmount;
-                var unlimitedIdx = index / _limitedDimensionAmount;
+                var column = index % cols;
+                var row = index / cols;
 
-                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
-                var minSizeLimited = _limitDimension == Dimension.Column ? minSizeX : minSizeY;
-                var minSizeUnlimited = UnlimitedDimension == Dimension.Column ? minSizeX : minSizeY;
-                limitedSize[limitedIdx] = Math.Max(minSizeLimited, limitedSize[limitedIdx]);
-                unlimitedSize[unlimitedIdx] = Math.Max(minSizeUnlimited, unlimitedSize[unlimitedIdx]);
-                var limitedSizeFlag = _limitDimension == Dimension.Column
+                // converting here to our "pretend" scenario where columns have a limit defined
+                var (minSizeXActual, minSizeYActual) = child.CombinedPixelMinimumSize;
+                var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
+                var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
+                minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
+                minRowHeight[row] = Math.Max(minSizeY, minRowHeight[row]);
+                var colSizeFlag = _limitDimension == Dimension.Column
                     ? child.SizeFlagsHorizontal
                     : child.SizeFlagsVertical;
-                var unlimitedSizeFlag = UnlimitedDimension == Dimension.Column
+                var rowSizeFlag = UnlimitedDimension == Dimension.Column
                     ? child.SizeFlagsHorizontal
                     : child.SizeFlagsVertical;
-                limitedExpandSize[limitedIdx] = limitedExpandSize[limitedIdx] || (limitedSizeFlag & SizeFlags.Expand) != 0;
-                unlimitedExpandSize[unlimitedIdx] = unlimitedExpandSize[unlimitedIdx] || (unlimitedSizeFlag & SizeFlags.Expand) != 0;
+                colExpand[column] = colExpand[column] || (colSizeFlag & SizeFlags.Expand) != 0;
+                rowExpand[row] = rowExpand[row] || (rowSizeFlag & SizeFlags.Expand) != 0;
 
                 index += 1;
             }
 
             // Basically now we just apply BoxContainer logic on rows and columns.
-            var stretchMinLimited = 0;
-            var stretchMinUnlimited = 0;
+            var stretchMinX = 0;
+            var stretchMinY = 0;
             // We do not use stretch ratios because Godot doesn't,
             // which makes sense since what happens if two things on the same column have a different stretch ratio?
             // Maybe there's an answer for that but I'm too lazy to think of a concrete solution
             // and it would make this code more complex so...
             // pass.
-            var stretchCountLimited = 0;
-            var stretchCountUnlimited = 0;
+            var stretchCountX = 0;
+            var stretchCountY = 0;
 
-            for (var i = 0; i < limitedSize.Length; i++)
+            for (var i = 0; i < minColWidth.Length; i++)
             {
-                if (!limitedExpandSize[i])
+                if (!colExpand[i])
                 {
-                    stretchMinLimited += limitedSize[i];
+                    stretchMinX += minColWidth[i];
                 }
                 else
                 {
-                    stretchCountLimited++;
+                    stretchCountX++;
                 }
             }
 
-            for (var i = 0; i < unlimitedSize.Length; i++)
+            for (var i = 0; i < minRowHeight.Length; i++)
             {
-                if (!unlimitedExpandSize[i])
+                if (!rowExpand[i])
                 {
-                    stretchMinUnlimited += unlimitedSize[i];
+                    stretchMinY += minRowHeight[i];
                 }
                 else
                 {
-                    stretchCountUnlimited++;
+                    stretchCountY++;
                 }
             }
 
-            var (vSep, hSep) = (Vector2i) (Separations * UIScale);
-            var limitedDimensionSep = _limitDimension == Dimension.Column ? hSep : vSep;
-            var unlimitedDimensionSep = UnlimitedDimension == Dimension.Column ? hSep : vSep;
-            var limitedDimSize = _limitDimension == Dimension.Column ? Width : Height;
-            var unlimitedDimSize = UnlimitedDimension == Dimension.Column ? Width : Height;
+            // converting here to our "pretend" scenario where columns have a limit defined
+            var (vSepActual, hSepActual) = (Vector2i) (Separations * UIScale);
+            var hSep = _limitDimension == Dimension.Column ? hSepActual : vSepActual;
+            var vSep = _limitDimension == Dimension.Column ? vSepActual : hSepActual;
+            var width = _limitDimension == Dimension.Column ? Width : Height;
+            var height = _limitDimension == Dimension.Column ? Height : Width;
 
-            var stretchMaxLimited = limitedDimSize - limitedDimensionSep * (_limitedDimensionAmount - 1);
-            var stretchMaxUnlimited = unlimitedDimSize - unlimitedDimensionSep * (unlimitedDimensionAmount - 1);
+            var stretchMaxX = width - hSep * (cols - 1);
+            var stretchMaxY = height - vSep * (rows - 1);
 
-            var stretchAvailLimited = Math.Max(0, stretchMaxLimited - stretchMinLimited);
-            var stretchAvailUnlimited = Math.Max(0, stretchMaxUnlimited - stretchMinUnlimited);
+            var stretchAvailX = Math.Max(0, stretchMaxX - stretchMinX);
+            var stretchAvailY = Math.Max(0, stretchMaxY - stretchMinY);
 
-            for (var i = 0; i < limitedSize.Length; i++)
+            for (var i = 0; i < minColWidth.Length; i++)
             {
-                if (!limitedExpandSize[i])
+                if (!colExpand[i])
                 {
                     continue;
                 }
 
-                limitedSize[i] = (int) (stretchAvailLimited / stretchCountLimited);
+                minColWidth[i] = (int) (stretchAvailX / stretchCountX);
             }
 
-            for (var i = 0; i < unlimitedSize.Length; i++)
+            for (var i = 0; i < minRowHeight.Length; i++)
             {
-                if (!unlimitedExpandSize[i])
+                if (!rowExpand[i])
                 {
                     continue;
                 }
 
-                unlimitedSize[i] = (int) (stretchAvailUnlimited / stretchCountUnlimited);
+                minRowHeight[i] = (int) (stretchAvailY / stretchCountY);
             }
 
             // Actually lay them out.
-            var limitedOffset = 0;
-            var unlimitedOffset = 0;
+            var hOffset = 0;
+            var vOffset = 0;
             index = 0;
             for (var i = 0; i < ChildCount; i++, index++)
             {
@@ -306,28 +316,29 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var limitedIdx = index % _limitedDimensionAmount;
-                var unlimitedIdx = index / _limitedDimensionAmount;
+                var column = index % cols;
+                var row = index / cols;
 
-                if (limitedIdx == 0)
+                if (column == 0)
                 {
                     // Just started a new row/col.
-                    limitedOffset = 0;
-                    if (unlimitedIdx != 0)
+                    hOffset = 0;
+                    if (row != 0)
                     {
-                        unlimitedOffset += unlimitedDimensionSep + unlimitedSize[unlimitedIdx - 1];
+                        vOffset += vSep + minRowHeight[row - 1];
                     }
                 }
 
-                var left = _limitDimension == Dimension.Column ? limitedOffset : unlimitedOffset;
-                var top = UnlimitedDimension == Dimension.Column ? limitedOffset : unlimitedOffset;
-                var width = _limitDimension == Dimension.Column ? limitedSize[limitedIdx] : unlimitedSize[unlimitedIdx];
-                var height = UnlimitedDimension == Dimension.Column ? limitedSize[limitedIdx] : unlimitedSize[unlimitedIdx];
+                // converting back from our "pretend" scenario
+                var left = _limitDimension == Dimension.Column ? hOffset : vOffset;
+                var top = _limitDimension == Dimension.Column ? vOffset : hOffset;
+                var boxWidth = _limitDimension == Dimension.Column ? minColWidth[column] : minRowHeight[row];
+                var boxHeight = _limitDimension == Dimension.Column ? minRowHeight[row] : minColWidth[column];
 
-                var box = UIBox2i.FromDimensions(left, top, width, height);
+                var box = UIBox2i.FromDimensions(left, top, boxWidth, boxHeight);
                 FitChildInPixelBox(child, box);
 
-                limitedOffset += limitedSize[limitedIdx] + limitedDimensionSep;
+                hOffset += minColWidth[column] + hSep;
             }
         }
     }

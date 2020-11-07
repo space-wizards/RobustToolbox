@@ -5,21 +5,21 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
-    ///     A container that lays out its children in a grid.
+    ///     GridContainer but row-oriented.
     /// </summary>
-    public class GridContainer : Container
+    public class GridRowContainer : Container
     {
-        private int _columns = 1;
+        private int _rows = 1;
 
         /// <summary>
-        ///     The amount of columns to organize the children into.
+        ///     The amount of rows to organize the children into.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        public int Columns
+        public int Rows
         {
-            get => _columns;
+            get => _rows;
             set
             {
                 if (value <= 0)
@@ -27,16 +27,16 @@ namespace Robust.Client.UserInterface.Controls
                     throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
                 }
 
-                _columns = value;
+                _rows = value;
                 MinimumSizeChanged();
                 UpdateLayout();
             }
         }
 
         /// <summary>
-        ///     The amount of rows being used for the current amount of children.
+        ///     The amount of columns being used for the current amount of children.
         /// </summary>
-        public int Rows
+        public int Columns
         {
             get
             {
@@ -45,8 +45,8 @@ namespace Robust.Client.UserInterface.Controls
                     return 1;
                 }
 
-                var div = ChildCount / Columns;
-                if (ChildCount % Columns != 0)
+                var div = ChildCount / Rows;
+                if (ChildCount % Rows != 0)
                 {
                     div += 1;
                 }
@@ -78,12 +78,12 @@ namespace Robust.Client.UserInterface.Controls
         protected override Vector2 CalculateMinimumSize()
         {
             var (wSep, hSep) = (Vector2i) (Separations * UIScale);
-            var rows = Rows;
+            var cols = Columns;
 
             // Minimum width of the columns.
-            Span<int> columnWidths = stackalloc int[_columns];
+            Span<int> columnWidths = stackalloc int[cols];
             // Minimum height of the rows.
-            Span<int> rowHeights = stackalloc int[rows];
+            Span<int> rowHeights = stackalloc int[_rows];
 
             var index = 0;
             foreach (var child in Children)
@@ -94,8 +94,8 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var row = index % _rows;
+                var column = index / _rows;
 
                 var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
                 columnWidths[column] = Math.Max(minSizeX, columnWidths[column]);
@@ -113,15 +113,15 @@ namespace Robust.Client.UserInterface.Controls
         private static int AccumSizes(Span<int> sizes, int separator)
         {
             var totalSize = 0;
-            var firstColumn = true;
+            var first = true;
 
             foreach (var size in sizes)
             {
                 totalSize += size;
 
-                if (firstColumn)
+                if (first)
                 {
-                    firstColumn = false;
+                    first = false;
                 }
                 else
                 {
@@ -134,16 +134,17 @@ namespace Robust.Client.UserInterface.Controls
 
         protected override void LayoutUpdateOverride()
         {
-            var rows = Rows;
+            var cols = Columns;
 
             // Minimum width of the columns.
-            Span<int> columnWidths = stackalloc int[_columns];
+            Span<int> columnWidths = stackalloc int[cols];
             // Minimum height of the rows.
-            Span<int> rowHeights = stackalloc int[rows];
+            Span<int> rowHeights = stackalloc int[_rows];
             // Columns that are set to expand horizontally.
-            Span<bool> columnExpandWidth = stackalloc bool[_columns];
+            Span<bool> columnExpandWidth = stackalloc bool[cols];
             // Rows that are set to expand vertically.
-            Span<bool> rowExpandHeight = stackalloc bool[rows];
+            Span<bool> rowExpandHeight = stackalloc bool[_rows];
+
 
             // Get minSize and size flag expand of each column and row.
             // All we need to apply the same logic BoxContainer does.
@@ -155,8 +156,8 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var row = index % _rows;
+                var column = index / _rows;
 
                 var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
                 columnWidths[column] = Math.Max(minSizeX, columnWidths[column]);
@@ -203,8 +204,8 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            var stretchMaxX = Width - hSep * (_columns - 1);
-            var stretchMaxY = Height - vSep * (rows - 1);
+            var stretchMaxX = Width - hSep * (cols - 1);
+            var stretchMaxY = Height - vSep * (_rows - 1);
 
             var stretchAvailX = Math.Max(0, stretchMaxX - stretchMinX);
             var stretchAvailY = Math.Max(0, stretchMaxY - stretchMinY);
@@ -242,23 +243,23 @@ namespace Robust.Client.UserInterface.Controls
                     continue;
                 }
 
-                var row = index / _columns;
-                var column = index % _columns;
+                var row = index % _rows;
+                var column = index / _rows;
 
-                if (column == 0)
+                if (row == 0)
                 {
-                    // Just started a new row.
-                    hOffset = 0;
-                    if (row != 0)
+                    // Just started a new column.
+                    vOffset = 0;
+                    if (column != 0)
                     {
-                        vOffset += vSep + rowHeights[row - 1];
+                        hOffset += hSep + columnWidths[column - 1];
                     }
                 }
 
                 var box = UIBox2i.FromDimensions(hOffset, vOffset, columnWidths[column], rowHeights[row]);
                 FitChildInPixelBox(child, box);
 
-                hOffset += columnWidths[column] + hSep;
+                vOffset += rowHeights[row] + vSep;
             }
         }
     }

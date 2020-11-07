@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -26,6 +27,21 @@ namespace Robust.Client.UserInterface.Controls
         /// Opposite dimension of LimitedDimension
         /// </summary>
         public Dimension UnlimitedDimension => _limitDimension == Dimension.Column ? Dimension.Row : Dimension.Column;
+        
+        /// <summary>
+        /// The "normal" direction of expansion when the defined row or column limit is met
+        /// is right (for row-limited) and down (for column-limited),
+        /// this inverts that so the container expands in the opposite direction as elements are added.
+        /// </summary>
+        public bool ExpandBackwards
+        {
+            get => _expandBackwards;
+            set
+            {
+                _expandBackwards = value;
+                UpdateLayout();
+            }
+        }
 
         /// <summary>
         ///     The amount of columns to organize the children into. Setting this puts this grid
@@ -69,6 +85,7 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private int? _hSeparationOverride;
+        private bool _expandBackwards;
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         public int? HSeparationOverride
@@ -304,8 +321,40 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             // Actually lay them out.
+            // if inverted, (in our pretend "columns are limited" scenario) we must calculate the final
+            // height (as height will vary depending on number of elements), and then
+            // go backwards, starting from the bottom and filling elements in upwards
+            var finalVOffset = 0;
+            if (ExpandBackwards)
+            {
+                // we have to iterate through the elements first to determine the height each
+                // row will end up having, as they can vary
+                index = 0;
+                for (var i = 0; i < ChildCount; i++, index++)
+                {
+                    var child = GetChild(i);
+                    if (!child.Visible)
+                    {
+                        index--;
+                        continue;
+                    }
+
+                    var column = index % cols;
+                    var row = index / cols;
+
+                    if (column == 0)
+                    {
+                        // Just started a new row/col.
+                        if (row != 0)
+                        {
+                            finalVOffset += vSep + minRowHeight[row - 1];
+                        }
+                    }
+                }
+            }
+
             var hOffset = 0;
-            var vOffset = 0;
+            var vOffset = ExpandBackwards ? finalVOffset : 0;
             index = 0;
             for (var i = 0; i < ChildCount; i++, index++)
             {
@@ -321,11 +370,21 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (column == 0)
                 {
-                    // Just started a new row/col.
+                    // Just started a new row
                     hOffset = 0;
                     if (row != 0)
                     {
-                        vOffset += vSep + minRowHeight[row - 1];
+                        if (ExpandBackwards)
+                        {
+                            // every time we start a new row we actually decrease the voffset, we are filling
+                            // in the up direction
+                            vOffset -= vSep + minRowHeight[row - 1];
+                        }
+                        else
+                        {
+                            vOffset += vSep + minRowHeight[row - 1];
+                        }
+
                     }
                 }
 

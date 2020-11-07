@@ -1834,9 +1834,9 @@ namespace Robust.Client.GameObjects
             if (prototype.Components.TryGetValue("Appearance", out _))
             {
                 var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                appearanceComponent.Initialize();
                 foreach (var layer in appearanceComponent.Visualizers)
                 {
+                    layer.InitializeEntity(dummy);
                     layer.OnChangeData(appearanceComponent);
                 }
             }

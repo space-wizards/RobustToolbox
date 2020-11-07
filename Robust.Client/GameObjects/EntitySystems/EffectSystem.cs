@@ -46,14 +46,14 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
             var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager, _entityManager);
-            overlayManager.AddOverlay(overlay);
+            overlayManager.AddOverlay(Guid.NewGuid(), overlay);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
 
-            overlayManager.RemoveOverlay("EffectSystem");
+            overlayManager.RemoveOverlaysOfClass("EffectSystem");
         }
 
         public void CreateEffect(EffectSystemMessage message)
@@ -352,8 +352,7 @@ namespace Robust.Client.GameObjects
             private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base(
-                "EffectSystem")
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base()
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();

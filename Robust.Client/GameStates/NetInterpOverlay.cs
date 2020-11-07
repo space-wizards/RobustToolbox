@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
+using System;
 
 namespace Robust.Client.GameStates
 {
@@ -24,7 +25,7 @@ namespace Robust.Client.GameStates
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
 
-        public NetInterpOverlay() : base(nameof(NetInterpOverlay))
+        public NetInterpOverlay() : base()
         {
             IoCManager.InjectDependencies(this);
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
@@ -91,14 +92,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if (bValue && !overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                if (bValue && !overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
                 {
-                    overlayMan.AddOverlay(new NetInterpOverlay());
+                    overlayMan.AddOverlay(Guid.NewGuid(), new NetInterpOverlay());
                     console.AddLine("Enabled network interp overlay.");
                 }
-                else if (overlayMan.HasOverlay(nameof(NetInterpOverlay)))
+                else if (overlayMan.HasOverlayOfClass(nameof(NetInterpOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetInterpOverlay));
+                    overlayMan.RemoveOverlaysOfClass(nameof(NetInterpOverlay));
                     console.AddLine("Disabled network interp overlay.");
                 }
 

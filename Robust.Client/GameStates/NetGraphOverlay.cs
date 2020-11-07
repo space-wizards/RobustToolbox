@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
@@ -41,7 +42,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new List<(GameTick Tick, int Payload, int lag, int interp)>(HistorySize+10);
 
-        public NetGraphOverlay() : base(nameof(NetGraphOverlay))
+        public NetGraphOverlay() : base()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();
@@ -190,14 +191,14 @@ namespace Robust.Client.GameStates
                 var bValue = iValue > 0;
                 var overlayMan = IoCManager.Resolve<IOverlayManager>();
 
-                if(bValue && !overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                if(bValue && !overlayMan.HasOverlayOfClass(nameof(NetGraphOverlay)))
                 {
-                    overlayMan.AddOverlay(new NetGraphOverlay());
+                    overlayMan.AddOverlay(Guid.NewGuid(), new NetGraphOverlay());
                     console.AddLine("Enabled network overlay.");
                 }
-                else if(overlayMan.HasOverlay(nameof(NetGraphOverlay)))
+                else if(overlayMan.HasOverlayOfClass(nameof(NetGraphOverlay)))
                 {
-                    overlayMan.RemoveOverlay(nameof(NetGraphOverlay));
+                    overlayMan.RemoveOverlaysOfClass(nameof(NetGraphOverlay));
                     console.AddLine("Disabled network overlay.");
                 }
 

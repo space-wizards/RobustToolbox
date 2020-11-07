@@ -10,12 +10,15 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
     [PublicAPI]
     public interface IOverlayManager
     {
-        void AddOverlay(Guid ID, Overlay overlay);
-        void RemoveOverlay(Guid ID);
-        bool HasOverlay(Guid ID);
+        void AddOverlay(Guid id, Overlay overlay);
+        void RemoveOverlay(Guid id);
+        void RemoveOverlaysOfClass(string className);
+        bool HasOverlay(Guid id);
+        bool HasOverlayOfClass(string className);
 
-        Overlay GetOverlay(Guid ID);
-        T[] GetOverlaysOfType<T>() where T : Overlay;
+        Overlay GetOverlay(Guid id);
+        bool GetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay;
+        bool GetOverlaysOfClass(string className, out List<Overlay> overlays);
         int GetOverlayTypeCount<T>() where T : Overlay;
 
         bool TryGetOverlay(Guid id, [NotNullWhen(true)] out Overlay? overlay);

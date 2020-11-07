@@ -18,10 +18,6 @@ namespace Robust.Client.Graphics.Overlays
     [PublicAPI]
     public abstract class Overlay
     {
-        /// <summary>
-        ///     The ID of this overlay. This is used to identify it inside the <see cref="IOverlayManager"/>.
-        /// </summary>
-        public string ID { get; }
 
         public virtual bool AlwaysDirty => false;
         public bool IsDirty => AlwaysDirty || _isDirty;
@@ -54,10 +50,9 @@ namespace Robust.Client.Graphics.Overlays
 
         private bool Disposed;
 
-        protected Overlay(string id)
+        protected Overlay()
         {
             OverlayManager = IoCManager.Resolve<IOverlayManager>();
-            ID = id;
         }
 
         public void Dispose()

@@ -13,7 +13,7 @@ namespace Robust.Client.Placement
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
             public override OverlayPriority Priority => OverlayPriority.P2;
 
-            public PlacementOverlay(PlacementManager manager) : base("placement")
+            public PlacementOverlay(PlacementManager manager) : base()
             {
                 _manager = manager;
                 ZIndex = 100;

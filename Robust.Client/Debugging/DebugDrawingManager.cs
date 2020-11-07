@@ -45,11 +45,11 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new DebugDrawRayOverlay(this));
+                    _overlayManager.AddOverlay(Guid.NewGuid(), new DebugDrawRayOverlay(this));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(DebugDrawRayOverlay));
+                    _overlayManager.RemoveOverlaysOfClass(nameof(DebugDrawRayOverlay));
                 }
             }
         }
@@ -86,7 +86,7 @@ namespace Robust.Client.Debugging
             private readonly DebugDrawingManager _owner;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugDrawRayOverlay(DebugDrawingManager owner) : base(nameof(DebugDrawRayOverlay))
+            public DebugDrawRayOverlay(DebugDrawingManager owner) : base()
             {
                 _owner = owner;
             }

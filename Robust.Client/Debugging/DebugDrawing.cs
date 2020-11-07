@@ -48,12 +48,12 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
+                    _overlayManager.AddOverlay(Guid.NewGuid(), new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(PhysicsOverlay));
+                    _overlayManager.RemoveOverlaysOfClass(nameof(PhysicsOverlay));
                 }
             }
         }
@@ -73,11 +73,11 @@ namespace Robust.Client.Debugging
 
                 if (value)
                 {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_entityManager, _eyeManager));
+                    _overlayManager.AddOverlay(Guid.NewGuid(), new EntityPositionOverlay(_entityManager, _eyeManager));
                 }
                 else
                 {
-                    _overlayManager.RemoveOverlay(nameof(EntityPositionOverlay));
+                    _overlayManager.RemoveOverlaysOfClass(nameof(EntityPositionOverlay));
                 }
             }
         }
@@ -95,8 +95,7 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
 
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
-                : base(nameof(PhysicsOverlay))
+            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager) : base()
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
@@ -253,7 +252,7 @@ namespace Robust.Client.Debugging
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager) : base(nameof(EntityPositionOverlay))
+            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager) : base()
             {
                 _entityManager = entityManager;
                 _eyeManager = eyeManager;

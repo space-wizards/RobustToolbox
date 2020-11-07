@@ -175,7 +175,7 @@ namespace Robust.Client.Placement
             MapManager.TileChanged += HandleTileChanged;
 
             _drawOverlay = new PlacementOverlay(this);
-            _overlayManager.AddOverlay(_drawOverlay);
+            _overlayManager.AddOverlay(Guid.NewGuid(), _drawOverlay);
 
             // a bit ugly, oh well
             _baseClient.PlayerJoinedServer += (sender, args) => SetupInput();

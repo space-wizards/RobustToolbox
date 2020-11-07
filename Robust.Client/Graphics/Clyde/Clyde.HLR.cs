@@ -122,8 +122,13 @@ namespace Robust.Client.Graphics.Clyde
 
                 for (OverlayPriority i = OverlayPriority.P1; i <= OverlayPriority.P9; i++) {
                     foreach (var overlay in list) {
-                        if(i == overlay.Priority)
-                            overlay.ClydeRender(_renderHandle, space);
+                        if (i == overlay.Priority) {
+                            if (overlay.RequestScreenTexture) {
+                                FlushRenderQueue();
+                                UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
+                            }
+                            overlay.ClydeRender(_renderHandle, space);             
+                        }
                     }
                 }
                 FlushRenderQueue();
@@ -132,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private ClydeTexture? ScreenBufferTexture;
         private GLHandle screenBufferHandle;
-        private void UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
+        private bool UpdateOverlayScreenTexture(OverlaySpace space, RenderTexture texture) {
             List<Overlay> oTargets = new List<Overlay>();
             foreach (var overlay in _overlayManager.AllOverlays) {
                 if (overlay.RequestScreenTexture && overlay.Space == space) {
@@ -150,7 +155,9 @@ namespace Robust.Client.Graphics.Clyde
                     overlay.ScreenTexture = ScreenBufferTexture;
                 }
                 oTargets.Clear();
+                return true;
             }
+            return false;
         }
 
         private void DrawEntities(Viewport viewport, Box2 worldBounds)
@@ -265,10 +272,10 @@ namespace Robust.Client.Graphics.Clyde
             FlushRenderQueue();
 
             // Cleanup remainders
-            foreach (var overlay in worldOverlays)
-            {
-                overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
-            }
+            //foreach (var overlay in worldOverlays)
+            //{
+                //overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+            //}
 
             FlushRenderQueue();
         }
@@ -369,8 +376,13 @@ namespace Robust.Client.Graphics.Clyde
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
-
+                        GL.Clear(ClearBufferMask.StencilBufferBit);
+                        GL.Enable(EnableCap.StencilTest);
+                        GL.StencilOp(StencilOp.Keep, StencilOp.Keep, StencilOp.Replace);
+                        GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
+                        GL.StencilMask(0xFF);
                         ApplyFovToBuffer(viewport, eye);
+                        GL.StencilMask(0x00);
                     }
                 }
 
@@ -399,12 +411,14 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, ScreenSize), new Color(1, 1, 1, 0.5f));
                 }
 
-                UpdateOverlayScreenTexture(OverlaySpace.WorldSpace, _mainViewport.RenderTarget);
+
                 RenderOverlays(OverlaySpace.WorldSpace);
 
-
-                UpdateOverlayScreenTexture(OverlaySpace.WorldSpaceFOVStencil, _mainViewport.RenderTarget);
+                GL.StencilFunc(StencilFunction.Notequal, 1, 0xFF);
+                GL.Disable(EnableCap.DepthTest);
                 RenderOverlays(OverlaySpace.WorldSpaceFOVStencil);
+                GL.Disable(EnableCap.StencilTest);
+                
 
             }
 

@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         /// Positions the provided control as a tooltip within the bounds of its parent UserInterfaceManager screen
-        /// under the current mouse position.
+        /// under the current mouse position. Sizing Based on its current combined minimum size.
         /// Defaults to the top left corner
         /// of the control being placed at the mouse position but
         /// adjusting to a different corner if the control would go beyond the edge of the bounds.
@@ -25,7 +25,8 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        /// Positions the provided control as a tooltip within the provided screenBounds based on its current size.
+        /// Positions the provided control as a tooltip within the provided screenBounds based on its current
+        /// combined minimum size.
         /// Defaults to the top left corner
         /// of the control being placed at the indicated position but
         /// adjusting to a different corner if the control would go beyond the edge of the bounds.
@@ -38,16 +39,17 @@ namespace Robust.Client.UserInterface
         {
             LayoutContainer.SetPosition(tooltip, screenPosition);
 
-            var (right, bottom) = tooltip.Position + tooltip.Size;
+            var combinedMinSize = tooltip.CombinedMinimumSize;
+            var (right, bottom) = tooltip.Position + combinedMinSize;
 
             if (right > screenBounds.X)
             {
-                LayoutContainer.SetPosition(tooltip, (screenPosition.X - tooltip.Size.X, tooltip.Position.Y));
+                LayoutContainer.SetPosition(tooltip, (screenPosition.X - combinedMinSize.X, tooltip.Position.Y));
             }
 
             if (bottom > screenBounds.Y)
             {
-                LayoutContainer.SetPosition(tooltip, (tooltip.Position.X, screenPosition.Y - tooltip.Size.Y));
+                LayoutContainer.SetPosition(tooltip, (tooltip.Position.X, screenPosition.Y - combinedMinSize.Y));
             }
         }
     }

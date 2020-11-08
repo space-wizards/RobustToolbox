@@ -78,6 +78,7 @@ namespace Robust.Client.UserInterface
         private bool _rendering = true;
         private float _tooltipTimer;
         private Tooltip _tooltip = default!;
+        private bool showingTooltip;
         private const float TooltipDelay = 1;
 
         private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
@@ -692,9 +693,11 @@ namespace Robust.Client.UserInterface
 
         private void _clearTooltip()
         {
+            if (!showingTooltip) return;
             _tooltip.Visible = false;
             CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
+            showingTooltip = false;
         }
 
 
@@ -713,6 +716,8 @@ namespace Robust.Client.UserInterface
 
         private void _showTooltip()
         {
+            if (showingTooltip) return;
+            showingTooltip = true;
             var hovered = CurrentlyHovered;
             if (hovered == null)
             {

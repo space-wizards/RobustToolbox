@@ -16,6 +16,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         // limit - depending on mode, this is either rows or columns
         private int _limitedDimensionCount = 1;
+        // virtual pixels
         private float _limitSize;
         private LimitType _limitType = LimitType.Count;
         private Dimension _limitDimension = Dimension.Column;
@@ -86,7 +87,7 @@ namespace Robust.Client.UserInterface.Controls
             set => SetCount(Dimension.Row, value);
         }
         /// <summary>
-        ///     The max width the grid of elements can have. This dynamically determines
+        ///     The max width (in virtual pixels) the grid of elements can have. This dynamically determines
         ///     the number of columns based on the size of the elements. Setting this puts this grid
         ///     into LimitMode.LimitColumns and LimitType.Size. Items will be added to fill up the entire row, up to the defined
         ///     width, and then create a second row.
@@ -106,7 +107,7 @@ namespace Robust.Client.UserInterface.Controls
             set => SetMaxSize(Dimension.Column, value);
         }
         /// <summary>
-        ///     The max height the grid of elements can have. This dynamically determines
+        ///     The max height (in virtual pixels) the grid  of elements can have. This dynamically determines
         ///     the number of rows based on the size of the elements. Setting this puts this grid
         ///     into LimitMode.LimitRows and LimitType.Size - items will be added to fill up the entire column, up to the defined
         ///     height, and then create a second column.
@@ -146,6 +147,11 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         private Vector2i Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
+
+        private float GetLimitPixelSize()
+        {
+            return _limitSize * UIScale;
+        }
 
         private int GetCount(Dimension forDimension)
         {
@@ -240,16 +246,16 @@ namespace Robust.Client.UserInterface.Controls
             // for additional wSep between each cell only if there's more than one
             if (ChildCount == 0) return 1;
 
-            if ((2 * cellWidth + wSep) > _limitSize)
+            if ((2 * cellWidth + wSep) > GetLimitPixelSize())
             {
                 return 1;
             }
 
-            return Math.Min(ChildCount, (int) ((_limitSize + wSep) / (cellWidth + wSep)));
+            return Math.Min(ChildCount, (int) ((GetLimitPixelSize() + wSep) / (cellWidth + wSep)));
         }
 
         /// <summary>
-        /// Calculates the size of a "cell", for use in LimitType.Size mode. This
+        /// Calculates the size of a "cell" in physical pixels, for use in LimitType.Size mode. This
         /// is based on the maximum minheight / minwidth of each element.
         /// </summary>
         /// <returns></returns>

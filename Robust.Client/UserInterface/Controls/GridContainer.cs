@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Maths;
@@ -6,19 +7,22 @@ using Robust.Shared.Maths;
 namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
-    ///     A container that lays out its children in a grid. Can define specific amount of
-    ///     rows or specific amount of columns (not both), and will grow to fill in additional rows/columns within
-    ///     that limit.
+    ///     A container that lays out its children in a grid. Can define specific count of
+    ///     rows or specific count of columns (not both), and will grow to fill in additional rows/columns within
+    ///     that limit. Alternatively, can define a maximum width or height, and grid will
+    ///     lay out elements (aligned in a grid pattern, not floated) within the defined limit.
     /// </summary>
     public class GridContainer : Container
     {
         // limit - depending on mode, this is either rows or columns
-        private int _limitedDimensionAmount = 1;
-
+        private int _limitedDimensionCount = 1;
+        private float _limitSize;
+        private LimitType _limitType = LimitType.Count;
         private Dimension _limitDimension = Dimension.Column;
 
+
         /// <summary>
-        /// Indicates whether row or column amount has been specified, and thus
+        /// Indicates whether row or column count has been specified, and thus
         /// how items will fill them out as they are added.
         /// This is set depending on whether you have specified Columns or Rows.
         /// </summary>
@@ -27,6 +31,12 @@ namespace Robust.Client.UserInterface.Controls
         /// Opposite dimension of LimitedDimension
         /// </summary>
         public Dimension UnlimitedDimension => _limitDimension == Dimension.Column ? Dimension.Row : Dimension.Column;
+
+        /// <summary>
+        /// Indicates whether we are limiting based on an explicit number of rows or columns, or limiting
+        /// based on a defined max width or height.
+        /// </summary>
+        public LimitType LimitType => _limitType;
 
         /// <summary>
         /// The "normal" direction of expansion when the defined row or column limit is met
@@ -45,36 +55,77 @@ namespace Robust.Client.UserInterface.Controls
         private bool _expandBackwards;
 
         /// <summary>
-        ///     The amount of columns to organize the children into. Setting this puts this grid
-        ///     into LimitMode.LimitColumns - items will be added to fill up the entire row, up to the defined
+        ///     The number of columns to organize the children into. Setting this puts this grid
+        ///     into LimitMode.LimitColumns and LimitType.Count - items will be added to fill up the entire row, up to the defined
         ///     limit of columns, and then create a second row.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        /// <returns>specified limit if LimitMode.LimitColums, otherwise the amount
+        /// <returns>specified limit if LimitMode.LimitColums, otherwise the number
         /// of columns being used for the current amount of children.</returns>
         public int Columns
         {
-            get => GetAmount(Dimension.Column);
-            set => SetAmount(Dimension.Column, value);
+            get => GetCount(Dimension.Column);
+            set => SetCount(Dimension.Column, value);
         }
 
         /// <summary>
-        ///     The amount of rows to organize the children into. Setting this puts this grid
-        ///     into LimitMode.LimitRows - items will be added to fill up the entire column, up to the defined
+        ///     The number of rows to organize the children into. Setting this puts this grid
+        ///     into LimitMode.LimitRows and LimitType.Count - items will be added to fill up the entire column, up to the defined
         ///     limit of rows, and then create a second column.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        /// <returns>specified limit if LimitMode.LimitRows, otherwise the amount
-        /// of rows being used for the current amount of children.</returns>
+        /// <returns>specified limit if LimitMode.LimitRows, otherwise the number
+        /// of rows being used for the current number of children.</returns>
         public int Rows
         {
-            get => GetAmount(Dimension.Row);
-            set => SetAmount(Dimension.Row, value);
+            get => GetCount(Dimension.Row);
+            set => SetCount(Dimension.Row, value);
         }
+        /// <summary>
+        ///     The max width the grid of elements can have. This dynamically determines
+        ///     the number of columns based on the size of the elements. Setting this puts this grid
+        ///     into LimitMode.LimitColumns and LimitType.Size. Items will be added to fill up the entire row, up to the defined
+        ///     width, and then create a second row.
+        ///
+        ///     In the presence of unevenly-sized children,
+        ///     rows will still have the same amount elements - the items are laid out in a grid pattern such
+        ///     that they are all aligned, the height and width of each "cell" being determined by
+        ///     the greatest min height and min width among the elements. In the presence of expanding elements,
+        ///     their pre-expanded size will be used to determine the cell layout, then the elements expand within
+        ///     the defined Control.Size
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the value assigned is less than or equal to 0.
+        /// </exception>
+        public float MaxWidth
+        {
+            set => SetMaxSize(Dimension.Column, value);
+        }
+        /// <summary>
+        ///     The max height the grid of elements can have. This dynamically determines
+        ///     the number of rows based on the size of the elements. Setting this puts this grid
+        ///     into LimitMode.LimitRows and LimitType.Size - items will be added to fill up the entire column, up to the defined
+        ///     height, and then create a second column.
+        ///
+        ///     In the presence of unevenly-sized children,
+        ///     columns will still have the same amount elements - the items are laid out in a grid pattern such
+        ///     that they are all aligned, the height and width of each "cell" being determined by
+        ///     the greatest min height and min width among the elements. In the presence of expanding elements,
+        ///     their pre-expanded size will be used to determine the layout, then the elements expand within
+        ///     the defined Control.Size
+        /// </summary>
+        /// <exception cref="ArgumentOutOfRangeException">
+        ///     Thrown if the value assigned is less than or equal to 0.
+        /// </exception>
+        public float MaxHeight
+        {
+            set => SetMaxSize(Dimension.Row, value);
+        }
+
 
         private int? _vSeparationOverride;
 
@@ -96,25 +147,44 @@ namespace Robust.Client.UserInterface.Controls
 
         private Vector2i Separations => (_hSeparationOverride ?? 4, _vSeparationOverride ?? 4);
 
-        private int GetAmount(Dimension forDimension)
+        private int GetCount(Dimension forDimension)
         {
-            if (forDimension == _limitDimension) return _limitedDimensionAmount;
-            if (ChildCount == 0)
+            if (_limitType == LimitType.Count)
             {
-                return 1;
-            }
+                if (forDimension == _limitDimension) return _limitedDimensionCount;
+                if (ChildCount == 0)
+                {
+                    return 1;
+                }
 
-            var divisor = (_limitDimension == Dimension.Column ? Columns : Rows);
-            var div = ChildCount / divisor;
-            if (ChildCount % divisor != 0)
+                var divisor = (_limitDimension == Dimension.Column ? Columns : Rows);
+                var div = ChildCount / divisor;
+                if (ChildCount % divisor != 0)
+                {
+                    div += 1;
+                }
+
+                return div;
+            }
+            else
             {
-                div += 1;
-            }
+                if (forDimension == _limitDimension) return CalculateLimitedCount();
+                if (ChildCount == 0)
+                {
+                    return 1;
+                }
+                var divisor = CalculateLimitedCount();;
+                var div = ChildCount / divisor;
+                if (ChildCount % divisor != 0)
+                {
+                    div += 1;
+                }
 
-            return div;
+                return div;
+            }
         }
 
-        private void SetAmount(Dimension forDimension, int value)
+        private void SetCount(Dimension forDimension, int value)
         {
             if (value <= 0)
             {
@@ -122,10 +192,79 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _limitDimension = forDimension;
+            _limitType = LimitType.Count;
 
-            _limitedDimensionAmount = value;
+            _limitedDimensionCount = value;
             MinimumSizeChanged();
             UpdateLayout();
+        }
+
+        private void SetMaxSize(Dimension forDimension, float value)
+        {
+            if (value <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), value, "Value must be greater than zero.");
+            }
+
+            _limitDimension = forDimension;
+            _limitType = LimitType.Size;
+
+            _limitSize = value;
+            MinimumSizeChanged();
+            UpdateLayout();
+        }
+
+        /// <summary>
+        /// If columns (or width) are being limited, calculates how many columns
+        /// there should be.
+        /// </summary>
+        private int CalculateLimitedCount()
+        {
+            if (_limitType == LimitType.Count) return _limitedDimensionCount;
+
+            // to make it easier to read and visualize, we're just going to use the terms "x" and "y", width, and height,
+            // rows and cols,
+            // but at the start of the method here we'll set those to what they actually are based
+            // on the limited dimension, which might involve swapping them.
+            // For the below convention, we pretend that columns (or width) have a limit defined, thus
+            // the amount of rows is not limited (unlimited).
+
+            // we convert all elements to "cells" of the same size so they will align,
+            // also converting to our pretend scenario of limited columns/width
+            var (cellWidthActual, cellHeightActual) = CellSize();
+            var (wSepActual, hSepActual) = (Vector2i) (Separations * UIScale);
+            var cellWidth = _limitDimension == Dimension.Column ? cellWidthActual : cellHeightActual;
+            var wSep = _limitDimension == Dimension.Column ? wSepActual : hSepActual;
+
+            // calculate how many cells will fit into a given column without going over, accounting
+            // for additional wSep between each cell only if there's more than one
+            if (ChildCount == 0) return 1;
+
+            if ((2 * cellWidth + wSep) > _limitSize)
+            {
+                return 1;
+            }
+
+            return Math.Min(ChildCount, (int) ((_limitSize + wSep) / (cellWidth + wSep)));
+        }
+
+        /// <summary>
+        /// Calculates the size of a "cell", for use in LimitType.Size mode. This
+        /// is based on the maximum minheight / minwidth of each element.
+        /// </summary>
+        /// <returns></returns>
+        private Vector2i CellSize()
+        {
+            int maxMinWidth = -1;
+            int maxMinHeight = -1;
+            foreach (var child in Children)
+            {
+                var (minSizeX, minSizeY) = child.CombinedPixelMinimumSize;
+                maxMinWidth = Math.Max(maxMinWidth, minSizeX);
+                maxMinHeight = Math.Max(maxMinHeight, minSizeY);
+            }
+
+            return new Vector2i(maxMinWidth, maxMinHeight);
         }
 
         protected override Vector2 CalculateMinimumSize()
@@ -137,8 +276,9 @@ namespace Robust.Client.UserInterface.Controls
             // For the below convention, we pretend that columns have a limit defined, thus
             // the amount of rows is not limited (unlimited).
 
-            var rows = GetAmount(UnlimitedDimension);
-            var cols = _limitedDimensionAmount;
+            var rows = GetCount(UnlimitedDimension);
+            var cols = GetCount(LimitedDimension);
+            var cellSize = CellSize();
 
             Span<int> minColWidth = stackalloc int[cols];
             Span<int> minRowHeight = stackalloc int[rows];
@@ -155,8 +295,9 @@ namespace Robust.Client.UserInterface.Controls
                 var column = index % cols;
                 var row = index / cols;
 
-                // also converting here to our "pretend" scenario where columns have a limit defined
-                var (minSizeXActual, minSizeYActual) = child.CombinedPixelMinimumSize;
+                // also converting here to our "pretend" scenario where columns have a limit defined.
+                // note if we are limiting by size rather than count, the size of each child is constant (cell size)
+                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.CombinedPixelMinimumSize : cellSize;
                 var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
                 var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
                 minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
@@ -209,8 +350,9 @@ namespace Robust.Client.UserInterface.Controls
             // For the below convention, we pretend that columns have a limit defined, thus
             // the amount of rows is not limited (unlimited).
 
-            var rows = GetAmount(UnlimitedDimension);
-            var cols = _limitedDimensionAmount;
+            var rows = GetCount(UnlimitedDimension);
+            var cols = GetCount(LimitedDimension);
+            var cellSize = CellSize();
 
             Span<int> minColWidth = stackalloc int[cols];
             // Minimum lateral size of the unlimited dimension
@@ -235,7 +377,8 @@ namespace Robust.Client.UserInterface.Controls
                 var row = index / cols;
 
                 // converting here to our "pretend" scenario where columns have a limit defined
-                var (minSizeXActual, minSizeYActual) = child.CombinedPixelMinimumSize;
+                // note if we are limiting by size rather than count, the size of each child is constant (cell size)
+                var (minSizeXActual, minSizeYActual) = _limitType == LimitType.Count ? child.CombinedPixelMinimumSize : cellSize;
                 var minSizeX = _limitDimension == Dimension.Column ? minSizeXActual : minSizeYActual;
                 var minSizeY = _limitDimension == Dimension.Column ? minSizeYActual : minSizeXActual;
                 minColWidth[column] = Math.Max(minSizeX, minColWidth[column]);
@@ -406,5 +549,18 @@ namespace Robust.Client.UserInterface.Controls
     {
         Column,
         Row
+    }
+
+    public enum LimitType
+    {
+        /// <summary>
+        /// Defined number of rows or columns
+        /// </summary>
+        Count,
+        /// <summary>
+        /// Defined max width or height, inside of which the number of rows or columns
+        /// will be fit.
+        /// </summary>
+        Size
     }
 }

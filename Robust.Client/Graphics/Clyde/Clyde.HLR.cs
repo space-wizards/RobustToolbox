@@ -78,8 +78,7 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(OverlaySpace.ScreenSpaceBelowWorld);
 
             _mainViewport.Eye = _eyeManager.CurrentEye;
-            RenderViewport(_mainViewport);
-
+            RenderViewport(_mainViewport); //Worldspace overlays are rendered here.
             {
                 var handle = _renderHandle.DrawingHandleScreen;
                 var tex = _mainViewport.RenderTarget.Texture;
@@ -117,9 +116,8 @@ namespace Robust.Client.Graphics.Clyde
                         list.Add(overlay);
                     }
                 }
-
+                FlushRenderQueue();
                 list.Sort(OverlayComparer.Instance);
-
                 for (OverlayPriority i = OverlayPriority.P1; i <= OverlayPriority.P9; i++) {
                     foreach (var overlay in list) {
                         if (i == overlay.Priority) {
@@ -127,11 +125,22 @@ namespace Robust.Client.Graphics.Clyde
                                 FlushRenderQueue();
                                 UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
                             }
-                            overlay.ClydeRender(_renderHandle, space);             
+
+                            if (overlay.OverwriteTargetFrameBuffer) {
+                                ClearFramebuffer(default);
+                                //GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.Zero);
+                                overlay.ClydeRender(_renderHandle, space);
+                                FlushRenderQueue();
+                                //GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
+                            }
+                            else {
+                                overlay.ClydeRender(_renderHandle, space);
+                                FlushRenderQueue();
+                            }
+                            
                         }
                     }
                 }
-                FlushRenderQueue();
             }
         }
 
@@ -418,8 +427,6 @@ namespace Robust.Client.Graphics.Clyde
                 GL.Disable(EnableCap.DepthTest);
                 RenderOverlays(OverlaySpace.WorldSpaceFOVStencil);
                 GL.Disable(EnableCap.StencilTest);
-                
-
             }
 
             PopRenderStateFull(state);

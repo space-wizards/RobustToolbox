@@ -38,6 +38,11 @@ namespace Robust.Client.Graphics.Overlays
         /// </summary>
         public Texture? ScreenTexture = null;
 
+        /// <summary>
+        ///     If set to true, the results of this shader will entirely overwrite the framebuffer it being overlayed onto. 
+        /// </summary>
+        public virtual bool OverwriteTargetFrameBuffer => false;
+
         protected IOverlayManager OverlayManager { get; }
 
         public int? ZIndex { get; set; }

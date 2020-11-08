@@ -125,19 +125,11 @@ namespace Robust.Client.Graphics.Clyde
                                 FlushRenderQueue();
                                 UpdateOverlayScreenTexture(space, _mainViewport.RenderTarget);
                             }
-
                             if (overlay.OverwriteTargetFrameBuffer) {
                                 ClearFramebuffer(default);
-                                //GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.Zero);
-                                overlay.ClydeRender(_renderHandle, space);
-                                FlushRenderQueue();
-                                //GL.BlendFuncSeparate(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha, BlendingFactorSrc.One, BlendingFactorDest.OneMinusSrcAlpha);
                             }
-                            else {
-                                overlay.ClydeRender(_renderHandle, space);
-                                FlushRenderQueue();
-                            }
-                            
+                            overlay.ClydeRender(_renderHandle, space);
+                            FlushRenderQueue();
                         }
                     }
                 }

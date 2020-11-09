@@ -293,7 +293,7 @@ namespace Robust.Shared.GameObjects.Components
                 if (_linVelocity.EqualsApprox(value, 0.000001))
                     return;
 
-                Logger.Debug($"Set velocity to {value}");
+                //Logger.Debug($"Set velocity to {value}");
                 _linVelocity = value;
                 Dirty();
             }

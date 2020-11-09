@@ -8,6 +8,8 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
@@ -125,12 +127,14 @@ namespace Robust.Shared.GameObjects.Systems
                 if(!body.CanMove())
                     continue;
 
-                var linearVelocity = Vector2.Zero;
+                var linearVelocity = body.WarmStart ? body.LinearVelocity : Vector2.Zero;
 
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
-                    linearVelocity += controller.LinearVelocity;
+                    linearVelocity += controller.LinearVelocity * deltaTime;
+                    linearVelocity += controller.Impulse * body.InvMass * deltaTime;
+                    controller.Impulse = Vector2.Zero;
                 }
 
                 // i'm not sure if this is the proper way to solve this, but
@@ -244,27 +248,9 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            var counter = 0;
-
             if (_collisionCache.Count > 0)
             {
-                while(GetNextCollision(_collisionCache, counter, out var collision))
-                {
-                    collision.A.WakeBody();
-                    collision.B.WakeBody();
-
-                    counter++;
-                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                    if (collision.A.CanMove())
-                    {
-                        collision.A.ApplyImpulse(-impulse);
-                    }
-
-                    if (collision.B.CanMove())
-                    {
-                        collision.B.ApplyImpulse(impulse);
-                    }
-                }
+                VelocitySolver();
             }
 
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
@@ -308,57 +294,49 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private bool GetNextCollision(IReadOnlyList<Manifold> collisions, int counter, out Manifold collision)
+        private void VelocitySolver()
         {
-            // The *4 is completely arbitrary
-            if (counter > collisions.Count * 4)
-            {
-                collision = default;
-                return false;
-            }
+            const byte iterations = 4;
 
-            var offset = _random.Next(collisions.Count - 1);
-            for (var i = 0; i < collisions.Count; i++)
+            for (var i = 0; i < iterations; i++)
             {
-                var index = (i + offset) % collisions.Count;
-                if (collisions[index].Unresolved)
+                var offset = _random.Next(_collisionCache.Count - 1);
+                for (var j = 0; j < _collisionCache.Count; j++)
                 {
-                    collision = collisions[index];
-                    return true;
+                    var collision = _collisionCache[(j + offset) % _collisionCache.Count];
+                    if (!collision.Unresolved) continue;
+
+                    collision.A.WakeBody();
+                    collision.B.WakeBody();
+
+                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                    if (collision.A.CanMove())
+                    {
+                        collision.A.ApplyImpulse(-impulse);
+                    }
+
+                    if (collision.B.CanMove())
+                    {
+                        collision.B.ApplyImpulse(impulse);
+                    }
                 }
-
             }
-
-            collision = default;
-            return false;
         }
 
+        /// <summary>
+        ///     Process friction between tiles and entities. Does not process collision friction.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="deltaTime"></param>
         private void ProcessFriction(IPhysicsComponent body, float deltaTime)
         {
-            if (body.LinearVelocity == Vector2.Zero) return;
+            if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
-            // sliding friction coefficient, and current gravity at current location
-            var (friction, gravity) = GetFriction(body);
+            var friction = GetFriction(body);
 
-            // friction between the two objects
-            var effectiveFriction = friction * body.Friction;
-
-            // current acceleration due to friction
-            var fAcceleration = effectiveFriction * gravity;
-
-            // integrate acceleration
-            var fVelocity = fAcceleration * deltaTime;
-
-            // Clamp friction because friction can't make you accelerate backwards
-            friction = Math.Min(fVelocity, body.LinearVelocity.Length);
-
-            if (friction == 0.0f)
-            {
-                return;
-            }
-
-            // No multiplication/division by mass here since that would be redundant.
-            var frictionVelocityChange = body.LinearVelocity.Normalized * -friction;
+            // friction between the two objects - Static friction not modelled
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length / 2;
+            var frictionVelocityChange = body.LinearVelocity.Normalized * -dynamicFriction;
 
             body.LinearVelocity += frictionVelocityChange;
         }
@@ -384,11 +362,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            // Slow zone up in here
-            if (physics.LinearVelocity.Length > _speedLimit)
-                physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
-
-            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var newPosition = physics.WorldPosition + physics.LinearVelocity;
             var owner = physics.Owner;
             var transform = owner.Transform;
 
@@ -409,7 +383,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.WorldRotation += physics.AngularVelocity;
             physics.WorldPosition = newPosition;
         }
 
@@ -417,7 +391,7 @@ namespace Robust.Shared.GameObjects.Systems
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
         private bool FixClipping(List<Manifold> collisions, float divisions)
         {
-            const float allowance = 1 / 128.0f;
+            const float allowance = 1 / 256.0f;
             var percent = MathHelper.Clamp(0.4f / divisions, 0.01f, 1f);
             var done = true;
             foreach (var collision in collisions)
@@ -453,16 +427,17 @@ namespace Robust.Shared.GameObjects.Systems
             return done;
         }
 
-        private (float friction, float gravity) GetFriction(IPhysicsComponent body)
+        private float GetFriction(IPhysicsComponent body)
         {
-            if (!body.OnGround)
-                return (0f, 0f);
+            var transform = body.Owner.Transform;
 
-            var location = body.Owner.Transform;
-            var grid = _mapManager.GetGrid(location.Coordinates.GetGridId(EntityManager));
-            var tile = grid.GetTileRef(location.Coordinates);
+            if (body.Status != BodyStatus.OnGround || transform.GridID == GridId.Invalid)
+                return 0f;
+
+            var grid = _mapManager.GetGrid(transform.Coordinates.GetGridId(EntityManager));
+            var tile = grid.GetTileRef(transform.Coordinates);
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return (tileDef.Friction, grid.HasGravity ? 9.8f : 0f);
+            return grid.HasGravity ? tileDef.Friction : 0f;
         }
     }
 }

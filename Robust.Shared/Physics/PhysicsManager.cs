@@ -105,7 +105,7 @@ namespace Robust.Shared.Physics
 
             if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
 
-            var restitution = 0.01f;
+            var restitution = Math.Min(aP.Restitution, bP.Restitution);
             var normal = manifold.Normal;
             var rV = manifold.RelativeVelocity;
 

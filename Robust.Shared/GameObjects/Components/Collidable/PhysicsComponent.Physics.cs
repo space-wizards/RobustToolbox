@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.Physics;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.ViewVariables;
@@ -11,6 +13,16 @@ namespace Robust.Shared.GameObjects.Components
 {
     public partial interface IPhysicsComponent
     {
+        /// <summary>
+        ///     Do we retain our velocity across ticks?
+        /// </summary>
+        bool WarmStart { get; set; }
+
+        /// <summary>
+        ///     How much do we bounce when we hit something? 0 -> not at all, 1 -> full bounce
+        /// </summary>
+        float Restitution { get; set; }
+
         /// <summary>
         ///     Current mass of the entity in kilograms.
         /// </summary>
@@ -174,7 +186,15 @@ namespace Robust.Shared.GameObjects.Components
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
         private bool _anchored = true;
-        private float _friction = 1;
+        private float _friction = 0.35f;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool WarmStart { get; set; }
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Restitution { get; set; }
 
         /// <summary>
         ///     Current mass of the entity in kilograms.
@@ -193,9 +213,10 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         /// Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
+        [ViewVariables]
         public float InvMass
         {
-            get => CanMove() ? Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
+            get => CanMove() ? 1f / Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
             set => Mass = value > 0 ? 1f / value : 0f;
         }
 
@@ -269,9 +290,10 @@ namespace Robust.Shared.GameObjects.Components
                 if (value != Vector2.Zero)
                     WakeBody();
 
-                if (_linVelocity.EqualsApprox(value, 0.0001))
+                if (_linVelocity.EqualsApprox(value, 0.000001))
                     return;
 
+                Logger.Debug($"Set velocity to {value}");
                 _linVelocity = value;
                 Dirty();
             }

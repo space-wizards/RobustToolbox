@@ -1,4 +1,5 @@
-﻿using Robust.Shared.GameObjects.Components;
+﻿using System;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 
@@ -14,10 +15,11 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Current contribution to the linear velocity of the entity in meters per second.
         /// </summary>
+        [Obsolete]
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Vector2 LinearVelocity
         {
-            get => _linearVelocity;
+            get => Vector2.Zero;
             set
             {
                 if (value != Vector2.Zero)
@@ -30,6 +32,25 @@ namespace Robust.Shared.Physics
                 ControlledComponent?.Dirty();
             }
         }
+
+        [ViewVariables]
+        public virtual Vector2 Impulse
+        {
+            get => _impulse;
+            set
+            {
+                if (value != Vector2.Zero)
+                    ControlledComponent?.WakeBody();
+
+                if (_impulse.EqualsApprox(value, 0.00001))
+                    return;
+
+                _impulse = value;
+                ControlledComponent?.Dirty();
+            }
+        }
+
+        private Vector2 _impulse;
 
         public virtual IPhysicsComponent? ControlledComponent { protected get; set; }
 

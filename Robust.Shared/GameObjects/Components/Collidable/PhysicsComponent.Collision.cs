@@ -132,6 +132,8 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
             serializer.DataField(ref _mass, "mass", 1.0f);
+            serializer.DataField(this, x => WarmStart, "warmStart", true);
+            serializer.DataField(this, x => Restitution, "restitution", 0.2f);
         }
 
         /// <inheritdoc />

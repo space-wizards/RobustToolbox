@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
@@ -244,21 +245,25 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             var counter = 0;
-            while(GetNextCollision(_collisionCache, counter, out var collision))
+
+            if (_collisionCache.Count > 0)
             {
-                collision.A.WakeBody();
-                collision.B.WakeBody();
-
-                counter++;
-                var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                if (collision.A.CanMove())
+                while(GetNextCollision(_collisionCache, counter, out var collision))
                 {
-                    collision.A.ApplyImpulse(-impulse);
-                }
+                    collision.A.WakeBody();
+                    collision.B.WakeBody();
 
-                if (collision.B.CanMove())
-                {
-                    collision.B.ApplyImpulse(impulse);
+                    counter++;
+                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                    if (collision.A.CanMove())
+                    {
+                        collision.A.ApplyImpulse(-impulse);
+                    }
+
+                    if (collision.B.CanMove())
+                    {
+                        collision.B.ApplyImpulse(impulse);
+                    }
                 }
             }
 
@@ -311,19 +316,17 @@ namespace Robust.Shared.GameObjects.Systems
                 collision = default;
                 return false;
             }
-            var indexes = new List<int>();
-            for (int i = 0; i < collisions.Count; i++)
+
+            var offset = _random.Next(collisions.Count - 1);
+            for (var i = 0; i < collisions.Count; i++)
             {
-                indexes.Add(i);
-            }
-            _random.Shuffle(indexes);
-            foreach (var index in indexes)
-            {
+                var index = (i + offset) % collisions.Count;
                 if (collisions[index].Unresolved)
                 {
                     collision = collisions[index];
                     return true;
                 }
+
             }
 
             collision = default;
@@ -390,17 +393,20 @@ namespace Robust.Shared.GameObjects.Systems
             var transform = owner.Transform;
 
             // Change parent if necessary
-            // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-            if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
-                grid.GridEntityId.IsValid() &&
-                grid.GridEntityId != owner.Uid)
+            if (!ContainerHelpers.IsInContainer(owner))
             {
-                if (grid.GridEntityId != transform.ParentUid)
-                    transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
-            }
-            else
-            {
-                transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
+                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != owner.Uid)
+                {
+                    if (grid.GridEntityId != transform.ParentUid)
+                        transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                }
             }
 
             physics.WorldRotation += physics.AngularVelocity * frameTime;

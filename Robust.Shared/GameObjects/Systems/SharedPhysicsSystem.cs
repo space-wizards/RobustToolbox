@@ -372,7 +372,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (physics.LinearVelocity != Vector2.Zero)
             {
-                if (ContainerHelpers.IsInContainer(ent))
+                if (ent.IsInContainer())
                 {
                     var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
                     ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
@@ -393,7 +393,7 @@ namespace Robust.Shared.GameObjects.Systems
             var transform = owner.Transform;
 
             // Change parent if necessary
-            if (!ContainerHelpers.IsInContainer(owner))
+            if (!owner.IsInContainer())
             {
                 // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
                 if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&

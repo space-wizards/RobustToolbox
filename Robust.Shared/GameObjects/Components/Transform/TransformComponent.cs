@@ -198,7 +198,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        public bool IsMapTransform => !ContainerHelpers.IsInContainer(Owner);
+        public bool IsMapTransform => !Owner.IsInContainer();
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

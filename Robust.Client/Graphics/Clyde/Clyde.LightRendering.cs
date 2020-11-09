@@ -716,6 +716,8 @@ namespace Robust.Client.Graphics.Clyde
                 foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, expandedBounds, true))
                 {
                     var occluderTree = occluderSystem.GetOccluderTreeForGrid(map, gridId);
+                    if (occluderTree == null) continue;
+
                     Box2 gridBounds;
 
                     if (gridId == GridId.Invalid)

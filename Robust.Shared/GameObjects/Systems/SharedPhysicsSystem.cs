@@ -129,11 +129,12 @@ namespace Robust.Shared.GameObjects.Systems
 
                 var linearVelocity = body.WarmStart ? body.LinearVelocity : Vector2.Zero;
 
+                // TODO: For whatever reason if you use deltaTime here instead of worldposition you get massive misprediction
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
-                    linearVelocity += controller.LinearVelocity * deltaTime;
-                    linearVelocity += controller.Impulse * body.InvMass * deltaTime;
+                    linearVelocity += controller.LinearVelocity;
+                    linearVelocity += controller.Impulse * body.InvMass;
                     controller.Impulse = Vector2.Zero;
                 }
 
@@ -144,8 +145,8 @@ namespace Robust.Shared.GameObjects.Systems
                     body.LinearVelocity = linearVelocity;
 
                 // Integrate forces
-                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
-                body.AngularVelocity += body.Torque * body.InvI * deltaTime;
+                body.LinearVelocity += body.Force * body.InvMass;
+                body.AngularVelocity += body.Torque * body.InvI;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -335,7 +336,11 @@ namespace Robust.Shared.GameObjects.Systems
             var friction = GetFriction(body);
 
             // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length / 2;
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length / 9.8f;
+
+            if (dynamicFriction == 0.0f)
+                return;
+
             var frictionVelocityChange = body.LinearVelocity.Normalized * -dynamicFriction;
 
             body.LinearVelocity += frictionVelocityChange;
@@ -362,7 +367,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var newPosition = physics.WorldPosition + physics.LinearVelocity;
+            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
             var owner = physics.Owner;
             var transform = owner.Transform;
 
@@ -383,7 +388,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity;
+            physics.WorldRotation += physics.AngularVelocity * frameTime;
             physics.WorldPosition = newPosition;
         }
 
@@ -437,7 +442,7 @@ namespace Robust.Shared.GameObjects.Systems
             var grid = _mapManager.GetGrid(transform.Coordinates.GetGridId(EntityManager));
             var tile = grid.GetTileRef(transform.Coordinates);
             var tileDef = _tileDefinitionManager[tile.Tile.TypeId];
-            return grid.HasGravity ? tileDef.Friction : 0f;
+            return tileDef.Friction;
         }
     }
 }

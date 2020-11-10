@@ -14,14 +14,27 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static bool Enabled { get; set; } = true;
 
+        /// <summary>
+        ///     Whether AVX is enabled via the environment variables.
+        /// </summary>
+        public static bool AvxEnabled => Environment.GetEnvironmentVariable("NUMERICS_AVX") != null && Avx.IsSupported;
+
         #region Utils
 
         /// <summary>
-        ///     Returns whether the specified array length is valid for doing SIMD.
+        ///     Returns whether the specified array length is valid for the SSE paths.
         /// </summary>
         public static bool SseLengthValid(int arrayLength)
         {
             return arrayLength >= 4;
+        }
+
+        /// <summary>
+        ///     Returns whether the specified array length is valid for the AVX paths.
+        /// </summary>
+        public static bool AvxLengthValid(int arrayLength)
+        {
+            return arrayLength >= 8;
         }
 
         #endregion
@@ -48,6 +61,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MultiplyAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -99,6 +118,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MultiplyAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Multiply(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MultiplyNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region MultiplyByScalar
@@ -123,6 +171,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MultiplyAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -172,6 +226,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MultiplyAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Multiply(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MultiplyNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region Divide
@@ -196,6 +277,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    DivideAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -247,6 +334,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void DivideAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Divide(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                DivideNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region DivideByScalar
@@ -271,6 +387,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    DivideAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -320,6 +442,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void DivideAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Divide(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                DivideNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region Add
@@ -344,6 +493,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    AddAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -395,6 +550,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void AddAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Add(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                AddNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region AddByScalar
@@ -419,6 +603,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    AddAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -468,6 +658,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void AddAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Add(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                AddNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region HorizontalAdd
@@ -480,6 +697,11 @@ namespace Robust.Shared.Maths
         {
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    return HorizontalAddAvx(a);
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse3.IsSupported)
@@ -534,6 +756,34 @@ namespace Robust.Shared.Maths
             return sum;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static float HorizontalAddAvx(ReadOnlySpan<float> a)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var accumulator = Vector256.Create(0f);
+
+            fixed (float* ptr = a)
+            {
+                for (var i = 0; i < length; i += 8)
+                {
+                    var j = Avx.LoadVector256(ptr + i);
+                    accumulator = Avx.HorizontalAdd(accumulator, j);
+                }
+            }
+
+            accumulator = Avx.HorizontalAdd(Avx.HorizontalAdd(accumulator, accumulator), accumulator);
+            var sum = accumulator.ToScalar();
+
+            if(remainder != 0)
+            {
+                sum += HorizontalAddNaive(a, length, a.Length);
+            }
+
+            return sum;
+        }
+
         #endregion
 
         #region Sub
@@ -558,6 +808,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    SubAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -609,6 +865,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void SubAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Subtract(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                SubNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region SubByScalar
@@ -633,6 +918,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    SubAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -682,6 +973,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void SubAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Subtract(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                SubNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region Abs
@@ -706,6 +1024,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && Avx2.IsSupported && AvxLengthValid(a.Length))
+                {
+                    AbsAvx(a, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported && Sse2.IsSupported)
@@ -755,6 +1079,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void AbsAvx(ReadOnlySpan<float> a, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var mask = Avx2.ShiftRightLogical(Vector256.Create(-1), 1).AsSingle();
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.And(mask, j));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                AbsNaive(a, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region Min
@@ -779,6 +1130,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MinAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -830,6 +1187,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MinAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Min(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MinNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region MinByScalar
@@ -854,6 +1240,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MinAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -903,6 +1295,33 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MinAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Min(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MinNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region Max
@@ -927,6 +1346,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if(AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MaxAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -978,6 +1403,35 @@ namespace Robust.Shared.Maths
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MaxAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrB = b)
+                {
+                    fixed (float* ptrS = s)
+                    {
+                        for (var i = 0; i < length; i += 8)
+                        {
+                            var j = Avx.LoadVector256(ptr + i);
+                            var k = Avx.LoadVector256(ptrB + i);
+
+                            Avx.Store(ptrS + i, Avx.Max(j, k));
+                        }
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MaxNaive(a, b, s, length, a.Length);
+            }
+        }
+
         #endregion
 
         #region MaxByScalar
@@ -1002,6 +1456,12 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
+                if (AvxEnabled && AvxLengthValid(a.Length))
+                {
+                    MaxAvx(a, b, s);
+                    return;
+                }
+
                 if (SseLengthValid(a.Length))
                 {
                     if (Sse.IsSupported)
@@ -1041,6 +1501,33 @@ namespace Robust.Shared.Maths
                         var j = Sse.LoadVector128(ptr + i);
 
                         Sse.Store(ptrS + i, Sse.Max(j, scalar));
+                    }
+                }
+            }
+
+            if(remainder != 0)
+            {
+                MaxNaive(a, b, s, length, a.Length);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        private static void MaxAvx(ReadOnlySpan<float> a, float b, Span<float> s)
+        {
+            var remainder = a.Length & 7;
+            var length = a.Length - remainder;
+
+            var scalar = Vector256.Create(b);
+
+            fixed (float* ptr = a)
+            {
+                fixed (float* ptrS = s)
+                {
+                    for (var i = 0; i < length; i += 8)
+                    {
+                        var j = Avx.LoadVector256(ptr + i);
+
+                        Avx.Store(ptrS + i, Avx.Max(j, scalar));
                     }
                 }
             }

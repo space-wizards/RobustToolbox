@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Drawing;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -11,12 +9,17 @@ namespace Robust.Shared.Maths
     {
         // TODO: ARM support when .NET 5.0 comes out.
 
+        /// <summary>
+        ///     Whether to use the hardware-accelerated paths.
+        /// </summary>
+        public static bool Enabled { get; set; } = true;
+
         #region Utils
 
         /// <summary>
         ///     Returns whether the specified array length is valid for doing SIMD.
         /// </summary>
-        public static bool LengthValid(int arrayLength)
+        public static bool SseLengthValid(int arrayLength)
         {
             return arrayLength >= 4;
         }
@@ -43,12 +46,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MultiplySse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MultiplySse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -115,12 +121,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MultiplySse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MultiplySse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -185,12 +194,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    DivideSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        DivideSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -257,12 +269,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    DivideSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        DivideSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -327,12 +342,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    AddSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        AddSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -399,12 +417,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    AddSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        AddSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -457,11 +478,14 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static float HorizontalAdd(ReadOnlySpan<float> a)
         {
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse3.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    return HorizontalAddSse(a);
+                    if (Sse3.IsSupported)
+                    {
+                        return HorizontalAddSse(a);
+                    }
                 }
             }
 
@@ -532,12 +556,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    SubSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        SubSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -604,12 +631,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    SubSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        SubSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -674,12 +704,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported && Sse2.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    AbsSse(a, s);
-                    return;
+                    if (Sse.IsSupported && Sse2.IsSupported)
+                    {
+                        AbsSse(a, s);
+                        return;
+                    }
                 }
             }
 
@@ -744,12 +777,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MinSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MinSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -816,12 +852,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MinSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MinSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -886,12 +925,15 @@ namespace Robust.Shared.Maths
             if (a.Length != b.Length || a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MaxSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MaxSse(a, b, s);
+                        return;
+                    }
                 }
             }
 
@@ -958,12 +1000,15 @@ namespace Robust.Shared.Maths
             if (a.Length != s.Length)
                 throw new ArgumentException("Length of arrays must be the same!");
 
-            if (LengthValid(a.Length))
+            if (Enabled)
             {
-                if (Sse.IsSupported)
+                if (SseLengthValid(a.Length))
                 {
-                    MaxSse(a, b, s);
-                    return;
+                    if (Sse.IsSupported)
+                    {
+                        MaxSse(a, b, s);
+                        return;
+                    }
                 }
             }
 

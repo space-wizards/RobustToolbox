@@ -7,6 +7,9 @@ namespace Robust.Shared.Maths
 {
     public static unsafe class NumericsHelpers
     {
+        public const string AvxEnvironmentVariable = "NUMERICS_AVX";
+
+        private static bool _avxEnabled = false;
         // TODO: ARM support when .NET 5.0 comes out.
 
         /// <summary>
@@ -15,9 +18,14 @@ namespace Robust.Shared.Maths
         public static bool Enabled { get; set; } = true;
 
         /// <summary>
-        ///     Whether AVX is enabled via the environment variables.
+        ///     Whether AVX is enabled.
         /// </summary>
-        public static bool AvxEnabled => Environment.GetEnvironmentVariable("NUMERICS_AVX") != null && Avx.IsSupported;
+        public static readonly bool AvxEnabled;
+
+        static NumericsHelpers()
+        {
+            AvxEnabled = Avx.IsSupported && Environment.GetEnvironmentVariable(AvxEnvironmentVariable) != null;
+        }
 
         #region Utils
 

@@ -180,9 +180,9 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // Process frictional forces
-            foreach (var physics in _awakeBodies)
+            foreach (var physics in simulatedBodies)
             {
-                ProcessFriction(physics, frameTime);
+                ProcessFriction(physics);
             }
 
             // Calculate collisions and store them in the cache
@@ -382,14 +382,14 @@ namespace Robust.Shared.GameObjects.Systems
         ///     Process friction between tiles and entities. Does not process collision friction.
         /// </summary>
         /// <param name="body"></param>
-        private void ProcessFriction(IPhysicsComponent body, float frameTime)
+        private void ProcessFriction(IPhysicsComponent body)
         {
             if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
             var friction = GetFriction(body);
 
             // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime;
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length;
 
             if (dynamicFriction == 0.0f)
                 return;

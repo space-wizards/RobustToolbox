@@ -34,7 +34,7 @@ namespace Robust.Client.Interfaces.UserInterface
         Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
-        
+
         /// <summary>
         ///     Gets the default UIScale that we will use if <see cref="CVars.DisplayUIScale"/> gets set to 0.
         ///     Based on the OS-assigned window scale factor.
@@ -134,6 +134,10 @@ namespace Robust.Client.Interfaces.UserInterface
         void QueueStyleUpdate(Control control);
         void QueueLayoutUpdate(Control control);
         void CursorChanged(Control control);
+        /// <summary>
+        /// Hides the tooltip for the indicated control, if tooltip for that control is currently showing.
+        /// </summary>
+        void HideTooltipFor(Control control);
     }
 }
 

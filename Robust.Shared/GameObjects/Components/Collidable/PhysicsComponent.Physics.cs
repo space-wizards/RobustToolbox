@@ -180,13 +180,13 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        private float _mass = 1;
+        private float _mass;
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
         private bool _anchored = true;
-        private float _friction = 0.35f;
+        private float _friction;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

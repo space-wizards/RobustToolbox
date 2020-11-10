@@ -109,9 +109,9 @@ namespace Robust.Shared.GameObjects.Systems
         /// <summary>
         ///     Simulates the physical world for a given amount of time.
         /// </summary>
-        /// <param name="deltaTime">Delta Time in seconds of how long to simulate the world.</param>
+        /// <param name="frameTime">Delta Time in seconds of how long to simulate the world.</param>
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
-        protected void SimulateWorld(float deltaTime, bool prediction)
+        protected void SimulateWorld(float frameTime, bool prediction)
         {
             var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
 
@@ -127,28 +127,35 @@ namespace Robust.Shared.GameObjects.Systems
                 if(!body.CanMove())
                     continue;
 
-                var linearVelocity = body.WarmStart ? body.LinearVelocity : Vector2.Zero;
+                // TODO: We should store impulse instead in case the mass changes
+                var oldVelocity = body.WarmStart ? body.LinearVelocity : Vector2.Zero;
+                var deltaVelocity = Vector2.Zero;
 
-                // TODO: For whatever reason if you use deltaTime here instead of worldposition you get massive misprediction
+                // See https://www.youtube.com/watch?v=SHinxAhv1ZE for an overall explanation
+
+                // Integration
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
-                    linearVelocity += controller.LinearVelocity * deltaTime;
-                    linearVelocity += controller.Impulse * body.InvMass * deltaTime;
+                    deltaVelocity += controller.LinearVelocity * frameTime;
+                    deltaVelocity += controller.Impulse * body.InvMass * frameTime;
                     controller.Impulse = Vector2.Zero;
+                    controller.LinearVelocity = Vector2.Zero;
                 }
 
-                if (linearVelocity != Vector2.Zero && linearVelocity.LengthSquared < 0.00001f)
+                // TODO https://youtu.be/SHinxAhv1ZE?t=1937
+                // Should stop the "springing" squishing
+
+                var newVelocity = (oldVelocity + deltaVelocity);
+
+                if (newVelocity != Vector2.Zero && newVelocity.LengthSquared < 0.00001f)
                 {
                     body.LinearVelocity = Vector2.Zero;
                 }
                 else
                 {
-                    body.LinearVelocity = linearVelocity;
+                    body.LinearVelocity = newVelocity;
                 }
-                // Integrate forces
-                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
-                body.AngularVelocity += body.Torque * body.InvI * deltaTime;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -157,24 +164,21 @@ namespace Robust.Shared.GameObjects.Systems
                 body.Torque = 0f;
             }
 
+            // Process frictional forces
+            foreach (var physics in simulatedBodies)
+            {
+                ProcessFriction(physics);
+            }
+
             // Calculate collisions and store them in the cache
             ProcessCollisions(_awakeBodies);
 
-            if (_collisionCache.Count > 0)
-            {
-                VelocitySolver();
-            }
+            VelocitySolver();
 
             CollisionBehaviors();
 
             // Remove all entities that were deleted during collision handling
             ProcessQueue();
-
-            // Process frictional forces
-            foreach (var physics in _awakeBodies)
-            {
-                ProcessFriction(physics);
-            }
 
             foreach (var (_, controllers) in _controllers)
             {
@@ -283,6 +287,9 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void VelocitySolver(byte iterations = 4)
         {
+            // TODO: Could potentially use a ConcurrentDictionary to write all of the impulses, then go through and apply them at the end
+            if (_collisionCache.Count == 0) return;
+
             for (var i = 0; i < iterations; i++)
             {
                 var offset = _random.Next(_collisionCache.Count - 1);
@@ -312,12 +319,13 @@ namespace Robust.Shared.GameObjects.Systems
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
         private void PositionSolver(List<Manifold> collisions, byte iterations = 1)
         {
-            const float allowance = 1 / 256.0f;
-            var percent = MathHelper.Clamp(0.4f / iterations, 0.01f, 1f);
-            var done = true;
+            const float allowance = 1 / 128.0f;
+            const float percent = 0.4f;
 
             for (var i = 0; i < iterations; i++)
             {
+                var done = true;
+
                 foreach (var collision in collisions)
                 {
                     if (!collision.Hard)
@@ -347,6 +355,9 @@ namespace Robust.Shared.GameObjects.Systems
                         collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
                     }
                 }
+
+                if (done)
+                    break;
             }
         }
 

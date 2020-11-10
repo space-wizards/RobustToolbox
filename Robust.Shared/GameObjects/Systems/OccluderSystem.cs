@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.EntitySystemMessages;
@@ -25,15 +26,17 @@ namespace Robust.Shared.GameObjects.Systems
         private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderRemoveQueue =
             new List<(OccluderComponent Occluder, EntityCoordinates Coordinates)>();
 
-        internal DynamicTree<OccluderComponent>? GetOccluderTreeForGrid(MapId mapId, GridId gridId)
+        internal bool TryGetOccluderTreeForGrid(MapId mapId, GridId gridId, [NotNullWhen(true)] out DynamicTree<OccluderComponent>? gridTree)
         {
+            gridTree = null;
+
             if (!_gridTrees.TryGetValue(mapId, out var grids))
-                return null;
+                return false;
 
-            if (!grids.TryGetValue(gridId, out var gridTree))
-                return null;
+            if (!grids.TryGetValue(gridId, out gridTree))
+                return false;
 
-            return gridTree;
+            return true;
         }
 
         public override void Initialize()

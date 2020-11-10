@@ -29,15 +29,15 @@ namespace Robust.Shared.Utility
     public struct UniqueIndex<TKey, TValue> : IUniqueIndex<TKey, TValue> where TKey : notnull
     {
 
-        private ImmutableDictionary<TKey, ISet<TValue>> _index;
+        private ImmutableDictionary<TKey, ISet<TValue>>? _index;
 
         /// <inheritdoc />
-        public int KeyCount => _index.Count;
+        public int KeyCount => _index?.Count ?? 0;
 
         /// <inheritdoc />
         public bool Add(TKey key, TValue value)
         {
-            ISet<TValue> set;
+            ISet<TValue>? set;
 
             if (_index is null)
             {
@@ -58,7 +58,7 @@ namespace Robust.Shared.Utility
         /// <inheritdoc />
         public int AddRange(TKey key, IEnumerable<TValue> values)
         {
-            ISet<TValue> set;
+            ISet<TValue>? set;
 
             if (_index is null)
             {
@@ -190,12 +190,11 @@ namespace Robust.Shared.Utility
             _index = ImmutableDictionary.CreateRange(index);
         }
 
-        /// <inheritdoc />
         public ISet<TValue> this[TKey key]
         {
             get
             {
-                ISet<TValue> set;
+                ISet<TValue>? set;
 
                 if (_index is null)
                 {
@@ -217,7 +216,15 @@ namespace Robust.Shared.Utility
 
         /// <inheritdoc cref="IEnumerable{T}"/>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator() => _index.GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, ISet<TValue>>> GetEnumerator()
+        {
+            if (_index != null)
+            {
+                return _index.GetEnumerator();
+            }
+
+            return Enumerable.Empty<KeyValuePair<TKey, ISet<TValue>>>().GetEnumerator();
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

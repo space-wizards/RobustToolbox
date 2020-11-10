@@ -198,7 +198,7 @@ namespace Robust.Server.Console
             return result;
         }
 
-        private void CancelKeyHandler(object sender, ConsoleCancelEventArgs args)
+        private void CancelKeyHandler(object? sender, ConsoleCancelEventArgs args)
         {
             // Handle process exiting ourselves.
             args.Cancel = true;

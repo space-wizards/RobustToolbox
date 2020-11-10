@@ -871,15 +871,15 @@ namespace Robust.Client.Graphics.Clyde
                 BindVertexArray(_occlusionVao.Handle);
                 CheckGlError();
 
-                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(..ai));
-                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(..avi));
-                _occlusionEbo.Reallocate(indexBuffer.AsSpan(..ii));
+                _occlusionVbo.Reallocate(arrayBuffer.AsSpan(0, ai));
+                _occlusionVIVbo.Reallocate(arrayVIBuffer.AsSpan(0, avi));
+                _occlusionEbo.Reallocate(indexBuffer.AsSpan(0, ii));
 
                 BindVertexArray(_occlusionMaskVao.Handle);
                 CheckGlError();
 
-                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(..ami));
-                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(..imi));
+                _occlusionMaskVbo.Reallocate(arrayMaskBuffer.AsSpan(0, ami));
+                _occlusionMaskEbo.Reallocate(indexMaskBuffer.AsSpan(0, imi));
             }
             finally
             {

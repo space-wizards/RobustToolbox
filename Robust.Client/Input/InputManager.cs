@@ -144,8 +144,8 @@ namespace Robust.Client.Input
             var version = 1;
 
             ser.DataField(ref version, "version", 1);
-            ser.DataField(ref modifiedBindings, "binds", null);
-            ser.DataField(ref leaveEmpty, "leaveEmpty", null);
+            ser.DataField(ref modifiedBindings, "binds", Array.Empty<KeyBindingRegistration>());
+            ser.DataField(ref leaveEmpty, "leaveEmpty", Array.Empty<BoundKeyFunction>());
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
@@ -159,7 +159,18 @@ namespace Robust.Client.Input
             // the diff does not have to be symmetrical, otherwise instead of 'A \ B' we allocate all the things with '(A \ B) ∪ (B \ A)'
             // It should be OK to artificially keyup these, because in the future the organic keyup will be blocked (either the context
             // does not have the binding, or the double keyup check in UpBind will block it).
-            foreach (var function in args.OldContext.Except(args.NewContext))
+            if (args.OldContext == null)
+            {
+                return;
+            }
+
+            IEnumerable<BoundKeyFunction> enumerable = args.OldContext;
+            if (args.NewContext != null)
+            {
+                enumerable = enumerable.Except(args.NewContext);
+            }
+
+            foreach (var function in enumerable)
             {
                 var bind = _bindings.Find(binding => binding.Function == function);
                 if (bind == null || bind.State == BoundKeyState.Up)

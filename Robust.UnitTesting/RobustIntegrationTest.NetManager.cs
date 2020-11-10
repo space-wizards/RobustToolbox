@@ -290,7 +290,7 @@ namespace Robust.UnitTesting
                 channel.Disconnect(reason);
             }
 
-            INetChannel IClientNetManager.ServerChannel => ServerChannel;
+            INetChannel? IClientNetManager.ServerChannel => ServerChannel;
             public ClientConnectionState ClientConnectState => ClientConnectionState.NotConnecting;
 
             public event Action<ClientConnectionState>? ClientConnectStateChanged
@@ -299,7 +299,7 @@ namespace Robust.UnitTesting
                 remove { }
             }
 
-            private IntegrationNetChannel ServerChannel
+            private IntegrationNetChannel? ServerChannel
             {
                 get
                 {
@@ -328,6 +328,11 @@ namespace Robust.UnitTesting
             public void ClientDisconnect(string reason)
             {
                 DebugTools.Assert(IsClient);
+                if (ServerChannel == null)
+                {
+                    return;
+                }
+
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
                 Shutdown(reason);
             }

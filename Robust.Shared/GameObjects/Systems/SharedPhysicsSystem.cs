@@ -22,7 +22,7 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly IGameTiming _timing = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private const float Epsilon = 1.0e-6f;
 
@@ -55,6 +55,21 @@ namespace Robust.Shared.GameObjects.Systems
 
         // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
         private float _speedLimit = 30.0f;
+
+        #region parameters
+        /// <summary>
+        ///     By how much are we allowed to move 2 colliding objects in a single tick if they're still overlapping after the velocity solver?
+        /// </summary>
+        private float _maxPositionCorrect = 0.1f;
+
+        /// <summary>
+        ///     Maximum amount of overlap allowed for 2 bodies.
+        /// </summary>
+        private float _positionAllowance = 1 / 258f;
+
+        private byte _positionSolverIterations = 1;
+        private byte _velocitySolverIterations = 4;
+        #endregion
 
         public override void Initialize()
         {
@@ -165,12 +180,13 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             // Process frictional forces
-            foreach (var physics in simulatedBodies)
+            foreach (var physics in _awakeBodies)
             {
                 ProcessFriction(physics);
             }
 
             // Calculate collisions and store them in the cache
+            // Don't use simulated because this is behavior stuff which WILL mispredict.
             ProcessCollisions(_awakeBodies);
 
             VelocitySolver();
@@ -191,7 +207,7 @@ namespace Robust.Shared.GameObjects.Systems
             // Remove all entities that were deleted due to the controller
             ProcessQueue();
 
-            PositionSolver(_collisionCache);
+            PositionSolver(frameTime);
 
             foreach (var physics in simulatedBodies)
             {
@@ -285,12 +301,12 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void VelocitySolver(byte iterations = 4)
+        private void VelocitySolver()
         {
             // TODO: Could potentially use a ConcurrentDictionary to write all of the impulses, then go through and apply them at the end
             if (_collisionCache.Count == 0) return;
 
-            for (var i = 0; i < iterations; i++)
+            for (var i = 0; i < _velocitySolverIterations; i++)
             {
                 var offset = _random.Next(_collisionCache.Count - 1);
                 for (var j = 0; j < _collisionCache.Count; j++)
@@ -300,7 +316,6 @@ namespace Robust.Shared.GameObjects.Systems
 
                     collision.A.WakeBody();
                     collision.B.WakeBody();
-
                     var impulse = _physicsManager.SolveCollisionImpulse(collision);
                     if (collision.A.CanMove())
                     {
@@ -317,16 +332,17 @@ namespace Robust.Shared.GameObjects.Systems
 
         // Based off of Randy Gaul's ImpulseEngine code
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
-        private void PositionSolver(List<Manifold> collisions, byte iterations = 1)
+        private void PositionSolver(float frameTime)
         {
-            const float allowance = 1 / 128.0f;
-            const float percent = 0.4f;
+            if (_collisionCache.Count == 0) return;
 
-            for (var i = 0; i < iterations; i++)
+            var fraction = (float) (frameTime / _gameTiming.TickPeriod.TotalSeconds);
+
+            for (var i = 0; i < _positionSolverIterations; i++)
             {
                 var done = true;
 
-                foreach (var collision in collisions)
+                foreach (var collision in _collisionCache)
                 {
                     if (!collision.Hard)
                     {
@@ -335,12 +351,12 @@ namespace Robust.Shared.GameObjects.Systems
 
                     var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
 
-                    if (penetration <= allowance)
+                    if (penetration <= _positionAllowance)
                         continue;
 
                     done = false;
-                    //var correction = collision.Normal * Math.Abs(penetration) * percent;
-                    var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
+                    var correction = collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f), _maxPositionCorrect * fraction) / (collision.A.InvMass + collision.B.InvMass);
+
                     if (collision.A.CanMove())
                     {
                         collision.A.Owner.Transform.DeferUpdates = true;

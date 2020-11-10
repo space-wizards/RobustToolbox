@@ -220,7 +220,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             {
                 if (!_parent.IsValid())
                 {
-                    DebugTools.Assert("Tried to move root node.");
+                    DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
                     return;
                 }
 

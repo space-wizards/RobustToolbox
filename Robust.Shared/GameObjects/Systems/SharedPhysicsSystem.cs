@@ -143,7 +143,7 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
 
                 // TODO: We should store impulse instead in case the mass changes
-                var oldVelocity = body.WarmStart ? body.LinearVelocity : Vector2.Zero;
+                var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity * frameTime : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
                 // See https://www.youtube.com/watch?v=SHinxAhv1ZE for an overall explanation
@@ -182,7 +182,7 @@ namespace Robust.Shared.GameObjects.Systems
             // Process frictional forces
             foreach (var physics in _awakeBodies)
             {
-                ProcessFriction(physics);
+                ProcessFriction(physics, frameTime);
             }
 
             // Calculate collisions and store them in the cache
@@ -214,6 +214,7 @@ namespace Robust.Shared.GameObjects.Systems
                 if (physics.LinearVelocity != Vector2.Zero)
                 {
                     UpdatePosition(physics);
+                    physics.LinearVelocity /= frameTime;
                 }
             }
 
@@ -381,14 +382,14 @@ namespace Robust.Shared.GameObjects.Systems
         ///     Process friction between tiles and entities. Does not process collision friction.
         /// </summary>
         /// <param name="body"></param>
-        private void ProcessFriction(IPhysicsComponent body)
+        private void ProcessFriction(IPhysicsComponent body, float frameTime)
         {
             if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
             var friction = GetFriction(body);
 
             // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length / 9.8f;
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime;
 
             if (dynamicFriction == 0.0f)
                 return;

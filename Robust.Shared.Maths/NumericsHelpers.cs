@@ -8,8 +8,7 @@ namespace Robust.Shared.Maths
     public static unsafe class NumericsHelpers
     {
         public const string AvxEnvironmentVariable = "NUMERICS_AVX";
-
-        private static bool _avxEnabled = false;
+        
         // TODO: ARM support when .NET 5.0 comes out.
 
         /// <summary>

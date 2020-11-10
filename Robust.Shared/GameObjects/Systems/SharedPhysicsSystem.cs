@@ -133,20 +133,22 @@ namespace Robust.Shared.GameObjects.Systems
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
-                    linearVelocity += controller.LinearVelocity;
-                    linearVelocity += controller.Impulse * body.InvMass;
+                    linearVelocity += controller.LinearVelocity * deltaTime;
+                    linearVelocity += controller.Impulse * body.InvMass * deltaTime;
                     controller.Impulse = Vector2.Zero;
                 }
 
-                // i'm not sure if this is the proper way to solve this, but
-                // these are not kinematic bodies, so we need to preserve the previous
-                // velocity.
-                //if (body.LinearVelocity.LengthSquared < linearVelocity.LengthSquared)
+                if (linearVelocity != Vector2.Zero && linearVelocity.LengthSquared < 0.00001f)
+                {
+                    body.LinearVelocity = Vector2.Zero;
+                }
+                else
+                {
                     body.LinearVelocity = linearVelocity;
-
+                }
                 // Integrate forces
-                body.LinearVelocity += body.Force * body.InvMass;
-                body.AngularVelocity += body.Torque * body.InvI;
+                body.LinearVelocity += body.Force * body.InvMass * deltaTime;
+                body.AngularVelocity += body.Torque * body.InvI * deltaTime;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -158,13 +160,20 @@ namespace Robust.Shared.GameObjects.Systems
             // Calculate collisions and store them in the cache
             ProcessCollisions(_awakeBodies);
 
+            if (_collisionCache.Count > 0)
+            {
+                VelocitySolver();
+            }
+
+            CollisionBehaviors();
+
             // Remove all entities that were deleted during collision handling
             ProcessQueue();
 
             // Process frictional forces
             foreach (var physics in _awakeBodies)
             {
-                ProcessFriction(physics, deltaTime);
+                ProcessFriction(physics);
             }
 
             foreach (var (_, controllers) in _controllers)
@@ -178,34 +187,13 @@ namespace Robust.Shared.GameObjects.Systems
             // Remove all entities that were deleted due to the controller
             ProcessQueue();
 
-            const int solveIterationsAt60 = 4;
+            PositionSolver(_collisionCache);
 
-            var multiplier = deltaTime / (1f / 60);
-
-            var divisions = MathHelper.Clamp(
-                MathF.Round(solveIterationsAt60 * multiplier, MidpointRounding.AwayFromZero),
-                1,
-                20
-            );
-
-            if (_timing.InSimulation) divisions = 1;
-
-            for (var i = 0; i < divisions; i++)
+            foreach (var physics in simulatedBodies)
             {
-                foreach (var physics in simulatedBodies)
+                if (physics.LinearVelocity != Vector2.Zero)
                 {
-                    if (physics.CanMove())
-                    {
-                        UpdatePosition(physics, deltaTime / divisions);
-                    }
-                }
-
-                for (var j = 0; j < divisions; ++j)
-                {
-                    if (FixClipping(_collisionCache, divisions))
-                    {
-                        break;
-                    }
+                    UpdatePosition(physics);
                 }
             }
 
@@ -227,7 +215,7 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero, false))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, aPhysics.LinearVelocity, false))
                 {
                     var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
@@ -248,12 +236,10 @@ namespace Robust.Shared.GameObjects.Systems
                     _collisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
                 }
             }
+        }
 
-            if (_collisionCache.Count > 0)
-            {
-                VelocitySolver();
-            }
-
+        private void CollisionBehaviors()
+        {
             var collisionsWith = new Dictionary<ICollideBehavior, int>();
             foreach (var collision in _collisionCache)
             {
@@ -295,10 +281,8 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void VelocitySolver()
+        private void VelocitySolver(byte iterations = 4)
         {
-            const byte iterations = 4;
-
             for (var i = 0; i < iterations; i++)
             {
                 var offset = _random.Next(_collisionCache.Count - 1);
@@ -324,12 +308,53 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
+        // Based off of Randy Gaul's ImpulseEngine code
+        // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
+        private void PositionSolver(List<Manifold> collisions, byte iterations = 1)
+        {
+            const float allowance = 1 / 256.0f;
+            var percent = MathHelper.Clamp(0.4f / iterations, 0.01f, 1f);
+            var done = true;
+
+            for (var i = 0; i < iterations; i++)
+            {
+                foreach (var collision in collisions)
+                {
+                    if (!collision.Hard)
+                    {
+                        continue;
+                    }
+
+                    var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
+
+                    if (penetration <= allowance)
+                        continue;
+
+                    done = false;
+                    //var correction = collision.Normal * Math.Abs(penetration) * percent;
+                    var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
+                    if (collision.A.CanMove())
+                    {
+                        collision.A.Owner.Transform.DeferUpdates = true;
+                        _deferredUpdates.Add(collision.A);
+                        collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
+                    }
+
+                    if (collision.B.CanMove())
+                    {
+                        collision.B.Owner.Transform.DeferUpdates = true;
+                        _deferredUpdates.Add(collision.B);
+                        collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         ///     Process friction between tiles and entities. Does not process collision friction.
         /// </summary>
         /// <param name="body"></param>
-        /// <param name="deltaTime"></param>
-        private void ProcessFriction(IPhysicsComponent body, float deltaTime)
+        private void ProcessFriction(IPhysicsComponent body)
         {
             if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
@@ -346,11 +371,11 @@ namespace Robust.Shared.GameObjects.Systems
             body.LinearVelocity += frictionVelocityChange;
         }
 
-        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
+        private void UpdatePosition(IPhysicsComponent physics)
         {
             var ent = physics.Entity;
 
-            if (!physics.CanMove() || (physics.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(physics.AngularVelocity) < Epsilon))
+            if ((physics.LinearVelocity.LengthSquared < Epsilon && MathF.Abs(physics.AngularVelocity) < Epsilon))
                 return;
 
             if (physics.LinearVelocity != Vector2.Zero)
@@ -367,7 +392,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var newPosition = physics.WorldPosition + physics.LinearVelocity;
             var owner = physics.Owner;
             var transform = owner.Transform;
 
@@ -375,7 +400,7 @@ namespace Robust.Shared.GameObjects.Systems
             if (!ContainerHelpers.IsInContainer(owner))
             {
                 // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
-                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                if (_mapManager.TryFindGridAt(transform.MapID, newPosition, out var grid) &&
                     grid.GridEntityId.IsValid() &&
                     grid.GridEntityId != owner.Uid)
                 {
@@ -388,48 +413,8 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.WorldRotation += physics.AngularVelocity;
             physics.WorldPosition = newPosition;
-        }
-
-        // Based off of Randy Gaul's ImpulseEngine code
-        // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
-        private bool FixClipping(List<Manifold> collisions, float divisions)
-        {
-            const float allowance = 1 / 256.0f;
-            var percent = MathHelper.Clamp(0.4f / divisions, 0.01f, 1f);
-            var done = true;
-            foreach (var collision in collisions)
-            {
-                if (!collision.Hard)
-                {
-                    continue;
-                }
-
-                var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
-
-                if (penetration <= allowance)
-                    continue;
-
-                done = false;
-                //var correction = collision.Normal * Math.Abs(penetration) * percent;
-                var correction = collision.Normal * Math.Max(penetration - allowance, 0.0f) / (collision.A.InvMass + collision.B.InvMass) * percent;
-                if (collision.A.CanMove())
-                {
-                    collision.A.Owner.Transform.DeferUpdates = true;
-                    _deferredUpdates.Add(collision.A);
-                    collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
-                }
-
-                if (collision.B.CanMove())
-                {
-                    collision.B.Owner.Transform.DeferUpdates = true;
-                    _deferredUpdates.Add(collision.B);
-                    collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
-                }
-            }
-
-            return done;
         }
 
         private float GetFriction(IPhysicsComponent body)

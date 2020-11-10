@@ -15,6 +15,7 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
         void RemoveOverlaysOfClass(string className);
         bool HasOverlay(Guid id);
         bool HasOverlayOfClass(string className);
+        bool HasOverlayOfType<T>();
 
         Overlay GetOverlay(Guid id);
         bool GetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay;

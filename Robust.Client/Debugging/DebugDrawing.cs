@@ -46,7 +46,7 @@ namespace Robust.Client.Debugging
 
                 _debugColliders = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlayOfType<PhysicsOverlay>())
                 {
                     _overlayManager.AddOverlay(Guid.NewGuid(), new PhysicsOverlay(_componentManager, _eyeManager,
                         _prototypeManager, _inputManager));
@@ -71,7 +71,7 @@ namespace Robust.Client.Debugging
 
                 _debugPositions = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlayOfType<EntityPositionOverlay>())
                 {
                     _overlayManager.AddOverlay(Guid.NewGuid(), new EntityPositionOverlay(_entityManager, _eyeManager));
                 }

@@ -43,7 +43,7 @@ namespace Robust.Client.Debugging
 
                 _debugDrawRays = value;
 
-                if (value)
+                if (value && !_overlayManager.HasOverlayOfType<DebugDrawRayOverlay>())
                 {
                     _overlayManager.AddOverlay(Guid.NewGuid(), new DebugDrawRayOverlay(this));
                 }

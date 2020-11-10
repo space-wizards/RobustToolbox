@@ -59,6 +59,14 @@ namespace Robust.Client.Graphics.Overlays
             }
             return false;
         }
+        public bool HasOverlayOfType<T>() {
+            foreach (var overlay in _overlays.Values) {
+                if (overlay.GetType() == typeof(T)) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public Overlay GetOverlay(Guid id)
         {

@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects.Systems
         /// <summary>
         ///     Maximum amount of overlap allowed for 2 bodies.
         /// </summary>
-        private float _positionAllowance = 1 / 258f;
+        private float _positionAllowance = -1 / 128f;
 
         private byte _positionSolverIterations = 1;
         private byte _velocitySolverIterations = 4;
@@ -166,12 +166,6 @@ namespace Robust.Shared.GameObjects.Systems
 
                 var newVelocity = oldVelocity + deltaVelocity;
                 body.LinearVelocity = newVelocity;
-
-
-                if (body.LinearVelocity == Vector2.Zero)
-                {
-
-                }
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -392,7 +386,7 @@ namespace Robust.Shared.GameObjects.Systems
             var friction = GetFriction(body);
 
             // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime;
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * body.LinearVelocity.Length * frameTime;
 
             if (dynamicFriction == 0.0f)
                 return;

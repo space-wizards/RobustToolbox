@@ -143,7 +143,10 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
 
                 // TODO: We should store impulse instead in case the mass changes
-                var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity * frameTime : Vector2.Zero;
+
+                // TODO: Something fucky is going on with LinearVelocity, maybe try storing the frametime adjusted amount? IDFK
+
+                var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
                 // See https://www.youtube.com/watch?v=SHinxAhv1ZE for an overall explanation
@@ -161,15 +164,13 @@ namespace Robust.Shared.GameObjects.Systems
                 // TODO https://youtu.be/SHinxAhv1ZE?t=1937
                 // Should stop the "springing" squishing
 
-                var newVelocity = (oldVelocity + deltaVelocity);
+                var newVelocity = oldVelocity + deltaVelocity;
+                body.LinearVelocity = newVelocity;
 
-                if (newVelocity != Vector2.Zero && newVelocity.LengthSquared < 0.00001f)
+
+                if (body.LinearVelocity == Vector2.Zero)
                 {
-                    body.LinearVelocity = Vector2.Zero;
-                }
-                else
-                {
-                    body.LinearVelocity = newVelocity;
+
                 }
 
                 // forces are instantaneous, so these properties are cleared
@@ -182,7 +183,7 @@ namespace Robust.Shared.GameObjects.Systems
             // Process frictional forces
             foreach (var physics in simulatedBodies)
             {
-                ProcessFriction(physics);
+                ProcessFriction(physics, frameTime);
             }
 
             // Calculate collisions and store them in the cache
@@ -213,8 +214,8 @@ namespace Robust.Shared.GameObjects.Systems
             {
                 if (physics.LinearVelocity != Vector2.Zero)
                 {
-                    UpdatePosition(physics);
-                    physics.LinearVelocity /= frameTime;
+                    UpdatePosition(physics, frameTime);
+                    //physics.LinearVelocity;
                 }
             }
 
@@ -382,24 +383,27 @@ namespace Robust.Shared.GameObjects.Systems
         ///     Process friction between tiles and entities. Does not process collision friction.
         /// </summary>
         /// <param name="body"></param>
-        private void ProcessFriction(IPhysicsComponent body)
+        private void ProcessFriction(IPhysicsComponent body, float frameTime)
         {
+            //Logger.Debug($"LinearVelocity is {body.LinearVelocity}");
+
             if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
             var friction = GetFriction(body);
 
             // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length;
+            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime;
 
             if (dynamicFriction == 0.0f)
                 return;
 
-            var frictionVelocityChange = body.LinearVelocity.Normalized * -dynamicFriction;
+            if (dynamicFriction > body.LinearVelocity.Length)
+                dynamicFriction = body.LinearVelocity.Length;
 
-            body.LinearVelocity += frictionVelocityChange;
+            body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
         }
 
-        private void UpdatePosition(IPhysicsComponent physics)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
         {
             var ent = physics.Entity;
 
@@ -420,7 +424,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var newPosition = physics.WorldPosition + physics.LinearVelocity;
+            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
             var owner = physics.Owner;
             var transform = owner.Transform;
 
@@ -441,7 +445,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity;
+            physics.WorldRotation += physics.AngularVelocity * frameTime;
             physics.WorldPosition = newPosition;
         }
 

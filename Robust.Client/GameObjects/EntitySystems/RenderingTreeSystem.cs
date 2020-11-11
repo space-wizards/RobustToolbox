@@ -102,9 +102,9 @@ namespace Robust.Client.GameObjects.EntitySystems
                 QueueUpdateLight(light);
             }
 
-            foreach (var child in entity.Transform.Children)
+            foreach (var child in entity.Transform.ChildEntityUids)
             {
-                UpdateEntity(child.Owner);
+                UpdateEntity(EntityManager.GetEntity(child));
             }
         }
 
@@ -131,7 +131,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 newMapTrees?.SpriteTree.AddOrUpdate(sprite);
             }
-            
+
             if (ev.Entity.TryGetComponent(out PointLightComponent? light))
             {
                 oldMapTrees?.LightTree.Remove(light);

@@ -1,5 +1,3 @@
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using Robust.Client.ViewVariables.Instances;
 
 namespace Robust.Client.ViewVariables

@@ -233,6 +233,8 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            ArrayPool<int>.Shared.Return(indexList);
+
             _drawingSpriteList.Clear();
             FlushRenderQueue();
 

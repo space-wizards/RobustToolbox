@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -288,6 +286,9 @@ namespace Robust.Client.UserInterface.Controls
 
             Span<int> minColWidth = stackalloc int[cols];
             Span<int> minRowHeight = stackalloc int[rows];
+
+            minColWidth.Fill(0);
+            minRowHeight.Fill(0);
 
             var index = 0;
             foreach (var child in Children)

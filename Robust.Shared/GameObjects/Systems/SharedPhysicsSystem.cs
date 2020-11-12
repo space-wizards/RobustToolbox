@@ -58,18 +58,31 @@ namespace Robust.Shared.GameObjects.Systems
 
         #region parameters
         /// <summary>
-        ///     By how much are we allowed to move 2 colliding objects in a single tick if they're still overlapping after the velocity solver?
+        ///     The maximum amount of object overlap we can correct in a single tick.
         /// </summary>
-        private float _maxPositionCorrect = 0.1f;
+        private float _maxPositionCorrect = 0.4f;
+
+        /// <summary>
+        ///     Percentage of how much overlap we can correct per tick.
+        /// </summary>
+        private float _positionCorrectPercent = 0.2f;
 
         /// <summary>
         ///     Maximum amount of overlap allowed for 2 bodies.
         /// </summary>
-        private float _positionAllowance = -1 / 128f;
+        private float _positionAllowance = 1 / 128f;
 
         private byte _positionSolverIterations = 1;
         private byte _velocitySolverIterations = 4;
         #endregion
+
+        /*
+         * ISLANDS:
+         * A few engines I've seen use island solvers where after they construct the manifolds
+         * They'll group all of the collisions together, so for example if A<->B and A<->C are colliding then
+         * it'd form one island of those 2 manifolds. From this you can solve these in parallel (at least
+         * probably not the behavior step given you'll likely get multithreading issues).
+         */
 
         public override void Initialize()
         {
@@ -132,7 +145,60 @@ namespace Robust.Shared.GameObjects.Systems
 
             ProcessQueue();
 
-            foreach (var body in simulatedBodies)
+            IntegrateForces(simulatedBodies, prediction, frameTime);
+
+            // Calculate collisions and store them in the cache
+            // Don't use simulated because this is behavior stuff which WILL mispredict.
+            BuildManifolds(_awakeBodies);
+
+            ProcessFriction(simulatedBodies, frameTime);
+
+            VelocitySolver();
+
+            CollisionBehaviors();
+
+            // Remove all entities that were deleted during collision handling
+            ProcessQueue();
+
+            foreach (var (_, controllers) in _controllers)
+            {
+                foreach (var controller in controllers)
+                {
+                    controller.UpdateAfterProcessing();
+                }
+            }
+
+            // Remove all entities that were deleted due to the controller
+            ProcessQueue();
+
+            PositionSolver();
+
+            var frameSpeedLimit = _speedLimit * frameTime;
+
+            foreach (var physics in simulatedBodies)
+            {
+                if (physics.LinearVelocity != Vector2.Zero)
+                {
+                    UpdatePosition(physics, frameTime, frameSpeedLimit);
+                }
+            }
+
+            // As we also defer the updates for the _collisionCache we need to update all entities
+            foreach (var physics in _deferredUpdates)
+            {
+                var transform = physics.Owner.Transform;
+                transform.DeferUpdates = false;
+                transform.RunPhysicsDeferred();
+            }
+
+            // Cleanup
+            _deferredUpdates.Clear();
+            _collisionCache.Clear();
+        }
+
+        private void IntegrateForces(IEnumerable<IPhysicsComponent> physicsComponents, bool prediction, float frameTime)
+        {
+            foreach (var body in physicsComponents)
             {
                 // running prediction updates will not cause a body to go to sleep.
                 if(!prediction)
@@ -164,8 +230,17 @@ namespace Robust.Shared.GameObjects.Systems
                 // TODO https://youtu.be/SHinxAhv1ZE?t=1937
                 // Should stop the "springing" squishing
 
+                // Round it off
                 var newVelocity = oldVelocity + deltaVelocity;
-                body.LinearVelocity = newVelocity;
+
+                if (newVelocity.LengthSquared < 0.00001f)
+                {
+                    body.LinearVelocity = Vector2.Zero;
+                }
+                else
+                {
+                    body.LinearVelocity = newVelocity;
+                }
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -173,61 +248,15 @@ namespace Robust.Shared.GameObjects.Systems
                 body.Force = Vector2.Zero;
                 body.Torque = 0f;
             }
-
-            // Process frictional forces
-            foreach (var physics in simulatedBodies)
-            {
-                ProcessFriction(physics, frameTime);
-            }
-
-            // Calculate collisions and store them in the cache
-            // Don't use simulated because this is behavior stuff which WILL mispredict.
-            ProcessCollisions(_awakeBodies);
-
-            VelocitySolver();
-
-            CollisionBehaviors();
-
-            // Remove all entities that were deleted during collision handling
-            ProcessQueue();
-
-            foreach (var (_, controllers) in _controllers)
-            {
-                foreach (var controller in controllers)
-                {
-                    controller.UpdateAfterProcessing();
-                }
-            }
-
-            // Remove all entities that were deleted due to the controller
-            ProcessQueue();
-
-            PositionSolver(frameTime);
-
-            foreach (var physics in simulatedBodies)
-            {
-                if (physics.LinearVelocity != Vector2.Zero)
-                {
-                    UpdatePosition(physics, frameTime);
-                    //physics.LinearVelocity;
-                }
-            }
-
-            // As we also defer the updates for the _collisionCache we need to update all entities
-            foreach (var physics in _deferredUpdates)
-            {
-                var transform = physics.Owner.Transform;
-                transform.DeferUpdates = false;
-                transform.RunPhysicsDeferred();
-            }
-
-            _deferredUpdates.Clear();
         }
 
-        // Runs collision behavior and updates cache
-        private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies)
+        /// <summary>
+        ///     Run through each active body and get their collisions.
+        ///     Stores them into the _collisionCache manifolds.
+        /// </summary>
+        /// <param name="awakeBodies"></param>
+        private void BuildManifolds(IEnumerable<IPhysicsComponent> awakeBodies)
         {
-            _collisionCache.Clear();
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
@@ -256,10 +285,13 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void CollisionBehaviors()
         {
-            var collisionsWith = new Dictionary<ICollideBehavior, int>();
-            foreach (var collision in _collisionCache)
+            var collisionsWith = new Dictionary<ICollideBehavior, uint>();
+
+            // Collision behavior
+            for (var i = 0; i < _collisionCache.Count; i++)
             {
-                // Apply onCollide behavior
+                var collision = _collisionCache[i];
+
                 foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.B.Entity;
@@ -291,6 +323,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
+            // Post collide
             foreach (var behavior in collisionsWith.Keys)
             {
                 behavior.PostCollide(collisionsWith[behavior]);
@@ -299,7 +332,6 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void VelocitySolver()
         {
-            // TODO: Could potentially use a ConcurrentDictionary to write all of the impulses, then go through and apply them at the end
             if (_collisionCache.Count == 0) return;
 
             for (var i = 0; i < _velocitySolverIterations; i++)
@@ -312,6 +344,7 @@ namespace Robust.Shared.GameObjects.Systems
 
                     collision.A.WakeBody();
                     collision.B.WakeBody();
+
                     var impulse = _physicsManager.SolveCollisionImpulse(collision);
                     if (collision.A.CanMove())
                     {
@@ -328,22 +361,20 @@ namespace Robust.Shared.GameObjects.Systems
 
         // Based off of Randy Gaul's ImpulseEngine code
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
-        private void PositionSolver(float frameTime)
+        private void PositionSolver()
         {
             if (_collisionCache.Count == 0) return;
-
-            var fraction = (float) (frameTime / _gameTiming.TickPeriod.TotalSeconds);
 
             for (var i = 0; i < _positionSolverIterations; i++)
             {
                 var done = true;
-
-                foreach (var collision in _collisionCache)
+                var offset = _random.Next(_collisionCache.Count - 1);
+                for (var j = 0; j < _collisionCache.Count; j++)
                 {
+                    var collision = _collisionCache[(j + offset) % _collisionCache.Count];
+
                     if (!collision.Hard)
-                    {
                         continue;
-                    }
 
                     var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
 
@@ -351,7 +382,7 @@ namespace Robust.Shared.GameObjects.Systems
                         continue;
 
                     done = false;
-                    var correction = collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f), _maxPositionCorrect * fraction) / (collision.A.InvMass + collision.B.InvMass);
+                    var correction = collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f), _maxPositionCorrect * _positionCorrectPercent) / (collision.A.InvMass + collision.B.InvMass);
 
                     if (collision.A.CanMove())
                     {
@@ -376,28 +407,30 @@ namespace Robust.Shared.GameObjects.Systems
         /// <summary>
         ///     Process friction between tiles and entities. Does not process collision friction.
         /// </summary>
-        /// <param name="body"></param>
-        private void ProcessFriction(IPhysicsComponent body, float frameTime)
+        /// <param name="bodies"></param>
+        /// <param name="frameTime"></param>
+        private void ProcessFriction(IEnumerable<IPhysicsComponent> bodies, float frameTime)
         {
-            //Logger.Debug($"LinearVelocity is {body.LinearVelocity}");
+            foreach (var body in bodies)
+            {
+                if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
 
-            if (body.LinearVelocity == Vector2.Zero || body.Status == BodyStatus.InAir) return;
+                var friction = GetFriction(body);
 
-            var friction = GetFriction(body);
+                // friction between the two objects - Static friction not modelled
+                var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * body.LinearVelocity.Length * frameTime;
 
-            // friction between the two objects - Static friction not modelled
-            var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * body.LinearVelocity.Length * frameTime;
+                if (dynamicFriction == 0.0f)
+                    return;
 
-            if (dynamicFriction == 0.0f)
-                return;
+                if (dynamicFriction > body.LinearVelocity.Length)
+                    dynamicFriction = body.LinearVelocity.Length;
 
-            if (dynamicFriction > body.LinearVelocity.Length)
-                dynamicFriction = body.LinearVelocity.Length;
-
-            body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
+                body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
+            }
         }
 
-        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime, float frameSpeedLimit)
         {
             var ent = physics.Entity;
 
@@ -418,7 +451,12 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var frameVelocity = physics.LinearVelocity * frameTime;
+
+            if (frameVelocity.Length > frameSpeedLimit)
+                frameVelocity = frameVelocity.Normalized * frameSpeedLimit;
+
+            var newPosition = physics.WorldPosition + frameVelocity;
             var owner = physics.Owner;
             var transform = owner.Transform;
 

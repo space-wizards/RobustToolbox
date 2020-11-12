@@ -31,11 +31,11 @@ namespace Robust.Client.Utility
                     }
                     Logger.Error("Failed to load RSI {0}", rsi.RsiPath);
                     return resc.GetFallback<TextureResource>().Texture;
-                case SpriteSpecifier.PrototypeIcon prototypeIcon:
+                case SpriteSpecifier.EntityPrototypeIcon prototypeIcon:
                     var protMgr = IoCManager.Resolve<IPrototypeManager>();
-                    if (!protMgr.TryIndex<EntityPrototype>(prototypeIcon.PrototypeId, out var prototype))
+                    if (!protMgr.TryIndex<EntityPrototype>(prototypeIcon.EntityPrototypeId, out var prototype))
                     {
-                        Logger.Error("Failed to load PrototypeIcon {0}", prototypeIcon.PrototypeId);
+                        Logger.Error("Failed to load EntityPrototypeIcon for EntityPrototypeId {0}", prototypeIcon.EntityPrototypeId);
                         return resc.GetFallback<TextureResource>().Texture;
                     }
                     return SpriteComponent.GetPrototypeIcon(prototype, resc)?.Default ?? resc.GetFallback<TextureResource>().Texture;
@@ -61,11 +61,11 @@ namespace Robust.Client.Utility
                         }
                     }
                     return resc.GetFallback<TextureResource>().Texture;
-                case SpriteSpecifier.PrototypeIcon prototypeIcon:
+                case SpriteSpecifier.EntityPrototypeIcon prototypeIcon:
                     var protMgr = IoCManager.Resolve<IPrototypeManager>();
-                    if (!protMgr.TryIndex<EntityPrototype>(prototypeIcon.PrototypeId, out var prototype))
+                    if (!protMgr.TryIndex<EntityPrototype>(prototypeIcon.EntityPrototypeId, out var prototype))
                     {
-                        Logger.Error("Failed to load PrototypeIcon {0}", prototypeIcon.PrototypeId);
+                        Logger.Error("Failed to load PrototypeIcon {0}", prototypeIcon.EntityPrototypeId);
                         return resc.GetFallback<TextureResource>().Texture;
                     }
                     return SpriteComponent.GetPrototypeIcon(prototype, resc) ?? resc.GetFallback<TextureResource>().Texture;

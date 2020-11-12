@@ -75,25 +75,25 @@ namespace Robust.Shared.Utility
         }
 
         [Serializable, NetSerializable]
-        public sealed class PrototypeIcon : SpriteSpecifier
+        public sealed class EntityPrototypeIcon : SpriteSpecifier
         {
-            public readonly string PrototypeId;
+            public readonly string EntityPrototypeId;
 
-            public PrototypeIcon(string prototypeId)
+            public EntityPrototypeIcon(string entityPrototypeId)
             {
-                PrototypeId = prototypeId;
+                EntityPrototypeId = entityPrototypeId;
             }
 
             public override bool Equals(object? obj)
             {
-                if (obj is PrototypeIcon prototypeIcon)
-                    return PrototypeId == prototypeIcon.PrototypeId;
+                if (obj is EntityPrototypeIcon prototypeIcon)
+                    return EntityPrototypeId == prototypeIcon.EntityPrototypeId;
                 return false;
             }
 
             public override int GetHashCode()
             {
-                return PrototypeId.GetHashCode();
+                return EntityPrototypeId.GetHashCode();
             }
         }
     }

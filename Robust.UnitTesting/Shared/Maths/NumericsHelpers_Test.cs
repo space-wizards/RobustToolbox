@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Microsoft.DotNet.RemoteExecutor;
-using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions;
+#if NET5_0
+using System.Runtime.Intrinsics.Arm;
+#endif
 
 namespace Robust.UnitTesting.Shared.Maths
 {

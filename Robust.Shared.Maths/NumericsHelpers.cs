@@ -10,6 +10,8 @@ namespace Robust.Shared.Maths
 {
     public static unsafe class NumericsHelpers
     {
+        #region Constructor & Environment Variables
+
         public const string DisabledEnvironmentVariable = "NUMERICS_DISABLED";
         public const string AvxEnvironmentVariable = "NUMERICS_AVX";
 
@@ -25,16 +27,20 @@ namespace Robust.Shared.Maths
 
         static NumericsHelpers()
         {
-            Enabled = Environment.GetEnvironmentVariable(DisabledEnvironmentVariable) == null;
-            AvxEnabled = Avx.IsSupported && Environment.GetEnvironmentVariable(AvxEnvironmentVariable) != null;
+            var disabled = Environment.GetEnvironmentVariable(DisabledEnvironmentVariable);
+            var avxEnabled = Environment.GetEnvironmentVariable(AvxEnvironmentVariable);
+            Enabled = disabled == null || !bool.Parse(disabled);
+            AvxEnabled = Enabled && Avx.IsSupported && avxEnabled != null && bool.Parse(avxEnabled);
         }
+
+        #endregion
 
         #region Utils
 
         /// <summary>
         ///     Returns whether the specified array length is valid for the SSE paths.
         /// </summary>
-        public static bool SseLengthValid(int arrayLength)
+        private static bool SseLengthValid(int arrayLength)
         {
             return arrayLength >= 4;
         }
@@ -42,7 +48,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns whether the specified array length is valid for the AVX paths.
         /// </summary>
-        public static bool AvxLengthValid(int arrayLength)
+        private static bool AvxLengthValid(int arrayLength)
         {
             return arrayLength >= 8;
         }
@@ -935,7 +941,7 @@ namespace Robust.Shared.Maths
         {
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && Sse3.IsSupported && AvxLengthValid(a.Length))
                 {
                     return HorizontalAddAvx(a);
                 }
@@ -1038,19 +1044,21 @@ namespace Robust.Shared.Maths
             var remainder = a.Length & 7;
             var length = a.Length - remainder;
 
-            var accumulator = Vector256.Create(0f);
+            var accumulator = Vector128.Create(0f);
 
             fixed (float* ptr = a)
             {
                 for (var i = 0; i < length; i += 8)
                 {
                     var j = Avx.LoadVector256(ptr + i);
-                    accumulator = Avx.HorizontalAdd(accumulator, j);
+                    var x128 = Sse.Add(Avx.ExtractVector128(j, 0), Avx.ExtractVector128(j, 1));
+                    accumulator = Sse3.HorizontalAdd(x128, accumulator);
                 }
             }
 
-            accumulator = Avx.HorizontalAdd(Avx.HorizontalAdd(accumulator, accumulator), accumulator);
-            var sum = accumulator.ToScalar();
+            var sum = 0f;
+            accumulator = Sse3.HorizontalAdd(Sse3.HorizontalAdd(accumulator, accumulator), accumulator);
+            Sse.StoreScalar(&sum, accumulator);
 
             if(remainder != 0)
             {

@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects.Components
         ///     Called after all collisions have been processed, as well as how many collisions occured
         /// </summary>
         /// <param name="collisionCount"></param>
-        void PostCollide(int collisionCount) { }
+        void PostCollide(uint collisionCount) { }
     }
 
     public interface ICollideSpecial

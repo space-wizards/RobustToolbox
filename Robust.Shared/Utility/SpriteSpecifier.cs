@@ -75,18 +75,18 @@ namespace Robust.Shared.Utility
         }
 
         [Serializable, NetSerializable]
-        public sealed class EntityPrototypeIcon : SpriteSpecifier
+        public sealed class EntityPrototype : SpriteSpecifier
         {
             public readonly string EntityPrototypeId;
 
-            public EntityPrototypeIcon(string entityPrototypeId)
+            public EntityPrototype(string entityPrototypeId)
             {
                 EntityPrototypeId = entityPrototypeId;
             }
 
             public override bool Equals(object? obj)
             {
-                if (obj is EntityPrototypeIcon prototypeIcon)
+                if (obj is EntityPrototype prototypeIcon)
                     return EntityPrototypeId == prototypeIcon.EntityPrototypeId;
                 return false;
             }

@@ -45,7 +45,7 @@ namespace Robust.Shared.ContentPack
             where T : GameShared;
 
         /// <summary>
-        ///     Sets the testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
+        ///     Adds a testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
         /// </summary>
         void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks);
 

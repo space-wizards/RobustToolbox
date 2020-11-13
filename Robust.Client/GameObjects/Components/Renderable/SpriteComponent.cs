@@ -1116,7 +1116,7 @@ namespace Robust.Client.GameObjects
             var layerData =
                 serializer.ReadDataField("layers", new List<PrototypeLayerData>());
 
-            {
+            if(layerData.Count == 0){
                 var baseState = serializer.ReadDataField<string?>("state", null);
                 var texturePath = serializer.ReadDataField<string?>("texture", null);
 
@@ -1834,9 +1834,9 @@ namespace Robust.Client.GameObjects
             if (prototype.Components.TryGetValue("Appearance", out _))
             {
                 var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                appearanceComponent.Initialize();
                 foreach (var layer in appearanceComponent.Visualizers)
                 {
+                    layer.InitializeEntity(dummy);
                     layer.OnChangeData(appearanceComponent);
                 }
             }

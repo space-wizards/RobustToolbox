@@ -370,6 +370,11 @@ namespace Robust.Client.UserInterface.Controls
             // rows that are set to expand horizontally
             Span<bool> rowExpand = stackalloc bool[rows];
 
+            minColWidth.Fill(0);
+            minRowHeight.Fill(0);
+            colExpand.Fill(false);
+            rowExpand.Fill(false);
+
             // Get minSize and size flag expand of each column and row.
             // All we need to apply the same logic BoxContainer does.
             var index = 0;

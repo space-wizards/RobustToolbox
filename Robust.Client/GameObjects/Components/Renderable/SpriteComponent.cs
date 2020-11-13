@@ -1820,7 +1820,11 @@ namespace Robust.Client.GameObjects
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
-            if (icon != null) yield return icon;
+            if (icon != null)
+            {
+                yield return icon;
+                yield break;
+            }
 
             if (!prototype.Components.TryGetValue("Sprite", out _))
             {

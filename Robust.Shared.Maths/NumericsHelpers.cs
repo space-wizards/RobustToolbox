@@ -12,8 +12,8 @@ namespace Robust.Shared.Maths
     {
         #region Constructor & Environment Variables
 
-        public const string DisabledEnvironmentVariable = "NUMERICS_DISABLED";
-        public const string AvxEnvironmentVariable = "NUMERICS_AVX";
+        public const string DisabledEnvironmentVariable = "ROBUST_NUMERICS_DISABLED";
+        public const string AvxEnvironmentVariable = "ROBUST_NUMERICS_AVX";
 
         /// <summary>
         ///     Whether to use the hardware-accelerated paths.

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
@@ -8,7 +7,6 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -22,11 +20,10 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
         [Dependency] private readonly IRobustRandom _random = default!;
-        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         private const float Epsilon = 1.0e-6f;
 
-        private readonly List<Manifold> _collisionCache = new List<Manifold>();
+        protected readonly List<Manifold> CollisionCache = new List<Manifold>();
 
         /// <summary>
         ///     Physics objects that are awake and usable for world simulation.
@@ -141,6 +138,10 @@ namespace Robust.Shared.GameObjects.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float frameTime, bool prediction)
         {
+            // The reason we clear this at the start of the simulation and not the end is because the client needs
+            // to check what needs to be predicted next simulation.
+            CollisionCache.Clear();
+
             var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
 
             ProcessQueue();
@@ -151,9 +152,9 @@ namespace Robust.Shared.GameObjects.Systems
             // Don't use simulated because this is behavior stuff which WILL mispredict.
             BuildManifolds(_awakeBodies);
 
-            ProcessFriction(simulatedBodies, frameTime);
-
             VelocitySolver();
+
+            ProcessFriction(_awakeBodies, frameTime);
 
             CollisionBehaviors();
 
@@ -193,7 +194,6 @@ namespace Robust.Shared.GameObjects.Systems
 
             // Cleanup
             _deferredUpdates.Clear();
-            _collisionCache.Clear();
         }
 
         private void IntegrateForces(IEnumerable<IPhysicsComponent> physicsComponents, bool prediction, float frameTime)
@@ -278,7 +278,7 @@ namespace Robust.Shared.GameObjects.Systems
                     }
 
                     var bPhysics = b.GetComponent<IPhysicsComponent>();
-                    _collisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
+                    CollisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
                 }
             }
         }
@@ -288,9 +288,9 @@ namespace Robust.Shared.GameObjects.Systems
             var collisionsWith = new Dictionary<ICollideBehavior, uint>();
 
             // Collision behavior
-            for (var i = 0; i < _collisionCache.Count; i++)
+            for (var i = 0; i < CollisionCache.Count; i++)
             {
-                var collision = _collisionCache[i];
+                var collision = CollisionCache[i];
 
                 foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
@@ -332,14 +332,14 @@ namespace Robust.Shared.GameObjects.Systems
 
         private void VelocitySolver()
         {
-            if (_collisionCache.Count == 0) return;
+            if (CollisionCache.Count == 0) return;
 
             for (var i = 0; i < _velocitySolverIterations; i++)
             {
-                var offset = _random.Next(_collisionCache.Count - 1);
-                for (var j = 0; j < _collisionCache.Count; j++)
+                var offset = _random.Next(CollisionCache.Count - 1);
+                for (var j = 0; j < CollisionCache.Count; j++)
                 {
-                    var collision = _collisionCache[(j + offset) % _collisionCache.Count];
+                    var collision = CollisionCache[(j + offset) % CollisionCache.Count];
                     if (!collision.Unresolved) continue;
 
                     collision.A.WakeBody();
@@ -363,15 +363,15 @@ namespace Robust.Shared.GameObjects.Systems
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
         private void PositionSolver()
         {
-            if (_collisionCache.Count == 0) return;
+            if (CollisionCache.Count == 0) return;
 
             for (var i = 0; i < _positionSolverIterations; i++)
             {
                 var done = true;
-                var offset = _random.Next(_collisionCache.Count - 1);
-                for (var j = 0; j < _collisionCache.Count; j++)
+                var offset = _random.Next(CollisionCache.Count - 1);
+                for (var j = 0; j < CollisionCache.Count; j++)
                 {
-                    var collision = _collisionCache[(j + offset) % _collisionCache.Count];
+                    var collision = CollisionCache[(j + offset) % CollisionCache.Count];
 
                     if (!collision.Hard)
                         continue;

@@ -173,9 +173,6 @@ namespace Robust.Shared.GameObjects.Components
             // This caused space movement to break in content and I'm not 100% sure this is a good fix.
             // Look man the CM test is in 5 hours cut me some slack.
             //_controllers = null;
-            // Reset predict flag to false to avoid predicting stuff too long.
-            // Another possibly bad hack for content at the moment.
-            Predict = false;
         }
 
         /// <inheritdoc />

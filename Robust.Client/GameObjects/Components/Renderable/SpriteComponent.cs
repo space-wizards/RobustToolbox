@@ -1116,7 +1116,7 @@ namespace Robust.Client.GameObjects
             var layerData =
                 serializer.ReadDataField("layers", new List<PrototypeLayerData>());
 
-            {
+            if(layerData.Count == 0){
                 var baseState = serializer.ReadDataField<string?>("state", null);
                 var texturePath = serializer.ReadDataField<string?>("texture", null);
 

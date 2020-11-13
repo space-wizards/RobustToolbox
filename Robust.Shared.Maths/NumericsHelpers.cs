@@ -38,17 +38,17 @@ namespace Robust.Shared.Maths
         #region Utils
 
         /// <summary>
-        ///     Returns whether the specified array length is valid for the SSE paths.
+        ///     Returns whether the specified array length is valid for loading into 128-bit registers.
         /// </summary>
-        private static bool SseLengthValid(int arrayLength)
+        private static bool LengthValid128Single(int arrayLength)
         {
             return arrayLength >= 4;
         }
 
         /// <summary>
-        ///     Returns whether the specified array length is valid for the AVX paths.
+        ///     Returns whether the specified array length is valid for loading into 256-bit registers.
         /// </summary>
-        private static bool AvxLengthValid(int arrayLength)
+        private static bool LengthValid256Single(int arrayLength)
         {
             return arrayLength >= 8;
         }
@@ -77,13 +77,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MultiplyAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -226,13 +226,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MultiplyAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -369,13 +369,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     DivideAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -518,13 +518,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     DivideAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -661,13 +661,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     AddAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -810,13 +810,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     AddAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -941,12 +941,12 @@ namespace Robust.Shared.Maths
         {
             if (Enabled)
             {
-                if (AvxEnabled && Sse3.IsSupported && AvxLengthValid(a.Length))
+                if (AvxEnabled && Sse3.IsSupported && LengthValid256Single(a.Length))
                 {
                     return HorizontalAddAvx(a);
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse3.IsSupported)
                     {
@@ -1092,13 +1092,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     SubAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -1240,13 +1240,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     SubAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -1382,13 +1382,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && Avx2.IsSupported && AvxLengthValid(a.Length))
+                if (AvxEnabled && Avx2.IsSupported && LengthValid256Single(a.Length))
                 {
                     AbsAvx(a, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported && Sse2.IsSupported)
                     {
@@ -1522,13 +1522,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MinAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -1671,13 +1671,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MinAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -1814,13 +1814,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if(AvxEnabled && AvxLengthValid(a.Length))
+                if(AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MaxAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {
@@ -1963,13 +1963,13 @@ namespace Robust.Shared.Maths
 
             if (Enabled)
             {
-                if (AvxEnabled && AvxLengthValid(a.Length))
+                if (AvxEnabled && LengthValid256Single(a.Length))
                 {
                     MaxAvx(a, b, s);
                     return;
                 }
 
-                if (SseLengthValid(a.Length))
+                if (LengthValid128Single(a.Length))
                 {
                     if (Sse.IsSupported)
                     {

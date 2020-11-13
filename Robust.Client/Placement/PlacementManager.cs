@@ -98,9 +98,9 @@ namespace Robust.Client.Placement
         public bool Eraser { get; private set; }
 
         /// <summary>
-        /// The texture we use to show from our placement manager to represent the entity to place
+        ///     The texture we use to show from our placement manager to represent the entity to place
         /// </summary>
-        public IDirectionalTextureProvider? CurrentBaseSprite { get; set; }
+        public List<IDirectionalTextureProvider>? CurrentTextures { get; set; }
 
         /// <summary>
         /// Which of the placement orientations we are trying to place with
@@ -311,7 +311,7 @@ namespace Robust.Client.Placement
         {
             PlacementChanged?.Invoke(this, EventArgs.Empty);
             Hijack = null;
-            CurrentBaseSprite = null;
+            CurrentTextures = null;
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
@@ -555,7 +555,7 @@ namespace Robust.Client.Placement
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
-            CurrentBaseSprite = SpriteComponent.GetPrototypeIcon(prototype, ResourceCache);
+            CurrentTextures = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache).ToList();
             CurrentPrototype = prototype;
 
             IsActive = true;
@@ -563,8 +563,9 @@ namespace Robust.Client.Placement
 
         private void PreparePlacementTile()
         {
-            CurrentBaseSprite = ResourceCache
-                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture;
+            CurrentTextures = new List<IDirectionalTextureProvider>
+            {ResourceCache
+                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture};
 
             IsActive = true;
         }

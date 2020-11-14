@@ -260,22 +260,6 @@ namespace Robust.Server.GameObjects.Components.Container
             _entitiesWaitingResolve = null;
         }
 
-        public int CountPrototypeOccurencesRecursive(string prototypeId)
-        {
-            int total = 0;
-            foreach (var container in GetAllContainers())
-            {
-                foreach (var entity in container.ContainedEntities)
-                {
-                    if (entity.Prototype?.ID == prototypeId) total++;
-                    if(!entity.TryGetComponent<ContainerManagerComponent>(out var component)) continue;
-                    total += component.CountPrototypeOccurencesRecursive(prototypeId);
-                }
-            }
-
-            return total;
-        }
-
         public override ComponentState GetComponentState()
         {
             return new ContainerManagerComponentState(

@@ -55,6 +55,9 @@ namespace Robust.Shared.GameObjects.Components.Timers
         /// <param name="cancellationToken"></param>
         public static void SpawnTimer(this IEntity entity, int milliseconds, Action onFired, CancellationToken cancellationToken = default)
         {
+            if (entity.Deleted)
+                return;
+
             entity
                 .EnsureComponent<TimerComponent>()
                 .Spawn(milliseconds, onFired, cancellationToken);

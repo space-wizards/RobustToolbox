@@ -63,8 +63,9 @@ namespace Robust.Client.Console.Commands
                 filter = args[0];
             }
 
+            var conGroup = IoCManager.Resolve<IClientConGroupController>();
             foreach (var command in console.Commands.Values
-                .Where(p => p.Command.Contains(filter))
+                .Where(p => p.Command.Contains(filter) && conGroup.CanCommand(p.Command))
                 .OrderBy(c => c.Command))
             {
                 console.AddLine(command.Command + ": " + command.Description);

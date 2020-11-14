@@ -30,6 +30,9 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     The amount of "real" pixels a virtual pixel takes up.
         ///     The higher the number, the bigger the interface.
+        ///     I.e. UIScale units are real pixels (rp) / virtual pixels (vp),
+        ///     real pixels varies depending on interface, virtual pixels doesn't.
+        ///     And vp * UIScale = rp, and rp / UIScale = vp
         /// </summary>
         [ViewVariables]
         protected float UIScale => UserInterfaceManager.UIScale;

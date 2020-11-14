@@ -317,7 +317,6 @@ namespace Robust.Server
             prototypeManager.Resync();
 
             IoCManager.Resolve<IConsoleShell>().Initialize();
-            IoCManager.Resolve<IConGroupController>().Initialize();
             _entities.Startup();
             _scriptHost.Initialize();
 
@@ -472,7 +471,7 @@ namespace Robust.Server
                 Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
                 SendTickRateUpdateToClients(b);
             });
-            
+
             cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
 
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);

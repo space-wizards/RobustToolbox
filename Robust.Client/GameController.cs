@@ -63,8 +63,6 @@ namespace Robust.Client
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoader _modLoader = default!;
-        [Dependency] private readonly ISignalHandler _signalHandler = default!;
-        [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -118,8 +116,6 @@ namespace Robust.Client
             {
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
-
-            _signalHandler.MaybeStart();
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
@@ -180,7 +176,6 @@ namespace Robust.Client
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
-            _conGroupController.Initialize();
             _scriptClient.Initialize();
 
             _client.Initialize();

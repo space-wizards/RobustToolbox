@@ -272,11 +272,7 @@ namespace Robust.Client.Graphics.Clyde
             _drawingSpriteList.Clear();
             FlushRenderQueue();
 
-            // Cleanup remainders
-            //foreach (var overlay in worldOverlays)
-            //{
-                //overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
-            //}
+            RenderOverlays(OverlaySpace.WorldSpaceBelowEntities);
 
             FlushRenderQueue();
         }
@@ -374,6 +370,8 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         DrawEntities(viewport, worldBounds);
                     }
+
+                    RenderOverlays(OverlaySpace.WorldSpaceBelowFOV);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {

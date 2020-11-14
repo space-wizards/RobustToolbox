@@ -99,10 +99,10 @@ namespace Robust.Client.Graphics.Overlays
         internal void ClydeRender(IRenderHandle renderHandle, OverlaySpace currentSpace)
         {
             DrawingHandleBase handle;
-            if (currentSpace == OverlaySpace.WorldSpace || currentSpace == OverlaySpace.WorldSpaceFOVStencil)
-                handle = renderHandle.DrawingHandleWorld;
-            else
+            if (currentSpace == OverlaySpace.ScreenSpace || currentSpace == OverlaySpace.ScreenSpaceBelowWorld)
                 handle = renderHandle.DrawingHandleScreen;
+            else
+                handle = renderHandle.DrawingHandleWorld;
 
             Draw(handle, currentSpace);
         }

@@ -181,9 +181,6 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AuthServer =
             CVarDef.Create("auth.server", "https://central.spacestation14.io/auth/", CVar.SECURE);
 
-        public static readonly CVarDef<int> ConsoleDefaultGroup =
-            CVarDef.Create("console.defaultGroup", 1, CVar.ARCHIVE);
-
         public static readonly CVarDef<bool> DisplayVSync =
             CVarDef.Create("display.vsync", true, CVar.ARCHIVE);
 
@@ -225,22 +222,6 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DiscordEnabled =
             CVarDef.Create("discord.enabled", true);
-
-        public static readonly CVarDef<bool> ConsoleLoginLocal =
-            CVarDef.Create("console.loginlocal", true, CVar.ARCHIVE);
-
-        // register console admin global password. DO NOT ADD THE REPLICATED FLAG
-        public static readonly CVarDef<string> ConsolePassword =
-            CVarDef.Create("console.password", string.Empty, CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-
-        public static readonly CVarDef<string> ConsoleHostPassword =
-            CVarDef.Create("console.hostpassword", string.Empty, CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-
-        public static readonly CVarDef<int> ConsoleAdminGroup =
-            CVarDef.Create("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
-
-        public static readonly CVarDef<int> ConsoleHostGroup =
-            CVarDef.Create("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
 
         public static readonly CVarDef<bool> SignalsHandle =
             CVarDef.Create("signals.handle", true);

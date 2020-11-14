@@ -156,7 +156,8 @@ namespace Robust.Server.ServerStatus
 
             try
             {
-                await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null);
+                // Passing null as content works so...
+                await _httpClient.PostAsync(new Uri(_baseUri, $"server_api/{_watchdogKey}/ping"), null!);
             }
             catch (HttpRequestException e)
             {

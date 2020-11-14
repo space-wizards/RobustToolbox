@@ -613,9 +613,9 @@ namespace Robust.Shared.GameObjects
                 ++necessary;
             }
 
-            foreach (var childTx in entity.Transform.Children)
+            foreach (var childTx in entity.Transform.ChildEntityUids)
             {
-                if (UpdateEntityTree(childTx.Owner))
+                if (UpdateEntityTree(GetEntity(childTx)))
                 {
                     ++necessary;
                 }

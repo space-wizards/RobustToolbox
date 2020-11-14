@@ -278,7 +278,7 @@ namespace Robust.Client.UserInterface
 
             DebugTools.AssertNotNull(process);
 
-            await process.WaitForExitAsync();
+            await process!.WaitForExitAsync();
 
             // Cancel hit.
             if (process.ExitCode == 1)

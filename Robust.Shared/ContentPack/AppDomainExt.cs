@@ -14,7 +14,7 @@ namespace Robust.Shared.ContentPack
         /// <returns></returns>
         public static Assembly GetAssemblyByName(this AppDomain domain, string name)
         {
-            return domain.GetAssemblies().SingleOrDefault(assembly => assembly.GetName().Name == name);
+            return domain.GetAssemblies().Single(assembly => assembly.GetName().Name == name);
         }
     }
 }

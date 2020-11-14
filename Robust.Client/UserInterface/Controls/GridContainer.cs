@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -289,6 +287,9 @@ namespace Robust.Client.UserInterface.Controls
             Span<int> minColWidth = stackalloc int[cols];
             Span<int> minRowHeight = stackalloc int[rows];
 
+            minColWidth.Fill(0);
+            minRowHeight.Fill(0);
+
             var index = 0;
             foreach (var child in Children)
             {
@@ -368,6 +369,11 @@ namespace Robust.Client.UserInterface.Controls
             Span<bool> colExpand = stackalloc bool[cols];
             // rows that are set to expand horizontally
             Span<bool> rowExpand = stackalloc bool[rows];
+
+            minColWidth.Fill(0);
+            minRowHeight.Fill(0);
+            colExpand.Fill(false);
+            rowExpand.Fill(false);
 
             // Get minSize and size flag expand of each column and row.
             // All we need to apply the same logic BoxContainer does.

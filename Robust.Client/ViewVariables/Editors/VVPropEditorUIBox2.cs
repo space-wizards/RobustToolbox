@@ -102,10 +102,10 @@ namespace Robust.Client.ViewVariables.Editors
             {
                 case BoxType.Box2:
                 case BoxType.Box2i:
-                    hBoxContainer.AddChild(bottom);
                     hBoxContainer.AddChild(left);
-                    hBoxContainer.AddChild(top);
+                    hBoxContainer.AddChild(bottom);
                     hBoxContainer.AddChild(right);
+                    hBoxContainer.AddChild(top);
                     break;
                 case BoxType.UIBox2:
                 case BoxType.UIBox2i:

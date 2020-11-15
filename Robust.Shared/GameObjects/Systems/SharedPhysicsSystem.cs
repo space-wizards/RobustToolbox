@@ -417,10 +417,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime, body.LinearVelocity.Length);
-
-                if (dynamicFriction == 0.0f)
-                    return;
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 25f * frameTime, body.LinearVelocity.Length);
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }

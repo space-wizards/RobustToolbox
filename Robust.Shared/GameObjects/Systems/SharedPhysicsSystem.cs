@@ -7,6 +7,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
 using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -154,7 +155,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             VelocitySolver();
 
-            ProcessFriction(_awakeBodies, frameTime);
+            ProcessFriction(simulatedBodies, frameTime, prediction);
 
             CollisionBehaviors();
 
@@ -181,6 +182,7 @@ namespace Robust.Shared.GameObjects.Systems
                 if (physics.LinearVelocity != Vector2.Zero)
                 {
                     UpdatePosition(physics, frameTime, frameSpeedLimit);
+                    //physics.LinearVelocity /= frameTime;
                 }
             }
 
@@ -409,7 +411,7 @@ namespace Robust.Shared.GameObjects.Systems
         /// </summary>
         /// <param name="bodies"></param>
         /// <param name="frameTime"></param>
-        private void ProcessFriction(IEnumerable<IPhysicsComponent> bodies, float frameTime)
+        private void ProcessFriction(IEnumerable<IPhysicsComponent> bodies, float frameTime, bool prediction)
         {
             foreach (var body in bodies)
             {
@@ -418,7 +420,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * body.LinearVelocity.Length * frameTime;
+                var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * frameTime;
 
                 if (dynamicFriction == 0.0f)
                     return;

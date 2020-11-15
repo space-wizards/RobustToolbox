@@ -151,11 +151,11 @@ namespace Robust.Shared.GameObjects.Systems
 
             // Calculate collisions and store them in the cache
             // Don't use simulated because this is behavior stuff which WILL mispredict.
-            BuildManifolds(_awakeBodies);
+            BuildManifolds(_awakeBodies, frameTime);
 
             VelocitySolver();
 
-            ProcessFriction(simulatedBodies, frameTime, prediction);
+            ProcessFriction(simulatedBodies, frameTime);
 
             CollisionBehaviors();
 
@@ -175,14 +175,11 @@ namespace Robust.Shared.GameObjects.Systems
 
             PositionSolver();
 
-            var frameSpeedLimit = _speedLimit * frameTime;
-
             foreach (var physics in simulatedBodies)
             {
                 if (physics.LinearVelocity != Vector2.Zero)
                 {
-                    UpdatePosition(physics, frameTime, frameSpeedLimit);
-                    //physics.LinearVelocity /= frameTime;
+                    UpdatePosition(physics, frameTime);
                 }
             }
 
@@ -213,7 +210,7 @@ namespace Robust.Shared.GameObjects.Systems
                 // TODO: We should store impulse instead in case the mass changes
 
                 // TODO: Something fucky is going on with LinearVelocity, maybe try storing the frametime adjusted amount? IDFK
-
+                // TODO: Make working linear velocity?
                 var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
@@ -257,12 +254,12 @@ namespace Robust.Shared.GameObjects.Systems
         ///     Stores them into the _collisionCache manifolds.
         /// </summary>
         /// <param name="awakeBodies"></param>
-        private void BuildManifolds(IEnumerable<IPhysicsComponent> awakeBodies)
+        private void BuildManifolds(IEnumerable<IPhysicsComponent> awakeBodies, float frameTime)
         {
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, aPhysics.LinearVelocity, false))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, aPhysics.LinearVelocity * frameTime, false))
                 {
                     var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
@@ -411,7 +408,7 @@ namespace Robust.Shared.GameObjects.Systems
         /// </summary>
         /// <param name="bodies"></param>
         /// <param name="frameTime"></param>
-        private void ProcessFriction(IEnumerable<IPhysicsComponent> bodies, float frameTime, bool prediction)
+        private void ProcessFriction(IEnumerable<IPhysicsComponent> bodies, float frameTime)
         {
             foreach (var body in bodies)
             {
@@ -420,19 +417,16 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Sqrt(friction * body.Friction) * 9.8f * frameTime;
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * body.LinearVelocity.Length * frameTime, body.LinearVelocity.Length);
 
                 if (dynamicFriction == 0.0f)
                     return;
-
-                if (dynamicFriction > body.LinearVelocity.Length)
-                    dynamicFriction = body.LinearVelocity.Length;
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }
         }
 
-        private void UpdatePosition(IPhysicsComponent physics, float frameTime, float frameSpeedLimit)
+        private void UpdatePosition(IPhysicsComponent physics, float frameTime)
         {
             var ent = physics.Entity;
 
@@ -453,10 +447,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var frameVelocity = physics.LinearVelocity * frameTime;
-
-            if (frameVelocity.Length > frameSpeedLimit)
-                frameVelocity = frameVelocity.Normalized * frameSpeedLimit;
+            var frameVelocity = physics.LinearVelocity.Normalized * MathF.Min(physics.LinearVelocity.Length, _speedLimit) * frameTime;
 
             var newPosition = physics.WorldPosition + frameVelocity;
             var owner = physics.Owner;

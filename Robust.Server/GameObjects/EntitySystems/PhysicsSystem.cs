@@ -1,7 +1,5 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Systems;
-using System.Linq;
-using Robust.Shared.GameObjects.Components;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {

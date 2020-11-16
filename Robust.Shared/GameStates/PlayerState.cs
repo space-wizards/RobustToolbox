@@ -12,7 +12,7 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public sealed class PlayerState
     {
-        public NetSessionId SessionId { get; set; }
+        public NetUserId UserId { get; set; }
 
         public string Name { get; set; }
         public SessionStatus Status { get; set; }

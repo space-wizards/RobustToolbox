@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Prometheus;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -17,7 +18,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
-        void Update(float frameTime);
+        void Update(float frameTime, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.
@@ -26,13 +27,14 @@ namespace Robust.Shared.Interfaces.GameObjects
 
         IComponentManager ComponentManager { get; }
         IEntityNetworkManager EntityNetManager { get; }
+        IEntitySystemManager EntitySysManager { get; }
         IEventBus EventBus { get; }
 
         #region Entity Management
 
         IEntity CreateEntityUninitialized(string? prototypeName);
 
-        IEntity CreateEntityUninitialized(string? prototypeName, GridCoordinates coordinates);
+        IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
 
         IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
 
@@ -42,7 +44,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntity(string? protoName, GridCoordinates coordinates);
+        IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Spawns an entity at a specific position
@@ -61,13 +63,13 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="protoName">The prototype to clone. If this is null, the entity won't have a prototype.</param>
         /// <param name="coordinates"></param>
         /// <returns>Newly created entity.</returns>
-        IEntity SpawnEntityNoMapInit(string? protoName, GridCoordinates coordinates);
+        IEntity SpawnEntityNoMapInit(string? protoName, EntityCoordinates coordinates);
 
         /// <summary>
         /// Returns an entity by id
         /// </summary>
         /// <param name="uid"></param>
-        /// <returns>Entity or null if entity id doesn't exist</returns>
+        /// <returns>Entity or throws if entity id doesn't exist</returns>
         IEntity GetEntity(EntityUid uid);
 
         /// <summary>
@@ -86,6 +88,13 @@ namespace Robust.Shared.Interfaces.GameObjects
         IEnumerable<IEntity> GetEntities(IEntityQuery query);
 
         IEnumerable<IEntity> GetEntities();
+
+        /// <summary>
+        ///     Yields all of the entities on a particular map. faster than GetEntities()
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <returns></returns>
+        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId);
 
         /// <summary>
         /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
@@ -153,7 +162,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// </summary>
         /// <param name="position"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
-        IEnumerable<IEntity> GetEntitiesIntersecting(GridCoordinates position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false);
 
         /// <summary>
         /// Gets entities that intersect with this entity
@@ -168,8 +177,8 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="position"></param>
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
-        IEnumerable<IEntity> GetEntitiesInRange(GridCoordinates position, float range, bool approximate = false);
-
+        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
+        
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>
@@ -177,6 +186,14 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false);
+
+        /// <summary>
+        /// Gets whether two entities are intersecting each other
+        /// </summary>
+        /// <param name="entityOne"></param>
+        /// <param name="entityTwo"></param>
+        /// <returns></returns>
+        public bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
 
         /// <summary>
         /// Gets entities within a certain *square* range of this bounding box
@@ -196,7 +213,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="arcWidth"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         /// <returns></returns>
-        IEnumerable<IEntity> GetEntitiesInArc(GridCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
 
         #endregion
 

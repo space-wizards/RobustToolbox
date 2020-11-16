@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the component already existed, false if it had to be created.</returns>
         public static bool EnsureComponent<T>(this IEntity entity, out T component) where T : Component, new()
         {
-            if (entity.TryGetComponent(out component))
+            if (entity.TryGetComponent(out component!))
             {
                 return true;
             }
@@ -34,7 +34,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The existing component, or the new component if none existed yet.</returns>
         public static T EnsureComponent<T>(this IEntity entity) where T : Component, new()
         {
-            if (entity.TryGetComponent(out T component))
+            if (entity.TryGetComponent(out T? component))
             {
                 return component;
             }

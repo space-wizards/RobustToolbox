@@ -1,4 +1,6 @@
 using System;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -21,7 +23,13 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
+                BoundingBoxChanged();
             }
+        }
+
+        private void BoundingBoxChanged()
+        {
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new OccluderBoundingBoxChangedMessage(this));
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -30,9 +38,19 @@ namespace Robust.Shared.GameObjects
             get => _enabled;
             set
             {
+                if (_enabled == value)
+                    return;
+
                 _enabled = value;
                 Dirty();
             }
+        }
+
+        protected override void Startup()
+        {
+            base.Startup();
+
+            EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
         }
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -41,6 +59,19 @@ namespace Robust.Shared.GameObjects
 
             serializer.DataField(ref _enabled, "enabled", true);
             serializer.DataField(ref _boundingBox, "boundingBox", new Box2(-0.5f, -0.5f, 0.5f, 0.5f));
+        }
+
+        public override void OnRemove()
+        {
+            base.OnRemove();
+
+            var transform = Owner.Transform;
+            var map = transform.MapID;
+            if (map != MapId.Nullspace)
+            {
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    new OccluderTreeRemoveOccluderMessage(this, map, transform.GridID));
+            }
         }
 
         public override ComponentState GetComponentState()
@@ -72,6 +103,16 @@ namespace Robust.Shared.GameObjects
                 Enabled = enabled;
                 BoundingBox = boundingBox;
             }
+        }
+    }
+
+    internal struct OccluderBoundingBoxChangedMessage
+    {
+        public OccluderComponent Occluder;
+
+        public OccluderBoundingBoxChangedMessage(OccluderComponent occluder)
+        {
+            Occluder = occluder;
         }
     }
 }

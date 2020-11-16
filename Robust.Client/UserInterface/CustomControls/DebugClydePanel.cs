@@ -37,11 +37,18 @@ namespace Robust.Client.UserInterface.CustomControls
             var info = _clydeInternal.DebugInfo;
             var stats = _clydeInternal.DebugStats;
 
+            var overridingText = "";
+            if (info.Overriding)
+            {
+                overridingText = $"\nVersion override: {info.OpenGLVersion}";
+            }
+
             _label.Text = $@"Renderer: {info.Renderer}
 Vendor: {info.Vendor}
-Version: {info.VersionString}
+Version: {info.VersionString}{overridingText}
 Draw Calls: Cly: {stats.LastClydeDrawCalls} GL: {stats.LastGLDrawCalls}
-Batches: {stats.LastBatches} Max size: {stats.LargestBatchSize}";
+Batches: {stats.LastBatches} Max size: {stats.LargestBatchSize}
+Lights: {stats.TotalLights}";
         }
     }
 }

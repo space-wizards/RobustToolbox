@@ -62,7 +62,7 @@ namespace Robust.Shared.ContentPack
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        private ModuleTestingCallbacks? _testingCallbacks;
+        private readonly List<ModuleTestingCallbacks> _testingCallbacks = new List<ModuleTestingCallbacks>();
 
         /// <summary>
         ///     Loaded assemblies.
@@ -144,6 +144,11 @@ namespace Robust.Shared.ContentPack
             InitMod<T>(assembly);
         }
 
+        public Assembly GetAssembly(string name)
+        {
+            return _mods.Select(p => p.GameAssembly).Single(p => p.GetName().Name == name);
+        }
+
         protected void InitMod<T>(Assembly assembly) where T : GameShared
         {
             var mod = new ModInfo(assembly);
@@ -209,7 +214,6 @@ namespace Robust.Shared.ContentPack
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
-#if !FULL_RELEASE
             if (resMan.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
@@ -224,12 +228,11 @@ namespace Robust.Shared.ContentPack
                     return false;
                 }
             }
-#endif
+
             if (resMan.TryContentFileRead(dllPath, out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
-#if !FULL_RELEASE
                 // see if debug info is present
                 if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"), out var gamePdb))
                 {
@@ -245,7 +248,6 @@ namespace Robust.Shared.ContentPack
                         return false;
                     }
                 }
-#endif
 
                 try
                 {
@@ -266,7 +268,7 @@ namespace Robust.Shared.ContentPack
 
         public void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks)
         {
-            _testingCallbacks = testingCallbacks;
+            _testingCallbacks.Add(testingCallbacks);
         }
 
         private Assembly? ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)

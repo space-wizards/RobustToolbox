@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Shared.GameObjects;
+using Robust.Client.Physics;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
@@ -32,16 +32,15 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             base.Initialize();
 
-            EntityQuery = new TypeEntityQuery(typeof(EyeComponent));
-
             //WARN: Tightly couples this system with InputSystem, and assumes InputSystem exists and  is initialized
             CommandBinds.Builder
                 .Bind(EngineKeyFunctions.CameraRotateRight, new NullInputCmdHandler())
                 .Bind(EngineKeyFunctions.CameraRotateLeft, new NullInputCmdHandler())
                 .Register<EyeUpdateSystem>();
 
-            // Make sure this runs *after* transforms are interpolated.
+            // Make sure this runs *after* entities have been moved by interpolation and movement.
             UpdatesAfter.Add(typeof(TransformSystem));
+            UpdatesAfter.Add(typeof(PhysicsSystem));
         }
 
         /// <inheritdoc />
@@ -82,16 +81,15 @@ namespace Robust.Client.GameObjects.EntitySystems
                 var currentDir = currentEye.Rotation.ToVec();
 
                 var dot = Vector2.Dot(closestDir, currentDir);
-                if (FloatMath.CloseTo(dot, 1, CameraSnapTolerance))
+                if (MathHelper.CloseTo(dot, 1, CameraSnapTolerance))
                 {
                     currentEye.Rotation = closestDir.ToAngle();
                 }
             }
 
-            foreach (var entity in RelevantEntities)
+            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>())
             {
-                var eyeComp = entity.GetComponent<EyeComponent>();
-                eyeComp.UpdateEyePosition();
+                eyeComponent.UpdateEyePosition();
             }
         }
     }

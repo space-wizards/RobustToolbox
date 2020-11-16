@@ -1,5 +1,4 @@
-﻿using System;
-using Robust.Shared.Map;
+﻿using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Interfaces.Graphics.ClientEye
@@ -48,37 +47,7 @@ namespace Robust.Client.Interfaces.Graphics.ClientEye
         /// </summary>
         /// <param name="point">Point in world to transform.</param>
         /// <returns>Corresponding point in UI screen space.</returns>
-        ScreenCoordinates WorldToScreen(GridCoordinates point);
-
-        /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
-        /// </summary>
-        /// <remarks>
-        /// The game exists on the 2D X/Y plane, so this function returns a point
-        /// instead of a line segment.
-        /// </remarks>
-        /// <param name="point">Point on screen to transform.</param>
-        /// <returns>
-        /// Corresponding grid-local point in the world. If there is no grid at the
-        /// point, the GridID will be Invalid and the Position will be in world coordinates.
-        /// </returns>
-        [Obsolete("The call site should use ScreenToMap(), and then call IMapManager.TryFindGridAt().")]
-        GridCoordinates ScreenToWorld(ScreenCoordinates point);
-
-        /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
-        /// </summary>
-        /// <remarks>
-        /// The game exists on the 2D X/Y plane, so this function returns a point on the plane
-        /// instead of a line segment.
-        /// </remarks>
-        /// <param name="point">Point on screen to transform.</param>
-        /// <returns>
-        /// Corresponding grid-local point in the world. If there is no grid at the
-        /// point, the GridID will be Invalid and the Position will be in world coordinates.
-        /// </returns>
-        [Obsolete("The call site should use ScreenToMap(), and then call IMapManager.TryFindGridAt().")]
-        GridCoordinates ScreenToWorld(Vector2 point);
+        ScreenCoordinates CoordinatesToScreen(EntityCoordinates point);
 
         /// <summary>
         /// Unprojects a point from UI screen space to world space using the current camera.

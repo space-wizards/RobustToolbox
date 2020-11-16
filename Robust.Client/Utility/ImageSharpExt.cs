@@ -1,9 +1,6 @@
 using System;
-using InlineIL;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
-using SixLabors.ImageSharp.Memory;
 using SixLabors.ImageSharp.PixelFormats;
 using Color = Robust.Shared.Maths.Color;
 
@@ -65,13 +62,15 @@ namespace Robust.Client.Utility
         /// Gets a <see cref="T:System.Span`1" /> to the backing data if the backing group consists of a single contiguous memory buffer.
         /// </summary>
         /// <returns>The <see cref="T:System.Span`1" /> referencing the memory area.</returns>
+        /// <exception cref="ArgumentException">Thrown if the image is not a single contiguous buffer.</exception>
         public static Span<T> GetPixelSpan<T>(this Image<T> image) where T : unmanaged, IPixel<T>
         {
-            IL.Push(image.Frames.RootFrame);
-            IL.Emit.Call(new MethodRef(typeof(ImageFrame<T>), "get_PixelBuffer"));
-            IL.Emit.Call(new MethodRef(typeof(Buffer2D<T>), "GetSingleSpan"));
-            IL.Emit.Ret();
-            throw IL.Unreachable();
+            if (!image.TryGetSinglePixelSpan(out var span))
+            {
+                throw new ArgumentException("Image is not backed by a single buffer, cannot fetch span.");
+            }
+
+            return span;
         }
     }
 }

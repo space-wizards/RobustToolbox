@@ -54,7 +54,7 @@ namespace Robust.Shared.Timing
             "Histogram of frametimes in ms",
             new HistogramConfiguration
             {
-                Buckets = Histogram.ExponentialBuckets(.0003, 1.5, 10)
+                Buckets = Histogram.ExponentialBuckets(.001, 1.5, 10)
             });
 
         private readonly IGameTiming _timing;
@@ -86,6 +86,8 @@ namespace Robust.Shared.Timing
         ///     If true and the same event causes an event 10 times in a row, the game loop will shut itself down.
         /// </summary>
         public bool DetectSoftLock { get; set; }
+
+        public bool EnableMetrics { get; set; } = false;
 
         /// <summary>
         ///     The method currently being used to limit the Update rate.
@@ -186,7 +188,14 @@ namespace Robust.Shared.Timing
                     try
                     {
 #endif
-                        using (_frameTimeHistogram.NewTimer())
+                        if (EnableMetrics)
+                        {
+                            using (_frameTimeHistogram.NewTimer())
+                            {
+                                Tick?.Invoke(this, simFrameEvent);
+                            }
+                        }
+                        else
                         {
                             Tick?.Invoke(this, simFrameEvent);
                         }
@@ -226,12 +235,11 @@ namespace Robust.Shared.Timing
 
                 // update out of the simulation
 
-                simFrameEvent = new FrameEventArgs((float) _timing.FrameTime.TotalSeconds);
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
-                    Update?.Invoke(this, simFrameEvent);
+                    Update?.Invoke(this, realFrameEvent);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception exp)
@@ -265,7 +273,7 @@ namespace Robust.Shared.Timing
         private TimeSpan CalcTickPeriod()
         {
             // ranges from -1 to 1, with 0 being 'default'
-            var ratio = FloatMath.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
+            var ratio = MathHelper.Clamp(_timing.TickTimingAdjustment, -0.99f, 0.99f);
             var diff = TimeSpan.FromTicks((long) (_timing.TickPeriod.Ticks * ratio));
             return _timing.TickPeriod - diff;
         }

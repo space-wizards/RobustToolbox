@@ -15,7 +15,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <returns>If the entity is inside of a container.</returns>
-        public static bool IsInContainer(IEntity entity)
+        public static bool IsInContainer(this IEntity entity)
         {
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
@@ -35,7 +35,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="manager">The container manager that this entity is inside of.</param>
         /// <returns>If a container manager was found.</returns>
-        public static bool TryGetContainerMan(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
+        public static bool TryGetContainerMan(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
@@ -53,7 +53,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="container">The container that this entity is inside of.</param>
         /// <returns>If a container was found.</returns>
-        public static bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
+        public static bool TryGetContainer(this IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
@@ -65,7 +65,33 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        private static bool TryGetManagerComp(IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
+        public static void AttachParentToContainerOrGrid(this ITransformComponent transform)
+        {
+            if (transform.Parent == null
+                || !TryGetContainer(transform.Parent.Owner, out var container)
+                || !TryInsertIntoContainer(transform, container))
+            {
+                transform.AttachToGridOrMap();
+            }
+        }
+
+        private static bool TryInsertIntoContainer(this ITransformComponent transform, IContainer container)
+        {
+            if (container.Insert(transform.Owner))
+            {
+                return true;
+            }
+
+            if (container.Owner.Transform.Parent != null
+                && TryGetContainer(container.Owner, out var newContainer))
+            {
+                return TryInsertIntoContainer(transform, newContainer);
+            }
+
+            return false;
+        }
+
+        private static bool TryGetManagerComp(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!entity.Deleted);
@@ -78,6 +104,30 @@ namespace Robust.Shared.Containers
                 return TryGetManagerComp(entity.Transform.Parent.Owner, out manager);
 
             return false;
+        }
+        
+        public static bool IsInSameOrNoContainer(this IEntity user, IEntity other)
+        {
+            DebugTools.AssertNotNull(user);
+            DebugTools.AssertNotNull(other);
+
+            var isUserContained = TryGetContainer(user, out var userContainer);
+            var isOtherContained = TryGetContainer(other, out var otherContainer);
+
+            // Both entities are not in a container
+            if (!isUserContained && !isOtherContained)
+            {
+                return true;
+            }
+
+            // Both entities are in different contained states
+            if (isUserContained != isOtherContained)
+            {
+                return false;
+            }
+
+            // Both entities are in the same container
+            return userContainer == otherContainer;
         }
     }
 }

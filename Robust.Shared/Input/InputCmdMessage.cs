@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -18,6 +19,12 @@ namespace Robust.Shared.Input
         public GameTick Tick { get; }
 
         /// <summary>
+        ///     How far into the tick this event was fired.
+        /// </summary>
+        /// <seealso cref="IGameTiming.TickFraction"/>
+        public ushort SubTick { get; }
+
+        /// <summary>
         ///     The function this command is changing.
         /// </summary>
         public KeyFunctionId InputFunctionId { get; }
@@ -32,9 +39,10 @@ namespace Robust.Shared.Input
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
-        public InputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId)
+        public InputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId)
         {
             Tick = tick;
+            SubTick = subTick;
             InputFunctionId = inputFunctionId;
         }
 
@@ -48,6 +56,12 @@ namespace Robust.Shared.Input
             if (ReferenceEquals(this, other)) return 0;
             if (ReferenceEquals(null, other)) return 1;
             return InputSequence.CompareTo(other.InputSequence);
+        }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"tick={Tick}, subTick={SubTick}, seq={InputSequence} func={InputFunctionId}";
         }
     }
 
@@ -68,8 +82,8 @@ namespace Robust.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="state">New state of the Input Function.</param>
-        public StateInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state)
-            : base(tick, inputFunctionId)
+        public StateInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, BoundKeyState state)
+            : base(tick, subTick, inputFunctionId)
         {
             State = state;
         }
@@ -86,8 +100,8 @@ namespace Robust.Shared.Input
         /// </summary>
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
-        public EventInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId)
-            : base(tick, inputFunctionId) { }
+        public EventInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId)
+            : base(tick, subTick, inputFunctionId) { }
     }
 
     /// <summary>
@@ -99,7 +113,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public GridCoordinates Coordinates { get; }
+        public EntityCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Entity that was under the pointer when the command was created (if any).
@@ -112,8 +126,8 @@ namespace Robust.Shared.Input
         /// <param name="tick">Client tick this was created.</param>
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
-        public PointerInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates)
-            : this(tick, inputFunctionId, coordinates, EntityUid.Invalid) { }
+        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, EntityCoordinates coordinates)
+            : this(tick, subTick, inputFunctionId, coordinates, EntityUid.Invalid) { }
 
         /// <summary>
         ///     Creates an instance of <see cref="PointerInputCmdMessage"/> with an optional Entity reference.
@@ -122,8 +136,8 @@ namespace Robust.Shared.Input
         /// <param name="inputFunctionId">Function this command is changing.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public PointerInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, GridCoordinates coordinates, EntityUid uid)
-            : base(tick, inputFunctionId)
+        public PointerInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, EntityCoordinates coordinates, EntityUid uid)
+            : base(tick, subTick, inputFunctionId)
         {
             Coordinates = coordinates;
             Uid = uid;
@@ -144,7 +158,7 @@ namespace Robust.Shared.Input
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
         /// </summary>
-        public GridCoordinates Coordinates { get; }
+        public EntityCoordinates Coordinates { get; }
 
         /// <summary>
         ///     Screen Coordinates of the pointer when the command was created.
@@ -165,8 +179,8 @@ namespace Robust.Shared.Input
         /// <param name="state">New state of the Input Function.</param>
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="screenCoordinates"></param>
-        public FullInputCmdMessage(GameTick tick, int inputSequence, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates)
-            : this(tick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
+        public FullInputCmdMessage(GameTick tick, ushort subTick, int inputSequence, KeyFunctionId inputFunctionId, BoundKeyState state, EntityCoordinates coordinates, ScreenCoordinates screenCoordinates)
+            : this(tick, subTick, inputFunctionId, state, coordinates, screenCoordinates, EntityUid.Invalid) { }
 
         /// <summary>
         ///     Creates an instance of <see cref="FullInputCmdMessage"/> with an optional Entity reference.
@@ -177,8 +191,8 @@ namespace Robust.Shared.Input
         /// <param name="coordinates">Local Coordinates of the pointer when the command was created.</param>
         /// <param name="screenCoordinates"></param>
         /// <param name="uid">Entity that was under the pointer when the command was created.</param>
-        public FullInputCmdMessage(GameTick tick, KeyFunctionId inputFunctionId, BoundKeyState state, GridCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
-            : base(tick, inputFunctionId)
+        public FullInputCmdMessage(GameTick tick, ushort subTick, KeyFunctionId inputFunctionId, BoundKeyState state, EntityCoordinates coordinates, ScreenCoordinates screenCoordinates, EntityUid uid)
+            : base(tick, subTick, inputFunctionId)
         {
             State = state;
             Coordinates = coordinates;

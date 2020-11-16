@@ -17,6 +17,7 @@ namespace Robust.Shared.Physics
     public class PhysicsManager : IPhysicsManager
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
             new ConcurrentDictionary<MapId, BroadPhase>();
@@ -31,26 +32,45 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public bool TryCollideRect(Box2 collider, MapId map)
         {
-            foreach (var body in this[map].Query(collider))
+            var state = (collider, map, found: false);
+            this[map].QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in IPhysBody body) =>
             {
                 if (!body.CanCollide || body.CollisionLayer == 0x0)
-                    continue;
-
-                if (body.MapID == map &&
-                    body.WorldAABB.Intersects(collider))
                     return true;
+
+                if (body.MapID == state.map &&
+                    body.WorldAABB.Intersects(state.collider))
+                {
+                    state.found = true;
+                    return false;
+                }
+                return true;
+            }, collider, true);
+
+            return state.found;
+        }
+
+        public bool IsWeightless(EntityCoordinates coordinates)
+        {
+            var gridId = coordinates.GetGridId(_entityManager);
+            if (!gridId.IsValid())
+            {
+                // Not on a grid = no gravity for now.
+                // In the future, may want to allow maps to override to always have gravity instead.
+                return true;
             }
 
-            return false;
+            var tile = _mapManager.GetGrid(gridId).GetTileRef(coordinates).Tile;
+            return !_mapManager.GetGrid(gridId).HasGravity || tile.IsEmpty;
         }
 
-        public bool IsWeightless(GridCoordinates gridPosition)
-        {
-            var tile = _mapManager.GetGrid(gridPosition.GridID).GetTileRef(gridPosition).Tile;
-            return !_mapManager.GetGrid(gridPosition.GridID).HasGravity || tile.IsEmpty;
-        }
-
-        public Vector2 CalculateNormal(ICollidableComponent target, ICollidableComponent source)
+        /// <summary>
+        ///     Calculates the normal vector for two colliding bodies
+        /// </summary>
+        /// <param name="target"></param>
+        /// <param name="source"></param>
+        /// <returns></returns>
+        public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
@@ -70,7 +90,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public float CalculatePenetration(ICollidableComponent target, ICollidableComponent source)
+        public float CalculatePenetration(IPhysBody target, IPhysBody source)
         {
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return 0.0f;
@@ -80,14 +100,14 @@ namespace Robust.Shared.Physics
         // Impulse resolution algorithm based on Box2D's approach in combination with Randy Gaul's Impulse Engine resolution algorithm.
         public Vector2 SolveCollisionImpulse(Manifold manifold)
         {
-            var aP = manifold.APhysics;
-            var bP = manifold.BPhysics;
-            if (aP == null && bP == null) return Vector2.Zero;
+            var aP = manifold.A;
+            var bP = manifold.B;
+
+            if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
+
             var restitution = 0.01f;
-            var normal = CalculateNormal(manifold.A, manifold.B);
-            var rV = aP != null
-                ? bP != null ? bP.LinearVelocity - aP.LinearVelocity : -aP.LinearVelocity
-                : bP!.LinearVelocity;
+            var normal = manifold.Normal;
+            var rV = manifold.RelativeVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
             if (vAlongNormal > 0)
@@ -96,45 +116,60 @@ namespace Robust.Shared.Physics
             }
 
             var impulse = -(1.0f + restitution) * vAlongNormal;
-            // So why the 100.0f instead of 0.0f? Well, because the other object needs to have SOME mass value,
-            // or otherwise the physics object can actually sink in slightly to the physics-less object.
-            // (the 100.0f is equivalent to a mass of 0.01kg)
-            impulse /= (aP != null && aP.Mass > 0.0f ? 1 / aP.Mass : 100.0f) +
-                       (bP != null && bP.Mass > 0.0f ? 1 / bP.Mass : 100.0f);
+            impulse /= aP.InvMass + bP.InvMass;
+
             return manifold.Normal * impulse;
         }
 
         public IEnumerable<IEntity> GetCollidingEntities(IPhysBody physBody, Vector2 offset, bool approximate = true)
         {
-            var modifiers = physBody.Owner.GetAllComponents<ICollideSpecial>();
-            foreach ( var body in this[physBody.MapID].Query(physBody.WorldAABB, approximate))
+            var modifiers = physBody.Entity.GetAllComponents<ICollideSpecial>();
+            var entities = new List<IEntity>();
+
+            var state = (physBody, modifiers, entities);
+
+            this[physBody.MapID].QueryAabb(ref state,
+                (ref (IPhysBody physBody, IEnumerable<ICollideSpecial> modifiers, List<IEntity> entities) state,
+                    in IPhysBody body) =>
             {
-                if (body.Owner.Deleted) {
-                    continue;
+                if (body.Entity.Deleted) {
+                    return true;
                 }
 
-                if (CollidesOnMask(physBody, body))
+                if (CollidesOnMask(state.physBody, body))
                 {
                     var preventCollision = false;
-                    var otherModifiers = body.Owner.GetAllComponents<ICollideSpecial>();
-                    foreach (var modifier in modifiers)
+                    var otherModifiers = body.Entity.GetAllComponents<ICollideSpecial>();
+                    foreach (var modifier in state.modifiers)
                     {
                         preventCollision |= modifier.PreventCollide(body);
                     }
                     foreach (var modifier in otherModifiers)
                     {
-                        preventCollision |= modifier.PreventCollide(physBody);
+                        preventCollision |= modifier.PreventCollide(state.physBody);
                     }
 
-                    if (preventCollision) continue;
-                    yield return body.Owner;
+                    if (preventCollision)
+                    {
+                        return true;
+                    }
+                    state.entities.Add(body.Entity);
                 }
-            }
+                return true;
+            }, physBody.WorldAABB, approximate);
+
+            return entities;
         }
 
-        public bool IsColliding(IPhysBody body, Vector2 offset)
+        /// <inheritdoc />
+        public IEnumerable<IPhysBody> GetCollidingEntities(MapId mapId, in Box2 worldBox)
         {
-            return GetCollidingEntities(body, offset).Any();
+            return this[mapId].QueryAabb(worldBox, false);
+        }
+
+        public bool IsColliding(IPhysBody body, Vector2 offset, bool approximate)
+        {
+            return GetCollidingEntities(body, offset, approximate).Any();
         }
 
         public static bool CollidesOnMask(IPhysBody a, IPhysBody b)
@@ -160,7 +195,7 @@ namespace Robust.Shared.Physics
         {
             if (!this[physBody.MapID].Add(physBody))
             {
-                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Owner}");
+                Logger.WarningS("phys", $"PhysicsBody already registered! {physBody.Entity}");
             }
         }
 
@@ -172,7 +207,7 @@ namespace Robust.Shared.Physics
         {
             var removed = false;
 
-            if (physBody.Owner.Deleted || physBody.Owner.Transform.Deleted)
+            if (physBody.Entity.Deleted || physBody.Entity.Transform.Deleted)
             {
                 foreach (var mapId in _mapManager.GetAllMapIds())
                 {
@@ -220,7 +255,7 @@ namespace Robust.Shared.Physics
             }
 
             if (!removed)
-                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Owner}");
+                Logger.WarningS("phys", $"Trying to remove unregistered PhysicsBody! {physBody.Entity.Uid}");
         }
 
         /// <inheritdoc />
@@ -230,7 +265,7 @@ namespace Robust.Shared.Physics
         {
             List<RayCastResults> results = new List<RayCastResults>();
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
 
                 if (returnOnFirstHit && results.Count > 0) return true;
@@ -250,16 +285,16 @@ namespace Robust.Shared.Physics
                     return true;
                 }
 
-                if (predicate != null && predicate.Invoke(body.Owner))
+                if (predicate != null && predicate.Invoke(body.Entity))
                 {
                     return true;
                 }
 
-                var result = new RayCastResults(distFromOrigin, point, body.Owner);
+                var result = new RayCastResults(distFromOrigin, point, body.Entity);
                 results.Add(result);
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
                 return true;
-            }, ray.Position, ray.Direction);
+            }, ray);
             if (results.Count == 0)
             {
                 DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, null));
@@ -278,7 +313,7 @@ namespace Robust.Shared.Physics
         {
             var penetration = 0f;
 
-            this[mapId].Query((ref IPhysBody body, in Vector2 point, float distFromOrigin) =>
+            this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {
                 if (distFromOrigin > maxLength)
                 {
@@ -301,7 +336,7 @@ namespace Robust.Shared.Physics
                     penetration += (point - exitPoint).Length;
                 }
                 return true;
-            }, ray.Position, ray.Direction);
+            }, ray);
 
             return penetration;
         }
@@ -309,16 +344,32 @@ namespace Robust.Shared.Physics
         public event Action<DebugRayData>? DebugDrawRay;
 
         public bool Update(IPhysBody collider)
-            => this[collider.MapID].Update(collider);
+        {
+            collider.WakeBody();
+            return this[collider.MapID].Update(collider);
+        }
 
         public void RemovedFromMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Remove(body);
         }
 
         public void AddedToMap(IPhysBody body, MapId mapId)
         {
+            body.WakeBody();
             this[mapId].Add(body);
         }
+
+        /// <summary>
+        /// How many ticks before a physics body will go to sleep. Bodies will only sleep if
+        /// they have no velocity.
+        /// </summary>
+        /// <remarks>
+        /// This is an arbitrary number greater than zero. To solve "locker stacks" that span multiple ticks,
+        /// this needs to be greater than one. Every time an entity collides or is moved, the body's <see cref="IPhysBody.SleepAccumulator"/>
+        /// goes back to zero.
+        /// </remarks>
+        public int SleepTimeThreshold { get; set; } = 2;
     }
 }

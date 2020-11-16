@@ -6,6 +6,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
@@ -29,7 +30,7 @@ namespace Robust.Server.GameObjects.Components.Container
         public Container(string id, IContainerManager manager) : base(id, manager) { }
 
         /// <inheritdoc />
-        public override IReadOnlyCollection<IEntity> ContainedEntities => _containerList.AsReadOnly();
+        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
 
         /// <inheritdoc />
         protected override void InternalInsert(IEntity toinsert)
@@ -84,10 +85,15 @@ namespace Robust.Server.GameObjects.Components.Container
         public bool Deleted { get; private set; }
 
         /// <inheritdoc />
-        public abstract IReadOnlyCollection<IEntity> ContainedEntities { get; }
+        [ViewVariables]
+        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
 
         /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool ShowContents { get; set; }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool OccludesLight { get; set; }
 
         /// <summary>
         /// DO NOT CALL THIS METHOD DIRECTLY!
@@ -116,7 +122,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (transform.Parent == null) // Only true if Parent is the map entity
                 return false;
 
-            if(ContainerHelpers.TryGetContainerMan(transform.Parent.Owner, out var containerManager) && !containerManager.Remove(toinsert))
+            if(transform.Parent.Owner.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
             {
                 // Can't remove from existing container, can't insert.
                 return false;
@@ -176,7 +182,7 @@ namespace Robust.Server.GameObjects.Components.Container
             if (!toremove.IsValid())
                 return true;
 
-            toremove.Transform.DetachParent();
+            toremove.Transform.AttachParentToContainerOrGrid();
             return true;
         }
 
@@ -218,7 +224,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <inheritdoc />
         public virtual void Shutdown()
         {
-            Manager.Dirty();
+            Manager.InternalContainerShutdown(this);
             Deleted = true;
         }
     }

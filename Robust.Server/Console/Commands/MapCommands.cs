@@ -5,6 +5,7 @@ using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Maps;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -98,12 +99,6 @@ namespace Robust.Server.Console.Commands
             if (!mapManager.TryGetGrid(gridId, out var grid))
             {
                 shell.SendText(player, "That grid does not exist.");
-                return;
-            }
-
-            if (grid.IsDefaultGrid)
-            {
-                shell.SendText(player, "Cannot save a default grid.");
                 return;
             }
 
@@ -228,9 +223,11 @@ namespace Robust.Server.Console.Commands
             if(player?.AttachedEntity == null)
                 return;
 
-            var pos = player.AttachedEntity.Transform.GridPosition;
+            var pos = player.AttachedEntity.Transform.Coordinates;
+            var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(pos.GridID).ParentMapId} GridID:{pos.GridID} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player,
+                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
@@ -406,8 +403,8 @@ namespace Robust.Server.Console.Commands
 
             foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
-                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3}, ent: {5}, grids: {4}\n",
-                    mapId, mapManager.GetDefaultGridId(mapId), pauseManager.IsMapInitialized(mapId),
+                msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
+                    mapId, pauseManager.IsMapInitialized(mapId),
                     pauseManager.IsMapPaused(mapId),
                     string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
                     mapManager.GetMapEntityId(mapId));
@@ -431,8 +428,8 @@ namespace Robust.Server.Console.Commands
 
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
-                msg.AppendFormat("{0}: map: {1}, ent: {4}, default: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMapId, grid.IsDefaultGrid, grid.WorldPosition, grid.GridEntityId);
+                msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3} \n",
+                    grid.Index, grid.ParentMapId, grid.WorldPosition, grid.GridEntityId);
             }
 
             shell.SendText(player, msg.ToString());

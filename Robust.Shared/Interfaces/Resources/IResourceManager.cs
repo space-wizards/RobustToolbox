@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Interfaces.Resources
 {
@@ -164,6 +165,27 @@ namespace Robust.Shared.Interfaces.Resources
             using var reader = new StreamReader(stream, encoding);
 
             return reader.ReadToEnd();
+        }
+
+        public YamlStream ContentFileReadYaml(ResourcePath path)
+        {
+            using var reader = ContentFileReadText(path);
+
+            var yamlStream = new YamlStream();
+            yamlStream.Load(reader);
+
+            return yamlStream;
+        }
+
+        public StreamReader ContentFileReadText(ResourcePath path)
+        {
+            return ContentFileReadText(path, EncodingHelpers.UTF8);
+        }
+
+        public StreamReader ContentFileReadText(ResourcePath path, Encoding encoding)
+        {
+            var stream = ContentFileRead(path);
+            return new StreamReader(stream, encoding);
         }
     }
 

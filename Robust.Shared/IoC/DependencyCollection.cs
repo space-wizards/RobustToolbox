@@ -80,7 +80,7 @@ namespace Robust.Shared.IoC
             _resolveTypes[typeof(TInterface)] = implementation.GetType();
             _services[typeof(TInterface)] = implementation;
 
-            InjectDependencies(implementation);
+            InjectDependencies(implementation, true);
 
             if (implementation is IPostInjectInit init)
                 init.PostInject();
@@ -122,6 +122,11 @@ namespace Robust.Shared.IoC
                     $"Attempted to resolve type {type} before the object graph for it has been populated.");
             }
 
+            if (type == typeof(IDependencyCollection))
+            {
+                return this;
+            }
+
             throw new UnregisteredTypeException(type);
         }
 
@@ -138,7 +143,7 @@ namespace Robust.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.
-                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value);
+                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value)!;
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.

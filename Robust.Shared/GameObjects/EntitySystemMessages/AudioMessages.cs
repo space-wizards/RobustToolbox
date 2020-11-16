@@ -32,13 +32,13 @@ namespace Robust.Shared.GameObjects
     [Serializable, NetSerializable]
     public class PlayAudioPositionalMessage : AudioMessage
     {
-        public GridCoordinates Coordinates { get; set; }
+        public EntityCoordinates Coordinates { get; set; }
     }
 
     [Serializable, NetSerializable]
     public class PlayAudioEntityMessage : AudioMessage
     {
-        public GridCoordinates Coordinates { get; set; }
+        public EntityCoordinates Coordinates { get; set; }
         public EntityUid EntityUid { get; set; }
     }
 }

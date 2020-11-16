@@ -36,8 +36,10 @@ using Robust.Server.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
-using Robust.Server.Interfaces.Maps;
+using Robust.Server.Log;
 using Robust.Shared.Serialization;
+using Serilog.Debugging;
+using Serilog.Sinks.Loki;
 using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
@@ -59,6 +61,14 @@ namespace Robust.Server
             "robust_server_curtick",
             "The IGameTiming.CurTick of the server.");
 
+        private static readonly Histogram TickUsage = Metrics.CreateHistogram(
+            "robust_server_update_usage",
+            "Time usage of the main loop Update()s",
+            new HistogramConfiguration
+            {
+                LabelNames = new[] {"area"},
+                Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
+            });
 
         [Dependency] private readonly IConfigurationManager _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
@@ -78,6 +88,7 @@ namespace Robust.Server
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
@@ -95,10 +106,10 @@ namespace Robust.Server
         private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
 
         /// <inheritdoc />
-        public int MaxPlayers => _config.GetCVar<int>("game.maxplayers");
+        public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
 
         /// <inheritdoc />
-        public string ServerName => _config.GetCVar<string>("game.hostname");
+        public string ServerName => _config.GetCVar(CVars.GameHostName);
 
         /// <inheritdoc />
         public void Restart()
@@ -135,27 +146,35 @@ namespace Robust.Server
         /// <inheritdoc />
         public bool Start(Func<ILogHandler>? logHandlerFactory = null)
         {
-            // Sets up the configMgr
-            // If a config file path was passed, use it literally.
-            // This ensures it's working-directory relative
-            // (for people passing config file through the terminal or something).
-            // Otherwise use the one next to the executable.
-            if (_commandLineArgs?.ConfigFile != null)
+            _config.Initialize(true);
+
+            if (LoadConfigAndUserData)
             {
-                _config.LoadFromFile(_commandLineArgs.ConfigFile);
-            }
-            else
-            {
-                var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
-                if (File.Exists(path))
+                // Sets up the configMgr
+                // If a config file path was passed, use it literally.
+                // This ensures it's working-directory relative
+                // (for people passing config file through the terminal or something).
+                // Otherwise use the one next to the executable.
+                if (_commandLineArgs?.ConfigFile != null)
                 {
-                    _config.LoadFromFile(path);
+                    _config.LoadFromFile(_commandLineArgs.ConfigFile);
                 }
                 else
                 {
-                    _config.SetSaveFile(path);
+                    var path = PathHelpers.ExecutableRelativeFile("server_config.toml");
+                    if (File.Exists(path))
+                    {
+                        _config.LoadFromFile(path);
+                    }
+                    else
+                    {
+                        _config.SetSaveFile(path);
+                    }
                 }
             }
+
+            _config.LoadCVarsFromAssembly(typeof(BaseServer).Assembly); // Robust.Server
+            _config.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
 
             _config.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
@@ -166,21 +185,16 @@ namespace Robust.Server
 
 
             //Sets up Logging
-            _config.RegisterCVar("log.enabled", true, CVar.ARCHIVE);
-            _config.RegisterCVar("log.path", "logs", CVar.ARCHIVE);
-            _config.RegisterCVar("log.format", "log_%(date)s-T%(time)s.txt", CVar.ARCHIVE);
-            _config.RegisterCVar("log.level", LogLevel.Info, CVar.ARCHIVE);
-
             _logHandlerFactory = logHandlerFactory;
 
             var logHandler = logHandlerFactory?.Invoke() ?? null;
 
-            var logEnabled = _config.GetCVar<bool>("log.enabled");
+            var logEnabled = _config.GetCVar(CVars.LogEnabled);
 
             if (logEnabled && logHandler == null)
             {
-                var logPath = _config.GetCVar<string>("log.path");
-                var logFormat = _config.GetCVar<string>("log.format");
+                var logPath = _config.GetCVar(CVars.LogPath);
+                var logFormat = _config.GetCVar(CVars.LogFormat);
                 var logFilename = logFormat.Replace("%(date)s", DateTime.Now.ToString("yyyy-MM-dd"))
                     .Replace("%(time)s", DateTime.Now.ToString("hh-mm-ss"));
                 var fullPath = Path.Combine(logPath, logFilename);
@@ -193,12 +207,19 @@ namespace Robust.Server
                 logHandler = new FileLogHandler(logPath);
             }
 
-            _log.RootSawmill.Level = _config.GetCVar<LogLevel>("log.level");
+            _log.RootSawmill.Level = _config.GetCVar(CVars.LogLevel);
 
             if (logEnabled && logHandler != null)
             {
                 _logHandler = logHandler;
                 _log.RootSawmill.AddHandler(_logHandler!);
+            }
+
+            SelfLog.Enable(s => { System.Console.WriteLine("SERILOG ERROR: {0}", s); });
+
+            if (!SetupLoki())
+            {
+                return true;
             }
 
             // Has to be done early because this guy's in charge of the main thread Synchronization Context.
@@ -225,7 +246,9 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir = _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data");
+            var dataDir = LoadConfigAndUserData
+                ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
+                : null;
 
             // Set up the VFS
             _resources.Initialize(dataDir);
@@ -256,6 +279,9 @@ namespace Robust.Server
                 return true;
             }
 
+            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
+            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
+
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
             // HAS to happen after content gets loaded.
@@ -266,7 +292,7 @@ namespace Robust.Server
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
             IoCManager.Resolve<IPrototypeManager>().LoadedData +=
-                IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
+                (yaml, name) => _stringSerializer.AddStrings(yaml);
 
             // Initialize Tier 2 services
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
@@ -291,7 +317,6 @@ namespace Robust.Server
             prototypeManager.Resync();
 
             IoCManager.Resolve<IConsoleShell>().Initialize();
-            IoCManager.Resolve<IConGroupController>().Initialize();
             _entities.Startup();
             _scriptHost.Initialize();
 
@@ -303,7 +328,58 @@ namespace Robust.Server
 
             _watchdogApi.Initialize();
 
+            _stringSerializer.LockStrings();
+
             return false;
+        }
+
+        private bool SetupLoki()
+        {
+            var enabled = _config.GetCVar(CVars.LokiEnabled);
+            if (!enabled)
+            {
+                return true;
+            }
+
+            var serverName = _config.GetCVar(CVars.LokiName);
+            var address = _config.GetCVar(CVars.LokiAddress);
+            var username = _config.GetCVar(CVars.LokiUsername);
+            var password = _config.GetCVar(CVars.LokiPassword);
+
+            if (string.IsNullOrWhiteSpace(serverName))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Server name is not specified/empty.");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                Logger.FatalS("loki", "Misconfiguration: Loki address is not specified/empty.");
+                return false;
+            }
+
+            LokiCredentials credentials;
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                credentials = new NoAuthCredentials(address);
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(password))
+                {
+                    Logger.FatalS("loki", "Misconfiguration: Loki password is not specified/empty but username is.");
+                    return false;
+                }
+
+                credentials = new BasicAuthCredentials(address, username, password);
+            }
+
+            Logger.DebugS("loki", "Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
+                address);
+
+            var handler = new LokiLogHandler(serverName, credentials);
+            _log.RootSawmill.AddHandler(handler);
+            return true;
         }
 
         private void ProcessExiting(object? sender, EventArgs e)
@@ -326,20 +402,21 @@ namespace Robust.Server
                 _mainLoop = new GameLoop(_time)
                 {
                     SleepMode = SleepMode.Delay,
-                    DetectSoftLock = true
+                    DetectSoftLock = true,
+                    EnableMetrics = true
                 };
             }
 
             _uptimeStopwatch.Start();
 
+            _mainLoop.Input += (sender, args) => Input(args);
+
             _mainLoop.Tick += (sender, args) => Update(args);
 
-            _mainLoop.Update += (sender, args) =>
-            {
-                ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
-            };
+            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
 
             // set GameLoop.Running to false to return from this function.
+            _time.Paused = false;
             _mainLoop.Run();
 
             _time.InSimulation = true;
@@ -349,6 +426,7 @@ namespace Robust.Server
         }
 
         public bool DisableLoadContext { private get; set; }
+        public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
@@ -385,18 +463,18 @@ namespace Robust.Server
         {
             var cfgMgr = IoCManager.Resolve<IConfigurationManager>();
 
-            cfgMgr.RegisterCVar("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER, i =>
+            cfgMgr.OnValueChanged(CVars.NetTickrate, i =>
             {
                 var b = (byte) i;
                 _time.TickRate = b;
+
+                Logger.InfoS("game", $"Tickrate changed to: {b} on tick {_time.CurTick}");
                 SendTickRateUpdateToClients(b);
             });
 
-            cfgMgr.RegisterCVar("game.hostname", "MyServer", CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.maxplayers", 32, CVar.ARCHIVE);
-            cfgMgr.RegisterCVar("game.type", GameType.Game);
+            cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
 
-            _time.TickRate = (byte) _config.GetCVar<int>("net.tickrate");
+            _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
@@ -420,13 +498,16 @@ namespace Robust.Server
             // shutdown entities
             _entities.Shutdown();
 
-            // Wrtie down exception log
-            var logPath = _config.GetCVar<string>("log.path");
-            var relPath = PathHelpers.ExecutableRelativeFile(logPath);
-            Directory.CreateDirectory(relPath);
-            var pathToWrite = Path.Combine(relPath,
-                "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
-            File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            if (_config.GetCVar(CVars.LogRuntimeLog))
+            {
+                // Wrtie down exception log
+                var logPath = _config.GetCVar(CVars.LogPath);
+                var relPath = PathHelpers.ExecutableRelativeFile(logPath);
+                Directory.CreateDirectory(relPath);
+                var pathToWrite = Path.Combine(relPath,
+                    "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
+                File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+            }
 
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
 
@@ -446,27 +527,53 @@ namespace Robust.Server
             return bps;
         }
 
+        private void Input(FrameEventArgs args)
+        {
+            _systemConsole.Update();
+
+            _network.ProcessPackets();
+            _taskManager.ProcessPendingTasks();
+        }
+
         private void Update(FrameEventArgs frameEventArgs)
         {
             ServerCurTick.Set(_time.CurTick.Value);
             ServerCurTime.Set(_time.CurTime.TotalSeconds);
 
             UpdateTitle();
-            _systemConsole.Update();
 
-            _network.ProcessPackets();
+            using (TickUsage.WithLabels("PreEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            using (TickUsage.WithLabels("Timers").NewTimer())
+            {
+                timerManager.UpdateTimers(frameEventArgs);
+            }
 
-            timerManager.UpdateTimers(frameEventArgs);
-            _taskManager.ProcessPendingTasks();
+            using (TickUsage.WithLabels("AsyncTasks").NewTimer())
+            {
+                _taskManager.ProcessPendingTasks();
+            }
 
-            _components.CullRemovedComponents();
-            _entities.Update(frameEventArgs.DeltaSeconds);
+            using (TickUsage.WithLabels("ComponentCull").NewTimer())
+            {
+                _components.CullRemovedComponents();
+            }
 
-            _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
+            _entities.Update(frameEventArgs.DeltaSeconds, TickUsage);
 
-            _stateManager.SendGameStateUpdate();
+            using (TickUsage.WithLabels("PostEngine").NewTimer())
+            {
+                _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
+            }
+
+            using (TickUsage.WithLabels("GameState").NewTimer())
+            {
+                _stateManager.SendGameStateUpdate();
+            }
 
             _watchdogApi.Heartbeat();
         }

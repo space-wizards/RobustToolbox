@@ -41,6 +41,27 @@ namespace Robust.Shared.Configuration
         /// <summary>
         /// Changing this var on the server notifies all clients, does nothing client-side.
         /// </summary>
-        NOTIFY = 32
+        NOTIFY = 32,
+
+        /// <summary>
+        ///     Ignore registration of this cvar on the client.
+        /// </summary>
+        /// <remarks>
+        ///     This is intended to aid shared code.
+        /// </remarks>
+        SERVERONLY = 64,
+
+        /// <summary>
+        ///     Ignore registration of this cvar on the client.
+        /// </summary>
+        /// <remarks>
+        ///     This is intended to aid shared code.
+        /// </remarks>
+        CLIENTONLY = 128,
+
+        /// <summary>
+        /// This var has to kept secure and may not be accessed by content.
+        /// </summary>
+        SECURE = 256
     }
 }

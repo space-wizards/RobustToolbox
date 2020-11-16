@@ -25,8 +25,8 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
-        private readonly Dictionary<uint, ViewVariablesSession>
-            _sessions = new Dictionary<uint, ViewVariablesSession>();
+        private readonly Dictionary<uint, ViewVariablesesSession>
+            _sessions = new Dictionary<uint, ViewVariablesesSession>();
 
         private uint _nextSessionId = 1;
 
@@ -47,7 +47,7 @@ namespace Robust.Server.ViewVariables
         private void _msgCloseSession(MsgViewVariablesCloseSession message)
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session)
-                || session.PlayerSession != message.MsgChannel.SessionId)
+                || session.PlayerUser != message.MsgChannel.UserId)
             {
                 // TODO: logging?
                 return;
@@ -59,7 +59,7 @@ namespace Robust.Server.ViewVariables
         private void _msgModifyRemote(MsgViewVariablesModifyRemote message)
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session)
-                || session.PlayerSession != message.MsgChannel.SessionId)
+                || session.PlayerUser != message.MsgChannel.UserId)
             {
                 // TODO: logging?
                 return;
@@ -77,7 +77,7 @@ namespace Robust.Server.ViewVariables
         private void _msgReqData(MsgViewVariablesReqData message)
         {
             if (!_sessions.TryGetValue(message.SessionId, out var session)
-                || session.PlayerSession != message.MsgChannel.SessionId)
+                || session.PlayerUser != message.MsgChannel.UserId)
             {
                 // TODO: logging?
                 return;
@@ -136,7 +136,7 @@ namespace Robust.Server.ViewVariables
                 }
                 case ViewVariablesSessionRelativeSelector sessionRelativeSelector:
                     if (!_sessions.TryGetValue(sessionRelativeSelector.SessionId, out var relSession)
-                        || relSession.PlayerSession != message.MsgChannel.SessionId)
+                        || relSession.PlayerUser != message.MsgChannel.UserId)
                     {
                         // TODO: logging?
                         Deny(DenyReason.NoObject);
@@ -190,7 +190,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var sessionId = _nextSessionId++;
-            var session = new ViewVariablesSession(message.MsgChannel.SessionId, theObject, sessionId, this,
+            var session = new ViewVariablesesSession(message.MsgChannel.UserId, theObject, sessionId, this,
                 _robustSerializer);
 
             _sessions.Add(sessionId, session);
@@ -217,7 +217,7 @@ namespace Robust.Server.ViewVariables
             }
 
             _sessions.Remove(sessionId);
-            if (!sendMsg || !_playerManager.TryGetSessionById(session.PlayerSession, out var player) ||
+            if (!sendMsg || !_playerManager.TryGetSessionById(session.PlayerUser, out var player) ||
                 player.Status == SessionStatus.Disconnected)
             {
                 return;

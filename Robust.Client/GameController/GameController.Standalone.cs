@@ -81,7 +81,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    Update(args);
+                    Tick(args);
                 }
             };
 
@@ -97,7 +97,7 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _clyde.ProcessInput(args);
+                    Input(args);
                 }
             };
 
@@ -105,12 +105,14 @@ namespace Robust.Client
             {
                 if (_mainLoop.Running)
                 {
-                    _frameProcessMain(args);
+                    Update(args);
                 }
             };
 
             // set GameLoop.Running to false to return from this function.
             _mainLoop.Run();
+
+            Cleanup();
         }
     }
 }

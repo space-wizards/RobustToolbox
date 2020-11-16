@@ -1,24 +1,22 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
-    public readonly struct Box2i : IEquatable<Box2i>
+    public struct Box2i : IEquatable<Box2i>
     {
-        public readonly int Left;
-        public readonly int Right;
-        public readonly int Top;
-        public readonly int Bottom;
+        public int Left;
+        public int Right;
+        public int Top;
+        public int Bottom;
 
-        public Vector2i BottomRight => new Vector2i(Right, Bottom);
-        public Vector2i TopLeft => new Vector2i(Left, Top);
-        public Vector2i TopRight => new Vector2i(Right, Top);
-        public Vector2i BottomLeft => new Vector2i(Left, Bottom);
-        public int Width => Math.Abs(Right - Left);
-        public int Height => Math.Abs(Top - Bottom);
-        public Vector2i Size => new Vector2i(Width, Height);
+        public readonly Vector2i BottomRight => new Vector2i(Right, Bottom);
+        public readonly Vector2i TopLeft => new Vector2i(Left, Top);
+        public readonly Vector2i TopRight => new Vector2i(Right, Top);
+        public readonly Vector2i BottomLeft => new Vector2i(Left, Bottom);
+        public readonly int Width => Math.Abs(Right - Left);
+        public readonly int Height => Math.Abs(Top - Bottom);
+        public readonly Vector2i Size => new Vector2i(Width, Height);
 
         public Box2i(Vector2i bottomLeft, Vector2i topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
         {
@@ -42,12 +40,12 @@ namespace Robust.Shared.Maths
             return FromDimensions(position.X, position.Y, size.X, size.Y);
         }
 
-        public bool Contains(int x, int y)
+        public readonly bool Contains(int x, int y)
         {
             return Contains(new Vector2i(x, y));
         }
 
-        public bool Contains(Vector2i point, bool closedRegion = true)
+        public readonly bool Contains(Vector2i point, bool closedRegion = true)
         {
             var xOk = closedRegion
                 ? point.X >= Left ^ point.X > Right
@@ -59,7 +57,7 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
-        public Box2i Translated(Vector2i point)
+        public readonly Box2i Translated(Vector2i point)
         {
             return new Box2i(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
         }
@@ -67,7 +65,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns the smallest rectangle that contains both of the rectangles.
         /// </summary>
-        public Box2i Union(in Box2i other)
+        public readonly Box2i Union(in Box2i other)
         {
             var left = Math.Min(Left, other.Left);
             var right = Math.Max(Right, other.Right);
@@ -81,7 +79,7 @@ namespace Robust.Shared.Maths
         }
 
         // override object.Equals
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (obj is Box2i box)
             {
@@ -91,13 +89,13 @@ namespace Robust.Shared.Maths
             return false;
         }
 
-        public bool Equals(Box2i other)
+        public readonly bool Equals(Box2i other)
         {
             return other.Left == Left && other.Right == Right && other.Bottom == Bottom && other.Top == Top;
         }
 
         // override object.GetHashCode
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             var code = Left.GetHashCode();
             code = (code * 929) ^ Right.GetHashCode();
@@ -116,7 +114,7 @@ namespace Robust.Shared.Maths
             return new Box2(box.Left, box.Bottom, box.Right, box.Top);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
         }

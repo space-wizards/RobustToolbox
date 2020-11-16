@@ -21,10 +21,14 @@ namespace Robust.Shared.GameObjects.Systems
     public abstract class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly IEntityManager EntityManager = default!;
+        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [Dependency] protected readonly IEntityNetworkManager EntityNetworkManager = default!;
 
+        [Obsolete("You need to create and store the query yourself in a field.")]
         protected IEntityQuery? EntityQuery;
+
+        [Obsolete("You need to use `EntityManager.GetEntities(EntityQuery)`, or store a query yourself.")]
         protected IEnumerable<IEntity> RelevantEntities => EntityQuery != null ? EntityManager.GetEntities(EntityQuery) : EntityManager.GetEntities();
 
         protected internal List<Type> UpdatesAfter { get; } = new List<Type>();
@@ -49,44 +53,49 @@ namespace Robust.Shared.GameObjects.Systems
         #region Event Proxy
 
         protected void SubscribeNetworkEvent<T>(EntityEventHandler<T> handler)
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler);
         }
 
         protected void SubscribeNetworkEvent<T>(EntitySessionEventHandler<T> handler)
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.SubscribeSessionEvent(EventSource.Network, this, handler);
         }
 
         protected void SubscribeLocalEvent<T>(EntityEventHandler<T> handler)
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler);
         }
 
         protected void SubscribeLocalEvent<T>(EntitySessionEventHandler<T> handler)
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.SubscribeSessionEvent(EventSource.Local, this, handler);
         }
 
         protected void UnsubscribeNetworkEvent<T>()
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Network, this);
         }
 
         protected void UnsubscribeLocalEvent<T>()
-            where T : EntitySystemMessage
+            where T : notnull
         {
             EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
         }
 
-        protected void RaiseLocalEvent(EntitySystemMessage message)
+        protected void RaiseLocalEvent<T>(T message) where T : notnull
         {
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, (object)message);
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+        }
+
+        protected void RaiseLocalEvent(object message)
+        {
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
         protected void QueueLocalEvent(EntitySystemMessage message)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Robust.Shared.Network;
 
 namespace Robust.Shared.Interfaces.Network
@@ -96,9 +97,15 @@ namespace Robust.Shared.Interfaces.Network
         void ServerSendToMany(NetMessage message, List<INetChannel> recipients);
 
         /// <summary>
+        ///     Sends a message to the server. Make sure to Initialize(true) and Connect() to a server before calling this.
+        /// </summary>
+        /// <param name="message">Message to send.</param>
+        void ClientSendMessage(NetMessage message);
+
+        /// <summary>
         ///     An incoming connection is being received.
         /// </summary>
-        event EventHandler<NetConnectingArgs> Connecting;
+        event Func<NetConnectingArgs, Task> Connecting;
 
         /// <summary>
         ///     A client has just connected to the server.
@@ -118,16 +125,25 @@ namespace Robust.Shared.Interfaces.Network
         /// <typeparam name="T">Type to register.</typeparam>
         /// <param name="name">String ID of the message.</param>
         /// <param name="rxCallback">Callback function to process the received message.</param>
-        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null)
+        /// <param name="accept">
+        /// The side of the network this message is accepted on.
+        /// If we are not on the side specified, the receive callback will not be registered even if provided.
+        /// </param>
+        void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+            NetMessageAccept accept = NetMessageAccept.Both)
             where T : NetMessage;
 
         /// <summary>
         ///     Creates a new NetMessage to be sent.
         /// </summary>
+        /// <remarks>
+        ///     This function is thread safe.
+        /// </remarks>
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
         T CreateNetMessage<T>() where T : NetMessage;
 
         #endregion StringTable
+
     }
 }

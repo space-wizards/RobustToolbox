@@ -3,6 +3,7 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared;
 using Robust.Shared.Input;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -33,6 +34,12 @@ namespace Robust.Client.Interfaces.UserInterface
         Control? CurrentlyHovered { get; }
 
         float UIScale { get; }
+
+        /// <summary>
+        ///     Gets the default UIScale that we will use if <see cref="CVars.DisplayUIScale"/> gets set to 0.
+        ///     Based on the OS-assigned window scale factor.
+        /// </summary>
+        float DefaultUIScale { get; }
 
         /// <summary>
         ///     The "root" control to which all other controls are parented,
@@ -82,6 +89,8 @@ namespace Robust.Client.Interfaces.UserInterface
         ///     Cursor automatically used when the mouse is not over any UI control.
         /// </summary>
         ICursor? WorldCursor { get; set; }
+
+        void PushModal(Control modal);
     }
 
     internal interface IUserInterfaceManagerInternal : IUserInterfaceManager
@@ -118,8 +127,6 @@ namespace Robust.Client.Interfaces.UserInterface
 
         void ControlRemovedFromTree(Control control);
 
-        void PushModal(Control modal);
-
         void RemoveModal(Control modal);
 
         void Render(IRenderHandle renderHandle);
@@ -127,6 +134,10 @@ namespace Robust.Client.Interfaces.UserInterface
         void QueueStyleUpdate(Control control);
         void QueueLayoutUpdate(Control control);
         void CursorChanged(Control control);
+        /// <summary>
+        /// Hides the tooltip for the indicated control, if tooltip for that control is currently showing.
+        /// </summary>
+        void HideTooltipFor(Control control);
     }
 }
 

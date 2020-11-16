@@ -62,6 +62,11 @@ namespace Robust.Client.Audio.Midi
         bool DisablePercussionChannel { get; set; }
 
         /// <summary>
+        /// Whether to drop messages for program change events.
+        /// </summary>
+        bool DisableProgramChangeEvent { get; set; }
+
+        /// <summary>
         ///     Gets the total number of ticks possible for the MIDI player.
         /// </summary>
         int PlayerTotalTick { get; }
@@ -139,7 +144,7 @@ namespace Robust.Client.Audio.Midi
         ///     This is only used if <see cref="Mono"/> is set to True
         ///     and <see cref="TrackingEntity"/> is null.
         /// </summary>
-        GridCoordinates? TrackingCoordinates { get; set; }
+        EntityCoordinates? TrackingCoordinates { get; set; }
 
         /// <summary>
         ///     Send a midi event for the renderer to play.
@@ -155,6 +160,11 @@ namespace Robust.Client.Audio.Midi
         /// <param name="time"></param>
         /// <param name="absolute"></param>
         void ScheduleMidiEvent(Shared.Audio.Midi.MidiEvent midiEvent, uint time, bool absolute);
+
+        /// <summary>
+        ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
+        /// </summary>
+        internal void InternalDispose();
     }
 
     public class MidiRenderer : IMidiRenderer
@@ -250,7 +260,7 @@ namespace Robust.Client.Audio.Midi
         }
 
         public IEntity? TrackingEntity { get; set; } = null;
-        public GridCoordinates? TrackingCoordinates { get; set; } = null;
+        public EntityCoordinates? TrackingCoordinates { get; set; } = null;
 
         internal bool Free { get; set; } = false;
 
@@ -558,7 +568,11 @@ namespace Robust.Client.Audio.Midi
                     CloseMidi();
                     break;
             }
+        }
 
+        /// <inheritdoc />
+        void IMidiRenderer.InternalDispose()
+        {
             Source?.Dispose();
             _synth?.Dispose();
             _player?.Dispose();

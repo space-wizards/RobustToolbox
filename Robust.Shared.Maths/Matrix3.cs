@@ -27,8 +27,6 @@ SOFTWARE.
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -796,7 +794,7 @@ namespace Robust.Shared.Maths
             //Credit: https://stackoverflow.com/a/18504573
 
             var d = Determinant;
-            if (FloatMath.CloseTo(d, 0))
+            if (MathHelper.CloseTo(d, 0))
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
             var m = this;

@@ -35,7 +35,7 @@ namespace Robust.Client.Graphics.Shaders
 
     internal sealed class ShaderFunctionDefinition
     {
-        public ShaderFunctionDefinition(string name, ShaderDataType returnType,
+        public ShaderFunctionDefinition(string name, ShaderDataTypeFull returnType,
             IReadOnlyList<ShaderFunctionParameter> parameters, string body)
         {
             Name = name;
@@ -45,14 +45,14 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType ReturnType { get; }
+        public ShaderDataTypeFull ReturnType { get; }
         public IReadOnlyList<ShaderFunctionParameter> Parameters { get; }
         public string Body { get; }
     }
 
     internal sealed class ShaderFunctionParameter
     {
-        public ShaderFunctionParameter(string name, ShaderDataType type, ShaderParameterQualifiers qualifiers)
+        public ShaderFunctionParameter(string name, ShaderDataTypeFull type, ShaderParameterQualifiers qualifiers)
         {
             Name = name;
             Type = type;
@@ -60,25 +60,25 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
         public ShaderParameterQualifiers Qualifiers { get; }
     }
 
     internal sealed class ShaderVaryingDefinition
     {
-        public ShaderVaryingDefinition(string name, ShaderDataType type)
+        public ShaderVaryingDefinition(string name, ShaderDataTypeFull type)
         {
             Name = name;
             Type = type;
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
     }
 
     internal sealed class ShaderUniformDefinition
     {
-        public ShaderUniformDefinition(string name, ShaderDataType type, string? defaultValue)
+        public ShaderUniformDefinition(string name, ShaderDataTypeFull type, string? defaultValue)
         {
             Name = name;
             Type = type;
@@ -86,13 +86,13 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
         public string? DefaultValue { get; }
     }
 
     internal sealed class ShaderConstantDefinition
     {
-        public ShaderConstantDefinition(string name, ShaderDataType type, string value)
+        public ShaderConstantDefinition(string name, ShaderDataTypeFull type, string value)
         {
             Name = name;
             Type = type;
@@ -100,7 +100,7 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         public string Name { get; }
-        public ShaderDataType Type { get; }
+        public ShaderDataTypeFull Type { get; }
         public string Value { get; }
     }
 
@@ -133,6 +133,40 @@ namespace Robust.Client.Graphics.Shaders
         USampler2D,
     }
 
+    internal sealed class ShaderDataTypeFull
+    {
+        public ShaderDataTypeFull(ShaderDataType type, ShaderPrecisionQualifier prec)
+        {
+            Type = type;
+            Precision = prec;
+        }
+
+        public ShaderDataType Type { get; }
+        public ShaderPrecisionQualifier Precision { get; }
+
+        public string GetNativeType()
+        {
+            if (Precision == ShaderPrecisionQualifier.Low)
+            {
+                return "lowp " + Type.GetNativeType();
+            }
+            else if (Precision == ShaderPrecisionQualifier.Medium)
+            {
+                return "mediump " + Type.GetNativeType();
+            }
+            else if (Precision == ShaderPrecisionQualifier.High)
+            {
+                return "highp " + Type.GetNativeType();
+            }
+            return Type.GetNativeType();
+        }
+        
+        public bool TypePrecisionConsistent()
+        {
+            return Type.TypeHasPrecision() == (Precision != ShaderPrecisionQualifier.None);
+        }
+    }
+
     internal static class ShaderEnumExt
     {
         public static string GetNativeType(this ShaderDataType type)
@@ -155,6 +189,18 @@ namespace Robust.Client.Graphics.Shaders
                 default:
                     throw new ArgumentOutOfRangeException(nameof(qualifier), qualifier, null);
             }
+        }
+        
+        public static bool TypeHasPrecision(this ShaderDataType type)
+        {
+            return
+                (type == ShaderDataType.Float) ||
+                (type == ShaderDataType.Vec2) ||
+                (type == ShaderDataType.Vec3) ||
+                (type == ShaderDataType.Vec4) ||
+                (type == ShaderDataType.Mat2) ||
+                (type == ShaderDataType.Mat3) ||
+                (type == ShaderDataType.Mat4);
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
@@ -215,5 +261,13 @@ namespace Robust.Client.Graphics.Shaders
         In = 1,
         Out = 2,
         Inout = 3,
+    }
+
+    internal enum ShaderPrecisionQualifier
+    {
+        None = 0,
+        Low = 1,
+        Medium = 2,
+        High = 3
     }
 }

@@ -54,13 +54,6 @@ namespace Robust.Shared.Utility
             return old;
         }
 
-        // So you can do foreach (var (key, value) in dict)
-        // This basically re-implements the CoreFX version because we're using a pretty old version of .NET Framework.
-        // https://github.com/dotnet/roslyn/issues/20393
-        public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> k, out TKey t, out TValue u) {
-            t = k.Key; u = k.Value;
-        }
-
         /// <summary>
         ///     Pop an element from the end of a list, removing it from the list and returning it.
         /// </summary>
@@ -83,7 +76,7 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
-        ///     Just like FirstOrDefault but returns null for value types as well.
+        ///     Just like <see cref="Enumerable.FirstOrDefault{TSource}(System.Collections.Generic.IEnumerable{TSource}, Func{TSource, bool})"/> but returns null for value types as well.
         /// </summary>
         /// <param name="source">An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return an element from.</param>
         /// <param name="predicate">A function to test each element for a condition.</param>
@@ -106,6 +99,34 @@ namespace Robust.Shared.Utility
                     return source1;
             }
             return null;
+        }
+
+        /// <summary>
+        ///     Just like <see cref="Enumerable.FirstOrDefault{TSource}(System.Collections.Generic.IEnumerable{TSource})"/> but returns null for value types as well.
+        /// </summary>
+        /// <param name="source">
+        ///     An <see cref="T:System.Collections.Generic.IEnumerable`1" /> to return the first element from.
+        /// </param>
+        /// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <returns>
+        ///     <see langword="null" /> if <paramref name="source" /> is empty, otherwise,
+        ///     the first element in <paramref name="source" />.
+        /// </returns>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="source" /> is <see langword="null" />.</exception>
+        public static TSource? FirstOrNull<TSource>(this IEnumerable<TSource> source)
+            where TSource : struct
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof (source));
+
+            using var enumerator = source.GetEnumerator();
+            if (!enumerator.MoveNext())
+            {
+                return null;
+            }
+
+            return enumerator.Current;
         }
 
         public static TValue GetOrNew<TKey, TValue>(this IDictionary<TKey, TValue> dict, TKey key) where TValue : new()

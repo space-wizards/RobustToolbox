@@ -51,7 +51,7 @@ namespace Robust.Client.UserInterface.Controls
             get
             {
                 var offset = ValueTarget + Page;
-                return offset > MaxValue || FloatMath.CloseTo(offset, MaxValue);
+                return offset > MaxValue || MathHelper.CloseTo(offset, MaxValue);
             }
         }
 
@@ -65,14 +65,14 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            if (!VisibleInTree || FloatMath.CloseTo(Value, ValueTarget))
+            if (!VisibleInTree || MathHelper.CloseTo(Value, ValueTarget))
             {
                 Value = ValueTarget;
             }
             else
             {
                 _updating = true;
-                Value = FloatMath.Lerp(Value, ValueTarget, args.DeltaSeconds * 15);
+                Value = MathHelper.Lerp(Value, ValueTarget, Math.Min(args.DeltaSeconds * 15, 1));
                 _updating = false;
             }
         }

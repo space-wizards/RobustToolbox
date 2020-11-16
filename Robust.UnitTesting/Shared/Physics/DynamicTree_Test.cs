@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             var initCap = dt.Capacity;
 
-            Assert.AreEqual(16, initCap);
+            Assert.That(initCap, Is.EqualTo(16));
 
             Assert.Multiple(() =>
             {
@@ -172,36 +172,6 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public void AddThenUpdate()
-        {
-            var aabbs = aabbs1;
-            var dt = new DynamicTree<int>((in int x) => aabbs[x], capacity: 16, growthFunc: x => x += 2);
-
-            Assert.Multiple(() =>
-            {
-                for (var i = 0; i < aabbs.Length; ++i)
-                {
-                    Assert.True(dt.Add(i), $"Add {i}");
-                }
-            });
-            aabbs = aabbs2;
-
-            Assert.Multiple(() => {
-                for (var i = 0; i < aabbs.Length; ++i)
-                {
-                    if (aabbs1[i].Contains(aabbs2[i]))
-                    {
-                        Assert.False(dt.Update(i), $"Update {i}");
-                    }
-                    else
-                    {
-                        Assert.True(dt.Update(i), $"Update {i}");
-                    }
-                }
-            });
-        }
-
-        [Test]
         public void AddThenRemove()
         {
             var aabbs = aabbs1;
@@ -218,43 +188,6 @@ namespace Robust.UnitTesting.Shared.Physics
 
             Assert.Multiple(() =>
             {
-                for (var i = 0; i < aabbs.Length; ++i)
-                {
-                    Assert.True(dt.Remove(i), $"Remove {i}");
-                }
-            });
-        }
-
-        [Test]
-        public void AddThenUpdateThenRemove()
-        {
-            var aabbs = aabbs1;
-            var dt = new DynamicTree<int>((in int x) => aabbs[x], capacity: 16, growthFunc: x => x += 2);
-
-            Assert.Multiple(() =>
-            {
-                for (var i = 0; i < aabbs.Length; ++i)
-                {
-                    Assert.True(dt.Add(i), $"Add {i}");
-                }
-            });
-            aabbs = aabbs2;
-
-            Assert.Multiple(() =>
-            {
-                for (var i = 0; i < aabbs.Length; ++i) {
-                    if (aabbs1[i].Contains(aabbs2[i]))
-                    {
-                        Assert.False(dt.Update(i), $"Update {i}");
-                    }
-                    else
-                    {
-                        Assert.True(dt.Update(i), $"Update {i}");
-                    }
-                }
-            });
-
-            Assert.Multiple(() => {
                 for (var i = 0; i < aabbs.Length; ++i)
                 {
                     Assert.True(dt.Remove(i), $"Remove {i}");
@@ -280,16 +213,16 @@ namespace Robust.UnitTesting.Shared.Physics
                 .Where(x => aabbs1[x].Contains(point))
                 .OrderBy(x => x).ToArray();
 
-            var results = dt.Query(point)
+            var results = dt.QueryPoint(point)
                 .OrderBy(x => x).ToArray();
 
             Assert.Multiple(() =>
             {
-                Assert.AreEqual(containers.Length, results.Length, "Length");
+                Assert.That(results.Length, Is.EqualTo(containers.Length), "Length");
                 var l = Math.Min(containers.Length, results.Length);
                 for (var i = 0; i < l; ++i)
                 {
-                    Assert.AreEqual(containers[i], results[i]);
+                    Assert.That(results[i], Is.EqualTo(containers[i]));
                 }
             });
         }

@@ -1,16 +1,12 @@
-﻿using System;
-using Robust.Shared.Console;
-using Robust.Shared.Input;
+﻿using JetBrains.Annotations;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Map;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
-
     public class RelayMovementEntityMessage : ComponentMessage
     {
-        public IEntity Entity { get; set; }
+        [PublicAPI]
+        public readonly IEntity Entity;
 
         public RelayMovementEntityMessage(IEntity entity)
         {

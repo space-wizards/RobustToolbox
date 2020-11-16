@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -11,17 +9,17 @@ namespace Robust.Shared.Maths
     /// </summary>
     [StructLayout(LayoutKind.Sequential)]
     [Serializable]
-    public readonly struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>
+    public struct Vector2 : IEquatable<Vector2>, IApproxEquatable<Vector2>
     {
         /// <summary>
         ///     The X component of the vector.
         /// </summary>
-        public readonly float X;
+        public float X;
 
         /// <summary>
         ///     The Y component of the vector.
         /// </summary>
-        public readonly float Y;
+        public float Y;
 
         /// <summary>
         ///     A zero length vector.
@@ -58,7 +56,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Gets the length (magnitude) of the vector.
         /// </summary>
-        public float Length
+        public readonly float Length
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => MathF.Sqrt(LengthSquared);
@@ -67,7 +65,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Gets the squared length of the vector.
         /// </summary>
-        public float LengthSquared
+        public readonly float LengthSquared
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => X * X + Y * Y;
@@ -77,7 +75,7 @@ namespace Robust.Shared.Maths
         ///     Returns a new, normalized, vector.
         /// </summary>
         /// <returns></returns>
-        public Vector2 Normalized
+        public readonly Vector2 Normalized
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -88,7 +86,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Vector2 Rounded()
+        public readonly Vector2 Rounded()
         {
             return new Vector2((float) MathF.Round(X), (float) MathF.Round(Y));
         }
@@ -236,9 +234,15 @@ namespace Robust.Shared.Maths
         public static Vector2 Clamp(Vector2 vector, Vector2 min, Vector2 max)
         {
             return new Vector2(
-                vector.X.Clamp(min.X, max.X),
-                vector.Y.Clamp(min.Y, max.Y)
+                MathHelper.Clamp(vector.X, min.X, max.X),
+                MathHelper.Clamp(vector.Y, min.Y, max.Y)
             );
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Vector2 Abs(in Vector2 a)
+        {
+            return new Vector2(Math.Abs(a.X), Math.Abs(a.Y));
         }
 
         /// <summary>
@@ -248,6 +252,32 @@ namespace Robust.Shared.Maths
         public static float Dot(Vector2 a, Vector2 b)
         {
             return a.X * b.X + a.Y * b.Y;
+        }
+
+        /// <summary>
+        ///     Perform the cross product on two vectors. In 2D this produces a scalar.
+        /// </summary>
+        public static float Cross(in Vector2 a, in Vector2 b)
+        {
+            return a.X * b.Y - a.Y * b.X;
+        }
+
+        /// <summary>
+        /// Perform the cross product on a vector and a scalar. In 2D this produces
+        /// a vector.
+        /// </summary>
+        public static Vector2 Cross(in Vector2 a, float s)
+        {
+            return new Vector2(s * a.Y, -s * a.X);
+        }
+
+        /// <summary>
+        /// Perform the cross product on a scalar and a vector. In 2D this produces
+        /// a vector.
+        /// </summary>
+        public static Vector2 Cross(float s, in Vector2 a)
+        {
+            return new Vector2(-s * a.Y, s * a.X);
         }
 
         /// <summary>
@@ -261,9 +291,9 @@ namespace Robust.Shared.Maths
         {
             return new Vector2(
                 //factor * (b.X - a.X) + a.X,
-                MathF.Interpolate(a.X, b.X, factor),
+                MathHelper.Lerp(a.X, b.X, factor),
                 //factor * (b.Y - a.Y) + a.Y
-                MathF.Interpolate(a.Y, b.Y, factor)
+                MathHelper.Lerp(a.Y, b.Y, factor)
             );
         }
 
@@ -286,7 +316,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Deconstruct(out float x, out float y)
+        public readonly void Deconstruct(out float x, out float y)
         {
             x = X;
             y = Y;
@@ -302,7 +332,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Returns a string that represents the current Vector2.
         /// </summary>
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({X}, {Y})";
         }
@@ -325,7 +355,7 @@ namespace Robust.Shared.Maths
         /// <param name="other">Other vector to check.</param>
         /// <returns>True if the two vectors are equal.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Equals(Vector2 other)
+        public readonly bool Equals(Vector2 other)
         {
             // ReSharper disable CompareOfFloatsByEqualityOperator
             return X == other.X && Y == other.Y;
@@ -338,7 +368,7 @@ namespace Robust.Shared.Maths
         /// <param name="obj">Other object to check.</param>
         /// <returns>True if Object and vector are equal.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             return obj is Vector2 vec && Equals(vec);
         }
@@ -348,7 +378,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -357,15 +387,15 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool EqualsApprox(Vector2 other)
+        public readonly bool EqualsApprox(Vector2 other)
         {
-            return FloatMath.CloseTo(X, other.X) && FloatMath.CloseTo(Y, other.Y);
+            return MathHelper.CloseTo(X, other.X) && MathHelper.CloseTo(Y, other.Y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool EqualsApprox(Vector2 other, double tolerance)
+        public readonly bool EqualsApprox(Vector2 other, double tolerance)
         {
-            return FloatMath.CloseTo(X, other.X, tolerance) && FloatMath.CloseTo(Y, other.Y, tolerance);
+            return MathHelper.CloseTo(X, other.X, tolerance) && MathHelper.CloseTo(Y, other.Y, tolerance);
         }
     }
 }

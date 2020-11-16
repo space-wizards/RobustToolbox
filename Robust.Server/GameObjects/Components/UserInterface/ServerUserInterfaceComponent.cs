@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
@@ -9,13 +10,10 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.GameObjects.Components.UserInterface
 {
@@ -24,6 +22,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     ///     Bound user interfaces are indexed with an enum or string key identifier.
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
+    [PublicAPI]
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
@@ -58,6 +57,13 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         public bool TryGetBoundUserInterface(object uiKey, [NotNullWhen(true)] out BoundUserInterface? boundUserInterface)
         {
             return _interfaces.TryGetValue(uiKey, out boundUserInterface);
+        }
+
+        public BoundUserInterface? GetBoundUserInterfaceOrNull(object uiKey)
+        {
+            return TryGetBoundUserInterface(uiKey, out var boundUserInterface)
+                ? boundUserInterface
+                : null;
         }
 
         public bool HasBoundUserInterface(object uiKey)
@@ -99,6 +105,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// <summary>
     ///     Represents an entity-bound interface that can be opened by multiple players at once.
     /// </summary>
+    [PublicAPI]
     public sealed class BoundUserInterface
     {
         private bool _isActive;
@@ -155,6 +162,29 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             _stateDirty = true;
         }
 
+        
+        /// <summary>
+        ///     Switches between closed and open for a specific client.
+        /// </summary>
+        /// <param name="session">The player session to toggle the UI on.</param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the session's status is <c>Connecting</c> or <c>Disconnected</c>
+        /// </exception>
+        /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
+        public void Toggle(IPlayerSession session)
+        {
+            if (_subscribedSessions.Contains(session))
+            {
+                Close(session);
+            }
+            else
+            {
+                Open(session);
+            }
+        }
+
+        
+        
         /// <summary>
         ///     Opens this interface for a specific client.
         /// </summary>
@@ -355,6 +385,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         }
     }
 
+    [PublicAPI]
     public class ServerBoundUserInterfaceMessage
     {
         public BoundUserInterfaceMessage Message { get; }

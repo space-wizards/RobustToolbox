@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -84,11 +86,11 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var downloadUrlWindows = _configurationManager.GetCVar<string>("build.download_url_windows");
+            var downloadUrlWindows = _configurationManager.GetCVar(CVars.BuildDownloadUrlWindows);
 
             JObject? buildInfo;
 
-            if (downloadUrlWindows == null)
+            if (string.IsNullOrEmpty(downloadUrlWindows))
             {
                 buildInfo = null;
             }
@@ -99,23 +101,32 @@ namespace Robust.Server.ServerStatus
                     ["download_urls"] = new JObject
                     {
                         ["Windows"] = downloadUrlWindows,
-                        ["MacOS"] = _configurationManager.GetCVar<string>("build.download_url_macos"),
-                        ["Linux"] = _configurationManager.GetCVar<string>("build.download_url_linux")
+                        ["MacOS"] = _configurationManager.GetCVar(CVars.BuildDownloadUrlMacOS),
+                        ["Linux"] = _configurationManager.GetCVar(CVars.BuildDownloadUrlLinux)
                     },
-                    ["fork_id"] = _configurationManager.GetCVar<string>("build.fork_id"),
-                    ["version"] = _configurationManager.GetCVar<string>("build.version"),
+                    ["fork_id"] = _configurationManager.GetCVar(CVars.BuildForkId),
+                    ["version"] = _configurationManager.GetCVar(CVars.BuildVersion),
                     ["hashes"] = new JObject
                     {
-                        ["Windows"] = _configurationManager.GetCVar<string>("build.hash_windows"),
-                        ["MacOS"] = _configurationManager.GetCVar<string>("build.hash_macos"),
-                        ["Linux"] = _configurationManager.GetCVar<string>("build.hash_linux"),
+                        ["Windows"] = _configurationManager.GetCVar(CVars.BuildHashWindows),
+                        ["MacOS"] = _configurationManager.GetCVar(CVars.BuildHashMacOS),
+                        ["Linux"] = _configurationManager.GetCVar(CVars.BuildHashLinux),
                     },
                 };
             }
 
+            var authInfo = new JObject
+            {
+                ["mode"] = _netManager.Auth.ToString(),
+                ["public_key"] = _netManager.RsaPublicKey != null
+                    ? Convert.ToBase64String(_netManager.RsaPublicKey)
+                    : null
+            };
+
             var jObject = new JObject
             {
-                ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress"),
+                ["connect_address"] = _configurationManager.GetCVar(CVars.StatusConnectAddress),
+                ["auth"] = authInfo,
                 ["build"] = buildInfo
             };
 
@@ -131,7 +142,6 @@ namespace Robust.Server.ServerStatus
 
             return true;
         }
-
     }
 
 }

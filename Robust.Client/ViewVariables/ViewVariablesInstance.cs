@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
-using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Client.ViewVariables.Editors;
-using Robust.Shared.IoC;
+using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -55,7 +53,7 @@ namespace Robust.Client.ViewVariables
         {
         }
 
-        protected internal static IEnumerable<Control> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
+        protected internal static IEnumerable<IGrouping<Type, Control>> LocalPropertyList(object obj, IViewVariablesManagerInternal vvm,
             IResourceCache resCache)
         {
             var styleOther = false;
@@ -92,31 +90,29 @@ namespace Robust.Client.ViewVariables
                     v => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }
 
-            members.Sort((a, b) => string.Compare(a.Item1.Name, b.Item1.Name, StringComparison.Ordinal));
-
-            foreach (var (memberInfo, access, value, onValueChanged, memberType) in members)
-            {
-                var data = new ViewVariablesBlobMembers.MemberData
+            var groupedSorted = members
+                .OrderBy(p => p.Item1.Name)
+                .GroupBy(p => p.Item1.DeclaringType!, tuple =>
                 {
-                    Editable = access == VVAccess.ReadWrite,
-                    Name = memberInfo.Name,
-                    Type = memberType.AssemblyQualifiedName,
-                    TypePretty = TypeAbbreviation.Abbreviate(memberType),
-                    Value = value
-                };
+                    var (memberInfo, access, value, onValueChanged, memberType) = tuple;
+                    var data = new ViewVariablesBlobMembers.MemberData
+                    {
+                        Editable = access == VVAccess.ReadWrite,
+                        Name = memberInfo.Name,
+                        Type = memberType.AssemblyQualifiedName,
+                        TypePretty = TypeAbbreviation.Abbreviate(memberType),
+                        Value = value
+                    };
 
-                var propertyEdit = new ViewVariablesPropertyControl(vvm, resCache);
-                propertyEdit.SetStyle(styleOther = !styleOther);
-                var editor = propertyEdit.SetProperty(data);
-                editor.OnValueChanged += onValueChanged;
-                // TODO: should this maybe not be hardcoded?
-                if (editor is ViewVariablesPropertyEditorReference refEditor)
-                {
-                    refEditor.OnPressed += () => vvm.OpenVV(data.Value!);
-                }
+                    var propertyEdit = new ViewVariablesPropertyControl(vvm, resCache);
+                    propertyEdit.SetStyle(styleOther = !styleOther);
+                    var editor = propertyEdit.SetProperty(data);
+                    editor.OnValueChanged += onValueChanged;
+                    return propertyEdit;
+                })
+                .OrderByDescending(p => p.Key, TypeHelpers.TypeInheritanceComparer);
 
-                yield return propertyEdit;
-            }
+            return groupedSorted;
         }
 
         protected static Control MakeTopBar(string top, string bottom)

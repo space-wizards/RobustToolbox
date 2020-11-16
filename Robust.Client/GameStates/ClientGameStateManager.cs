@@ -10,9 +10,8 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 using Robust.Client.Player;
-using Robust.Shared.Configuration;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
@@ -21,8 +20,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Client.GameStates
 {
@@ -47,6 +44,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
 
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
@@ -60,6 +58,8 @@ namespace Robust.Client.GameStates
         public bool Predicting { get; private set; }
 
         public int PredictSize { get; private set; }
+
+        public int StateBufferMergeThreshold { get; private set; }
 
         private uint _lastProcessedSeq;
         private GameTick _lastProcessedTick = GameTick.Zero;
@@ -78,17 +78,18 @@ namespace Robust.Client.GameStates
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);
             _client.RunLevelChanged += RunLevelChanged;
 
-            _config.RegisterCVar("net.interp", false, CVar.ARCHIVE, b => _processor.Interpolation = b);
-            _config.RegisterCVar("net.interp_ratio", 0, CVar.ARCHIVE, i => _processor.InterpRatio = i);
-            _config.RegisterCVar("net.logging", false, CVar.ARCHIVE, b => _processor.Logging = b);
-            _config.RegisterCVar("net.predict", true, CVar.ARCHIVE, b => Predicting = b);
-            _config.RegisterCVar("net.predict_size", 1, CVar.ARCHIVE, i => PredictSize = i);
+            _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
+            _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
+            _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
+            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
+            _config.OnValueChanged(CVars.NetPredictSize, i => PredictSize = i, true);
+            _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
 
-            _processor.Interpolation = _config.GetCVar<bool>("net.interp");
-            _processor.InterpRatio = _config.GetCVar<int>("net.interp_ratio");
-            _processor.Logging = _config.GetCVar<bool>("net.logging");
-            Predicting = _config.GetCVar<bool>("net.predict");
-            PredictSize = _config.GetCVar<int>("net.predict_size");
+            _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
+            _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
+            _processor.Logging = _config.GetCVar(CVars.NetLogging);
+            Predicting = _config.GetCVar(CVars.NetPredict);
+            PredictSize = _config.GetCVar(CVars.NetPredictSize);
         }
 
         /// <inheritdoc />
@@ -121,8 +122,8 @@ namespace Robust.Client.GameStates
 
             var inputMan = IoCManager.Resolve<IInputManager>();
             inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            //Logger.DebugS("State",
-            //    $"CL> SENT tick={_timing.CurTick}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
+            Logger.DebugS(CVars.NetPredict.Name,
+                $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
 
@@ -162,48 +163,74 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void ApplyGameState()
         {
-            _timing.CurTick = _lastProcessedTick + 1;
+            // Calculate how many states we need to apply this tick.
+            // Always at least one, but can be more based on StateBufferMergeThreshold.
+            var curBufSize = _processor.CurrentBufferSize;
+            var targetBufSize = _processor.TargetBufferSize;
+            var applyCount = Math.Max(1, curBufSize - targetBufSize - StateBufferMergeThreshold);
 
-            if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
+            // Logger.Debug(applyCount.ToString());
+
+            var i = 0;
+            for (; i < applyCount; i++)
             {
+                _timing.CurTick = _lastProcessedTick + 1;
+
+                // TODO: We could theoretically communicate with the GameStateProcessor better here.
+                // Since game states are sliding windows, it is possible that we need less than applyCount applies here.
+                // Consider, if you have 3 states, (tFrom=1, tTo=2), (tFrom=1, tTo=3), (tFrom=2, tTo=3),
+                // you only need to apply the last 2 states to go from 1 -> 3.
+                // instead of all 3.
+                // This would be a nice optimization though also minor since the primary cost here
+                // is avoiding entity system and re-prediction runs.
+                if (!_processor.ProcessTickStates(_timing.CurTick, out var curState, out var nextState))
+                {
+                    break;
+                }
+
+                // Logger.DebugS("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
+
+                // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
+                // this won't run meaning it could potentially get stuck dirty.
+                if (Predicting && i == 0)
+                {
+                    // Disable IsFirstTimePredicted while re-running HandleComponentState here.
+                    // Helps with debugging.
+                    using var resetArea = _timing.StartPastPredictionArea();
+
+                    ResetPredictedEntities(_timing.CurTick);
+                }
+
+                // Store last tick we got from the GameStateProcessor.
+                _lastProcessedTick = _timing.CurTick;
+
+                // apply current state
+                var createdEntities = ApplyGameState(curState, nextState);
+
+                MergeImplicitData(createdEntities);
+
+                if (_lastProcessedSeq < curState.LastProcessedInput)
+                {
+                    Logger.DebugS(CVars.NetPredict.Name, $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                    _lastProcessedSeq = curState.LastProcessedInput;
+                }
+            }
+
+            if (i == 0)
+            {
+                // Didn't apply a single state successfully.
                 return;
             }
 
-            // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
-            // this won't run meaning it could potentially get stuck dirty.
-            if (Predicting)
-            {
-                // Disable IsFirstTimePredicted while re-running HandleComponentState here.
-                // Helps with debugging.
-                using var resetArea = _timing.StartPastPredictionArea();
-
-                ResetPredictedEntities(_timing.CurTick);
-            }
-
-            // Store last tick we got from the GameStateProcessor.
-            _lastProcessedTick = _timing.CurTick;
-
-            // apply current state
-            var createdEntities = ApplyGameState(curState, nextState);
-
-            MergeImplicitData(createdEntities);
-
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            var input = EntitySystem.Get<InputSystem>();
-
-            if (_lastProcessedSeq < curState.LastProcessedInput)
-            {
-                Logger.DebugS("net.predict", $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
-                _lastProcessedSeq = curState.LastProcessedInput;
-            }
+            var input = _entitySystemManager.GetEntitySystem<InputSystem>();
 
             // remove old pending inputs
             while (_pendingInputs.Count > 0 && _pendingInputs.Peek().InputSequence <= _lastProcessedSeq)
             {
                 var inCmd = _pendingInputs.Dequeue();
 
-                inputMan.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS("net.predict",
+                _inputManager.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
+                Logger.DebugS(CVars.NetPredict.Name,
                     $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
@@ -221,9 +248,8 @@ namespace Robust.Client.GameStates
 
             if (_pendingInputs.Count > 0)
             {
-                Logger.DebugS("net.predict", "CL> Predicted:");
+                Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
             }
-
 
             var pendingInputEnumerator = _pendingInputs.GetEnumerator();
             var pendingMessagesEnumerator = _pendingSystemMessages.GetEnumerator();
@@ -234,9 +260,9 @@ namespace Robust.Client.GameStates
             var targetTick = _timing.CurTick.Value + _processor.TargetBufferSize +
                              (int) Math.Ceiling(_timing.TickRate * ping) + PredictSize;
 
-            // Logger.DebugS("State", $"Predicting from {_lastProcessedTick} to {targetTick}");
+            // Logger.DebugS("net.predict", $"Predicting from {_lastProcessedTick} to {targetTick}");
 
-            for (var t = _lastProcessedTick.Value; t <= targetTick; t++)
+            for (var t = _lastProcessedTick.Value + 1; t <= targetTick; t++)
             {
                 var tick = new GameTick(t);
                 _timing.CurTick = tick;
@@ -245,10 +271,10 @@ namespace Robust.Client.GameStates
                 {
                     var inputCmd = pendingInputEnumerator.Current;
 
-                    inputMan.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
+                    _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
-                    Logger.DebugS("net.predict",
-                        $"    seq={inputCmd.InputSequence}, dTick={tick}, func={boundFunc.FunctionName}, " +
+                    Logger.DebugS(CVars.NetPredict.Name,
+                        $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
                         $"state={inputCmd.State}");
 
 
@@ -288,9 +314,13 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                // Logger.DebugS("State", $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
 
-                var last = _processor.GetLastServerStates(entity.Uid);
+                if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
+                {
+                    // Entity was probably deleted on the server so do nothing.
+                    continue;
+                }
 
                 // TODO: handle component deletions/creations.
                 foreach (var comp in _componentManager.GetNetComponents(entity.Uid))
@@ -302,7 +332,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    // Logger.DebugS("State", $"  And also its component {comp.Name}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
                     comp.HandleComponentState(compState, null);
                 }

@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
-using Robust.Shared.Configuration;
-using Robust.Shared.Console;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
-using Robust.Shared.Log;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
 
@@ -58,17 +56,6 @@ namespace Robust.Server.Console
         /// <inheritdoc />
         public void Initialize()
         {
-            // register console admin global password. DO NOT ADD THE REPLICATED FLAG
-            if (!_configMan.IsCVarRegistered("console.password"))
-                _configMan.RegisterCVar("console.password", string.Empty,
-                    CVar.ARCHIVE | CVar.SERVER | CVar.NOT_CONNECTED);
-
-            if (!_configMan.IsCVarRegistered("console.adminGroup"))
-                _configMan.RegisterCVar("console.adminGroup", 100, CVar.ARCHIVE | CVar.SERVER);
-
-            if (!_configMan.IsCVarRegistered("console.hostGroup"))
-                _configMan.RegisterCVar("console.hostGroup", 200, CVar.ARCHIVE | CVar.SERVER);
-
             ReloadCommands();
 
             // setup networking with clients
@@ -148,7 +135,7 @@ namespace Robust.Server.Console
             }
             catch (Exception e)
             {
-                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}");
+                _logMan.GetSawmill(SawmillName).Warning($"{FormatPlayerString(session)}: ExecuteError - {command}:\n{e}");
                 SendText(session, $"There was an error while executing the command: {e}");
             }
         }
@@ -175,77 +162,18 @@ namespace Robust.Server.Console
             return session != null ? $"{session.Name}" : "[HOST]";
         }
 
-        public bool ElevateShell(IPlayerSession session, string password)
+        private class SudoCommand : IClientCommand
         {
-            if (session == null)
-                throw new ArgumentNullException(nameof(session));
-
-            var realPass = _configMan.GetCVar<string>("console.password");
-
-            // password disabled
-            if (string.IsNullOrWhiteSpace(realPass))
-                return false;
-
-            // wrong password
-            if (password != realPass)
-                return false;
-
-            // success!
-            _groupController.SetGroup(session, new ConGroupIndex(_configMan.GetCVar<int>("console.adminGroup")));
-
-            return true;
-        }
-
-        private class LoginCommand : IClientCommand
-        {
-            public string Command => "login";
-            public string Description => "Elevates client to admin permission group.";
-            public string Help => "login";
+            public string Command => "sudo";
+            public string Description => "sudo make me a sandwich";
+            public string Help => "sudo";
 
             public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
             {
-                // system console can't log in to itself, and is pointless anyways
-                if (player == null)
-                    return;
+                var command = args[0];
+                var cArgs = args[1..].Select(CommandParsing.Escape);
 
-                // If the password is null/empty/whitespace in the config, this effectively disables the command
-                if (args.Length < 1 || string.IsNullOrWhiteSpace(args[0]))
-                    return;
-
-                // WE ARE AT THE BRIDGE OF DEATH
-                if (shell.ElevateShell(player, args[0]))
-                    return;
-
-                // CAST INTO THE GORGE OF ETERNAL PERIL
-                Logger.WarningS(
-                    "con.auth",
-                    $"Failed console login authentication.\n  NAME:{player}\n  IP:  {player.ConnectedClient.RemoteEndPoint}");
-
-                var net = IoCManager.Resolve<IServerNetManager>();
-                net.DisconnectChannel(player.ConnectedClient, "Failed login authentication.");
-            }
-        }
-
-        private class GroupCommand : IClientCommand
-        {
-            public string Command => "group";
-            public string Description => "Prints your current permission group.";
-            public string Help => "group";
-
-            public void Execute(IConsoleShell shell, IPlayerSession? player, string[] args)
-            {
-                // only the local server console bypasses permissions
-                if (player == null)
-                {
-                    shell.SendText((IPlayerSession?) null, "LOCAL_CONSOLE");
-                    return;
-                }
-
-                var groupController = IoCManager.Resolve<IConGroupController>();
-                var groupIndex = groupController.GetGroupIndex(player);
-                var groupName = groupController.GetGroupName(groupIndex);
-
-                shell.SendText(player, $"Current group: {groupName}");
+                shell.ExecuteCommand($"{command} {string.Join(' ', cArgs)}");
             }
         }
     }

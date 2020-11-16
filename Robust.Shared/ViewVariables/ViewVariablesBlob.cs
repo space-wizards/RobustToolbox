@@ -60,7 +60,8 @@ namespace Robust.Shared.ViewVariables
         /// <summary>
         ///     A list of VV-accessible the remote object has.
         /// </summary>
-        public List<MemberData> Members { get; set; } = new List<MemberData>();
+        public List<(string groupName, List<MemberData> groupMembers)> MemberGroups { get; set; }
+            = new List<(string, List<MemberData>)>();
 
         /// <summary>
         ///     Token used to indicate "this is a reference, but I can't send the actual reference over".
@@ -96,6 +97,13 @@ namespace Robust.Shared.ViewVariables
             {
                 return Stringified;
             }
+        }
+
+        [Serializable, NetSerializable]
+        public class ServerKeyValuePairToken
+        {
+            public object Key { get; set; }
+            public object Value { get; set; }
         }
 
         /// <summary>

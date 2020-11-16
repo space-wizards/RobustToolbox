@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -18,6 +19,7 @@ using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
@@ -57,7 +59,7 @@ namespace Robust.UnitTesting
             return instance;
         }
 
-        [TearDown]
+        [OneTimeTearDown]
         public async Task TearDown()
         {
             _integrationInstances.ForEach(p => p.Stop());
@@ -162,6 +164,7 @@ namespace Robust.UnitTesting
             /// <exception cref="InvalidOperationException">
             ///     Thrown if you did not ensure that the instance is idle via <see cref="WaitIdleAsync"/> first.
             /// </exception>
+            [Pure]
             public T ResolveDependency<T>()
             {
                 if (!_isSurelyIdle)
@@ -332,6 +335,8 @@ namespace Robust.UnitTesting
 
                     var server = DependencyCollection.Resolve<IBaseServerInternal>();
 
+                    server.LoadConfigAndUserData = false;
+
                     if (_options?.ServerContentAssembly != null)
                     {
                         IoCManager.Resolve<ModLoader>().ServerContentAssembly = _options.ServerContentAssembly;
@@ -347,7 +352,16 @@ namespace Robust.UnitTesting
                         _options.BeforeStart?.Invoke();
                         IoCManager.Resolve<IConfigurationManager>()
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                        if (_options.ExtraPrototypes != null)
+                        {
+                            IoCManager.Resolve<IResourceManagerInternal>()
+                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                        }
                     }
+
+                    IoCManager.Resolve<IConfigurationManager>()
+                        .OverrideConVars(new []{("log.runtimelog", "false")});
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {
@@ -434,7 +448,13 @@ namespace Robust.UnitTesting
                         _options.BeforeStart?.Invoke();
                         IoCManager.Resolve<IConfigurationManager>()
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
-                    };
+
+                        if (_options.ExtraPrototypes != null)
+                        {
+                            IoCManager.Resolve<IResourceManagerInternal>()
+                                .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                        }
+                    }
 
                     client.Startup(() => new TestLogHandler("CLIENT"));
 
@@ -505,8 +525,10 @@ namespace Robust.UnitTesting
                             var simFrameEvent = new FrameEventArgs(msg.Delta);
                             for (var i = 0; i < msg.Ticks && Running; i++)
                             {
+                                Input?.Invoke(this, simFrameEvent);
                                 Tick?.Invoke(this, simFrameEvent);
                                 _gameTiming.CurTick = new GameTick(_gameTiming.CurTick.Value + 1);
+                                Update?.Invoke(this, simFrameEvent);
                             }
 
                             _channelWriter.TryWrite(new AckTicksMessage(msg.MessageId));
@@ -553,6 +575,7 @@ namespace Robust.UnitTesting
             public Action? InitIoC { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly? SharedContentAssembly { get; set; }
+            public string? ExtraPrototypes { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
         }

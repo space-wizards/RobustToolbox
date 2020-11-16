@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
-using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -23,12 +21,13 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         Vector2 LocalPosition { get; set; }
 
         /// <summary>
-        ///     Position offset of this entity relative to the grid it's on.
+        ///     Position offset of this entity relative to its parent.
         /// </summary>
-        GridCoordinates GridPosition { get; set; }
+        EntityCoordinates Coordinates { get; set; }
 
         /// <summary>
         ///     Current position offset of the entity relative to the world.
+        ///     Can de-parent from its parent if the parent is a grid.
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
@@ -99,9 +98,24 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         /// </summary>
         GridId GridID { get; }
 
-        void DetachParent();
+        /// <summary>
+        ///     Whether external system updates should run or not (e.g. EntityTree, Matrices, PhysicsTree).
+        ///     These should be manually run later.
+        /// </summary>
+        bool DeferUpdates { get; set; }
+
+        void AttachToGridOrMap();
         void AttachParent(ITransformComponent parent);
         void AttachParent(IEntity parent);
+
+        /// <summary>
+        ///     Run the updates marked as deferred (UpdateEntityTree and movement events).
+        ///     Don't call this unless you REALLY need to.
+        /// </summary>
+        /// <remarks>
+        ///    Physics optimisation so these aren't spammed during physics updates.
+        /// </remarks>
+        void RunPhysicsDeferred();
 
         IEnumerable<ITransformComponent> Children { get; }
         int ChildCount { get; }

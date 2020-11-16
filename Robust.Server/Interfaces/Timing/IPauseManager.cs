@@ -1,7 +1,7 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects.Components.Markers;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Map;
 
 namespace Robust.Server.Interfaces.Timing
@@ -33,9 +33,10 @@ namespace Robust.Server.Interfaces.Timing
     public static class PauseManagerExt
     {
         [Pure]
+        [Obsolete("Use IEntity.Paused directly")]
         public static bool IsEntityPaused(this IPauseManager manager, IEntity entity)
         {
-            return !entity.HasComponent<IgnorePauseComponent>() && manager.IsGridPaused(entity.Transform.GridID);
+            return entity.Paused;
         }
     }
 }

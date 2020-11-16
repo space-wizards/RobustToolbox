@@ -40,6 +40,12 @@ namespace Robust.Client.Interfaces.GameStates
         GameTick CurServerTick { get; }
 
         /// <summary>
+        ///     If the buffer size is this many states larger than the target buffer size,
+        ///     apply the overflow of states in a single tick.
+        /// </summary>
+        int StateBufferMergeThreshold { get; }
+
+        /// <summary>
         ///     This is called after the game state has been applied for the current tick.
         /// </summary>
         event Action<GameStateAppliedArgs> GameStateApplied;

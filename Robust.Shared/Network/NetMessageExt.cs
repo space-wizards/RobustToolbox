@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using Lidgren.Network;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -8,17 +10,17 @@ namespace Robust.Shared.Network
 {
     public static class NetMessageExt
     {
-        public static GridCoordinates ReadGridLocalCoordinates(this NetIncomingMessage message)
+        public static EntityCoordinates ReadEntityCoordinates(this NetIncomingMessage message)
         {
-            var gridId = new GridId(message.ReadInt32());
+            var entityUid = new EntityUid(message.ReadInt32());
             var vector = message.ReadVector2();
 
-            return new GridCoordinates(vector, gridId);
+            return new EntityCoordinates(entityUid, vector);
         }
 
-        public static void Write(this NetOutgoingMessage message, GridCoordinates coordinates)
+        public static void Write(this NetOutgoingMessage message, EntityCoordinates coordinates)
         {
-            message.Write(coordinates.GridID.Value);
+            message.Write(coordinates.EntityId);
             message.Write(coordinates.Position);
         }
 
@@ -54,6 +56,38 @@ namespace Robust.Shared.Network
         public static void Write(this NetOutgoingMessage message, GameTick tick)
         {
             message.Write(tick.Value);
+        }
+
+        public static Guid ReadGuid(this NetIncomingMessage message)
+        {
+            Span<byte> span = stackalloc byte[16];
+            message.ReadBytes(span);
+            return new Guid(span);
+        }
+
+        public static void Write(this NetOutgoingMessage message, Guid guid)
+        {
+            Span<byte> span = stackalloc byte[16];
+            guid.TryWriteBytes(span);
+            message.Write(span);
+        }
+
+        /// <summary>
+        ///     Reads byte-aligned data as a memory stream.
+        /// </summary>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if the current read position of the message is not byte-aligned.
+        /// </exception>
+        public static MemoryStream ReadAlignedMemory(this NetIncomingMessage message, int length)
+        {
+            if ((message.Position & 7) != 0)
+            {
+                throw new ArgumentException("Read position in message must be byte-aligned", nameof(message));
+            }
+
+            var stream = new MemoryStream(message.Data, message.PositionInBytes, length, false);
+            message.Position += length * 8;
+            return stream;
         }
     }
 }

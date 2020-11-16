@@ -86,7 +86,7 @@ namespace Robust.Server.Placement
 
             //TODO: Distance check, so you can't place things off of screen.
 
-            var coordinates = msg.GridCoordinates;
+            var coordinates = msg.EntityCoordinates;
 
 
             /* TODO: Redesign permission system, or document what this is supposed to be doing
@@ -118,7 +118,7 @@ namespace Robust.Server.Placement
             }
             else
             {
-                var mapCoords = coordinates.ToMap(_mapManager);
+                var mapCoords = coordinates.ToMap(_entityManager);
                 PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
             }
         }
@@ -152,7 +152,13 @@ namespace Robust.Server.Placement
             if (closest != null) // stick to existing grid
             {
                 // round to nearest cardinal dir
-                var normal = new Angle(position - intersect.Center).GetCardinalDir().ToVec();
+                var deltaVec = position - intersect.Center;
+                var normal = new Vector2(0,0);
+                if (deltaVec != Vector2.Zero)
+                {
+                    normal = new Angle(deltaVec).GetCardinalDir().ToVec();
+                }
+
 
                 // round coords to center of tile
                 var tileIndices = closest.WorldToTile(intersect.Center);

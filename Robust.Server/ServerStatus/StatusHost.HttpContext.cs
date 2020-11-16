@@ -44,21 +44,15 @@ namespace Robust.Server.ServerStatus
                 return;
             }
 
-            IoCManager.Clear();
             ILogManager? logMgr = null;
             WaitSync(() =>
             {
                 logMgr = IoCManager.Resolve<ILogManager>();
             }, ApplicationStopping);
-            IoCManager.InitThread();
-            if (logMgr != null)
-            {
-                IoCManager.RegisterInstance<ILogManager>(logMgr);
-            }
-
-            IoCManager.BuildGraph();
+            var deps = new DependencyCollection();
+            deps.RegisterInstance<ILogManager>(new ProxyLogManager(logMgr!));
+            deps.BuildGraph();
+            IoCManager.InitThread(deps, true);
         }
-
     }
-
 }

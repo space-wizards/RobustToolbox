@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Enums;
+﻿using System;
+using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Network;
 
@@ -13,7 +14,7 @@ namespace Robust.Client.Player
         public IEntity? AttachedEntity { get; set; }
 
         /// <inheritdoc />
-        public NetSessionId SessionId { get; }
+        public NetUserId UserId { get; }
 
         /// <inheritdoc cref="IPlayerSession" />
         public string Name { get; set; } = "<Unknown>";
@@ -24,9 +25,9 @@ namespace Robust.Client.Player
         /// <summary>
         ///     Creates an instance of a PlayerSession.
         /// </summary
-        public PlayerSession(NetSessionId session)
+        public PlayerSession(NetUserId user)
         {
-            SessionId = session;
+            UserId = user;
         }
     }
 }

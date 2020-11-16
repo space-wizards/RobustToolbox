@@ -11,12 +11,13 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Advanced;
 using SixLabors.ImageSharp.PixelFormats;
+using static Robust.Client.Utility.LiterallyJustMessageBox;
 using ErrorCode = OpenToolkit.GraphicsLibraryFramework.ErrorCode;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 using GLFW = OpenToolkit.GraphicsLibraryFramework.GLFW;
@@ -30,10 +31,14 @@ using Keys = OpenToolkit.GraphicsLibraryFramework.Keys;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 using MouseButton = OpenToolkit.GraphicsLibraryFramework.MouseButton;
 using OpenGlProfile = OpenToolkit.GraphicsLibraryFramework.OpenGlProfile;
+using ClientApi = OpenToolkit.GraphicsLibraryFramework.ClientApi;
+using ContextApi = OpenToolkit.GraphicsLibraryFramework.ContextApi;
 using Window = OpenToolkit.GraphicsLibraryFramework.Window;
 using WindowHintBool = OpenToolkit.GraphicsLibraryFramework.WindowHintBool;
 using WindowHintInt = OpenToolkit.GraphicsLibraryFramework.WindowHintInt;
 using WindowHintOpenGlProfile = OpenToolkit.GraphicsLibraryFramework.WindowHintOpenGlProfile;
+using WindowHintClientApi = OpenToolkit.GraphicsLibraryFramework.WindowHintClientApi;
+using WindowHintContextApi = OpenToolkit.GraphicsLibraryFramework.WindowHintContextApi;
 using WindowHintString = OpenToolkit.GraphicsLibraryFramework.WindowHintString;
 
 namespace Robust.Client.Graphics.Clyde
@@ -59,6 +64,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private Vector2i _framebufferSize;
         private Vector2i _windowSize;
+        private Vector2i _prevWindowSize;
+        private Vector2i _prevWindowPos;
         private Vector2 _windowScale;
         private Vector2 _pixelRatio;
         private Thread? _mainThread;
@@ -68,7 +75,7 @@ namespace Robust.Client.Graphics.Clyde
         // NOTE: in engine we pretend the framebuffer size is the screen size..
         // For practical reasons like UI rendering.
         public override Vector2i ScreenSize => _framebufferSize;
-
+        public Vector2 DefaultWindowScale => _windowScale;
         public Vector2 MouseScreenPosition => _lastMousePos;
 
         public string GetKeyName(Keyboard.Key key)
@@ -128,25 +135,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             InitCursors();
-            InitWindow();
-            return true;
+
+            return InitWindow();
         }
 
-        private void InitWindow()
+        private bool InitWindow()
         {
-            GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-            GLFW.WindowHint(WindowHintInt.ContextVersionMajor, MinimumOpenGLVersion.Major);
-            GLFW.WindowHint(WindowHintInt.ContextVersionMinor, MinimumOpenGLVersion.Minor);
-            GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
-#if DEBUG
-            GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
-            GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-            GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-
-            var width = _configurationManager.GetCVar<int>("display.width");
-            var height = _configurationManager.GetCVar<int>("display.height");
+            var width = _configurationManager.GetCVar(CVars.DisplayWidth);
+            var height = _configurationManager.GetCVar(CVars.DisplayHeight);
 
             Monitor* monitor = null;
 
@@ -158,7 +154,60 @@ namespace Robust.Client.Graphics.Clyde
                 height = mode->Height;
             }
 
-            _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+#if DEBUG
+            GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
+#endif
+            GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
+            GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+
+            var renderer = (Renderer) _configurationManager.GetCVar<int>(CVars.DisplayRenderer);
+
+            Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
+                Renderer.OpenGL33,
+                Renderer.OpenGL31,
+                Renderer.OpenGLES2
+            } : stackalloc Renderer[] {renderer};
+
+            foreach (Renderer r in renderers)
+            {
+                CreateWindowForRenderer(r);
+
+                if (_glfwWindow != null)
+                {
+                    renderer = r;
+                    _isGLES = renderer == Renderer.OpenGLES2;
+                    _isCore = renderer == Renderer.OpenGL33;
+                    break;
+                }
+                // Window failed to init due to error.
+                // Try not to treat the error code seriously.
+                var code = GLFW.GetError(out string desc);
+                Logger.DebugS("clyde.win", $"{r} unsupported: [${code}] ${desc}");
+            }
+
+            if (_glfwWindow == null)
+            {
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    var code = GLFW.GetError(out string desc);
+
+                    var errorContent = "Failed to create the game window. " +
+                        "This probably means your GPU is too old to play the game. " +
+                        "That or update your graphic drivers\n" +
+                        $"The exact error is: [{code}]\n {desc}";
+
+                    MessageBoxW(null,
+                        errorContent,
+                        "Space Station 14: Failed to create window",
+                        MB_OK | MB_ICONERROR);
+                }
+
+                Logger.FatalS("clyde.win",
+                    "Failed to create GLFW window! " +
+                    "This probably means your GPU is too old to run the game. " +
+                    "That or update your graphics drivers.");
+                return false;
+            }
 
             LoadWindowIcon();
 
@@ -178,12 +227,16 @@ namespace Robust.Client.Graphics.Clyde
 
             GLFW.GetFramebufferSize(_glfwWindow, out var fbW, out var fbH);
             _framebufferSize = (fbW, fbH);
+            UpdateWindowLoadedRtSize();
 
             GLFW.GetWindowContentScale(_glfwWindow, out var scaleX, out var scaleY);
             _windowScale = (scaleX, scaleY);
 
             GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
-            _windowSize = (w, h);
+            _prevWindowSize = _windowSize = (w, h);
+
+            GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+            _prevWindowPos = (x, y);
 
             _pixelRatio = _framebufferSize / _windowSize;
 
@@ -196,6 +249,45 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.MakeContextCurrent(_glfwWindow);
 
             InitOpenGL();
+
+            return true;
+
+            void CreateWindowForRenderer(Renderer r)
+            {
+                if (r == Renderer.OpenGL33)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
+                }
+                else if (r == Renderer.OpenGL31)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
+                }
+                else if (r == Renderer.OpenGLES2)
+                {
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 2);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 0);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
+                    // GLES2 is initialized through EGL to allow ANGLE usage.
+                    // (It may be an idea to make this a configuration cvar)
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
+                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
+                }
+                _glfwWindow = GLFW.CreateWindow(width, height, string.Empty, monitor, null);
+            }
         }
 
         private void LoadWindowIcon()
@@ -262,9 +354,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitGLContext()
         {
-            // Initialize the OpenTK 3 GL context with GLFW.
             _graphicsContext = new GLFWBindingsContext();
             GL.LoadBindings(_graphicsContext);
+
+            if (_isGLES)
+            {
+                // On GLES we use some OES and KHR functions so make sure to initialize them.
+                OpenToolkit.Graphics.ES20.GL.LoadBindings(_graphicsContext);
+            }
         }
 
         private void ShutdownWindowing()
@@ -336,10 +433,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void EmitKeyEvent(Keyboard.Key key, InputAction action, KeyModifiers mods)
         {
-            var shift = mods.HasFlag(KeyModifiers.Shift);
-            var alt = mods.HasFlag(KeyModifiers.Alt);
-            var control = mods.HasFlag(KeyModifiers.Control);
-            var system = mods.HasFlag(KeyModifiers.Super);
+            var shift = (mods & KeyModifiers.Shift) != 0;
+            var alt = (mods & KeyModifiers.Alt) != 0;
+            var control = (mods & KeyModifiers.Control) != 0;
+            var system = (mods & KeyModifiers.Super) != 0;
 
             var ev = new KeyEventArgs(
                 key,
@@ -393,6 +490,7 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.GetFramebufferSize(window, out var fbW, out var fbH);
                 _framebufferSize = (fbW, fbH);
                 _windowSize = (width, height);
+                UpdateWindowLoadedRtSize();
 
                 if (fbW == 0 || fbH == 0 || width == 0 || height == 0)
                     return;
@@ -400,9 +498,11 @@ namespace Robust.Client.Graphics.Clyde
                 _pixelRatio = _framebufferSize / _windowSize;
 
                 GL.Viewport(0, 0, fbW, fbH);
+                CheckGlError();
                 if (fbW != 0 && fbH != 0)
                 {
-                    RegenerateLightingRenderTargets();
+                    _mainViewport.Dispose();
+                    CreateMainViewport();
                 }
 
                 OnWindowResized?.Invoke(new WindowResizedEventArgs(oldSize, _framebufferSize));
@@ -461,6 +561,11 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.SetWindowTitle(_glfwWindow, title);
         }
 
+        public void RequestWindowAttention()
+        {
+            GLFW.RequestWindowAttention(_glfwWindow);
+        }
+
         public void ProcessInput(FrameEventArgs frameEventArgs)
         {
             GLFW.PollEvents();
@@ -515,14 +620,20 @@ namespace Robust.Client.Graphics.Clyde
 
             if (WindowMode == WindowMode.Fullscreen)
             {
+                GLFW.GetWindowSize(_glfwWindow, out var w, out var h);
+                _prevWindowSize = (w, h);
+
+                GLFW.GetWindowPos(_glfwWindow, out var x, out var y);
+                _prevWindowPos = (x, y);
                 var monitor = GLFW.GetPrimaryMonitor();
                 var mode = GLFW.GetVideoMode(monitor);
+
                 GLFW.SetWindowMonitor(_glfwWindow, GLFW.GetPrimaryMonitor(), 0, 0, mode->Width, mode->Height,
                     mode->RefreshRate);
             }
             else
             {
-                GLFW.SetWindowMonitor(_glfwWindow, null, 0, 0, 1280, 720, 0);
+                GLFW.SetWindowMonitor(_glfwWindow, null, _prevWindowPos.X, _prevWindowPos.Y, _prevWindowSize.X, _prevWindowSize.Y, 0);
             }
         }
 

@@ -10,7 +10,7 @@ namespace Robust.Client.Player
     public interface IPlayerManager
     {
         IEnumerable<IPlayerSession> Sessions { get; }
-        IReadOnlyDictionary<NetSessionId, IPlayerSession> SessionsDict { get; }
+        IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict { get; }
 
         LocalPlayer? LocalPlayer { get; }
 

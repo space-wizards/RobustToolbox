@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -35,8 +37,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new ConcurrentQueue<(int, int)>();
         private readonly ConcurrentQueue<int> _bufferDisposeQueue = new ConcurrentQueue<int>();
 
-        public bool HasDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
-        public bool HasContextExtension(string extension) => _alContextExtensions.Contains(extension);
+        public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
+        public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
 
         internal bool IsEfxSupported;
 
@@ -47,7 +49,7 @@ namespace Robust.Client.Graphics.Clyde
             // Create OpenAL context.
             _audioCreateContext();
 
-            IsEfxSupported = HasDeviceExtension("ALC_EXT_EFX");
+            IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
         }
 
         private void _audioCreateContext()
@@ -75,8 +77,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _audioOpenDevice()
         {
-
-            var preferredDevice = _configurationManager.GetCVar<string>("audio.device");
+            var preferredDevice = _configurationManager.GetCVar(CVars.AudioDevice);
 
             // Open device.
             if (!string.IsNullOrEmpty(preferredDevice))
@@ -356,7 +357,6 @@ namespace Robust.Client.Graphics.Clyde
 #endif
 
             private float _gain;
-            private float _gainCoeff = 1;
 
             private bool IsEfxSupported => _master.IsEfxSupported;
 
@@ -419,8 +419,14 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
-                _gain = MathF.Pow(10, decibels / 10);
-                AL.Source(SourceHandle, ALSourcef.Gain, _gain * _gainCoeff);
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
+                _gain =  MathF.Pow(10, decibels / 10);
+                AL.Source(SourceHandle, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
 
@@ -436,7 +442,6 @@ namespace Robust.Client.Graphics.Clyde
                 else
                 {
                     gain *= gain * gain;
-                    _gainCoeff = gain;
                     AL.Source(SourceHandle, ALSourcef.Gain, _gain * gain);
                 }
                 _checkAlError();
@@ -555,7 +560,6 @@ namespace Robust.Client.Graphics.Clyde
             private int FilterHandle;
 
             private float _gain;
-            private float _gainCoeff;
 
             public int SampleRate { get; set; } = 44100;
 
@@ -625,8 +629,14 @@ namespace Robust.Client.Graphics.Clyde
             public void SetVolume(float decibels)
             {
                 _checkDisposed();
+                var priorOcclusion = 1f;
+                if (!IsEfxSupported)
+                {
+                    AL.GetSource(SourceHandle!.Value, ALSourcef.Gain, out var priorGain);
+                    priorOcclusion = priorGain / _gain;
+                }
                 _gain =  MathF.Pow(10, decibels / 10);
-                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * _gainCoeff);
+                AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
                 _checkAlError();
             }
 
@@ -642,7 +652,6 @@ namespace Robust.Client.Graphics.Clyde
                 else
                 {
                     gain *= gain * gain;
-                    _gainCoeff = gain;
                     AL.Source(SourceHandle!.Value, ALSourcef.Gain, gain * _gain);
                 }
 
@@ -720,9 +729,10 @@ namespace Robust.Client.Graphics.Clyde
             private void Dispose(bool disposing)
             {
                 if (SourceHandle == null) return;
-                if (!disposing)
+
+                if (!disposing || Thread.CurrentThread != _master._mainThread)
                 {
-                    // We can't run this code inside the finalizer thread so tell Clyde to clear it up later.
+                    // We can't run this code inside another thread so tell Clyde to clear it up later.
                     _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);
                     for (var i = 0; i < BufferHandles.Length; i++)
                         _master.DeleteAudioBufferOnMainThread(BufferHandles[i]);

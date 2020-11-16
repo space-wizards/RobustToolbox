@@ -1,18 +1,16 @@
 using System;
 using System.Runtime.InteropServices;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
-    public readonly struct Vector4d
+    public struct Vector4d
     {
-        public readonly double X;
-        public readonly double Y;
-        public readonly double Z;
-        public readonly double W;
+        public double X;
+        public double Y;
+        public double Z;
+        public double W;
 
         public Vector4d(double x, double y, double z, double w)
         {
@@ -22,7 +20,7 @@ namespace Robust.Shared.Maths
             W = w;
         }
 
-        public void Deconstruct(out double x, out double y, out double z, out double w)
+        public readonly void Deconstruct(out double x, out double y, out double z, out double w)
         {
             x = X;
             y = Y;

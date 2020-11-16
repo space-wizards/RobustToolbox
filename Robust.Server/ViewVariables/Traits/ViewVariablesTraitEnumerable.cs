@@ -12,7 +12,7 @@ namespace Robust.Server.ViewVariables.Traits
         private readonly IEnumerable _enumerable;
         private bool Ended => _enumerator == null;
 
-        public ViewVariablesTraitEnumerable(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitEnumerable(IViewVariablesSession session) : base(session)
         {
             _enumerable = (IEnumerable) session.Object;
             _refresh();
@@ -67,13 +67,12 @@ namespace Robust.Server.ViewVariables.Traits
 
         private void _cacheTo(int index)
         {
-            DebugTools.AssertNotNull(_enumerator);
-
             if (Ended || index < _cache.Count)
             {
                 return;
             }
 
+            DebugTools.AssertNotNull(_enumerator);
             while (_cache.Count <= index)
             {
                 if (!_enumerator!.MoveNext())

@@ -1,6 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -30,6 +34,38 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void SerializeListAsReadOnlyCollectionTest()
+        {
+            // Arrange
+            IReadOnlyCollection<int> data = SerializableList;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedListYaml));
+        }
+
+        [Test]
+        public void SerializeListAsReadOnlyListTest()
+        {
+            // Arrange
+            IReadOnlyList<int> data = SerializableList;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedListYaml));
+        }
+
+        [Test]
         public void DeserializeListTest()
         {
             // Arrange
@@ -46,6 +82,40 @@ namespace Robust.UnitTesting.Shared.Serialization
             for (var i = 0; i < SerializableList.Count; i++)
                 Assert.That(data[i], Is.EqualTo(SerializableList[i]));
         }
+
+        [Test]
+        public void DeserializeListAsReadOnlyListTest()
+        {
+            // Arrange
+            IReadOnlyList<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedListYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableList.Count));
+            for (var i = 0; i < SerializableList.Count; i++)
+                Assert.That(data[i], Is.EqualTo(SerializableList[i]));
+        }
+
+        [Test]
+        public void DeserializeListAsReadOnlyCollectionTest()
+        {
+            // Arrange
+            IReadOnlyCollection<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedListYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datalist", Array.Empty<int>());
+
+            // Assert
+            Assert.That(data, Is.EquivalentTo(SerializableList));
+        }
+
 
         private readonly string SerializedListYaml = "datalist:\n- 1\n- 2\n- 3\n...\n";
         private readonly List<int> SerializableList = new List<int> { 1, 2, 3 };
@@ -67,9 +137,42 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         [Test]
+        public void SerializeDictAsReadOnlyTest()
+        {
+            // Arrange
+            IReadOnlyDictionary<string, int> data = SerializableDict;
+            var mapping = new YamlMappingNode();
+            var serializer = YamlObjectSerializer.NewWriter(mapping);
+
+            // Act
+            serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
+
+            // Assert
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedDictYaml));
+        }
+
+        [Test]
         public void DeserializeDictTest()
         {
             Dictionary<string, int> data = null!;
+            var rootNode = YamlTextToNode(SerializedDictYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            // Act
+            serializer.DataField(ref data, "datadict", new Dictionary<string, int>(0));
+
+            // Assert
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableDict.Count));
+            foreach (var kvEntry in SerializableDict)
+                Assert.That(data[kvEntry.Key], Is.EqualTo(kvEntry.Value));
+        }
+
+        [Test]
+        public void DeserializeDictToReadOnlyTest()
+        {
+            IReadOnlyDictionary<string, int> data = null!;
             var rootNode = YamlTextToNode(SerializedDictYaml);
             var serializer = YamlObjectSerializer.NewReader(rootNode);
 
@@ -120,8 +223,191 @@ namespace Robust.UnitTesting.Shared.Serialization
             Assert.That(mapping, Is.EquivalentTo(new YamlMappingNode {{"bar", "honk!"}, {"foo", "5"}}));
         }
 
+        [Test]
+        public void SerializedEqualDictTest()
+        {
+            var dict = new Dictionary<string, string>
+            {
+                ["A"] = "B",
+                ["C"] = "W",
+                ["D"] = "G",
+                ["E"] = "J"
+            };
+
+            var dict2 = new Dictionary<string, string>(dict);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(dict, dict2), Is.True);
+        }
+
+        [Test]
+        public void TestSelfSerialize()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            var field = new SelfSerializeTest {Value = 456};
+
+            reader.DataField(ref field, "foo", default);
+
+            Assert.That(mapping["foo"].AsString(), Is.EqualTo("456"));
+        }
+
+        [Test]
+        public void TestSelfDeserialize()
+        {
+            var dict = new YamlMappingNode
+            {
+                {"foo", "123"}
+            };
+
+            var reader = YamlObjectSerializer.NewReader(dict);
+
+            SelfSerializeTest field = default;
+
+            reader.DataField(ref field, "foo", default);
+
+            Assert.That(field.Value, Is.EqualTo(123));
+        }
+
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
         private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
+
+        [Test]
+        public void SerializeHashSetTest()
+        {
+            var mapping = new YamlMappingNode();
+            var set = SerializableSet;
+
+            var writer = YamlObjectSerializer.NewWriter(mapping);
+
+            writer.DataField(ref set, "dataSet", new HashSet<int>(0));
+
+            var result = NodeToYamlText(mapping);
+            Assert.That(result, Is.EqualTo(SerializedSetYaml));
+        }
+
+        [Test]
+        public void DeserializeHashSetTest()
+        {
+            HashSet<int> data = null!;
+            var rootNode = YamlTextToNode(SerializedSetYaml);
+            var serializer = YamlObjectSerializer.NewReader(rootNode);
+
+            serializer.DataField(ref data, "dataSet", new HashSet<int>(0));
+
+            Assert.That(data, Is.Not.Null);
+            Assert.That(data.Count, Is.EqualTo(SerializableSet.Count));
+            for (var i = 0; i < SerializableSet.Count; i++)
+                Assert.That(data.ElementAt(i), Is.EqualTo(SerializableSet.ElementAt(i)));
+        }
+
+        [Test]
+        public void SerializedEqualHashSetTest()
+        {
+            var set = new HashSet<string> {"A", "B", "C", "D", "E"};
+            var set2 = new HashSet<string>(set);
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(set, set2), Is.True);
+        }
+
+        [Test]
+        public void SerializedNotEqualHashSetTest()
+        {
+            var set = new HashSet<string> {"A"};
+            var set2 = new HashSet<string> {"B"};
+
+            Assert.That(YamlObjectSerializer.IsSerializedEqual(set, set2), Is.False);
+        }
+
+        private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
+        private readonly HashSet<int> SerializableSet = new HashSet<int> { 1, 2, 3 };
+
+        [Test]
+        public void NullablePrimitiveSerializeNullTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(mapping.Children.Count, Is.Zero);
+        }
+
+        [Test]
+        public void NullablePrimitiveSerializeValueTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewWriter(mapping);
+
+            int? value = 5;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(mapping["foo"].AsInt(), Is.EqualTo(5));
+        }
+
+        [Test]
+        public void NullablePrimitiveDeserializeNullTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", null!}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void NullablePrimitiveDeserializeEmptyTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", ""}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void NullablePrimitiveDeserializeNothingTest()
+        {
+            var mapping = new YamlMappingNode();
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.Null);
+        }
+
+        [Test]
+        public void NullablePrimitiveDeserializeValueTest()
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"foo", "5"}
+            };
+            var reader = YamlObjectSerializer.NewReader(mapping);
+
+            int? value = null;
+
+            reader.DataField(ref value, "foo", null);
+
+            Assert.That(value, Is.EqualTo(5));
+        }
 
         // serializes a node tree into text
         internal static string NodeToYamlText(YamlNode root)
@@ -169,6 +455,21 @@ namespace Robust.UnitTesting.Shared.Serialization
             public int Foo { get; set; }
             public string Bar { get; set; } = default!;
             public Color Baz { get; set; } = Color.Orange;
+        }
+
+        private struct SelfSerializeTest : ISelfSerialize
+        {
+            public int Value;
+
+            public void Deserialize(string value)
+            {
+                Value = int.Parse(value, CultureInfo.InvariantCulture);
+            }
+
+            public string Serialize()
+            {
+                return Value.ToString(CultureInfo.InvariantCulture);
+            }
         }
     }
 }

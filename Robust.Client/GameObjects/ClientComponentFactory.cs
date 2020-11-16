@@ -2,11 +2,14 @@
 using Robust.Client.GameObjects.Components.Animations;
 using Robust.Client.GameObjects.Components.Containers;
 using Robust.Client.GameObjects.Components.UserInterface;
-using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Components.Appearance;
+using Robust.Shared.GameObjects.Components.Eye;
 using Robust.Shared.GameObjects.Components.Map;
+using Robust.Shared.GameObjects.Components.Renderable;
+using Robust.Shared.GameObjects.Components.Timers;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -32,25 +35,27 @@ namespace Robust.Client.GameObjects
             Register<MapGridComponent>();
             RegisterReference<MapGridComponent, IMapGridComponent>();
 
-            Register<CollidableComponent>();
-            RegisterReference<CollidableComponent, IPhysBody>();
-            RegisterReference<CollidableComponent, ICollidableComponent>();
-            Register<IconComponent>();
+            Register<PhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
+            RegisterReference<PhysicsComponent, IPhysicsComponent>();
             RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
-            Register<PhysicsComponent>();
 
             Register<InputComponent>();
 
             Register<SpriteComponent>();
+            RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteComponent>();
 
             Register<ClientOccluderComponent>();
             RegisterReference<ClientOccluderComponent, OccluderComponent>();
 
             Register<EyeComponent>();
+            RegisterReference<EyeComponent, SharedEyeComponent>();
 
             Register<AppearanceComponent>();
+            RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
+            
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
@@ -63,6 +68,8 @@ namespace Robust.Client.GameObjects
 
             Register<ContainerManagerComponent>();
             RegisterReference<ContainerManagerComponent, IContainerManager>();
+
+            Register<TimerComponent>();
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();

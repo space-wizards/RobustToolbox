@@ -1,6 +1,4 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
@@ -9,36 +7,36 @@ namespace Robust.Shared.Maths
     ///     Uses a left-handed coordinate system. This means that X+ is to the right and Y+ down.
     /// </summary>
     [Serializable]
-    public readonly struct UIBox2 : IEquatable<UIBox2>
+    public struct UIBox2 : IEquatable<UIBox2>
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
         /// </summary>
-        public readonly float Left;
+        public float Left;
 
         /// <summary>
         ///     The X coordinate of the right edge of the box.
         /// </summary>
-        public readonly float Right;
+        public float Right;
 
         /// <summary>
         ///     The Y coordinate of the top edge of the box.
         /// </summary>
-        public readonly float Top;
+        public float Top;
 
         /// <summary>
         ///     The Y coordinate of the bottom of the box.
         /// </summary>
-        public readonly float Bottom;
+        public float Bottom;
 
-        public Vector2 BottomRight => new Vector2(Right, Bottom);
-        public Vector2 TopLeft => new Vector2(Left, Top);
-        public Vector2 TopRight => new Vector2(Right, Top);
-        public Vector2 BottomLeft => new Vector2(Left, Bottom);
-        public float Width => MathF.Abs(Right - Left);
-        public float Height => MathF.Abs(Top - Bottom);
-        public Vector2 Size => new Vector2(Width, Height);
-        public Vector2 Center => TopLeft + Size / 2;
+        public readonly Vector2 BottomRight => new Vector2(Right, Bottom);
+        public readonly Vector2 TopLeft => new Vector2(Left, Top);
+        public readonly Vector2 TopRight => new Vector2(Right, Top);
+        public readonly Vector2 BottomLeft => new Vector2(Left, Bottom);
+        public readonly float Width => MathF.Abs(Right - Left);
+        public readonly float Height => MathF.Abs(Top - Bottom);
+        public readonly Vector2 Size => new Vector2(Width, Height);
+        public readonly Vector2 Center => TopLeft + Size / 2;
 
         public UIBox2(Vector2 leftTop, Vector2 rightBottom) : this(leftTop.X, leftTop.Y, rightBottom.X, rightBottom.Y)
         {
@@ -62,29 +60,29 @@ namespace Robust.Shared.Maths
             return FromDimensions(leftTopPosition.X, leftTopPosition.Y, size.X, size.Y);
         }
 
-        public bool Intersects(UIBox2 other)
+        public readonly bool Intersects(UIBox2 other)
         {
             return other.Bottom >= this.Top && other.Top <= this.Bottom && other.Right >= this.Left &&
                    other.Left <= this.Right;
         }
 
-        public bool IsEmpty()
+        public readonly bool IsEmpty()
         {
-            return FloatMath.CloseTo(Width, 0.0f) && FloatMath.CloseTo(Height, 0.0f);
+            return MathHelper.CloseTo(Width, 0.0f) && MathHelper.CloseTo(Height, 0.0f);
         }
 
-        public bool Encloses(UIBox2 inner)
+        public readonly bool Encloses(UIBox2 inner)
         {
             return this.Left < inner.Left && this.Bottom > inner.Bottom && this.Right > inner.Right &&
                    this.Top < inner.Top;
         }
 
-        public bool Contains(float x, float y)
+        public readonly bool Contains(float x, float y)
         {
             return Contains(new Vector2(x, y));
         }
 
-        public bool Contains(Vector2 point, bool closedRegion = true)
+        public readonly bool Contains(Vector2 point, bool closedRegion = true)
         {
             var xOk = closedRegion
                 ? point.X >= Left ^ point.X > Right
@@ -102,7 +100,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         /// <param name="scalar">Value to scale the box by.</param>
         /// <returns>Scaled box.</returns>
-        public UIBox2 Scale(float scalar)
+        public readonly UIBox2 Scale(float scalar)
         {
             if (scalar < 0)
             {
@@ -117,24 +115,24 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
-        public UIBox2 Translated(Vector2 point)
+        public readonly UIBox2 Translated(Vector2 point)
         {
             return new UIBox2(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
-        public bool Equals(UIBox2 other)
+        public readonly bool Equals(UIBox2 other)
         {
             return Left.Equals(other.Left) && Right.Equals(other.Right) && Top.Equals(other.Top) &&
                    Bottom.Equals(other.Bottom);
         }
 
-        public override bool Equals(object? obj)
+        public override readonly bool Equals(object? obj)
         {
             if (obj is null) return false;
             return obj is UIBox2 box2 && Equals(box2);
         }
 
-        public override int GetHashCode()
+        public override readonly int GetHashCode()
         {
             unchecked
             {
@@ -151,10 +149,10 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static bool operator ==(UIBox2 a, UIBox2 b)
         {
-            return FloatMath.CloseTo(a.Bottom, b.Bottom) &&
-                   FloatMath.CloseTo(a.Right, b.Right) &&
-                   FloatMath.CloseTo(a.Top, b.Top) &&
-                   FloatMath.CloseTo(a.Left, b.Left);
+            return MathHelper.CloseTo(a.Bottom, b.Bottom) &&
+                   MathHelper.CloseTo(a.Right, b.Right) &&
+                   MathHelper.CloseTo(a.Top, b.Top) &&
+                   MathHelper.CloseTo(a.Left, b.Left);
         }
 
         public static bool operator !=(UIBox2 a, UIBox2 b)
@@ -169,7 +167,7 @@ namespace Robust.Shared.Maths
             return new UIBox2(box.Left + lo, box.Top + to, box.Right + ro, box.Bottom + bo);
         }
 
-        public override string ToString()
+        public override readonly string ToString()
         {
             return $"({Left}, {Top}, {Right}, {Bottom})";
         }

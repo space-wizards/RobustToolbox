@@ -51,13 +51,5 @@ namespace Robust.Server.Interfaces.Console
         /// <param name="player">Session of the remote player. If this is null, the command is executed as the local console.</param>
         /// <param name="command">Command string to execute.</param>
         void ExecuteCommand(IPlayerSession? player, string command);
-
-        /// <summary>
-        /// Elevates a player shell from user group to administrator group.
-        /// </summary>
-        /// <param name="session">Session shell to elevate.</param>
-        /// <param name="password">super user password.</param>
-        /// <returns></returns>
-        bool ElevateShell(IPlayerSession session, string password);
     }
 }

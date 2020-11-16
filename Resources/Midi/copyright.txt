@@ -1,0 +1,7 @@
+fallback.sf2 is a modified version of https://musical-artifacts.com/artifacts/806
+The original was created by: stgiga, Cirnopez/Cirnomiji/Pezbeth, Zmey Kolbasnik, and Elf of Happy and Love/StarDream Studios, and also formerly Zandro Reville and Gashisoft
+It was then modified by 20kdc to:
+ 1. add more instruments, though also to remove the 'high' presets as they are basically never used,
+ 2. and to remove presets which just alias to Piano anyway
+Licensed under CC-BY-3.0.
+

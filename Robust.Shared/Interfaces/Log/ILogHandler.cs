@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Log;
+﻿using Serilog.Events;
 
 namespace Robust.Shared.Interfaces.Log
 {
@@ -14,7 +14,8 @@ namespace Robust.Shared.Interfaces.Log
         /// <remarks>
         ///     This method can be called from multiple threads so make sure it's thread safe!
         /// </remarks>
+        /// <param name="sawmillName">The name of the sawmill that this message was raised on.</param>
         /// <param name="message">The message to log.</param>
-        void Log(in LogMessage message);
+        void Log(string sawmillName, LogEvent message);
     }
 }

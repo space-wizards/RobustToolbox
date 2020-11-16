@@ -26,5 +26,10 @@ namespace Robust.Client.Interfaces.Graphics
         int LastBatches { get; }
 
         (int vertices, int indices) LargestBatchSize { get; }
+
+        /// <summary>
+        ///     The amount of lights that were rendered last frame.
+        /// </summary>
+        int TotalLights { get; }
     }
 }

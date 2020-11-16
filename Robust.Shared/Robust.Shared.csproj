@@ -14,7 +14,6 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
     <PackageReference Include="Mono.Cecil" Version="0.11.2" />
-    <PackageReference Include="NetSerializer" Version="4.1.1" />
     <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="nfluidsynth" Version="0.3.0" />
@@ -22,12 +21,15 @@
     <PackageReference Include="Pidgin" Version="2.4.0" />
     <PackageReference Include="prometheus-net" Version="3.5.0" />
     <PackageReference Include="Robust.Shared.AuthLib" Version="0.1.0" />
+    <PackageReference Include="Serilog" Version="2.9.0" />
     <PackageReference Condition="'$(TargetFramework)' == 'net472'" Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="YamlDotNet" Version="8.1.2" />
     <PackageReference Include="StringToExpression" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
+    <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
+    <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
   </ItemGroup>
   <ItemGroup>
@@ -37,8 +39,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Input\CommandBindMapping.cs" />
+    <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
+      <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
+    </Compile>
     <Compile Update="Serialization\RobustSerializer.Handshake.cs">
       <DependentUpon>RobustSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
+      <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />

@@ -1,11 +1,11 @@
 ﻿using System;
-using Math = CannyFastMath.Math;
-using MathF = CannyFastMath.MathF;
 
 namespace Robust.Shared.Maths
 {
+    [Flags]
     public enum Direction
     {
+        Invalid = -1,
         East = 0,
         NorthEast = 1,
         North = 2,
@@ -13,7 +13,7 @@ namespace Robust.Shared.Maths
         West = 4,
         SouthWest = 5,
         South = 6,
-        SouthEast = 7
+        SouthEast = 7,
     }
 
     /// <summary>
@@ -35,6 +35,42 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        /// Converts a direction vector to the closest Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetDir(this Vector2i vec)
+        {
+            return new Angle(vec).GetDir();
+        }
+
+        /// <summary>
+        /// Converts a direction vector to the closest cardinal Direction enum.
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns></returns>
+        public static Direction GetCardinalDir(this Vector2i vec)
+        {
+            return new Angle(vec).GetCardinalDir();
+        }
+
+        public static Direction GetOpposite(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.East => Direction.West,
+                Direction.West => Direction.East,
+                Direction.North => Direction.South,
+                Direction.South => Direction.North,
+                Direction.NorthEast => Direction.SouthWest,
+                Direction.SouthWest => Direction.NorthEast,
+                Direction.NorthWest => Direction.SouthEast,
+                Direction.SouthEast => Direction.NorthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
+        }
+
+        /// <summary>
         /// Converts a direction to an angle, where angle is -PI to +PI.
         /// </summary>
         /// <param name="dir"></param>
@@ -49,6 +85,17 @@ namespace Robust.Shared.Maths
             return ang;
         }
 
+        private static Vector2[] directionVectors = new[]
+        {
+            new Vector2(1, 0),
+            new Vector2(1, 1).Normalized,
+            new Vector2(0, 1),
+            new Vector2(-1, 1).Normalized,
+            new Vector2(-1, 0),
+            new Vector2(-1, -1).Normalized,
+            new Vector2(0, -1),
+            new Vector2(1, -1).Normalized
+        };
         /// <summary>
         /// Converts a Direction to a normalized Direction vector.
         /// </summary>
@@ -56,7 +103,7 @@ namespace Robust.Shared.Maths
         /// <returns></returns>
         public static Vector2 ToVec(this Direction dir)
         {
-            return dir.ToAngle().ToVec();
+            return directionVectors[(int) dir];
         }
 
         /// <summary>

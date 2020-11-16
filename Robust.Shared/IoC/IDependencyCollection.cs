@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.Shared.IoC
@@ -72,6 +73,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
+        [Pure]
         T Resolve<T>();
 
         /// <summary>
@@ -82,6 +84,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
+        [Pure]
         object ResolveType(Type type);
 
         /// <summary>

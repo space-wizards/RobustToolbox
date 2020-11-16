@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Appearance;
+using Robust.Shared.ViewVariables;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -8,16 +9,23 @@ namespace Robust.Server.GameObjects
 {
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
+        [ViewVariables]
         readonly Dictionary<object, object> data = new Dictionary<object, object>();
 
         public override void SetData(string key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value))
+                return;
+
             data[key] = value;
             Dirty();
         }
 
         public override void SetData(Enum key, object value)
         {
+            if (data.TryGetValue(key, out var existing) && existing.Equals(value))
+                return;
+
             data[key] = value;
             Dirty();
         }
@@ -50,7 +58,7 @@ namespace Robust.Server.GameObjects
                 return true;
             }
 
-            data = default;
+            data = default!;
             return false;
         }
 

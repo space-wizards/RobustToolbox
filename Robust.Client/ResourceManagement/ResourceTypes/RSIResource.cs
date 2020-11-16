@@ -74,7 +74,7 @@ namespace Robust.Client.ResourceManagement
 
             var metaData = ParseMetaData(manifestJson);
             var frameSize = metaData.Size;
-            var rsi = new RSI(frameSize);
+            var rsi = new RSI(frameSize, path);
 
             var callbackOffsets = new Dictionary<RSI.StateId, Vector2i[][]>();
 
@@ -338,7 +338,7 @@ namespace Robust.Client.ResourceManagement
             var size = manifestJson["size"]!.ToObject<Vector2i>();
             var states = new List<StateMetadata>();
 
-            foreach (var stateObject in manifestJson["states"].Cast<JObject>())
+            foreach (var stateObject in manifestJson["states"]!.Cast<JObject>())
             {
                 var stateName = stateObject["name"]!.ToObject<string>()!;
                 var dirValue = stateObject["directions"]!.ToObject<int>();

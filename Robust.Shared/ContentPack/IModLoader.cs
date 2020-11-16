@@ -24,6 +24,8 @@ namespace Robust.Shared.ContentPack
         void LoadGameAssembly<T>(string diskPath)
             where T : GameShared;
 
+        Assembly GetAssembly(string name);
+
         /// <summary>
         ///     Broadcasts a run level change to all loaded entry point.
         /// </summary>
@@ -43,7 +45,7 @@ namespace Robust.Shared.ContentPack
             where T : GameShared;
 
         /// <summary>
-        ///     Sets the testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
+        ///     Adds a testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
         /// </summary>
         void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks);
 

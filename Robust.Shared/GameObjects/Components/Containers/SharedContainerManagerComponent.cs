@@ -23,19 +23,30 @@ namespace Robust.Shared.GameObjects.Components.Containers
 
         public abstract bool ContainsEntity(IEntity entity);
         public abstract void ForceRemove(IEntity entity);
+        public abstract void InternalContainerShutdown(IContainer container);
 
         [Serializable, NetSerializable]
         protected class ContainerManagerComponentState : ComponentState
         {
-            public Dictionary<string,(bool, List<EntityUid>)> Containers { get; }
+            public Dictionary<string, ContainerData> Containers { get; }
 
-            public ContainerManagerComponentState(Dictionary<string, (bool, List<EntityUid>)> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(Dictionary<string, ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
             {
                 Containers = containers;
             }
+
+            [Serializable, NetSerializable]
+            public struct ContainerData
+            {
+                public bool ShowContents;
+                public bool OccludesLight;
+                public EntityUid[] ContainedEntities;
+            }
         }
 
-        public abstract IEnumerable<IContainer> GetAllContainers();
+        public IEnumerable<IContainer> GetAllContainers() => GetAllContainersImpl();
 
+        // Separate impl method to facilitate method hiding in the subclasses.
+        protected abstract IEnumerable<IContainer> GetAllContainersImpl();
     }
 }

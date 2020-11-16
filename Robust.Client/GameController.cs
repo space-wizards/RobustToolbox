@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Globalization;
 using System.IO;
 using System.Net;
+using System.Threading.Tasks;
 using Robust.Client.Console;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Graphics;
-using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.Placement;
@@ -15,7 +14,7 @@ using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Interfaces.Utility;
-using Robust.Client.UserInterface.CustomControls;
+using Robust.Client.Player;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Shared;
@@ -23,6 +22,7 @@ using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
@@ -30,7 +30,6 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -64,9 +63,9 @@ namespace Robust.Client
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoader _modLoader = default!;
-        [Dependency] private readonly ISignalHandler _signalHandler = default!;
-        [Dependency] private readonly IClientConGroupController _conGroupController = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
+        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -91,6 +90,8 @@ namespace Robust.Client
             // Figure out user data directory.
             var userDataDir = GetUserDataDir();
 
+            _configurationManager.Initialize(false);
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");
@@ -106,14 +107,15 @@ namespace Robust.Client
                 }
             }
 
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
             {
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
-
-            _signalHandler.MaybeStart();
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
@@ -154,6 +156,10 @@ namespace Robust.Client
                 throw new NotSupportedException("Cannot load client without content assembly");
             }
 
+
+            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Client"));
+            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
+
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
@@ -170,7 +176,6 @@ namespace Robust.Client
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
-            _conGroupController.Initialize();
             _scriptClient.Initialize();
 
             _client.Initialize();
@@ -190,7 +195,6 @@ namespace Robust.Client
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
             }
 
-            _checkOpenGLVersion();
             return true;
         }
 
@@ -223,22 +227,6 @@ namespace Robust.Client
             }
         }
 
-        private void _checkOpenGLVersion()
-        {
-            var debugInfo = _clyde.DebugInfo;
-
-            // == null because I'm too lazy to implement a dummy for headless.
-            if (debugInfo == null || debugInfo.OpenGLVersion >= debugInfo.MinimumVersion)
-            {
-                // OpenGL version supported, we're good.
-                return;
-            }
-
-            var window = new BadOpenGLVersionWindow(debugInfo);
-            window.OpenCentered();
-        }
-
-
         public void Shutdown(string? reason = null)
         {
             // Already got shut down I assume,
@@ -259,9 +247,15 @@ namespace Robust.Client
             _mainLoop.Running = false;
         }
 
-        private void Update(FrameEventArgs frameEventArgs)
+        private void Input(FrameEventArgs frameEventArgs)
         {
+            _clyde.ProcessInput(frameEventArgs);
             _networkManager.ProcessPackets();
+            _taskManager.ProcessPendingTasks(); // tasks like connect
+        }
+
+        private void Tick(FrameEventArgs frameEventArgs)
+        {
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
@@ -269,21 +263,36 @@ namespace Robust.Client
 
             if (_client.RunLevel >= ClientRunLevel.Connected)
             {
+                _componentManager.CullRemovedComponents();
                 _gameStateManager.ApplyGameState();
+                _entityManager.Update(frameEventArgs.DeltaSeconds);
+                _playerManager.Update(frameEventArgs.DeltaSeconds);
             }
 
             _stateManager.Update(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
         }
 
-        private void _frameProcessMain(FrameEventArgs frameEventArgs)
+        private void Update(FrameEventArgs frameEventArgs)
         {
             _clyde.FrameProcess(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
             _stateManager.FrameUpdate(frameEventArgs);
+
+            if (_client.RunLevel >= ClientRunLevel.Connected)
+            {
+                _placementManager.FrameUpdate(frameEventArgs);
+                _entityManager.FrameUpdate(frameEventArgs.DeltaSeconds);
+            }
+
             _overlayManager.FrameUpdate(frameEventArgs);
             _userInterfaceManager.FrameUpdate(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePostEngine, frameEventArgs);
+        }
+
+        private void Render()
+        {
+
         }
 
         internal static void SetupLogging(ILogManager logManager, Func<ILogHandler> logHandlerFactory)
@@ -300,6 +309,36 @@ namespace Robust.Client
             logManager.GetSawmill("gdparse").Level = LogLevel.Error;
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
+            logManager.GetSawmill("szr").Level = LogLevel.Info;
+
+#if DEBUG_ONLY_FCE_INFO
+#if DEBUG_ONLY_FCE_LOG
+            var fce = logManager.GetSawmill("fce");
+#endif
+            AppDomain.CurrentDomain.FirstChanceException += (sender, args) =>
+            {
+                // TODO: record FCE stats
+#if DEBUG_ONLY_FCE_LOG
+                fce.Fatal(message);
+#endif
+            }
+#endif
+
+            var uh = logManager.GetSawmill("unhandled");
+            AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
+            {
+                var message = ((Exception) args.ExceptionObject).ToString();
+                uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
+            };
+
+            var uo = logManager.GetSawmill("unobserved");
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+            {
+                uo.Error(args.Exception!.ToString());
+#if EXCEPTION_TOLERANCE
+                args.SetObserved(); // don't crash
+#endif
+            };
         }
 
         private string GetUserDataDir()
@@ -325,6 +364,12 @@ namespace Robust.Client
         {
             Headless,
             Clyde,
+        }
+
+        private void Cleanup()
+        {
+            _entityManager.Shutdown();
+            _clyde.Shutdown();
         }
     }
 }

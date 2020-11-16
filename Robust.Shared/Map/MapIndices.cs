@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -7,9 +8,11 @@ namespace Robust.Shared.Map
 {
     /// <summary>
     ///     Internal structure to store 2 indices of a chunk or tile.
+    ///     <remarks>Despite the name, this can refer to a specific tile on a grid.</remarks>
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
+    [Obsolete("Use Vector2i instead")]
     public readonly struct MapIndices : IEquatable<MapIndices>
     {
         /// <summary>
@@ -39,6 +42,22 @@ namespace Robust.Shared.Map
         public static MapIndices operator +(MapIndices left, MapIndices right)
         {
             return new MapIndices(left.X + right.X, left.Y + right.Y);
+        }
+
+        /// <summary>
+        ///     Translates the indices by a given offset.
+        /// </summary>
+        public static MapIndices operator -(MapIndices left, MapIndices right)
+        {
+            return new MapIndices(left.X - right.X, left.Y - right.Y);
+        }
+
+        /// <summary>
+        ///     Returns the opposite indices.
+        /// </summary>
+        public static MapIndices operator -(MapIndices indices)
+        {
+            return new MapIndices(-indices.X, -indices.Y);
         }
 
         /// <summary>
@@ -83,6 +102,14 @@ namespace Robust.Shared.Map
             return $"{{{X},{Y}}}";
         }
 
+        public EntityCoordinates ToEntityCoordinates(IMapManager mapManager, GridId gridId)
+        {
+            var grid = mapManager.GetGrid(gridId);
+            var tile = grid.TileSize;
+
+            return new EntityCoordinates(grid.GridEntityId, (X * tile, Y * tile));
+        }
+
         /// <inheritdoc />
         public override int GetHashCode()
         {
@@ -97,6 +124,11 @@ namespace Robust.Shared.Map
         public static implicit operator MapIndices(in Vector2i indices)
         {
             return new MapIndices(indices.X, indices.Y);
+        }
+
+        public static implicit operator Vector2(in MapIndices indices)
+        {
+            return new Vector2(indices.X, indices.Y);
         }
     }
 }

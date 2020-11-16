@@ -1,10 +1,15 @@
-float toLinear(float sRGB)
+mediump float toLinear(mediump float sRGB)
 {
+    mediump float higher = pow((sRGB + 0.055)/1.055, 2.4);
+    mediump float lower = sRGB/12.92;
+#ifdef HAS_BOOL_MIX
     bool cutoff = sRGB < 0.04045;
-    float higher = pow((sRGB + 0.055)/1.055, 2.4);
-    float lower = sRGB/12.92;
-
     return mix(higher, lower, cutoff);
+#else
+    // Fake it; this is 0.0 if 'lower' should be used, 1.0 if 'higher' should be used
+    mediump float s = max(0.0, sign(sRGB - 0.04045));
+    return mix(lower, higher, s);
+#endif
 }
 
 void fragment()
@@ -12,13 +17,13 @@ void fragment()
     // NOTE: This shader does NOT work correctly!!!
     // This assumes the depth is projected onto a circle, which it IS NOT.
 
-    float PI = 3.1415;
-    vec2 uv = (UV * 2) - 1;
-    float angle = atan(uv.y, -uv.x) + PI + radians(135.0);
+    highp float PI = 3.1415;
+    highp vec2 uv = (UV * 2.0) - 1.0;
+    highp float angle = atan(uv.y, -uv.x) + PI + radians(135.0);
 
-    angle = mod(angle, 2 * PI);
-    angle /= (PI * 2);
+    angle = mod(angle, 2.0 * PI);
+    angle /= (PI * 2.0);
 
-    float val = texture(TEXTURE, vec2(angle, 0.5)).r / 8;
+    highp float val = zTexture(vec2(angle, 0.5)).r / 8.0;
     COLOR = vec4(vec3(toLinear(val)), 0.5);
 }

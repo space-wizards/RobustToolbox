@@ -113,7 +113,7 @@ namespace Robust.Client.UserInterface
             Restyle();
         }
 
-        private void Restyle()
+        internal void Restyle()
         {
             if (_stylingDirty)
             {

@@ -263,7 +263,7 @@ namespace Robust.Client.UserInterface.Controls
                 else
                 {
                     var metrics = font.GetCharMetrics(chr, UIScale);
-                    if (!metrics.HasValue)
+                    if (metrics == null)
                     {
                         continue;
                     }

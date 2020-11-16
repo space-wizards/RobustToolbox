@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Interfaces.Timing
@@ -84,6 +85,22 @@ namespace Robust.Shared.Interfaces.Timing
         TimeSpan TickRemainder { get; set; }
 
         /// <summary>
+        ///     Fraction of how far into the tick we are. <c>0</c> is 0% and <see cref="ushort.MaxValue"/> is 100%.
+        /// </summary>
+        ushort TickFraction
+        {
+            get
+            {
+                if (InSimulation)
+                {
+                    return ushort.MaxValue;
+                }
+
+                return (ushort)(ushort.MaxValue * TickRemainder.TotalSeconds / TickPeriod.TotalSeconds);
+            }
+        }
+
+        /// <summary>
         ///     If the client clock is a little behind or ahead of the server, you can
         ///     use the to adjust the timing of the clock speed. The default value is 0,
         ///     and you can run the clock from -1 (almost stopped) to 1 (almost no delay).
@@ -116,6 +133,13 @@ namespace Robust.Shared.Interfaces.Timing
             return new PredictionGuard(this);
         }
 
-        string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}";
+        string TickStamp => $"{CurTick}, predFirst: {IsFirstTimePredicted}, tickRem: {TickRemainder.TotalSeconds}, sim: {InSimulation}";
+
+        static string TickStampStatic => IoCManager.Resolve<IGameTiming>().TickStamp;
+
+        /// <summary>
+        /// Resets the simulation time. This should be called on round restarts.
+        /// </summary>
+        void ResetSimTime();
     }
 }

@@ -29,10 +29,7 @@ namespace Robust.Shared.Physics {
 
         public bool Remove(IPhysBody item) => _tree.Remove(item);
 
-        public int Capacity {
-            get => _tree.Capacity;
-            set => _tree.Capacity = value;
-        }
+        public int Capacity => _tree.Capacity;
 
         public int Height => _tree.Height;
 
@@ -48,15 +45,46 @@ namespace Robust.Shared.Physics {
 
         public bool Update(in IPhysBody item) => _tree.Update(in item);
 
-        public IEnumerable<IPhysBody> Query(Box2 aabb, bool approx = false) => _tree.Query(aabb, approx);
+        public void QueryAabb(DynamicTree<IPhysBody>.QueryCallbackDelegate callback, Box2 aabb, bool approx = false)
+        {
+            _tree.QueryAabb(callback, aabb, approx);
+        }
 
-        public IEnumerable<IPhysBody> Query(Vector2 point, bool approx = false) => _tree.Query(point, approx);
+        public void QueryAabb<TState>(ref TState state, DynamicTree<IPhysBody>.QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx = false)
+        {
+            _tree.QueryAabb(ref state, callback, aabb, approx);
+        }
 
-        public bool Query(DynamicTree<IPhysBody>.RayQueryCallbackDelegate callback, in Vector2 start, in Vector2 dir, bool approx = false) =>
-            _tree.Query(callback, in start, in dir, approx);
+        public IEnumerable<IPhysBody> QueryAabb(Box2 aabb, bool approx = false)
+        {
+            return _tree.QueryAabb(aabb, approx);
+        }
 
-        public IEnumerable<(IPhysBody A, IPhysBody B)> GetCollisions(bool approx = false) =>
-            _tree.GetCollisions(approx);
+        public void QueryPoint(DynamicTree<IPhysBody>.QueryCallbackDelegate callback, Vector2 point,
+            bool approx = false)
+        {
+            _tree.QueryPoint(callback, point, approx);
+        }
+
+        public void QueryPoint<TState>(ref TState state, DynamicTree<IPhysBody>.QueryCallbackDelegate<TState> callback,
+            Vector2 point, bool approx = false)
+        {
+            _tree.QueryPoint(ref state, callback, point, approx);
+        }
+
+        public IEnumerable<IPhysBody> QueryPoint(Vector2 point, bool approx = false)
+        {
+            return _tree.QueryPoint(point, approx);
+        }
+
+        public void QueryRay(DynamicTree<IPhysBody>.RayQueryCallbackDelegate callback, in Ray ray, bool approx = false) =>
+            _tree.QueryRay(callback, ray, approx);
+
+        public void QueryRay<TState>(ref TState state, DynamicTree<IPhysBody>.RayQueryCallbackDelegate<TState> callback, in Ray ray,
+            bool approx = false)
+        {
+            _tree.QueryRay(ref state, callback, ray, approx);
+        }
 
         public bool IsReadOnly => _tree.IsReadOnly;
 

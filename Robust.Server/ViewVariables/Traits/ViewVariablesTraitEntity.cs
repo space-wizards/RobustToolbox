@@ -9,7 +9,7 @@ namespace Robust.Server.ViewVariables.Traits
     {
         private readonly IEntity _entity;
 
-        public ViewVariablesTraitEntity(ViewVariablesSession session) : base(session)
+        public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
             _entity = (IEntity) Session.Object;
         }

@@ -49,12 +49,24 @@ namespace Robust.Client.Console.Commands
     class ListCommand : IConsoleCommand
     {
         public string Command => "list";
-        public string Help => "Lists all available commands, and their short descriptions.";
-        public string Description => "List all commands";
+        public string Help => "Usage: list [filter]\n" +
+                              "Lists all available commands, and their short descriptions.\n" +
+                              "If a filter is provided, " +
+                              "only commands that contain the given string in their name will be listed.";
+        public string Description => "List all commands, optionally with a filter.";
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            foreach (var command in console.Commands.Values.OrderBy(c => c.Command))
+            var filter = "";
+            if (args.Length == 1)
+            {
+                filter = args[0];
+            }
+
+            var conGroup = IoCManager.Resolve<IClientConGroupController>();
+            foreach (var command in console.Commands.Values
+                .Where(p => p.Command.Contains(filter) && conGroup.CanCommand(p.Command))
+                .OrderBy(c => c.Command))
             {
                 console.AddLine(command.Command + ": " + command.Description);
             }

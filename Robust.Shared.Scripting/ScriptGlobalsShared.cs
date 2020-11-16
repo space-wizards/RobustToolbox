@@ -27,14 +27,19 @@ namespace Robust.Shared.Scripting
 
         public IEnumerable<EntityPrototype> eprotos => prot.EnumeratePrototypes<EntityPrototype>();
 
-        public GridCoordinates gpos(double x, double y, int gridId)
+        public EntityCoordinates gpos(double x, double y, int gridId)
         {
-            return new GridCoordinates((float)x, (float)y, new GridId(gridId));
+            return gpos(x, y, new GridId(gridId));
         }
 
-        public GridCoordinates gpos(double x, double y, GridId gridId)
+        public EntityCoordinates gpos(double x, double y, GridId gridId)
         {
-            return new GridCoordinates((float)x, (float)y, gridId);
+            if (!map.TryGetGrid(gridId, out var grid))
+            {
+                return new EntityCoordinates(EntityUid.Invalid, ((float) x, (float) y));
+            }
+            
+            return new EntityCoordinates(grid.GridEntityId, ((float) x, (float) y));
         }
 
         public EntityUid eid(int i)
@@ -62,7 +67,7 @@ namespace Robust.Shared.Scripting
             return map.GetGrid(mapId);
         }
 
-        public IEntity spawn(string prototype, GridCoordinates position)
+        public IEntity spawn(string prototype, EntityCoordinates position)
         {
             return ent.SpawnEntity(prototype, position);
         }

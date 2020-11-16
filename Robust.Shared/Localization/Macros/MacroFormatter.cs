@@ -20,7 +20,7 @@ namespace Robust.Shared.Localization.Macros
                 return string.Format(fallbackProvider, "{0}", arg);
 
             bool capitalized = char.IsUpper(format[0]);
-            string lowerCasedFunctionName = format.ToLower();
+            string lowerCasedFunctionName = char.ToLower(format[0]) + format.Substring(1);
 
             if (!Macros.TryGetValue(lowerCasedFunctionName, out var grammarFunction))
                 return string.Format(fallbackProvider, "{0:" + format + '}', arg);

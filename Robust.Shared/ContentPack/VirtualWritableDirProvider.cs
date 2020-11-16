@@ -84,7 +84,7 @@ namespace Robust.Shared.ContentPack
             return TryGetNodeAt(path, out var node) && node is DirectoryNode;
         }
 
-        public Stream Open(ResourcePath path, FileMode fileMode)
+        public Stream Open(ResourcePath path, FileMode fileMode, FileAccess access, FileShare share)
         {
             if (!path.IsRooted)
             {
@@ -270,7 +270,9 @@ namespace Robust.Shared.ContentPack
                 }
 
                 _source.Position = Position;
-                return _source.Read(buffer, offset, count);
+                var read = _source.Read(buffer, offset, count);
+                Position = _source.Position;
+                return read;
             }
 
             public override long Seek(long offset, SeekOrigin origin)
@@ -302,6 +304,7 @@ namespace Robust.Shared.ContentPack
             {
                 _source.Position = Position;
                 _source.Write(buffer, offset, count);
+                Position = _source.Position;
             }
 
             public override bool CanRead { get; }

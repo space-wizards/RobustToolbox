@@ -20,14 +20,14 @@ namespace Robust.Shared.Network.Messages
         {
         }
 
+        #endregion
+
         public int ScriptSession { get; set; }
         public bool WasComplete { get; set; }
 
         // Echo of the entered code with syntax highlighting applied.
-        public FormattedMessage Echo { get; set; }
-        public FormattedMessage Response { get; set; }
-
-        #endregion
+        public FormattedMessage Echo;
+        public FormattedMessage Response;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
@@ -38,12 +38,11 @@ namespace Robust.Shared.Network.Messages
             {
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
 
+                buffer.ReadPadBits();
                 var length = buffer.ReadVariableInt32();
-                var stateData = buffer.ReadBytes(length);
-
-                using var memoryStream = new MemoryStream(stateData);
-                Echo = serializer.Deserialize<FormattedMessage>(memoryStream);
-                Response = serializer.Deserialize<FormattedMessage>(memoryStream);
+                using var stream = buffer.ReadAlignedMemory(length);
+                serializer.DeserializeDirect(stream, out Echo);
+                serializer.DeserializeDirect(stream, out Response);
             }
         }
 
@@ -54,14 +53,16 @@ namespace Robust.Shared.Network.Messages
 
             if (WasComplete)
             {
+                buffer.WritePadBits();
                 var serializer = IoCManager.Resolve<IRobustSerializer>();
 
                 var memoryStream = new MemoryStream();
-                serializer.Serialize(memoryStream, Echo);
-                serializer.Serialize(memoryStream, Response);
+                serializer.SerializeDirect(memoryStream, Echo);
+                serializer.SerializeDirect(memoryStream, Response);
 
                 buffer.WriteVariableInt32((int)memoryStream.Length);
-                buffer.Write(memoryStream.ToArray());
+                memoryStream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
         }
     }

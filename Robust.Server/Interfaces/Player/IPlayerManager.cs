@@ -42,31 +42,44 @@ namespace Robust.Server.Interfaces.Player
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
 
+        bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out IPlayerSession? session);
+
         /// <summary>
         ///     Returns the client session of the networkId.
         /// </summary>
         /// <returns></returns>
-        IPlayerSession GetSessionById(NetSessionId index);
+        IPlayerSession GetSessionByUserId(NetUserId index);
 
         IPlayerSession GetSessionByChannel(INetChannel channel);
 
         bool TryGetSessionByChannel(INetChannel channel, [NotNullWhen(true)] out IPlayerSession? session);
 
-        bool TryGetSessionById(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerSession? session);
+        bool TryGetSessionById(NetUserId userId, [NotNullWhen(true)] out IPlayerSession? session);
 
         /// <summary>
         ///     Checks to see if a PlayerIndex is a valid session.
         /// </summary>
-        bool ValidSessionId(NetSessionId index);
+        bool ValidSessionId(NetUserId index);
 
-        IPlayerData GetPlayerData(NetSessionId sessionId);
-        bool TryGetPlayerData(NetSessionId sessionId, [NotNullWhen(true)] out IPlayerData? data);
-        bool HasPlayerData(NetSessionId sessionId);
+        IPlayerData GetPlayerData(NetUserId userId);
+        bool TryGetPlayerData(NetUserId userId, [NotNullWhen(true)] out IPlayerData? data);
+        bool TryGetPlayerDataByUsername(string userName, [NotNullWhen(true)] out IPlayerData? data);
+        bool HasPlayerData(NetUserId userId);
+
+        /// <summary>
+        ///     Tries to get the user ID of the user with the specified username.
+        /// </summary>
+        /// <remarks>
+        ///     This only works if this user has already connected once before during this server run.
+        ///     It does still work if the user has since disconnected.
+        /// </remarks>
+        bool TryGetUserId(string userName, out NetUserId userId);
 
         IEnumerable<IPlayerData> GetAllPlayerData();
 
         void DetachAll();
-        List<IPlayerSession> GetPlayersInRange(GridCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(MapCoordinates worldPos, int range);
+        List<IPlayerSession> GetPlayersInRange(EntityCoordinates worldPos, int range);
         List<IPlayerSession> GetPlayersBy(Func<IPlayerSession, bool> predicate);
         List<IPlayerSession> GetAllPlayers();
         List<PlayerState>? GetPlayerStates(GameTick fromTick);

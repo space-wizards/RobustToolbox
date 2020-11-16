@@ -192,11 +192,10 @@ namespace Robust.Client.Graphics.Shaders
                         ? $"Shader param '{name}' does not exist on shader '{shaderName}'"
                         : $"Shader param '{name}' does not exist on this shader."
                     );
-
                     continue;
                 }
 
-                var value = _parseUniformValue(valueNode, uniformDefinition.Type);
+                var value = _parseUniformValue(valueNode, uniformDefinition.Type.Type);
                 shaderParams[name] = value;
             }
         }
@@ -211,8 +210,8 @@ namespace Robust.Client.Graphics.Shaders
             foreach (var (name, def) in prototype.Source.ParsedShader.Uniforms)
             {
                 shaderParams.TryAdd(name, (def.DefaultValue != null
-                    ? _parseUniformValue(def.DefaultValue, def.Type)
-                    : def.Type switch
+                    ? _parseUniformValue(def.DefaultValue, def.Type.Type)
+                    : def.Type.Type switch
                     {
                         ShaderDataType.Void => null,
                         ShaderDataType.Bool => false,
@@ -287,7 +286,7 @@ namespace Robust.Client.Graphics.Shaders
                 }
             }
 
-            source += "void fragment() {\n    COLOR = texture(TEXTURE, UV);\n}";
+            source += "void fragment() {\n    COLOR = zTexture(UV);\n}";
 
             var preset = ShaderParser.Parse(source, _resourceCache);
             CompiledCanvasShader = _clyde.LoadShader(preset, $"canvas_preset_{ID}");

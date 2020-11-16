@@ -47,7 +47,7 @@ namespace Robust.Client.Placement
         [Dependency] public readonly IEyeManager eyeManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] public readonly IEntityManager EntityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
@@ -62,7 +62,7 @@ namespace Robust.Client.Placement
         /// Dictionary of all placement mode types
         /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new Dictionary<string, Type>();
-        private readonly List<Tuple<GridCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<GridCoordinates, TimeSpan>>();
+        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new List<Tuple<EntityCoordinates, TimeSpan>>();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -77,7 +77,7 @@ namespace Robust.Client.Placement
         /// <summary>
         /// Holds the anchor that we can try to spawn in a line or a grid from
         /// </summary>
-        public GridCoordinates StartPoint { get; set; }
+        public EntityCoordinates StartPoint { get; set; }
 
         /// <summary>
         /// Whether the placement manager is currently in a mode where it accepts actions
@@ -127,7 +127,7 @@ namespace Robust.Client.Placement
                 {
                     PlacementOffset = value.PlacementOffset;
 
-                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Collidable"))
+                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Physics"))
                     {
                         var map = value.Components["BoundingBox"];
                         var serializer = YamlObjectSerializer.NewReader(map);
@@ -203,12 +203,15 @@ namespace Robust.Client.Placement
 
                         if (Eraser)
                         {
+                            if (HandleDeletion(coords))
+                                return true;
+
                             if (uid == EntityUid.Invalid)
                             {
                                 return false;
                             }
 
-                            HandleDeletion(_entityManager.GetEntity(uid));
+                            HandleDeletion(EntityManager.GetEntity(uid));
                         }
                         else
                         {
@@ -321,6 +324,9 @@ namespace Robust.Client.Placement
 
         public void Rotate()
         {
+            if (Hijack != null && !Hijack.CanRotate)
+                return;
+
             switch (Direction)
             {
                 case Direction.North:
@@ -369,6 +375,15 @@ namespace Robust.Client.Placement
             }
         }
 
+        public bool HandleDeletion(EntityCoordinates coordinates)
+        {
+            if (!IsActive || !Eraser) return false;
+            if (Hijack != null)
+                return Hijack.HijackDeletion(coordinates);
+
+            return false;
+        }
+
         public void HandleDeletion(IEntity entity)
         {
             if (!IsActive || !Eraser) return;
@@ -401,9 +416,9 @@ namespace Robust.Client.Placement
             else Clear();
         }
 
-        public void BeginPlacing(PlacementInformation info)
+        public void BeginPlacing(PlacementInformation info, PlacementHijack? hijack = null)
         {
-            BeginHijackedPlacing(info);
+            BeginHijackedPlacing(info, hijack);
         }
 
         public void BeginHijackedPlacing(PlacementInformation info, PlacementHijack? hijack = null)
@@ -540,7 +555,7 @@ namespace Robust.Client.Placement
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
 
-            CurrentBaseSprite = IconComponent.GetPrototypeIcon(prototype, ResourceCache);
+            CurrentBaseSprite = SpriteComponent.GetPrototypeIcon(prototype, ResourceCache);
             CurrentPrototype = prototype;
 
             IsActive = true;
@@ -554,20 +569,24 @@ namespace Robust.Client.Placement
             IsActive = true;
         }
 
-        private void RequestPlacement(GridCoordinates coordinates)
+        private void RequestPlacement(EntityCoordinates coordinates)
         {
-            if (MapManager.GetGrid(coordinates.GridID).ParentMapId == MapId.Nullspace) return;
             if (CurrentPermission == null) return;
             if (!CurrentMode!.IsValidPosition(coordinates)) return;
             if (Hijack != null && Hijack.HijackPlacementRequest(coordinates)) return;
 
             if (CurrentPermission.IsTile)
             {
-                var grid = MapManager.GetGrid(coordinates.GridID);
+                var gridId = coordinates.GetGridId(EntityManager);
+                // If we have actually placed something on a valid grid...
+                if (gridId.IsValid())
+                {
+                    var grid = MapManager.GetGrid(gridId);
 
-                // no point changing the tile to the same thing.
-                if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
-                    return;
+                    // no point changing the tile to the same thing.
+                    if (grid.GetTileRef(coordinates).Tile.TypeId == CurrentPermission.TileType)
+                        return;
+                }
 
                 foreach (var tileChange in _pendingTileChanges)
                 {
@@ -576,7 +595,7 @@ namespace Robust.Client.Placement
                         return;
                 }
 
-                var tuple = new Tuple<GridCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
+                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
                 _pendingTileChanges.Add(tuple);
             }
 
@@ -592,7 +611,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.GridCoordinates = coordinates;
+            message.EntityCoordinates = coordinates;
 
             message.DirRcv = Direction;
 

@@ -29,7 +29,7 @@ namespace Robust.Shared.Network.Messages
 
         #endregion
 
-        public GameState State { get; set; }
+        public GameState State;
 
         private bool _hasWritten;
 
@@ -37,12 +37,9 @@ namespace Robust.Shared.Network.Messages
         {
             MsgSize = buffer.LengthBytes;
             var length = buffer.ReadVariableInt32();
-            var stateData = buffer.ReadBytes(length);
-            using (var stateStream = new MemoryStream(stateData))
-            {
-                var serializer = IoCManager.Resolve<IRobustSerializer>();
-                State = serializer.Deserialize<GameState>(stateStream);
-            }
+            using var stream = buffer.ReadAlignedMemory(length);
+            var serializer = IoCManager.Resolve<IRobustSerializer>();
+            serializer.DeserializeDirect(stream, out State);
 
             State.PayloadSize = length;
         }
@@ -53,9 +50,12 @@ namespace Robust.Shared.Network.Messages
             using (var stateStream = new MemoryStream())
             {
                 DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
-                serializer.Serialize(stateStream, State);
+                serializer.SerializeDirect(stateStream, State);
                 buffer.WriteVariableInt32((int) stateStream.Length);
-                buffer.Write(stateStream.ToArray());
+
+                // Always succeeds.
+                stateStream.TryGetBuffer(out var segment);
+                buffer.Write(segment);
             }
 
             _hasWritten = false;

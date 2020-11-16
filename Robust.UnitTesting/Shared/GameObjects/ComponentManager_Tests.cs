@@ -5,7 +5,9 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.ComponentDependencies;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting.Shared.GameObjects
@@ -208,7 +210,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             manager.AddComponent(entity, component);
 
             // Act
-            var result = manager.GetAllComponents<DummyComponent>();
+            var result = manager.EntityQuery<DummyComponent>();
 
             // Assert
             var list = result.ToList();
@@ -254,7 +256,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             mockFactory.Setup(x => x.GetRegistration(It.IsAny<Type>())).Returns(mockRegistration.Object);
             mockFactory.Setup(x => x.GetComponent<DummyComponent>()).Returns(new DummyComponent());
             mockFactory.Setup(x => x.GetAllRefTypes()).Returns(new[] { typeof(DummyComponent) });
+            mockFactory.Setup(x => x.GetAllNetIds()).Returns(new[] { CompNetId });
             dependencies.RegisterInstance<IComponentFactory>(mockFactory.Object);
+            var mockCompDependencyManager = new Mock<IComponentDependencyManager>();
+            dependencies.RegisterInstance<IComponentDependencyManager>(mockCompDependencyManager.Object); //todo probably not correct
 
             // set up the entity manager
             var mockEntMan = new Mock<IEntityManager>();

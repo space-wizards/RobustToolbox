@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     A node in the GUI system.
-    ///     See https://github.com/space-wizards/RobustToolbox/wiki/UI-System-Tutorial for some basic concepts.
+    ///     See https://hackmd.io/@ss14/ui-system-tutorial for some basic concepts.
     /// </summary>
     [PublicAPI]
     public partial class Control : IDisposable
@@ -192,12 +192,41 @@ namespace Robust.Client.UserInterface
 
 
         /// <summary>
-        ///     The tooltip that is shown when the mouse is hovered over this control for a bit.
+        /// Simple text tooltip that is shown when the mouse is hovered over this control for a bit.
+        /// See <see cref="OnShowTooltip"/> for a more customizable alternative.
         /// </summary>
         /// <remarks>
-        ///     If empty or null, no tooltip is shown in the first place.
+        /// If empty or null, no tooltip is shown in the first place (but OnShowTooltip and OnHideTooltip
+        /// events are still fired).
         /// </remarks>
         public string? ToolTip { get; set; }
+
+        /// <summary>
+        /// Invoked when the mouse is hovered over this control for a bit and a tooltip
+        /// should be shown. Can be used as an alternative to ToolTip to perform custom tooltip
+        /// logic such as showing a more complex tooltip control.
+        ///
+        /// Any custom tooltip controls should typically be added
+        /// as a child of UserInterfaceManager.PopupRoot
+        /// Handlers can use <see cref="Tooltips.PositionTooltip(Control)"/> to assist with positioning
+        /// custom tooltip controls.
+        /// </summary>
+        public event EventHandler? OnShowTooltip;
+
+        internal void PerformShowTooltip()
+        {
+            OnShowTooltip?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Invoked when this control is showing a tooltip which should now be hidden.
+        /// </summary>
+        public event EventHandler? OnHideTooltip;
+
+        internal void PerformHideTooltip()
+        {
+            OnHideTooltip?.Invoke(this, EventArgs.Empty);
+        }
 
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
@@ -363,7 +392,6 @@ namespace Robust.Client.UserInterface
             }
 
             Dispose(true);
-            GC.SuppressFinalize(this);
             Disposed = true;
         }
 
@@ -374,15 +402,12 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+
             DisposeAllChildren();
             Parent?.RemoveChild(this);
 
             OnKeyBindDown = null;
-        }
-
-        ~Control()
-        {
-            Dispose(false);
         }
 
         /// <summary>
@@ -711,7 +736,7 @@ namespace Robust.Client.UserInterface
         ///     Check if this control currently has keyboard focus.
         /// </summary>
         /// <returns></returns>
-        public bool HasKeyboardFocus()
+        public virtual bool HasKeyboardFocus()
         {
             return UserInterfaceManager.KeyboardFocused == this;
         }

@@ -313,6 +313,13 @@ namespace Robust.Client.UserInterface.Controls
             return null;
         }
 
+        protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
+        {
+            base.MouseWheel(args);
+
+            _scrollBar.ValueTarget -= args.Delta.Y * 50;
+        }
+
         public sealed class Item : IDisposable
         {
             internal readonly List<Item> Children = new List<Item>();

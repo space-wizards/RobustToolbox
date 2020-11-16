@@ -1,13 +1,14 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
-using JetBrains.Annotations;
+using System.Diagnostics;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameStates
 {
+    [DebuggerDisplay("GameState from={FromSequence} to={ToSequence} ext={Extrapolated}")]
     [Serializable, NetSerializable]
-    public class GameState
+    public sealed class GameState
     {
         /// <summary>
         ///     An extrapolated state that was created artificially by the client.

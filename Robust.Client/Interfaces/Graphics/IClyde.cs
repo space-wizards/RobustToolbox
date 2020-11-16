@@ -10,8 +10,22 @@ namespace Robust.Client.Interfaces.Graphics
 {
     public interface IClyde
     {
+        IRenderWindow MainWindowRenderTarget { get; }
+
         Vector2i ScreenSize { get; }
+
+        /// <summary>
+        ///     The default scale ratio for window contents, given to us by the OS.
+        /// </summary>
+        Vector2 DefaultWindowScale { get; }
+
         void SetWindowTitle(string title);
+
+        /// <summary>
+        ///     This is the magic method to make the game window ping you in the task bar.
+        /// </summary>
+        void RequestWindowAttention();
+
         event Action<WindowResizedEventArgs> OnWindowResized;
 
         Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
@@ -20,10 +34,8 @@ namespace Robust.Client.Interfaces.Graphics
         Texture LoadTextureFromImage<T>(Image<T> image, string? name = null,
             TextureLoadParameters? loadParams = null) where T : unmanaged, IPixel<T>;
 
-        IRenderTarget CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
+        IRenderTexture CreateRenderTarget(Vector2i size, RenderTargetFormatParameters format,
             TextureSampleParameters? sampleParameters = null, string? name = null);
-
-        void CalcWorldProjectionMatrix(out Matrix3 projMatrix);
 
         // Cursor API.
         /// <summary>
@@ -64,6 +76,8 @@ namespace Robust.Client.Interfaces.Graphics
 
             return tcs.Task;
         }
+
+        IClydeViewport CreateViewport(Vector2i size, string? name = null);
     }
 
     // TODO: Maybe implement IDisposable for render targets. I got lazy and didn't.

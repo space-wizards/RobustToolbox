@@ -75,8 +75,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public Slider()
+        public Slider(string? styleClass = null)
         {
+            if(styleClass != null)
+                StyleClasses = new[] { styleClass };
             MouseFilter = MouseFilterMode.Stop;
 
             AddChild(new LayoutContainer
@@ -89,7 +91,7 @@ namespace Robust.Client.UserInterface.Controls
                     (_grabber = new PanelContainer())
                 }
             });
-
+            
             SetAnchorBottom(_fillPanel, 1);
             SetAnchorBottom(_grabber, 1);
             SetGrowHorizontal(_grabber, GrowDirection.Both);

@@ -44,12 +44,13 @@ namespace Robust.Client.UserInterface.Controls
 
             handle.UseShader(Shader);
 
-            if (!TryGetStyleProperty("color", out Color color))
-            {
-                color = _color ?? DefaultColor;
-            }
+            Color? color = null;
+            color = _color ?? (TryGetStyleProperty("color", out Color styleColor) ? styleColor : DefaultColor);
 
-            handle.DrawRect(UIBox2.FromDimensions(Vector2.Zero, PixelSize), color);
+            if (color != null)
+                handle.DrawRect(PixelSizeBox, (Color)color);
+            else
+                throw new InvalidOperationException("Tried to draw a colorrect with no color! This means the defaultcolor failed too!");
         }
 
         protected override Vector2 CalculateMinimumSize()

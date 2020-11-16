@@ -1,5 +1,4 @@
-﻿#nullable enable
-using System;
+﻿using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
@@ -31,14 +30,16 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public ColorSlider()
+        public ColorSlider(string? styleClass = null)
         {
-            _slider = new Slider
+            _slider = new Slider(styleClass)
             {
+
                 SizeFlagsHorizontal = SizeFlags.FillExpand,
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
                 MaxValue = Byte.MaxValue
             };
+
             _textBox = new LineEdit
             {
                 CustomMinimumSize = (50, 0)
@@ -75,7 +76,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 if (Int32.TryParse(ev.Text, out var result))
                 {
-                    result = result.Clamp(0, Byte.MaxValue);
+                    result = Math.Clamp(result, 0, byte.MaxValue);
 
                     _ignoreEvents = true;
                     _colorValue = (byte) result;
@@ -86,10 +87,6 @@ namespace Robust.Client.UserInterface.Controls
                 }
             };
         }
-
-        public ColorSlider(string styleClass) : this()
-            => _slider.StyleClasses = new[] {styleClass};
-
     }
 
 }

@@ -459,33 +459,8 @@ namespace Robust.Client.UserInterface
         /// </exception>
         public void AddChild(Control child)
         {
-            DebugTools.Assert(!Disposed, "Control has been disposed.");
-
-            if (child == null) throw new ArgumentNullException(nameof(child));
-            if (child.Parent != null)
-            {
-                throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
-            }
-
-            DebugTools.Assert(!child.Disposed, "Child is disposed.");
-
-            if (child == this)
-            {
-                throw new InvalidOperationException("You can't parent something to itself!");
-            }
-
-            // Ensure this control isn't a parent of ours.
-            // Doesn't need to happen if the control has no children of course.
-            if (child.ChildCount != 0)
-            {
-                for (var parent = Parent; parent != null; parent = parent.Parent)
-                {
-                    if (parent == child)
-                    {
-                        throw new ArgumentException("This control is one of our parents!", nameof(child));
-                    }
-                }
-            }
+            if (!ChildParentCheck(child))
+                return;
 
             child.Parent = this;
             _orderedChildren.Add(child);
@@ -514,33 +489,8 @@ namespace Robust.Client.UserInterface
         /// </exception>
         protected void InsertChild(int index, Control child)
         {
-            DebugTools.Assert(!Disposed, "Control has been disposed.");
-
-            if (child == null) throw new ArgumentNullException(nameof(child));
-            if (child.Parent != null)
-            {
-                throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
-            }
-
-            DebugTools.Assert(!child.Disposed, "Child is disposed.");
-
-            if (child == this)
-            {
-                throw new InvalidOperationException("You can't parent something to itself!");
-            }
-
-            // Ensure this control isn't a parent of ours.
-            // Doesn't need to happen if the control has no children of course.
-            if (child.ChildCount != 0)
-            {
-                for (var parent = Parent; parent != null; parent = parent.Parent)
-                {
-                    if (parent == child)
-                    {
-                        throw new ArgumentException("This control is one of our parents!", nameof(child));
-                    }
-                }
-            }
+            if (!ChildParentCheck(child))
+                return;
 
             child.Parent = this;
             _orderedChildren.Insert(index, child);
@@ -552,6 +502,35 @@ namespace Robust.Client.UserInterface
             }
 
             ChildAdded(child);
+        }
+
+        /// <summary>
+        ///     Ensures that a given child can be parented to this control.
+        /// </summary>
+        private bool ChildParentCheck(Control child) {
+            DebugTools.Assert(!Disposed, "Control has been disposed.");
+
+            if (child == null) throw new ArgumentNullException(nameof(child));
+            if (child.Parent != null) {
+                throw new InvalidOperationException("This component is still parented. Deparent it before adding it.");
+            }
+
+            DebugTools.Assert(!child.Disposed, "Child is disposed.");
+
+            if (child == this) {
+                throw new InvalidOperationException("You can't parent something to itself!");
+            }
+
+            // Ensure this control isn't a parent of ours.
+            // Doesn't need to happen if the control has no children of course.
+            if (child.ChildCount != 0) {
+                for (var parent = Parent; parent != null; parent = parent.Parent) {
+                    if (parent == child) {
+                        throw new ArgumentException("This control is one of our parents!", nameof(child));
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>

@@ -34,7 +34,7 @@ namespace Robust.Shared.Physics
 
         void ApplyState();
 
-        void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent, Angle angle);
+        void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent);
     }
 
     /// <summary>

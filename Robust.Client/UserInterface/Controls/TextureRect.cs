@@ -104,20 +104,37 @@ namespace Robust.Client.UserInterface.Controls
             switch (Stretch)
             {
                 case StretchMode.Scale:
-                    handle.DrawTextureRect(texture,
-                        UIBox2.FromDimensions(Vector2.Zero, PixelSize));
-                    break;
                 case StretchMode.Tile:
                 // TODO: Implement Tile.
                 case StretchMode.Keep:
+                case StretchMode.KeepCentered:
+                case StretchMode.KeepAspect:
+                case StretchMode.KeepAspectCentered:
                     handle.DrawTextureRect(texture,
-                        UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale));
+                        GetDrawDimensions(texture));
                     break;
+                case StretchMode.KeepAspectCovered:
+                    handle.DrawTextureRectRegion(texture, PixelSizeBox, GetDrawDimensions(texture));
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        protected UIBox2 GetDrawDimensions(Texture texture)
+        {
+            switch (Stretch)
+            {
+                case StretchMode.Scale:
+                    return UIBox2.FromDimensions(Vector2.Zero, PixelSize);
+                case StretchMode.Tile:
+                // TODO: Implement Tile.
+                case StretchMode.Keep:
+                    return UIBox2.FromDimensions(Vector2.Zero, texture.Size * _textureScale * UIScale);
                 case StretchMode.KeepCentered:
                 {
                     var position = (PixelSize - texture.Size * _textureScale * UIScale) / 2;
-                    handle.DrawTextureRect(texture, UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale));
-                    break;
+                    return UIBox2.FromDimensions(position, texture.Size * _textureScale * UIScale);
                 }
 
                 case StretchMode.KeepAspect:
@@ -139,7 +156,7 @@ namespace Robust.Client.UserInterface.Controls
                         position = (PixelSize - size) / 2;
                     }
 
-                    handle.DrawTextureRectRegion(texture, UIBox2.FromDimensions(position, size));
+                    return UIBox2.FromDimensions(position, size);
                     break;
                 }
 
@@ -151,7 +168,7 @@ namespace Robust.Client.UserInterface.Controls
                     var scale = Math.Max(scaleX, scaleY);
                     // Offset inside the actual texture.
                     var offset = (texSize - PixelSize) / scale / 2f;
-                    handle.DrawTextureRectRegion(texture, PixelSizeBox, UIBox2.FromDimensions(offset, PixelSize / scale));
+                    return UIBox2.FromDimensions(offset, PixelSize / scale);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

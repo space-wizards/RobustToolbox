@@ -155,7 +155,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             VelocitySolver();
 
-            ProcessFriction(simulatedBodies, frameTime);
+            ProcessFriction(_awakeBodies, frameTime);
 
             CollisionBehaviors();
 
@@ -211,6 +211,7 @@ namespace Robust.Shared.GameObjects.Systems
 
                 // TODO: Something fucky is going on with LinearVelocity, maybe try storing the frametime adjusted amount? IDFK
                 // TODO: Make working linear velocity?
+                // TODO: I completely fucked up warmstarting oh my fucking god, it should be only on manifolds.
                 var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
@@ -417,7 +418,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 25f * frameTime, body.LinearVelocity.Length);
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 9.8f * 2 * frameTime, body.LinearVelocity.Length);
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }

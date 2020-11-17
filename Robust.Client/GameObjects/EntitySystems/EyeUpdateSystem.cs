@@ -89,7 +89,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>())
             {
-                eyeComponent.UpdateEyePosition();
+                eyeComponent.UpdateEyePosition(frameTime);
             }
         }
     }

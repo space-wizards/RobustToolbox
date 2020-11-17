@@ -1,4 +1,5 @@
-﻿using Robust.Client.Graphics.ClientEye;
+﻿using System;
+using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Eye;
@@ -28,6 +29,8 @@ namespace Robust.Client.GameObjects
         private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
+
+        private EyeType _eyeType = EyeType.Delayed;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Current
@@ -90,7 +93,6 @@ namespace Robust.Client.GameObjects
                     return;
 
                 _offset = value;
-                UpdateEyePosition();
             }
         }
 
@@ -173,11 +175,36 @@ namespace Robust.Client.GameObjects
         /// Updates the Eye of this entity with the transform position. This has to be called every frame to
         /// keep the view following the entity.
         /// </summary>
-        public void UpdateEyePosition()
+        public void UpdateEyePosition(float frameTime)
         {
             if (_eye == null) return;
+
             var mapPos = Owner.Transform.MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position + _offset, mapPos.MapId);
+
+            switch (_eyeType)
+            {
+                case EyeType.Delayed:
+                    _eye.Position = new MapCoordinates(_eye.Position.Position + (mapPos.Position - _eye.Position.Position) * 5f * frameTime, mapPos.MapId);
+                    break;
+                case EyeType.Fixed:
+                    _eye.Position = new MapCoordinates(mapPos.Position + _offset, mapPos.MapId);
+                    break;
+                default:
+                    throw new NotImplementedException($"No EyeType implemented for {_eyeType}");
+            }
         }
+    }
+
+    public enum EyeType
+    {
+        /// <summary>
+        ///     Follows the tracked-entity exactly
+        /// </summary>
+        Fixed,
+
+        /// <summary>
+        ///     Smooths the camera between its current position and the entity
+        /// </summary>
+        Delayed,
     }
 }

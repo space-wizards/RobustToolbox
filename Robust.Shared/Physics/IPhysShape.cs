@@ -32,6 +32,11 @@ namespace Robust.Shared.Physics
         /// </summary>
         int CollisionMask { get; set; }
 
+        /// <summary>
+        /// How far can the collision detection step in a single iteration.
+        /// </summary>
+        float MaximumStepDistance { get; }
+
         void ApplyState();
 
         void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent);

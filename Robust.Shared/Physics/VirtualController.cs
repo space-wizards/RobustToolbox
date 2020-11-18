@@ -19,7 +19,7 @@ namespace Robust.Shared.Physics
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Vector2 LinearVelocity
         {
-            get => Vector2.Zero;
+            get => _linearVelocity;
             set
             {
                 if (value != Vector2.Zero)

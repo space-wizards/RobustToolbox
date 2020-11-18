@@ -47,6 +47,9 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
+        public float MaximumStepDistance => MathF.Min(_rectangle.Width, _rectangle.Height);
+
+        /// <inheritdoc />
         public void ApplyState() { }
 
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,

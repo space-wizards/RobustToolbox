@@ -41,6 +41,10 @@ namespace Robust.Shared.Map
             set { }
         }
 
+        // TODO: Less hardcoded
+        /// <inheritdoc />
+        public float MaximumStepDistance => 1f;
+
         /// <inheritdoc />
         public void ApplyState()
         {

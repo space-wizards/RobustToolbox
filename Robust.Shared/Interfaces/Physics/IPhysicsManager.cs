@@ -47,6 +47,8 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns></returns>
         bool IsColliding(IPhysBody body, Vector2 offset, bool approx);
 
+        bool CollidingWith(IPhysBody aPhysBody, IPhysBody bPhysBody);
+
         void AddBody(IPhysBody physBody);
         void RemoveBody(IPhysBody physBody);
 
@@ -120,24 +122,30 @@ namespace Robust.Shared.Interfaces.Physics
         public float MaxLength { get; }
     }
 
-    public readonly struct Manifold
+    public sealed class Manifold
     {
-        public readonly IPhysicsComponent A;
-        public readonly IPhysicsComponent B;
+        public IPhysicsComponent A { get; }
+        public IPhysicsComponent B { get; }
 
-        public readonly Vector2 Normal;
-        public readonly bool Hard;
+        public bool Hard { get; }
+        public Vector2? Impulse { get; set; }
+
+        public Vector2 Normal => PhysicsManager.CalculateNormal(A, B);
 
         public Vector2 RelativeVelocity => B.LinearVelocity - A.LinearVelocity;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) < 0 && Hard;
+        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) > 0 && Hard;
 
-        public Manifold(IPhysicsComponent a, IPhysicsComponent b, bool hard)
+        public bool Colliding => A.CollidingWith(B);
+
+        public bool WarmStart => Impulse != null;
+
+        public Manifold(IPhysicsComponent a, IPhysicsComponent b, bool hard, Vector2 impulse)
         {
             A = a;
             B = b;
-            Normal = PhysicsManager.CalculateNormal(a, b);
             Hard = hard;
+            Impulse = impulse;
         }
     }
 }

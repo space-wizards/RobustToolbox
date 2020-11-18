@@ -75,6 +75,9 @@ namespace Robust.Shared.Physics
         }
 
         /// <inheritdoc />
+        public float MaximumStepDistance => _radius;
+
+        /// <inheritdoc />
         public void ApplyState() { }
 
         /// <inheritdoc />

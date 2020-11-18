@@ -14,11 +14,6 @@ namespace Robust.Shared.GameObjects.Components
     public partial interface IPhysicsComponent
     {
         /// <summary>
-        ///     Do we retain our velocity across ticks?
-        /// </summary>
-        bool WarmStart { get; set; }
-
-        /// <summary>
         ///     How much do we bounce when we hit something? 0 -> not at all, 1 -> full bounce
         /// </summary>
         float Restitution { get; set; }
@@ -37,6 +32,11 @@ namespace Robust.Shared.GameObjects.Components
         ///     Apply an impulse to an entity. Velocity += impulse / InvMass.
         /// </summary>
         void ApplyImpulse(Vector2 impulse);
+
+        /// <summary>
+        ///     Our Impulse from the last physics tick
+        /// </summary>
+        Vector2 LastVelocity { get; set; }
 
         /// <summary>
         ///     The current status of the object
@@ -190,10 +190,6 @@ namespace Robust.Shared.GameObjects.Components
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool WarmStart { get; set; }
-
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
         public float Restitution { get; set; }
 
         /// <summary>
@@ -277,6 +273,9 @@ namespace Robust.Shared.GameObjects.Components
         {
             LinearVelocity += impulse * InvMass;
         }
+
+        /// <inheritdoc />
+        public Vector2 LastVelocity { get; set; }
 
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.

@@ -31,7 +31,12 @@ namespace Robust.Shared.GameObjects.Components
     public partial interface IPhysicsComponent : IComponent, IPhysBody
     {
         public new bool Hard { get; set; }
+
+        public float MaximumStepDistance { get; }
+
         bool IsColliding(Vector2 offset, bool approximate = true);
+
+        bool CollidingWith(IPhysicsComponent physicsComponent);
 
         IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approximate = true);
         bool UpdatePhysicsTree();
@@ -132,7 +137,6 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
             serializer.DataField(ref _mass, "mass", 10.0f);
-            serializer.DataField(this, x => WarmStart, "warmStart", true);
             serializer.DataField(this, x => Restitution, "restitution", 0.2f);
             serializer.DataField(this, x => Friction, "friction", 0.5f);
         }
@@ -251,6 +255,27 @@ namespace Robust.Shared.GameObjects.Components
         }
 
         /// <summary>
+        ///     How far can the collision detection step per iteration.
+        ///     Uses the minimum of all of our shapes.
+        /// </summary>
+        [ViewVariables]
+        public float MaximumStepDistance
+        {
+            // TODO: Cache
+            get
+            {
+                var maximum = float.MaxValue;
+
+                foreach (var shape in _physShapes)
+                {
+                    maximum = MathF.Min(maximum, shape.MaximumStepDistance);
+                }
+
+                return maximum;
+            }
+        }
+
+        /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
@@ -359,6 +384,11 @@ namespace Robust.Shared.GameObjects.Components
         public bool IsColliding(Vector2 offset, bool approx = true)
         {
             return _physicsManager.IsColliding(this, offset, approx);
+        }
+
+        public bool CollidingWith(IPhysicsComponent physicsComponent)
+        {
+            return _physicsManager.CollidingWith(this, physicsComponent);
         }
 
         public IEnumerable<IEntity> GetCollidingEntities(Vector2 offset, bool approx = true)

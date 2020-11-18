@@ -6,11 +6,11 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects.Systems
@@ -56,12 +56,12 @@ namespace Robust.Shared.GameObjects.Systems
 
         #region parameters
         /// <summary>
-        ///     The maximum amount of object overlap we can correct in a single tick.
+        ///     The maximum amount of object overlap we can correct in a second.
         /// </summary>
-        private float _maxPositionCorrect = 0.4f;
+        private float _maxPositionCorrect = 0.8f;
 
         /// <summary>
-        ///     Percentage of how much overlap we can correct per tick.
+        ///     Percentage of overlap we can correct in a tick.
         /// </summary>
         private float _positionCorrectPercent = 0.2f;
 
@@ -139,23 +139,19 @@ namespace Robust.Shared.GameObjects.Systems
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float frameTime, bool prediction)
         {
-            // The reason we clear this at the start of the simulation and not the end is because the client needs
-            // to check what needs to be predicted next simulation.
-            CollisionCache.Clear();
-
             var simulatedBodies = prediction ? _predictedAwakeBodies : _awakeBodies;
+
+            ProcessQueue();
+
+            ProcessCollisions(simulatedBodies, frameTime);
 
             ProcessQueue();
 
             IntegrateForces(simulatedBodies, prediction, frameTime);
 
-            // Calculate collisions and store them in the cache
-            // Don't use simulated because this is behavior stuff which WILL mispredict.
-            BuildManifolds(_awakeBodies, frameTime);
+            VelocitySolver(frameTime);
 
-            VelocitySolver();
-
-            ProcessFriction(_awakeBodies, frameTime);
+            ProcessFriction(simulatedBodies, frameTime);
 
             CollisionBehaviors();
 
@@ -173,7 +169,7 @@ namespace Robust.Shared.GameObjects.Systems
             // Remove all entities that were deleted due to the controller
             ProcessQueue();
 
-            PositionSolver();
+            PositionSolver(frameTime);
 
             foreach (var physics in simulatedBodies)
             {
@@ -207,12 +203,6 @@ namespace Robust.Shared.GameObjects.Systems
                 if(!body.CanMove())
                     continue;
 
-                // TODO: We should store impulse instead in case the mass changes
-
-                // TODO: Something fucky is going on with LinearVelocity, maybe try storing the frametime adjusted amount? IDFK
-                // TODO: Make working linear velocity?
-                // TODO: I completely fucked up warmstarting oh my fucking god, it should be only on manifolds.
-                var oldVelocity = body.WarmStart && body.LinearVelocity != Vector2.Zero ? body.LinearVelocity : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
                 // See https://www.youtube.com/watch?v=SHinxAhv1ZE for an overall explanation
@@ -222,8 +212,6 @@ namespace Robust.Shared.GameObjects.Systems
                 {
                     controller.UpdateBeforeProcessing();
                     deltaVelocity += controller.LinearVelocity * frameTime;
-                    deltaVelocity += controller.Impulse * body.InvMass * frameTime;
-                    controller.Impulse = Vector2.Zero;
                     controller.LinearVelocity = Vector2.Zero;
                 }
 
@@ -231,16 +219,8 @@ namespace Robust.Shared.GameObjects.Systems
                 // Should stop the "springing" squishing
 
                 // Round it off
-                var newVelocity = oldVelocity + deltaVelocity;
 
-                if (newVelocity.LengthSquared < 0.00001f)
-                {
-                    body.LinearVelocity = Vector2.Zero;
-                }
-                else
-                {
-                    body.LinearVelocity = newVelocity;
-                }
+                body.LinearVelocity = deltaVelocity.LengthSquared < 0.00001f ? Vector2.Zero : deltaVelocity;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -255,30 +235,91 @@ namespace Robust.Shared.GameObjects.Systems
         ///     Stores them into the _collisionCache manifolds.
         /// </summary>
         /// <param name="awakeBodies"></param>
-        private void BuildManifolds(IEnumerable<IPhysicsComponent> awakeBodies, float frameTime)
+        /// <param name="frameTime"></param>
+        private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies, float frameTime)
         {
             var combinations = new HashSet<(EntityUid, EntityUid)>();
+
+            // Go through existing manifolds and work out which are still relevant. These may need warmstarting later on.
+            for (var i = CollisionCache.Count - 1; i >= 0; i--)
+            {
+                var manifold = CollisionCache[i];
+
+                if (!manifold.Hard || !manifold.Colliding || !manifold.Unresolved)
+                {
+                    CollisionCache.RemoveAt(i);
+                    continue;
+                }
+
+                combinations.Add((manifold.A.Owner.Uid, manifold.B.Owner.Uid));
+            }
+
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, aPhysics.LinearVelocity * frameTime, false))
+                // To avoid tunnelling we need to step from our current position to our target position if the distance is high.
+                // We'll use our minimum bounding width as the maximum amount we can step.
+
+                // Alternative you could write continuous collision detection but it'd probably be slower.
+                var frameDistance = aPhysics.LinearVelocity.Length;
+
+                // TODO: Technically the first step can be our maximum distance + (height or width depending on our direction)
+                // Not an optimisation if our tickrate stays at 30
+                var maxStepDistance = aPhysics.MaximumStepDistance - 0.0001f;
+                var stepDistance = maxStepDistance >= frameDistance ? frameDistance : maxStepDistance;
+
+                var steps = (int) (MathF.Ceiling(frameDistance / stepDistance) + 1);
+
+                for (var i = 0; i < steps; i++)
                 {
-                    var aUid = aPhysics.Entity.Uid;
-                    var bUid = b.Uid;
+                    float distance;
 
-                    if (bUid.CompareTo(aUid) > 0)
+                    if (i == steps - 1)
                     {
-                        var tmpUid = bUid;
-                        bUid = aUid;
-                        aUid = tmpUid;
+                        distance = frameDistance;
+                    }
+                    else
+                    {
+                        distance = stepDistance * i;
+                    }
+                    var offset = aPhysics.LinearVelocity == Vector2.Zero
+                        ? Vector2.Zero
+                        : aPhysics.LinearVelocity.Normalized * distance;
+
+                    var anyHard = false;
+
+                    Logger.Debug($"Step {i + 1} / {steps} distance: {distance}");
+
+                    foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, offset, false))
+                    {
+                        var aUid = aPhysics.Entity.Uid;
+                        var bUid = b.Uid;
+
+                        if (bUid.CompareTo(aUid) > 0)
+                        {
+                            var tmpUid = bUid;
+                            bUid = aUid;
+                            aUid = tmpUid;
+                        }
+
+                        if (!combinations.Add((aUid, bUid)))
+                        {
+                            continue;
+                        }
+
+                        var bPhysics = b.GetComponent<IPhysicsComponent>();
+                        var hard = aPhysics.Hard && bPhysics.Hard;
+                        anyHard = anyHard || hard;
+
+                        aPhysics.WakeBody();
+                        bPhysics.WakeBody();
+
+                        // TODO: Need to step through and check the collision shit at low tickrate
+
+                        CollisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard, Vector2.Zero));
                     }
 
-                    if (!combinations.Add((aUid, bUid)))
-                    {
-                        continue;
-                    }
-
-                    var bPhysics = b.GetComponent<IPhysicsComponent>();
-                    CollisionCache.Add(new Manifold(aPhysics, bPhysics, aPhysics.Hard && bPhysics.Hard));
+                    // Something would stop us so proceed to next
+                    if (anyHard) break;
                 }
             }
         }
@@ -330,38 +371,70 @@ namespace Robust.Shared.GameObjects.Systems
             }
         }
 
-        private void VelocitySolver()
+        private void VelocitySolver(float frameTime)
         {
             if (CollisionCache.Count == 0) return;
 
+            // Warmstart manifolds that carry across ticks
+            for (var i = 0; i < CollisionCache.Count; i++)
+            {
+                var manifold = CollisionCache[i];
+                if (!manifold.WarmStart) continue;
+
+                DebugTools.AssertNotNull(manifold.Impulse);
+                // TODO
+                if (manifold.Impulse == null || manifold.Impulse.Value == Vector2.Zero) continue;
+                var impulse = manifold.Impulse.Value * frameTime;
+                //Logger.Debug($"Impulse is {impulse}");
+
+                if (manifold.A.CanMove())
+                {
+                    manifold.A.ApplyImpulse(impulse);
+                }
+
+                if (manifold.B.CanMove())
+                {
+                    manifold.B.ApplyImpulse(-impulse);
+                }
+
+                manifold.Impulse = Vector2.Zero;
+            }
+
             for (var i = 0; i < _velocitySolverIterations; i++)
             {
+                var anyRemaining = false;
                 var offset = _random.Next(CollisionCache.Count - 1);
                 for (var j = 0; j < CollisionCache.Count; j++)
                 {
-                    var collision = CollisionCache[(j + offset) % CollisionCache.Count];
-                    if (!collision.Unresolved) continue;
+                    var manifold = CollisionCache[(j + offset) % CollisionCache.Count];
+                    if (!manifold.Unresolved) continue;
 
-                    collision.A.WakeBody();
-                    collision.B.WakeBody();
+                    anyRemaining = true;
+                    manifold.A.WakeBody();
+                    manifold.B.WakeBody();
 
-                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                    if (collision.A.CanMove())
+                    var impulse = _physicsManager.SolveCollisionImpulse(manifold);
+                    // TODO: Need to clamp the accumulated impulses, see https://youtu.be/SHinxAhv1ZE?t=1956
+                    manifold.Impulse += impulse / frameTime;
+
+                    if (manifold.A.CanMove())
                     {
-                        collision.A.ApplyImpulse(-impulse);
+                        manifold.A.ApplyImpulse(impulse);
                     }
 
-                    if (collision.B.CanMove())
+                    if (manifold.B.CanMove())
                     {
-                        collision.B.ApplyImpulse(impulse);
+                        manifold.B.ApplyImpulse(-impulse);
                     }
                 }
+
+                if (!anyRemaining) break;
             }
         }
 
         // Based off of Randy Gaul's ImpulseEngine code
         // https://github.com/RandyGaul/ImpulseEngine/blob/5181fee1648acc4a889b9beec8e13cbe7dac9288/Manifold.cpp#L123a
-        private void PositionSolver()
+        private void PositionSolver(float frameTime)
         {
             if (CollisionCache.Count == 0) return;
 
@@ -373,16 +446,14 @@ namespace Robust.Shared.GameObjects.Systems
                 {
                     var collision = CollisionCache[(j + offset) % CollisionCache.Count];
 
-                    if (!collision.Hard)
-                        continue;
+                    if (!collision.Hard) continue;
 
                     var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
 
-                    if (penetration <= _positionAllowance)
-                        continue;
+                    if (penetration <= _positionAllowance) continue;
 
                     done = false;
-                    var correction = collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f), _maxPositionCorrect * _positionCorrectPercent) / (collision.A.InvMass + collision.B.InvMass);
+                    var correction = -collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f) * _positionCorrectPercent, _maxPositionCorrect) / (collision.A.InvMass + collision.B.InvMass);
 
                     if (collision.A.CanMove())
                     {
@@ -399,8 +470,7 @@ namespace Robust.Shared.GameObjects.Systems
                     }
                 }
 
-                if (done)
-                    break;
+                if (done) break;
             }
         }
 
@@ -418,7 +488,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 9.8f * 2 * frameTime, body.LinearVelocity.Length);
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 9.8f * frameTime, body.LinearVelocity.Length);
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }
@@ -445,7 +515,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var frameVelocity = physics.LinearVelocity.Normalized * MathF.Min(physics.LinearVelocity.Length, _speedLimit) * frameTime;
+            var frameVelocity = physics.LinearVelocity.Normalized * MathF.Min(physics.LinearVelocity.Length, _speedLimit * frameTime);
 
             var newPosition = physics.WorldPosition + frameVelocity;
             var owner = physics.Owner;
@@ -468,7 +538,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity * frameTime;
+            physics.WorldRotation += physics.AngularVelocity;
             physics.WorldPosition = newPosition;
         }
 

@@ -72,6 +72,11 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
+            if (target.Entity.Name.Contains("John"))
+            {
+
+            }
+
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
             if (manifold.Height > manifold.Width)
@@ -79,14 +84,14 @@ namespace Robust.Shared.Physics
                 // X is the axis of seperation
                 var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
                 var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
-                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
+                return new Vector2(leftDist > rightDist ? -1 : 1, 0);
             }
             else
             {
                 // Y is the axis of seperation
                 var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
                 var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
-                return new Vector2(0, bottomDist > topDist ? 1 : -1);
+                return new Vector2(0, bottomDist > topDist ? -1 : 1);
             }
         }
 
@@ -110,12 +115,12 @@ namespace Robust.Shared.Physics
             var rV = manifold.RelativeVelocity;
 
             var vAlongNormal = Vector2.Dot(rV, normal);
-            if (vAlongNormal > 0)
+            if (vAlongNormal < 0)
             {
                 return Vector2.Zero;
             }
 
-            var impulse = -(1.0f + restitution) * vAlongNormal;
+            var impulse = (1.0f + restitution) * vAlongNormal;
             impulse /= aP.InvMass + bP.InvMass;
 
             return manifold.Normal * impulse;
@@ -159,6 +164,28 @@ namespace Robust.Shared.Physics
             }, physBody.WorldAABB, approximate);
 
             return entities;
+        }
+
+        public bool CollidingWith(IPhysBody aPhysBody, IPhysBody bPhysBody)
+        {
+            if (aPhysBody.Entity.Deleted || bPhysBody.Entity.Deleted || !CollidesOnMask(aPhysBody, bPhysBody)) return false;
+
+            var preventCollision = false;
+            foreach (var modifier in aPhysBody.Entity.GetAllComponents<ICollideSpecial>())
+            {
+                preventCollision |= modifier.PreventCollide(bPhysBody);
+            }
+            foreach (var modifier in bPhysBody.Entity.GetAllComponents<ICollideSpecial>())
+            {
+                preventCollision |= modifier.PreventCollide(aPhysBody);
+            }
+
+            if (preventCollision)
+            {
+                return false;
+            }
+
+            return aPhysBody.WorldAABB.Intersects(bPhysBody.WorldAABB);
         }
 
         /// <inheritdoc />

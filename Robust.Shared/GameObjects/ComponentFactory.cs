@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
 using Robust.Shared.Interfaces.GameObjects;
@@ -262,6 +263,52 @@ namespace Robust.Shared.GameObjects
         public IComponentRegistration GetRegistration(IComponent component)
         {
             return GetRegistration(component.GetType());
+        }
+
+        public bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (names.TryGetValue(componentName, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (types.TryGetValue(reference, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new()
+        {
+            return TryGetRegistration(typeof(T), out registration);
+        }
+
+        public bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            if (netIDs.TryGetValue(netID, out var tempRegistration))
+            {
+                registration = tempRegistration;
+                return true;
+            }
+
+            registration = null;
+            return false;
+        }
+
+        public bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration)
+        {
+            return TryGetRegistration(component.GetType(), out registration);
         }
 
         public void DoAutoRegistrations()

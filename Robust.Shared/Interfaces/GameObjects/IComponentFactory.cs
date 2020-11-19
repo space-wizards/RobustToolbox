@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Interfaces.GameObjects
@@ -112,37 +113,78 @@ namespace Robust.Shared.Interfaces.GameObjects
         IComponent GetComponent(uint netId);
 
         /// <summary>
-        /// Gets the registration belonging to a component.
+        ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <param name="componentName">The name of the component.</param>
         IComponentRegistration GetRegistration(string componentName);
 
         /// <summary>
-        /// Gets the registration belonging to a component.
+        ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <param name="reference">A reference corresponding to the component to look up.</param>
         IComponentRegistration GetRegistration(Type reference);
 
         /// <summary>
-        /// Gets the registration belonging to a component.
+        ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
         /// </summary>
         /// <typeparam name="T">A type referencing the component.</typeparam>
         IComponentRegistration GetRegistration<T>() where T : IComponent, new();
 
         /// <summary>
-        /// Gets the registration belonging to a component.
+        ///     Gets the registration belonging to a component, throwing an exception
+        ///     if it does not exist.
         /// </summary>
         /// <param name="netID">The network ID corresponding to the component.</param>
         /// <returns></returns>
         IComponentRegistration GetRegistration(uint netID);
 
         /// <summary>
-        /// Get the registration of a component.
+        ///     Gets the registration of a component, throwing an exception if it does not exist.
         /// </summary>
-        /// <param name="component"></param>
+        /// <param name="component">An instance of the component.</param>
         /// <returns></returns>
         IComponentRegistration GetRegistration(IComponent component);
 
+        /// <summary>
+        ///     Tries to get the registration belonging to a component.
+        /// </summary>
+        /// <param name="componentName">The name of the component.</param>
+        /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <returns>true it found, false otherwise.</returns>
+        bool TryGetRegistration(string componentName, [NotNullWhen(true)] out IComponentRegistration? registration);
+
+        /// <summary>
+        ///     Tries to get the registration belonging to a component.
+        /// </summary>
+        /// <param name="reference">A reference corresponding to the component to look up.</param>
+        /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <returns>true it found, false otherwise.</returns>
+        bool TryGetRegistration(Type reference, [NotNullWhen(true)] out IComponentRegistration? registration);
+
+        /// <summary>
+        ///     Tries to get the registration belonging to a component.
+        /// </summary>
+        /// <typeparam name="T">A type referencing the component.</typeparam>
+        /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <returns>true it found, false otherwise.</returns>
+        bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new();
+
+        /// <summary>
+        ///     Tries to get the registration belonging to a component.
+        /// </summary>
+        /// <param name="netID">The network ID corresponding to the component.</param>
+        /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <returns>true it found, false otherwise.</returns>
+        bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration);
+
+        /// <summary>
+        ///     Tries to get the registration of a component.
+        /// </summary>
+        /// <param name="component">An instance of the component.</param>
+        /// <param name="registration">The registration if found, null otherwise.</param>
+        /// <returns>true it found, false otherwise.</returns>
+        bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration);
+        
         /// <summary>
         ///     Automatically create registrations for all components with a <see cref="RegisterComponentAttribute" />
         /// </summary>

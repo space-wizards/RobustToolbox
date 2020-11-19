@@ -947,14 +947,15 @@ namespace Robust.Server.GameObjects
 
         private void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
         {
-            foreach (var entity in set.ToArray())
+            set.RemoveWhere(e =>
             {
-                if (!entity.TryGetComponent(out VisibilityComponent? visibility))
-                    continue;
+                if (!e.TryGetComponent(out VisibilityComponent? visibility))
+                {
+                    return false;
+                }
 
-                if ((visibilityMask & visibility.Layer) == 0)
-                    set.Remove(entity);
-            }
+                return (visibilityMask & visibility.Layer) == 0;
+            });
         }
 
         public override void Update(float frameTime, Histogram? histogram)

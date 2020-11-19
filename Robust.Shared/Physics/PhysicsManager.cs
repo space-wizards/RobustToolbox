@@ -95,9 +95,9 @@ namespace Robust.Shared.Physics
             }
         }
 
-        public float CalculatePenetration(IPhysBody target, IPhysBody source)
+        public float CalculatePenetration(Box2 target, Box2 source)
         {
-            var manifold = target.WorldAABB.Intersect(source.WorldAABB);
+            var manifold = target.Intersect(source);
             if (manifold.IsEmpty()) return 0.0f;
             return manifold.Height > manifold.Width ? manifold.Width : manifold.Height;
         }

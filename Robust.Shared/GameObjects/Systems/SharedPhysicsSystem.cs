@@ -251,6 +251,8 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
                 }
 
+                manifold.A.WakeBody();
+                manifold.B.WakeBody();
                 combinations.Add((manifold.A.Owner.Uid, manifold.B.Owner.Uid));
             }
 
@@ -286,8 +288,6 @@ namespace Robust.Shared.GameObjects.Systems
                         : aPhysics.LinearVelocity.Normalized * distance;
 
                     var anyHard = false;
-
-                    Logger.Debug($"Step {i + 1} / {steps} distance: {distance}");
 
                     foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, offset, false))
                     {
@@ -448,7 +448,7 @@ namespace Robust.Shared.GameObjects.Systems
 
                     if (!collision.Hard) continue;
 
-                    var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
+                    var penetration = _physicsManager.CalculatePenetration(collision.A.WorldAABB.Translated(collision.A.LinearVelocity), collision.B.WorldAABB.Translated(collision.B.LinearVelocity));
 
                     if (penetration <= _positionAllowance) continue;
 
@@ -488,7 +488,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 9.8f * frameTime, body.LinearVelocity.Length);
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * frameTime, body.LinearVelocity.Length);
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }

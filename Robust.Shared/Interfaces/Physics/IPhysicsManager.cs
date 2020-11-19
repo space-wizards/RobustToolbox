@@ -80,7 +80,7 @@ namespace Robust.Shared.Interfaces.Physics
         /// <param name="target"></param>
         /// <param name="source"></param>
         /// <returns></returns>
-        float CalculatePenetration(IPhysBody target, IPhysBody source);
+        float CalculatePenetration(Box2 target, Box2 source);
 
         Vector2 SolveCollisionImpulse(Manifold manifold);
 

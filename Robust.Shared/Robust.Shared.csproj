@@ -12,8 +12,10 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
+    <PackageReference Include="dnlib" Version="3.3.2" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
     <PackageReference Include="Mono.Cecil" Version="0.11.2" />
+    <PackageReference Include="Microsoft.ILVerification" Version="5.0.0" />
     <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="nfluidsynth" Version="0.3.0" />
@@ -34,6 +36,10 @@
   <ItemGroup>
     <EmbeddedResource Include="Utility\TypeAbbreviations.yaml">
       <LogicalName>Robust.Shared.Utility.TypeAbbreviations.yaml</LogicalName>
+    </EmbeddedResource>
+    <None Remove="ContentPack\Sandbox.yml" />
+    <EmbeddedResource Include="ContentPack\Sandbox.yml">
+      <LogicalName>Robust.Shared.ContentPack.Sandbox.yml</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

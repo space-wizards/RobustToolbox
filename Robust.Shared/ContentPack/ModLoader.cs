@@ -56,13 +56,14 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal class ModLoader : IModLoader, IDisposable
+    internal class ModLoader : IModLoader, IDisposable, IPostInjectInit
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
         private readonly List<ModuleTestingCallbacks> _testingCallbacks = new List<ModuleTestingCallbacks>();
+        private AssemblyTypeChecker _typeChecker = default!;
 
         /// <summary>
         ///     Loaded assemblies.
@@ -87,6 +88,12 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
+
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _typeChecker = new AssemblyTypeChecker(_resourceManager);
         }
 
         public void SetUseLoadContext(bool useLoadContext)
@@ -100,9 +107,10 @@ namespace Robust.Shared.ContentPack
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
-            AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = false;
-            if (!AssemblyTypeChecker.CheckAssembly(assembly))
+            _typeChecker.DisableTypeCheck = false;
+            _typeChecker.DumpTypes = false;
+
+            if (!_typeChecker.CheckAssembly(assembly))
                 return;
 
             assembly.Position = 0;
@@ -126,11 +134,13 @@ namespace Robust.Shared.ContentPack
             // TODO: Re-enable type check when it's not just a giant pain in the butt.
             // It slows down development too much and we need other things like System.Type fixed
             // before it can reasonably be re-enabled.
-            AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = false;
+            _typeChecker.DisableTypeCheck = false;
+            _typeChecker.DumpTypes = false;
 
-            if (!AssemblyTypeChecker.CheckAssembly(diskPath))
-                return;
+            if (!_typeChecker.CheckAssembly(diskPath))
+            {
+                throw new TypeCheckFailedException();
+            }
 
             Assembly assembly;
             if (_useLoadContext)

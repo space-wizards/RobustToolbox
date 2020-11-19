@@ -1,0 +1,681 @@
+﻿# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
+
+SystemAssemblyName: System.Runtime
+
+# ILVerify errors that are allowed.
+AllowedVerifierErrors:
+# InitOnly happens a lot when calling e.g. ToString() on a readonly field.
+# It's fine and doesn't break anything runtime related so...
+- InitOnly
+
+#
+WhitelistedNamespaces:
+- Robust
+- Content
+
+# The type whitelist does NOT care about which assembly types come from.
+# This is because types switch assembly all the time.
+# Just look up stuff like StreamReader on https://apisof.net.
+# I figure this cannot be abused so long as we ensure content
+# gets to load ONLY Content.Shared and Content.Client, no more.
+
+
+# There are 4 reasons why an API might be missing here:
+# * The API would simply allow you to break sandbox or such. e.g. File.Open().
+# * It is a new API that has not been whitelisted yet.
+# * The API is not *relevant* to content. e.g. System.Type.IsAnsiClass.
+# * I am lazy these API lists are huge dude.
+Types:
+  Lidgren.Network:
+    NetBuffer:
+      All: True
+
+    NetOutgoingMessage:
+      All: True
+
+    NetIncomingMessage:
+      All: True
+
+    NetDeliveryMethod: { }
+
+  System.Reflection:
+    MemberFilter: { } # Delegate
+    AssemblyCompanyAttribute: { All: True }
+    AssemblyConfigurationAttribute: { All: True }
+    AssemblyFileVersionAttribute: { All: True }
+    AssemblyInformationalVersionAttribute: { All: True }
+    AssemblyProductAttribute: { All: True }
+    AssemblyTitleAttribute: { All: True }
+    Assembly:
+      Methods:
+      - "System.Collections.Generic.IEnumerable`1<System.Reflection.TypeInfo> get_DefinedTypes()"
+      - "string get_FullName()"
+      - "string CreateQualifiedName(string, string)"
+      - "System.Reflection.Assembly GetAssembly(System.Type)"
+      - "System.Reflection.Assembly GetExecutingAssembly()"
+    DefaultMemberAttribute: { All: True }
+    MethodInfo: { }
+    MethodBase: { }
+    MemberInfo: { }
+    TypeAttributes: { } # Enum
+    GenericParameterAttributes: { } # Enum
+    TypeInfo: { }
+
+  System:
+    Char: { }
+    CharEnumerator: { All: True }
+    IAsyncDisposable: { All: True }
+    Attribute: { All: True }
+    AttributeTargets: { }
+    AttributeUsageAttribute: { All: True }
+    Object: { All: True }
+    Comparison`1: { All: True }
+
+    Action: { All: True }
+    Action`1: { All: True }
+    Action`2: { All: True }
+    Action`3: { All: True }
+    Action`4: { All: True }
+    Action`5: { All: True }
+    Action`6: { All: True }
+    Action`7: { All: True }
+    Action`8: { All: True }
+    Action`9: { All: True }
+    Action`10: { All: True }
+    Action`11: { All: True }
+    Action`12: { All: True }
+    Action`13: { All: True }
+    Action`14: { All: True }
+    Action`15: { All: True }
+    Action`16: { All: True }
+
+    Func`1: { All: True }
+    Func`2: { All: True }
+    Func`3: { All: True }
+    Func`4: { All: True }
+    Func`5: { All: True }
+    Func`6: { All: True }
+    Func`7: { All: True }
+    Func`8: { All: True }
+    Func`9: { All: True }
+    Func`10: { All: True }
+    Func`11: { All: True }
+    Func`12: { All: True }
+    Func`13: { All: True }
+    Func`14: { All: True }
+    Func`15: { All: True }
+    Func`16: { All: True }
+    Func`17: { All: True }
+
+    Type:
+      # COM, marshalling, interop, etc... stuff omitted.
+      # Content should never touch that.
+      Fields:
+      - "char Delimiter"
+      - "System.Type[] EmptyTypes"
+      - "System.Reflection.MemberFilter FilterAttribute"
+      - "System.Reflection.MemberFilter FilterName"
+      - "System.Reflection.MemberFilter FilterNameIgnoreCase"
+      - "object Missing"
+      Methods:
+      - "System.Reflection.Assembly get_Assembly()"
+      - "string get_AssemblyQualifiedName()"
+      - "System.Reflection.TypeAttributes get_Attributes()"
+      - "System.Type get_BaseType()"
+      - "bool get_ContainsGenericParameters()"
+      - "System.Type get_DeclaringType()"
+      - "System.Reflection.MethodBase get_DeclaringMethod()"
+      - "string get_FullName()"
+      - "System.Reflection.GenericParameterAttributes get_GenericParameterAttributes()"
+      - "int get_GenericParameterPosition()"
+      - "System.Type[] get_GenericTypeArguments()"
+      - "System.Guid get_GUID()"
+      - "bool get_HasElementType()"
+      - "bool get_IsAbstract()"
+      - "bool get_IsArray()"
+      - "bool get_IsByRef()"
+      - "bool get_IsByRefLike()"
+      - "bool get_IsClass()"
+      - "bool get_IsConstructedGenericType()"
+      - "bool get_IsEnum()"
+      - "bool get_IsGenericMethodParameter()"
+      - "bool get_IsGenericParameter()"
+      - "bool get_IsGenericType()"
+      - "bool get_IsGenericTypeDefinition()"
+      - "bool get_IsGenericTypeParameter()"
+      - "bool get_IsInterface()"
+      - "bool get_IsNested()"
+      - "bool get_IsNestedAssembly()"
+      - "bool get_IsNestedFamANDAssem()"
+      - "bool get_IsNestedFamily()"
+      - "bool get_IsNestedFamORAssem()"
+      - "bool get_IsNestedPrivate()"
+      - "bool get_IsNestedPublic()"
+      - "bool get_IsNotPublic()"
+      - "bool get_IsPointer()"
+      - "bool get_IsPrimitive()"
+      - "bool get_IsPublic()"
+      - "bool get_IsSealed()"
+      - "bool get_IsSerializable()"
+      - "bool get_IsSignatureType()"
+      - "bool get_IsSpecialName()"
+      - "bool get_IsSZArray()"
+      - "bool get_IsTypeDefinition()"
+      - "bool get_IsValueType()"
+      - "System.Reflection.MemberTypes get_MemberType()"
+      - "string get_Namespace()"
+      - "System.Type get_ReflectedType()"
+      - "bool Equals(object)"
+      - "System.Type[] FindInterfaces(System.Reflection.TypeFilter, object)"
+      - "System.Reflection.MemberInfo[] FindMembers(System.Reflection.MemberTypes, System.Reflection.BindingFlags, System.Reflection.MemberFilter, object)"
+      - "System.Type GetTypeFromHandle(System.RuntimeTypeHandle)"
+      # I give up add more shit to this later.
+
+    IDisposable: { All: True }
+    Nullable`1: { All: True }
+    ArraySegment`1: { All: True }
+
+    ValueType: { All: True }
+    # TODO: Reflection-ish API. Probably safe but still review.
+    Enum: { }
+    FlagsAttribute: { All: True }
+    EventArgs: { All: True }
+    DateTime: { }
+    DateTimeOffse: { }
+
+    ValueTuple: { All: True }
+    ValueTuple`1: { All: True }
+    ValueTuple`2: { All: True }
+    ValueTuple`3: { All: True }
+    ValueTuple`4: { All: True }
+    ValueTuple`5: { All: True }
+    ValueTuple`6: { All: True }
+    ValueTuple`7: { All: True }
+    ValueTuple`8: { All: True }
+
+    TimeSpan: { All: True }
+    MulticastDelegate: { }
+    IAsyncResult: { }
+    AsyncCallback: { }
+    IComparable`1: { All: True }
+    IComparable: { All: True }
+    Byte: { All: True }
+    SByte: { All: True }
+    String:
+      Fields:
+      - "string Empty"
+      Methods:
+      - "void .ctor(char, int)"
+      - "void .ctor(char[])"
+      - "void .ctor(char[], int, int)"
+      - "void .ctor(System.ReadOnlySpan`1<char>)"
+      - "int get_Length()"
+      - "char get_Chars(int)"
+      - "object Clone()"
+      - "int CompareTo(string, int, string, int, int)"
+      - "int CompareTo(string, int, string, int, int, bool)"
+      - "int CompareTo(string, int, string, int, int, bool, System.Globalization.CultureInfo)"
+      - "int CompareTo(string, int, string, int, int, bool, System.Globalization.CultureInfo, System.Globalization.CompareOptions)"
+      - "int CompareTo(string, int, string, int, int, System.StringComparison)"
+      - "int CompareTo(string, string)"
+      - "int CompareTo(string, string, bool)"
+      - "int CompareTo(string, string, bool, System.Globalization.CultureInfo)"
+      - "int CompareTo(string, string, bool, System.Globalization.CultureInfo, System.Globalization.CompareOptions)"
+      - "int CompareTo(string, string, System.StringComparison)"
+      - "int CompareOrdinal(string, int, string, int, int)"
+      - "int CompareOrdinal(string, string)"
+      - "int CompareTo(object)"
+      - "int CompareTo(string)"
+      - "string Concat(System.Collections.Generic.IEnumerable`1<string>)"
+      - "string Concat(object)"
+      - "string Concat(object, object)"
+      - "string Concat(object, object, object)"
+      - "string Concat(object[])"
+      - "string Concat(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
+      - "string Concat(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
+      - "string Concat(System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>, System.ReadOnlySpan`1<char>)"
+      - "string Concat(string, string)"
+      - "string Concat(string, string, string)"
+      - "string Concat(string, string, string, string)"
+      - "string Concat(string[])"
+      - "string Concat`1(System.Collections.Generic.IEnumerable`1<!!0>)"
+      - "bool Contains(char)"
+      - "bool Contains(char, System.StringComparison)"
+      - "bool Contains(string)"
+      - "void CopyTo(int, char[], int, int)"
+      - "string Create`1(int, !!0, System.Buffers.SpanAction`2<char, !!0>)"
+      - "bool EndsWith(char)"
+      - "bool EndsWith(string)"
+      - "bool EndsWith(string, bool, System.Globalization.CultureInfo)"
+      - "bool EndsWith(string, System.StringComparison)"
+      - "StringRuneEnumerator EnumerateRunes()"
+      - "bool Equals(object)"
+      - "bool Equals(string)"
+      - "bool Equals(string, string)"
+      - "bool Equals(string, string, System.StringComparison)"
+      - "bool Equals(string, System.StringComparison)"
+      - "bool Equals(string, System.StringComparison)"
+      - "string Format(System.IFormatProvider, string, object)"
+      - "string Format(System.IFormatProvider, string, object, object)"
+      - "string Format(System.IFormatProvider, string, object, object, object)"
+      - "string Format(System.IFormatProvider, string, object[])"
+      - "string Format(string, object)"
+      - "string Format(string, object, object)"
+      - "string Format(string, object, object, object)"
+      - "string Format(string, object[])"
+      - "System.CharEnumerator GetEnumerator()"
+      - "int GetHashCode()"
+      - "int GetHashCode(System.ReadOnlySpan`1<char>)"
+      - "int GetHashCode(System.ReadOnlySpan`1<char>, System.StringComparison)"
+      - "int GetHashCode(System.StringComparison)"
+      - "int GetHashCode(System.StringComparison)"
+      - "System.TypeCode GetTypeCode()"
+      - "int IndexOf(char)"
+      - "int IndexOf(char, int)"
+      - "int IndexOf(char, int, int)"
+      - "int IndexOf(char, System.StringComparison)"
+      - "int IndexOf(string)"
+      - "int IndexOf(string, int)"
+      - "int IndexOf(string, int, int)"
+      - "int IndexOf(string, int, int, System.StringComparison)"
+      - "int IndexOf(string, int, System.StringComparison)"
+      - "int IndexOf(string, System.StringComparison)"
+      - "int IndexOfAny(char[])"
+      - "int IndexOfAny(char[], int)"
+      - "string Insert(int, string)"
+      - "string Intern(string)"
+      - "string IsInterned(string)"
+      - "bool IsNormalized()"
+      - "bool IsNormalized(System.Text.NormalizationForm)"
+      - "bool IsNullOrEmpty(string)"
+      - "bool IsNullOrWhiteSpace(string)"
+      - "string Join(char, object[])"
+      - "string Join(char, string[])"
+      - "string Join(char, string[], int, int)"
+      - "string Join(string, System.Collections.IEnumerable`1<string>)"
+      - "string Join(string, object[])"
+      - "string Join(string, string[])"
+      - "string Join(string, string[], int, int)"
+      - "string Join`1(char, System.Collections.IEnumerable`1<!!0>)"
+      - "string Join`1(string, System.Collections.IEnumerable`1<!!0>)"
+      - "int LastIndexOf(char)"
+      - "int LastIndexOf(char, int)"
+      - "int LastIndexOf(char, int, int)"
+      - "int LastIndexOf(string)"
+      - "int LastIndexOf(string, int)"
+      - "int LastIndexOf(string, int, int)"
+      - "int LastIndexOf(string, int, int, System.StringComparison)"
+      - "int LastIndexOf(string, int, System.StringComparison)"
+      - "int LastIndexOf(string, System.StringComparison)"
+      - "int LastIndexOfAny(char[])"
+      - "int LastIndexOfAny(char[], int)"
+      - "int LastIndexOfAny(char[], int, int)"
+      - "string Normalize()"
+      - "string Normalize(System.Text.NormalizationForm)"
+      - "string PadLeft(int)"
+      - "string PadLeft(int, char)"
+      - "string PadRight(int)"
+      - "string PadRight(int, char)"
+      - "string Remove(int)"
+      - "string Remove(int, int)"
+      - "string Replace(char, char)"
+      - "string Replace(string, string)"
+      - "string Replace(string, string, bool, System.Globalization.CultureInfo)"
+      - "string Replace(string, string, System.StringComparison)"
+      - "string[] Split(char, int, System.StringSplitOptions)"
+      - "string[] Split(char, System.StringSplitOptions)"
+      - "string[] Split(char[])"
+      - "string[] Split(char[], int)"
+      - "string[] Split(char[], int, System.StringSplitOptions)"
+      - "string[] Split(char[], System.StringSplitOptions)"
+      - "string[] Split(string, int, System.StringSplitOptions)"
+      - "string[] Split(string, System.StringSplitOptions)"
+      - "string[] Split(string[], int, System.StringSplitOptions)"
+      - "string[] Split(string[], System.StringSplitOptions)"
+      - "bool StartsWith(char)"
+      - "bool StartsWith(string)"
+      - "bool StartsWith(string, bool, System.Globalization.CultureInfo)"
+      - "bool StartsWith(string, System.StringComparison)"
+      - "string Substring(int)"
+      - "string Substring(int, int)"
+      - "char[] ToCharArray()"
+      - "char[] ToCharArray(int, int)"
+      - "string ToLower()"
+      - "string ToLower(System.Globalization.CultureInfo)"
+      - "string ToLowerInvariant()"
+      - "string ToString()"
+      - "string ToString(System.IFormatProvider)"
+      - "string ToUpper()"
+      - "string ToUpper(System.Globalization.CultureInfo)"
+      - "string ToUpperInvariant()"
+      - "string Trim()"
+      - "string Trim(char)"
+      - "string Trim(char[])"
+      - "string TrimEnd()"
+      - "string TrimEnd(char)"
+      - "string TrimEnd(char[])"
+      - "string TrimStart()"
+      - "string TrimStart(char)"
+      - "string TrimStart(char[])"
+      - "bool op_Equality(string, string)"
+      - "System.ReadOnlySpan`1<char> op_Implicit(string)"
+      - "bool op_Inequality(string, string)"
+
+    TypeCode: { } # Enum
+
+    Math: { All: True }
+    MathF: { All: True }
+    ArgumentException: { All: True }
+    RuntimeTypeHandle: { }
+    RuntimeMethodHandle: { }
+    RuntimeFieldHandle: { }
+    Single: { All: True }
+    Double: { All: True }
+    Void: { All: True }
+    Int16: { All: True }
+    UInt16: { All: True }
+    Int32: { All: True }
+    UInt32: { All: True }
+    Int64: { All: True }
+    UInt64: { All: True }
+    IntPtr: { All: True }
+    UIntPtr: { All: True }
+    Environment: { }
+    IEquatable`1: { }
+    ParamArrayAttribute: { All: True }
+    StringSplitOptions: { } # Enum
+    ICloneable: { All: True }
+    Array: { }
+    ReadOnlySpan`1: { }
+    ReadOnlyMemory`1: { }
+    Memory`1: { }
+    Span`1: { }
+    HashCode: { }
+    ArgumentOutOfRangeException: { }
+    MemoryExtensions: { }
+    Delegate: { }
+    InvalidOperationException: { }
+    Exception: { }
+    MidpointRounding: { }
+    IFormatProvider: { All: True }
+    DivideByZeroException: { }
+    StringComparison: { }
+    DateTimeKind: { }
+    NotSupportedException: { }
+    Activator: { } # TODO: REMOVE
+    Predicate`1: { }
+    EventHandler: { }
+    EventHandler`1: { }
+    Random: { }
+    Boolean: { }
+    IndexOutOfRangeException: { }
+    NullReferenceException: { }
+    Rune: { All: True }
+
+  System.Buffers:
+    SpanAction`2: { }
+
+  System.Text:
+    NormalizationForm: { } # Enum
+    StringBuilder: { }
+    Encoding: { }
+    StringRuneEnumerator: { All: True }
+
+
+  System.Text.RegularExpressions:
+    Capture: { }
+    CaptureCollection: { }
+    Group: { }
+    GroupCollection: { }
+    Match: { }
+    MatchCollection: { }
+    MatchEvaluator: { }
+    Regex: { }
+    RegexMatchTimeoutException: { }
+    RegexOptions: { }
+    RegexParseError: { }
+    RegexParseException: { }
+
+  System.Diagnostics.CodeAnalysis:
+    AllowNullAttribute: { All: True }
+    DisallowNullAttribute: { All: True }
+    DoesNotReturnAttribute: { All: True }
+    DoesNotReturnIfAttribute: { All: True }
+    ExcludeFromCodeCoverageAttribute: { All: True }
+    MaybeNullAttribute: { All: True }
+    MaybeNullWhenAttribute: { All: True }
+    NotNullAttribute: { All: True }
+    NotNullIfNotNullAttribute: { All: True }
+    NotNullWhenAttribute: { All: True }
+    SuppressMessageAttribute: { All: True }
+
+
+  System.Globalization:
+    CultureInfo: { All: True }
+    TextInfo: { }
+    CompareOptions: { }
+
+  System.Net:
+    DnsEndPoint: { }
+
+  System.IO:
+    TextWriter: { }
+    StreamReader:
+      Methods:
+      # Allowed:
+      - "void .ctor(System.IO.Stream)"
+      - "void .ctor(System.IO.Stream, bool)"
+      - "void .ctor(System.IO.Stream, System.Text.Encoding)"
+      - "void .ctor(System.IO.Stream, System.Text.Encoding, bool)"
+      - "void .ctor(System.IO.Stream, System.Text.Encoding, bool, int32)"
+      - "void .ctor(System.IO.Stream, System.Text.Encoding, bool, int32, bool)"
+      # Not allowed:
+      #- ".ctor(string)"
+      #- ".ctor(string, bool)"
+      #- ".ctor(string, System.Text.Encoding)"
+      #- ".ctor(string, System.Text.Encoding, bool)"
+      #- ".ctor(string, System.Text.Encoding, bool, int32)"
+
+    Stream: { All: True }
+    MemoryStream: { All: True }
+    TextReader: { All: True }
+    InvalidDataException: { }
+    IOException: { }
+
+    StreamWriter: { }
+    FileMode: { }
+    FileAccess: { }
+    FileShare: { }
+
+  System.Runtime.ExceptionServices:
+    ExceptionDispatchInfo: { All: True }
+
+  System.Runtime.CompilerServices:
+    IAsyncStateMachine: { }
+    ExtensionAttribute: { All: True }
+    CompilationRelaxationsAttribute: { All: True }
+    RuntimeCompatibilityAttribute: { All: True }
+    CompilerGeneratedAttribute: { All: True }
+    IteratorStateMachineAttribute: { All: True }
+    IsReadOnlyAttribute: { All: True }
+    TupleElementNamesAttribute: { All: True }
+    RuntimeHelpers: { All: True }
+    InternalsVisibleToAttribute: { All: True }
+    AsyncStateMachineAttribute: { All: True }
+    TaskAwaiter`1: { All: True }
+    TaskAwaiter: { All: True }
+    ValueTaskAwaiter: { All: True }
+    ValueTaskAwaiter`1: { All: True }
+    AsyncVoidMethodBuilder: { All: True }
+    AsyncValueTaskMethodBuilder: { All: True }
+    AsyncValueTaskMethodBuilder`1: { All: True }
+    AsyncTaskMethodBuilder: { All: True }
+    AsyncTaskMethodBuilder`1: { All: True }
+
+  System.Diagnostics:
+    DebuggableAttribute: { All: True }
+    DebuggerBrowsableState: { }
+    DebuggerBrowsableAttribute: { All: True }
+    DebuggerHiddenAttribute: { All: True }
+    DebuggerDisplayAttribute: { All: True }
+    DebuggerStepThroughAttribute: { All: True }
+    DebuggerNonUserCodeAttribute: { All: True }
+    DebuggerStepperBoundaryAttribute: { All: True }
+    DebuggerVisualizerAttribute: { All: True }
+    DebuggerTypeProxyAttribute: { All: True }
+    Stopwatch: { }
+
+  System.Runtime.Versioning:
+    TargetFrameworkAttribute: { All: True }
+
+  System.Collections.Generic:
+    Comparer`1: { All: True }
+    CollectionExtensions: { All: True }
+    Dictionary`2: { All: True }
+    EqualityComparer`1: { All: True }
+    HashSet`1: { All: True }
+    IAsyncEnumerable`1: { All: True }
+    ICollection`1: { All: True }
+    IComparer`1: { All: True }
+    IDictionary`2: { All: True }
+    IEnumerable`1: { All: True }
+    IEnumerator`1: { All: True }
+    IEqualityComparer`1: { All: True }
+    IList`1: { All: True }
+    IReadOnlyCollection`1: { All: True }
+    IReadOnlyDictionary`2: { All: True }
+    IReadOnlyList`1: { All: True }
+    IReadOnlySet`1: { All: True }
+    ISet`1: { All: True }
+    KeyNotFoundException: { All: True }
+    KeyValuePair: { All: True } # Literally wtf is this class.
+    KeyValuePair`2: { All: True }
+    LinkedList`1: { All: True }
+    LinkedListNode`1: { All: True }
+    List`1: { All: True }
+    Queue`1: { All: True }
+    ReferenceEqualityComparer: { All: True }
+    SortedDictionary`2: { All: True }
+    SortedList`2: { All: True }
+    SortedSet`1: { All: True }
+    Stack`1: { All: True }
+
+  System.Runtime.InteropServices:
+    InAttribute: { All: True }
+    UnmanagedType: { } # `unmanaged` constraint in C# modreqs with this.
+
+  System.Collections.Immutable:
+    IImmutableDictionary`2: { All: True }
+    IImmutableList`1: { All: True }
+    IImmutableQueue`1: { All: True }
+    IImmutableSet`1: { All: True }
+    IImmutableStack`1: { All: True }
+    ImmutableArray: { All: True }
+    ImmutableArray`1: { All: True }
+    ImmutableDictionary: { All: True }
+    ImmutableDictionary`2: { All: True }
+    ImmutableHashSet: { All: True }
+    ImmutableHashSet`1: { All: True }
+    ImmutableInterlocked: { All: True }
+    ImmutableList: { All: True }
+    ImmutableList`1: { All: True }
+    ImmutableQueue: { All: True }
+    ImmutableQueue`1: { All: True }
+    ImmutableSortedDictionary: { All: True }
+    ImmutableSortedDictionary`2: { All: True }
+    ImmutableSortedSet: { All: True }
+    ImmutableSortedSet`1: { All: True }
+    ImmutableSortedStack: { All: True }
+    ImmutableSortedStack`1: { All: True }
+
+  System.Collections:
+    IEnumerator: { All: True }
+    IEnumerable: { All: True }
+    IReadOnlyList`1: { All: True }
+
+  YamlDotNet.RepresentationModel:
+    YamlNode: { }
+    YamlScalarNode: { }
+    YamlMappingNode: { }
+    YamlSequenceNode: { }
+
+  System.Linq.Expressions:
+    # TODO: Review
+    ParameterExpression: { }
+    Expression: { }
+    MemberExpression: { }
+    Expression`1: { }
+    ConstantExpression: { }
+
+  System.Threading.Tasks:
+    Task`1: { }
+    Task: { }
+    ValueTask: { }
+    ValueTask`1: { }
+    TaskCanceledException: { }
+
+  System.Threading:
+    CancellationToken: { All: True }
+    CancellationTokenSource: { All: True }
+    Interlocked: { }
+
+  System.Linq:
+    Enumerable: { All: True }
+    IOrderedEnumerable`1: { All: True }
+    IGrouping`2: { }
+
+  System.Numerics:
+    BitOperations: { }
+
+  SixLabors.ImageSharp:
+    Image`1: { }
+    Image: { }
+    Size: { }
+    Configuration: { }
+    ImageExtensions: { }
+
+  SixLabors.ImageSharp.PixelFormats:
+    IPixel: { All: True }
+    IPixel`1: { All: True }
+    A8: { All: True }
+    Argb32: { All: True }
+    Bgr24: { All: True }
+    Bgr565: { All: True }
+    Bgra32: { All: True }
+    Bgra4444: { All: True }
+    Bgra5551: { All: True }
+    Byte4: { All: True }
+    HalfSingle: { All: True }
+    HalfVector2: { All: True }
+    HalfVector4: { All: True }
+    L16: { All: True }
+    L8: { All: True }
+    La16: { All: True }
+    La32: { All: True }
+    NormalizedByte2: { All: True }
+    NormalizedByte4: { All: True }
+    NormalizedShort2: { All: True }
+    NormalizedShort4: { All: True }
+    Rg32: { All: True }
+    Rgb24: { All: True }
+    Rgb48: { All: True }
+    Rgba1010102: { All: True }
+    Rgba32: { All: True }
+    Rgba64: { All: True }
+    RgbaVector: { All: True }
+    Short2: { All: True }
+    Short4: { All: True }
+
+  Newtonsoft.Json:
+    # TODO: Remove
+    JsonSerializer: { }
+    JsonTextReader: { }
+    JsonObjectAttribute: { All: True }
+    Required: { }
+    JsonReader: { }
+
+  Nett:
+    TomlTable: { }
+    TomlObject: { }
+    TomlTableArray: { }
+    Toml: { }

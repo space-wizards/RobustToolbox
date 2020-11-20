@@ -328,6 +328,13 @@ namespace Robust.Client.ViewVariables.Instances
             var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
 
             _serverComponents.DisposeAllChildren();
+            
+            _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
+            {
+                PlaceHolder = Loc.GetString("Search"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+            
             componentsBlob.ComponentTypes.Sort();
 
             var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();

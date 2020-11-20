@@ -71,7 +71,7 @@ namespace Robust.Shared.Physics
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            return new Box2(-_radius, -_radius, _radius, _radius);
+            return new(-_radius, -_radius, _radius, _radius);
         }
 
         /// <inheritdoc />

@@ -107,7 +107,7 @@ namespace Robust.Shared.Serialization
         private MappedStringDict _dict = default!;
 
         private readonly Dictionary<INetChannel, InProgressHandshake> _incompleteHandshakes
-            = new Dictionary<INetChannel, InProgressHandshake>();
+            = new();
 
         private byte[]? _mappedStringsPackage;
         private byte[]? _serverHash;
@@ -122,7 +122,7 @@ namespace Robust.Shared.Serialization
         public ReadOnlySpan<byte> MappedStringsHash => _stringMapHash;
 
         private static readonly Regex RxSymbolSplitter
-            = new Regex(
+            = new(
                 @"(?<=[^\s\W])(?=[A-Z]) # Match for split at start of new capital letter
                             |(?<=[^0-9\s\W])(?=[0-9]) # Match for split before spans of numbers
                             |(?<=[A-Za-z0-9])(?=_) # Match for a split before an underscore

@@ -24,7 +24,7 @@ namespace Robust.Shared.Configuration
             CVar flag = CVar.NONE,
             string? desc = null) where T : notnull
         {
-            return new CVarDef<T>(name, defaultValue, flag, desc);
+            return new(name, defaultValue, flag, desc);
         }
     }
 

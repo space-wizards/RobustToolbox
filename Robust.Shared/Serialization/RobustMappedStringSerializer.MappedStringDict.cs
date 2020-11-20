@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization
 
             // HashSet<string> of strings that we are currently building.
             // This should be added to in a thread-safe manner with TryAddString during building.
-            private readonly HashSet<string> _buildingStrings = new HashSet<string>();
+            private readonly HashSet<string> _buildingStrings = new();
 
             public int StringCount => _mappedStrings?.Length ?? 0;
 

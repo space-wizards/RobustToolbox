@@ -20,7 +20,7 @@ namespace Robust.Shared.Reflection
         /// </remarks>
         protected abstract IEnumerable<string> TypePrefixes { get; }
 
-        private readonly List<Assembly> assemblies = new List<Assembly>();
+        private readonly List<Assembly> assemblies = new();
 
         public event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 

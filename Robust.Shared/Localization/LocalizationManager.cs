@@ -19,7 +19,7 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly ITextMacroFactory _textMacroFactory = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
-        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
+        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new();
         private CultureInfo? _defaultCulture;
 
         public string GetString(string text)

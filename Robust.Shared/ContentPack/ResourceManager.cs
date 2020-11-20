@@ -21,18 +21,18 @@ namespace Robust.Shared.ContentPack
     {
         [Dependency] private readonly IConfigurationManager _config = default!;
 
-        private readonly ReaderWriterLockSlim _contentRootsLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
+        private readonly ReaderWriterLockSlim _contentRootsLock = new(LockRecursionPolicy.SupportsRecursion);
 
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
-            new List<(ResourcePath, IContentRoot)>();
+            new();
 
         // Special file names on Windows like serial ports.
         private static readonly Regex BadPathSegmentRegex =
-            new Regex("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
+            new("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
 
         // Literally not characters that can't go into filenames on Windows.
         private static readonly Regex BadPathCharacterRegex =
-            new Regex("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
+            new("[<>:\"|?*\0\\x01-\\x1f]", RegexOptions.IgnoreCase);
 
         /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; } = default!;

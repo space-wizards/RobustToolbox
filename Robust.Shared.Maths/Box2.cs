@@ -33,25 +33,25 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomRight
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(Right, Bottom);
+            get => new(Right, Bottom);
         }
 
         public readonly Vector2 TopLeft
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(Left, Top);
+            get => new(Left, Top);
         }
 
         public readonly Vector2 TopRight
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(Right, Top);
+            get => new(Right, Top);
         }
 
         public readonly Vector2 BottomLeft
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(Left, Bottom);
+            get => new(Left, Bottom);
         }
 
         public readonly float Width
@@ -69,7 +69,7 @@ namespace Robust.Shared.Maths
         public readonly Vector2 Size
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(Width, Height);
+            get => new(Width, Height);
         }
 
         public readonly Vector2 Center
@@ -87,7 +87,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     A 1x1 unit box with the origin centered.
         /// </summary>
-        public static readonly Box2 UnitCentered = new Box2(-0.5f, -0.5f, 0.5f, 0.5f);
+        public static readonly Box2 UnitCentered = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
         public Box2(Vector2 bottomLeft, Vector2 topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
         {
@@ -104,7 +104,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 FromDimensions(float left, float bottom, float width, float height)
         {
-            return new Box2(left, bottom, left + width, bottom + height);
+            return new(left, bottom, left + width, bottom + height);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -129,7 +129,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Box2 Enlarged(float size)
         {
-            return new Box2(Left - size, Bottom - size, Right + size, Top + size);
+            return new(Left - size, Bottom - size, Right + size, Top + size);
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Box2 Translated(Vector2 point)
         {
-            return new Box2(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
+            return new(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -304,7 +304,7 @@ namespace Robust.Shared.Maths
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Box2 Union(in Vector2 a, in Vector2 b)
-            => new Box2(
+            => new(
                 MathF.Min(a.X, b.X),
                 MathF.Min(a.Y, b.Y),
                 MathF.Max(a.X, b.X),

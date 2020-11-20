@@ -114,8 +114,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public void WakeBody()
         {
-            if (CanMove())
-                SleepAccumulator = 0;
+            SleepAccumulator = 0;
         }
 
         public PhysicsComponent()

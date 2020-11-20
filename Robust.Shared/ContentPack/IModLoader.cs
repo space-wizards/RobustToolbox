@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Robust.Shared.Interfaces.Resources;
@@ -7,6 +6,18 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.ContentPack
 {
     public interface IModLoader
+    {
+        Assembly GetAssembly(string name);
+
+        /// <summary>
+        ///     Adds a testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
+        /// </summary>
+        void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks);
+
+        bool IsContentAssembly(Assembly typeAssembly);
+    }
+
+    internal interface IModLoaderInternal : IModLoader
     {
         /// <summary>
         ///     Loads an assembly into the current AppDomain.
@@ -23,8 +34,6 @@ namespace Robust.Shared.ContentPack
         /// <typeparam name="T">The type of the entry point to search for.</typeparam>
         void LoadGameAssembly<T>(string diskPath)
             where T : GameShared;
-
-        Assembly GetAssembly(string name);
 
         /// <summary>
         ///     Broadcasts a run level change to all loaded entry point.
@@ -44,11 +53,7 @@ namespace Robust.Shared.ContentPack
         bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
             where T : GameShared;
 
-        /// <summary>
-        ///     Adds a testing callbacks that will be passed to <see cref="GameShared.SetTestingCallbacks"/>.
-        /// </summary>
-        void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks);
-
         void SetUseLoadContext(bool useLoadContext);
+        void SetEnableSandboxing(bool sandboxing);
     }
 }

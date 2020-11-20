@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
 #pragma warning disable 649
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
@@ -112,7 +112,7 @@ namespace Robust.Shared.GameObjects
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 // Force IoC inject of all systems
-                var instance = _typeFactory.CreateInstance<IEntitySystem>(type);
+                var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type);
 
                 _systems.Add(type, instance);
 

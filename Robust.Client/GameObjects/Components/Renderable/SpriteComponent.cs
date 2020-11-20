@@ -1910,8 +1910,8 @@ namespace Robust.Client.GameObjects
 
             public T AddComponent<T>() where T : Component, new()
             {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-                var comp = (T) typeFactory.CreateInstance(typeof(T));
+                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
+                var comp = (T) typeFactory.CreateInstanceUnchecked(typeof(T));
                 _components[typeof(T)] = comp;
                 comp.Owner = this;
 

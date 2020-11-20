@@ -37,6 +37,7 @@ namespace Robust.Shared
             IoCManager.Register<IConfigurationManager, ConfigurationManager>();
             IoCManager.Register<IConfigurationManagerInternal, ConfigurationManager>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            IoCManager.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
@@ -44,6 +45,7 @@ namespace Robust.Shared
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IMapManagerInternal, MapManager>();
             IoCManager.Register<IModLoader, ModLoader>();
+            IoCManager.Register<IModLoaderInternal, ModLoader>();
             IoCManager.Register<INetManager, NetManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IRobustSerializer, RobustSerializer>();

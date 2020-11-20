@@ -56,7 +56,7 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal class ModLoader : IModLoader, IDisposable, IPostInjectInit
+    internal class ModLoader : IModLoaderInternal, IDisposable, IPostInjectInit
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IResourceManager _resourceManager = default!;
@@ -88,7 +88,6 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
-
         }
 
         void IPostInjectInit.PostInject()
@@ -101,15 +100,28 @@ namespace Robust.Shared.ContentPack
             _useLoadContext = useLoadContext;
         }
 
+        public void SetEnableSandboxing(bool sandboxing)
+        {
+            _typeChecker.VerifyIL = sandboxing;
+            _typeChecker.DisableTypeCheck = !sandboxing;
+        }
+
+        public bool IsContentAssembly(Assembly typeAssembly)
+        {
+            foreach (var mod in _mods)
+            {
+                if (mod.GameAssembly == typeAssembly)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public virtual void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
             where T : GameShared
         {
-            // TODO: Re-enable type check when it's not just a giant pain in the butt.
-            // It slows down development too much and we need other things like System.Type fixed
-            // before it can reasonably be re-enabled.
-            _typeChecker.DisableTypeCheck = false;
-            _typeChecker.DumpTypes = false;
-
             if (!_typeChecker.CheckAssembly(assembly))
                 return;
 
@@ -131,12 +143,6 @@ namespace Robust.Shared.ContentPack
         public virtual void LoadGameAssembly<T>(string diskPath)
             where T : GameShared
         {
-            // TODO: Re-enable type check when it's not just a giant pain in the butt.
-            // It slows down development too much and we need other things like System.Type fixed
-            // before it can reasonably be re-enabled.
-            _typeChecker.DisableTypeCheck = false;
-            _typeChecker.DumpTypes = false;
-
             if (!_typeChecker.CheckAssembly(diskPath))
             {
                 throw new TypeCheckFailedException();
@@ -151,6 +157,7 @@ namespace Robust.Shared.ContentPack
             {
                 assembly = Assembly.LoadFrom(diskPath);
             }
+
             InitMod<T>(assembly);
         }
 
@@ -177,6 +184,7 @@ namespace Robust.Shared.ContentPack
                 {
                     entryPointInstance.SetTestingCallbacks(_testingCallbacks);
                 }
+
                 mod.EntryPoints.Add(entryPointInstance);
             }
 

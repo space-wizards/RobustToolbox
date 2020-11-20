@@ -62,7 +62,7 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -142,6 +142,7 @@ namespace Robust.Client
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
+            _modLoader.SetEnableSandboxing(true);
 
             //identical code for server in baseserver
             if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))

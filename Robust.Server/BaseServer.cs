@@ -84,7 +84,7 @@ namespace Robust.Server
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog runtimeLog = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
@@ -265,6 +265,7 @@ namespace Robust.Server
 #endif
 
             _modLoader.SetUseLoadContext(!DisableLoadContext);
+            _modLoader.SetEnableSandboxing(false);
 
             //identical code in game controller for client
             if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))

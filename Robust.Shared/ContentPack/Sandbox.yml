@@ -402,7 +402,6 @@ Types:
     StringComparison: { }
     DateTimeKind: { }
     NotSupportedException: { }
-    Activator: { } # TODO: REMOVE
     Predicate`1: { }
     EventHandler: { }
     EventHandler`1: { }

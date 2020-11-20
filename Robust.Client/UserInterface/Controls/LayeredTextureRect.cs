@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyShader = "shader";
 
         private bool _canShrink;
-        private List<Texture> _textures = new List<Texture>();
+        private List<Texture> _textures = new();
         private Vector2 _textureScale = Vector2.One;
 
         public ShaderInstance? ShaderOverride { get; set; }

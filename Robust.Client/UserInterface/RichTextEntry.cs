@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface
     internal struct RichTextEntry
     {
         private static readonly FormattedMessage.TagColor TagBaseColor
-            = new FormattedMessage.TagColor(new Color(200, 200, 200));
+            = new(new Color(200, 200, 200));
 
         public readonly FormattedMessage Message;
 

@@ -141,7 +141,7 @@ Mouse Pos:
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(175, _contents.CombinedMinimumSize.Y + 10);
+            return new(175, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

@@ -28,14 +28,14 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IClientConsole _console;
         private readonly IResourceManager _resourceManager;
 
-        private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
+        private static readonly ResourcePath HistoryPath = new("/debug_console_history.json");
 
         private readonly HistoryLineEdit CommandBar;
         private readonly OutputPanel Output;
         private readonly Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
-        private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
+        private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
 
         private bool _targetVisible;
 

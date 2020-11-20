@@ -23,7 +23,7 @@ namespace Robust.Client.ResourceManagement
 
         public VectorFont MakeDefault()
         {
-            return new VectorFont(this, 12);
+            return new(this, 12);
         }
     }
 }

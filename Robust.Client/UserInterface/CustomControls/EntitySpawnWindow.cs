@@ -35,7 +35,7 @@ namespace Robust.Client.UserInterface.CustomControls
         protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
         // List of prototypes that are visible based on current filter criteria.
-        private readonly List<EntityPrototype> _filteredPrototypes = new List<EntityPrototype>();
+        private readonly List<EntityPrototype> _filteredPrototypes = new();
         // The indices of the visible prototypes last time UpdateVisiblePrototypes was ran.
         // This is inclusive, so end is the index of the last prototype, not right after it.
         private (int start, int end) _lastPrototypeIndices;

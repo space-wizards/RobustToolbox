@@ -39,9 +39,9 @@ namespace Robust.Server.ServerStatus
 
         private const string Sawmill = "statushost";
 
-        private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
+        private static readonly JsonSerializer JsonSerializer = new();
 
-        private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
+        private readonly List<StatusHostHandler> _handlers = new();
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;

@@ -10,7 +10,7 @@ namespace Robust.Server.GameObjects
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]
-        readonly Dictionary<object, object> data = new Dictionary<object, object>();
+        readonly Dictionary<object, object> data = new();
 
         public override void SetData(string key, object value)
         {

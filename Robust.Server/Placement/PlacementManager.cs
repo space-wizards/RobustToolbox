@@ -26,7 +26,7 @@ namespace Robust.Server.Placement
 
         //TO-DO: Expand for multiple permission per mob?
         //       Add support for multi-use placeables (tiles etc.).
-        public List<PlacementInformation> BuildPermissions { get; set; } = new List<PlacementInformation>();
+        public List<PlacementInformation> BuildPermissions { get; set; } = new();
 
         //Holds build permissions for all mobs. A list of mobs and the objects they're allowed to request and how. One permission per mob.
 

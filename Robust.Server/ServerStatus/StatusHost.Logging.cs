@@ -12,7 +12,7 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
 
-        private Dictionary<string, SawmillWrapper> _sawmillCache = new Dictionary<string, SawmillWrapper>();
+        private Dictionary<string, SawmillWrapper> _sawmillCache = new();
 
         public ILogger CreateLogger(string categoryName)
         {

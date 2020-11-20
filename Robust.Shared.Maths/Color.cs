@@ -1197,8 +1197,9 @@ namespace Robust.Shared.Maths
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (143, 188, 139, 255).
+        ///     Previously (R, G, B, A) = (143, 188, 139, 255) before .NET 5.
         /// </summary>
-        public static Color DarkSeaGreen => new Color(143, 188, 139, 255);
+        public static Color DarkSeaGreen => new Color(143, 188, 143, 255);
 
         /// <summary>
         ///     Gets the system color with (R, G, B, A) = (72, 61, 139, 255).

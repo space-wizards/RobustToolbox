@@ -6,7 +6,6 @@ using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Random;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -149,9 +148,9 @@ namespace Robust.Shared.GameObjects.Systems
 
             IntegrateForces(simulatedBodies, prediction, frameTime);
 
-            VelocitySolver(frameTime);
-
             ProcessFriction(simulatedBodies, frameTime);
+
+            VelocitySolver(frameTime);
 
             CollisionBehaviors();
 
@@ -243,14 +242,14 @@ namespace Robust.Shared.GameObjects.Systems
         {
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             // FAT TODO: Make warmstarting not turn my laptop into a jet engine
-            CollisionCache.Clear();
+            //CollisionCache.Clear();
 
             // Go through existing manifolds and work out which are still relevant. These may need warmstarting later on.
             for (var i = CollisionCache.Count - 1; i >= 0; i--)
             {
                 var manifold = CollisionCache[i];
 
-                if (manifold.PositionResolved(manifold.A.WorldAABB, manifold.B.WorldAABB, _positionAllowance))
+                if (manifold.PositionResolved(manifold.A.WorldAABB, manifold.B.WorldAABB, _positionAllowance + 0.001f))
                 {
                     CollisionCache.RemoveAt(i);
                     continue;
@@ -380,23 +379,23 @@ namespace Robust.Shared.GameObjects.Systems
             for (var i = 0; i < CollisionCache.Count; i++)
             {
                 var manifold = CollisionCache[i];
-                if (!manifold.WarmStart || manifold.VelocityResolved) continue;
+                if (!manifold.WarmStart) continue;
 
                 DebugTools.AssertNotNull(manifold.Impulse);
                 if (manifold.Impulse == null || manifold.Impulse.Value == Vector2.Zero) continue;
                 var impulse = manifold.Impulse.Value * frameTime;
-                var maxImpulse = -(manifold.Normal * manifold.RelativeVelocity).Length;
+                //var maxImpulse = (manifold.Normal * manifold.RelativeVelocity).Length;
 
-                impulse = impulse.Normalized * MathF.Min(impulse.Length, maxImpulse);
+                //impulse = impulse.Normalized * MathF.Min(impulse.Length, maxImpulse);
 
                 if (manifold.A.CanMove())
                 {
-                    manifold.A.ApplyImpulse(impulse);
+                    manifold.A.ApplyImpulse(-impulse);
                 }
 
                 if (manifold.B.CanMove())
                 {
-                    manifold.B.ApplyImpulse(-impulse);
+                    manifold.B.ApplyImpulse(impulse);
                 }
 
                 manifold.Impulse = Vector2.Zero;
@@ -421,12 +420,12 @@ namespace Robust.Shared.GameObjects.Systems
 
                     if (manifold.A.CanMove())
                     {
-                        manifold.A.ApplyImpulse(impulse);
+                        manifold.A.ApplyImpulse(-impulse);
                     }
 
                     if (manifold.B.CanMove())
                     {
-                        manifold.B.ApplyImpulse(-impulse);
+                        manifold.B.ApplyImpulse(impulse);
                     }
                 }
 
@@ -455,20 +454,22 @@ namespace Robust.Shared.GameObjects.Systems
                     var penetration = PhysicsManager.CalculatePenetration(aProjected, bProjected);
 
                     done = false;
-                    var correction = -manifold.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f) * _baumgarte, _maxPositionCorrect) / (manifold.A.InvMass + manifold.B.InvMass);
+                    var correction = manifold.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f) * _baumgarte, _maxPositionCorrect) / (manifold.A.InvMass + manifold.B.InvMass);
 
                     if (manifold.A.CanMove())
                     {
                         manifold.A.Owner.Transform.DeferUpdates = true;
                         _deferredUpdates.Add(manifold.A);
-                        manifold.A.Owner.Transform.WorldPosition += correction * manifold.A.InvMass;
+                        manifold.A.Owner.Transform.WorldPosition -= correction * manifold.A.InvMass;
+                        manifold.A.WakeBody();
                     }
 
                     if (manifold.B.CanMove())
                     {
                         manifold.B.Owner.Transform.DeferUpdates = true;
                         _deferredUpdates.Add(manifold.B);
-                        manifold.B.Owner.Transform.WorldPosition -= correction * manifold.B.InvMass;
+                        manifold.B.Owner.Transform.WorldPosition += correction * manifold.B.InvMass;
+                        manifold.B.WakeBody();
                     }
                 }
 

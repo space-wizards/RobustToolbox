@@ -114,7 +114,7 @@ namespace Robust.Shared.Physics
             if (vAlongNormal >= 0f)
                 return Vector2.Zero;
 
-            var impulse = (1.0f + restitution) * vAlongNormal;
+            var impulse = -(1.0f + restitution) * vAlongNormal;
             impulse /= aP.InvMass + bP.InvMass;
 
             return manifold.Normal * impulse;

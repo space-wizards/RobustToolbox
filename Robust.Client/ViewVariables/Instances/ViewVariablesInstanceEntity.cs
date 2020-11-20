@@ -41,6 +41,8 @@ namespace Robust.Client.ViewVariables.Instances
 
         private ViewVariablesBlobMembers? _membersBlob;
 
+        private VBoxContainer _clientComponents = default!;
+
         private VBoxContainer _serverVariables = default!;
         private VBoxContainer _serverComponents = default!;
 
@@ -128,11 +130,11 @@ namespace Robust.Client.ViewVariables.Instances
                 }
             }
 
-            var clientComponents = new VBoxContainer {SeparationOverride = 0};
-            _tabs.AddChild(clientComponents);
+            _clientComponents = new VBoxContainer {SeparationOverride = 0};
+            _tabs.AddChild(_clientComponents);
             _tabs.SetTabTitle(TabClientComponents, "Client Components");
 
-            clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
+            _clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
             {
                 PlaceHolder = Loc.GetString("Search"),
                 SizeFlagsHorizontal = SizeFlags.FillExpand
@@ -160,27 +162,38 @@ namespace Robust.Client.ViewVariables.Instances
             }
         }
 
-        private void BuildClientComponentList(string? searchStr = null)
+        private void UpdateClientComponentListVisibility(string? searchStr = null)
         {
-            var clientComponents = _tabs.GetChild(TabClientComponents);
-
-            clientComponents.RemoveAllChildren();
-
-            // See engine#636 for why the Distinct() call.
-            var componentList = _entity.GetAllComponents();
-
-            if (!string.IsNullOrEmpty(searchStr))
+            if (string.IsNullOrEmpty(searchStr))
             {
-                componentList = componentList.Where(c => c.GetType().ToString().Contains(searchStr, StringComparison.InvariantCultureIgnoreCase));
+                foreach (var child in _clientComponents.Children)
+                {
+                    child.Visible = true;
+                }
+
+                return;
             }
 
-            componentList = componentList.OrderBy(c => c.GetType().ToString());
-
-            foreach (var component in componentList)
+            foreach (var child in _clientComponents.Children)
             {
-                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
-                button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
-                clientComponents.AddChild(button);
+                if (child is not Button button)
+                {
+                    continue;
+                }
+
+                if (button.Text == null)
+                {
+                    button.Visible = false;
+                    continue;
+                }
+
+                if (!button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    button.Visible = false;
+                    continue;
+                }
+                
+                button.Visible = true;
             }
         }
 
@@ -203,19 +216,25 @@ namespace Robust.Client.ViewVariables.Instances
                     continue;
                 }
 
-                if (button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+                if (button.Text == null)
                 {
-                    button.Visible = true;
+                    button.Visible = false;
+                    continue;
+                }
+                
+                if (!button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    button.Visible = false;
                     continue;
                 }
 
-                button.Visible = false;
+                button.Visible = true;
             }
         }
 
         private void OnClientComponentsSearchBarChanged(LineEditEventArgs args)
         {
-            BuildClientComponentList(args.Text);
+            UpdateClientComponentListVisibility(args.Text);
         }
 
         private void OnServerComponentsSearchBarChanged(LineEditEventArgs args)

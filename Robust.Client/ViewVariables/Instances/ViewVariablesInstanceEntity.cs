@@ -334,6 +334,8 @@ namespace Robust.Client.ViewVariables.Instances
                 PlaceHolder = Loc.GetString("Search"),
                 SizeFlagsHorizontal = SizeFlags.FillExpand
             });
+
+            _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
             
             componentsBlob.ComponentTypes.Sort();
 

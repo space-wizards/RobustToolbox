@@ -29,13 +29,13 @@ namespace Robust.Shared.Maths
         /// </summary>
         public float Bottom;
 
-        public readonly Vector2 BottomRight => new Vector2(Right, Bottom);
-        public readonly Vector2 TopLeft => new Vector2(Left, Top);
-        public readonly Vector2 TopRight => new Vector2(Right, Top);
-        public readonly Vector2 BottomLeft => new Vector2(Left, Bottom);
+        public readonly Vector2 BottomRight => new(Right, Bottom);
+        public readonly Vector2 TopLeft => new(Left, Top);
+        public readonly Vector2 TopRight => new(Right, Top);
+        public readonly Vector2 BottomLeft => new(Left, Bottom);
         public readonly float Width => MathF.Abs(Right - Left);
         public readonly float Height => MathF.Abs(Top - Bottom);
-        public readonly Vector2 Size => new Vector2(Width, Height);
+        public readonly Vector2 Size => new(Width, Height);
         public readonly Vector2 Center => TopLeft + Size / 2;
 
         public UIBox2(Vector2 leftTop, Vector2 rightBottom) : this(leftTop.X, leftTop.Y, rightBottom.X, rightBottom.Y)
@@ -52,7 +52,7 @@ namespace Robust.Shared.Maths
 
         public static UIBox2 FromDimensions(float left, float top, float width, float height)
         {
-            return new UIBox2(left, top, left + width, top + height);
+            return new(left, top, left + width, top + height);
         }
 
         public static UIBox2 FromDimensions(Vector2 leftTopPosition, Vector2 size)
@@ -117,7 +117,7 @@ namespace Robust.Shared.Maths
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
         public readonly UIBox2 Translated(Vector2 point)
         {
-            return new UIBox2(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
+            return new(Left + point.X, Top + point.Y, Right + point.X, Bottom + point.Y);
         }
 
         public readonly bool Equals(UIBox2 other)

@@ -18,7 +18,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     A 1x1 unit box with the origin centered and identity rotation.
         /// </summary>
-        public static readonly Box2Rotated UnitCentered = new Box2Rotated(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
+        public static readonly Box2Rotated UnitCentered = new(Box2.UnitCentered, Angle.Zero, Vector2.Zero);
 
         public readonly Vector2 BottomRight => Origin + Rotation.RotateVec(Box.BottomRight - Origin);
         public readonly Vector2 TopLeft => Origin + Rotation.RotateVec(Box.TopLeft - Origin);

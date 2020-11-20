@@ -64,32 +64,32 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the X-axis.
         /// </summary>
-        public static readonly Vector4 UnitX = new Vector4(1, 0, 0, 0);
+        public static readonly Vector4 UnitX = new(1, 0, 0, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the Y-axis.
         /// </summary>
-        public static readonly Vector4 UnitY = new Vector4(0, 1, 0, 0);
+        public static readonly Vector4 UnitY = new(0, 1, 0, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the Z-axis.
         /// </summary>
-        public static readonly Vector4 UnitZ = new Vector4(0, 0, 1, 0);
+        public static readonly Vector4 UnitZ = new(0, 0, 1, 0);
 
         /// <summary>
         /// Defines a unit-length Vector4 that points towards the W-axis.
         /// </summary>
-        public static readonly Vector4 UnitW = new Vector4(0, 0, 0, 1);
+        public static readonly Vector4 UnitW = new(0, 0, 0, 1);
 
         /// <summary>
         /// Defines a zero-length Vector4.
         /// </summary>
-        public static readonly Vector4 Zero = new Vector4(0, 0, 0, 0);
+        public static readonly Vector4 Zero = new(0, 0, 0, 0);
 
         /// <summary>
         /// Defines an instance with all components set to 1.
         /// </summary>
-        public static readonly Vector4 One = new Vector4(1, 1, 1, 1);
+        public static readonly Vector4 One = new(1, 1, 1, 1);
 
         /// <summary>
         /// Defines the size of the Vector4 struct in bytes.
@@ -751,7 +751,7 @@ namespace Robust.Shared.Maths
         public Vector2 Xy
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector2(X, Y);
+            get => new(X, Y);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
@@ -767,7 +767,7 @@ namespace Robust.Shared.Maths
         public Vector3 Xyz
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new Vector3(X, Y, Z);
+            get => new(X, Y, Z);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {

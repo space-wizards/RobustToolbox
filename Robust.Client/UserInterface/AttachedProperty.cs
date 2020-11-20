@@ -94,7 +94,7 @@ namespace Robust.Client.UserInterface
             : base(name, owningType, typeof(T), defaultValue,
                 validate != null ? o => validate!((T) o!) : (Func<object?, bool>?) null,
                 changed != null
-                    ? (AttachedPropertyChangedCallback) ((o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!)))
+                    ? (AttachedPropertyChangedCallback?) ((o, ev) => changed!(o, new AttachedPropertyChangedEventArgs<T>((T) ev.NewValue!, (T) ev.OldValue!)))
                     : null)
         {
             Validate = validate;

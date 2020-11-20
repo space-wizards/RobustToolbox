@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -7,9 +8,12 @@ using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables.Traits;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Control;
+using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.ViewVariables.Instances
 {
@@ -40,6 +44,9 @@ namespace Robust.Client.ViewVariables.Instances
         private VBoxContainer _serverVariables = default!;
         private VBoxContainer _serverComponents = default!;
 
+        private LineEdit _clientComponentsSearchBar = default!;
+        private LineEdit _serverComponentsSearchBar = default!;
+
         private bool _serverLoaded;
 
         public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IResourceCache resCache, IEntityManager entityManager) : base(vvm, resCache)
@@ -51,15 +58,13 @@ namespace Robust.Client.ViewVariables.Instances
         {
             _entity = (IEntity) obj;
 
-            var type = obj.GetType();
-
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new VBoxContainer
             {
-                SizeFlagsHorizontal = Control.SizeFlags.FillExpand,
-                SizeFlagsVertical = Control.SizeFlags.FillExpand,
+                SizeFlagsHorizontal = SizeFlags.FillExpand,
+                SizeFlagsVertical = SizeFlags.FillExpand,
             };
             scrollContainer.AddChild(vBoxContainer);
 
@@ -90,7 +95,7 @@ namespace Robust.Client.ViewVariables.Instances
                 if (_entity.TryGetComponent(out ISpriteComponent? sprite))
                 {
                     var hBox = new HBoxContainer();
-                    top.SizeFlagsHorizontal = Control.SizeFlags.FillExpand;
+                    top.SizeFlagsHorizontal = SizeFlags.FillExpand;
                     hBox.AddChild(top);
                     hBox.AddChild(new SpriteView {Sprite = sprite});
                     vBoxContainer.AddChild(hBox);
@@ -127,14 +132,13 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.AddChild(clientComponents);
             _tabs.SetTabTitle(TabClientComponents, "Client Components");
 
-            // See engine#636 for why the Distinct() call.
-            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
-            foreach (var component in componentList)
+            clientComponents.AddChild(_clientComponentsSearchBar = new LineEdit
             {
-                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
-                button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
-                clientComponents.AddChild(button);
-            }
+                PlaceHolder = Loc.GetString("Search"),
+                SizeFlagsHorizontal = SizeFlags.FillExpand
+            });
+
+            _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
             if (!_entity.Uid.IsClientSide())
             {
@@ -145,7 +149,78 @@ namespace Robust.Client.ViewVariables.Instances
                 _serverComponents = new VBoxContainer {SeparationOverride = 0};
                 _tabs.AddChild(_serverComponents);
                 _tabs.SetTabTitle(TabServerComponents, "Server Components");
+
+                _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
+                {
+                    PlaceHolder = Loc.GetString("Search"),
+                    SizeFlagsHorizontal = SizeFlags.FillExpand
+                });
+
+                _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
             }
+        }
+
+        private void BuildClientComponentList(string? searchStr = null)
+        {
+            var clientComponents = _tabs.GetChild(TabClientComponents);
+
+            clientComponents.RemoveAllChildren();
+
+            // See engine#636 for why the Distinct() call.
+            var componentList = _entity.GetAllComponents();
+
+            if (!string.IsNullOrEmpty(searchStr))
+            {
+                componentList = componentList.Where(c => c.GetType().ToString().Contains(searchStr, StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            componentList = componentList.OrderBy(c => c.GetType().ToString());
+
+            foreach (var component in componentList)
+            {
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
+                button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
+                clientComponents.AddChild(button);
+            }
+        }
+
+        private void UpdateServerComponentListVisibility(string? searchStr = null)
+        {
+            if (string.IsNullOrEmpty(searchStr))
+            {
+                foreach (var child in _serverComponents.Children)
+                {
+                    child.Visible = true;
+                }
+
+                return;
+            }
+
+            foreach (var child in _serverComponents.Children)
+            {
+                if (child is not Button button)
+                {
+                    continue;
+                }
+
+                if (button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    button.Visible = true;
+                    continue;
+                }
+
+                button.Visible = false;
+            }
+        }
+
+        private void OnClientComponentsSearchBarChanged(LineEditEventArgs args)
+        {
+            BuildClientComponentList(args.Text);
+        }
+
+        private void OnServerComponentsSearchBarChanged(LineEditEventArgs args)
+        {
+            UpdateServerComponentListVisibility(args.Text);
         }
 
         public override async void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
@@ -225,7 +300,19 @@ namespace Robust.Client.ViewVariables.Instances
 
             _serverComponents.DisposeAllChildren();
             componentsBlob.ComponentTypes.Sort();
-            foreach (var componentType in componentsBlob.ComponentTypes.OrderBy(t => t.Stringified))
+
+            var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(_serverComponentsSearchBar.Text))
+            {
+                componentTypes = componentTypes
+                    .Where(t => t.Stringified.Contains(_serverComponentsSearchBar.Text,
+                        StringComparison.InvariantCultureIgnoreCase));
+            }
+
+            componentTypes = componentTypes.OrderBy(t => t.Stringified);
+
+            foreach (var componentType in componentTypes)
             {
                 var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
                 button.OnPressed += args =>

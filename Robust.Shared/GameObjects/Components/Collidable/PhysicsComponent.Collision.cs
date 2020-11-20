@@ -30,8 +30,6 @@ namespace Robust.Shared.GameObjects.Components
 
     public partial interface IPhysicsComponent : IComponent, IPhysBody
     {
-        public new bool Hard { get; set; }
-
         public float MaximumStepDistance { get; }
 
         bool IsColliding(Vector2 offset, bool approximate = true);
@@ -139,6 +137,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _mass, "mass", 10.0f);
             serializer.DataField(this, x => Restitution, "restitution", 0.2f);
             serializer.DataField(this, x => Friction, "friction", 0.5f);
+            serializer.DataField(this, x => WarmStart, "warmStart", true);
         }
 
         /// <inheritdoc />

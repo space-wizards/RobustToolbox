@@ -192,9 +192,7 @@ namespace Robust.Shared.GameObjects.Components
         [ViewVariables(VVAccess.ReadWrite)]
         public float Restitution { get; set; }
 
-        /// <summary>
-        ///     Current mass of the entity in kilograms.
-        /// </summary>
+        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public float Mass
         {
@@ -206,9 +204,10 @@ namespace Robust.Shared.GameObjects.Components
             }
         }
 
-        /// <summary>
-        /// Inverse mass of the entity in kilograms (1 / Mass).
-        /// </summary>
+        /// <inheritdoc />
+        public bool WarmStart { get; set; }
+
+        /// <inheritdoc />
         [ViewVariables]
         public float InvMass
         {

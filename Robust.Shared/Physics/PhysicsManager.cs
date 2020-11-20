@@ -72,11 +72,6 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public static Vector2 CalculateNormal(IPhysBody target, IPhysBody source)
         {
-            if (target.Entity.Name.Contains("John"))
-            {
-
-            }
-
             var manifold = target.WorldAABB.Intersect(source.WorldAABB);
             if (manifold.IsEmpty()) return Vector2.Zero;
             if (manifold.Height > manifold.Width)
@@ -84,18 +79,18 @@ namespace Robust.Shared.Physics
                 // X is the axis of seperation
                 var leftDist = source.WorldAABB.Right - target.WorldAABB.Left;
                 var rightDist = target.WorldAABB.Right - source.WorldAABB.Left;
-                return new Vector2(leftDist > rightDist ? -1 : 1, 0);
+                return new Vector2(leftDist > rightDist ? 1 : -1, 0);
             }
             else
             {
                 // Y is the axis of seperation
                 var bottomDist = source.WorldAABB.Top - target.WorldAABB.Bottom;
                 var topDist = target.WorldAABB.Top - source.WorldAABB.Bottom;
-                return new Vector2(0, bottomDist > topDist ? -1 : 1);
+                return new Vector2(0, bottomDist > topDist ? 1 : -1);
             }
         }
 
-        public float CalculatePenetration(Box2 target, Box2 source)
+        public static float CalculatePenetration(Box2 target, Box2 source)
         {
             var manifold = target.Intersect(source);
             if (manifold.IsEmpty()) return 0.0f;
@@ -110,15 +105,14 @@ namespace Robust.Shared.Physics
 
             if (!aP.CanMove() && !bP.CanMove()) return Vector2.Zero;
 
-            var restitution = Math.Min(aP.Restitution, bP.Restitution);
+            var restitution = MathF.Min(aP.Restitution, bP.Restitution);
             var normal = manifold.Normal;
-            var rV = manifold.RelativeVelocity;
+            var relativeVelocity = manifold.RelativeVelocity;
 
-            var vAlongNormal = Vector2.Dot(rV, normal);
-            if (vAlongNormal < 0)
-            {
+            var vAlongNormal = Vector2.Dot(relativeVelocity, normal);
+
+            if (vAlongNormal >= 0f)
                 return Vector2.Zero;
-            }
 
             var impulse = (1.0f + restitution) * vAlongNormal;
             impulse /= aP.InvMass + bP.InvMass;
@@ -161,7 +155,7 @@ namespace Robust.Shared.Physics
                     state.entities.Add(body.Entity);
                 }
                 return true;
-            }, physBody.WorldAABB, approximate);
+            }, physBody.WorldAABB.Translated(offset), approximate);
 
             return entities;
         }

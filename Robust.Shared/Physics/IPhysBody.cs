@@ -76,12 +76,17 @@ namespace Robust.Shared.Physics
         bool Hard { get; set; }
 
         /// <summary>
+        ///     Should this body have its velocity reset every tick.
+        /// </summary>
+        bool WarmStart { get; set; }
+
+        /// <summary>
         /// Inverse mass of the entity in kilograms (1 / Mass).
         /// </summary>
         float InvMass { get; }
 
         /// <summary>
-        /// Inverse moment of inertia, in 
+        /// Inverse moment of inertia, in
         /// </summary>
         float InvI { get; }
 

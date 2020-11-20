@@ -56,22 +56,22 @@ namespace Robust.Shared.GameObjects.Systems
 
         #region parameters
         /// <summary>
-        ///     The maximum amount of object overlap we can correct in a second.
+        ///     The maximum amount of object overlap we can correct in a tick.
         /// </summary>
-        private float _maxPositionCorrect = 0.8f;
+        private float _maxPositionCorrect = 0.4f;
 
         /// <summary>
         ///     Percentage of overlap we can correct in a tick.
         /// </summary>
-        private float _positionCorrectPercent = 0.2f;
+        private float _baumgarte = 0.4f;
 
         /// <summary>
         ///     Maximum amount of overlap allowed for 2 bodies.
         /// </summary>
-        private float _positionAllowance = 1 / 128f;
+        private float _positionAllowance = 1 / 256f;
 
-        private byte _positionSolverIterations = 1;
-        private byte _velocitySolverIterations = 4;
+        private byte _positionSolverIterations = 2;
+        private byte _velocitySolverIterations = 6;
         #endregion
 
         /*
@@ -203,6 +203,7 @@ namespace Robust.Shared.GameObjects.Systems
                 if(!body.CanMove())
                     continue;
 
+                var oldVelocity = Vector2.Zero; // body.WarmStart ? body.LinearVelocity : Vector2.Zero;
                 var deltaVelocity = Vector2.Zero;
 
                 // See https://www.youtube.com/watch?v=SHinxAhv1ZE for an overall explanation
@@ -211,7 +212,7 @@ namespace Robust.Shared.GameObjects.Systems
                 foreach (var controller in body.Controllers.Values)
                 {
                     controller.UpdateBeforeProcessing();
-                    deltaVelocity += controller.LinearVelocity * frameTime;
+                    deltaVelocity += controller.LinearVelocity;
                     controller.LinearVelocity = Vector2.Zero;
                 }
 
@@ -220,7 +221,9 @@ namespace Robust.Shared.GameObjects.Systems
 
                 // Round it off
 
-                body.LinearVelocity = deltaVelocity.LengthSquared < 0.00001f ? Vector2.Zero : deltaVelocity;
+                var bodyVelocity = oldVelocity + deltaVelocity;
+
+                body.LinearVelocity = bodyVelocity.LengthSquared < 0.00001f ? Vector2.Zero : bodyVelocity;
 
                 // forces are instantaneous, so these properties are cleared
                 // once integrated. If you want to apply a continuous force,
@@ -239,20 +242,20 @@ namespace Robust.Shared.GameObjects.Systems
         private void ProcessCollisions(IEnumerable<IPhysicsComponent> awakeBodies, float frameTime)
         {
             var combinations = new HashSet<(EntityUid, EntityUid)>();
+            // FAT TODO: Make warmstarting not turn my laptop into a jet engine
+            CollisionCache.Clear();
 
             // Go through existing manifolds and work out which are still relevant. These may need warmstarting later on.
             for (var i = CollisionCache.Count - 1; i >= 0; i--)
             {
                 var manifold = CollisionCache[i];
 
-                if (!manifold.Hard || !manifold.Colliding || !manifold.Unresolved)
+                if (manifold.PositionResolved(manifold.A.WorldAABB, manifold.B.WorldAABB, _positionAllowance))
                 {
                     CollisionCache.RemoveAt(i);
                     continue;
                 }
 
-                manifold.A.WakeBody();
-                manifold.B.WakeBody();
                 combinations.Add((manifold.A.Owner.Uid, manifold.B.Owner.Uid));
             }
 
@@ -262,14 +265,15 @@ namespace Robust.Shared.GameObjects.Systems
                 // We'll use our minimum bounding width as the maximum amount we can step.
 
                 // Alternative you could write continuous collision detection but it'd probably be slower.
-                var frameDistance = aPhysics.LinearVelocity.Length;
+                var frameDistance = aPhysics.LinearVelocity.Length * frameTime;
 
                 // TODO: Technically the first step can be our maximum distance + (height or width depending on our direction)
                 // Not an optimisation if our tickrate stays at 30
                 var maxStepDistance = aPhysics.MaximumStepDistance - 0.0001f;
                 var stepDistance = maxStepDistance >= frameDistance ? frameDistance : maxStepDistance;
 
-                var steps = (int) (MathF.Ceiling(frameDistance / stepDistance) + 1);
+                // TODO: Need to get time of collision to work out penetration
+                var steps = 1; //(int) (MathF.Ceiling(frameDistance / stepDistance) + 1);
 
                 for (var i = 0; i < steps; i++)
                 {
@@ -309,9 +313,6 @@ namespace Robust.Shared.GameObjects.Systems
                         var bPhysics = b.GetComponent<IPhysicsComponent>();
                         var hard = aPhysics.Hard && bPhysics.Hard;
                         anyHard = anyHard || hard;
-
-                        aPhysics.WakeBody();
-                        bPhysics.WakeBody();
 
                         // TODO: Need to step through and check the collision shit at low tickrate
 
@@ -379,13 +380,14 @@ namespace Robust.Shared.GameObjects.Systems
             for (var i = 0; i < CollisionCache.Count; i++)
             {
                 var manifold = CollisionCache[i];
-                if (!manifold.WarmStart) continue;
+                if (!manifold.WarmStart || manifold.VelocityResolved) continue;
 
                 DebugTools.AssertNotNull(manifold.Impulse);
-                // TODO
                 if (manifold.Impulse == null || manifold.Impulse.Value == Vector2.Zero) continue;
                 var impulse = manifold.Impulse.Value * frameTime;
-                //Logger.Debug($"Impulse is {impulse}");
+                var maxImpulse = -(manifold.Normal * manifold.RelativeVelocity).Length;
+
+                impulse = impulse.Normalized * MathF.Min(impulse.Length, maxImpulse);
 
                 if (manifold.A.CanMove())
                 {
@@ -407,7 +409,7 @@ namespace Robust.Shared.GameObjects.Systems
                 for (var j = 0; j < CollisionCache.Count; j++)
                 {
                     var manifold = CollisionCache[(j + offset) % CollisionCache.Count];
-                    if (!manifold.Unresolved) continue;
+                    if (manifold.VelocityResolved) continue;
 
                     anyRemaining = true;
                     manifold.A.WakeBody();
@@ -444,29 +446,29 @@ namespace Robust.Shared.GameObjects.Systems
                 var offset = _random.Next(CollisionCache.Count - 1);
                 for (var j = 0; j < CollisionCache.Count; j++)
                 {
-                    var collision = CollisionCache[(j + offset) % CollisionCache.Count];
+                    var manifold = CollisionCache[(j + offset) % CollisionCache.Count];
+                    var aProjected = manifold.A.WorldAABB;//.Translated(manifold.A.LinearVelocity * frameTime);
+                    var bProjected = manifold.B.WorldAABB;//.Translated(manifold.B.LinearVelocity * frameTime);
 
-                    if (!collision.Hard) continue;
+                    if (manifold.PositionResolved(aProjected, bProjected, _positionAllowance)) continue;
 
-                    var penetration = _physicsManager.CalculatePenetration(collision.A.WorldAABB.Translated(collision.A.LinearVelocity), collision.B.WorldAABB.Translated(collision.B.LinearVelocity));
-
-                    if (penetration <= _positionAllowance) continue;
+                    var penetration = PhysicsManager.CalculatePenetration(aProjected, bProjected);
 
                     done = false;
-                    var correction = -collision.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f) * _positionCorrectPercent, _maxPositionCorrect) / (collision.A.InvMass + collision.B.InvMass);
+                    var correction = -manifold.Normal * MathF.Min(MathF.Max(penetration - _positionAllowance, 0.0f) * _baumgarte, _maxPositionCorrect) / (manifold.A.InvMass + manifold.B.InvMass);
 
-                    if (collision.A.CanMove())
+                    if (manifold.A.CanMove())
                     {
-                        collision.A.Owner.Transform.DeferUpdates = true;
-                        _deferredUpdates.Add(collision.A);
-                        collision.A.Owner.Transform.WorldPosition -= correction * collision.A.InvMass;
+                        manifold.A.Owner.Transform.DeferUpdates = true;
+                        _deferredUpdates.Add(manifold.A);
+                        manifold.A.Owner.Transform.WorldPosition += correction * manifold.A.InvMass;
                     }
 
-                    if (collision.B.CanMove())
+                    if (manifold.B.CanMove())
                     {
-                        collision.B.Owner.Transform.DeferUpdates = true;
-                        _deferredUpdates.Add(collision.B);
-                        collision.B.Owner.Transform.WorldPosition += correction * collision.B.InvMass;
+                        manifold.B.Owner.Transform.DeferUpdates = true;
+                        _deferredUpdates.Add(manifold.B);
+                        manifold.B.Owner.Transform.WorldPosition -= correction * manifold.B.InvMass;
                     }
                 }
 
@@ -488,7 +490,7 @@ namespace Robust.Shared.GameObjects.Systems
                 var friction = GetFriction(body);
 
                 // friction between the two objects - Static friction not modelled
-                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * frameTime, body.LinearVelocity.Length);
+                var dynamicFriction = MathF.Min(MathF.Sqrt(friction * body.Friction) * 9.8f * frameTime, body.LinearVelocity.Length);
 
                 body.LinearVelocity -= body.LinearVelocity.Normalized * dynamicFriction;
             }
@@ -515,7 +517,7 @@ namespace Robust.Shared.GameObjects.Systems
             physics.Owner.Transform.DeferUpdates = true;
             _deferredUpdates.Add(physics);
 
-            var frameVelocity = physics.LinearVelocity.Normalized * MathF.Min(physics.LinearVelocity.Length, _speedLimit * frameTime);
+            var frameVelocity = physics.LinearVelocity.Normalized * MathF.Min(physics.LinearVelocity.Length, _speedLimit) * frameTime;
 
             var newPosition = physics.WorldPosition + frameVelocity;
             var owner = physics.Owner;
@@ -538,7 +540,7 @@ namespace Robust.Shared.GameObjects.Systems
                 }
             }
 
-            physics.WorldRotation += physics.AngularVelocity;
+            physics.WorldRotation += physics.AngularVelocity * frameTime;
             physics.WorldPosition = newPosition;
         }
 

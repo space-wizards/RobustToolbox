@@ -74,14 +74,6 @@ namespace Robust.Shared.Interfaces.Physics
         /// <returns>The distance the ray traveled while colliding with entities</returns>
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null);
 
-        /// <summary>
-        ///     Calculates the penetration depth of the axis-of-least-penetration for a
-        /// </summary>
-        /// <param name="target"></param>
-        /// <param name="source"></param>
-        /// <returns></returns>
-        float CalculatePenetration(Box2 target, Box2 source);
-
         Vector2 SolveCollisionImpulse(Manifold manifold);
 
         /// <summary>
@@ -134,9 +126,9 @@ namespace Robust.Shared.Interfaces.Physics
 
         public Vector2 RelativeVelocity => B.LinearVelocity - A.LinearVelocity;
 
-        public bool Unresolved => Vector2.Dot(RelativeVelocity, Normal) > 0 && Hard;
+        public bool PositionResolved(Box2 A, Box2 B, float tolerance) => !Hard || PhysicsManager.CalculatePenetration(A, B) < tolerance;
 
-        public bool Colliding => A.CollidingWith(B);
+        public bool VelocityResolved => !Hard || Vector2.Dot(Normal, RelativeVelocity) >= 0;
 
         public bool WarmStart => Impulse != null;
 

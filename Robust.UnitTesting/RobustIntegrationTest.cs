@@ -37,7 +37,7 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
-        private readonly List<IntegrationInstance> _integrationInstances = new List<IntegrationInstance>();
+        private readonly List<IntegrationInstance> _integrationInstances = new();
 
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
@@ -577,7 +577,7 @@ namespace Robust.UnitTesting
             public Assembly? SharedContentAssembly { get; set; }
             public string? ExtraPrototypes { get; set; }
 
-            public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();
+            public Dictionary<string, string> CVarOverrides { get; } = new();
         }
 
         /// <summary>

@@ -142,6 +142,16 @@ namespace Robust.Client.ViewVariables.Instances
 
             _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
+            // See engine#636 for why the Distinct() call.
+            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
+
+            foreach (var component in componentList)
+            {
+                var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
+                button.OnPressed += args => { ViewVariablesManager.OpenVV(component); };
+                _clientComponents.AddChild(button);
+            }
+
             if (!_entity.Uid.IsClientSide())
             {
                 _serverVariables = new VBoxContainer {SeparationOverride = 0};

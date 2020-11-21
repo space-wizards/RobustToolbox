@@ -102,8 +102,6 @@ namespace Robust.Shared.Timing
         private int _tickExceptions;
 #endif
 
-        private const int MaxSoftLockExceptions = 10;
-
         public GameLoop(IGameTiming timing)
         {
             _timing = timing;

@@ -37,6 +37,7 @@ using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Log;
+using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -89,6 +90,7 @@ namespace Robust.Server
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
 
@@ -289,6 +291,8 @@ namespace Robust.Server
             // Else the content types won't be included.
             // TODO: solve this properly.
             _serializer.Initialize();
+
+            _loc.AddLoadedToStringSerializer();
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;

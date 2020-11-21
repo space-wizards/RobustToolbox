@@ -4,8 +4,9 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics {
 
-    public interface IBroadPhase : IBroadPhase<IPhysBody> {
-
+    internal interface IBroadPhase
+    {
+        void UpdatePairs(PhysicsMapCallback.BroadphaseDelegate callback);
     }
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {

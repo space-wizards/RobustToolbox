@@ -9,12 +9,27 @@ namespace Robust.Shared.Physics
     /// <summary>
     ///
     /// </summary>
-    public interface IPhysBody
+    internal interface IPhysBody
     {
         /// <summary>
         ///     Entity that this physBody represents.
         /// </summary>
         IEntity Entity { get; }
+
+        // TODO: Look at dumping the double-linked list
+        ContactEdge? ContactList { get; set; }
+
+        JointEdge? JointList { get; set; }
+
+        /// <summary>
+        ///     Has this body been added to an island?
+        /// </summary>
+        bool Island { get; set; }
+
+        /// <summary>
+        ///     Index of this body in its island.
+        /// </summary>
+        int IslandIndex { get; set; }
 
         /// <summary>
         ///     AABB of this entity in world space.
@@ -32,6 +47,11 @@ namespace Robust.Shared.Physics
         /// Whether or not this body can collide.
         /// </summary>
         bool CanCollide { get; set; }
+
+        /// <summary>
+        ///     Whether it should be included in the CCD solver.
+        /// </summary>
+        bool ContinuousCollisionDetection { get; set; }
 
         /// <summary>
         /// Bitmask of the collision layers this body is a part of. The layers are calculated from
@@ -64,7 +84,7 @@ namespace Robust.Shared.Physics
 
         int SleepThreshold { get; set; }
 
-        bool Awake { get; }
+        bool Awake { get; set; }
 
         /// <summary>
         ///     Non-hard <see cref="IPhysicsComponent"/>s will not cause action collision (e.g. blocking of movement)
@@ -153,5 +173,8 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <returns>True if this body can move, false if it is static.</returns>
         bool CanMove();
+
+        //TODO wat de fak is this thing even doing
+        void SynchronizeFixtures();
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using System.Collections.Generic;
@@ -58,6 +58,9 @@ namespace Robust.Server.Placement
                     break;
                 case PlacementManagerMessage.RequestEntRemove:
                     HandleEntRemoveReq(msg.EntityUid);
+                    break;
+                case PlacementManagerMessage.RequestRectRemove:
+                    HandleRectRemoveReq(msg);
                     break;
             }
         }
@@ -200,6 +203,60 @@ namespace Robust.Server.Placement
             //TODO: Some form of admin check
             if (_entityManager.TryGetEntity(entityUid, out var entity))
                 _entityManager.DeleteEntity(entity);
+        }
+
+        private void HandleRectRemoveReq(MsgPlacement msg)
+        {
+            EntityCoordinates start = msg.EntityCoordinates;
+            EntityCoordinates end = msg.EndEntityCoordinates;
+            EntityCoordinates center = new EntityCoordinates(start.EntityId, (start.Position + end.Position) / 2.0f);
+            // Optimization for rect checks without adding a new method
+            float xSize = MathF.Abs(start.X - end.X);
+            float ySize = MathF.Abs(start.Y - end.Y);
+            if (xSize > ySize)
+            {
+                float low, high;
+                if (start.Y > end.Y)
+                {
+                    low = end.Y;
+                    high = start.Y;
+                }
+                else
+                {
+                    low = start.Y;
+                    high = end.Y;
+                }
+                foreach (IEntity entity in _entityManager.GetEntitiesInRange(center, xSize))
+                {
+                    if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
+                        continue;
+                    if (entity.Transform.Coordinates.Y < low || entity.Transform.Coordinates.Y > high)
+                        continue;
+                    _entityManager.DeleteEntity(entity);
+                }
+            }
+            else
+            {
+                float low, high;
+                if (start.X > end.X)
+                {
+                    low = end.X;
+                    high = start.X;
+                }
+                else
+                {
+                    low = start.X;
+                    high = end.X;
+                }
+                foreach (IEntity entity in _entityManager.GetEntitiesInRange(center, ySize))
+                {
+                    if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
+                        continue;
+                    if (entity.Transform.Coordinates.X < low || entity.Transform.Coordinates.X > high)
+                        continue;
+                    _entityManager.DeleteEntity(entity);
+                }
+            }
         }
 
         /// <summary>

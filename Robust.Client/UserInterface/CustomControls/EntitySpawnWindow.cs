@@ -201,6 +201,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
             placementManager.ToggleEraser();
+            OverrideMenu.Disabled = args.Pressed;
         }
 
         private void BuildEntityList(string? searchStr = null)
@@ -510,6 +511,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             EraseButton.Pressed = false;
+            OverrideMenu.Disabled = false;
         }
 
         private class DoNotMeasure : Control

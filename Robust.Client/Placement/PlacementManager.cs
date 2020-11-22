@@ -506,7 +506,7 @@ namespace Robust.Client.Placement
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
             var map = MapId.Nullspace;
-            var ent = PlayerManager.LocalPlayer!.ControlledEntity;
+            var ent = PlayerManager.LocalPlayer?.ControlledEntity;
             if (ent != null)
             {
                 map = ent.Transform.MapID;
@@ -518,7 +518,7 @@ namespace Robust.Client.Placement
                 return false;
             }
 
-            coordinates = EntityCoordinates.FromMap(ent!.EntityManager, MapManager,
+            coordinates = EntityCoordinates.FromMap(ent.EntityManager, MapManager,
                 eyeManager.ScreenToMap(new ScreenCoordinates(_inputManager.MouseScreenPosition)));
             return true;
         }

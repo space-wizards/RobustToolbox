@@ -28,10 +28,24 @@ namespace Robust.Shared.ContentPack
 
         private sealed class TypeConfig
         {
+            // Used for type configs where the type config doesn't exist due to a bigger-scoped All whitelisting.
+            // e.g. nested types or namespace whitelist.
+            public static readonly TypeConfig DefaultAll = new TypeConfig {All = true};
+
             public bool All;
+            public InheritMode Inherit = InheritMode.Default;
             public List<string>? Methods;
             public List<string>? Fields;
             public Dictionary<string, TypeConfig>? NestedTypes;
+        }
+
+        private enum InheritMode
+        {
+            // Allow if All is set, block otherwise
+            Default,
+            Allow,
+            // Block even is All is set
+            Block
         }
     }
 }

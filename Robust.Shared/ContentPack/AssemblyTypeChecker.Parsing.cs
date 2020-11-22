@@ -41,7 +41,7 @@ namespace Robust.Shared.ContentPack
             })).Labelled("basic type");
 
         private static readonly Parser<char, IEnumerable<MType>> GenericParametersParser =
-            Rec(() => ConstructedTypeParser)
+            Rec(() => ConstructedTypeParser!)
                 .Between(SkipWhitespaces)
                 .Separated(Char(','))
                 .Between(Char('<'), Char('>'));

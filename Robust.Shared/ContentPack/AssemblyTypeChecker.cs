@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Net;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -27,16 +27,10 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         public bool DisableTypeCheck { get; set; } = false;
 
-        /// <summary>
-        ///     Dump the assembly types into the log.
-        /// </summary>
-        public bool DumpTypes { get; set; } = true;
-
-        public bool DumpMembers { get; set; } = true;
-
+        public DumpFlags Dump { get; set; } = DumpFlags.All;
         public bool VerifyIL { get; set; } = true;
 
-        private bool WouldNoOp => !DumpTypes && DisableTypeCheck && !VerifyIL;
+        private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
 
         public AssemblyTypeChecker(IResourceManager res)
         {
@@ -108,8 +102,9 @@ namespace Robust.Shared.ContentPack
 
             var types = GetReferencedTypes(reader, errors);
             var members = GetReferencedMembers(reader, errors);
+            var inherited = GetExternalInheritedTypes(reader, errors);
 
-            if (DumpTypes)
+            if ((Dump & DumpFlags.Types) != 0)
             {
                 foreach (var mType in types)
                 {
@@ -117,11 +112,23 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            if (DumpMembers)
+            if ((Dump & DumpFlags.Members) != 0)
             {
                 foreach (var memberRef in members)
                 {
                     Logger.DebugS("res.typecheck", $"RefMember: {memberRef}");
+                }
+            }
+
+            if ((Dump & DumpFlags.Inheritance) != 0)
+            {
+                foreach (var (name, baseType, interfaces) in inherited)
+                {
+                    Logger.DebugS("res.typecheck", $"Inherit: {name} -> {baseType}");
+                    foreach (var @interface in interfaces)
+                    {
+                        Logger.DebugS("res.typecheck", $"  Interface: {@interface}");
+                    }
                 }
             }
 
@@ -138,6 +145,41 @@ namespace Robust.Shared.ContentPack
                 if (!IsTypeAccessAllowed(type, config, out _))
                 {
                     errors.Add(new SandboxError($"Access to type not allowed: {type}"));
+                }
+            }
+
+            // This inheritance whitelisting primarily serves to avoid content doing funny stuff
+            // by e.g. inheriting Type.
+            foreach (var (_, baseType, interfaces) in inherited)
+            {
+                if (!CanInherit(baseType))
+                {
+                    errors.Add(new SandboxError($"Inheriting of type not allowed: {baseType}"));
+                }
+
+                foreach (var @interface in interfaces)
+                {
+                    if (!CanInherit(@interface))
+                    {
+                        errors.Add(new SandboxError($"Implementing of interface not allowed: {@interface}"));
+                    }
+                }
+
+                bool CanInherit(MType inheritType)
+                {
+                    var realBaseType = baseType switch
+                    {
+                        MTypeGeneric generic => (MTypeReferenced) generic.GenericType,
+                        MTypeReferenced referenced => referenced,
+                        _ => throw new InvalidOperationException() // Can't happen.
+                    };
+
+                    if (!IsTypeAccessAllowed(realBaseType, config, out var cfg))
+                    {
+                        return false;
+                    }
+
+                    return cfg.Inherit != InheritMode.Block && (cfg.Inherit == InheritMode.Allow || cfg.All);
                 }
             }
 
@@ -210,6 +252,10 @@ namespace Robust.Shared.ContentPack
                     case MMemberRefMethod mMemberRefMethod:
                         if (typeCfg.Methods != null)
                         {
+                            if (mMemberRefMethod.Name == "ToCharArray")
+                            {
+
+                            }
                             foreach (var method in typeCfg.Methods)
                             {
                                 var parsed = MethodParser.ParseOrThrow(method);
@@ -228,6 +274,7 @@ namespace Robust.Shared.ContentPack
                                             goto paramMismatch;
                                         }
                                     }
+
                                     goto found;
                                 }
 
@@ -252,32 +299,39 @@ namespace Robust.Shared.ContentPack
             return errors.Count == 0;
         }
 
-        private static bool IsTypeAccessAllowed(MTypeReferenced type, SandboxConfig config, out TypeConfig? cfg)
+        private static bool IsTypeAccessAllowed(MTypeReferenced type, SandboxConfig config,
+            [NotNullWhen(true)] out TypeConfig? cfg)
         {
-            cfg = null;
             if (type.Namespace == null)
             {
                 if (type.ResolutionScope is MResScopeType parentType)
                 {
                     if (!IsTypeAccessAllowed((MTypeReferenced) parentType.Type, config, out var parentCfg))
                     {
+                        cfg = null;
                         return false;
                     }
 
-                    if (parentCfg == null || parentCfg.All)
+                    if (parentCfg.All)
                     {
                         // Enclosing type is namespace-whitelisted so we don't have to check anything else.
-                        // Null this so whitelisting propagates if it's due to All flag.
-                        cfg = null;
+                        cfg = TypeConfig.DefaultAll;
                         return true;
                     }
 
                     // Found enclosing type, checking if we are allowed to access this nested type.
                     // Also pass it up in case of multiple nested types.
-                    return parentCfg.NestedTypes != null && parentCfg.NestedTypes.TryGetValue(type.Name, out cfg);
+                    if (parentCfg.NestedTypes != null && parentCfg.NestedTypes.TryGetValue(type.Name, out cfg))
+                    {
+                        return true;
+                    }
+
+                    cfg = null;
+                    return false;
                 }
 
                 // Types without namespaces or nesting parent are not allowed at all.
+                cfg = null;
                 return false;
             }
 
@@ -286,12 +340,14 @@ namespace Robust.Shared.ContentPack
             {
                 if (type.Namespace.StartsWith(whNamespace))
                 {
+                    cfg = TypeConfig.DefaultAll;
                     return true;
                 }
             }
 
             if (!config.Types.TryGetValue(type.Namespace, out var nsDict))
             {
+                cfg = null;
                 return false;
             }
 
@@ -402,6 +458,99 @@ namespace Robust.Shared.ContentPack
             }
 
             return list;
+        }
+
+        private List<(MType type, MType parent, ArraySegment<MType> interfaceImpls)> GetExternalInheritedTypes(
+            MetadataReader reader,
+            List<SandboxError> errors)
+        {
+            var list = new List<(MType, MType, ArraySegment<MType>)>();
+            foreach (var typeDefHandle in reader.TypeDefinitions)
+            {
+                var typeDef = reader.GetTypeDefinition(typeDefHandle);
+                ArraySegment<MType> interfaceImpls;
+                MTypeDefined type = GetTypeFromDefinition(reader, typeDefHandle);
+
+                if (!ParseInheritType(type, typeDef.BaseType, out var parent))
+                {
+                    continue;
+                }
+
+                var interfaceImplsCollection = typeDef.GetInterfaceImplementations();
+                if (interfaceImplsCollection.Count == 0)
+                {
+                    interfaceImpls = Array.Empty<MType>();
+                }
+                else
+                {
+                    interfaceImpls = new MType[interfaceImplsCollection.Count];
+                    var i = 0;
+                    foreach (var implHandle in interfaceImplsCollection)
+                    {
+                        var interfaceImpl = reader.GetInterfaceImplementation(implHandle);
+
+                        if (ParseInheritType(type, interfaceImpl.Interface, out var implemented))
+                        {
+                            interfaceImpls[i++] = implemented;
+                        }
+                    }
+
+                    interfaceImpls = interfaceImpls[..i];
+                }
+
+                list.Add((type, parent, interfaceImpls));
+            }
+
+            return list;
+
+
+            bool ParseInheritType(MType ownerType, EntityHandle handle, [NotNullWhen(true)] out MType? type)
+            {
+                type = default;
+
+                switch (handle.Kind)
+                {
+                    case HandleKind.TypeDefinition:
+                        // Definition to type in same assembly, allowed without hassle.
+                        return false;
+
+                    case HandleKind.TypeReference:
+                        // Regular type reference.
+                        try
+                        {
+                            type = ParseTypeReference(reader, (TypeReferenceHandle) handle);
+                            return true;
+                        }
+                        catch (UnsupportedMetadataException u)
+                        {
+                            errors.Add(new SandboxError(u));
+                            return false;
+                        }
+
+                    case HandleKind.TypeSpecification:
+                        var typeSpec = reader.GetTypeSpecification((TypeSpecificationHandle) handle);
+                        // Generic type reference.
+                        var provider = new TypeProvider();
+                        type = typeSpec.DecodeSignature(provider, 0);
+
+                        if (type.IsCoreTypeDefined())
+                        {
+                            // Ensure this isn't a self-defined type.
+                            // This can happen due to generics.
+                            return false;
+                        }
+
+                        break;
+
+                    default:
+                        errors.Add(new SandboxError(
+                            $"Unsupported BaseType of kind {handle.Kind} on type {ownerType}"));
+                        return false;
+                }
+
+                type = default!;
+                return false;
+            }
         }
 
         private sealed class SandboxError
@@ -623,16 +772,7 @@ namespace Robust.Shared.ContentPack
 
             public MType GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle, byte rawTypeKind)
             {
-                var typeDef = reader.GetTypeDefinition(handle);
-                var name = reader.GetString(typeDef.Name);
-                var ns = NilNullString(reader, typeDef.Namespace);
-                MTypeDefined? enclosing = null;
-                if (typeDef.IsNested)
-                {
-                    enclosing = (MTypeDefined) GetTypeFromDefinition(reader, typeDef.GetDeclaringType(), 0);
-                }
-
-                return new MTypeDefined(name, ns, enclosing);
+                return AssemblyTypeChecker.GetTypeFromDefinition(reader, handle);
             }
 
             public MType GetTypeFromReference(MetadataReader reader, TypeReferenceHandle handle, byte rawTypeKind)
@@ -671,6 +811,31 @@ namespace Robust.Shared.ContentPack
             {
                 return reader.GetTypeSpecification(handle).DecodeSignature(this, 0);
             }
+        }
+
+        private static MTypeDefined GetTypeFromDefinition(MetadataReader reader, TypeDefinitionHandle handle)
+        {
+            var typeDef = reader.GetTypeDefinition(handle);
+            var name = reader.GetString(typeDef.Name);
+            var ns = NilNullString(reader, typeDef.Namespace);
+            MTypeDefined? enclosing = null;
+            if (typeDef.IsNested)
+            {
+                enclosing = GetTypeFromDefinition(reader, typeDef.GetDeclaringType());
+            }
+
+            return new MTypeDefined(name, ns, enclosing);
+        }
+
+        [Flags]
+        public enum DumpFlags
+        {
+            None = 0,
+            Types = 1,
+            Members = 2,
+            Inheritance = 4,
+
+            All = Types | Members | Inheritance
         }
     }
 }

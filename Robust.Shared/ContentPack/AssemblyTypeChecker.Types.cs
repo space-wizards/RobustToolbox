@@ -186,7 +186,7 @@ namespace Robust.Shared.ContentPack
 
             public override bool WhitelistEquals(MType other)
             {
-                return other is MTypeSZArray arr && ElementType.WhitelistEquals(arr);
+                return other is MTypeSZArray arr && ElementType.WhitelistEquals(arr.ElementType);
             }
         }
 

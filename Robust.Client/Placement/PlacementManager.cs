@@ -88,11 +88,6 @@ namespace Robust.Client.Placement
         public bool Eraser { get; private set; }
 
         /// <summary>
-        /// Holds the anchor for erasing a rect
-        /// </summary>
-        public EntityCoordinates? EraserStartPoint { get; set; }
-
-        /// <summary>
         /// Holds the selection rectangle for the eraser
         /// </summary>
         public Box2? EraserRect { get; set; }
@@ -211,16 +206,11 @@ namespace Robust.Client.Placement
                         if (!IsActive)
                             return false;
 
-                        if (EraserStartPoint.HasValue)
+                        if (EraserRect.HasValue)
                         {
-                            if (CurrentEraserMouseCoordinates(out EntityCoordinates endCoord))
-                            {
-                                HandleRectDeletion(EraserStartPoint.Value, endCoord);
-                                EraserStartPoint = null;
-                                EraserRect = null;
-                                return true;
-                            }
-                            return false;
+                            HandleRectDeletion(StartPoint, EraserRect.Value);
+                            EraserRect = null;
+                            return true;
                         }
 
                         if (Eraser)
@@ -341,7 +331,6 @@ namespace Robust.Client.Placement
             _placenextframe = false;
             IsActive = false;
             Eraser = false;
-            EraserStartPoint = null;
             EraserRect = null;
             PlacementOffset = Vector2i.Zero;
         }
@@ -419,12 +408,12 @@ namespace Robust.Client.Placement
             NetworkManager.ClientSendMessage(msg);
         }
 
-        public void HandleRectDeletion(EntityCoordinates start, EntityCoordinates end)
+        public void HandleRectDeletion(EntityCoordinates start, Box2 rect)
         {
             var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
             msg.PlaceType = PlacementManagerMessage.RequestRectRemove;
-            msg.EntityCoordinates = start;
-            msg.EndEntityCoordinates = end;
+            msg.EntityCoordinates = new EntityCoordinates(StartPoint.EntityId, rect.BottomLeft);
+            msg.RectSize = rect.Size;
             NetworkManager.ClientSendMessage(msg);
         }
 
@@ -526,36 +515,34 @@ namespace Robust.Client.Placement
         /// <inheritdoc />
         public void FrameUpdate(FrameEventArgs e)
         {
-            if (!CurrentMousePosition(out var mouseScreen)) {
-                if (EraserStartPoint.HasValue)
+            if (!CurrentMousePosition(out var mouseScreen))
+            {
+                if (EraserRect.HasValue)
                 {
                     if (!CurrentEraserMouseCoordinates(out EntityCoordinates end))
                         return;
-                    EntityCoordinates start = EraserStartPoint.Value;
-
-                    float left, bottom, right, top;
-                    if (start.X < end.X)
+                    float b, l, t, r;
+                    if (StartPoint.X < end.X)
                     {
-                        left = start.X;
-                        right = end.X;
+                        l = StartPoint.X;
+                        r = end.X;
                     }
                     else
                     {
-                        left = end.X;
-                        right = start.X;
+                        l = end.X;
+                        r = StartPoint.X;
                     }
-                    if (start.Y < end.Y)
+                    if (StartPoint.Y < end.Y)
                     {
-                        bottom = start.Y;
-                        top = end.Y;
+                        b = StartPoint.Y;
+                        t = end.Y;
                     }
                     else
                     {
-                        bottom = end.Y;
-                        top = start.Y;
+                        b = end.Y;
+                        t = StartPoint.Y;
                     }
-
-                    EraserRect = new Box2(left, bottom, right, top);
+                    EraserRect = new Box2(l, b, r, t);
                 }
                 return;
             }
@@ -601,7 +588,8 @@ namespace Robust.Client.Placement
             if (!CurrentEraserMouseCoordinates(out EntityCoordinates coordinates))
                 return;
 
-            EraserStartPoint = coordinates;
+            StartPoint = coordinates;
+            EraserRect = new Box2(coordinates.Position, Vector2.Zero);
         }
 
         private bool DeactivateSpecialPlacement()

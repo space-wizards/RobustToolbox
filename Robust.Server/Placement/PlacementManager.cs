@@ -208,54 +208,13 @@ namespace Robust.Server.Placement
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
             EntityCoordinates start = msg.EntityCoordinates;
-            EntityCoordinates end = msg.EndEntityCoordinates;
-            EntityCoordinates center = new EntityCoordinates(start.EntityId, (start.Position + end.Position) / 2.0f);
-            // Optimization for rect checks without adding a new method
-            float xSize = MathF.Abs(start.X - end.X);
-            float ySize = MathF.Abs(start.Y - end.Y);
-            if (xSize > ySize)
+            Vector2 rectSize = msg.RectSize;
+            foreach (IEntity entity in _entityManager.GetEntitiesIntersecting(start.GetMapId(_entityManager),
+                new Box2(start.Position, start.Position + rectSize)))
             {
-                float low, high;
-                if (start.Y > end.Y)
-                {
-                    low = end.Y;
-                    high = start.Y;
-                }
-                else
-                {
-                    low = start.Y;
-                    high = end.Y;
-                }
-                foreach (IEntity entity in _entityManager.GetEntitiesInRange(center, xSize))
-                {
-                    if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
-                        continue;
-                    if (entity.Transform.Coordinates.Y < low || entity.Transform.Coordinates.Y > high)
-                        continue;
-                    _entityManager.DeleteEntity(entity);
-                }
-            }
-            else
-            {
-                float low, high;
-                if (start.X > end.X)
-                {
-                    low = end.X;
-                    high = start.X;
-                }
-                else
-                {
-                    low = start.X;
-                    high = end.X;
-                }
-                foreach (IEntity entity in _entityManager.GetEntitiesInRange(center, ySize))
-                {
-                    if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
-                        continue;
-                    if (entity.Transform.Coordinates.X < low || entity.Transform.Coordinates.X > high)
-                        continue;
-                    _entityManager.DeleteEntity(entity);
-                }
+                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<IActorComponent>())
+                    continue;
+                entity.Delete();
             }
         }
 

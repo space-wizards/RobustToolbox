@@ -29,7 +29,7 @@ namespace Robust.Shared.Network.Messages
         public int Range { get; set; }
         public string ObjType { get; set; }
         public string AlignOption { get; set; }
-        public EntityCoordinates EndEntityCoordinates { get; set; }
+        public Vector2 RectSize { get; set; }
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
@@ -60,7 +60,7 @@ namespace Robust.Shared.Network.Messages
                     break;
                 case PlacementManagerMessage.RequestRectRemove:
                     EntityCoordinates = buffer.ReadEntityCoordinates();
-                    EndEntityCoordinates = buffer.ReadEntityCoordinates();
+                    RectSize = buffer.ReadVector2();
                     break;
             }
         }
@@ -94,7 +94,7 @@ namespace Robust.Shared.Network.Messages
                     break;
                 case PlacementManagerMessage.RequestRectRemove:
                     buffer.Write(EntityCoordinates);
-                    buffer.Write(EndEntityCoordinates);
+                    buffer.Write(RectSize);
                     break;
             }
         }

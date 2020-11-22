@@ -494,22 +494,24 @@ namespace Robust.Client.Placement
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
-            var map = MapId.Nullspace;
             var ent = PlayerManager.LocalPlayer?.ControlledEntity;
-            if (ent != null)
-            {
-                map = ent.Transform.MapID;
-            }
-
-            if (map == MapId.Nullspace || !Eraser)
+            if (ent == null)
             {
                 coordinates = new EntityCoordinates();
                 return false;
             }
-
-            coordinates = EntityCoordinates.FromMap(ent.EntityManager, MapManager,
-                eyeManager.ScreenToMap(new ScreenCoordinates(_inputManager.MouseScreenPosition)));
-            return true;
+            else
+            {
+                var map = ent.Transform.MapID;
+                if (map == MapId.Nullspace || !Eraser)
+                {
+                    coordinates = new EntityCoordinates();
+                    return false;
+                }
+                coordinates = EntityCoordinates.FromMap(ent.EntityManager, MapManager,
+                    eyeManager.ScreenToMap(new ScreenCoordinates(_inputManager.MouseScreenPosition)));
+                return true;
+            }
         }
 
         /// <inheritdoc />

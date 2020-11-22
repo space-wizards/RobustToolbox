@@ -2,9 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-#if NET5_0
 using System.Runtime.Intrinsics.Arm;
-#endif
 
 namespace Robust.Shared.Maths
 {
@@ -91,13 +89,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MultiplyAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -142,7 +138,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MultiplyAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -171,7 +166,6 @@ namespace Robust.Shared.Maths
                 MultiplyNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MultiplyAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -240,13 +234,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MultiplyAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -289,7 +281,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MultiplyAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -316,7 +307,6 @@ namespace Robust.Shared.Maths
                 MultiplyNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MultiplyAvx(ReadOnlySpan<float> a, float b, Span<float> s)
@@ -383,13 +373,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.Arm64.IsSupported)
                     {
                         DivideAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -434,7 +422,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void DivideAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -463,7 +450,6 @@ namespace Robust.Shared.Maths
                 DivideNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void DivideAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -532,13 +518,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.Arm64.IsSupported)
                     {
                         DivideAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -581,7 +565,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void DivideAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -608,7 +591,6 @@ namespace Robust.Shared.Maths
                 DivideNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void DivideAvx(ReadOnlySpan<float> a, float b, Span<float> s)
@@ -675,13 +657,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         AddAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -726,7 +706,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AddAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -755,7 +734,6 @@ namespace Robust.Shared.Maths
                 AddNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AddAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -824,13 +802,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         AddAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -873,7 +849,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AddAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -900,7 +875,6 @@ namespace Robust.Shared.Maths
                 AddNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AddAvx(ReadOnlySpan<float> a, float b, Span<float> s)
@@ -953,12 +927,10 @@ namespace Robust.Shared.Maths
                         return HorizontalAddSse(a);
                     }
 
-                    #if NET5_0
                     if (AdvSimd.Arm64.IsSupported)
                     {
                         return HorizontalAddAdvSimd(a);
                     }
-                    #endif
                 }
             }
 
@@ -1007,7 +979,6 @@ namespace Robust.Shared.Maths
             return sum;
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static float HorizontalAddAdvSimd(ReadOnlySpan<float> a)
         {
@@ -1036,7 +1007,6 @@ namespace Robust.Shared.Maths
 
             return sum;
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static float HorizontalAddAvx(ReadOnlySpan<float> a)
@@ -1106,12 +1076,10 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         SubAdvSimd(a, b, s);
                     }
-                    #endif
                 }
             }
 
@@ -1156,7 +1124,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void SubAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -1185,7 +1152,6 @@ namespace Robust.Shared.Maths
                 SubNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void SubAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -1254,12 +1220,10 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         SubAdvSimd(a, b, s);
                     }
-                    #endif
                 }
             }
 
@@ -1302,7 +1266,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void SubAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -1329,7 +1292,6 @@ namespace Robust.Shared.Maths
                 SubNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void SubAvx(ReadOnlySpan<float> a, float b, Span<float> s)
@@ -1396,12 +1358,10 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         AbsAdvSimd(a, s);
                     }
-                    #endif
                 }
             }
 
@@ -1444,7 +1404,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AbsAdvSimd(ReadOnlySpan<float> a, Span<float> s)
         {
@@ -1469,7 +1428,6 @@ namespace Robust.Shared.Maths
                 AbsNaive(a, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void AbsAvx(ReadOnlySpan<float> a, Span<float> s)
@@ -1536,13 +1494,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MinSse(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -1587,7 +1543,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MinAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -1616,7 +1571,6 @@ namespace Robust.Shared.Maths
                 MinNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MinAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -1685,13 +1639,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MinAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -1734,7 +1686,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MinAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -1761,7 +1712,6 @@ namespace Robust.Shared.Maths
                 MinNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MinAvx(ReadOnlySpan<float> a, float b, Span<float> s)
@@ -1828,13 +1778,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MaxAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -1879,7 +1827,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MaxAdvSimd(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
         {
@@ -1908,7 +1855,6 @@ namespace Robust.Shared.Maths
                 MaxNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MaxAvx(ReadOnlySpan<float> a, ReadOnlySpan<float> b, Span<float> s)
@@ -1977,13 +1923,11 @@ namespace Robust.Shared.Maths
                         return;
                     }
 
-                    #if NET5_0
                     if (AdvSimd.IsSupported)
                     {
                         MaxAdvSimd(a, b, s);
                         return;
                     }
-                    #endif
                 }
             }
 
@@ -2026,7 +1970,6 @@ namespace Robust.Shared.Maths
             }
         }
 
-        #if NET5_0
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MaxAdvSimd(ReadOnlySpan<float> a, float b, Span<float> s)
         {
@@ -2053,7 +1996,6 @@ namespace Robust.Shared.Maths
                 MaxNaive(a, b, s, length, a.Length);
             }
         }
-        #endif
 
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         private static void MaxAvx(ReadOnlySpan<float> a, float b, Span<float> s)

@@ -5,9 +5,7 @@ using System.Runtime.Intrinsics.X86;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Microsoft.DotNet.RemoteExecutor;
-#if NET5_0
 using System.Runtime.Intrinsics.Arm;
-#endif
 
 namespace Robust.UnitTesting.Shared.Maths
 {
@@ -71,13 +69,11 @@ namespace Robust.UnitTesting.Shared.Maths
             if (flags.HasFlag(Intrinsics.Avx2) && !Avx2.IsSupported)
                 return false;
 
-#if NET5_0
             if (flags.HasFlag(Intrinsics.AdvSimd) && !AdvSimd.IsSupported)
                 return false;
 
             if (flags.HasFlag(Intrinsics.AdvSimdArm64) && !AdvSimd.IsSupported)
                 return false;
-#endif
 
             return true;
         }
@@ -98,7 +94,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void EnvironmentVariablesWork()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             // Disabling both.
             RemoteExecutor.Invoke(() =>
@@ -113,10 +109,14 @@ namespace Robust.UnitTesting.Shared.Maths
                 Assert.That(NumericsHelpers.Enabled, Is.True);
                 Assert.That(NumericsHelpers.AvxEnabled, Is.False);
             }, GetInvokeOptions(true)).Dispose();
+        }
 
+        [Test]
+        public void EnvironmentVariablesWorkAvx()
+        {
             // The next one is only valid if the computer supports AVX.
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             // Enabling NumericsHelper and enabling AVX.
             RemoteExecutor.Invoke(() =>
@@ -184,7 +184,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Multiply, GetInvokeOptions()).Dispose();
         }
@@ -193,7 +193,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplySse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true)).Dispose();
         }
@@ -202,7 +202,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true)).Dispose();
         }
@@ -211,7 +211,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Multiply, GetInvokeOptions(true, true)).Dispose();
         }
@@ -259,7 +259,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions()).Dispose();
         }
@@ -268,7 +268,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -277,7 +277,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -286,7 +286,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MultiplyByScalar, GetInvokeOptions(true, true)).Dispose();
         }
@@ -344,7 +344,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Divide, GetInvokeOptions()).Dispose();
         }
@@ -353,7 +353,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Divide, GetInvokeOptions(true)).Dispose();
         }
@@ -362,7 +362,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Divide, GetInvokeOptions(true)).Dispose();
         }
@@ -419,7 +419,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions()).Dispose();
         }
@@ -428,7 +428,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -437,7 +437,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -446,7 +446,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(DivideByScalar, GetInvokeOptions(true, true)).Dispose();
         }
@@ -504,7 +504,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Add, GetInvokeOptions()).Dispose();
         }
@@ -513,7 +513,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Add, GetInvokeOptions(true)).Dispose();
         }
@@ -522,7 +522,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Add, GetInvokeOptions(true)).Dispose();
         }
@@ -531,7 +531,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Add, GetInvokeOptions(true, true)).Dispose();
         }
@@ -579,7 +579,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions()).Dispose();
         }
@@ -588,7 +588,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -597,7 +597,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -606,7 +606,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AddByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(AddByScalar, GetInvokeOptions(true, true)).Dispose();
         }
@@ -647,7 +647,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void HorizontalAddNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions()).Dispose();
         }
@@ -656,7 +656,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void HorizontalAddSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true)).Dispose();
         }
@@ -665,7 +665,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void HorizontalAddAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true)).Dispose();
         }
@@ -674,7 +674,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void HorizontalAddAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(HorizontalAdd, GetInvokeOptions(true, true)).Dispose();
         }
@@ -732,7 +732,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Sub, GetInvokeOptions()).Dispose();
         }
@@ -741,7 +741,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Sub, GetInvokeOptions(true)).Dispose();
         }
@@ -750,7 +750,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Sub, GetInvokeOptions(true)).Dispose();
         }
@@ -759,7 +759,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Sub, GetInvokeOptions(true, true)).Dispose();
         }
@@ -807,7 +807,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions()).Dispose();
         }
@@ -816,7 +816,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -825,7 +825,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -834,7 +834,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void SubByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(SubByScalar, GetInvokeOptions(true, true)).Dispose();
         }
@@ -882,7 +882,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AbsNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Abs, GetInvokeOptions()).Dispose();
         }
@@ -891,7 +891,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AbsSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Abs, GetInvokeOptions(true)).Dispose();
         }
@@ -900,7 +900,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AbsAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Abs, GetInvokeOptions(true)).Dispose();
         }
@@ -909,7 +909,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void AbsAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Abs, GetInvokeOptions(true, true)).Dispose();
         }
@@ -967,7 +967,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Min, GetInvokeOptions()).Dispose();
         }
@@ -976,7 +976,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Min, GetInvokeOptions(true)).Dispose();
         }
@@ -985,7 +985,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Min, GetInvokeOptions(true)).Dispose();
         }
@@ -1048,7 +1048,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions()).Dispose();
         }
@@ -1057,7 +1057,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -1066,7 +1066,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -1075,7 +1075,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MinByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MinByScalar, GetInvokeOptions(true, true)).Dispose();
         }
@@ -1133,7 +1133,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Max, GetInvokeOptions()).Dispose();
         }
@@ -1142,7 +1142,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Max, GetInvokeOptions(true)).Dispose();
         }
@@ -1151,7 +1151,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Max, GetInvokeOptions(true)).Dispose();
         }
@@ -1160,7 +1160,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Max, GetInvokeOptions(true, true)).Dispose();
         }
@@ -1208,7 +1208,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxByScalarNaive()
         {
             if (!ValidComputer())
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions()).Dispose();
         }
@@ -1217,7 +1217,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxByScalarSse()
         {
             if (!ValidComputer(Intrinsics.Sse))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -1226,7 +1226,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxByScalarAdvSimd()
         {
             if (!ValidComputer(Intrinsics.AdvSimd))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true)).Dispose();
         }
@@ -1235,7 +1235,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MaxByScalarAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(MaxByScalar, GetInvokeOptions(true, true)).Dispose();
         }

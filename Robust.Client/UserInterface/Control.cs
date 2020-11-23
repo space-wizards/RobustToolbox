@@ -202,6 +202,12 @@ namespace Robust.Client.UserInterface
         public string? ToolTip { get; set; }
 
         /// <summary>
+        /// Overrides the global tooltip delay, showing the tooltip for this
+        /// control within the specified number of seconds.
+        /// </summary>
+        public float? TooltipDelay { get; set; }
+
+        /// <summary>
         /// Invoked when the mouse is hovered over this control for a bit and a tooltip
         /// should be shown. Can be used as an alternative to ToolTip to perform custom tooltip
         /// logic such as showing a more complex tooltip control.

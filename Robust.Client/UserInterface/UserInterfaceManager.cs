@@ -77,6 +77,8 @@ namespace Robust.Client.UserInterface
 
         private bool _rendering = true;
         private float _tooltipTimer;
+        // set to null when not counting down
+        private float? _tooltipDelay;
         private Tooltip _tooltip = default!;
         private bool showingTooltip;
         private const float TooltipDelay = 1;
@@ -208,10 +210,15 @@ namespace Robust.Client.UserInterface
                 control.DoLayoutUpdate();
             }
 
-            _tooltipTimer -= args.DeltaSeconds;
-            if (_tooltipTimer <= 0)
+            // count down tooltip delay if we're not showing one yet and
+            // are hovering the mouse over a control without moving it
+            if (_tooltipDelay != null && !showingTooltip)
             {
-                _showTooltip();
+                _tooltipTimer += args.DeltaSeconds;
+                if (_tooltipTimer >= _tooltipDelay)
+                {
+                    _showTooltip();
+                }
             }
 
             if (_needUpdateActiveCursor)
@@ -332,6 +339,14 @@ namespace Robust.Client.UserInterface
                 CurrentlyHovered?.MouseExited();
                 CurrentlyHovered = newHovered;
                 CurrentlyHovered?.MouseEntered();
+                if (CurrentlyHovered != null)
+                {
+                    _tooltipDelay = CurrentlyHovered.TooltipDelay ?? TooltipDelay;
+                }
+                else
+                {
+                    _tooltipDelay = null;
+                }
 
                 _needUpdateActiveCursor = true;
             }
@@ -711,7 +726,7 @@ namespace Robust.Client.UserInterface
 
         private void _resetTooltipTimer()
         {
-            _tooltipTimer = TooltipDelay;
+            _tooltipTimer = 0;
         }
 
         private void _showTooltip()

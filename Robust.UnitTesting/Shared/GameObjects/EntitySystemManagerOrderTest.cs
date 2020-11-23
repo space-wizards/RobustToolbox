@@ -68,6 +68,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var deps = new DependencyCollection();
             deps.Register<ILogManager, LogManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
+            deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.Register<IEntitySystemManager, EntitySystemManager>();
             deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
 

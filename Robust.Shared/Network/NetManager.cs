@@ -463,6 +463,8 @@ namespace Robust.Shared.Network
                 {
                     _netPeers.RemoveAll(p => p.Peer == peer);
                 }
+
+                _toCleanNetPeers.Clear();
             }
 
             SentMessagesMetrics.IncTo(sentMessages);

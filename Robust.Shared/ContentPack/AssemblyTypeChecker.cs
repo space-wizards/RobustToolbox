@@ -170,7 +170,7 @@ namespace Robust.Shared.ContentPack
 
                 bool CanInherit(MType inheritType)
                 {
-                    var realBaseType = baseType switch
+                    var realBaseType = inheritType switch
                     {
                         MTypeGeneric generic => (MTypeReferenced) generic.GenericType,
                         MTypeReferenced referenced => referenced,

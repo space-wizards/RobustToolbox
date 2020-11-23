@@ -221,7 +221,7 @@ namespace Robust.Shared.ContentPack
                     continue;
                 }
 
-                if (typeCfg == null || typeCfg.All)
+                if (typeCfg.All)
                 {
                     // Fully whitelisted for the type, we good.
                     continue;
@@ -252,17 +252,23 @@ namespace Robust.Shared.ContentPack
                     case MMemberRefMethod mMemberRefMethod:
                         if (typeCfg.Methods != null)
                         {
-                            if (mMemberRefMethod.Name == "ToCharArray")
-                            {
-
-                            }
                             foreach (var method in typeCfg.Methods)
                             {
-                                var parsed = MethodParser.ParseOrThrow(method);
+                                WhitelistMethodDefine parsed;
+                                try
+                                {
+                                    parsed = MethodParser.ParseOrThrow(method);
+                                }
+                                catch (ParseException e)
+                                {
+                                    Logger.ErrorS("res.typecheck", $"Parse error for: '{method}': {e}");
+                                    continue;
+                                }
 
                                 if (parsed.Name == mMemberRefMethod.Name &&
                                     mMemberRefMethod.ReturnType.WhitelistEquals(parsed.ReturnType) &&
-                                    mMemberRefMethod.ParameterTypes.Length == parsed.ParameterTypes.Length)
+                                    mMemberRefMethod.ParameterTypes.Length == parsed.ParameterTypes.Length &&
+                                    mMemberRefMethod.GenericParameterCount == parsed.GenericParameterCount)
                                 {
                                     for (var i = 0; i < mMemberRefMethod.ParameterTypes.Length; i++)
                                     {

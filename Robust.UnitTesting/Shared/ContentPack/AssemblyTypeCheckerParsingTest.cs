@@ -58,9 +58,9 @@ namespace Robust.UnitTesting.Shared.ContentPack
         [Test]
         public void TestGenericMethod()
         {
-            var res = MethodParser.ParseOrThrow("string Concat`1(System.Collections.Generic.IEnumerable`1<!!0>)");
+            var res = MethodParser.ParseOrThrow("string Concat(System.Collections.Generic.IEnumerable`1<!!0>)");
 
-            Assert.That(res.Name, Is.EqualTo("Concat`1"));
+            Assert.That(res.Name, Is.EqualTo("Concat"));
             Assert.That(res.ReturnType, Is.EqualTo(new MTypePrimitive(PrimitiveTypeCode.String)));
             Assert.That(res.ParameterTypes,
                 Is.EquivalentTo(new MType[]

@@ -77,25 +77,50 @@ namespace Robust.Shared.ContentPack
         internal sealed class MTypeParsed : MType
         {
             public readonly string FullName;
+            public readonly MTypeParsed? NestedParent;
 
-            public MTypeParsed(string fullName)
+            public MTypeParsed(string fullName, MTypeParsed? nestedParent = null)
             {
                 FullName = fullName;
+                NestedParent = nestedParent;
             }
 
             public override string ToString()
             {
-                return FullName;
+                return NestedParent != null ? $"{NestedParent}/{FullName}" : FullName;
             }
 
             public override bool WhitelistEquals(MType other)
             {
-                return other switch
+                switch (other)
                 {
-                    MTypeParsed parsed => parsed.FullName == FullName,
-                    MTypeReferenced referenced => FullName == $"{referenced.Namespace}.{referenced.Name}",
-                    _ => false
-                };
+                    case MTypeParsed parsed:
+                        if (NestedParent != null)
+                        {
+                            if (parsed.NestedParent == null || !NestedParent.WhitelistEquals(parsed.NestedParent))
+                            {
+                                return false;
+                            }
+                        }
+
+                        return parsed.FullName == FullName;
+                    case MTypeReferenced referenced:
+                        if (NestedParent != null)
+                        {
+                            if (referenced.ResolutionScope is not MResScopeType parentRes ||
+                                !NestedParent.WhitelistEquals(parentRes.Type))
+                            {
+                                return false;
+                            }
+                        }
+
+                        var refFullName = referenced.Namespace == null
+                            ? referenced.Name
+                            : $"{referenced.Namespace}.{referenced.Name}";
+                        return FullName == refFullName;
+                    default:
+                        return false;
+                }
             }
 
             private bool Equals(MTypeParsed other)
@@ -486,6 +511,11 @@ namespace Robust.Shared.ContentPack
                 return ReferenceEquals(this, obj) || obj is MTypeGenericTypePlaceHolder other && Equals(other);
             }
 
+            public override bool WhitelistEquals(MType other)
+            {
+                return Equals(other);
+            }
+
             public override int GetHashCode()
             {
                 return Index;
@@ -514,6 +544,11 @@ namespace Robust.Shared.ContentPack
             public override bool Equals(object? obj)
             {
                 return ReferenceEquals(this, obj) || obj is MTypeGenericMethodPlaceHolder other && Equals(other);
+            }
+
+            public override bool WhitelistEquals(MType other)
+            {
+                return Equals(other);
             }
 
             public override int GetHashCode()

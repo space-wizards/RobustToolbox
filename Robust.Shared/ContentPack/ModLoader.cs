@@ -70,6 +70,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         private readonly List<ModInfo> _mods = new List<ModInfo>();
 
+        // List of extra assemblies side-loaded from the /Assemblies/ mounted path.
         private readonly List<Assembly> _sideModules = new List<Assembly>();
 
         private readonly AssemblyLoadContext _loadContext;
@@ -79,6 +80,7 @@ namespace Robust.Shared.ContentPack
         private static int _modLoaderId;
 
         private bool _useLoadContext = true;
+        private bool _sandboxingEnabled;
 
         public ModLoader()
         {
@@ -98,12 +100,15 @@ namespace Robust.Shared.ContentPack
         public void SetUseLoadContext(bool useLoadContext)
         {
             _useLoadContext = useLoadContext;
+            Logger.DebugS("res", "{0} assembly load context", useLoadContext ? "ENABLING" : "DISABLING");
         }
 
         public void SetEnableSandboxing(bool sandboxing)
         {
+            _sandboxingEnabled = sandboxing;
             _typeChecker.VerifyIL = sandboxing;
             _typeChecker.DisableTypeCheck = !sandboxing;
+            Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
         }
 
         public bool IsContentAssembly(Assembly typeAssembly)
@@ -306,19 +311,24 @@ namespace Robust.Shared.ContentPack
                         }
                     }
 
-                    foreach (var assembly in _sideModules)
+                    // Do not allow sideloading when sandboxing is enabled.
+                    // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
+                    if (!_sandboxingEnabled)
                     {
-                        if (assembly.FullName == name.FullName)
+                        foreach (var assembly in _sideModules)
                         {
+                            if (assembly.FullName == name.FullName)
+                            {
+                                return assembly;
+                            }
+                        }
+
+                        if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                        {
+                            var assembly = _loadContext.LoadFromStream(dll);
+                            _sideModules.Add(assembly);
                             return assembly;
                         }
-                    }
-
-                    if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
-                    {
-                        var assembly = _loadContext.LoadFromStream(dll);
-                        _sideModules.Add(assembly);
-                        return assembly;
                     }
 
                     return null;

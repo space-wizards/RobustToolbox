@@ -174,7 +174,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetItemId(int idx, int id)
         {
-            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != id)
+            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != idx)
             {
                 throw new InvalidOperationException("An item with said ID already exists.");
             }

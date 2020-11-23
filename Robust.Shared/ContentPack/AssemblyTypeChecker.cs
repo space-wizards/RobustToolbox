@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Threading.Tasks;
 using ILVerify;
 using Pidgin;
 using Robust.Shared.Interfaces.Resources;
@@ -100,12 +103,13 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            var errors = new List<SandboxError>();
+            var errors = new ConcurrentBag<SandboxError>();
             var reader = peReader.GetMetadataReader();
 
             var types = GetReferencedTypes(reader, errors);
             var members = GetReferencedMembers(reader, errors);
             var inherited = GetExternalInheritedTypes(reader, errors);
+            Logger.DebugS("res.typecheck", $"References loaded... {fullStopwatch.ElapsedMilliseconds}ms");
 
             if ((Dump & DumpFlags.Types) != 0)
             {
@@ -151,6 +155,8 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
+            Logger.DebugS("res.typecheck", $"Types... {fullStopwatch.ElapsedMilliseconds}ms");
+
             // This inheritance whitelisting primarily serves to avoid content doing funny stuff
             // by e.g. inheriting Type.
             foreach (var (_, baseType, interfaces) in inherited)
@@ -186,7 +192,9 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            foreach (var memberRef in members)
+            Logger.DebugS("res.typecheck", $"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
+
+            Parallel.ForEach(members, memberRef =>
             {
                 MType baseType = memberRef.ParentType;
                 while (!(baseType is MTypeReferenced))
@@ -207,7 +215,7 @@ namespace Robust.Shared.ContentPack
                                 errors.Add(new SandboxError($"Access to type not allowed: {array}"));
                             }
 
-                            goto found;
+                            return; // Found
                         }
                         default:
                         {
@@ -221,13 +229,13 @@ namespace Robust.Shared.ContentPack
                 if (!IsTypeAccessAllowed(baseTypeReferenced, config, out var typeCfg))
                 {
                     errors.Add(new SandboxError($"Access to type not allowed: {baseTypeReferenced}"));
-                    continue;
+                    return;
                 }
 
                 if (typeCfg.All)
                 {
                     // Fully whitelisted for the type, we good.
-                    continue;
+                    return;
                 }
 
                 switch (memberRef)
@@ -243,8 +251,7 @@ namespace Robust.Shared.ContentPack
                                 if (parsed.Name == mMemberRefField.Name &&
                                     mMemberRefField.FieldType.WhitelistEquals(parsed.FieldType))
                                 {
-                                    // I regret nothing.
-                                    goto found;
+                                    return; // Found
                                 }
                             }
                         }
@@ -284,7 +291,7 @@ namespace Robust.Shared.ContentPack
                                         }
                                     }
 
-                                    goto found;
+                                    return; // Found
                                 }
 
                                 paramMismatch: ;
@@ -296,9 +303,7 @@ namespace Robust.Shared.ContentPack
                     default:
                         throw new ArgumentOutOfRangeException(nameof(memberRef));
                 }
-
-                found: ;
-            }
+            });
 
             foreach (var error in errors)
             {
@@ -365,115 +370,120 @@ namespace Robust.Shared.ContentPack
             return nsDict.TryGetValue(type.Name, out cfg);
         }
 
-        private List<MTypeReferenced> GetReferencedTypes(MetadataReader reader, List<SandboxError> errors)
+        private List<MTypeReferenced> GetReferencedTypes(MetadataReader reader, ConcurrentBag<SandboxError> errors)
         {
-            var list = new List<MTypeReferenced>();
-
-            foreach (var typeRefHandle in reader.TypeReferences)
-            {
-                list.Add(ParseTypeReference(reader, typeRefHandle));
-            }
-
-            return list;
+            return reader.TypeReferences.Select(typeRefHandle =>
+                {
+                    try
+                    {
+                        return ParseTypeReference(reader, typeRefHandle);
+                    }
+                    catch (UnsupportedMetadataException e)
+                    {
+                        return null;
+                    }
+                })
+                .Where(p => p != null)
+                .ToList()!;
         }
 
-        private List<MMemberRef> GetReferencedMembers(MetadataReader reader, List<SandboxError> errors)
+        private List<MMemberRef> GetReferencedMembers(MetadataReader reader, ConcurrentBag<SandboxError> errors)
         {
-            var list = new List<MMemberRef>();
-            foreach (var memRefHandle in reader.MemberReferences)
-            {
-                var memRef = reader.GetMemberReference(memRefHandle);
-                var memName = reader.GetString(memRef.Name);
-                MType parent;
-                switch (memRef.Parent.Kind)
+            return reader.MemberReferences.AsParallel()
+                .Select(memRefHandle =>
                 {
-                    // See II.22.25 in ECMA-335.
-                    case HandleKind.TypeReference:
+                    var memRef = reader.GetMemberReference(memRefHandle);
+                    var memName = reader.GetString(memRef.Name);
+                    MType parent;
+                    switch (memRef.Parent.Kind)
                     {
-                        // Regular type reference.
-                        try
+                        // See II.22.25 in ECMA-335.
+                        case HandleKind.TypeReference:
                         {
-                            parent = ParseTypeReference(reader, (TypeReferenceHandle) memRef.Parent);
+                            // Regular type reference.
+                            try
+                            {
+                                parent = ParseTypeReference(reader, (TypeReferenceHandle) memRef.Parent);
+                            }
+                            catch (UnsupportedMetadataException u)
+                            {
+                                errors.Add(new SandboxError(u));
+                                return null;
+                            }
+
+                            break;
                         }
-                        catch (UnsupportedMetadataException u)
+                        case HandleKind.TypeSpecification:
                         {
-                            errors.Add(new SandboxError(u));
-                            continue;
+                            var typeSpec = reader.GetTypeSpecification((TypeSpecificationHandle) memRef.Parent);
+                            // Generic type reference.
+                            var provider = new TypeProvider();
+                            parent = typeSpec.DecodeSignature(provider, 0);
+
+                            if (parent.IsCoreTypeDefined())
+                            {
+                                // Ensure this isn't a self-defined type.
+                                // This can happen due to generics since MethodSpec needs to point to MemberRef.
+                                return null;
+                            }
+
+                            break;
                         }
-
-                        break;
-                    }
-                    case HandleKind.TypeSpecification:
-                    {
-                        var typeSpec = reader.GetTypeSpecification((TypeSpecificationHandle) memRef.Parent);
-                        // Generic type reference.
-                        var provider = new TypeProvider();
-                        parent = typeSpec.DecodeSignature(provider, 0);
-
-                        if (parent.IsCoreTypeDefined())
+                        case HandleKind.ModuleReference:
                         {
-                            // Ensure this isn't a self-defined type.
-                            // This can happen due to generics since MethodSpec needs to point to MemberRef.
-                            continue;
+                            errors.Add(new SandboxError(
+                                $"Module global variables and methods are unsupported. Name: {memName}"));
+                            return null;
                         }
-
-                        break;
+                        case HandleKind.MethodDefinition:
+                        {
+                            errors.Add(new SandboxError($"Vararg calls are unsupported. Name: {memName}"));
+                            return null;
+                        }
+                        default:
+                        {
+                            errors.Add(new SandboxError(
+                                $"Unsupported member ref parent type: {memRef.Parent}. Name: {memName}"));
+                            return null;
+                        }
                     }
-                    case HandleKind.ModuleReference:
+
+                    MMemberRef memberRef;
+
+                    switch (memRef.GetKind())
                     {
-                        errors.Add(new SandboxError(
-                            $"Module global variables and methods are unsupported. Name: {memName}"));
-                        continue;
+                        case MemberReferenceKind.Method:
+                        {
+                            var sig = memRef.DecodeMethodSignature(new TypeProvider(), 0);
+
+                            memberRef = new MMemberRefMethod(
+                                parent,
+                                memName,
+                                sig.ReturnType,
+                                sig.GenericParameterCount,
+                                sig.ParameterTypes);
+
+                            break;
+                        }
+                        case MemberReferenceKind.Field:
+                        {
+                            var fieldType = memRef.DecodeFieldSignature(new TypeProvider(), 0);
+                            memberRef = new MMemberRefField(parent, memName, fieldType);
+                            break;
+                        }
+                        default:
+                            throw new ArgumentOutOfRangeException();
                     }
-                    case HandleKind.MethodDefinition:
-                    {
-                        errors.Add(new SandboxError($"Vararg calls are unsupported. Name: {memName}"));
-                        continue;
-                    }
-                    default:
-                    {
-                        errors.Add(new SandboxError(
-                            $"Unsupported member ref parent type: {memRef.Parent}. Name: {memName}"));
-                        continue;
-                    }
-                }
 
-                MMemberRef memberRef;
-
-                switch (memRef.GetKind())
-                {
-                    case MemberReferenceKind.Method:
-                    {
-                        var sig = memRef.DecodeMethodSignature(new TypeProvider(), 0);
-
-                        memberRef = new MMemberRefMethod(
-                            parent,
-                            memName,
-                            sig.ReturnType,
-                            sig.GenericParameterCount,
-                            sig.ParameterTypes);
-
-                        break;
-                    }
-                    case MemberReferenceKind.Field:
-                    {
-                        var fieldType = memRef.DecodeFieldSignature(new TypeProvider(), 0);
-                        memberRef = new MMemberRefField(parent, memName, fieldType);
-                        break;
-                    }
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                list.Add(memberRef);
-            }
-
-            return list;
+                    return memberRef;
+                })
+                .Where(p => p != null)
+                .ToList()!;
         }
 
         private List<(MType type, MType parent, ArraySegment<MType> interfaceImpls)> GetExternalInheritedTypes(
             MetadataReader reader,
-            List<SandboxError> errors)
+            ConcurrentBag<SandboxError> errors)
         {
             var list = new List<(MType, MType, ArraySegment<MType>)>();
             foreach (var typeDefHandle in reader.TypeDefinitions)

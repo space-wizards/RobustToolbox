@@ -27,7 +27,7 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         public bool DisableTypeCheck { get; set; } = false;
 
-        public DumpFlags Dump { get; set; } = DumpFlags.All;
+        public DumpFlags Dump { get; set; } = DumpFlags.None;
         public bool VerifyIL { get; set; } = true;
 
         private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
@@ -65,6 +65,9 @@ namespace Robust.Shared.ContentPack
                 // This method is a no-op in this case so don't bother
                 return true;
             }
+
+            Logger.DebugS("res.typecheck", "Checking assembly...");
+            var fullStopwatch = Stopwatch.StartNew();
 
             var config = LoadConfig();
             var resolver = CreateResolver();
@@ -301,6 +304,8 @@ namespace Robust.Shared.ContentPack
             {
                 Logger.ErrorS("res.typecheck", $"Sandbox violation: {error.Message}");
             }
+
+            Logger.DebugS("res.typecheck", $"Checked assembly in {fullStopwatch.ElapsedMilliseconds}ms");
 
             return errors.Count == 0;
         }

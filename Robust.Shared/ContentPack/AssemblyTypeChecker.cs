@@ -673,48 +673,6 @@ namespace Robust.Shared.ContentPack
             return handle.IsNil ? null : reader.GetString(handle);
         }
 
-        /*
-        /// <summary>
-        ///     Runs an enumeration of types through the white/black lists and prints results to log.
-        /// </summary>
-        /// <param name="types">Types to check.</param>
-        private void AnalyzeTypes(IEnumerable<TypeReference> types)
-        {
-            foreach (var typeRef in types)
-            {
-                var result = 'G';
-                foreach (var typeName in _typeWhiteList)
-                {
-                    if (!typeRef.FullName.StartsWith(typeName))
-                        continue;
-
-                    result = 'W';
-                    break;
-                }
-
-                foreach (var typeName in _typeBlackList)
-                {
-                    if (!typeRef.FullName.StartsWith(typeName))
-                        continue;
-
-                    result = 'B';
-                    break;
-                }
-
-                Logger.DebugS("res.typecheck", $"RefType: [{result}] {typeRef.FullName}");
-            }
-        }*/
-
-        /*private IEnumerable<MTypeReferenced> GetReferencedTypes(MetadataReader reader)
-        {
-            foreach (var typeRefHandle in reader.TypeReferences)
-            {
-                var typeRef = reader.GetTypeReference(typeRefHandle);
-
-                yield return new MTypeReferenced();
-            }
-        }*/
-
         private sealed class Resolver : ResolverBase
         {
             private readonly AssemblyTypeChecker _parent;

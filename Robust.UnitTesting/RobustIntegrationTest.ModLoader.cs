@@ -1,4 +1,5 @@
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Resources;
@@ -12,6 +13,8 @@ namespace Robust.UnitTesting
             public Assembly? ClientContentAssembly { get; set; }
             public Assembly? ServerContentAssembly { get; set; }
             public Assembly? SharedContentAssembly { get; set; }
+
+            public Assembly[]? ExtraAssemblies { get; set; }
 
             public override void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
             {
@@ -64,6 +67,11 @@ namespace Robust.UnitTesting
                 }
 
                 return false;
+            }
+
+            public override bool IsContentAssembly(Assembly typeAssembly)
+            {
+                return base.IsContentAssembly(typeAssembly) || (ExtraAssemblies?.Contains(typeAssembly) ?? false);
             }
         }
     }

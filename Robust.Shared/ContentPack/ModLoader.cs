@@ -111,7 +111,7 @@ namespace Robust.Shared.ContentPack
             Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
         }
 
-        public bool IsContentAssembly(Assembly typeAssembly)
+        public virtual bool IsContentAssembly(Assembly typeAssembly)
         {
             foreach (var mod in _mods)
             {

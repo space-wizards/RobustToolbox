@@ -326,6 +326,7 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
                     IoCManager.Register<IModLoader, ModLoader>(true);
+                    IoCManager.Register<IModLoaderInternal, ModLoader>(true);
                     IoCManager.Register<ModLoader, ModLoader>(true);
                     IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                     _options?.InitIoC?.Invoke();
@@ -345,6 +346,11 @@ namespace Robust.UnitTesting
                     if (_options?.SharedContentAssembly != null)
                     {
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
+                    }
+
+                    if (_options?.ExtraAssemblies != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().ExtraAssemblies = _options.ExtraAssemblies;
                     }
 
                     if (_options != null)
@@ -423,6 +429,7 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IModLoader, ModLoader>(true);
+                    IoCManager.Register<IModLoaderInternal, ModLoader>(true);
                     IoCManager.Register<ModLoader, ModLoader>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
@@ -439,6 +446,11 @@ namespace Robust.UnitTesting
                     if (_options?.SharedContentAssembly != null)
                     {
                         IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
+                    }
+
+                    if (_options?.ExtraAssemblies != null)
+                    {
+                        IoCManager.Resolve<ModLoader>().ExtraAssemblies = _options.ExtraAssemblies;
                     }
 
                     client.LoadConfigAndUserData = false;
@@ -575,6 +587,7 @@ namespace Robust.UnitTesting
             public Action? InitIoC { get; set; }
             public Action? BeforeStart { get; set; }
             public Assembly? SharedContentAssembly { get; set; }
+            public Assembly[]? ExtraAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();

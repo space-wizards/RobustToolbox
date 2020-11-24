@@ -474,6 +474,7 @@ namespace Robust.Shared.GameObjects
         private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, ObjectSerializer ser)
         {
             var compType = factory.GetRegistration(compName).Type;
+            ser.CurrentType = compType;
 
             if (!entity.TryGetComponent(compType, out var component))
             {

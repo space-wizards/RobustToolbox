@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -193,6 +196,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var rootNode = YamlTextToNode("foo: 5\nbar: \"baz\"");
             var serializer = YamlObjectSerializer.NewReader(rootNode);
+            serializer.CurrentType = typeof(DummyClass);
 
             serializer.DataField(dummy, d => d.Foo, "foo", 4);
             serializer.DataField(dummy, d => d.Bar, "bar", "honk");
@@ -215,6 +219,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var mapping = new YamlMappingNode();
             var serializer = YamlObjectSerializer.NewWriter(mapping);
+            serializer.CurrentType = typeof(DummyClass);
 
             serializer.DataField(dummy, d => d.Foo, "foo", 1);
             serializer.DataField(dummy, d => d.Bar, "bar", "*silence*");

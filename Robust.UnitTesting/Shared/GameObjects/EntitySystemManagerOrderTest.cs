@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Systems;
@@ -69,6 +70,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<ILogManager, LogManager>();
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
+            deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
             deps.Register<IEntitySystemManager, EntitySystemManager>();
             deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
 

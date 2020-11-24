@@ -56,8 +56,6 @@ namespace Robust.Client.UserInterface.CustomControls
             "AlignWallProper",
         };
 
-        private const int TARGET_ICON_HEIGHT = 32;
-
         private EntitySpawnButton? SelectedButton;
         private EntityPrototype? SelectedPrototype;
 

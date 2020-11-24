@@ -17,7 +17,6 @@ namespace Robust.Shared.Network
     partial class NetManager
     {
         private const int RsaKeySize = 2048;
-        private const int VerifyTokenSize = 4; // Literally just what MC does idk.
 
         private RSA? _authRsaPrivateKey;
 

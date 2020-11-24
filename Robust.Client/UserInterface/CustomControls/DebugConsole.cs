@@ -23,8 +23,6 @@ namespace Robust.Client.UserInterface.CustomControls
     // (At least from the main thread, which is what's throwing the exceptions..)
     public class DebugConsole : Control, IDebugConsole
     {
-        private const int MaxHistorySize = 100;
-
         private readonly IClientConsole _console;
         private readonly IResourceManager _resourceManager;
 

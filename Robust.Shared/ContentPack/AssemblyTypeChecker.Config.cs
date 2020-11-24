@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using ILVerify;
+using Pidgin;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using YamlDotNet.Serialization;
 
@@ -15,7 +19,68 @@ namespace Robust.Shared.ContentPack
                 .GetManifestResourceStream("Robust.Shared.ContentPack.Sandbox.yml")!;
 
             DebugTools.AssertNotNull(stream);
-            return new Deserializer().Deserialize<SandboxConfig>(new StreamReader(stream, Encoding.UTF8));
+            var cfg = new Deserializer().Deserialize<SandboxConfig>(new StreamReader(stream, Encoding.UTF8));
+            foreach (var typeCfg in cfg.Types.Values.SelectMany(p => p.Values))
+            {
+                ParseTypeConfig(typeCfg);
+            }
+
+            return cfg;
+        }
+
+        private static void ParseTypeConfig(TypeConfig cfg)
+        {
+            if (cfg.Methods != null)
+            {
+                var list = new List<WhitelistMethodDefine>();
+                foreach (var m in cfg.Methods)
+                {
+                    try
+                    {
+                        list.Add(MethodParser.ParseOrThrow(m));
+                    }
+                    catch (ParseException e)
+                    {
+                        Logger.ErrorS("res.typecheck", $"Parse exception for '{m}': {e}");
+                    }
+                }
+
+                cfg.MethodsParsed = list.ToArray();
+            }
+            else
+            {
+                cfg.MethodsParsed = Array.Empty<WhitelistMethodDefine>();
+            }
+
+            if (cfg.Fields != null)
+            {
+                var list = new List<WhitelistFieldDefine>();
+                foreach (var f in cfg.Fields)
+                {
+                    try
+                    {
+                        list.Add(FieldParser.ParseOrThrow(f));
+                    }
+                    catch (ParseException e)
+                    {
+                        Logger.ErrorS("res.typecheck", $"Parse exception for '{f}': {e}");
+                    }
+                }
+
+                cfg.FieldsParsed = list.ToArray();
+            }
+            else
+            {
+                cfg.FieldsParsed = Array.Empty<WhitelistFieldDefine>();
+            }
+
+            if (cfg.NestedTypes != null)
+            {
+                foreach (var nested in cfg.NestedTypes.Values)
+                {
+                    ParseTypeConfig(nested);
+                }
+            }
         }
 
         private sealed class SandboxConfig
@@ -34,8 +99,10 @@ namespace Robust.Shared.ContentPack
 
             public bool All;
             public InheritMode Inherit = InheritMode.Default;
-            public List<string>? Methods;
-            public List<string>? Fields;
+            public string[]? Methods;
+            [NonSerialized] public WhitelistMethodDefine[] MethodsParsed = default!;
+            public string[]? Fields;
+            [NonSerialized] public WhitelistFieldDefine[] FieldsParsed = default!;
             public Dictionary<string, TypeConfig>? NestedTypes;
         }
 
@@ -44,6 +111,7 @@ namespace Robust.Shared.ContentPack
             // Allow if All is set, block otherwise
             Default,
             Allow,
+
             // Block even is All is set
             Block
         }

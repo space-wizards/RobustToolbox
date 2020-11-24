@@ -79,46 +79,7 @@ namespace Robust.Shared.ContentPack
 
             if (VerifyIL)
             {
-                Logger.DebugS("res.typecheck", "Verifying IL...");
-                var sw = Stopwatch.StartNew();
-                var ver = new Verifier(resolver);
-                ver.SetSystemModuleName(new AssemblyName(config.SystemAssemblyName));
-                var verifyErrors = false;
-                foreach (var res in ver.Verify(peReader))
-                {
-                    if (config.AllowedVerifierErrors.Contains(res.Code))
-                    {
-                        continue;
-                    }
-
-                    var msg = $"ILVerify: {res.Message}";
-
-                    if (!res.Method.IsNil)
-                    {
-                        var method = reader.GetMethodDefinition(res.Method);
-                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
-                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
-
-                        var methodName =
-                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
-
-                        msg = $"{msg}, method: {methodName}";
-                    }
-
-                    if (!res.Type.IsNil)
-                    {
-                        var type = GetTypeFromDefinition(reader, res.Type);
-                        msg = $"{msg}, type: {type}";
-                    }
-
-                    verifyErrors = true;
-                    Logger.ErrorS("res.typecheck", msg);
-                }
-
-                Logger.DebugS("res.typecheck", $"Verified IL in {sw.Elapsed.TotalMilliseconds}ms");
-
-                //assembly.Position = start;
-                if (verifyErrors)
+                if (!DoVerifyIL(resolver, config, peReader, reader))
                 {
                     return false;
                 }
@@ -177,43 +138,74 @@ namespace Robust.Shared.ContentPack
 
             Logger.DebugS("res.typecheck", $"Types... {fullStopwatch.ElapsedMilliseconds}ms");
 
-            // This inheritance whitelisting primarily serves to avoid content doing funny stuff
-            // by e.g. inheriting Type.
-            foreach (var (_, baseType, interfaces) in inherited)
-            {
-                if (!CanInherit(baseType))
-                {
-                    errors.Add(new SandboxError($"Inheriting of type not allowed: {baseType}"));
-                }
-
-                foreach (var @interface in interfaces)
-                {
-                    if (!CanInherit(@interface))
-                    {
-                        errors.Add(new SandboxError($"Implementing of interface not allowed: {@interface}"));
-                    }
-                }
-
-                bool CanInherit(MType inheritType)
-                {
-                    var realBaseType = inheritType switch
-                    {
-                        MTypeGeneric generic => (MTypeReferenced) generic.GenericType,
-                        MTypeReferenced referenced => referenced,
-                        _ => throw new InvalidOperationException() // Can't happen.
-                    };
-
-                    if (!IsTypeAccessAllowed(realBaseType, config, out var cfg))
-                    {
-                        return false;
-                    }
-
-                    return cfg.Inherit != InheritMode.Block && (cfg.Inherit == InheritMode.Allow || cfg.All);
-                }
-            }
+            CheckInheritance(inherited, errors, config);
 
             Logger.DebugS("res.typecheck", $"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
 
+            CheckMemberReferences(members, config, errors);
+
+            foreach (var error in errors)
+            {
+                Logger.ErrorS("res.typecheck", $"Sandbox violation: {error.Message}");
+            }
+
+            Logger.DebugS("res.typecheck", $"Checked assembly in {fullStopwatch.ElapsedMilliseconds}ms");
+
+            return errors.IsEmpty;
+        }
+
+        private static bool DoVerifyIL(Resolver resolver, SandboxConfig config, PEReader peReader,
+            MetadataReader reader)
+        {
+            Logger.DebugS("res.typecheck", "Verifying IL...");
+            var sw = Stopwatch.StartNew();
+            var ver = new Verifier(resolver);
+            ver.SetSystemModuleName(new AssemblyName(config.SystemAssemblyName));
+            var verifyErrors = false;
+            foreach (var res in ver.Verify(peReader))
+            {
+                if (config.AllowedVerifierErrors.Contains(res.Code))
+                {
+                    continue;
+                }
+
+                var msg = $"ILVerify: {res.Message}";
+
+                if (!res.Method.IsNil)
+                {
+                    var method = reader.GetMethodDefinition(res.Method);
+                    var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+                    var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+
+                    var methodName =
+                        $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+
+                    msg = $"{msg}, method: {methodName}";
+                }
+
+                if (!res.Type.IsNil)
+                {
+                    var type = GetTypeFromDefinition(reader, res.Type);
+                    msg = $"{msg}, type: {type}";
+                }
+
+                verifyErrors = true;
+                Logger.ErrorS("res.typecheck", msg);
+            }
+
+            Logger.DebugS("res.typecheck", $"Verified IL in {sw.Elapsed.TotalMilliseconds}ms");
+
+            if (verifyErrors)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void CheckMemberReferences(List<MMemberRef> members, SandboxConfig config,
+            ConcurrentBag<SandboxError> errors)
+        {
             Parallel.ForEach(members, memberRef =>
             {
                 MType baseType = memberRef.ParentType;
@@ -262,17 +254,12 @@ namespace Robust.Shared.ContentPack
                 {
                     case MMemberRefField mMemberRefField:
                     {
-                        if (typeCfg.Fields != null)
+                        foreach (var field in typeCfg.FieldsParsed)
                         {
-                            foreach (var field in typeCfg.Fields)
+                            if (field.Name == mMemberRefField.Name &&
+                                mMemberRefField.FieldType.WhitelistEquals(field.FieldType))
                             {
-                                var parsed = FieldParser.ParseOrThrow(field);
-
-                                if (parsed.Name == mMemberRefField.Name &&
-                                    mMemberRefField.FieldType.WhitelistEquals(parsed.FieldType))
-                                {
-                                    return; // Found
-                                }
+                                return; // Found
                             }
                         }
 
@@ -280,42 +267,28 @@ namespace Robust.Shared.ContentPack
                         break;
                     }
                     case MMemberRefMethod mMemberRefMethod:
-                        if (typeCfg.Methods != null)
+                        foreach (var parsed in typeCfg.MethodsParsed)
                         {
-                            foreach (var method in typeCfg.Methods)
+                            if (parsed.Name == mMemberRefMethod.Name &&
+                                mMemberRefMethod.ReturnType.WhitelistEquals(parsed.ReturnType) &&
+                                mMemberRefMethod.ParameterTypes.Length == parsed.ParameterTypes.Length &&
+                                mMemberRefMethod.GenericParameterCount == parsed.GenericParameterCount)
                             {
-                                WhitelistMethodDefine parsed;
-                                try
+                                for (var i = 0; i < mMemberRefMethod.ParameterTypes.Length; i++)
                                 {
-                                    parsed = MethodParser.ParseOrThrow(method);
-                                }
-                                catch (ParseException e)
-                                {
-                                    Logger.ErrorS("res.typecheck", $"Parse error for: '{method}': {e}");
-                                    continue;
-                                }
+                                    var a = mMemberRefMethod.ParameterTypes[i];
+                                    var b = parsed.ParameterTypes[i];
 
-                                if (parsed.Name == mMemberRefMethod.Name &&
-                                    mMemberRefMethod.ReturnType.WhitelistEquals(parsed.ReturnType) &&
-                                    mMemberRefMethod.ParameterTypes.Length == parsed.ParameterTypes.Length &&
-                                    mMemberRefMethod.GenericParameterCount == parsed.GenericParameterCount)
-                                {
-                                    for (var i = 0; i < mMemberRefMethod.ParameterTypes.Length; i++)
+                                    if (!a.WhitelistEquals(b))
                                     {
-                                        var a = mMemberRefMethod.ParameterTypes[i];
-                                        var b = parsed.ParameterTypes[i];
-
-                                        if (!a.WhitelistEquals(b))
-                                        {
-                                            goto paramMismatch;
-                                        }
+                                        goto paramMismatch;
                                     }
-
-                                    return; // Found
                                 }
 
-                                paramMismatch: ;
+                                return; // Found
                             }
+
+                            paramMismatch: ;
                         }
 
                         errors.Add(new SandboxError($"Access to method not allowed: {mMemberRefMethod}"));
@@ -324,15 +297,46 @@ namespace Robust.Shared.ContentPack
                         throw new ArgumentOutOfRangeException(nameof(memberRef));
                 }
             });
+        }
 
-            foreach (var error in errors)
+        private static void CheckInheritance(
+            List<(MType type, MType parent, ArraySegment<MType> interfaceImpls)> inherited,
+            ConcurrentBag<SandboxError> errors, SandboxConfig config)
+        {
+            // This inheritance whitelisting primarily serves to avoid content doing funny stuff
+            // by e.g. inheriting Type.
+            foreach (var (_, baseType, interfaces) in inherited)
             {
-                Logger.ErrorS("res.typecheck", $"Sandbox violation: {error.Message}");
+                if (!CanInherit(baseType))
+                {
+                    errors.Add(new SandboxError($"Inheriting of type not allowed: {baseType}"));
+                }
+
+                foreach (var @interface in interfaces)
+                {
+                    if (!CanInherit(@interface))
+                    {
+                        errors.Add(new SandboxError($"Implementing of interface not allowed: {@interface}"));
+                    }
+                }
+
+                bool CanInherit(MType inheritType)
+                {
+                    var realBaseType = inheritType switch
+                    {
+                        MTypeGeneric generic => (MTypeReferenced) generic.GenericType,
+                        MTypeReferenced referenced => referenced,
+                        _ => throw new InvalidOperationException() // Can't happen.
+                    };
+
+                    if (!IsTypeAccessAllowed(realBaseType, config, out var cfg))
+                    {
+                        return false;
+                    }
+
+                    return cfg.Inherit != InheritMode.Block && (cfg.Inherit == InheritMode.Allow || cfg.All);
+                }
             }
-
-            Logger.DebugS("res.typecheck", $"Checked assembly in {fullStopwatch.ElapsedMilliseconds}ms");
-
-            return errors.Count == 0;
         }
 
         private static bool IsTypeAccessAllowed(MTypeReferenced type, SandboxConfig config,

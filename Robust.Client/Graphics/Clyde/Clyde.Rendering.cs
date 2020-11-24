@@ -368,6 +368,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
+        private Dictionary<AtlasTexture, ClydeTexture> atlasCache = new Dictionary<AtlasTexture, ClydeTexture>();
         private (GLShaderProgram, LoadedShader) ActivateShaderInstance(ClydeHandle handle)
         {
             var instance = _shaderInstances[handle];
@@ -421,7 +422,8 @@ namespace Robust.Client.Graphics.Clyde
                         break;
                     case ClydeTexture clydeTexture:
                         //This is important it starts at Texture6 since DrawCommandBatch uses Texture0 and Texture1 immediately after calling this
-                        //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too!
+                        //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
+                        //Hey what can ya do?
                         TextureUnit cTarget = TextureUnit.Texture6+textureUnitVal;
                         SetTexture(cTarget, ((ClydeTexture)clydeTexture).TextureId);
                         program.SetUniformTexture(name, cTarget);
@@ -429,8 +431,14 @@ namespace Robust.Client.Graphics.Clyde
                         break;
                     case AtlasTexture atlasTexture:
                         TextureUnit aTarget = TextureUnit.Texture6+textureUnitVal;
-                        //This currently does a costly grab-and-copy operation every time an atlas texture is passed in. Really need to change this to cache it somehow!
-                        SetTexture(aTarget, AtlasToClydeTextureExpensive(atlasTexture).TextureId);
+                        if (atlasCache.TryGetValue(atlasTexture, out var clydeCached)) {
+                            SetTexture(aTarget, clydeCached!.TextureId);
+                        }
+                        else {
+                            ClydeTexture newlyCached = AtlasToClydeTextureExpensive(atlasTexture);
+                            atlasCache.Add(atlasTexture, newlyCached);
+                            SetTexture(aTarget, newlyCached.TextureId);
+                        }
                         program.SetUniformTexture(name, aTarget);
                         textureUnitVal++;
                         break;

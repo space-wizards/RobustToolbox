@@ -75,6 +75,7 @@ namespace Robust.Shared.ContentPack
             var config = LoadConfig();
             var resolver = CreateResolver();
             using var peReader = new PEReader(assembly, PEStreamOptions.LeaveOpen);
+            var reader = peReader.GetMetadataReader();
 
             if (VerifyIL)
             {
@@ -90,8 +91,28 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
+                    var msg = $"ILVerify: {res.Message}";
+
+                    if (!res.Method.IsNil)
+                    {
+                        var method = reader.GetMethodDefinition(res.Method);
+                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+
+                        var methodName =
+                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+
+                        msg = $"{msg}, method: {methodName}";
+                    }
+
+                    if (!res.Type.IsNil)
+                    {
+                        var type = GetTypeFromDefinition(reader, res.Type);
+                        msg = $"{msg}, type: {type}";
+                    }
+
                     verifyErrors = true;
-                    Logger.ErrorS("res.typecheck", $"ILVerify: {res.Message}");
+                    Logger.ErrorS("res.typecheck", msg);
                 }
 
                 Logger.DebugS("res.typecheck", $"Verified IL in {sw.Elapsed.TotalMilliseconds}ms");
@@ -104,7 +125,6 @@ namespace Robust.Shared.ContentPack
             }
 
             var errors = new ConcurrentBag<SandboxError>();
-            var reader = peReader.GetMetadataReader();
 
             var types = GetReferencedTypes(reader, errors);
             var members = GetReferencedMembers(reader, errors);

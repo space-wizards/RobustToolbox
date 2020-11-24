@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
@@ -55,6 +56,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <exception cref="FileNotFoundException">Thrown if <paramref name="path"/> does not exist in the VFS.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
         Stream ContentFileRead(ResourcePath path);
 
         /// <summary>
@@ -93,6 +95,7 @@ namespace Robust.Shared.Interfaces.Resources
         /// <returns>True if the file could be loaded, false otherwise.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        /// <seealso cref="ResourceManagerExt.ContentFileReadOrNull"/>
         bool TryContentFileRead(ResourcePath path, [NotNullWhen(true)] out Stream? fileStream);
 
         /// <summary>
@@ -112,10 +115,23 @@ namespace Robust.Shared.Interfaces.Resources
         ///     If the directory does not exist, an empty enumerable is returned.
         /// </remarks>
         /// <param name="path">Directory to search inside of.</param>
-        /// <returns>Enumeration of all relative file paths of the files found, that is they are relative to <paramref name="path"/>.</returns>
+        /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(ResourcePath path);
+
+        IEnumerable<ResourcePath> ContentFindRelativeFiles(ResourcePath path)
+        {
+            foreach (var absPath in ContentFindFiles(path))
+            {
+                if (!absPath.TryRelativeTo(path, out var rel))
+                {
+                    DebugTools.Assert("Past must be relative to be returned, unreachable.");
+                }
+
+                yield return rel;
+            }
+        }
 
         /// <summary>
         ///     Recursively finds all files in a directory and all sub directories.
@@ -124,7 +140,7 @@ namespace Robust.Shared.Interfaces.Resources
         ///     If the directory does not exist, an empty enumerable is returned.
         /// </remarks>
         /// <param name="path">Directory to search inside of.</param>
-        /// <returns>Enumeration of all relative file paths of the files found, that is they are relative to <paramref name="path"/>.</returns>
+        /// <returns>Enumeration of all absolute file paths of the files found.</returns>
         /// <exception cref="ArgumentException">Thrown if <paramref name="path"/> is not rooted.</exception>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
         IEnumerable<ResourcePath> ContentFindFiles(string path);

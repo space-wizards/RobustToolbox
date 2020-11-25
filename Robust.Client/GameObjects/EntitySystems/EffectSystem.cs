@@ -372,7 +372,7 @@ namespace Robust.Client.GameObjects
                 foreach (var effect in _owner._Effects)
                 {
                     if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
-                        _mapManager.GetGrid(effect.Coordinates.GetGridId(_entityManager)).ParentMapId != map)
+                        effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }

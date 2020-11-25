@@ -40,6 +40,7 @@ namespace Robust.Shared
             IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<IGameTiming, GameTiming>();
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
+            IoCManager.Register<ILocalizationManagerInternal, LocalizationManager>();
             IoCManager.Register<ILogManager, LogManager>();
             IoCManager.Register<IMapManager, MapManager>();
             IoCManager.Register<IMapManagerInternal, MapManager>();

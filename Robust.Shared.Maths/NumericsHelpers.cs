@@ -1079,6 +1079,7 @@ namespace Robust.Shared.Maths
                     if (AdvSimd.IsSupported)
                     {
                         SubAdvSimd(a, b, s);
+                        return;
                     }
                 }
             }
@@ -1223,6 +1224,7 @@ namespace Robust.Shared.Maths
                     if (AdvSimd.IsSupported)
                     {
                         SubAdvSimd(a, b, s);
+                        return;
                     }
                 }
             }
@@ -1361,6 +1363,7 @@ namespace Robust.Shared.Maths
                     if (AdvSimd.IsSupported)
                     {
                         AbsAdvSimd(a, s);
+                        return;
                     }
                 }
             }

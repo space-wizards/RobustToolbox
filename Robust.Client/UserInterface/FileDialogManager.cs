@@ -1,15 +1,13 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
-using Robust.Client.Interfaces.Console;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -39,7 +37,18 @@ namespace Robust.Client.UserInterface
             DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
         }
 
-        public async Task<string?> OpenFile(FileDialogFilters? filters = null)
+        public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
+        {
+            var name = await GetOpenFileName(filters);
+            if (name == null)
+            {
+                return null;
+            }
+
+            return File.Open(name, FileMode.Open);
+        }
+
+        private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -50,7 +59,25 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<string?> SaveFile()
+        public async Task<(Stream, bool)?> SaveFile()
+        {
+            var name = await GetSaveFileName();
+            if (name == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return (File.Open(name, FileMode.Open), true);
+            }
+            catch (FileNotFoundException e)
+            {
+                return (File.Open(name, FileMode.Create), false);
+            }
+        }
+
+        private async Task<string?> GetSaveFileName()
         {
 #if LINUX
             if (await IsKDialogAvailable())
@@ -61,6 +88,7 @@ namespace Robust.Client.UserInterface
             return await SaveFileNfd();
         }
 
+        /*
         public async Task<string?> OpenFolder()
         {
 #if LINUX
@@ -71,6 +99,7 @@ namespace Robust.Client.UserInterface
 #endif
             return await OpenFolderNfd();
         }
+        */
 
         private unsafe Task<string?> OpenFileNfd(FileDialogFilters? filters)
         {
@@ -324,29 +353,6 @@ namespace Robust.Client.UserInterface
             SW_NFD_ERROR,
             SW_NFD_OKAY,
             SW_NFD_CANCEL,
-        }
-    }
-
-    [UsedImplicitly]
-    internal sealed class TestOpenFileCommand : IConsoleCommand
-    {
-        // ReSharper disable once StringLiteralTypo
-        public string Command => "testopenfile";
-        public string Description => string.Empty;
-        public string Help => string.Empty;
-
-        public bool Execute(IDebugConsole console, params string[] args)
-        {
-            Inner(console);
-            return false;
-        }
-
-        private static async void Inner(IDebugConsole console)
-        {
-            var manager = IoCManager.Resolve<IFileDialogManager>();
-            var path = await manager.OpenFile();
-
-            console.AddLine(path ?? string.Empty);
         }
     }
 }

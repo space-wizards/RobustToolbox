@@ -33,6 +33,7 @@ namespace Robust.Client.Audio.Midi
         /// </returns>
         IMidiRenderer? GetNewRenderer();
 
+        /*
         /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
         /// </summary>
@@ -48,6 +49,7 @@ namespace Robust.Client.Audio.Midi
         ///     We add this here so content doesn't need to reference NFluidsynth.
         /// </remarks>
         bool IsSoundfontFile(string filename);
+        */
 
         /// <summary>
         ///     Method called every frame.
@@ -169,6 +171,7 @@ namespace Robust.Client.Audio.Midi
             _sawmill.Log(rLevel, message);
         }
 
+        /*
         public bool IsMidiFile(string filename)
         {
             return SoundFont.IsMidiFile(filename);
@@ -178,6 +181,7 @@ namespace Robust.Client.Audio.Midi
         {
             return SoundFont.IsSoundFont(filename);
         }
+        */
 
         public IMidiRenderer? GetNewRenderer()
         {

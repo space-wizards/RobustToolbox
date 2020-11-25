@@ -67,7 +67,7 @@ namespace Robust.Client.Audio.Midi
     internal class MidiManager : IDisposable, IMidiManager
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public bool IsAvailable

@@ -123,10 +123,10 @@ namespace Robust.Client
             _resourceCache.MountContentDirectory(@"Resources/");
 #else
             var contentRootDir = ProgramShared.FindContentRootDir();
-            _resourceCache.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resourceCache.MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
+            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
+            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
                 new ResourcePath("/Assemblies/"));
-            _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
+            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
             // Bring display up as soon as resources are mounted.

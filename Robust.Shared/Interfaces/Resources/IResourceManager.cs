@@ -20,35 +20,6 @@ namespace Robust.Shared.Interfaces.Resources
         IWritableDirProvider UserData { get; }
 
         /// <summary>
-        ///     Loads the default content pack from the configuration file into the VFS.
-        /// </summary>
-        void MountDefaultContentPack();
-
-        /// <summary>
-        ///     Loads a content pack from disk into the VFS. The path is relative to
-        ///     the executable location on disk.
-        /// </summary>
-        /// <param name="pack">The path of the pack to load on disk.</param>
-        /// <param name="prefix">The resource path to which all files in the pack will be relative to in the VFS.</param>
-        /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
-        void MountContentPack(string pack, ResourcePath? prefix = null);
-
-        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
-
-        /// <summary>
-        ///     Adds a directory to search inside of to the VFS. The directory is relative to
-        ///     the executable location on disk.
-        /// </summary>
-        /// <param name="path">The path of the directory to add to the VFS on disk.</param>
-        /// <param name="prefix">The resource path to which all files in the directory will be relative to in the VFS.</param>
-        /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
-        void MountContentDirectory(string path, ResourcePath? prefix = null);
-
-        /// <summary>
         ///     Read a file from the mounted content roots.
         /// </summary>
         /// <param name="path">The path to the file in the VFS. Must be rooted.</param>
@@ -147,13 +118,6 @@ namespace Robust.Shared.Interfaces.Resources
         IEnumerable<ResourcePath> ContentFindFiles(string path);
 
         /// <summary>
-        ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
-        ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
-        ///     Hrm.
-        /// </summary>
-        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
-
-        /// <summary>
         ///     Read a file from the mounted content paths to a string.
         /// </summary>
         /// <param name="path">Path of the file to read.</param>
@@ -223,5 +187,41 @@ namespace Robust.Shared.Interfaces.Resources
         /// <param name="stream">The stream to mount.</param>
         /// <param name="path">The path that the file will be mounted at.</param>
         void MountStreamAt(MemoryStream stream, ResourcePath path);
+
+        /// <summary>
+        ///     Loads the default content pack from the configuration file into the VFS.
+        /// </summary>
+        void MountDefaultContentPack();
+
+        /// <summary>
+        ///     Loads a content pack from disk into the VFS. The path is relative to
+        ///     the executable location on disk.
+        /// </summary>
+        /// <param name="pack">The path of the pack to load on disk.</param>
+        /// <param name="prefix">The resource path to which all files in the pack will be relative to in the VFS.</param>
+        /// <exception cref="FileNotFoundException">Thrown if <paramref name="pack"/> does not exist on disk.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> is not rooted.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="pack"/> is null.</exception>
+        void MountContentPack(string pack, ResourcePath? prefix = null);
+
+        void MountContentPack(Stream zipStream, ResourcePath? prefix = null);
+
+        /// <summary>
+        ///     Adds a directory to search inside of to the VFS. The directory is relative to
+        ///     the executable location on disk.
+        /// </summary>
+        /// <param name="path">The path of the directory to add to the VFS on disk.</param>
+        /// <param name="prefix">The resource path to which all files in the directory will be relative to in the VFS.</param>
+        /// <exception cref="DirectoryNotFoundException">Thrown if <paramref name="path"/> does not exist on disk.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="prefix"/> passed is not rooted.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="path"/> is null.</exception>
+        void MountContentDirectory(string path, ResourcePath? prefix = null);
+
+        /// <summary>
+        ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
+        ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
+        ///     Hrm.
+        /// </summary>
+        bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
     }
 }

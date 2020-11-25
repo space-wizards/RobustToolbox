@@ -21,7 +21,7 @@ namespace Robust.Shared.ContentPack
     /// </summary>
     internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable, IPostInjectInit
     {
-        [Dependency] private readonly IResourceManager _res = default!;
+        [Dependency] private readonly IResourceManagerInternal _res = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
         private AssemblyTypeChecker _typeChecker = default!;

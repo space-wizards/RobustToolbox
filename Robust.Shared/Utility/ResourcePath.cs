@@ -593,6 +593,31 @@ namespace Robust.Shared.Utility
         }
 
         /// <summary>
+        ///     Return a copy of this resource path with the file extension changed.
+        /// </summary>
+        /// <param name="newExtension">
+        ///     The new file extension.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        ///     Thrown if <paramref name="newExtension"/> is null, empty,
+        ///     contains <see cref="Separator"/> or is equal to <c>.</c>
+        /// </exception>
+        public ResourcePath WithExtension(string newExtension)
+        {
+            if (string.IsNullOrEmpty(newExtension))
+            {
+                throw new ArgumentException("New file name cannot be null or empty.");
+            }
+
+            if (newExtension.Contains(Separator))
+            {
+                throw new ArgumentException("New file name cannot contain the separator.");
+            }
+
+            return WithName($"{FilenameWithoutExtension}.{newExtension}");
+        }
+
+        /// <summary>
         ///     Enumerates the segments of this path.
         /// </summary>
         /// <remarks>

@@ -242,6 +242,16 @@ namespace Robust.UnitTesting.Shared.Utility
         }
 
         [Test]
+        [TestCase("/a/b.txt", "png", "/a/b.png")]
+        [TestCase("/a/b.txt.bak", "png", "/a/b.txt.png")]
+        public void WithExtensionTest(string start, string newExt, string expected)
+        {
+            var startPath = new ResourcePath(start);
+            Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
+            Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
+        }
+
+        [Test]
         public void RootToRelativeTest()
         {
             var path = new ResourcePath("/");

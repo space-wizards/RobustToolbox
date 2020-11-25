@@ -371,7 +371,7 @@ namespace Robust.UnitTesting.Shared.Maths
         public void DivideAvx()
         {
             if (!ValidComputer(Intrinsics.Avx))
-                return;
+                Assert.Ignore();
 
             RemoteExecutor.Invoke(Divide, GetInvokeOptions(true, true)).Dispose();
         }

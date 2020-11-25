@@ -168,6 +168,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            RenderOverlays(OverlaySpace.WorldSpaceBelowEntities);
+
             var screenSize = viewport.Size;
 
             // So we could calculate the correct size of the entities based on the contents of their sprite...
@@ -272,10 +274,6 @@ namespace Robust.Client.Graphics.Clyde
             ArrayPool<int>.Shared.Return(indexList);
 
             _drawingSpriteList.Clear();
-            FlushRenderQueue();
-
-            RenderOverlays(OverlaySpace.WorldSpaceBelowEntities);
-
             FlushRenderQueue();
         }
 

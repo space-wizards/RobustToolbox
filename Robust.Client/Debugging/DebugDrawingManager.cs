@@ -86,7 +86,7 @@ namespace Robust.Client.Debugging
             private readonly DebugDrawingManager _owner;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugDrawRayOverlay(DebugDrawingManager owner) : base()
+            public DebugDrawRayOverlay(DebugDrawingManager owner)
             {
                 _owner = owner;
             }

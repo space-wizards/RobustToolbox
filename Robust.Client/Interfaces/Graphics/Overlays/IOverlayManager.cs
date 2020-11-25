@@ -18,8 +18,8 @@ namespace Robust.Client.Interfaces.Graphics.Overlays
         bool HasOverlayOfType<T>();
 
         Overlay GetOverlay(Guid id);
-        bool GetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay;
-        bool GetOverlaysOfClass(string className, out List<Overlay> overlays);
+        bool TryGetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay;
+        bool TryGetOverlaysOfClass(string className, out List<Overlay> overlays);
         int GetOverlayTypeCount<T>() where T : Overlay;
 
         bool TryGetOverlay(Guid id, [NotNullWhen(true)] out Overlay? overlay);

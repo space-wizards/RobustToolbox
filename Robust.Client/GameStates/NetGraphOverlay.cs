@@ -42,7 +42,7 @@ namespace Robust.Client.GameStates
 
         private readonly List<(GameTick Tick, int Payload, int lag, int interp)> _history = new List<(GameTick Tick, int Payload, int lag, int interp)>(HistorySize+10);
 
-        public NetGraphOverlay() : base()
+        public NetGraphOverlay()
         {
             IoCManager.InjectDependencies(this);
             var cache = IoCManager.Resolve<IResourceCache>();

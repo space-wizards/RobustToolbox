@@ -252,7 +252,7 @@ namespace Robust.Client.Debugging
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager) : base()
+            public EntityPositionOverlay(IEntityManager entityManager, IEyeManager eyeManager)
             {
                 _entityManager = entityManager;
                 _eyeManager = eyeManager;

@@ -41,7 +41,7 @@ namespace Robust.Client.Graphics.Overlays
         public void RemoveOverlaysOfClass(string className) {
             var overlaysCopy = new Dictionary<Guid, Overlay>(_overlays);
             foreach (var (id, overlay) in overlaysCopy) {
-                if (overlay.GetType().ToString() == className) {
+                if (nameof(overlay) == className) {
                     overlay.Dispose();
                     _overlays.Remove(id);
                 }
@@ -73,7 +73,7 @@ namespace Robust.Client.Graphics.Overlays
             return _overlays[id];
         }
 
-        public bool GetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay
+        public bool TryGetOverlaysOfClass<T>(out List<T> overlays) where T : Overlay
         {
             overlays = new List<T>();
             foreach (var overlay in _overlays.Values) {
@@ -82,7 +82,7 @@ namespace Robust.Client.Graphics.Overlays
             }
             return overlays.Count > 0;
         }
-        public bool GetOverlaysOfClass(string className, out List<Overlay> overlays) {
+        public bool TryGetOverlaysOfClass(string className, out List<Overlay> overlays) {
             Type? type = Type.GetType(className);
             overlays = new List<Overlay>();
             if(type == null)

@@ -25,7 +25,7 @@ namespace Robust.Client.GameStates
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
         private readonly ShaderInstance _shader;
 
-        public NetInterpOverlay() : base()
+        public NetInterpOverlay()
         {
             IoCManager.InjectDependencies(this);
             _shader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();

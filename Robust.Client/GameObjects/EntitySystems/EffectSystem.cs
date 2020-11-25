@@ -352,7 +352,7 @@ namespace Robust.Client.GameObjects
             private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager) : base()
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager)
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();

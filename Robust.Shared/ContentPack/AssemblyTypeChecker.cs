@@ -13,7 +13,7 @@ namespace Robust.Shared.ContentPack
         /// <summary>
         ///     Namespaces/Types that are explicitly allowed.
         /// </summary>
-        private static readonly List<string> _typeWhiteList = new List<string>
+        private static readonly List<string> _typeWhiteList = new()
         {
             // base types for making a dll
             "System.Runtime.CompilerServices.CompilationRelaxationsAttribute",
@@ -165,7 +165,7 @@ namespace Robust.Shared.ContentPack
         /// <summary>
         ///     Namespaces/Types that are restricted. This overrides the white list.
         /// </summary>
-        private static readonly List<string> _typeBlackList = new List<string>
+        private static readonly List<string> _typeBlackList = new()
         {
             // IL stuff
             "System.Linq.Expressions",

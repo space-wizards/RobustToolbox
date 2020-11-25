@@ -14,8 +14,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string RightButtonStyle = "spinbox-right";
         public const string MiddleButtonStyle = "spinbox-middle";
         private LineEdit _lineEdit;
-        private List<Button> _leftButtons = new List<Button>();
-        private List<Button> _rightButtons = new List<Button>();
+        private List<Button> _leftButtons = new();
+        private List<Button> _rightButtons = new();
         private int _stepSize = 1;
 
         /// <summary>

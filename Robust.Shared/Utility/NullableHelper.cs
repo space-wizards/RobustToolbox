@@ -13,9 +13,9 @@ namespace Robust.Shared.Utility
         private const int NotAnnotatedNullableFlag = 1;
 
 
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?> _nullableAttributeTypeCache = new Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?>();
+        private static Dictionary<Assembly, (Type AttributeType, FieldInfo NullableFlagsField)?> _nullableAttributeTypeCache = new();
 
-        private static Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?> _nullableContextAttributeTypeCache = new Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?>();
+        private static Dictionary<Assembly, (Type AttributeType, FieldInfo FlagsField)?> _nullableContextAttributeTypeCache = new();
 
         /// <summary>
         /// Checks if the field has a nullable annotation [?]

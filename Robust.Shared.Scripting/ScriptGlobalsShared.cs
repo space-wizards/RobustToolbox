@@ -44,7 +44,7 @@ namespace Robust.Shared.Scripting
 
         public EntityUid eid(int i)
         {
-            return new EntityUid(i);
+            return new(i);
         }
 
         public IEntity getent(int i)

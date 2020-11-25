@@ -16,7 +16,7 @@ namespace Robust.Client.ResourceManagement
     {
         public const float ClickThreshold = 0.25f;
 
-        public override ResourcePath? Fallback => new ResourcePath("/Textures/noSprite.png");
+        public override ResourcePath? Fallback => new("/Textures/noSprite.png");
         public Texture Texture { get; private set; } = default!;
 
         public override void Load(IResourceCache cache, ResourcePath path)

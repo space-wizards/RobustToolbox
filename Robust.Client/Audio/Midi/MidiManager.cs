@@ -80,7 +80,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        private readonly List<MidiRenderer> _renderers = new List<MidiRenderer>();
+        private readonly List<MidiRenderer> _renderers = new();
 
         private bool _alive = true;
         private Settings? _settings;
@@ -104,7 +104,7 @@ namespace Robust.Client.Audio.Midi
 
         private const string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
 
-        private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new ResourceLoaderCallbacks();
+        private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
 
         private bool FluidsynthInitialized;
         private bool _failedInitialize;
@@ -373,7 +373,7 @@ namespace Robust.Client.Audio.Midi
         /// </summary>
         private class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
         {
-            private readonly Dictionary<int, Stream> _openStreams = new Dictionary<int, Stream>();
+            private readonly Dictionary<int, Stream> _openStreams = new();
             private int _nextStreamId = 1;
 
             public override IntPtr Open(string filename)

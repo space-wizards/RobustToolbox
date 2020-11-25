@@ -888,7 +888,7 @@ namespace Robust.Client.Console.Commands
 
         public static Dictionary<string, FileSystemWatcher>? _watchers;
 
-        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
+        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new();
 
         public bool Execute(IDebugConsole console, params string[] args)
         {

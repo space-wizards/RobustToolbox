@@ -40,7 +40,7 @@ namespace Robust.Shared.Network
 
         public static EntityUid ReadEntityUid(this NetIncomingMessage message)
         {
-            return new EntityUid(message.ReadInt32());
+            return new(message.ReadInt32());
         }
 
         public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
@@ -50,7 +50,7 @@ namespace Robust.Shared.Network
 
         public static GameTick ReadGameTick(this NetIncomingMessage message)
         {
-            return new GameTick(message.ReadUInt32());
+            return new(message.ReadUInt32());
         }
 
         public static void Write(this NetOutgoingMessage message, GameTick tick)

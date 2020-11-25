@@ -6,11 +6,11 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
 
-        private readonly CancellationTokenSource _startedSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _startedSource = new();
 
-        private readonly CancellationTokenSource _stoppedSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _stoppedSource = new();
 
-        private readonly CancellationTokenSource _stoppingSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _stoppingSource = new();
 
         public void StopApplication() => Dispose();
 

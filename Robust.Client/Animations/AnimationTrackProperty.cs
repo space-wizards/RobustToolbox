@@ -10,7 +10,7 @@ namespace Robust.Client.Animations
     /// </summary>
     public abstract class AnimationTrackProperty : AnimationTrack
     {
-        public readonly List<KeyFrame> KeyFrames = new List<KeyFrame>();
+        public readonly List<KeyFrame> KeyFrames = new();
 
         /// <summary>
         ///     How to interpolate values when between two keyframes.

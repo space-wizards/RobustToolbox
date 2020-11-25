@@ -92,7 +92,7 @@ namespace Robust.Server
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
 
-        private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
+        private readonly Stopwatch _uptimeStopwatch = new();
 
         private CommandLineArgs _commandLineArgs = default!;
         private Func<ILogHandler>? _logHandlerFactory;
@@ -105,7 +105,7 @@ namespace Robust.Server
 
         private string? _shutdownReason;
 
-        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _shutdownEvent = new(false);
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);

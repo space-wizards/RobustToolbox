@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
+        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -277,7 +277,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
+        public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]

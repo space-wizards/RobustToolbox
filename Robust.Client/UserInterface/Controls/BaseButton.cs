@@ -385,6 +385,6 @@ namespace Robust.Client.UserInterface.Controls
     /// </remarks>
     public sealed class ButtonGroup
     {
-        internal readonly List<BaseButton> Buttons = new List<BaseButton>();
+        internal readonly List<BaseButton> Buttons = new();
     }
 }

@@ -118,7 +118,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
 
         private readonly string SerializedListYaml = "datalist:\n- 1\n- 2\n- 3\n...\n";
-        private readonly List<int> SerializableList = new List<int> { 1, 2, 3 };
+        private readonly List<int> SerializableList = new() { 1, 2, 3 };
 
         [Test]
         public void SerializeDictTest()
@@ -270,7 +270,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         private readonly string SerializedDictYaml = "datadict:\n  val1: 1\n  val2: 2\n...\n";
-        private readonly Dictionary<string, int> SerializableDict = new Dictionary<string, int> { { "val1", 1 }, { "val2", 2 } };
+        private readonly Dictionary<string, int> SerializableDict = new() { { "val1", 1 }, { "val2", 2 } };
 
         [Test]
         public void SerializeHashSetTest()
@@ -320,7 +320,7 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
 
         private readonly string SerializedSetYaml = "dataSet:\n- 1\n- 2\n- 3\n...\n";
-        private readonly HashSet<int> SerializableSet = new HashSet<int> { 1, 2, 3 };
+        private readonly HashSet<int> SerializableSet = new() { 1, 2, 3 };
 
         [Test]
         public void NullablePrimitiveSerializeNullTest()

@@ -193,7 +193,7 @@ namespace Robust.Client.Audio.Midi
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
-        private readonly object _playerStateLock = new object();
+        private readonly object _playerStateLock = new();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         public bool Disposed { get; private set; } = false;

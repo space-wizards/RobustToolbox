@@ -119,7 +119,7 @@ namespace Robust.Client.Graphics
             return loadParams;
         }
 
-        public static readonly TextureLoadParameters Default = new TextureLoadParameters
+        public static readonly TextureLoadParameters Default = new()
         {
             SampleParameters = TextureSampleParameters.Default,
             Srgb = true
@@ -178,7 +178,7 @@ namespace Robust.Client.Graphics
             return new TextureSampleParameters {Filter = filter, WrapMode = wrap};
         }
 
-        public static readonly TextureSampleParameters Default = new TextureSampleParameters
+        public static readonly TextureSampleParameters Default = new()
         {
             Filter = false,
             WrapMode = TextureWrapMode.None

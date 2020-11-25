@@ -213,15 +213,15 @@ namespace Robust.Server.Maps
             private readonly IComponentManager _componentManager;
             private readonly IPrototypeManager _prototypeManager;
 
-            private readonly Dictionary<GridId, int> GridIDMap = new Dictionary<GridId, int>();
-            public readonly List<IMapGrid> Grids = new List<IMapGrid>();
+            private readonly Dictionary<GridId, int> GridIDMap = new();
+            public readonly List<IMapGrid> Grids = new();
 
-            private readonly Dictionary<EntityUid, int> EntityUidMap = new Dictionary<EntityUid, int>();
-            private readonly Dictionary<int, EntityUid> UidEntityMap = new Dictionary<int, EntityUid>();
-            public readonly List<IEntity> Entities = new List<IEntity>();
+            private readonly Dictionary<EntityUid, int> EntityUidMap = new();
+            private readonly Dictionary<int, EntityUid> UidEntityMap = new();
+            public readonly List<IEntity> Entities = new();
 
             private readonly List<(IEntity, YamlMappingNode)> _entitiesToDeserialize
-                = new List<(IEntity, YamlMappingNode)>();
+                = new();
 
             private bool IsBlueprintMode => GridIDMap.Count == 1;
 

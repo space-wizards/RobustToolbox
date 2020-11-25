@@ -21,9 +21,9 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeTexture _stockTextureTransparent = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedTexture> _loadedTextures =
-            new Dictionary<ClydeHandle, LoadedTexture>();
+            new();
 
-        private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new ConcurrentQueue<ClydeHandle>();
+        private readonly ConcurrentQueue<ClydeHandle> _textureDisposeQueue = new();
 
         public Texture LoadTextureFromPNGStream(Stream stream, string? name = null,
             TextureLoadParameters? loadParams = null)

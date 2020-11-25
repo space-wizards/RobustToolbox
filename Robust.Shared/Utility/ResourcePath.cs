@@ -30,12 +30,12 @@ namespace Robust.Shared.Utility
         /// <summary>
         ///     "." as a static. Separator used is <c>/</c>.
         /// </summary>
-        public static readonly ResourcePath Self = new ResourcePath(".");
+        public static readonly ResourcePath Self = new(".");
 
         /// <summary>
         ///     "/" (root) as a static. Separator used is <c>/</c>.
         /// </summary>
-        public static readonly ResourcePath Root = new ResourcePath("/");
+        public static readonly ResourcePath Root = new("/");
 
         /// <summary>
         ///     List of the segments of the path.

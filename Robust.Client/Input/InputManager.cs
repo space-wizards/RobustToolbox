@@ -41,18 +41,18 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
-        private readonly List<KeyBindingRegistration> _defaultRegistrations = new List<KeyBindingRegistration>();
+        private readonly List<KeyBindingRegistration> _defaultRegistrations = new();
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
-            new Dictionary<BoundKeyFunction, InputCmdHandler>();
+            new();
 
         private readonly Dictionary<BoundKeyFunction, List<KeyBinding>> _bindingsByFunction
-            = new Dictionary<BoundKeyFunction, List<KeyBinding>>();
+            = new();
 
         // For knowing what to write to config.
-        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new HashSet<BoundKeyFunction>();
+        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new();
 
-        [ViewVariables] private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
+        [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
@@ -149,7 +149,7 @@ namespace Robust.Client.Input
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new YamlDocument(mapping)};
+            var stream = new YamlStream {new(mapping)};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 

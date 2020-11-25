@@ -62,18 +62,18 @@ namespace Robust.Shared.ContentPack
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        private readonly List<ModuleTestingCallbacks> _testingCallbacks = new List<ModuleTestingCallbacks>();
+        private readonly List<ModuleTestingCallbacks> _testingCallbacks = new();
 
         /// <summary>
         ///     Loaded assemblies.
         /// </summary>
-        private readonly List<ModInfo> _mods = new List<ModInfo>();
+        private readonly List<ModInfo> _mods = new();
 
-        private readonly List<Assembly> _sideModules = new List<Assembly>();
+        private readonly List<Assembly> _sideModules = new();
 
         private readonly AssemblyLoadContext _loadContext;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private static int _modLoaderId;
 

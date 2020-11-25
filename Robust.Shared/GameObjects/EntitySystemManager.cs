@@ -31,20 +31,20 @@ namespace Robust.Shared.GameObjects
 #pragma warning restore 649
 
         [ViewVariables]
-        private readonly List<Type> _extraLoadedTypes = new List<Type>();
+        private readonly List<Type> _extraLoadedTypes = new();
 
-        private readonly Stopwatch _stopwatch = new Stopwatch();
+        private readonly Stopwatch _stopwatch = new();
 
         /// <summary>
         /// Maps system types to instances.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _systems = new Dictionary<Type, IEntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _systems = new();
         /// <summary>
         /// Maps system supertypes to instances.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new Dictionary<Type, IEntitySystem>();
+        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new();
 
         private bool _initialized;
 
@@ -106,7 +106,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Initialize()
         {
-            HashSet<Type> excludedTypes = new HashSet<Type>();
+            HashSet<Type> excludedTypes = new();
 
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
             {
@@ -323,7 +323,7 @@ namespace Robust.Shared.GameObjects
         private sealed class GraphNode
         {
             public readonly IEntitySystem System;
-            public readonly List<GraphNode> DependsOn = new List<GraphNode>();
+            public readonly List<GraphNode> DependsOn = new();
 
             public GraphNode(IEntitySystem system)
             {

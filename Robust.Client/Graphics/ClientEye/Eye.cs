@@ -38,7 +38,7 @@ namespace Robust.Client.Graphics.ClientEye
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 Zoom
         {
-            get => new Vector2(1 / _scale.X, 1 / _scale.Y);
+            get => new(1 / _scale.X, 1 / _scale.Y);
             set => _scale = new Vector2(1 / value.X, 1 / value.Y);
         }
 

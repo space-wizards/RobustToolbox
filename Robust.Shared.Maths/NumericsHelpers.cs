@@ -1496,7 +1496,7 @@ namespace Robust.Shared.Maths
 
                     if (AdvSimd.IsSupported)
                     {
-                        MinSse(a, b, s);
+                        MinAdvSimd(a, b, s);
                         return;
                     }
                 }

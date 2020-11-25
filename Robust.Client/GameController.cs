@@ -144,22 +144,16 @@ namespace Robust.Client
             _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
             _modLoader.SetEnableSandboxing(true);
 
-            //identical code for server in baseserver
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
-                throw new NotSupportedException("Cannot load client without content assembly");
+                Logger.Fatal("Errors while loading content assemblies.");
+                return false;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Client DLL.");
-                throw new NotSupportedException("Cannot load client without content assembly");
+                _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
-
-
-            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Client"));
-            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);

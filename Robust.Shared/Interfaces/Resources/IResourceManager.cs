@@ -127,6 +127,7 @@ namespace Robust.Shared.Interfaces.Resources
                 if (!absPath.TryRelativeTo(path, out var rel))
                 {
                     DebugTools.Assert("Past must be relative to be returned, unreachable.");
+                    throw new InvalidOperationException("This is unreachable");
                 }
 
                 yield return rel;

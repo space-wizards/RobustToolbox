@@ -325,9 +325,9 @@ namespace Robust.UnitTesting
                     IoCManager.Register<IServerNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<ISystemConsoleManager, SystemConsoleManagerDummy>(true);
-                    IoCManager.Register<IModLoader, ModLoader>(true);
-                    IoCManager.Register<IModLoaderInternal, ModLoader>(true);
-                    IoCManager.Register<ModLoader, ModLoader>(true);
+                    IoCManager.Register<IModLoader, TestingModLoader>(true);
+                    IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
+                    IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                     IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
@@ -338,19 +338,9 @@ namespace Robust.UnitTesting
 
                     server.LoadConfigAndUserData = false;
 
-                    if (_options?.ServerContentAssembly != null)
+                    if (_options?.ContentAssemblies != null)
                     {
-                        IoCManager.Resolve<ModLoader>().ServerContentAssembly = _options.ServerContentAssembly;
-                    }
-
-                    if (_options?.SharedContentAssembly != null)
-                    {
-                        IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
-                    }
-
-                    if (_options?.ExtraAssemblies != null)
-                    {
-                        IoCManager.Resolve<ModLoader>().ExtraAssemblies = _options.ExtraAssemblies;
+                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
                     }
 
                     if (_options != null)
@@ -428,9 +418,9 @@ namespace Robust.UnitTesting
                     IoCManager.Register<INetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IClientNetManager, IntegrationNetManager>(true);
                     IoCManager.Register<IntegrationNetManager, IntegrationNetManager>(true);
-                    IoCManager.Register<IModLoader, ModLoader>(true);
-                    IoCManager.Register<IModLoaderInternal, ModLoader>(true);
-                    IoCManager.Register<ModLoader, ModLoader>(true);
+                    IoCManager.Register<IModLoader, TestingModLoader>(true);
+                    IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
+                    IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                     _options?.InitIoC?.Invoke();
                     IoCManager.BuildGraph();
 
@@ -438,19 +428,9 @@ namespace Robust.UnitTesting
 
                     var client = DependencyCollection.Resolve<IGameControllerInternal>();
 
-                    if (_options?.ClientContentAssembly != null)
+                    if (_options?.ContentAssemblies != null)
                     {
-                        IoCManager.Resolve<ModLoader>().ClientContentAssembly = _options.ClientContentAssembly;
-                    }
-
-                    if (_options?.SharedContentAssembly != null)
-                    {
-                        IoCManager.Resolve<ModLoader>().SharedContentAssembly = _options.SharedContentAssembly;
-                    }
-
-                    if (_options?.ExtraAssemblies != null)
-                    {
-                        IoCManager.Resolve<ModLoader>().ExtraAssemblies = _options.ExtraAssemblies;
+                        IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
                     }
 
                     client.LoadConfigAndUserData = false;
@@ -574,20 +554,17 @@ namespace Robust.UnitTesting
 
         public class ServerIntegrationOptions : IntegrationOptions
         {
-            public Assembly? ServerContentAssembly { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
         {
-            public Assembly? ClientContentAssembly { get; set; }
         }
 
         public abstract class IntegrationOptions
         {
             public Action? InitIoC { get; set; }
             public Action? BeforeStart { get; set; }
-            public Assembly? SharedContentAssembly { get; set; }
-            public Assembly[]? ExtraAssemblies { get; set; }
+            public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
 
             public Dictionary<string, string> CVarOverrides { get; } = new Dictionary<string, string>();

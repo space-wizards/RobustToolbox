@@ -12,6 +12,7 @@ using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
 {
@@ -58,6 +59,10 @@ namespace Robust.UnitTesting
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
+            var modLoader = IoCManager.Resolve<TestingModLoader>();
+            modLoader.Assemblies = GetContentAssemblies();
+            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
+
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
@@ -77,6 +82,13 @@ namespace Robust.UnitTesting
         /// Called after all IoC registration has been done, but before the graph has been built.
         /// This allows one to add new IoC types or overwrite existing ones if needed.
         /// </summary>
-        protected virtual void OverrideIoC() { }
+        protected virtual void OverrideIoC()
+        {
+        }
+
+        protected virtual Assembly[] GetContentAssemblies()
+        {
+            return Array.Empty<Assembly>();
+        }
     }
 }

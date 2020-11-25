@@ -171,22 +171,29 @@ namespace Robust.Shared.ContentPack
 
                 var msg = $"ILVerify: {res.Message}";
 
-                if (!res.Method.IsNil)
+                try
                 {
-                    var method = reader.GetMethodDefinition(res.Method);
-                    var methodSig = method.DecodeSignature(new TypeProvider(), 0);
-                    var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+                    if (!res.Method.IsNil)
+                    {
+                        var method = reader.GetMethodDefinition(res.Method);
+                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
 
-                    var methodName =
-                        $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+                        var methodName =
+                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
 
-                    msg = $"{msg}, method: {methodName}";
+                        msg = $"{msg}, method: {methodName}";
+                    }
+
+                    if (!res.Type.IsNil)
+                    {
+                        var type = GetTypeFromDefinition(reader, res.Type);
+                        msg = $"{msg}, type: {type}";
+                    }
                 }
-
-                if (!res.Type.IsNil)
+                catch (UnsupportedMetadataException e)
                 {
-                    var type = GetTypeFromDefinition(reader, res.Type);
-                    msg = $"{msg}, type: {type}";
+                    Logger.ErrorS("res.typecheck", $"{e}");
                 }
 
                 verifyErrors = true;

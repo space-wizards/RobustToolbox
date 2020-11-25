@@ -269,21 +269,16 @@ namespace Robust.Server
             _modLoader.SetUseLoadContext(!DisableLoadContext);
             _modLoader.SetEnableSandboxing(false);
 
-            //identical code in game controller for client
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                Logger.Fatal("Errors while loading content assemblies.");
                 return true;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Server DLL.");
-                return true;
+                _config.LoadCVarsFromAssembly(loadedModule);
             }
-
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 

@@ -47,5 +47,8 @@ namespace Robust.Client.Interfaces.Graphics
 
         int GetKeyScanCode(Keyboard.Key key);
         void Shutdown();
+
+        /// <returns>Null if not running on X11.</returns>
+        uint? GetX11WindowId();
     }
 }

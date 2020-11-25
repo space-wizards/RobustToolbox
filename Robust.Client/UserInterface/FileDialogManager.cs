@@ -6,8 +6,10 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Shared;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
@@ -22,6 +24,9 @@ namespace Robust.Client.UserInterface
         // Uses nativefiledialog to open the file dialogs cross platform.
         // On Linux, if the kdialog command is found, it will be used instead.
         // TODO: Should we maybe try to avoid running kdialog if the DE isn't KDE?
+#if LINUX
+        [Dependency] private readonly IClydeInternal _clyde = default!;
+#endif
 
 #if MACOS
         [Dependency] private readonly Shared.Asynchronous.ITaskManager _taskManager;
@@ -241,7 +246,7 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static Task<string?> OpenFileKDialog(FileDialogFilters? filters)
+        private Task<string?> OpenFileKDialog(FileDialogFilters? filters)
         {
             var sb = new StringBuilder();
 
@@ -278,17 +283,19 @@ namespace Robust.Client.UserInterface
             return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, sb.ToString());
         }
 
-        private static Task<string?> SaveFileKDialog()
+        private Task<string?> SaveFileKDialog()
         {
             return RunKDialog("--getsavefilename");
         }
 
-        private static Task<string?> OpenFolderKDialog()
+        /*
+        private Task<string?> OpenFolderKDialog()
         {
             return RunKDialog("--getexistingdirectory");
         }
+        */
 
-        private static async Task<string?> RunKDialog(params string[] options)
+        private async Task<string?> RunKDialog(params string[] options)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -301,6 +308,12 @@ namespace Robust.Client.UserInterface
             foreach (var option in options)
             {
                 startInfo.ArgumentList.Add(option);
+            }
+
+            if (_clyde.GetX11WindowId() is { } id)
+            {
+                startInfo.ArgumentList.Add("--attach");
+                startInfo.ArgumentList.Add(id.ToString());
             }
 
             var process = Process.Start(startInfo);

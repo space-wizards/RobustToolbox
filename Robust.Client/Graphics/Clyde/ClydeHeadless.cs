@@ -54,6 +54,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public uint? GetX11WindowId()
+        {
+            return null;
+        }
+
         public override void SetWindowTitle(string title)
         {
             // Nada.

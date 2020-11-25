@@ -154,7 +154,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         {
             var results = new HashSet<GridTileLookupNode>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(_mapManager.GetGrid(coordinates.GetGridId(EntityManager)).ParentMapId, box))
+            foreach (var grid in _mapManager.FindGridsIntersecting(coordinates.GetMapId(EntityManager), box))
             {
                 foreach (var tile in grid.GetTilesIntersecting(box))
                 {

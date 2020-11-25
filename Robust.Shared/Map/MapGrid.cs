@@ -362,7 +362,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
         {
-            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(coords.GetGridId(_entityManager)).ParentMapId);
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridCellFor(local, offset);

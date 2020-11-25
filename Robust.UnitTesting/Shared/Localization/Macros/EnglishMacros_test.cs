@@ -28,10 +28,10 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
             }
         }
 
-        private readonly Subject female = new Subject("Lisa", Gender.Female, true);
-        private readonly Subject male = new Subject("Bob", Gender.Male, true);
-        private readonly Subject epicene = new Subject("Michel", Gender.Epicene, true);
-        private readonly Subject neuter = new Subject("D.O.O.R.K.N.O.B.", Gender.Neuter, true);
+        private readonly Subject female = new("Lisa", Gender.Female, true);
+        private readonly Subject male = new("Bob", Gender.Male, true);
+        private readonly Subject epicene = new("Michel", Gender.Epicene, true);
+        private readonly Subject neuter = new("D.O.O.R.K.N.O.B.", Gender.Neuter, true);
 
         public void TestThey()
         {

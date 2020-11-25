@@ -19,10 +19,10 @@ namespace Robust.Client.Graphics.Clyde
     internal partial class Clyde
     {
         private readonly Dictionary<ClydeHandle, LoadedRenderTarget> _renderTargets =
-            new Dictionary<ClydeHandle, LoadedRenderTarget>();
+            new();
 
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
-            = new ConcurrentQueue<ClydeHandle>();
+            = new();
 
         IRenderWindow IClyde.MainWindowRenderTarget => _mainWindowRenderTarget;
         // Initialized in Clyde's constructor

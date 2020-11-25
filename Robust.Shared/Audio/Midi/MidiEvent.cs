@@ -33,7 +33,7 @@ namespace Robust.Shared.Audio.Midi
 
         public static explicit operator MidiEvent(NFluidsynth.MidiEvent midiEvent)
         {
-            return new MidiEvent()
+            return new()
             {
                 Type = (byte) midiEvent.Type,
                 Channel = (byte) midiEvent.Channel,
@@ -48,7 +48,7 @@ namespace Robust.Shared.Audio.Midi
 
         public static implicit operator NFluidsynth.MidiEvent(MidiEvent midiEvent)
         {
-            return new NFluidsynth.MidiEvent()
+            return new()
             {
                 Type = midiEvent.Type,
                 Channel = midiEvent.Channel,

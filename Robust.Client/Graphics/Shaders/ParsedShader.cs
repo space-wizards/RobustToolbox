@@ -204,7 +204,7 @@ namespace Robust.Client.Graphics.Shaders
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new Dictionary<ShaderDataType, string>
+        private static readonly Dictionary<ShaderDataType, string> _nativeTypes = new()
         {
             {ShaderDataType.Void, "void"},
             {ShaderDataType.Bool, "bool"},

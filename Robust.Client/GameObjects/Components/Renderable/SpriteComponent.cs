@@ -164,7 +164,7 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new Dictionary<object, int>();
+        [ViewVariables] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = default!;
 
@@ -1906,7 +1906,7 @@ namespace Robust.Client.GameObjects
             public ITransformComponent Transform { get; } = null!;
             public IMetaDataComponent MetaData { get; } = null!;
 
-            private Dictionary<Type, IComponent> _components = new Dictionary<Type, IComponent>();
+            private Dictionary<Type, IComponent> _components = new();
 
             public T AddComponent<T>() where T : Component, new()
             {

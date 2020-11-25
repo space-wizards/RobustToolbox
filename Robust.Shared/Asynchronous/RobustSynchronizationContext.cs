@@ -17,7 +17,7 @@ namespace Robust.Shared.Asynchronous
         }
 
         private readonly ConcurrentQueue<(SendOrPostCallback d, object? state)> _pending
-            = new ConcurrentQueue<(SendOrPostCallback, object?)>();
+            = new();
 
         public override void Send(SendOrPostCallback d, object? state)
         {

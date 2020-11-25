@@ -9,7 +9,7 @@ namespace Robust.UnitTesting
 {
     internal sealed class GameControllerDummy : IGameControllerInternal
     {
-        public InitialLaunchState LaunchState { get; } = new InitialLaunchState(false, null, null, null);
+        public InitialLaunchState LaunchState { get; } = new(false, null, null, null);
 
         public void Shutdown(string? reason = null)
         {

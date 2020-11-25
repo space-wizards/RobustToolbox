@@ -24,7 +24,7 @@ namespace Robust.Server.GameObjects.Components.Container
         /// <summary>
         /// The generic container class uses a list of entities
         /// </summary>
-        private readonly List<IEntity> _containerList = new List<IEntity>();
+        private readonly List<IEntity> _containerList = new();
 
         /// <inheritdoc />
         public Container(string id, IContainerManager manager) : base(id, manager) { }

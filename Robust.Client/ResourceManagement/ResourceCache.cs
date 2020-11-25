@@ -13,9 +13,9 @@ namespace Robust.Client.ResourceManagement
     internal class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
-            new Dictionary<Type, Dictionary<ResourcePath, BaseResource>>();
+            new();
 
-        private readonly Dictionary<Type, BaseResource> _fallbacks = new Dictionary<Type, BaseResource>();
+        private readonly Dictionary<Type, BaseResource> _fallbacks = new();
 
         public T GetResource<T>(string path, bool useFallback = true) where T : BaseResource, new()
         {

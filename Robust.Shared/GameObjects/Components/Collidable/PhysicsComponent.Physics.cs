@@ -172,7 +172,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
+        private Dictionary<Type, VirtualController> _controllers = new();
         private bool _anchored = true;
         private float _friction = 1;
 

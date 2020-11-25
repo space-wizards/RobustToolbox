@@ -26,13 +26,13 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         private readonly Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>> _graph =
-                     new Dictionary<GridId, Dictionary<Vector2i, GridTileLookupChunk>>();
+                     new();
 
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
         private readonly Dictionary<IEntity, HashSet<GridTileLookupNode>> _lastKnownNodes =
-                     new Dictionary<IEntity, HashSet<GridTileLookupNode>>();
+                     new();
 
         /// <summary>
         ///     Yields all of the entities intersecting a particular entity's tiles.
@@ -118,7 +118,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 
         private Vector2i GetChunkIndices(Vector2i indices)
         {
-            return new Vector2i(
+            return new(
                 (int) (Math.Floor((float) indices.X / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize),
                 (int) (Math.Floor((float) indices.Y / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize));
         }
@@ -154,7 +154,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
         {
             var results = new HashSet<GridTileLookupNode>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(_mapManager.GetGrid(coordinates.GetGridId(EntityManager)).ParentMapId, box))
+            foreach (var grid in _mapManager.FindGridsIntersecting(coordinates.GetMapId(EntityManager), box))
             {
                 foreach (var tile in grid.GetTilesIntersecting(box))
                 {

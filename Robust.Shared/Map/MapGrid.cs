@@ -55,7 +55,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new Dictionary<Vector2i, IMapChunkInternal>();
+        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
         private readonly IEntityManager _entityManager;
@@ -362,7 +362,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2i SnapGridCellFor(EntityCoordinates coords, SnapGridOffset offset)
         {
-            DebugTools.Assert(ParentMapId == _mapManager.GetGrid(coords.GetGridId(_entityManager)).ParentMapId);
+            DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
             var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridCellFor(local, offset);
@@ -510,7 +510,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public EntityCoordinates GridTileToLocal(Vector2i gridTile)
         {
-            return new EntityCoordinates(GridEntityId, (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
+            return new(GridEntityId, (gridTile.X * TileSize + (TileSize / 2f), gridTile.Y * TileSize + (TileSize / 2f)));
         }
 
         public Vector2 GridTileToWorldPos(Vector2i gridTile)
@@ -523,7 +523,7 @@ namespace Robust.Shared.Map
 
         public MapCoordinates GridTileToWorld(Vector2i gridTile)
         {
-            return new MapCoordinates(GridTileToWorldPos(gridTile), ParentMapId);
+            return new(GridTileToWorldPos(gridTile), ParentMapId);
         }
 
         /// <inheritdoc />

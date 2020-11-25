@@ -49,7 +49,7 @@ namespace Robust.Shared.Utility
         private int _shrinkBound;
 
         // ReSharper disable once StaticFieldInGenericType
-        private static readonly InvalidOperationException EmptyCollectionException = new InvalidOperationException("Collection is empty.");
+        private static readonly InvalidOperationException EmptyCollectionException = new("Collection is empty.");
 
         /// <summary>
         /// Create a max-priority queue with default capacity of 10.

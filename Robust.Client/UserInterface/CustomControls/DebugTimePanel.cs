@@ -59,7 +59,7 @@ TickTimingAdjustment: {_gameTiming.TickTimingAdjustment}";
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
+            return new(_contents.CombinedMinimumSize.X + 10, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

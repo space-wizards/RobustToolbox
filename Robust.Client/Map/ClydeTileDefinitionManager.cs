@@ -20,7 +20,7 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas { get; private set; } = default!;
 
-        private readonly Dictionary<ushort, Box2> _tileRegions = new Dictionary<ushort, Box2>();
+        private readonly Dictionary<ushort, Box2> _tileRegions = new();
 
         public Box2? TileAtlasRegion(Tile tile)
         {

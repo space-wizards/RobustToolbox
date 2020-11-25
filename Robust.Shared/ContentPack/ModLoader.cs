@@ -27,11 +27,11 @@ namespace Robust.Shared.ContentPack
         private AssemblyTypeChecker _typeChecker = default!;
 
         // List of extra assemblies side-loaded from the /Assemblies/ mounted path.
-        private readonly List<Assembly> _sideModules = new List<Assembly>();
+        private readonly List<Assembly> _sideModules = new();
 
         private readonly AssemblyLoadContext _loadContext;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private static int _modLoaderId;
 

@@ -93,7 +93,7 @@ namespace Robust.Shared.Serialization
         /// </param>
         public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 ReadMaps = readMaps,
                 _context = context,
@@ -113,7 +113,7 @@ namespace Robust.Shared.Serialization
         /// </param>
         public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 WriteMap = writeMap,
                 _context = context,

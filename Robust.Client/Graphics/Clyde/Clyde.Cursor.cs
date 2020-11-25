@@ -16,10 +16,10 @@ namespace Robust.Client.Graphics.Clyde
         // These are actually Cursor* but we can't do that because no pointer generic arguments.
         // Need a queue to dispose cursors since the GLFW methods aren't allowed from non-main thread (finalizers).
         // And they also aren't re-entrant.
-        private readonly ConcurrentQueue<IntPtr> _cursorDisposeQueue = new ConcurrentQueue<IntPtr>();
+        private readonly ConcurrentQueue<IntPtr> _cursorDisposeQueue = new();
 
         private readonly Dictionary<StandardCursorShape, CursorImpl> _standardCursors =
-            new Dictionary<StandardCursorShape, CursorImpl>();
+            new();
 
         // Keep current active cursor around so it doesn't get garbage collected.
         private CursorImpl? _currentCursor;

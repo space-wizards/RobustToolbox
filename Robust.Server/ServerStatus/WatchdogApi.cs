@@ -29,7 +29,7 @@ namespace Robust.Server.ServerStatus
 
         // Ping watchdog every 15 seconds.
         private static readonly TimeSpan PingGap = TimeSpan.FromSeconds(15);
-        private readonly HttpClient _httpClient = new HttpClient();
+        private readonly HttpClient _httpClient = new();
 
         private TimeSpan? _lastPing;
         private string? _watchdogToken;

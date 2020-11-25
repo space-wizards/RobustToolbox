@@ -12,7 +12,7 @@ namespace Robust.Client.UserInterface.Controls
         public const string StylePropertyItemBoxSelected = "item-selected";
         public const string StylePropertyBackground = "background";
 
-        private readonly List<Item> _itemList = new List<Item>();
+        private readonly List<Item> _itemList = new();
 
         private Item? _root;
         private int? _selectedIndex;
@@ -322,7 +322,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public sealed class Item : IDisposable
         {
-            internal readonly List<Item> Children = new List<Item>();
+            internal readonly List<Item> Children = new();
             internal readonly int Index;
             public readonly Tree Parent;
             public object? Metadata { get; set; }

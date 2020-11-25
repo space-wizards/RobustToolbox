@@ -15,7 +15,7 @@ namespace Robust.Shared.GameObjects.Components.Timers
         public override string Name => "Timer";
 
         private readonly List<(Timer timer, CancellationToken source)>
-            _timers = new List<(Timer timer, CancellationToken source)>();
+            _timers = new();
 
         public void Update(float frameTime)
         {

@@ -20,7 +20,7 @@ namespace Robust.Shared.Physics
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly ConcurrentDictionary<MapId,BroadPhase> _treesPerMap =
-            new ConcurrentDictionary<MapId, BroadPhase>();
+            new();
 
         private BroadPhase this[MapId mapId] => _treesPerMap.GetOrAdd(mapId, _ => new BroadPhase());
 
@@ -263,7 +263,7 @@ namespace Robust.Shared.Physics
             float maxLength = 50F,
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
-            List<RayCastResults> results = new List<RayCastResults>();
+            List<RayCastResults> results = new();
 
             this[mapId].QueryRay((in IPhysBody body, in Vector2 point, float distFromOrigin) =>
             {

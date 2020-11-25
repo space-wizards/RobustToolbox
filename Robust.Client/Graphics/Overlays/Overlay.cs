@@ -36,7 +36,7 @@ namespace Robust.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-        private readonly List<DrawingHandleBase> TempHandles = new List<DrawingHandleBase>();
+        private readonly List<DrawingHandleBase> TempHandles = new();
 
         private bool Disposed;
 

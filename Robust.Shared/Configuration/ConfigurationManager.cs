@@ -15,7 +15,7 @@ namespace Robust.Shared.Configuration
     public class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars = new Dictionary<string, ConfigVar>();
+        private readonly Dictionary<string, ConfigVar> _configVars = new();
         private string? _configFile;
         private bool _isServer;
 

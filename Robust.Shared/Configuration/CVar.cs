@@ -52,7 +52,7 @@ namespace Robust.Shared.Configuration
         SERVERONLY = 64,
 
         /// <summary>
-        ///     Ignore registration of this cvar on the client.
+        ///     Ignore registration of this cvar on the server.
         /// </summary>
         /// <remarks>
         ///     This is intended to aid shared code.

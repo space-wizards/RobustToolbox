@@ -21,6 +21,8 @@ namespace Robust.Shared.Interfaces.GameObjects
     /// <seealso cref="IEntitySystem"/>
     public interface IEntitySystemManager
     {
+        bool MetricsEnabled { get; set; }
+
         /// <summary>
         /// A new entity system has been loaded into the manager.
         /// </summary>
@@ -30,7 +32,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// An existing entity system has been unloaded from the manager.
         /// </summary>
         event EventHandler<SystemChangedArgs> SystemUnloaded;
-        
+
         IReadOnlyCollection<IEntitySystem> AllSystems { get; }
 
         /// <summary>

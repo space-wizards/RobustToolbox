@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
 {
@@ -8,27 +9,31 @@ namespace Robust.Shared.Maths
     ///     Uses a right-handed coordinate system. This means that X+ is to the right and Y+ up.
     /// </summary>
     [Serializable]
+    [StructLayout(LayoutKind.Explicit)]
     public struct Box2 : IEquatable<Box2>
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
         /// </summary>
-        public float Left;
-
-        /// <summary>
-        ///     The X coordinate of the right edge of the box.
-        /// </summary>
-        public float Right;
-
-        /// <summary>
-        ///     The Y coordinate of the top edge of the box.
-        /// </summary>
-        public float Top;
+        [FieldOffset(sizeof(float) * 0)] public float Left;
 
         /// <summary>
         ///     The Y coordinate of the bottom of the box.
         /// </summary>
-        public float Bottom;
+        [FieldOffset(sizeof(float) * 1)] public float Bottom;
+
+        /// <summary>
+        ///     The X coordinate of the right edge of the box.
+        /// </summary>
+        [FieldOffset(sizeof(float) * 2)] public float Right;
+
+        /// <summary>
+        ///     The Y coordinate of the top edge of the box.
+        /// </summary>
+        [FieldOffset(sizeof(float) * 3)] public float Top;
+
+        [FieldOffset(sizeof(float) * 0)] public Vector2 BottomLeft;
+        [FieldOffset(sizeof(float) * 2)] public Vector2 TopRight;
 
         public readonly Vector2 BottomRight
         {
@@ -40,18 +45,6 @@ namespace Robust.Shared.Maths
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => new(Left, Top);
-        }
-
-        public readonly Vector2 TopRight
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(Right, Top);
-        }
-
-        public readonly Vector2 BottomLeft
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => new(Left, Bottom);
         }
 
         public readonly float Width
@@ -89,12 +82,18 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static readonly Box2 UnitCentered = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
-        public Box2(Vector2 bottomLeft, Vector2 topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
+        public Box2(Vector2 bottomLeft, Vector2 topRight)
         {
+            Unsafe.SkipInit(out this);
+
+            BottomLeft = bottomLeft;
+            TopRight = topRight;
         }
 
         public Box2(float left, float bottom, float right, float top)
         {
+            Unsafe.SkipInit(out this);
+
             Left = left;
             Right = right;
             Top = top;

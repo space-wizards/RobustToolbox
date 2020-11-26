@@ -71,6 +71,17 @@ namespace Robust.Shared.Physics
         /// <param name="frameTime"></param>
         public void Solve(float frameTime)
         {
+            // TODO: Solve grids first and handle their movement as they're isolated.
+            // Then, check for entities in the grid's new worldspace (reason for this is if we're moving in space
+            // then we might overlap something that is inactive). Wake any entities in this region.
+
+            // Also need to make sure broadphase stores trees per grid so when we move entities they're not updated
+            // and shitting up our performance.
+
+            // Then continue as normal.
+
+            // Also Acruid / PJB talked a bit about it in Jan 2020.
+
             // Island reset
             // If use IslandSet?
 

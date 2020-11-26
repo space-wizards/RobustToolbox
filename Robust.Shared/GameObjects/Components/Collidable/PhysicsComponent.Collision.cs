@@ -29,6 +29,20 @@ namespace Robust.Shared.GameObjects.Components
         public override string Name => "Physics";
         public override uint? NetID => NetIDs.PHYSICS;
 
+        // _xf is body origin transform, fucking WHAT
+
+        /// <summary>
+        ///     Swept motion for the CCD (Continuous Collision Detection).
+        /// </summary>
+        internal Sweep Sweep { get; set; }
+
+        /// <summary>
+        ///     Can this body rotate at all?
+        /// </summary>
+        private bool _fixedRotation;
+
+        public List<Fixture> FixtureList { get; set; } = new List<Fixture>();
+
         /// <summary>
         ///     Angular velocity of this component in radians / second.
         /// </summary>
@@ -73,17 +87,70 @@ namespace Robust.Shared.GameObjects.Components
         public Vector2 Force { get; set; }
 
         /// <summary>
-        ///     Inverse inertia.
+        ///     Rotational inertia about the local origin in kg / m ^ 2
+        ///     Read-only during callbacks
         /// </summary>
-        public float InvI { get; set; }
+        public float Inertia
+        {
+            get => _inertia + Mass * Vector2.Dot(Sweep.LocalCentre, Sweep.LocalCentre);
+            set
+            {
+                // TODO: Debug assert
+                if (BodyType != BodyType.Dynamic)
+                    return;
+
+                if (value > 0f && !_fixedRotation)
+                {
+                    _inertia = value - Mass * Vector2.Dot(LocalCentre, LocalCentre);
+                    _invI = 1f / _inertia;
+                }
+            }
+        }
+
+        private float _inertia;
+
+        /// <summary>
+        ///     Inverse inertia
+        /// </summary>
+        private float _invI;
+
+        /// <summary>
+        ///     Local position of the center of mass
+        /// </summary>
+        public Vector2 LocalCentre { get; set; }
 
         /// <summary>
         ///     Inverse mass. Typically this is used over Mass.
         /// </summary>
         public float InvMass { get; set; }
 
-        public float SleepTime { get; set; }
+        public float Mass
+        {
+            get => _mass;
+            set
+            {
+                if (BodyType != BodyType.Dynamic)
+                    return;
 
+                _mass = value;
+
+                if (_mass <= 0f)
+                    _mass = 1f;
+
+                InvMass = 1f / _mass;
+            }
+        }
+
+        private float _mass;
+
+        /// <summary>
+        ///     How long have we been awake for to check if we can sleep.
+        /// </summary>
+        internal float SleepTime { get; set; }
+
+        /// <summary>
+        ///     https://en.wikipedia.org/wiki/Torque
+        /// </summary>
         public float Torque { get; set; }
 
         // TODO
@@ -107,7 +174,11 @@ namespace Robust.Shared.GameObjects.Components
 
                 if (_bodyType == BodyType.Static)
                 {
-
+                    _linearVelocity = Vector2.Zero;
+                    _angularVelocity = 0.0f;
+                    _sweep.A0 = _sweep.A;
+                    _sweep.C0 = _sweep.C;
+                    SynchronizeFixtures();
                 }
 
                 Awake = true;
@@ -174,7 +245,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 if (!_awake)
                 {
-                    _sleepTime = 0f;
+                    SleepTime = 0f;
 
                     // TODO: Add to ActiveContacts in contactmanager
                     // TODO: Add to awake bodies
@@ -184,7 +255,7 @@ namespace Robust.Shared.GameObjects.Components
                     // TODO: Remove from awakebodies
                     // TODO: ResetDynamics
                     // TODO: Remove from active contacts
-                    _sleepTime = 0f;
+                    SleepTime = 0f;
                 }
 
                 _awake = value;
@@ -206,16 +277,18 @@ namespace Robust.Shared.GameObjects.Components
         {
             // Reset all of our stuff then re-sum our fixtures.
             _mass = 0f;
-            _invMass = 0f;
-            _interia = 0f;
+            InvMass = 0f;
+            _inertia = 0f;
             _invI = 0f;
 
             if (BodyType == BodyType.Kinematic)
             {
                 // TODO: fucking WAHT
-                _sweep.C0 = _xf.p;
-                _sweep.C = _xf.p;
-                _sweep.A0 = _sweep.A;
+                // TODO: pretty sure this needs changing.
+                throw new NotImplementedException();
+                Sweep.C0 = Owner.Transform.WorldPosition;
+                Sweep.C = Owner.Transform.WorldPosition;
+                Sweep.A0 = _sweep.A;
                 return;
             }
 
@@ -237,6 +310,7 @@ namespace Robust.Shared.GameObjects.Components
             //FPE: Static bodies only have mass, they don't have other properties. A little hacky tho...
             if (BodyType == BodyType.Static)
             {
+                throw new NotImplementedException()
                 _sweep.C0 = _sweep.C = _xf.p;
                 return;
             }
@@ -282,6 +356,18 @@ namespace Robust.Shared.GameObjects.Components
         internal void CreateProxies()
         {
 
+        }
+
+        internal void SynchronizeFixtures()
+        {
+            Transform xf1 = new Transform(Vector2.Zero, _sweep.A0);
+            xf1.p = _sweep.C0 - Complex.Multiply(ref _sweep.LocalCenter, ref xf1.q);
+
+            IBroadPhase broadPhase = World.ContactManager.BroadPhase;
+            for (int i = 0; i < FixtureList.Count; i++)
+            {
+                FixtureList[i].Synchronize(broadPhase, ref xf1, ref _xf);
+            }
         }
     }
 

@@ -83,13 +83,16 @@ namespace Robust.Shared
             CVarDef.Create("metrics.port", 44880);
 
         public static readonly CVarDef<bool> StatusEnabled =
-            CVarDef.Create("status.enabled", true, CVar.ARCHIVE);
+            CVarDef.Create("status.enabled", true, CVar.ARCHIVE | CVar.SERVERONLY);
 
         public static readonly CVarDef<string> StatusBind =
-            CVarDef.Create("status.bind", "*:1212", CVar.ARCHIVE);
+            CVarDef.Create("status.bind", "*:1212", CVar.ARCHIVE | CVar.SERVERONLY);
+
+        public static readonly CVarDef<int> StatusMaxConnections =
+            CVarDef.Create("status.max_connections", 5, CVar.SERVERONLY);
 
         public static readonly CVarDef<string> StatusConnectAddress =
-            CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE);
+            CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         public static readonly CVarDef<string> BuildForkId =
             CVarDef.Create("build.fork_id", "", CVar.ARCHIVE);

@@ -1,29 +1,39 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
+    [StructLayout(LayoutKind.Explicit)]
     public struct UIBox2i : IEquatable<UIBox2i>
     {
-        public int Left;
-        public int Right;
-        public int Top;
-        public int Bottom;
+        [FieldOffset(sizeof(int) * 0)] public int Left;
+        [FieldOffset(sizeof(int) * 1)] public int Top;
+        [FieldOffset(sizeof(int) * 2)] public int Right;
+        [FieldOffset(sizeof(int) * 3)] public int Bottom;
 
-        public readonly Vector2i BottomRight => new(Right, Bottom);
-        public readonly Vector2i TopLeft => new(Left, Top);
+        [FieldOffset(sizeof(int) * 0)] public Vector2i TopLeft;
+        [FieldOffset(sizeof(int) * 2)] public Vector2i BottomRight;
+
         public readonly Vector2i TopRight => new(Right, Top);
         public readonly Vector2i BottomLeft => new(Left, Bottom);
         public readonly int Width => Math.Abs(Right - Left);
         public readonly int Height => Math.Abs(Top - Bottom);
         public readonly Vector2i Size => new(Width, Height);
 
-        public UIBox2i(Vector2i topLeft, Vector2i bottomRight) : this(topLeft.X, topLeft.Y, bottomRight.X, bottomRight.Y)
+        public UIBox2i(Vector2i topLeft, Vector2i bottomRight)
         {
+            Unsafe.SkipInit(out this);
+
+            TopLeft = topLeft;
+            BottomRight = bottomRight;
         }
 
         public UIBox2i(int left, int top, int right, int bottom)
         {
+            Unsafe.SkipInit(out this);
+
             Left = left;
             Right = right;
             Top = top;
@@ -76,6 +86,7 @@ namespace Robust.Shared.Maths
             {
                 return null;
             }
+
             return new UIBox2i(
                 Vector2i.ComponentMax(TopLeft, other.TopLeft),
                 Vector2i.ComponentMin(BottomRight, other.BottomRight));

@@ -14,9 +14,9 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.5.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.5.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.5.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.8.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
   </ItemGroup>
 

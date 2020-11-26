@@ -293,14 +293,14 @@ namespace Robust.Shared.Configuration
             //TODO: Make flags work, required non-derpy net system.
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
             {
-                if (!Equals(cVar.Value, value))
+                if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                 {
-                    cVar.Value = value;
-                    cVar.ValueChanged?.Invoke(value);
-
-                    // Setting an override value just turns off the override, basically.
+                    // Setting an overriden var just turns off the override, basically.
                     cVar.OverrideValue = null;
                     cVar.OverrideValueParsed = null;
+
+                    cVar.Value = value;
+                    cVar.ValueChanged?.Invoke(value);
                 }
             }
             else

@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Robust.Shared;
@@ -22,21 +21,20 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleInfo);
         }
 
-        private static bool HandleTeapot(HttpMethod method, HttpRequest request, HttpResponse response)
+        private static bool HandleTeapot(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
         {
-            if (!method.IsGetLike() || request.Path != "/teapot")
+            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/teapot")
             {
                 return false;
             }
 
-            response.StatusCode = StatusCodes.Status418ImATeapot;
-            response.Respond("I am a teapot.", StatusCodes.Status418ImATeapot);
+            response.Respond(method, "I am a teapot.", (HttpStatusCode) 418);
             return true;
         }
 
-        private bool HandleStatus(HttpMethod method, HttpRequest request, HttpResponse response)
+        private bool HandleStatus(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
         {
-            if (!method.IsGetLike() || request.Path != "/status")
+            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/status")
             {
                 return false;
             }
@@ -44,7 +42,7 @@ namespace Robust.Server.ServerStatus
             if (OnStatusRequest == null)
             {
                 Logger.WarningS(Sawmill, "OnStatusRequest is not set, responding with a 501.");
-                response.Respond("Not Implemented", HttpStatusCode.NotImplemented);
+                response.Respond(method, "Not Implemented", HttpStatusCode.NotImplemented);
                 return true;
             }
 
@@ -60,7 +58,7 @@ namespace Robust.Server.ServerStatus
 
             OnStatusRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.Body, EncodingHelpers.UTF8);
+            using var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8);
 
             using var jsonWriter = new JsonTextWriter(streamWriter);
 
@@ -71,9 +69,9 @@ namespace Robust.Server.ServerStatus
             return true;
         }
 
-        private bool HandleInfo(HttpMethod method, HttpRequest request, HttpResponse response)
+        private bool HandleInfo(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
         {
-            if (!method.IsGetLike() || request.Path != "/info")
+            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/info")
             {
                 return false;
             }
@@ -132,7 +130,7 @@ namespace Robust.Server.ServerStatus
 
             OnInfoRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.Body, EncodingHelpers.UTF8);
+            using var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8);
 
             using var jsonWriter = new JsonTextWriter(streamWriter);
 

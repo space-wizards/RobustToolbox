@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
@@ -563,10 +562,9 @@ namespace Robust.Shared.Serialization
                     if (string.IsNullOrWhiteSpace(tag))
                         throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
 
-                    var args = tag.Split(':');
-                    if (args.Length == 2 && args[0] == "!type")
+                    if (tag.StartsWith("!type:"))
                     {
-                        concreteType = ResolveConcreteType(type, args[1]);
+                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
                     }
                     else
                     {
@@ -609,15 +607,13 @@ namespace Robust.Shared.Serialization
         private static Type ResolveConcreteType(Type baseType, string typeName)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
-            foreach (var derivedType in reflection.GetAllChildren(baseType))
+            var type = reflection.YamlTypeTagLookup(baseType, typeName);
+            if (type == null)
             {
-                if (derivedType.Name == typeName)
-                {
-                    return derivedType;
-                }
+                throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
             }
 
-            throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
+            return type;
         }
 
         public YamlNode TypeToNode(object obj)

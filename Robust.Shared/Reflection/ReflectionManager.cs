@@ -27,6 +27,8 @@ namespace Robust.Shared.Reflection
         [ViewVariables]
         public IReadOnlyList<Assembly> Assemblies => assemblies;
 
+        private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
+
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
         {
@@ -190,6 +192,27 @@ namespace Robust.Shared.Reflection
             }
 
             throw new ArgumentException("Could not resolve enum reference.");
+        }
+
+        public Type? YamlTypeTagLookup(Type baseType, string typeName)
+        {
+            if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
+            {
+                return type;
+            }
+
+            Type? found = null;
+            foreach (var derivedType in GetAllChildren(baseType))
+            {
+                if (derivedType.Name == typeName)
+                {
+                    found = derivedType;
+                    break;
+                }
+            }
+
+            _yamlTypeTagCache.Add((baseType, typeName), found);
+            return found;
         }
     }
 }

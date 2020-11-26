@@ -209,7 +209,7 @@ namespace Robust.Client.GameObjects
             this.Layers = new List<Layer>(other.Layers.Count);
             foreach (var otherLayer in other.Layers)
             {
-                this.Layers.Add(new Layer(otherLayer));
+                this.Layers.Add(new Layer(otherLayer, this));
             }
             this.IsInert = other.IsInert;
             this.LayerMap = other.LayerMap.ToDictionary(entry => entry.Key,
@@ -1089,12 +1089,12 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            static List<Layer> CloneLayers(List<Layer> source)
+            List<Layer> CloneLayers(List<Layer> source)
             {
                 var clone = new List<Layer>(source.Count);
                 foreach (var layer in source)
                 {
-                    clone.Add(new Layer(layer));
+                    clone.Add(new Layer(layer, this));
                 }
 
                 return clone;
@@ -1550,9 +1550,9 @@ namespace Robust.Client.GameObjects
                 _parent = parent;
             }
 
-            public Layer(Layer toClone)
+            public Layer(Layer toClone, SpriteComponent parentSprite)
             {
-                _parent = toClone._parent;
+                _parent = parentSprite;
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;

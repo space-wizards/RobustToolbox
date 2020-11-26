@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     public class ComponentFactory : IComponentFactory
     {
-        [Dependency] private readonly IDynamicTypeFactory _typeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private class ComponentRegistration : IComponentRegistration
@@ -197,7 +197,7 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{componentType} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<IComponent>(types[componentType].Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(types[componentType].Type);
         }
 
         public T GetComponent<T>() where T : IComponent, new()
@@ -206,17 +206,17 @@ namespace Robust.Shared.GameObjects
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstance<T>(types[typeof(T)].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(string componentName)
         {
-            return _typeFactory.CreateInstance<IComponent>(GetRegistration(componentName).Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
         public IComponent GetComponent(uint netId)
         {
-            return _typeFactory.CreateInstance<IComponent>(GetRegistration(netId).Type);
+            return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
         }
 
         public IComponentRegistration GetRegistration(string componentName)

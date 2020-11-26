@@ -402,5 +402,8 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
         [DllImport(LibraryName)]
         public static extern int glfwCreateWindowSurface(VkHandle instance, Window* window, void* allocator, VkHandle surface);
+
+        [DllImport(LibraryName)]
+        public static extern uint glfwGetX11Window(Window* window);
     }
 }

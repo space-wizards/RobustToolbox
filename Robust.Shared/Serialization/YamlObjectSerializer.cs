@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -69,6 +70,14 @@ namespace Robust.Shared.Serialization
         public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Context? context = null)
         {
             return NewReader(new List<YamlMappingNode>(1) { readMap }, context);
+        }
+
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Type deserializingType,
+            Context? context = null)
+        {
+            var r = NewReader(readMap, context);
+            r.SetDeserializingType(deserializingType);
+            return r;
         }
 
         /// <summary>
@@ -580,6 +589,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewReader(mapNode, _context);
+                fork.CurrentType = concreteType;
                 if (_context != null)
                 {
                     _context.StackDepth--;
@@ -753,6 +763,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewWriter(mapping, _context);
+                fork.CurrentType = type;
                 if (_context != null)
                 {
                     _context.StackDepth--;

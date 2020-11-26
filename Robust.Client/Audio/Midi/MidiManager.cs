@@ -33,6 +33,7 @@ namespace Robust.Client.Audio.Midi
         /// </returns>
         IMidiRenderer? GetNewRenderer();
 
+        /*
         /// <summary>
         ///     Checks whether the file at the given path is a valid midi file or not.
         /// </summary>
@@ -48,6 +49,7 @@ namespace Robust.Client.Audio.Midi
         ///     We add this here so content doesn't need to reference NFluidsynth.
         /// </remarks>
         bool IsSoundfontFile(string filename);
+        */
 
         /// <summary>
         ///     Method called every frame.
@@ -67,7 +69,7 @@ namespace Robust.Client.Audio.Midi
     internal class MidiManager : IDisposable, IMidiManager
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public bool IsAvailable
@@ -169,6 +171,7 @@ namespace Robust.Client.Audio.Midi
             _sawmill.Log(rLevel, message);
         }
 
+        /*
         public bool IsMidiFile(string filename)
         {
             return SoundFont.IsMidiFile(filename);
@@ -178,6 +181,7 @@ namespace Robust.Client.Audio.Midi
         {
             return SoundFont.IsSoundFont(filename);
         }
+        */
 
         public IMidiRenderer? GetNewRenderer()
         {

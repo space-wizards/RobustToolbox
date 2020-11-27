@@ -46,6 +46,8 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
+
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
         }
 
         void IPostInjectInit.PostInject()
@@ -307,6 +309,34 @@ namespace Robust.Shared.ContentPack
         public void Dispose()
         {
             _loadContext.Unload();
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+        }
+
+        private Assembly? DefaultOnResolving(AssemblyLoadContext ctx, AssemblyName name)
+        {
+            // We have to hook AssemblyLoadContext.Default.Resolving so that C# interactive loads assemblies correctly.
+            // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
+            if (_useLoadContext)
+            {
+                Logger.DebugS("res.mod", $"RESOLVING DEFAULT: {name}");
+                foreach (var module in LoadedModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
+
+                foreach (var module in _sideModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

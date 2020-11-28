@@ -411,6 +411,7 @@ namespace Robust.Shared.ContentPack
                     }
                     catch (UnsupportedMetadataException e)
                     {
+                        errors.Add(new SandboxError(e));
                         return null;
                     }
                 })

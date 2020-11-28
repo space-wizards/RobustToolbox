@@ -157,7 +157,6 @@ namespace Robust.Client.UserInterface.Controls
                     }
 
                     return UIBox2.FromDimensions(position, size);
-                    break;
                 }
 
                 case StretchMode.KeepAspectCovered:
@@ -169,7 +168,6 @@ namespace Robust.Client.UserInterface.Controls
                     // Offset inside the actual texture.
                     var offset = (texSize - PixelSize) / scale / 2f;
                     return UIBox2.FromDimensions(offset, PixelSize / scale);
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }

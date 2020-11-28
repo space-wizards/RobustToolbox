@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection.Metadata;
 // ReSharper disable MemberCanBePrivate.Global
@@ -304,6 +305,18 @@ namespace Robust.Shared.ContentPack
             {
                 return otherGeneric != null && GenericType.Equals(otherGeneric.GenericType) &&
                        TypeArguments.SequenceEqual(otherGeneric.TypeArguments);
+            }
+
+            public override int GetHashCode()
+            {
+                var hc = new HashCode();
+                hc.Add(GenericType);
+                foreach (var typeArg in TypeArguments)
+                {
+                    hc.Add(typeArg);
+                }
+
+                return hc.ToHashCode();
             }
 
             public override bool IsCoreTypeDefined()

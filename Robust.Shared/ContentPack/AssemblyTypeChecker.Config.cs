@@ -91,6 +91,7 @@ namespace Robust.Shared.ContentPack
             public Dictionary<string, Dictionary<string, TypeConfig>> Types = default!;
         }
 
+#pragma warning disable 649
         private sealed class TypeConfig
         {
             // Used for type configs where the type config doesn't exist due to a bigger-scoped All whitelisting.
@@ -105,6 +106,7 @@ namespace Robust.Shared.ContentPack
             [NonSerialized] public WhitelistFieldDefine[] FieldsParsed = default!;
             public Dictionary<string, TypeConfig>? NestedTypes;
         }
+#pragma warning restore 649
 
         private enum InheritMode
         {

@@ -76,7 +76,7 @@ namespace Robust.Client.UserInterface
             {
                 return (File.Open(name, FileMode.Open), true);
             }
-            catch (FileNotFoundException e)
+            catch (FileNotFoundException)
             {
                 return (File.Open(name, FileMode.Create), false);
             }

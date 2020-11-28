@@ -1,16 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\MSBuild\Robust.Properties.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.props" />
   <PropertyGroup>
-    <!-- Work around https://github.com/dotnet/project-system/issues/4314 -->
-    <TargetFramework>$(TargetFramework)</TargetFramework>
-    <LangVersion>9</LangVersion>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputType>Exe</OutputType>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Client</OutputPath>
     <NoWarn>NU1701</NoWarn>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>

@@ -433,6 +433,7 @@ Types:
     ExtensionAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
+    IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }

@@ -36,6 +36,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        submodules: true
+        
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+        
+    - name: Build
+      run: dotnet build
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL

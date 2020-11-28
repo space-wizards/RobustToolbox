@@ -26,7 +26,6 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
@@ -41,7 +40,6 @@ namespace Robust.Client
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -123,10 +121,10 @@ namespace Robust.Client
             _resourceCache.MountContentDirectory(@"Resources/");
 #else
             var contentRootDir = ProgramShared.FindContentRootDir();
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
+            _resourceCache.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
+            _resourceCache.MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
                 new ResourcePath("/Assemblies/"));
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}Resources/");
+            _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
 #endif
 
             // Bring display up as soon as resources are mounted.

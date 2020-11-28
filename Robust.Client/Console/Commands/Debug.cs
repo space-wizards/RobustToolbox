@@ -892,7 +892,7 @@ namespace Robust.Client.Console.Commands
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            IResourceCache resC;
+            IResourceCacheInternal resC;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -902,7 +902,7 @@ namespace Robust.Client.Console.Commands
                         console.AddLine("Already watching.");
                         return false;
                     }
-                    resC = IoCManager.Resolve<IResourceCache>();
+                    resC = IoCManager.Resolve<IResourceCacheInternal>();
 
                     _watchers = new Dictionary<string, FileSystemWatcher>();
 
@@ -1029,7 +1029,7 @@ namespace Robust.Client.Console.Commands
 
             console.AddLine("Reloading content shader resources...");
 
-            resC = IoCManager.Resolve<IResourceCache>();
+            resC = IoCManager.Resolve<IResourceCacheInternal>();
 
             foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {

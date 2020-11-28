@@ -218,10 +218,17 @@ namespace Robust.Shared.Interfaces.Resources
         void MountContentDirectory(string path, ResourcePath? prefix = null);
 
         /// <summary>
-        ///     TODO: TEMPORARY: We need this because Godot can't load most resources without the disk easily.
-        ///     Actually, seems like JetBrains Rider has trouble loading PBD files passed into AppDomain.Load too.
-        ///     Hrm.
+        ///     Attempts to get an on-disk path absolute file path for the specified resource path.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        ///     This only works if the resource is mounted as a direct directory,
+        ///     so this obviously fails if the resource is mounted in another way such as a zip file.
+        /// </para>
+        /// <para>
+        ///     This can be used for optimizations such as assembly loading, where an on-disk path is better.
+        /// </para>
+        /// </remarks>
         bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath);
     }
 }

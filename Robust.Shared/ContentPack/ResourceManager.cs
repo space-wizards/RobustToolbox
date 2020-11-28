@@ -264,7 +264,6 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        // TODO: Remove this when/if we can get Godot to load from not-the-filesystem.
         public bool TryGetDiskFilePath(ResourcePath path, [NotNullWhen(true)] out string? diskPath)
         {
             // loop over each root trying to get the file
@@ -273,7 +272,7 @@ namespace Robust.Shared.ContentPack
             {
                 foreach (var (prefix, root) in _contentRoots)
                 {
-                    if (!(root is DirLoader dirLoader) || !path.TryRelativeTo(prefix, out var tempPath))
+                    if (root is not DirLoader dirLoader || !path.TryRelativeTo(prefix, out var tempPath))
                     {
                         continue;
                     }

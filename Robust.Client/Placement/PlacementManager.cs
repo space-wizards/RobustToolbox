@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.ResourceManagement;
@@ -22,7 +22,6 @@ using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Log;
-using Robust.Client.Graphics.Shaders;
 
 namespace Robust.Client.Placement
 {
@@ -618,7 +617,7 @@ namespace Robust.Client.Placement
                 if (EraserRect.HasValue)
                 {
                     handle.UseShader(_drawingShader);
-                    handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 100));
+                    handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 50));
                 }
                 return;
             }

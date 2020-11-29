@@ -220,6 +220,9 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty);
 
+        public static readonly CVarDef<float> AudioMasterVolume =
+            CVarDef.Create("audio.mastervolume", 1.0f);
+
         public static readonly CVarDef<string> PlayerName =
             CVarDef.Create("player.name", "JoeGenero", CVar.ARCHIVE);
 

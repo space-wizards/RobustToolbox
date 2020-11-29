@@ -22,6 +22,7 @@ using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Log;
+using Robust.Client.Graphics.Shaders;
 
 namespace Robust.Client.Placement
 {
@@ -93,6 +94,11 @@ namespace Robust.Client.Placement
         public Box2? EraserRect { get; set; }
 
         /// <summary>
+        /// Drawing shader for drawing without being affected by lighting
+        /// </summary>
+        private ShaderInstance? _drawingShader { get; set; }
+
+        /// <summary>
         /// The texture we use to show from our placement manager to represent the entity to place
         /// </summary>
         public List<IDirectionalTextureProvider>? CurrentTextures { get; set; }
@@ -159,6 +165,8 @@ namespace Robust.Client.Placement
 
         public void Initialize()
         {
+            _drawingShader = _prototypeManager.Index<ShaderPrototype>("unshaded").Instance();
+
             NetworkManager.RegisterNetMessage<MsgPlacement>(MsgPlacement.NAME, HandlePlacementMessage);
 
             _modeDictionary.Clear();
@@ -605,11 +613,11 @@ namespace Robust.Client.Placement
 
         private void Render(DrawingHandleWorld handle)
         {
-
             if (CurrentMode == null || !IsActive)
             {
                 if (EraserRect.HasValue)
                 {
+                    handle.UseShader(_drawingShader);
                     handle.DrawRect(EraserRect.Value, new Color(255, 0, 0, 100));
                 }
                 return;

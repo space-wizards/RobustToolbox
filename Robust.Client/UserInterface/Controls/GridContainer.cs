@@ -557,13 +557,13 @@ namespace Robust.Client.UserInterface.Controls
         }
     }
 
-    public enum Dimension
+    public enum Dimension : byte
     {
         Column,
         Row
     }
 
-    public enum LimitType
+    public enum LimitType : byte
     {
         /// <summary>
         /// Defined number of rows or columns

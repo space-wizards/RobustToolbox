@@ -582,7 +582,7 @@ namespace Robust.Server
     /// <summary>
     ///     Type of game currently running.
     /// </summary>
-    public enum GameType
+    public enum GameType : byte
     {
         MapEditor = 0,
         Game,

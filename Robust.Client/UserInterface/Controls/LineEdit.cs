@@ -711,7 +711,7 @@ namespace Robust.Client.UserInterface.Controls
             return CharClass.Other;
         }
 
-        private enum CharClass
+        private enum CharClass : byte
         {
             Other,
             AlphaNumeric,

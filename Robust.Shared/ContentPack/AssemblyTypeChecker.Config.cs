@@ -106,7 +106,7 @@ namespace Robust.Shared.ContentPack
             public Dictionary<string, TypeConfig>? NestedTypes;
         }
 
-        private enum InheritMode
+        private enum InheritMode : byte
         {
             // Allow if All is set, block otherwise
             Default,

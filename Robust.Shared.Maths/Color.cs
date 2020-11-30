@@ -1009,7 +1009,7 @@ namespace Robust.Shared.Maths
         }
 
         [PublicAPI]
-        public enum BlendFactor
+        public enum BlendFactor : byte
         {
             Zero,
             One,

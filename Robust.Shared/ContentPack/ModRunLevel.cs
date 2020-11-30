@@ -3,7 +3,7 @@
     /// <summary>
     ///     Run levels of the Content entry point.
     /// </summary>
-    public enum ModRunLevel
+    public enum ModRunLevel: byte
     {
         Error = 0,
         Init = 1,

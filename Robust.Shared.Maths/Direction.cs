@@ -3,7 +3,7 @@
 namespace Robust.Shared.Maths
 {
     [Flags]
-    public enum Direction
+    public enum Direction : sbyte
     {
         Invalid = -1,
         East = 0,

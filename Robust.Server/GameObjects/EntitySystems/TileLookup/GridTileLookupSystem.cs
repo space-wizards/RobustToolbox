@@ -156,7 +156,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
 
             foreach (var grid in _mapManager.FindGridsIntersecting(coordinates.GetMapId(EntityManager), box))
             {
-                foreach (var tile in grid.GetTilesIntersecting(box))
+                foreach (var tile in grid.GetTilesIntersecting(box, false))
                 {
                     results.Add(GetOrCreateNode(grid.Index, tile.GridIndices));
                 }
@@ -192,7 +192,7 @@ namespace Robust.Server.GameObjects.EntitySystems.TileLookup
             {
                 var indices = new List<Vector2i>();
 
-                foreach (var tile in grid.GetTilesIntersecting(entityBounds))
+                foreach (var tile in grid.GetTilesIntersecting(entityBounds, false))
                 {
                     indices.Add(tile.GridIndices);
                 }

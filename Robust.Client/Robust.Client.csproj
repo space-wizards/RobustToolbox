@@ -11,6 +11,11 @@
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
+    <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.0.166" />
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" PrivateAssets="All" />
     <PackageReference Include="nfluidsynth" Version="0.3.0" />

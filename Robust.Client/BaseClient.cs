@@ -17,6 +17,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
+using HelloWorldGenerated;
 
 namespace Robust.Client
 {
@@ -60,6 +61,7 @@ namespace Robust.Client
             _playMan.Initialize();
             _debugDrawMan.Initialize();
             Reset();
+            HelloWorld.SayHello();
         }
 
         /// <inheritdoc />

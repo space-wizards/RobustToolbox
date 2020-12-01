@@ -1,0 +1,4 @@
+﻿<userInterface:Control Name="C1" xmlns:userInterface="clr-namespace:Robust.Client.UserInterface">
+    <userInterface:Control Name="C2">
+    </userInterface:Control>
+</userInterface:Control>

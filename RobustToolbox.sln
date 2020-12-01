@@ -25,7 +25,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetSerializer", "NetSeriali
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Physics", "Robust.Physics\Robust.Physics.csproj", "{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.XAMLUI", "Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj", "{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.XamlUI", "Robust.Client.XamlUI\Robust.Client.XamlUI.csproj", "{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX", "XamlX\src\XamlX\XamlX.csproj", "{8D1D9681-F308-4A14-953E-9629C39AC00E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -123,6 +125,14 @@ Global
 		{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}.Release|x64.ActiveCfg = Release|Any CPU
 		{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}.Release|x64.Build.0 = Release|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Debug|x64.Build.0 = Debug|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Release|x64.ActiveCfg = Release|Any CPU
+		{8D1D9681-F308-4A14-953E-9629C39AC00E}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

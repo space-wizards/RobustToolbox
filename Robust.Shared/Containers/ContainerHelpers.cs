@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
@@ -102,6 +104,25 @@ namespace Robust.Shared.Containers
         public static bool TryRemoveFromContainer(this IEntity entity, bool force = false)
         {
             return TryRemoveFromContainer(entity, force, out _);
+        }
+
+        /// <summary>
+        ///     Attempts to remove all entities in a container.
+        /// </summary>
+        public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null)
+        {
+            foreach (var entity in container.ContainedEntities.ToArray())
+            {
+                if (entity.Deleted) continue;
+
+                if (force)
+                    container.ForceRemove(entity);
+                else
+                    container.Remove(entity);
+
+                if (moveTo.HasValue)
+                    entity.Transform.Coordinates = moveTo.Value;
+            }
         }
 
         public static void AttachParentToContainerOrGrid(this ITransformComponent transform)

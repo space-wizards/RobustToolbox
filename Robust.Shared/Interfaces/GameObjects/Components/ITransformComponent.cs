@@ -4,6 +4,7 @@ using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared.Interfaces.GameObjects.Components
 {
@@ -47,6 +48,11 @@ namespace Robust.Shared.Interfaces.GameObjects.Components
         ///     Current world rotation of the entity.
         /// </summary>
         Angle WorldRotation { get; set; }
+
+        /// <summary>
+        ///     World rotation
+        /// </summary>
+        Complex Q { get; }
 
         /// <summary>
         ///     Matrix for transforming points from local to world space.

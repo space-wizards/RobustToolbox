@@ -1,4 +1,6 @@
 ﻿using System;
+using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -91,12 +93,55 @@ namespace Robust.Shared.Physics
 
         internal void Solve(float frameTime)
         {
-            throw new NotImplementedException();
+            // TODO: Our AABBs are going to need to be relative to the grid we are on most likely
+            // So I'll need to change a bunch of internal shit for that (RIP me).
+            // Broadphase will probably be the only area we need to change it I HOPE.
+            // TODO: Maybe add a method called "GridAABB" on transform we can call?
 
-            for (var i = 0; i < BodyCount; i++)
+            // TODO: Reduce
+            float h = frameTime;
+
+            // Integrate velocities and apply damping. Initialize the body state.
+            for (int i = 0; i < BodyCount; ++i)
             {
-                var body = Bodies[i];
-                // TODO.
+                IPhysBody b = Bodies[i];
+
+                Vector2 c = b._sweep.C;
+                float a = b._sweep.A;
+                Vector2 v = b._linearVelocity;
+                float w = b._angularVelocity;
+
+                // Store positions for continuous collision.
+                b._sweep.C0 = b._sweep.C;
+                b._sweep.A0 = b._sweep.A;
+
+                if (b.BodyType == BodyType.Dynamic)
+                {
+                    // Integrate velocities.
+
+                    // FPE: Only apply gravity if the body wants it.
+                    if (b.IgnoreGravity)
+                        v += h * (b._invMass * b._force);
+                    else
+                        v += h * (gravity + b._invMass * b._force);
+
+                    w += h * b._invI * b._torque;
+
+                    // Apply damping.
+                    // ODE: dv/dt + c * v = 0
+                    // Solution: v(t) = v0 * exp(-c * t)
+                    // Time step: v(t + dt) = v0 * exp(-c * (t + dt)) = v0 * exp(-c * t) * exp(-c * dt) = v * exp(-c * dt)
+                    // v2 = exp(-c * dt) * v1
+                    // Taylor expansion:
+                    // v2 = (1.0f - c * dt) * v1
+                    v *= MathUtils.Clamp(1.0f - h * b.LinearDamping, 0.0f, 1.0f);
+                    w *= MathUtils.Clamp(1.0f - h * b.AngularDamping, 0.0f, 1.0f);
+                }
+
+                _positions[i].c = c;
+                _positions[i].a = a;
+                _velocities[i].v = v;
+                _velocities[i].w = w;
             }
         }
     }

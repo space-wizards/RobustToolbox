@@ -11,6 +11,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -135,6 +136,16 @@ namespace Robust.Shared.GameObjects.Components.Transform
                 var diff = value - current;
                 LocalRotation += diff;
             }
+        }
+
+        // Look it's a shitty variable name but for now I'm trying to keep it close to Aether2D so this is what you get
+        // Ideally we could maaybbbeee replace it with just using WorldRotation straight up longer-term...
+        /// <summary>
+        ///     Represents Rotation
+        /// </summary>
+        public Complex Q
+        {
+            get => Complex.FromAngle((float) WorldRotation.Theta);
         }
 
         /// <summary>

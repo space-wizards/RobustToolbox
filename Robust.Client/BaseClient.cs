@@ -6,6 +6,7 @@ using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
+using Robust.Client.UI;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
@@ -60,6 +61,7 @@ namespace Robust.Client
             _playMan.Initialize();
             _debugDrawMan.Initialize();
             Reset();
+            new TestView();
         }
 
         /// <inheritdoc />

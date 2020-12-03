@@ -10,6 +10,7 @@ using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -34,9 +35,12 @@ namespace Robust.Server.ServerStatus
         private string? _watchdogToken;
         private string? _watchdogKey;
         private Uri? _baseUri;
+        private ISawmill _sawmill = default!;
 
         public void PostInject()
         {
+            _sawmill = Logger.GetSawmill("watchdogApi");
+
             _statusHost.AddHandler(UpdateHandler);
             _statusHost.AddHandler(ShutdownHandler);
         }
@@ -50,7 +54,7 @@ namespace Robust.Server.ServerStatus
 
             if (_watchdogToken == null)
             {
-                Logger.WarningS("watchdogApi", "Watchdog token is unset but received POST /update API call. Ignoring");
+                _sawmill.Warning("Watchdog token is unset but received POST /update API call. Ignoring");
                 return false;
             }
 
@@ -59,7 +63,7 @@ namespace Robust.Server.ServerStatus
             if (auth != _watchdogToken)
             {
                 // Holy shit nobody read these logs please.
-                Logger.InfoS("watchdogApi", @"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
+                _sawmill.Info(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
                 response.StatusCode = (int) HttpStatusCode.Unauthorized;
                 return true;
             }
@@ -80,8 +84,7 @@ namespace Robust.Server.ServerStatus
 
             if (_watchdogToken == null)
             {
-                Logger.WarningS("watchdogApi",
-                    "Watchdog token is unset but received POST /shutdown API call. Ignoring");
+                _sawmill.Warning("Watchdog token is unset but received POST /shutdown API call. Ignoring");
                 return false;
             }
 
@@ -89,7 +92,7 @@ namespace Robust.Server.ServerStatus
 
             if (auth != _watchdogToken)
             {
-                Logger.WarningS("watchdogApi",
+                _sawmill.Warning(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
                 response.StatusCode = (int) HttpStatusCode.Unauthorized;

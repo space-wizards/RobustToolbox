@@ -5,7 +5,6 @@ using System.Net.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Robust.Shared;
-using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
@@ -41,7 +40,7 @@ namespace Robust.Server.ServerStatus
 
             if (OnStatusRequest == null)
             {
-                Logger.WarningS(Sawmill, "OnStatusRequest is not set, responding with a 501.");
+                _httpSawmill.Warning("OnStatusRequest is not set, responding with a 501.");
                 response.Respond(method, "Not Implemented", HttpStatusCode.NotImplemented);
                 return true;
             }

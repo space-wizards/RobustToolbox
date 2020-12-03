@@ -125,6 +125,19 @@ namespace Robust.Shared.Containers
             }
         }
 
+        /// <summary>
+        ///     Attempts to remove and delete all entities in a container.
+        /// </summary>
+        public static void CleanContainer(this IContainer container)
+        {
+            foreach (var ent in container.ContainedEntities.ToArray())
+            {
+                if (ent.Deleted) continue;
+                container.ForceRemove(ent);
+                ent.Delete();
+            }
+        }
+
         public static void AttachParentToContainerOrGrid(this ITransformComponent transform)
         {
             if (transform.Parent == null

@@ -189,6 +189,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetMasterVolume(float newVolume)
+        {
+            // Nada.
+        }
+
         private class DummyCursor : ICursor
         {
             public void Dispose()

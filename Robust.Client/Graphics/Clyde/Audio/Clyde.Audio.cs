@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -50,6 +50,8 @@ namespace Robust.Client.Graphics.Clyde
             _audioCreateContext();
 
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+
+            _configurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
         }
 
         private void _audioCreateContext()
@@ -177,6 +179,11 @@ namespace Robust.Client.Graphics.Clyde
         private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
         {
             if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
+        }
+
+        public void SetMasterVolume(float newVolume)
+        {
+            AL.Listener(ALListenerf.Gain, newVolume);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)

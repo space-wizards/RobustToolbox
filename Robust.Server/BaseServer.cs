@@ -94,7 +94,7 @@ namespace Robust.Server
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
-        private CommandLineArgs _commandLineArgs = default!;
+        private CommandLineArgs? _commandLineArgs;
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
@@ -185,7 +185,6 @@ namespace Robust.Server
                 _config.OverrideConVars(_commandLineArgs.CVars);
             }
 
-
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
 
@@ -255,16 +254,7 @@ namespace Robust.Server
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-#if FULL_RELEASE
-            _resources.MountContentDirectory(@"./Resources/");
-#else
-            // Load from the resources dir in the repo root instead.
-            // It's a debug build so this is fine.
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resources.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
-            _resources.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server");
 
             _modLoader.SetUseLoadContext(!DisableLoadContext);
             _modLoader.SetEnableSandboxing(false);

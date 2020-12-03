@@ -117,15 +117,7 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-#if FULL_RELEASE
-            _resourceCache.MountContentDirectory(@"Resources/");
-#else
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resourceCache.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resourceCache.MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
-                new ResourcePath("/Assemblies/"));
-            _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client");
 
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())

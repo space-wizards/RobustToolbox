@@ -406,38 +406,61 @@ namespace Robust.Client.Input
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var baseSerializer = YamlObjectSerializer.NewReader(mapping);
-            var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
 
-            foreach (var reg in baseKeyRegs)
+            try
             {
-                if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
-                {
-                    Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
-                        reg.Function.FunctionName);
-                    continue;
-                }
+                var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
 
-                if (!userData)
+                foreach (var reg in baseKeyRegs)
                 {
-                    _defaultRegistrations.Add(reg);
-
-                    if (_modifiedKeyFunctions.Contains(reg.Function))
+                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        // Don't read key functions from preset files that have been modified.
-                        // So that we don't bulldoze a user's saved preferences.
+                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                            reg.Function.FunctionName);
                         continue;
                     }
-                }
 
-                RegisterBinding(reg, markModified: userData);
+                    if (!userData)
+                    {
+                        _defaultRegistrations.Add(reg);
+
+                        if (_modifiedKeyFunctions.Contains(reg.Function))
+                        {
+                            // Don't read key functions from preset files that have been modified.
+                            // So that we don't bulldoze a user's saved preferences.
+                            continue;
+                        }
+                    }
+
+                    RegisterBinding(reg, markModified: userData);
+                }
+            }
+            catch (Exception ex)
+            {
+                // User has custom keybinds.yml but no binds were found, so ignore this exception
+                if (ex.GetType() != typeof(KeyNotFoundException))
+                {
+                    throw;
+                }
             }
 
             if (userData)
             {
                 // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
                 // Because they've been explicitly cleared.
-                var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
-                _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                try
+                {
+                    var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
+                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                }
+                catch (Exception ex)
+                {
+                    // No "leaveEmpty" key binds were found, so we can ignore this exception
+                    if (ex.GetType() != typeof(KeyNotFoundException))
+                    {
+                        throw;
+                    }
+                }
             }
         }
 

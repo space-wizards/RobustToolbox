@@ -54,7 +54,7 @@ namespace Robust.UnitTesting
 
             foreach (var assembly in assemblies)
             {
-                IoCManager.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(assembly);
+                IoCManager.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
             }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);

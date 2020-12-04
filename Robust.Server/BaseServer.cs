@@ -71,7 +71,7 @@ namespace Robust.Server
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
         [Dependency] private readonly IServerEntityManager _entities = default!;
         [Dependency] private readonly ILogManager _log = default!;

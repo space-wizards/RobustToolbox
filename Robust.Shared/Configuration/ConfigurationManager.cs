@@ -12,7 +12,7 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    public class ConfigurationManager : IConfigurationManagerInternal
+    internal sealed class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
         private readonly Dictionary<string, ConfigVar> _configVars = new();
@@ -173,7 +173,7 @@ namespace Robust.Shared.Configuration
             }
             catch (Exception e)
             {
-                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e.Message}");
+                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e}");
             }
         }
 

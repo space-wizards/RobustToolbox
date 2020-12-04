@@ -407,10 +407,10 @@ namespace Robust.Client.Input
 
             var baseSerializer = YamlObjectSerializer.NewReader(mapping);
 
-            try
-            {
-                var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
+            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
 
+            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
+            {
                 foreach (var reg in baseKeyRegs)
                 {
                     if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
@@ -435,31 +435,16 @@ namespace Robust.Client.Input
                     RegisterBinding(reg, markModified: userData);
                 }
             }
-            catch (Exception ex)
-            {
-                // User has custom keybinds.yml but no binds were found, so ignore this exception
-                if (ex.GetType() != typeof(KeyNotFoundException))
-                {
-                    throw;
-                }
-            }
 
             if (userData)
             {
-                // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
-                // Because they've been explicitly cleared.
-                try
+                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+
+                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
                 {
-                    var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
+                    // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
+                    // Because they've been explicitly cleared.
                     _modifiedKeyFunctions.UnionWith(leaveEmpty);
-                }
-                catch (Exception ex)
-                {
-                    // No "leaveEmpty" key binds were found, so we can ignore this exception
-                    if (ex.GetType() != typeof(KeyNotFoundException))
-                    {
-                        throw;
-                    }
                 }
             }
         }

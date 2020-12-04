@@ -462,8 +462,6 @@ namespace Robust.Server
                 SendTickRateUpdateToClients(b);
             });
 
-            cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
-
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
@@ -567,14 +565,5 @@ namespace Robust.Server
 
             _watchdogApi.Heartbeat();
         }
-    }
-
-    /// <summary>
-    ///     Type of game currently running.
-    /// </summary>
-    public enum GameType
-    {
-        MapEditor = 0,
-        Game,
     }
 }

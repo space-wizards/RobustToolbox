@@ -90,6 +90,11 @@ namespace Robust.Client
 
             _configurationManager.Initialize(false);
 
+            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
+            // So SECURE CVars are blacklisted from config.
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");
@@ -104,9 +109,6 @@ namespace Robust.Client
                     _configurationManager.SetSaveFile(configFile);
                 }
             }
-
-            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
-            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 

@@ -80,6 +80,14 @@ namespace Robust.Shared.Configuration
                 // if the CVar has already been registered
                 if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
+                    if ((cfgVar.Flags & CVar.SECURE) != 0)
+                    {
+                        // DO NOT read SECURE CVars.
+                        // client config is in a location content can access via the user data API.
+                        // Basically all secure CVars are something
+                        // the launcher should be passing in via env vars anyways.
+                        return;
+                    }
                     // overwrite the value with the saved one
                     cfgVar.Value = TypeConvert(obj);
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);

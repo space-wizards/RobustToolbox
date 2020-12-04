@@ -26,7 +26,6 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
@@ -39,9 +38,8 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -92,6 +90,11 @@ namespace Robust.Client
 
             _configurationManager.Initialize(false);
 
+            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
+            // So SECURE CVars are blacklisted from config.
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");
@@ -107,9 +110,6 @@ namespace Robust.Client
                 }
             }
 
-            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
-            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
-
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
@@ -119,15 +119,7 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-#if FULL_RELEASE
-            _resourceCache.MountContentDirectory(@"Resources/");
-#else
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
-                new ResourcePath("/Assemblies/"));
-            ((IResourceCache) _resourceCache).MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client");
 
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())

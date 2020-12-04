@@ -46,6 +46,8 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
+
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
         }
 
         void IPostInjectInit.PostInject()
@@ -69,7 +71,7 @@ namespace Robust.Shared.ContentPack
 
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
-            var files = new List<(string name, ResourcePath Path, string[] references)>();
+            var files = new Dictionary<string, (ResourcePath Path, string[] references)>();
 
             // Find all modules we want to load.
             foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
@@ -81,13 +83,18 @@ namespace Robust.Shared.ContentPack
                 var asmFile = _res.ContentFileRead(fullPath);
                 var (asmRefs, asmName) = GetAssemblyReferenceData(asmFile);
 
-                files.Add((asmName, fullPath, asmRefs));
+                if (!files.TryAdd(asmName, (fullPath, asmRefs)))
+                {
+                    Logger.ErrorS("res.mod", "Found multiple modules with the same assembly name " +
+                                             $"'{asmName}', A: {files[asmName].Path}, B: {fullPath}.");
+                    return false;
+                }
             }
 
             // Actually load them in the order they depend on each other.
             foreach (var path in TopologicalSortModules(files))
             {
-                Logger.DebugS("res.mod", $"Loading module: '{path}");
+                Logger.DebugS("res.mod", $"Loading module: '{path}'");
                 try
                 {
                     // If possible, load from disk path instead.
@@ -114,11 +121,11 @@ namespace Robust.Shared.ContentPack
         }
 
         private static IEnumerable<ResourcePath> TopologicalSortModules(
-            IEnumerable<(string name, ResourcePath Path, string[] references)> modules)
+            IEnumerable<KeyValuePair<string, (ResourcePath Path, string[] references)>> modules)
         {
             var elems = modules.ToDictionary(
-                node => node.name,
-                node => (node.Path, refs: new HashSet<string>(node.references)));
+                node => node.Key,
+                node => (node.Value.Path, refs: new HashSet<string>(node.Value.references)));
 
             // Remove assembly references we aren't sorting for.
             foreach (var (_, set) in elems.Values)
@@ -307,6 +314,34 @@ namespace Robust.Shared.ContentPack
         public void Dispose()
         {
             _loadContext.Unload();
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+        }
+
+        private Assembly? DefaultOnResolving(AssemblyLoadContext ctx, AssemblyName name)
+        {
+            // We have to hook AssemblyLoadContext.Default.Resolving so that C# interactive loads assemblies correctly.
+            // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
+            if (_useLoadContext)
+            {
+                Logger.DebugS("res.mod", $"RESOLVING DEFAULT: {name}");
+                foreach (var module in LoadedModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
+
+                foreach (var module in _sideModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

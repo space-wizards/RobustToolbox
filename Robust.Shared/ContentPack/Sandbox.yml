@@ -61,6 +61,12 @@ WhitelistedNamespaces:
 # I think that's everything?
 # Idk ask me if you can't figure it out yourself from looking at the 1k+ definitions in here already.
 
+# Also you can use the "dmetamem" command on the client to dump the fields and methods of a type,
+# in a format you can drop in here. So no need to manually type stuff over.
+# You still have to split the fields and methods manually but I'm sure you're smart enough to do that yourself.
+# Of course, I still expect you to do your due diligence to go over every member,
+# even if they're more easy to dump in here.
+
 # There are 4 reasons why an API might be missing here:
 # * The API would simply allow you to break sandbox or such. e.g. File.Open().
 # * It is a new API that has not been whitelisted yet.
@@ -427,6 +433,7 @@ Types:
     ExtensionAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
+    IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
     RuntimeCompatibilityAttribute: { All: True }
@@ -766,11 +773,39 @@ Types:
     Attribute: { All: True }
     AttributeTargets: { }
     AttributeUsageAttribute: { All: True }
+    Base64FormattingOptions: { } # Enum
     Boolean: { All: True }
     Byte: { All: True }
     Char: { All: True }
     CharEnumerator: { All: True }
     Comparison`1: { All: True }
+    Convert:
+      # All Type -> Type methods in this class are intentionally left out because they are insanely fucking stupid.
+      # Like yes, I want to do Convert.ToBoolean(DateTime) which LITERALLY ALWAYS THROWS.
+      # WHY ARE THESE A THING??
+      Fields:
+      - "object DBNull"
+      Methods:
+      - "System.TypeCode GetTypeCode(object)"
+      - "bool IsDBNull(object)"
+      - "string ToBase64String(byte[])"
+      - "string ToBase64String(byte[], System.Base64FormattingOptions)"
+      - "string ToBase64String(byte[], int, int)"
+      - "string ToBase64String(byte[], int, int, System.Base64FormattingOptions)"
+      - "string ToBase64String(System.ReadOnlySpan`1<byte>, System.Base64FormattingOptions)"
+      - "int ToBase64CharArray(byte[], int, int, char[], int)"
+      - "int ToBase64CharArray(byte[], int, int, char[], int, System.Base64FormattingOptions)"
+      - "bool TryToBase64Chars(System.ReadOnlySpan`1<byte>, System.Span`1<char>, ref int, System.Base64FormattingOptions)"
+      - "byte[] FromBase64String(string)"
+      - "bool TryFromBase64String(string, System.Span`1<byte>, ref int)"
+      - "bool TryFromBase64Chars(System.ReadOnlySpan`1<char>, System.Span`1<byte>, ref int)"
+      - "byte[] FromBase64CharArray(char[], int, int)"
+      - "byte[] FromHexString(string)"
+      - "byte[] FromHexString(System.ReadOnlySpan`1<char>)"
+      - "string ToHexString(byte[])"
+      - "string ToHexString(byte[], int, int)"
+      - "string ToHexString(System.ReadOnlySpan`1<byte>)"
+
     Converter`2: { All: True } # Delegate
     DateTime: { All: True }
     DateTimeKind: { } # Enum

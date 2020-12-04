@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace Robust.Shared.ContentPack
 {
     internal sealed partial class AssemblyTypeChecker
     {
-        internal abstract class MType
+        internal abstract record MType
         {
-            public virtual IEnumerable<MType> GetUsedTypes()
-            {
-                return Array.Empty<MType>();
-            }
-
             public virtual bool WhitelistEquals(MType other)
             {
                 return false;
@@ -24,6 +18,14 @@ namespace Robust.Shared.ContentPack
             public virtual bool IsCoreTypeDefined()
             {
                 return false;
+            }
+
+            /// <summary>
+            /// Outputs this type in a format re-parseable for the sandbox config whitelist.
+            /// </summary>
+            public virtual string? WhitelistToString()
+            {
+                return ToString();
             }
         }
 
@@ -74,17 +76,8 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeParsed : MType
+        internal sealed record MTypeParsed(string FullName, MTypeParsed? NestedParent = null) : MType
         {
-            public readonly string FullName;
-            public readonly MTypeParsed? NestedParent;
-
-            public MTypeParsed(string fullName, MTypeParsed? nestedParent = null)
-            {
-                FullName = fullName;
-                NestedParent = nestedParent;
-            }
-
             public override string ToString()
             {
                 return NestedParent != null ? $"{NestedParent}/{FullName}" : FullName;
@@ -122,32 +115,10 @@ namespace Robust.Shared.ContentPack
                         return false;
                 }
             }
-
-            private bool Equals(MTypeParsed other)
-            {
-                return FullName == other.FullName;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return ReferenceEquals(this, obj) || obj is MTypeParsed other && Equals(other);
-            }
-
-            public override int GetHashCode()
-            {
-                return FullName.GetHashCode();
-            }
         }
 
-        internal sealed class MTypePrimitive : MType
+        internal sealed record MTypePrimitive(PrimitiveTypeCode TypeCode) : MType
         {
-            public readonly PrimitiveTypeCode TypeCode;
-
-            public MTypePrimitive(PrimitiveTypeCode typeCode)
-            {
-                TypeCode = typeCode;
-            }
-
             public override string ToString()
             {
                 return TypeCode switch
@@ -166,6 +137,7 @@ namespace Robust.Shared.ContentPack
                     PrimitiveTypeCode.Single => "float32",
                     PrimitiveTypeCode.Double => "float64",
                     PrimitiveTypeCode.String => "string",
+                    // ReSharper disable once StringLiteralTypo
                     PrimitiveTypeCode.TypedReference => "typedref",
                     PrimitiveTypeCode.IntPtr => "native int",
                     PrimitiveTypeCode.UIntPtr => "unsigned native int",
@@ -174,14 +146,33 @@ namespace Robust.Shared.ContentPack
                 };
             }
 
-            public override bool Equals(object? obj)
+            public override string WhitelistToString()
             {
-                return obj is MTypePrimitive prim && prim.TypeCode == TypeCode;
-            }
-
-            public override int GetHashCode()
-            {
-                return (int) TypeCode;
+                return TypeCode switch
+                {
+                    PrimitiveTypeCode.Void => "void",
+                    PrimitiveTypeCode.Boolean => "bool",
+                    PrimitiveTypeCode.Char => "char",
+                    PrimitiveTypeCode.SByte => "sbyte",
+                    PrimitiveTypeCode.Byte => "byte",
+                    PrimitiveTypeCode.Int16 => "short",
+                    PrimitiveTypeCode.UInt16 => "ushort",
+                    PrimitiveTypeCode.Int32 => "int",
+                    PrimitiveTypeCode.UInt32 => "uint",
+                    PrimitiveTypeCode.Int64 => "long",
+                    PrimitiveTypeCode.UInt64 => "ulong",
+                    PrimitiveTypeCode.Single => "float",
+                    PrimitiveTypeCode.Double => "double",
+                    PrimitiveTypeCode.String => "string",
+                    // ReSharper disable once StringLiteralTypo
+                    PrimitiveTypeCode.TypedReference => "typedref",
+                    // ReSharper disable once StringLiteralTypo
+                    PrimitiveTypeCode.IntPtr => "nint",
+                    // ReSharper disable once StringLiteralTypo
+                    PrimitiveTypeCode.UIntPtr => "unint",
+                    PrimitiveTypeCode.Object => "object",
+                    _ => "???"
+                };
             }
 
             public override bool WhitelistEquals(MType other)
@@ -190,23 +181,16 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeSZArray : MType
+        internal sealed record MTypeSZArray(MType ElementType) : MType
         {
-            public readonly MType ElementType;
-
-            public MTypeSZArray(MType elementType)
-            {
-                ElementType = elementType;
-            }
-
-            public override IEnumerable<MType> GetUsedTypes()
-            {
-                return new[] {ElementType};
-            }
-
             public override string ToString()
             {
                 return $"{ElementType}[]";
+            }
+
+            public override string WhitelistToString()
+            {
+                return $"{ElementType.WhitelistToString()}[]";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -215,25 +199,16 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeArray : MType
+        internal sealed record MTypeArray(MType ElementType, ArrayShape Shape) : MType
         {
-            public readonly MType ElementType;
-            public readonly ArrayShape Shape;
-
-            public MTypeArray(MType elementType, ArrayShape shape)
-            {
-                ElementType = elementType;
-                Shape = shape;
-            }
-
-            public override IEnumerable<MType> GetUsedTypes()
-            {
-                return new[] {ElementType};
-            }
-
             public override string ToString()
             {
                 return $"{ElementType}[TODO]";
+            }
+
+            public override string WhitelistToString()
+            {
+                return $"{ElementType.WhitelistToString()}[TODO]";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -252,23 +227,16 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeByRef : MType
+        internal sealed record MTypeByRef(MType ElementType) : MType
         {
-            public readonly MType ElementType;
-
-            public MTypeByRef(MType elementType)
-            {
-                ElementType = elementType;
-            }
-
-            public override IEnumerable<MType> GetUsedTypes()
-            {
-                return new[] {ElementType};
-            }
-
             public override string ToString()
             {
                 return $"{ElementType}&";
+            }
+
+            public override string WhitelistToString()
+            {
+                return $"ref {ElementType.WhitelistToString()}";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -277,23 +245,16 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypePointer : MType
+        internal sealed record MTypePointer(MType ElementType) : MType
         {
-            public MType ElementType { get; }
-
-            public MTypePointer(MType elementType)
-            {
-                ElementType = elementType;
-            }
-
-            public override IEnumerable<MType> GetUsedTypes()
-            {
-                return new[] {ElementType};
-            }
-
             public override string ToString()
             {
-                return $"{base.ToString()}*";
+                return $"{ElementType}*";
+            }
+
+            public override string WhitelistToString()
+            {
+                return $"{ElementType.WhitelistToString()}*";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -302,30 +263,16 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeGeneric : MType
+        internal sealed record MTypeGeneric(MType GenericType, ImmutableArray<MType> TypeArguments) : MType
         {
-            public MType GenericType { get; }
-            public ImmutableArray<MType> TypeArguments { get; }
-
-            public MTypeGeneric(MType genericType, ImmutableArray<MType> typeArguments)
-            {
-                GenericType = genericType;
-                TypeArguments = typeArguments;
-            }
-
-            public override IEnumerable<MType> GetUsedTypes()
-            {
-                yield return GenericType;
-
-                foreach (var typeArgument in TypeArguments)
-                {
-                    yield return typeArgument;
-                }
-            }
-
             public override string ToString()
             {
                 return $"{GenericType}<{string.Join(", ", TypeArguments)}>";
+            }
+
+            public override string WhitelistToString()
+            {
+                return $"{GenericType.WhitelistToString()}<{string.Join(", ", TypeArguments.Select(t => t.WhitelistToString()))}>";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -354,26 +301,16 @@ namespace Robust.Shared.ContentPack
                 return GenericType.WhitelistEquals(generic.GenericType);
             }
 
-            public override bool IsCoreTypeDefined()
+            public bool Equals(MTypeGeneric? otherGeneric)
             {
-                return GenericType.IsCoreTypeDefined();
-            }
-
-            private bool Equals(MTypeGeneric other)
-            {
-                return GenericType.Equals(other.GenericType) && TypeArguments.SequenceEqual(other.TypeArguments);
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return obj is MTypeGeneric other && Equals(other);
+                return otherGeneric != null && GenericType.Equals(otherGeneric.GenericType) &&
+                       TypeArguments.SequenceEqual(otherGeneric.TypeArguments);
             }
 
             public override int GetHashCode()
             {
                 var hc = new HashCode();
                 hc.Add(GenericType);
-                hc.Add(TypeArguments.Length);
                 foreach (var typeArg in TypeArguments)
                 {
                     hc.Add(typeArg);
@@ -381,21 +318,15 @@ namespace Robust.Shared.ContentPack
 
                 return hc.ToHashCode();
             }
+
+            public override bool IsCoreTypeDefined()
+            {
+                return GenericType.IsCoreTypeDefined();
+            }
         }
 
-        internal sealed class MTypeDefined : MType
+        internal sealed record MTypeDefined(string Name, string? Namespace, MTypeDefined? Enclosing) : MType
         {
-            public string Name { get; }
-            public string? Namespace { get; }
-            public MTypeDefined? Enclosing { get; }
-
-            public MTypeDefined(string name, string? ns, MTypeDefined? enclosing)
-            {
-                Name = name;
-                Namespace = ns;
-                Enclosing = enclosing;
-            }
-
             public override string ToString()
             {
                 var name = Namespace != null ? $"{Namespace}.{Name}" : Name;
@@ -414,29 +345,26 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed class MTypeReferenced : MType
+        internal sealed record MTypeReferenced(MResScope ResolutionScope, string Name, string? Namespace) : MType
         {
-            public MResScope ResolutionScope { get; }
-            public string Name { get; }
-            public string? Namespace { get; }
-
-            public MTypeReferenced(MResScope resolutionScope, string name, string? @namespace)
-            {
-                ResolutionScope = resolutionScope;
-                Name = name;
-                Namespace = @namespace;
-            }
-
             public override string ToString()
             {
                 if (Namespace == null)
                 {
                     return $"{ResolutionScope}{Name}";
                 }
-                else
+
+                return $"{ResolutionScope}{Namespace}.{Name}";
+            }
+
+            public override string WhitelistToString()
+            {
+                if (Namespace == null)
                 {
-                    return $"{ResolutionScope}{Namespace}.{Name}";
+                    return Name;
                 }
+
+                return $"{Namespace}.{Name}";
             }
 
             public override bool WhitelistEquals(MType other)
@@ -453,127 +381,63 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal abstract class MResScope
+        internal abstract record MResScope
         {
         }
 
-        internal sealed class MResScopeType : MResScope
+        internal sealed record MResScopeType(MType Type) : MResScope
         {
-            public MType Type { get; }
-
-            public MResScopeType(MType type)
-            {
-                Type = type;
-            }
-
             public override string ToString()
             {
                 return $"{Type}/";
             }
         }
 
-        internal sealed class MResScopeAssembly : MResScope
+        internal sealed record MResScopeAssembly(string Name) : MResScope
         {
-            public string Name { get; }
-
-            public MResScopeAssembly(string name)
-            {
-                Name = name;
-            }
-
             public override string ToString()
             {
                 return $"[{Name}]";
             }
         }
 
-        internal sealed class MTypeGenericTypePlaceHolder : MType
+        internal sealed record MTypeGenericTypePlaceHolder(int Index) : MType
         {
-            public int Index { get; }
-
-            public MTypeGenericTypePlaceHolder(int index)
-            {
-                Index = index;
-            }
-
             public override string ToString()
             {
                 return $"!{Index}";
             }
 
-            private bool Equals(MTypeGenericTypePlaceHolder other)
-            {
-                return Index == other.Index;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return ReferenceEquals(this, obj) || obj is MTypeGenericTypePlaceHolder other && Equals(other);
-            }
-
             public override bool WhitelistEquals(MType other)
             {
                 return Equals(other);
             }
-
-            public override int GetHashCode()
-            {
-                return Index;
-            }
         }
 
-        internal sealed class MTypeGenericMethodPlaceHolder : MType
+        internal sealed record MTypeGenericMethodPlaceHolder(int Index) : MType
         {
-            public int Index { get; }
-
-            public MTypeGenericMethodPlaceHolder(int index)
-            {
-                Index = index;
-            }
-
             public override string ToString()
             {
                 return $"!!{Index}";
             }
 
-            private bool Equals(MTypeGenericMethodPlaceHolder other)
-            {
-                return Index == other.Index;
-            }
-
-            public override bool Equals(object? obj)
-            {
-                return ReferenceEquals(this, obj) || obj is MTypeGenericMethodPlaceHolder other && Equals(other);
-            }
-
             public override bool WhitelistEquals(MType other)
             {
                 return Equals(other);
             }
-
-            public override int GetHashCode()
-            {
-                return Index;
-            }
         }
 
-        internal sealed class MTypeModified : MType
+        internal sealed record MTypeModified(MType UnmodifiedType, MType ModifierType, bool Required) : MType
         {
-            public MType UnmodifiedType { get; }
-            public MType ModifierType { get; }
-            public bool Required { get; }
-
-            public MTypeModified(MType unmodifiedType, MType modifierType, bool required)
-            {
-                UnmodifiedType = unmodifiedType;
-                ModifierType = modifierType;
-                Required = required;
-            }
-
             public override string ToString()
             {
                 var modName = Required ? "modreq" : "modopt";
                 return $"{UnmodifiedType} {modName}({ModifierType})";
+            }
+
+            public override string? WhitelistToString()
+            {
+                return UnmodifiedType.WhitelistToString();
             }
 
             public override bool WhitelistEquals(MType other)

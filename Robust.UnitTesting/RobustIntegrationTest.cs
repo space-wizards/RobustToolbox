@@ -343,11 +343,12 @@ namespace Robust.UnitTesting
                         IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
                     }
 
+                    var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
+
                     if (_options != null)
                     {
                         _options.BeforeStart?.Invoke();
-                        IoCManager.Resolve<IConfigurationManager>()
-                            .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                        cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
                         if (_options.ExtraPrototypes != null)
                         {
@@ -356,8 +357,7 @@ namespace Robust.UnitTesting
                         }
                     }
 
-                    IoCManager.Resolve<IConfigurationManager>()
-                        .OverrideConVars(new []{("log.runtimelog", "false")});
+                    cfg.OverrideConVars(new []{("log.runtimelog", "false")});
 
                     if (server.Start(() => new TestLogHandler("SERVER")))
                     {
@@ -438,7 +438,7 @@ namespace Robust.UnitTesting
                     if (_options != null)
                     {
                         _options.BeforeStart?.Invoke();
-                        IoCManager.Resolve<IConfigurationManager>()
+                        IoCManager.Resolve<IConfigurationManagerInternal>()
                             .OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
 
                         if (_options.ExtraPrototypes != null)

@@ -62,11 +62,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            warning ??= $"Entity {entity} " +
-                        (entity.Prototype == null
-                            ? ""
-                            : $"with prototype id {entity.Prototype.ID} ")
-                        + $"at {entity.Transform.MapPosition} did not have a {nameof(T)}";
+            warning ??= $"Entity {entity} at {entity.Transform.MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 
@@ -92,11 +88,7 @@ namespace Robust.Shared.GameObjects
                 return component;
             }
 
-            warning ??= $"Entity {entity} " +
-                        (entity.Prototype == null
-                            ? ""
-                            : $"with prototype id {entity.Prototype.ID} ")
-                        + $"at {entity.Transform.MapPosition} did not have a {nameof(T)}";
+            warning ??= $"Entity {entity} at {entity.Transform.MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 

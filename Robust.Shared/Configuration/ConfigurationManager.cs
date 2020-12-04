@@ -87,9 +87,11 @@ namespace Robust.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
-                    _configVars.Add(tablePath, cVar);
+                    cfgVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
+                    _configVars.Add(tablePath, cfgVar);
                 }
+
+                cfgVar.ConfigModified = true;
             }
         }
 
@@ -106,11 +108,8 @@ namespace Robust.Shared.Configuration
             {
                 var tblRoot = Toml.Create();
 
-                foreach (var kvCVar in _configVars)
+                foreach (var (name, cVar) in _configVars)
                 {
-                    var cVar = kvCVar.Value;
-                    var name = kvCVar.Key;
-
                     var value = cVar.Value;
                     if (value == null && cVar.Registered)
                     {
@@ -120,6 +119,12 @@ namespace Robust.Shared.Configuration
                     if (value == null)
                     {
                         Logger.ErrorS("cfg", $"CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    if (!cVar.ConfigModified &&
+                        (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
+                    {
                         continue;
                     }
 
@@ -458,6 +463,12 @@ namespace Robust.Shared.Configuration
             ///     Has this CVar been registered in code?
             /// </summary>
             public bool Registered { get; set; }
+
+            /// <summary>
+            ///     Was the CVar present in the config file?
+            ///     If so we need to always re-save it even if it's not ARCHIVE.
+            /// </summary>
+            public bool ConfigModified;
 
             /// <summary>
             ///     Invoked when the value of this CVar is changed.

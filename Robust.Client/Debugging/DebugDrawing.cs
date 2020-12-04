@@ -178,7 +178,7 @@ namespace Robust.Client.Debugging
 
                     foreach (var shape in physBody.PhysicsShapes)
                     {
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold, transform.WorldRotation);
+                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

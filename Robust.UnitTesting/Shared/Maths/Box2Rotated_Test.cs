@@ -27,7 +27,7 @@ namespace Robust.UnitTesting.Shared.Maths
                 var nextbox = Boxes1[next];
 
                 var rotatedBox = new Box2Rotated(box, angle);
-                Assert.Equals(rotatedBox.CalcBoundingBox(), nextbox);
+                Assert.That(nextbox, Is.EqualTo(rotatedBox.CalcBoundingBox()));
                 angle += Angle.FromDegrees(90);
             }
         }

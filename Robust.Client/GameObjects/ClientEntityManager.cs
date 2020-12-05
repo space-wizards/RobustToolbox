@@ -58,8 +58,8 @@ namespace Robust.Client.GameObjects
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState) es.ComponentStates
-                            .FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        var metaState = (MetaDataComponentState?) es.ComponentStates
+                            ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
                         if (metaState == null)
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
@@ -223,7 +223,7 @@ namespace Robust.Client.GameObjects
 
         protected override EntityUid GenerateEntityUid()
         {
-            return new EntityUid(_nextClientEntityUid++);
+            return new(_nextClientEntityUid++);
         }
 
         private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityState? curState,

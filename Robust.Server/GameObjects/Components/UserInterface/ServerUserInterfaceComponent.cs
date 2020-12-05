@@ -26,7 +26,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
-            new Dictionary<object, BoundUserInterface>();
+            new();
 
         /// <summary>
         ///     Enumeration of all the interfaces this component provides.
@@ -112,13 +112,13 @@ namespace Robust.Server.GameObjects.Components.UserInterface
 
         public object UiKey { get; }
         public ServerUserInterfaceComponent Owner { get; }
-        private readonly HashSet<IPlayerSession> _subscribedSessions = new HashSet<IPlayerSession>();
+        private readonly HashSet<IPlayerSession> _subscribedSessions = new();
         private BoundUserInterfaceState? _lastState;
 
         private bool _stateDirty;
 
         private readonly Dictionary<IPlayerSession, BoundUserInterfaceState> _playerStateOverrides =
-            new Dictionary<IPlayerSession, BoundUserInterfaceState>();
+            new();
 
         /// <summary>
         ///     All of the sessions currently subscribed to this UserInterface.

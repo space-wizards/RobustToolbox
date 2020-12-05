@@ -73,5 +73,28 @@ namespace Robust.Shared.Utility
                 return TexturePath.GetHashCode();
             }
         }
+
+        [Serializable, NetSerializable]
+        public sealed class EntityPrototype : SpriteSpecifier
+        {
+            public readonly string EntityPrototypeId;
+
+            public EntityPrototype(string entityPrototypeId)
+            {
+                EntityPrototypeId = entityPrototypeId;
+            }
+
+            public override bool Equals(object? obj)
+            {
+                if (obj is EntityPrototype prototypeIcon)
+                    return EntityPrototypeId == prototypeIcon.EntityPrototypeId;
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return EntityPrototypeId.GetHashCode();
+            }
+        }
     }
 }

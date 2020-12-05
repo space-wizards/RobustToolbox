@@ -11,7 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     public class TabContainer : Container
     {
         public static readonly AttachedProperty<bool> TabVisibleProperty = AttachedProperty<bool>.Create("TabVisible", typeof(TabContainer), true);
-        public static readonly AttachedProperty<string> TabTitleProperty = AttachedProperty<string>.Create("TabTitle", typeof(TabContainer));
+        public static readonly AttachedProperty<string?> TabTitleProperty = AttachedProperty<string?>.CreateNull("TabTitle", typeof(TabContainer));
 
         public const string StylePropertyTabStyleBox = "tab-stylebox";
         public const string StylePropertyTabStyleBoxInactive = "tab-stylebox-inactive";
@@ -80,7 +80,7 @@ namespace Robust.Client.UserInterface.Controls
             return title ?? control.Name ?? Loc.GetString("No title");
         }
 
-        public static string GetTabTitle(Control control)
+        public static string? GetTabTitle(Control control)
         {
             return control.GetValue(TabTitleProperty);
         }

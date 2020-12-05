@@ -16,10 +16,10 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             ((Box2) default).Enlarged(1), //2x2 square
             ((Box2) default).Enlarged(2), //4x4 square
-            new Box2(-3, 3, -3, 3), // point off to the bottom left
-            new Box2(-3, -3, -3, -3), // point off to the top left
-            new Box2(3, 3, 3, 3), // point off to the bottom right
-            new Box2(3, -3, 3, -3), // point off to the top right
+            new(-3, 3, -3, 3), // point off to the bottom left
+            new(-3, -3, -3, -3), // point off to the top left
+            new(3, 3, 3, 3), // point off to the bottom right
+            new(3, -3, 3, -3), // point off to the top right
             ((Box2) default).Enlarged(1), //2x2 square
             ((Box2) default).Enlarged(2), //4x4 square
             ((Box2) default).Enlarged(1), //2x2 square
@@ -29,10 +29,10 @@ namespace Robust.UnitTesting.Shared.Physics
             ((Box2) default).Enlarged(1), //2x2 square
             ((Box2) default).Enlarged(2), //4x4 square
             ((Box2) default).Enlarged(3), //6x6 square
-            new Box2(-3, 3, -3, 3), // point off to the bottom left
-            new Box2(-3, -3, -3, -3), // point off to the top left
-            new Box2(3, 3, 3, 3), // point off to the bottom right
-            new Box2(3, -3, 3, -3), // point off to the top right
+            new(-3, 3, -3, 3), // point off to the bottom left
+            new(-3, -3, -3, -3), // point off to the top left
+            new(3, 3, 3, 3), // point off to the bottom right
+            new(3, -3, 3, -3), // point off to the top right
         };
 
         private static Box2[] aabbs2 =
@@ -40,18 +40,18 @@ namespace Robust.UnitTesting.Shared.Physics
             ((Box2) default).Enlarged(3), //6x6 square
             ((Box2) default).Enlarged(1), //2x2 square
             ((Box2) default).Enlarged(2), //4x4 square
-            new Box2(-3, 3, -3, 3), // point off to the bottom left
-            new Box2(-3, -3, -3, -3), // point off to the top left
-            new Box2(3, 3, 3, 3), // point off to the bottom right
-            new Box2(3, -3, 3, -3), // point off to the top right
-            new Box2(-3, 3, -3, 3), // point off to the bottom left
-            new Box2(-3, -3, -3, -3), // point off to the top left
-            new Box2(3, 3, 3, 3), // point off to the bottom right
-            new Box2(3, -3, 3, -3), // point off to the top right
-            new Box2(-3, 3, -3, 3), // point off to the bottom left
-            new Box2(-3, -3, -3, -3), // point off to the top left
-            new Box2(3, 3, 3, 3), // point off to the bottom right
-            new Box2(3, -3, 3, -3), // point off to the top right
+            new(-3, 3, -3, 3), // point off to the bottom left
+            new(-3, -3, -3, -3), // point off to the top left
+            new(3, 3, 3, 3), // point off to the bottom right
+            new(3, -3, 3, -3), // point off to the top right
+            new(-3, 3, -3, 3), // point off to the bottom left
+            new(-3, -3, -3, -3), // point off to the top left
+            new(3, 3, 3, 3), // point off to the bottom right
+            new(3, -3, 3, -3), // point off to the top right
+            new(-3, 3, -3, 3), // point off to the bottom left
+            new(-3, -3, -3, -3), // point off to the top left
+            new(3, 3, 3, 3), // point off to the bottom right
+            new(3, -3, 3, -3), // point off to the top right
             ((Box2) default).Enlarged(2), //4x4 square
             ((Box2) default).Enlarged(1), //2x2 square
             ((Box2) default).Enlarged(2), //4x4 square

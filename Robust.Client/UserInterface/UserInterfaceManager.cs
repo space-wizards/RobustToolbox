@@ -73,7 +73,7 @@ namespace Robust.Client.UserInterface
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
-        private readonly List<Control> _modalStack = new List<Control>();
+        private readonly List<Control> _modalStack = new();
 
         private bool _rendering = true;
         private float _tooltipTimer;
@@ -83,8 +83,8 @@ namespace Robust.Client.UserInterface
         private bool showingTooltip;
         private const float TooltipDelay = 1;
 
-        private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
-        private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+        private readonly Queue<Control> _styleUpdateQueue = new();
+        private readonly Queue<Control> _layoutUpdateQueue = new();
         private Stylesheet? _stylesheet;
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;

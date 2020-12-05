@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics
 
         public static explicit operator ClydeHandle(long x)
         {
-            return new ClydeHandle(x);
+            return new(x);
         }
 
         public static explicit operator long(ClydeHandle h)

@@ -10,8 +10,8 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
-        private List<ButtonData> _buttonData = new List<ButtonData>();
-        private Dictionary<int, int> _idMap = new Dictionary<int, int>();
+        private List<ButtonData> _buttonData = new();
+        private Dictionary<int, int> _idMap = new();
         private Popup _popup;
         private VBoxContainer _popupVBox;
         private Label _label;

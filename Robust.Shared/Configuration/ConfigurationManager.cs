@@ -12,10 +12,10 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    public class ConfigurationManager : IConfigurationManagerInternal
+    internal sealed class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars = new Dictionary<string, ConfigVar>();
+        private readonly Dictionary<string, ConfigVar> _configVars = new();
         private string? _configFile;
         private bool _isServer;
 
@@ -80,6 +80,14 @@ namespace Robust.Shared.Configuration
                 // if the CVar has already been registered
                 if (_configVars.TryGetValue(tablePath, out var cfgVar))
                 {
+                    if ((cfgVar.Flags & CVar.SECURE) != 0)
+                    {
+                        // DO NOT read SECURE CVars.
+                        // client config is in a location content can access via the user data API.
+                        // Basically all secure CVars are something
+                        // the launcher should be passing in via env vars anyways.
+                        return;
+                    }
                     // overwrite the value with the saved one
                     cfgVar.Value = TypeConvert(obj);
                     cfgVar.ValueChanged?.Invoke(cfgVar.Value);
@@ -87,9 +95,11 @@ namespace Robust.Shared.Configuration
                 else
                 {
                     //or add another unregistered CVar
-                    var cVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
-                    _configVars.Add(tablePath, cVar);
+                    cfgVar = new ConfigVar(tablePath, null, CVar.NONE) { Value = TypeConvert(obj) };
+                    _configVars.Add(tablePath, cfgVar);
                 }
+
+                cfgVar.ConfigModified = true;
             }
         }
 
@@ -106,11 +116,8 @@ namespace Robust.Shared.Configuration
             {
                 var tblRoot = Toml.Create();
 
-                foreach (var kvCVar in _configVars)
+                foreach (var (name, cVar) in _configVars)
                 {
-                    var cVar = kvCVar.Value;
-                    var name = kvCVar.Key;
-
                     var value = cVar.Value;
                     if (value == null && cVar.Registered)
                     {
@@ -120,6 +127,12 @@ namespace Robust.Shared.Configuration
                     if (value == null)
                     {
                         Logger.ErrorS("cfg", $"CVar {name} has no value or default value, was the default value registered as null?");
+                        continue;
+                    }
+
+                    if (!cVar.ConfigModified &&
+                        (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
+                    {
                         continue;
                     }
 
@@ -173,7 +186,7 @@ namespace Robust.Shared.Configuration
             }
             catch (Exception e)
             {
-                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e.Message}");
+                Logger.WarningS("cfg", $"Cannot save the config file '{_configFile}'.\n {e}");
             }
         }
 
@@ -293,14 +306,14 @@ namespace Robust.Shared.Configuration
             //TODO: Make flags work, required non-derpy net system.
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
             {
-                if (!Equals(cVar.Value, value))
+                if (!Equals(cVar.OverrideValueParsed ?? cVar.Value, value))
                 {
-                    cVar.Value = value;
-                    cVar.ValueChanged?.Invoke(value);
-
-                    // Setting an override value just turns off the override, basically.
+                    // Setting an overriden var just turns off the override, basically.
                     cVar.OverrideValue = null;
                     cVar.OverrideValueParsed = null;
+
+                    cVar.Value = value;
+                    cVar.ValueChanged?.Invoke(value);
                 }
             }
             else
@@ -458,6 +471,12 @@ namespace Robust.Shared.Configuration
             ///     Has this CVar been registered in code?
             /// </summary>
             public bool Registered { get; set; }
+
+            /// <summary>
+            ///     Was the CVar present in the config file?
+            ///     If so we need to always re-save it even if it's not ARCHIVE.
+            /// </summary>
+            public bool ConfigModified;
 
             /// <summary>
             ///     Invoked when the value of this CVar is changed.

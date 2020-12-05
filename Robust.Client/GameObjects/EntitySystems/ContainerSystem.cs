@@ -7,7 +7,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 {
     public class ContainerSystem : EntitySystem
     {
-        private readonly HashSet<IEntity> _updateQueue = new HashSet<IEntity>();
+        private readonly HashSet<IEntity> _updateQueue = new();
 
         public override void Initialize()
         {

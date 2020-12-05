@@ -94,12 +94,6 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Start playing a midi file.
         /// </summary>
-        /// <param name="filename">Path to the midi file</param>
-        bool OpenMidi(string filename);
-
-        /// <summary>
-        ///     Start playing a midi file.
-        /// </summary>
         /// <param name="buffer">Bytes of the midi file</param>
         bool OpenMidi(ReadOnlySpan<byte> buffer);
 
@@ -193,7 +187,7 @@ namespace Robust.Client.Audio.Midi
         private bool _loopMidi = false;
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
-        private readonly object _playerStateLock = new object();
+        private readonly object _playerStateLock = new();
         private SequencerClientId _synthRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         public bool Disposed { get; private set; } = false;
@@ -295,11 +289,6 @@ namespace Robust.Client.Audio.Midi
 
             _driver = new MidiDriver(_settings, MidiDriverEventHandler);
             return true;
-        }
-
-        public bool OpenMidi(string filename)
-        {
-            return OpenMidi(File.ReadAllBytes(filename));
         }
 
         public bool OpenMidi(ReadOnlySpan<byte> buffer)

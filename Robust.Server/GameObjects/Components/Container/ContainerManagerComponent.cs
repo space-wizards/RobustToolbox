@@ -19,7 +19,7 @@ namespace Robust.Server.GameObjects.Components.Container
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
-        private readonly Dictionary<string, IContainer> EntityContainers = new Dictionary<string, IContainer>();
+        private readonly Dictionary<string, IContainer> EntityContainers = new();
         private Dictionary<string, List<EntityUid>>? _entitiesWaitingResolve;
 
         [ViewVariables] private IEnumerable<IContainer> _allContainers => EntityContainers.Values;
@@ -88,8 +88,10 @@ namespace Robust.Server.GameObjects.Components.Container
 
         public new AllContainersEnumerable GetAllContainers()
         {
-            return new AllContainersEnumerable(this);
+            return new(this);
         }
+
+
 
         protected override IEnumerable<IContainer> GetAllContainersImpl()
         {
@@ -268,7 +270,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
         private static ContainerManagerComponentState.ContainerData DataFor(IContainer container)
         {
-            return new ContainerManagerComponentState.ContainerData
+            return new()
             {
                 ContainedEntities = container.ContainedEntities.Select(e => e.Uid).ToArray(),
                 ShowContents = container.ShowContents,
@@ -305,7 +307,7 @@ namespace Robust.Server.GameObjects.Components.Container
 
             public AllContainersEnumerator GetEnumerator()
             {
-                return new AllContainersEnumerator(_manager);
+                return new(_manager);
             }
 
             IEnumerator<IContainer> IEnumerable<IContainer>.GetEnumerator()

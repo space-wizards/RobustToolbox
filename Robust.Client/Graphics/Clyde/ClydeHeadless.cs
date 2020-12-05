@@ -54,6 +54,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public uint? GetX11WindowId()
+        {
+            return null;
+        }
+
         public override void SetWindowTitle(string title)
         {
             // Nada.
@@ -155,13 +160,13 @@ namespace Robust.Client.Graphics.Clyde
         public AudioStream LoadAudioOggVorbis(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
         public AudioStream LoadAudioWav(Stream stream, string? name = null)
         {
             // TODO: Might wanna actually load this so the length gets reported correctly.
-            return new AudioStream(default, default, 1, name);
+            return new(default, default, 1, name);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -184,6 +189,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void SetMasterVolume(float newVolume)
+        {
+            // Nada.
+        }
+
         private class DummyCursor : ICursor
         {
             public void Dispose()
@@ -194,7 +204,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private class DummyAudioSource : IClydeAudioSource
         {
-            public static DummyAudioSource Instance { get; } = new DummyAudioSource();
+            public static DummyAudioSource Instance { get; } = new();
 
             public bool IsPlaying => default;
             public bool IsLooping { get; set; }
@@ -247,7 +257,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyBufferedAudioSource : DummyAudioSource, IClydeBufferedAudioSource
         {
-            public new static DummyBufferedAudioSource Instance { get; } = new DummyBufferedAudioSource();
+            public new static DummyBufferedAudioSource Instance { get; } = new();
             public int SampleRate { get; set; } = 0;
 
             public void WriteBuffer(int handle, ReadOnlySpan<ushort> data)
@@ -411,7 +421,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class DummyDebugInfo : IClydeDebugInfo
         {
-            public OpenGLVersion OpenGLVersion { get; } = new OpenGLVersion(3, 3, isES: false, isCore: true);
+            public OpenGLVersion OpenGLVersion { get; } = new(3, 3, isES: false, isCore: true);
             public string Renderer => "ClydeHeadless";
             public string Vendor => "Space Wizards Federation";
             public string VersionString { get; } = $"3.3.0 WIZARDS {typeof(DummyDebugInfo).Assembly.GetName().Version}";

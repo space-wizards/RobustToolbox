@@ -5,20 +5,13 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal;
-using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
+using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -29,34 +22,26 @@ using Robust.Shared.Log;
 
 namespace Robust.Server.ServerStatus
 {
-
-    internal sealed partial class StatusHost
-        : IStatusHost, IDisposable,
-            IHttpApplication<HttpContext>,
-            IApplicationLifetime,
-            ILoggerFactory
+    internal sealed partial class StatusHost : IStatusHost, IDisposable
     {
-
         private const string Sawmill = "statushost";
-
-        private static readonly JsonSerializer JsonSerializer = new JsonSerializer();
-
-        private readonly List<StatusHostHandler> _handlers = new List<StatusHostHandler>();
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
 
-        private KestrelServer _server = default!;
+        private static readonly JsonSerializer JsonSerializer = new();
+        private readonly List<StatusHostHandler> _handlers = new();
+        private HttpListener? _listener;
+        private TaskCompletionSource? _stopSource;
+        private ISawmill _httpSawmill = default!;
 
-        public Task ProcessRequestAsync(HttpContext context)
+        public Task ProcessRequestAsync(HttpListenerContext context)
         {
             var response = context.Response;
             var request = context.Request;
-            var method = new HttpMethod(request.Method);
-            InitHttpContextThread();
+            var method = new HttpMethod(request.HttpMethod);
 
-            Logger.InfoS(Sawmill, $"{method} {context.Request.Path} from " +
-                $"{context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}");
+            _httpSawmill.Info($"{method} {context.Request.Url?.PathAndQuery} from {request.RemoteEndPoint}");
 
             try
             {
@@ -70,16 +55,18 @@ namespace Robust.Server.ServerStatus
 
                 // No handler returned true, assume no handlers care about this.
                 // 404.
-                response.Respond("Not Found", HttpStatusCode.NotFound);
+                response.Respond(method, "Not Found", HttpStatusCode.NotFound);
             }
             catch (Exception e)
             {
-                response.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
-                Logger.ErrorS(Sawmill, $"Exception in StatusHost: {e}");
+                response.Respond(method, "Internal Server Error", HttpStatusCode.InternalServerError);
+                _httpSawmill.Error($"Exception in StatusHost: {e}");
             }
 
-            Logger.DebugS(Sawmill, $"{method} {context.Request.Path} {context.Response.StatusCode} " +
-                $"{(HttpStatusCode) context.Response.StatusCode} to {context.Connection.RemoteIpAddress}:{context.Connection.RemotePort}");
+            /*
+            _httpSawmill.Debug(Sawmill, $"{method} {context.Request.Url!.PathAndQuery} {context.Response.StatusCode} " +
+                                         $"{(HttpStatusCode) context.Response.StatusCode} to {context.Request.RemoteEndPoint}");
+                                         */
 
             return Task.CompletedTask;
         }
@@ -88,10 +75,14 @@ namespace Robust.Server.ServerStatus
 
         public event Action<JObject>? OnInfoRequest;
 
-        public void AddHandler(StatusHostHandler handler) => _handlers.Add(handler);
+        public void AddHandler(StatusHostHandler handler)
+        {
+            _handlers.Add(handler);
+        }
 
         public void Start()
         {
+            _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
             RegisterCVars();
 
             if (!_configurationManager.GetCVar(CVars.StatusEnabled))
@@ -99,64 +90,53 @@ namespace Robust.Server.ServerStatus
                 return;
             }
 
-            ConfigureSawmills();
-
-            _ctxFactory = CreateHttpContextFactory();
-
-            var kestrelOpts = new KestrelServerOptions
-            {
-                AllowSynchronousIO = true,
-                ApplicationSchedulingMode = SchedulingMode.ThreadPool
-            };
-
-            kestrelOpts.Listen(GetBinding());
-
-            _server = new KestrelServer(
-                Options.Create(
-                    kestrelOpts
-                ),
-                GetSocketTransportFactory(),
-                this
-            );
-
             RegisterHandlers();
 
-            _server.StartAsync(this, ApplicationStopping);
+            _stopSource = new TaskCompletionSource();
+            _listener = new HttpListener();
+            _listener.Prefixes.Add($"http://{_configurationManager.GetCVar(CVars.StatusBind)}/");
+            _listener.Start();
 
-            _syncCtx = SynchronizationContext.Current!;
-
-            if (_syncCtx == null)
-            {
-                SynchronizationContext.SetSynchronizationContext(_syncCtx = new SynchronizationContext());
-            }
+            Task.Run(ListenerThread);
         }
 
-        private IPEndPoint GetBinding()
+        // Not a real thread but whatever.
+        private async Task ListenerThread()
         {
-            var binding = _configurationManager.GetCVar(CVars.StatusBind).Split(':');
-            var ipAddrStr = binding[0];
-            if (ipAddrStr == "+" || ipAddrStr == "*")
+            var maxConnections = _configurationManager.GetCVar(CVars.StatusMaxConnections);
+            var connectionsSemaphore = new SemaphoreSlim(maxConnections, maxConnections);
+            while (true)
             {
-                ipAddrStr = "0.0.0.0";
-            }
+                var getContextTask = _listener!.GetContextAsync();
+                var task = await Task.WhenAny(getContextTask, _stopSource!.Task);
 
-            var ipAddress = IPAddress.Parse(ipAddrStr);
-            var port = int.Parse(binding[1]);
-            var ipEndPoint = new IPEndPoint(ipAddress, port);
-            return ipEndPoint;
-        }
-
-        private SocketTransportFactory GetSocketTransportFactory()
-        {
-            var transportFactory = new SocketTransportFactory(
-                Options.Create(new SocketTransportOptions
+                if (task == _stopSource.Task)
                 {
-                    IOQueueCount = 42
-                }),
-                this,
-                this
-            );
-            return transportFactory;
+                    return;
+                }
+
+                await connectionsSemaphore.WaitAsync();
+
+                // Task.Run this so it gets run on another thread pool thread.
+#pragma warning disable 4014
+                Task.Run(async () =>
+#pragma warning restore 4014
+                {
+                    try
+                    {
+                        var ctx = await getContextTask;
+                        await ProcessRequestAsync(ctx);
+                    }
+                    catch (Exception e)
+                    {
+                        _httpSawmill.Error($"Error inside ProcessRequestAsync:\n{e}");
+                    }
+                    finally
+                    {
+                        connectionsSemaphore.Release();
+                    }
+                });
+            }
         }
 
         private void RegisterCVars()
@@ -181,6 +161,17 @@ namespace Robust.Server.ServerStatus
             _configurationManager.SetCVar(CVars.BuildHashLinux, info?.Hashes.Linux ?? "");
         }
 
+        public void Dispose()
+        {
+            if (_stopSource == null)
+            {
+                return;
+            }
+
+            _stopSource.SetResult();
+            _listener!.Stop();
+        }
+
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
@@ -198,5 +189,4 @@ namespace Robust.Server.ServerStatus
             [JsonProperty("macos")] public string MacOS { get; set; } = default!;
         }
     }
-
 }

@@ -66,7 +66,6 @@ namespace Robust.Server
             IoCManager.Register<IServerEntityManagerInternal, ServerEntityManager>();
             IoCManager.Register<IServerGameStateManager, ServerGameStateManager>();
             IoCManager.Register<IServerNetManager, NetManager>();
-            IoCManager.Register<ISignalHandler, ServerSignalHandler>();
             IoCManager.Register<IStatusHost, StatusHost>();
             IoCManager.Register<ISystemConsoleManager, SystemConsoleManager>();
             IoCManager.Register<ITileDefinitionManager, TileDefinitionManager>();

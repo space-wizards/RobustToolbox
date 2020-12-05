@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface
     [PublicAPI]
     public partial class Control : IDisposable
     {
-        private readonly List<Control> _orderedChildren = new List<Control>();
+        private readonly List<Control> _orderedChildren = new();
 
         private bool _visible = true;
 
@@ -796,7 +796,7 @@ namespace Robust.Client.UserInterface
 
             public Enumerator GetEnumerator()
             {
-                return new Enumerator(Owner);
+                return new(Owner);
             }
 
             IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();

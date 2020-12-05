@@ -36,12 +36,12 @@ namespace Robust.Shared.Maths
 
         public static Vector2i ComponentMax(Vector2i a, Vector2i b)
         {
-            return new Vector2i(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
+            return new(Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
         }
 
         public static Vector2i ComponentMin(Vector2i a, Vector2i b)
         {
-            return new Vector2i(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
+            return new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y));
         }
 
         /// <summary>
@@ -79,57 +79,57 @@ namespace Robust.Shared.Maths
 
         public static Vector2i operator -(Vector2i a, Vector2i b)
         {
-            return new Vector2i(a.X - b.X, a.Y - b.Y);
+            return new(a.X - b.X, a.Y - b.Y);
         }
 
         public static Vector2i operator -(Vector2i a, int b)
         {
-            return new Vector2i(a.X - b, a.Y - b);
+            return new(a.X - b, a.Y - b);
         }
 
         public static Vector2i operator -(Vector2i a)
         {
-            return new Vector2i(-a.X, -a.Y);
+            return new(-a.X, -a.Y);
         }
 
         public static Vector2i operator +(Vector2i a, Vector2i b)
         {
-            return new Vector2i(a.X + b.X, a.Y + b.Y);
+            return new(a.X + b.X, a.Y + b.Y);
         }
 
         public static Vector2i operator +(Vector2i a, int b)
         {
-            return new Vector2i(a.X + b, a.Y + b);
+            return new(a.X + b, a.Y + b);
         }
 
         public static Vector2i operator *(Vector2i a, Vector2i b)
         {
-            return new Vector2i(a.X * b.X, a.Y * b.Y);
+            return new(a.X * b.X, a.Y * b.Y);
         }
 
         public static Vector2i operator *(Vector2i a, int scale)
         {
-            return new Vector2i(a.X * scale, a.Y * scale);
+            return new(a.X * scale, a.Y * scale);
         }
 
         public static Vector2 operator *(Vector2i a, float scale)
         {
-            return new Vector2(a.X * scale, a.Y * scale);
+            return new(a.X * scale, a.Y * scale);
         }
 
         public static Vector2i operator /(Vector2i a, Vector2i b)
         {
-            return new Vector2i(a.X / b.X, a.Y / b.Y);
+            return new(a.X / b.X, a.Y / b.Y);
         }
 
         public static Vector2i operator /(Vector2i a, int scale)
         {
-            return new Vector2i(a.X / scale, a.Y / scale);
+            return new(a.X / scale, a.Y / scale);
         }
 
         public static Vector2 operator /(Vector2i a, float scale)
         {
-            return new Vector2(a.X / scale, a.Y / scale);
+            return new(a.X / scale, a.Y / scale);
         }
 
         public static bool operator ==(Vector2i a, Vector2i b)
@@ -150,12 +150,12 @@ namespace Robust.Shared.Maths
 
         public static implicit operator Vector2(Vector2i vector)
         {
-            return new Vector2(vector.X, vector.Y);
+            return new(vector.X, vector.Y);
         }
 
         public static explicit operator Vector2i(Vector2 vector)
         {
-            return new Vector2i((int) vector.X, (int) vector.Y);
+            return new((int) vector.X, (int) vector.Y);
         }
 
         public static implicit operator Vector2i((int x, int y) tuple)

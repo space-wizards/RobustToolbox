@@ -93,7 +93,7 @@ PING: {NetManager.ServerChannel?.Ping ?? -1} ms";
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
+            return new(contents.CombinedMinimumSize.X + 10, contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

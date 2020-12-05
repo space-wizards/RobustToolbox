@@ -18,18 +18,18 @@ namespace Robust.Shared.IoC
         /// <summary>
         /// Dictionary that maps the types passed to <see cref="Resolve{T}"/> to their implementation.
         /// </summary>
-        private readonly Dictionary<Type, object> _services = new Dictionary<Type, object>();
+        private readonly Dictionary<Type, object> _services = new();
 
         /// <summary>
         /// The types interface types mapping to their registered implementations.
         /// This is pulled from to make a service if it doesn't exist yet.
         /// </summary>
-        private readonly Dictionary<Type, Type> _resolveTypes = new Dictionary<Type, Type>();
+        private readonly Dictionary<Type, Type> _resolveTypes = new();
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
         private readonly Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)> _injectorCache =
-            new Dictionary<Type, (InjectorDelegate? @delegate, object[]? services)>();
+            new();
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(bool overwrite = false)
@@ -143,7 +143,7 @@ namespace Robust.Shared.IoC
                 // Find a potential dupe by checking other registered types that have already been instantiated that have the same instance type.
                 // Can't catch ourselves because we're not instantiated.
                 // Ones that aren't yet instantiated are about to be and will find us instead.
-                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value);
+                var (type, _) = _resolveTypes.FirstOrDefault(p => _services.ContainsKey(p.Key) && p.Value == value)!;
 
                 // Interface key can't be null so since KeyValuePair<> is a struct,
                 // this effectively checks whether we found something.

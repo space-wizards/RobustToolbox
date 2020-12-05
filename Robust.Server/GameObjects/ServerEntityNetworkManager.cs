@@ -33,10 +33,10 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
 
-        private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageSequenceComparer());
+        private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
-            new Dictionary<IPlayerSession, uint>();
+            new();
 
         private bool _logLateMsgs;
 

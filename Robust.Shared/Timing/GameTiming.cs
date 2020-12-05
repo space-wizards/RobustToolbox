@@ -17,7 +17,7 @@ namespace Robust.Shared.Timing
         private const int NumFrames = 60;
 
         private readonly IStopwatch _realTimer = new Stopwatch();
-        private readonly List<long> _realFrameTimes = new List<long>(NumFrames);
+        private readonly List<long> _realFrameTimes = new(NumFrames);
         private TimeSpan _lastRealTime;
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Robust.Shared.Timing
         /// <summary>
         ///     The current simulation tick being processed.
         /// </summary>
-        public GameTick CurTick { get; set; } = new GameTick(1); // Time always starts on the first tick
+        public GameTick CurTick { get; set; } = new(1); // Time always starts on the first tick
 
         private byte _tickRate;
         private TimeSpan _tickRemainder;

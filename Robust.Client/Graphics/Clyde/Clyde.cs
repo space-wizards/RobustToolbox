@@ -68,11 +68,11 @@ namespace Robust.Client.Graphics.Clyde
         private bool _checkGLErrors;
 
         private readonly List<(ScreenshotType type, Action<Image<Rgb24>> callback)> _queuedScreenshots
-            = new List<(ScreenshotType, Action<Image<Rgb24>>)>();
+            = new();
 
         private readonly List<(uint pbo, IntPtr sync, Vector2i size, Action<Image<Rgb24>> callback)>
             _transferringScreenshots
-                = new List<(uint, IntPtr, Vector2i, Action<Image<Rgb24>> )>();
+                = new();
 
         public Clyde()
         {

@@ -38,7 +38,7 @@ namespace Robust.Client.Graphics.Drawing
         }
 
         public Vector2 MinimumSize =>
-            new Vector2(GetContentMargin(Margin.Left) + GetContentMargin(Margin.Right),
+            new(GetContentMargin(Margin.Left) + GetContentMargin(Margin.Right),
                 GetContentMargin(Margin.Top) + GetContentMargin(Margin.Bottom));
 
         public float? ContentMarginLeftOverride

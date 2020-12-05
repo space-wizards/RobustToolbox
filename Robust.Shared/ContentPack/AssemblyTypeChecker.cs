@@ -226,10 +226,16 @@ namespace Robust.Shared.ContentPack
 
                             break;
                         }
-                        case MTypeArray array:
+                        case MTypeWackyArray array:
                         {
+                            var elemType = array.ElementType;
+                            if (elemType is MTypeGeneric generic)
+                            {
+                                elemType = generic.GenericType;
+                            }
+
                             // For this kind of array we just need access to the type itself.
-                            if (!IsTypeAccessAllowed((MTypeReferenced) array.ElementType, config, out _))
+                            if (!IsTypeAccessAllowed((MTypeReferenced) elemType, config, out _))
                             {
                                 errors.Add(new SandboxError($"Access to type not allowed: {array}"));
                             }
@@ -758,7 +764,7 @@ namespace Robust.Shared.ContentPack
 
             public MType GetArrayType(MType elementType, ArrayShape shape)
             {
-                return new MTypeArray(elementType, shape);
+                return new MTypeWackyArray(elementType, shape);
             }
 
             public MType GetByReferenceType(MType elementType)

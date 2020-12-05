@@ -1,0 +1,47 @@
+﻿name: Publish Client Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.100
+
+    - name: Package client
+      run: Tools/publish_release_build.py -p windows mac linux
+
+    - name: Shuffle files around
+      run: |
+        mkdir "release/${{ github.event.inputs.version }}"
+        mv release/*.zip "release/${{ github.event.inputs.version }}"
+
+    - name: Upload files to centcomm
+      uses: appleboy/scp-action@master
+      with:
+        host: centcomm.spacestation14.io
+        username: robust-build-push
+        key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+        source: "release/${{ github.event.inputs.version }}"
+        target: "/var/lib/robust-builds/builds/"
+
+    - name: Update manifest JSON
+      uses: appleboy/ssh-action@master
+      with:
+        host: centcomm.spacestation14.io
+        username: robust-build-push
+        key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+        script: /home/robust-build-push/push.ps1 ${{ github.event.inputs.version }}
+

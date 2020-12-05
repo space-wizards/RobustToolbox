@@ -14,7 +14,7 @@ jobs:
       shell: pwsh
       run: |
         $ver = [regex]::Match($env:GITHUB_REF, "v?(.+)").Groups[1].Value
-        echo "::set-output name=version::{0}" -f $ver
+        echo ("::set-output name=version::{0}" -f $ver)
 
     - uses: actions/checkout@v2
       with:

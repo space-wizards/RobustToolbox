@@ -21,7 +21,7 @@ jobs:
         dotnet-version: 5.0.100
 
     - name: Package client
-      run: Tools/publish_release_build.py -p windows mac linux
+      run: Tools/package_client_build.py -p windows mac linux
 
     - name: Shuffle files around
       run: |

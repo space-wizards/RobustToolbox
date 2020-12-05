@@ -181,6 +181,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
+        // Normal single dimensional array with zero lower bound.
         internal sealed record MTypeSZArray(MType ElementType) : MType
         {
             public override string ToString()
@@ -199,7 +200,8 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        internal sealed record MTypeArray(MType ElementType, ArrayShape Shape) : MType
+        // Multi-dimension arrays with funny lower and upper bounds.
+        internal sealed record MTypeWackyArray(MType ElementType, ArrayShape Shape) : MType
         {
             public override string ToString()
             {
@@ -213,7 +215,7 @@ namespace Robust.Shared.ContentPack
 
             public override bool WhitelistEquals(MType other)
             {
-                return other is MTypeArray arr && ShapesEqual(Shape, arr.Shape) && ElementType.WhitelistEquals(arr);
+                return other is MTypeWackyArray arr && ShapesEqual(Shape, arr.Shape) && ElementType.WhitelistEquals(arr);
             }
 
             private static bool ShapesEqual(in ArrayShape a, in ArrayShape b)

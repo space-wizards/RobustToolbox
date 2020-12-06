@@ -16,6 +16,13 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
+// psst
+// You know ECMA-335 right? The specification for the CLI that .NET runs on?
+// Yeah, you need it to understand a lot of this code. So get a copy.
+// You know the cool thing?
+// ISO has a version that has correct PDF metadata so there's an actual table of contents.
+// Right here: https://standards.iso.org/ittf/PubliclyAvailableStandards/c058046_ISO_IEC_23271_2012(E).zip
+
 namespace Robust.Shared.ContentPack
 {
     /// <summary>
@@ -226,21 +233,11 @@ namespace Robust.Shared.ContentPack
 
                             break;
                         }
-                        case MTypeWackyArray array:
+                        case MTypeWackyArray:
                         {
-                            var elemType = array.ElementType;
-                            if (elemType is MTypeGeneric generic)
-                            {
-                                elemType = generic.GenericType;
-                            }
-
-                            // For this kind of array we just need access to the type itself.
-                            if (!IsTypeAccessAllowed((MTypeReferenced) elemType, config, out _))
-                            {
-                                errors.Add(new SandboxError($"Access to type not allowed: {array}"));
-                            }
-
-                            return; // Found
+                            // Members on arrays (not to be confused with vectors) are all fine.
+                            // See II.14.2 in ECMA-335.
+                            return;
                         }
                         default:
                         {
@@ -253,6 +250,9 @@ namespace Robust.Shared.ContentPack
 
                 if (!IsTypeAccessAllowed(baseTypeReferenced, config, out var typeCfg))
                 {
+                    // Technically this error isn't necessary since we have an earlier pass
+                    // checking all referenced types. That should have caught this
+                    // We still need the typeCfg so that's why we're checking. Might as well.
                     errors.Add(new SandboxError($"Access to type not allowed: {baseTypeReferenced}"));
                     return;
                 }

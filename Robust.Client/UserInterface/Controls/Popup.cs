@@ -11,10 +11,10 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         public event Action? OnPopupHide;
-
+        public bool AllowDrawOffScreen = false;
         private Vector2 _desiredSize;
 
-        public void Open(UIBox2? box = null, Vector2? altPos = null)
+        public void Open(UIBox2? box = null, Vector2? altPos = null, bool allowDrawOffScreen = false)
         {
             if (Visible)
             {
@@ -30,6 +30,7 @@ namespace Robust.Client.UserInterface.Controls
                 MinimumSizeChanged();
             }
 
+            AllowDrawOffScreen = allowDrawOffScreen;
             Visible = true;
             UserInterfaceManagerInternal.PushModal(this);
         }

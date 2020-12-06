@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics.Shapes
     ///     Represents a simple non-selfintersecting convex polygon.
     ///     Create a convex hull from the given array of points.
     /// </summary>
-    internal sealed class PolygonShape : Shape
+    public sealed class PolygonShape : Shape
     {
         // TODO: These are initialized in the constructor so need to mark it somehow
         private Vertices _vertices = null!;
@@ -20,7 +20,7 @@ namespace Robust.Shared.Physics.Shapes
         /// </summary>
         /// <param name="vertices">The vertices.</param>
         /// <param name="density">The density.</param>
-        internal PolygonShape(Vertices vertices, float density)
+        public PolygonShape(Vertices vertices, float density)
             : base(density)
         {
             ShapeType = ShapeType.Polygon;
@@ -44,7 +44,7 @@ namespace Robust.Shared.Physics.Shapes
             _normals = new Vertices(PhysicsSettings.MaxPolygonVertices);
         }
 
-        internal PolygonShape()
+        public PolygonShape()
             : base(0)
         {
             ShapeType = ShapeType.Polygon;
@@ -99,7 +99,7 @@ namespace Robust.Shared.Physics.Shapes
 
         public Vertices Normals => _normals;
 
-        internal override int ChildCount => 1;
+        public override int ChildCount => 1;
 
         protected override void ComputeProperties()
         {
@@ -194,7 +194,7 @@ namespace Robust.Shared.Physics.Shapes
             MassData.Inertia += MassData.Mass * (Vector2.Dot(MassData.Centroid, MassData.Centroid) - Vector2.Dot(center, center));
         }
 
-        internal override bool TestPoint(ITransformComponent transform, ref Vector2 point)
+        public override bool TestPoint(ITransformComponent transform, ref Vector2 point)
         {
             Vector2 pLocal = Complex.Divide(point - transform.WorldPosition, transform.Q);
 
@@ -210,7 +210,7 @@ namespace Robust.Shared.Physics.Shapes
             return true;
         }
 
-        internal override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
         {
             output = new RayCastOutput();
 
@@ -287,20 +287,25 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="aabb">The aabb results.</param>
         /// <param name="transform">The world transform of the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
-        internal override void ComputeAABB(out AABB aabb, ITransformComponent transform, int childIndex)
+        public override AABB ComputeAABB(PhysicsTransform transform, int childIndex)
         {
+            // TODO: This is used by the fixture to put the proxies onto the broadphase
+            // Ergo, we need to get our GRID-LOCAL AABB.
+
+            var aabb = new AABB();
+
             // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
             var vert = Vertices[0];
-            aabb.LowerBound.X = (vert.X * transform.Q.Real - vert.Y * transform.Q.Imaginary) + transform.WorldPosition.X;
-            aabb.LowerBound.Y = (vert.Y * transform.Q.Real + vert.X * transform.Q.Imaginary) + transform.WorldPosition.Y;
+            aabb.LowerBound.X = (vert.X * transform.Quarternion.Real - vert.Y * transform.Quarternion.Imaginary) + transform.Position.X;
+            aabb.LowerBound.Y = (vert.Y * transform.Quarternion.Real + vert.X * transform.Quarternion.Imaginary) + transform.Position.Y;
             aabb.UpperBound = aabb.LowerBound;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
                 // OPT: Vector2 v = Transform.Multiply(Vertices[i], ref transform);
                 vert = Vertices[i];
-                float vX = (vert.X * transform.Q.Real - vert.Y * transform.Q.Imaginary) + transform.WorldPosition.X;
-                float vY = (vert.Y * transform.Q.Real + vert.X * transform.Q.Imaginary) + transform.WorldPosition.Y;
+                float vX = (vert.X * transform.Quarternion.Real - vert.Y * transform.Quarternion.Imaginary) + transform.Position.X;
+                float vY = (vert.Y * transform.Quarternion.Real + vert.X * transform.Quarternion.Imaginary) + transform.Position.Y;
 
                 // OPT: Vector2.Min(ref aabb.LowerBound, ref v, out aabb.LowerBound);
                 // OPT: Vector2.Max(ref aabb.UpperBound, ref v, out aabb.UpperBound);
@@ -319,6 +324,7 @@ namespace Robust.Shared.Physics.Shapes
             aabb.LowerBound.Y -= Radius;
             aabb.UpperBound.X += Radius;
             aabb.UpperBound.Y += Radius;
+            return aabb;
         }
 
         public bool CompareTo(PolygonShape shape)
@@ -335,7 +341,7 @@ namespace Robust.Shared.Physics.Shapes
             return (Math.Abs(Radius - shape.Radius) < float.Epsilon && MassData == shape.MassData);
         }
 
-        internal override Shape Clone()
+        public override Shape Clone()
         {
             PolygonShape clone = new PolygonShape
             {

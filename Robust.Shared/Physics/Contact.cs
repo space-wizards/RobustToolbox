@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics
     ///     Represents a contact between 2 shapes. Even if this exists it doesn't mean that their is an overlap as
     ///     it only represents the AABB overlapping.
     /// </summary>
-    internal sealed class Contact
+    public sealed class Contact
     {
         private ContactType _contactType;
 
@@ -16,83 +16,83 @@ namespace Robust.Shared.Physics
 
         // _registers?
 
-        internal ContactEdge _nodeA = new ContactEdge();
-        internal ContactEdge _nodeB = new ContactEdge();
+        public ContactEdge _nodeA = new ContactEdge();
+        public ContactEdge _nodeB = new ContactEdge();
 
         /// <summary>
         ///     TimeOfImpact count
         /// </summary>
-        internal int _toiCount;
+        public int _toiCount;
 
         /// <summary>
         ///     TimeOfImpact TODO: Rename
         /// </summary>
-        internal float _toi;
+        public float _toi;
 
-        internal Fixture FixtureA { get; set; }
-        internal Fixture FixtureB { get; set; }
+        public Fixture FixtureA { get; set; }
+        public Fixture FixtureB { get; set; }
 
         /// <summary>
         ///     Friction of the contact.
         /// </summary>
-        internal float Friction { get; set; }
+        public float Friction { get; set; }
 
         /// <summary>
         ///     Restitution (AKA bounciness) of the contact.
         /// </summary>
-        internal float Restitution { get; set; }
+        public float Restitution { get; set; }
 
         // TODO
-        internal Manifold Manifold { get; } = default!;
+        public Manifold Manifold { get; } = default!;
 
         /// <summary>
         ///     Get / set desired tangent speed for conveyor belt behavior in m/s.
         /// </summary>
-        internal float TangentSpeed { get; set; }
+        public float TangentSpeed { get; set; }
 
         // TODO: That long-ass comment
-        internal bool Enabled { get; set; } = true;
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         ///     Get the child primitive index for FixtureA.
         /// </summary>
-        internal int ChildIndexA { get; set; }
+        public int ChildIndexA { get; set; }
 
         /// <summary>
         ///     Get the child primitive index for FixtureB.
         /// </summary>
-        internal int ChildIndexB { get; set; }
+        public int ChildIndexB { get; set; }
 
         /// <summary>
         ///     Get the next contact in the map's contact list.
         /// </summary>
-        internal Contact? Next { get; set; }
+        public Contact? Next { get; set; }
 
         /// <summary>
         ///     Get the previous contact in the map's contact list.
         /// </summary>
-        internal Contact? Previous { get; set; }
+        public Contact? Previous { get; set; }
 
         /// <summary>
         ///     Is this Contact currently touching.
         /// </summary>
-        internal bool IsTouching { get; set; }
+        public bool IsTouching { get; set; }
 
         /// <summary>
         ///     Has this contact already been added to a physics island?
         /// </summary>
-        internal bool IslandFlag { get; set; }
+        public bool IslandFlag { get; set; }
 
-        internal bool TOIFlag { get; set; }
+        public bool TOIFlag { get; set; }
 
-        internal bool FilterFlag { get; set; }
+        public bool FilterFlag { get; set; }
 
-        internal void ResetRestitution()
+        public void ResetRestitution()
         {
             throw new NotImplementedException();
         }
 
-        internal void ResetFriction()
+        public void ResetFriction()
         {
             throw new NotImplementedException();
         }
@@ -102,7 +102,7 @@ namespace Robust.Shared.Physics
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 
-        internal void GetMapManifold(out Vector2 normal, out Vector2[] points)
+        public void GetMapManifold(out Vector2 normal, out Vector2[] points)
         {
             throw new NotImplementedException();
         }
@@ -135,31 +135,31 @@ namespace Robust.Shared.Physics
         }
     }
 
-    internal sealed class ContactEdge
+    public sealed class ContactEdge
     {
         /// <summary>
         ///     Parent contact for this edge.
         /// </summary>
-        internal Contact Contact { get; set; } = default!;
+        public Contact Contact { get; set; } = default!;
 
         /// <summary>
         ///     Other body we're connected to.
         /// </summary>
-        internal IPhysBody Other { get; set; } = default!;
+        public IPhysBody Other { get; set; } = default!;
 
         /// <summary>
         ///     Next edge in our body's contact list.
         /// </summary>
-        internal ContactEdge Next { get; set; } = default!;
+        public ContactEdge Next { get; set; } = default!;
 
         /// <summary>
         ///     Previous edge in our body's contact list.
         /// </summary>
-        internal ContactEdge Previous { get; set; } = default!;
+        public ContactEdge Previous { get; set; } = default!;
 
-        internal ContactEdge() {}
+        public ContactEdge() {}
 
-        internal ContactEdge(Contact contact, IPhysBody other, ContactEdge next, ContactEdge previous)
+        public ContactEdge(Contact contact, IPhysBody other, ContactEdge next, ContactEdge previous)
         {
             Contact = contact;
             Other = other;
@@ -168,7 +168,7 @@ namespace Robust.Shared.Physics
         }
     }
 
-    internal enum ContactType
+    public enum ContactType
     {
         NotSupported = 0,
         Polygon,

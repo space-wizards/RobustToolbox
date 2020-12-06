@@ -7,7 +7,7 @@ using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics.Shapes
 {
-    internal sealed class CircleShape : Shape
+    public sealed class CircleShape : Shape
     {
         // TODO: Relative to the body's transform or...?
         /// <summary>
@@ -23,7 +23,7 @@ namespace Robust.Shared.Physics.Shapes
             }
         }
 
-        internal Vector2 _position;
+        public Vector2 _position;
 
         /// <summary>
         /// Create a new circle with the desired radius and density.
@@ -41,7 +41,7 @@ namespace Robust.Shared.Physics.Shapes
             Radius = radius; // The Radius property cache 2radius and calls ComputeProperties(). So no need to call ComputeProperties() here.
         }
 
-        internal CircleShape()
+        public CircleShape()
             : base(0)
         {
             ShapeType = ShapeType.Circle;
@@ -49,16 +49,16 @@ namespace Robust.Shared.Physics.Shapes
             _position = Vector2.Zero;
         }
 
-        internal override int ChildCount => 1;
+        public override int ChildCount => 1;
 
-        internal override bool TestPoint(ITransformComponent transform, ref Vector2 point)
+        public override bool TestPoint(ITransformComponent transform, ref Vector2 point)
         {
             var centre = transform.WorldPosition + Complex.Multiply(_position, transform.Q);
             var distance = point - centre;
             return Vector2.Dot(distance, distance) <= _2radius;
         }
 
-        internal override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
         {
             // Collision Detection in Interactive 3D Environments by Gino van den Bergen
             // From Section 3.1.2
@@ -101,7 +101,7 @@ namespace Robust.Shared.Physics.Shapes
         }
 
         // TODO: Anything World is giga sketchy when we need relative transforms
-        internal override void ComputeAABB(out AABB aabb, ITransformComponent transform, int childIndex)
+        public override void ComputeAABB(out AABB aabb, ITransformComponent transform, int childIndex)
         {
             // TODO: Optimise
             var pX = (_position.X * transform.Q.Real - _position.Y * transform.Q.Imaginary) + transform.WorldPosition.X;
@@ -134,7 +134,7 @@ namespace Robust.Shared.Physics.Shapes
             return (Math.Abs(Radius - shape.Radius) < float.Epsilon && Position == shape.Position);
         }
 
-        internal override Shape Clone()
+        public override Shape Clone()
         {
             CircleShape clone = new CircleShape();
             clone.ShapeType = ShapeType;

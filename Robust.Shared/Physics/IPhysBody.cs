@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     ///
     /// </summary>
-    internal interface IPhysBody
+    public interface IPhysBody
     {
         /// <summary>
         ///     Entity that this physBody represents.

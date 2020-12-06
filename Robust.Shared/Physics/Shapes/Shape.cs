@@ -9,14 +9,14 @@ namespace Robust.Shared.Physics.Shapes
     /// Shapes used for simulation in World are created automatically when a Fixture
     /// is created. Shapes may encapsulate a one or more child shapes.
     /// </summary>
-    internal abstract class Shape
+    public abstract class Shape
     {
         /// <summary>
         /// Gets or sets the density.
         /// Changing the density causes a recalculation of shape properties.
         /// </summary>
         /// <value>The density.</value>
-        internal float Density
+        public float Density
         {
             get => _density;
             set
@@ -37,7 +37,7 @@ namespace Robust.Shared.Physics.Shapes
         /// Radius of the Shape
         /// Changing the radius causes a recalculation of shape properties.
         /// </summary>
-        internal float Radius
+        public float Radius
         {
             get => _radius;
             set
@@ -53,7 +53,7 @@ namespace Robust.Shared.Physics.Shapes
 
         protected float _radius;
 
-        internal float _2radius;
+        public float _2radius;
 
         /// <summary>
         /// Contains the properties of the shape such as:
@@ -62,21 +62,21 @@ namespace Robust.Shared.Physics.Shapes
         /// - Inertia
         /// - Mass
         /// </summary>
-        internal MassData MassData;
+        public MassData MassData;
 
         /// <summary>
         /// Get the type of this shape.
         /// </summary>
         /// <value>The type of the shape.</value>
-        internal ShapeType ShapeType { get; set; }
+        public ShapeType ShapeType { get; set; }
 
         /// <summary>
         /// Get the number of child primitives.
         /// </summary>
         /// <value></value>
-        internal abstract int ChildCount { get; }
+        public abstract int ChildCount { get; }
 
-        internal Shape(float density)
+        public Shape(float density)
         {
             _density = density;
             ShapeType = ShapeType.Unknown;
@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics.Shapes
         /// Clone the concrete shape
         /// </summary>
         /// <returns>A clone of the shape</returns>
-        internal abstract Shape Clone();
+        public abstract Shape Clone();
 
         /// <summary>
         /// Test a point for containment in this shape.
@@ -95,7 +95,7 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="transform">The shape world transform.</param>
         /// <param name="point">A point in world coordinates.</param>
         /// <returns>True if the point is inside the shape</returns>
-        internal abstract bool TestPoint(PhysicsTransform transform, ref Vector2 point);
+        public abstract bool TestPoint(PhysicsTransform transform, ref Vector2 point);
 
         /// <summary>
         /// Cast a ray against a child shape.
@@ -105,15 +105,14 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="transform">The transform to be applied to the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
         /// <returns>True if the ray-cast hits the shape</returns>
-        internal abstract bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex);
+        public abstract bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex);
 
         /// <summary>
         /// Given a transform, compute the associated axis aligned bounding box for a child shape.
         /// </summary>
-        /// <param name="aabb">The aabb results.</param>
         /// <param name="transform">The world transform of the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
-        internal abstract void ComputeAABB(out AABB aabb, PhysicsTransform transform, int childIndex);
+        public abstract AABB ComputeAABB(PhysicsTransform transform, int childIndex);
 
         /// <summary>
         /// Compute the mass properties of this shape using its dimensions and density.
@@ -125,10 +124,10 @@ namespace Robust.Shared.Physics.Shapes
         //<summary>
         //Used for the buoyancy controller
         //</summary>
-        //internal abstract float ComputeSubmergedArea(ref Vector2 normal, float offset, ITransformComponent transform, out Vector2 sc);
+        //public abstract float ComputeSubmergedArea(ref Vector2 normal, float offset, ITransformComponent transform, out Vector2 sc);
     }
 
-    internal enum ShapeType : sbyte
+    public enum ShapeType : sbyte
     {
         Unknown = -1,
         Circle = 0,

@@ -6,27 +6,27 @@ namespace Robust.Shared.Physics
     /// <summary>
     ///     Holds the mass data computed for a shape
     /// </summary>
-    internal struct MassData : IEquatable<MassData>
+    public struct MassData : IEquatable<MassData>
     {
         /// <summary>
         ///     The area of the shape
         /// </summary>
-        internal float Area { get; set; }
+        public float Area { get; set; }
 
         /// <summary>
         ///     The position of the shape's centroid relative to the shape's origin.
         /// </summary>
-        internal Vector2 Centroid { get; set; }
+        public Vector2 Centroid { get; set; }
 
         /// <summary>
         ///     The rotational inertia of the shape about the local origin.
         /// </summary>
-        internal float Inertia { get; set; }
+        public float Inertia { get; set; }
 
         /// <summary>
         ///     The mass of the shape, usually in kilograms.
         /// </summary>
-        internal float Mass { get; set; }
+        public float Mass { get; set; }
 
         public static bool operator ==(MassData left, MassData right)
         {

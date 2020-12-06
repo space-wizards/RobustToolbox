@@ -127,12 +127,15 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Sets an anchor AND a margin preset. This is most likely the method you want.
         ///
+
+        /// </summary>
+        /// <remarks>
         ///     Note that the current size and minimum size of the control affects how
         ///     each of the margins will be set, so if your control needs to shrink beyond its
         ///     current size / min size, you should either not call this method or only call it when your
         ///     control has a size of (0, 0). Otherwise your control's size will never be able
         ///     to go below the size implied by the margins set in this method.
-        /// </summary>
+        /// </remarks>
         public static void SetAnchorAndMarginPreset(Control control, LayoutPreset preset,
             LayoutPresetMode mode = LayoutPresetMode.MinSize,
             int margin = 0)

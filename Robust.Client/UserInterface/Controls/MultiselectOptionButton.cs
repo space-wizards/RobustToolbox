@@ -35,6 +35,8 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public IReadOnlyList<TKey> SelectedKeys => _selectedKeys;
 
+        public int ItemCount => _buttonData.Count;
+
         /// <summary>
         /// Labels of all currently selected items, ordered by most recently selected = last
         /// </summary>
@@ -56,7 +58,7 @@ namespace Robust.Client.UserInterface.Controls
         public MultiselectOptionButton() : base()
         {
             AddStyleClass(StyleClassButton);
-            OnPressed += _onPressed;
+            OnPressed += OnPressedInternal;
 
             var hBox = new HBoxContainer();
             AddChild(hBox);
@@ -132,12 +134,14 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _keyMap.Clear();
+            foreach (var buttonDatum in _buttonData)
+            {
+                buttonDatum.Button.OnPressed -= ButtonOnPressed;
+            }
             _buttonData.Clear();
             _popupVBox.DisposeAllChildren();
             _selectedKeys = new List<TKey>();
         }
-
-        public int ItemCount => _buttonData.Count;
 
         public TKey GetItemKey(int idx)
         {
@@ -157,6 +161,7 @@ namespace Robust.Client.UserInterface.Controls
         public void RemoveItem(int idx)
         {
             var data = _buttonData[idx];
+            data.Button.OnPressed -= ButtonOnPressed;
             _keyMap.Remove(data.Key);
             _popupVBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
@@ -213,10 +218,6 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Disabled = disabled;
         }
 
-        public void SetItemIcon(int idx, Texture texture)
-        {
-        }
-
         public void SetItemKey(int idx, TKey key)
         {
             if (_keyMap.TryGetValue(key, out var existIdx) && existIdx != idx)
@@ -242,7 +243,7 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Text = text;
         }
 
-        private void _onPressed(ButtonEventArgs args)
+        private void OnPressedInternal(ButtonEventArgs args)
         {
             var globalPos = GlobalPosition;
             var (minX, minY) = _popupVBox.CombinedMinimumSize;

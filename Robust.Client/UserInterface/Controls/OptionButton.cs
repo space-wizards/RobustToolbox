@@ -16,6 +16,8 @@ namespace Robust.Client.UserInterface.Controls
         private VBoxContainer _popupVBox;
         private Label _label;
 
+        public int ItemCount => _buttonData.Count;
+
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
         public string Prefix { get; set; }
@@ -24,7 +26,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             AddStyleClass(StyleClassButton);
             Prefix = "";
-            OnPressed += _onPressed;
+            OnPressed += OnPressedInternal;
 
             var hBox = new HBoxContainer();
             AddChild(hBox);
@@ -105,12 +107,14 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _idMap.Clear();
+            foreach (var buttonDatum in _buttonData)
+            {
+                buttonDatum.Button.OnPressed -= ButtonOnPressed;
+            }
             _buttonData.Clear();
             _popupVBox.DisposeAllChildren();
             SelectedId = 0;
         }
-
-        public int ItemCount => _buttonData.Count;
 
         public int GetItemId(int idx)
         {
@@ -134,6 +138,7 @@ namespace Robust.Client.UserInterface.Controls
         public void RemoveItem(int idx)
         {
             var data = _buttonData[idx];
+            data.Button.OnPressed -= ButtonOnPressed;
             _idMap.Remove(data.Id);
             _popupVBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
@@ -168,10 +173,6 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Disabled = disabled;
         }
 
-        public void SetItemIcon(int idx, Texture texture)
-        {
-        }
-
         public void SetItemId(int idx, int id)
         {
             if (_idMap.TryGetValue(id, out var existIdx) && existIdx != idx)
@@ -202,7 +203,7 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Text = text;
         }
 
-        private void _onPressed(ButtonEventArgs args)
+        private void OnPressedInternal(ButtonEventArgs args)
         {
             var globalPos = GlobalPosition;
             var (minX, minY) = _popupVBox.CombinedMinimumSize;

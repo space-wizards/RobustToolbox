@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -22,32 +24,32 @@ namespace Robust.Shared.GameObjects.Systems
 
         private const float Epsilon = 1.0e-6f;
 
-        private readonly List<Manifold> _collisionCache = new List<Manifold>();
+        private readonly List<Manifold> _collisionCache = new();
 
         /// <summary>
         ///     Physics objects that are awake and usable for world simulation.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _awakeBodies = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _awakeBodies = new();
 
         /// <summary>
         ///     Physics objects that are awake and predicted and usable for world simulation.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _predictedAwakeBodies = new();
 
         /// <summary>
         ///     VirtualControllers on applicable <see cref="IPhysicsComponent"/>s
         /// </summary>
         private Dictionary<IPhysicsComponent, IEnumerable<VirtualController>> _controllers =
-            new Dictionary<IPhysicsComponent, IEnumerable<VirtualController>>();
+            new();
 
         // We'll defer changes to IPhysicsComponent until each step is done.
-        private readonly List<IPhysicsComponent> _queuedDeletions = new List<IPhysicsComponent>();
-        private readonly List<IPhysicsComponent> _queuedUpdates = new List<IPhysicsComponent>();
+        private readonly List<IPhysicsComponent> _queuedDeletions = new();
+        private readonly List<IPhysicsComponent> _queuedUpdates = new();
 
         /// <summary>
         ///     Updates to EntityTree etc. that are deferred until the end of physics.
         /// </summary>
-        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new HashSet<IPhysicsComponent>();
+        private readonly HashSet<IPhysicsComponent> _deferredUpdates = new();
 
         // CVars aren't replicated to client (yet) so not using a cvar server-side for this.
         private float _speedLimit = 30.0f;
@@ -220,7 +222,7 @@ namespace Robust.Shared.GameObjects.Systems
             var combinations = new HashSet<(EntityUid, EntityUid)>();
             foreach (var aPhysics in awakeBodies)
             {
-                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero))
+                foreach (var b in _physicsManager.GetCollidingEntities(aPhysics, Vector2.Zero, false))
                 {
                     var aUid = aPhysics.Entity.Uid;
                     var bUid = b.Uid;
@@ -243,21 +245,25 @@ namespace Robust.Shared.GameObjects.Systems
             }
 
             var counter = 0;
-            while(GetNextCollision(_collisionCache, counter, out var collision))
+
+            if (_collisionCache.Count > 0)
             {
-                collision.A.WakeBody();
-                collision.B.WakeBody();
-
-                counter++;
-                var impulse = _physicsManager.SolveCollisionImpulse(collision);
-                if (collision.A.CanMove())
+                while(GetNextCollision(_collisionCache, counter, out var collision))
                 {
-                    collision.A.ApplyImpulse(-impulse);
-                }
+                    collision.A.WakeBody();
+                    collision.B.WakeBody();
 
-                if (collision.B.CanMove())
-                {
-                    collision.B.ApplyImpulse(impulse);
+                    counter++;
+                    var impulse = _physicsManager.SolveCollisionImpulse(collision);
+                    if (collision.A.CanMove())
+                    {
+                        collision.A.ApplyImpulse(-impulse);
+                    }
+
+                    if (collision.B.CanMove())
+                    {
+                        collision.B.ApplyImpulse(impulse);
+                    }
                 }
             }
 
@@ -265,11 +271,10 @@ namespace Robust.Shared.GameObjects.Systems
             foreach (var collision in _collisionCache)
             {
                 // Apply onCollide behavior
-                var aBehaviors = collision.A.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in aBehaviors)
+                foreach (var behavior in collision.A.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.B.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {
@@ -280,11 +285,11 @@ namespace Robust.Shared.GameObjects.Systems
                         collisionsWith[behavior] = 1;
                     }
                 }
-                var bBehaviors = collision.B.Entity.GetAllComponents<ICollideBehavior>();
-                foreach (var behavior in bBehaviors)
+
+                foreach (var behavior in collision.B.Entity.GetAllComponents<ICollideBehavior>().ToArray())
                 {
                     var entity = collision.A.Entity;
-                    if (entity.Deleted) continue;
+                    if (entity.Deleted) break;
                     behavior.CollideWith(entity);
                     if (collisionsWith.ContainsKey(behavior))
                     {
@@ -311,19 +316,17 @@ namespace Robust.Shared.GameObjects.Systems
                 collision = default;
                 return false;
             }
-            var indexes = new List<int>();
-            for (int i = 0; i < collisions.Count; i++)
+
+            var offset = _random.Next(collisions.Count - 1);
+            for (var i = 0; i < collisions.Count; i++)
             {
-                indexes.Add(i);
-            }
-            _random.Shuffle(indexes);
-            foreach (var index in indexes)
-            {
+                var index = (i + offset) % collisions.Count;
                 if (collisions[index].Unresolved)
                 {
                     collision = collisions[index];
                     return true;
                 }
+
             }
 
             collision = default;
@@ -369,7 +372,7 @@ namespace Robust.Shared.GameObjects.Systems
 
             if (physics.LinearVelocity != Vector2.Zero)
             {
-                if (ContainerHelpers.IsInContainer(ent))
+                if (ent.IsInContainer())
                 {
                     var relayEntityMoveMessage = new RelayMovementEntityMessage(ent);
                     ent.Transform.Parent!.Owner.SendMessage(ent.Transform, relayEntityMoveMessage);
@@ -385,8 +388,29 @@ namespace Robust.Shared.GameObjects.Systems
             if (physics.LinearVelocity.Length > _speedLimit)
                 physics.LinearVelocity = physics.LinearVelocity.Normalized * _speedLimit;
 
+            var newPosition = physics.WorldPosition + physics.LinearVelocity * frameTime;
+            var owner = physics.Owner;
+            var transform = owner.Transform;
+
+            // Change parent if necessary
+            if (!owner.IsInContainer())
+            {
+                // This shoouullddnnn'''tt de-parent anything in a container because none of that should have physics applied to it.
+                if (_mapManager.TryFindGridAt(owner.Transform.MapID, newPosition, out var grid) &&
+                    grid.GridEntityId.IsValid() &&
+                    grid.GridEntityId != owner.Uid)
+                {
+                    if (grid.GridEntityId != transform.ParentUid)
+                        transform.AttachParent(owner.EntityManager.GetEntity(grid.GridEntityId));
+                }
+                else
+                {
+                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                }
+            }
+
             physics.WorldRotation += physics.AngularVelocity * frameTime;
-            physics.WorldPosition += physics.LinearVelocity * frameTime;
+            physics.WorldPosition = newPosition;
         }
 
         // Based off of Randy Gaul's ImpulseEngine code

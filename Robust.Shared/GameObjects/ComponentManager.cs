@@ -29,15 +29,15 @@ namespace Robust.Shared.GameObjects
         private const int ComponentCollectionCapacity = 1024;
 
         private readonly Dictionary<uint, Dictionary<EntityUid, Component>> _entNetIdDict
-            = new Dictionary<uint, Dictionary<EntityUid, Component>>();
+            = new();
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
-            = new Dictionary<Type, Dictionary<EntityUid, Component>>();
+            = new();
 
-        private readonly HashSet<Component> _deleteSet = new HashSet<Component>(TypeCapacity);
+        private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
         private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
-            new UniqueIndexHkm<EntityUid, Component>(ComponentCollectionCapacity);
+            new(ComponentCollectionCapacity);
 
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentAdded;
@@ -133,7 +133,9 @@ namespace Robust.Shared.GameObjects
                 ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component));
             }
 
-            component.ExposeData(DefaultValueSerializer.Reader());
+            var defaultSerializer = DefaultValueSerializer.Reader();
+            defaultSerializer.CurrentType = component.GetType();
+            component.ExposeData(defaultSerializer);
 
             _componentDependencyManager.OnComponentAdd(entity, component);
 
@@ -464,19 +466,19 @@ namespace Robust.Shared.GameObjects
         #region Join Functions
 
         /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>(bool paused = false)
+        public IEnumerable<T> EntityQuery<T>(bool includePaused = true)
         {
             var comps = _entTraitDict[typeof(T)];
             foreach (var comp in comps.Values)
             {
-                if (comp.Deleted || paused && comp.Paused) continue;
+                if (comp.Deleted || !includePaused && comp.Paused) continue;
 
                 yield return (T) (object) comp;
             }
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool paused = false)
+        public IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
@@ -489,7 +491,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
                     continue;
 
                 yield return ((TComp1) (object) kvComp.Value, (TComp2) (object) t2Comp);
@@ -497,7 +499,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool paused = false)
+        public IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -510,7 +512,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
                     continue;
 
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
@@ -523,7 +525,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool paused = false)
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -538,7 +540,7 @@ namespace Robust.Shared.GameObjects
             {
                 var uid = kvComp.Key;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || paused && kvComp.Value.Paused)
+                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
                     continue;
 
                 if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
@@ -557,12 +559,12 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         /// <inheritdoc />
-        public IEnumerable<IComponent> GetAllComponents(Type type, bool paused = false)
+        public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = true)
         {
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)
             {
-                if (comp.Deleted || paused && comp.Paused) continue;
+                if (comp.Deleted || !includePaused && comp.Paused) continue;
 
                 yield return comp;
             }

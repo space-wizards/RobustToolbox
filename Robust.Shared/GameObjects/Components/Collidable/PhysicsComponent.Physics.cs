@@ -172,7 +172,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
+        private Dictionary<Type, VirtualController> _controllers = new();
         private bool _anchored = true;
         private float _friction = 1;
 
@@ -266,11 +266,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
-                if (_linVelocity == value)
+                if (value != Vector2.Zero)
+                    WakeBody();
+
+                if (_linVelocity.EqualsApprox(value, 0.0001))
                     return;
 
                 _linVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -284,11 +286,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _angVelocity;
             set
             {
-                if (_angVelocity.Equals(value))
+                if (value != 0.0f)
+                    WakeBody();
+
+                if (Math.Abs(_angVelocity - value) < 0.0001)
                     return;
 
                 _angVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -312,6 +316,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _status;
             set
             {
+                if (_status == value)
+                    return;
+
                 _status = value;
                 Dirty();
             }
@@ -333,6 +340,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _anchored;
             set
             {
+                if (_anchored == value)
+                    return;
+
                 _anchored = value;
                 AnchoredChanged?.Invoke();
                 Dirty();

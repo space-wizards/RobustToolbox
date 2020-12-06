@@ -99,7 +99,7 @@ namespace Robust.Client.Console
         private sealed class WatchControl : Control
         {
             private readonly ScriptRunner<object> _runner;
-            private readonly ScriptGlobalsImpl _globals = new ScriptGlobalsImpl();
+            private readonly ScriptGlobalsImpl _globals = new();
             private readonly Label _outputLabel;
 
             public WatchControl(ScriptRunner<object> runner)

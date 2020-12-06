@@ -71,22 +71,22 @@ namespace Robust.Shared.Maths
 
         public static Vector2u operator /(Vector2u vector, uint divider)
         {
-            return new Vector2u(vector.X / divider, vector.Y / divider);
+            return new(vector.X / divider, vector.Y / divider);
         }
 
         public static implicit operator Vector2(Vector2u vector)
         {
-            return new Vector2(vector.X, vector.Y);
+            return new(vector.X, vector.Y);
         }
 
         public static explicit operator Vector2u(Vector2 vector)
         {
-            return new Vector2u((uint) vector.X, (uint) vector.Y);
+            return new((uint) vector.X, (uint) vector.Y);
         }
 
         public static explicit operator Vector2i(Vector2u vector)
         {
-            return new Vector2i((int) vector.X, (int) vector.Y);
+            return new((int) vector.X, (int) vector.Y);
         }
     }
 }

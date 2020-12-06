@@ -35,7 +35,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, string> _dllMapLinux = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _dllMapLinux = new()
         {
             {"opengl32.dll", "libGL.so.1"},
             {"glu32.dll", "libGLU.so.1"},
@@ -48,7 +48,7 @@ namespace Robust.Client.Graphics.Clyde
         };
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
-        private static readonly Dictionary<string, string> _dllMapMacOS = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> _dllMapMacOS = new()
         {
             {"opengl32.dll", "/System/Library/Frameworks/OpenGL.framework/OpenGL"},
             {"openal32.dll", "/System/Library/Frameworks/OpenAL.framework/OpenAL"},

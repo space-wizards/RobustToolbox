@@ -16,7 +16,7 @@ namespace Robust.Shared.Utility
     [Serializable, NetSerializable]
     public sealed partial class FormattedMessage
     {
-        public TagList Tags => new TagList(_tags);
+        public TagList Tags => new(_tags);
         private readonly List<Tag> _tags;
 
         public FormattedMessage()
@@ -124,7 +124,7 @@ namespace Robust.Shared.Utility
         [Serializable, NetSerializable]
         public class TagPop : Tag
         {
-            public static readonly TagPop Instance = new TagPop();
+            public static readonly TagPop Instance = new();
         }
 
         public readonly struct TagList : IReadOnlyList<Tag>

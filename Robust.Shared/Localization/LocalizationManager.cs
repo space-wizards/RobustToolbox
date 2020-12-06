@@ -13,13 +13,13 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Localization
 {
-    internal sealed class LocalizationManager : ILocalizationManager
+    internal sealed class LocalizationManager : ILocalizationManagerInternal
     {
         [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly ITextMacroFactory _textMacroFactory = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
-        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new Dictionary<CultureInfo, Catalog>();
+        private readonly Dictionary<CultureInfo, Catalog> _catalogs = new();
         private CultureInfo? _defaultCulture;
 
         public string GetString(string text)
@@ -136,6 +136,27 @@ namespace Robust.Shared.Localization
             }
         }
 
+        public void AddLoadedToStringSerializer()
+        {
+            _stringSerializer.AddStrings(StringIterator());
+
+            IEnumerable<string> StringIterator()
+            {
+                foreach (var catalog in _catalogs.Values)
+                {
+                    foreach (var (key, translations) in catalog.Translations)
+                    {
+                        yield return key;
+
+                        foreach (var t in translations)
+                        {
+                            yield return t;
+                        }
+                    }
+                }
+            }
+        }
+
         private void _loadData(CultureInfo culture, Catalog catalog)
         {
             // Load data from .yml files.
@@ -165,8 +186,6 @@ namespace Robust.Shared.Localization
             {
                 _readEntry(entry, catalog);
             }
-
-            _stringSerializer.AddStrings(yamlStream);
         }
 
         private static void _readEntry(YamlMappingNode entry, Catalog catalog)

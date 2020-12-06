@@ -15,7 +15,7 @@ namespace Robust.Client.Graphics.Clyde
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
-            new Dictionary<GridId, Dictionary<Vector2i, MapChunkData>>();
+            new();
 
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();

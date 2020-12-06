@@ -1,29 +1,39 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Robust.Shared.Maths
 {
     [Serializable]
+    [StructLayout(LayoutKind.Explicit)]
     public struct Box2i : IEquatable<Box2i>
     {
-        public int Left;
-        public int Right;
-        public int Top;
-        public int Bottom;
+        [FieldOffset(sizeof(int) * 0)] public int Left;
+        [FieldOffset(sizeof(int) * 1)] public int Bottom;
+        [FieldOffset(sizeof(int) * 2)] public int Right;
+        [FieldOffset(sizeof(int) * 3)] public int Top;
 
-        public readonly Vector2i BottomRight => new Vector2i(Right, Bottom);
-        public readonly Vector2i TopLeft => new Vector2i(Left, Top);
-        public readonly Vector2i TopRight => new Vector2i(Right, Top);
-        public readonly Vector2i BottomLeft => new Vector2i(Left, Bottom);
+        [FieldOffset(sizeof(int) * 0)] public Vector2i BottomLeft;
+        [FieldOffset(sizeof(int) * 2)] public Vector2i TopRight;
+
+        public readonly Vector2i BottomRight => new(Right, Bottom);
+        public readonly Vector2i TopLeft => new(Left, Top);
         public readonly int Width => Math.Abs(Right - Left);
         public readonly int Height => Math.Abs(Top - Bottom);
-        public readonly Vector2i Size => new Vector2i(Width, Height);
+        public readonly Vector2i Size => new(Width, Height);
 
-        public Box2i(Vector2i bottomLeft, Vector2i topRight) : this(bottomLeft.X, bottomLeft.Y, topRight.X, topRight.Y)
+        public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
+            Unsafe.SkipInit(out this);
+
+            BottomLeft = bottomLeft;
+            TopRight = topRight;
         }
 
         public Box2i(int left, int bottom, int right, int top)
         {
+            Unsafe.SkipInit(out this);
+
             Left = left;
             Right = right;
             Top = top;
@@ -32,7 +42,7 @@ namespace Robust.Shared.Maths
 
         public static Box2i FromDimensions(int left, int bottom, int width, int height)
         {
-            return new Box2i(left, bottom, left + width, bottom + height);
+            return new(left, bottom, left + width, bottom + height);
         }
 
         public static Box2i FromDimensions(Vector2i position, Vector2i size)
@@ -59,7 +69,7 @@ namespace Robust.Shared.Maths
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
         public readonly Box2i Translated(Vector2i point)
         {
-            return new Box2i(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
+            return new(Left + point.X, Bottom + point.Y, Right + point.X, Top + point.Y);
         }
 
         /// <summary>
@@ -106,12 +116,12 @@ namespace Robust.Shared.Maths
 
         public static explicit operator Box2i(Box2 box)
         {
-            return new Box2i((int) box.Left, (int) box.Bottom, (int) box.Right, (int) box.Top);
+            return new((int) box.Left, (int) box.Bottom, (int) box.Right, (int) box.Top);
         }
 
         public static implicit operator Box2(Box2i box)
         {
-            return new Box2(box.Left, box.Bottom, box.Right, box.Top);
+            return new(box.Left, box.Bottom, box.Right, box.Top);
         }
 
         public override readonly string ToString()

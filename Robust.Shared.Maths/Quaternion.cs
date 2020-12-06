@@ -294,7 +294,7 @@ namespace Robust.Shared.Maths
         /// <summary>
         /// Defines the identity quaternion.
         /// </summary>
-        public static readonly Quaternion Identity = new Quaternion(0, 0, 0, 1);
+        public static readonly Quaternion Identity = new(0, 0, 0, 1);
 
         #endregion Fields
 
@@ -309,7 +309,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Add(Quaternion left, Quaternion right)
         {
-            return new Quaternion(
+            return new(
                 left.Xyz + right.Xyz,
                 left.W + right.W);
         }
@@ -341,7 +341,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Sub(Quaternion left, Quaternion right)
         {
-            return new Quaternion(
+            return new(
                 left.Xyz - right.Xyz,
                 left.W - right.W);
         }
@@ -412,7 +412,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Multiply(Quaternion quaternion, float scale)
         {
-            return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
+            return new(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
 
         #endregion Mult
@@ -440,7 +440,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion Conjugate(Quaternion q)
         {
-            return new Quaternion(-q.Xyz, q.W);
+            return new(-q.Xyz, q.W);
         }
 
         /// <summary>
@@ -866,7 +866,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Quaternion operator *(float scale, Quaternion quaternion)
         {
-            return new Quaternion(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
+            return new(quaternion.X * scale, quaternion.Y * scale, quaternion.Z * scale, quaternion.W * scale);
         }
 
         /// <summary>

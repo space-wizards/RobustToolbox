@@ -1,6 +1,7 @@
 using System;
 using Robust.Client;
 using Robust.Server;
+using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting
@@ -25,6 +26,10 @@ namespace Robust.UnitTesting
                 default:
                     throw new NotSupportedException($"Unknown testing project: {Project}");
             }
+
+            IoCManager.Register<IModLoader, TestingModLoader>(overwrite: true);
+            IoCManager.Register<IModLoaderInternal, TestingModLoader>(overwrite: true);
+            IoCManager.Register<TestingModLoader, TestingModLoader>(overwrite: true);
 
             OverrideIoC();
 

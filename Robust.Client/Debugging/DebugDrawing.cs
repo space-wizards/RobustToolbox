@@ -92,7 +92,7 @@ namespace Robust.Client.Debugging
             private readonly Font _font;
 
             private Vector2 _hoverStartScreen = Vector2.Zero;
-            private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
+            private List<IPhysBody> _hoverBodies = new();
 
             public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
                 : base(nameof(PhysicsOverlay))

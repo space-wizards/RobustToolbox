@@ -25,12 +25,12 @@ namespace Robust.Client.Graphics.Clyde
         private string _shaderWrapCodeRawVert = default!;
 
         private readonly Dictionary<ClydeHandle, LoadedShader> _loadedShaders =
-            new Dictionary<ClydeHandle, LoadedShader>();
+            new();
 
         private readonly Dictionary<ClydeHandle, LoadedShaderInstance> _shaderInstances =
-            new Dictionary<ClydeHandle, LoadedShaderInstance>();
+            new();
 
-        private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new ConcurrentQueue<ClydeHandle>();
+        private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
         private class LoadedShader
         {
@@ -45,7 +45,7 @@ namespace Robust.Client.Graphics.Clyde
             public ClydeHandle ShaderHandle;
 
             // TODO(perf): Maybe store these parameters not boxed with a tagged union.
-            public readonly Dictionary<string, object> Parameters = new Dictionary<string, object>();
+            public readonly Dictionary<string, object> Parameters = new();
 
             public StencilParameters Stencil = StencilParameters.Default;
         }
@@ -471,7 +471,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private struct StencilParameters
         {
-            public static readonly StencilParameters Default = new StencilParameters
+            public static readonly StencilParameters Default = new()
             {
                 Enabled = false,
                 Ref = 0,

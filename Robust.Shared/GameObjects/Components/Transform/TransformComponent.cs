@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         [ViewVariables(VVAccess.ReadWrite)]
         public bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new SortedSet<EntityUid>();
+        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localRotation;
             set
             {
-                if (_localRotation.EqualsApprox(value, 0.001))
+                if (_localRotation.EqualsApprox(value, 0.00001))
                     return;
 
                 var oldRotation = _localRotation;
@@ -198,7 +198,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             }
         }
 
-        public bool IsMapTransform => !ContainerHelpers.IsInContainer(Owner);
+        public bool IsMapTransform => !Owner.IsInContainer();
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -277,7 +277,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public MapCoordinates MapPosition => new MapCoordinates(WorldPosition, MapID);
+        public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             get => _localPosition;
             set
             {
-                if (_localPosition.EqualsApprox(value, 0.001))
+                if (_localPosition.EqualsApprox(value, 0.00001))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             //NOTE: This function must be callable from before initialize
 
             // nothing to attach to.
-            if (newParent == null)
+            if (ParentUid == newParent.Owner.Uid)
                 return;
 
             DebugTools.Assert(newParent != this,
@@ -717,7 +717,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     rebuildMatrices = true;
                 }
 
-                if (_localPosition != newState.LocalPosition)
+                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
                 {
                     var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);

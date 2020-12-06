@@ -73,15 +73,16 @@ namespace Robust.Client.UserInterface
         public IDebugMonitors DebugMonitors => _debugMonitors;
         private DebugMonitors _debugMonitors = default!;
 
-        private readonly List<Control> _modalStack = new List<Control>();
+        private readonly List<Control> _modalStack = new();
 
         private bool _rendering = true;
         private float _tooltipTimer;
         private Tooltip _tooltip = default!;
+        private bool showingTooltip;
         private const float TooltipDelay = 1;
 
-        private readonly Queue<Control> _styleUpdateQueue = new Queue<Control>();
-        private readonly Queue<Control> _layoutUpdateQueue = new Queue<Control>();
+        private readonly Queue<Control> _styleUpdateQueue = new();
+        private readonly Queue<Control> _layoutUpdateQueue = new();
         private Stylesheet? _stylesheet;
         private ICursor? _worldCursor;
         private bool _needUpdateActiveCursor;
@@ -692,8 +693,20 @@ namespace Robust.Client.UserInterface
 
         private void _clearTooltip()
         {
+            if (!showingTooltip) return;
             _tooltip.Visible = false;
+            CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
+            showingTooltip = false;
+        }
+
+
+        public void HideTooltipFor(Control control)
+        {
+            if (CurrentlyHovered == control)
+            {
+                _clearTooltip();
+            }
         }
 
         private void _resetTooltipTimer()
@@ -703,27 +716,23 @@ namespace Robust.Client.UserInterface
 
         private void _showTooltip()
         {
+            if (showingTooltip) return;
+            showingTooltip = true;
             var hovered = CurrentlyHovered;
-            if (hovered == null || string.IsNullOrWhiteSpace(hovered.ToolTip))
+            if (hovered == null)
             {
                 return;
             }
 
-            _tooltip.Visible = true;
-            _tooltip.Text = hovered.ToolTip;
-            LayoutContainer.SetPosition(_tooltip, MousePositionScaled);
-
-            var (right, bottom) = _tooltip.Position + _tooltip.Size;
-
-            if (right > RootControl.Size.X)
+            // show simple tooltip if there is one
+            if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
             {
-                LayoutContainer.SetPosition(_tooltip, (RootControl.Size.X - _tooltip.Size.X, _tooltip.Position.Y));
+                _tooltip.Visible = true;
+                _tooltip.Text = hovered.ToolTip;
+               Tooltips.PositionTooltip(_tooltip);
             }
 
-            if (bottom > RootControl.Size.Y)
-            {
-                LayoutContainer.SetPosition(_tooltip, (_tooltip.Position.X, RootControl.Size.Y - _tooltip.Size.Y));
-            }
+            hovered.PerformShowTooltip();
         }
 
         private void _uiScaleChanged(float newValue)

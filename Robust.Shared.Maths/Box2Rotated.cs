@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace Robust.Shared.Maths
 {
@@ -10,6 +13,7 @@ namespace Robust.Shared.Maths
     {
         public Box2 Box;
         public Angle Rotation;
+
         /// <summary>
         /// The point about which the rotation occurs.
         /// </summary>
@@ -26,13 +30,19 @@ namespace Robust.Shared.Maths
         public readonly Vector2 BottomLeft => Origin + Rotation.RotateVec(Box.BottomLeft - Origin);
 
         public Box2Rotated(Vector2 bottomLeft, Vector2 topRight)
-            : this(new Box2(bottomLeft, topRight)) { }
+            : this(new Box2(bottomLeft, topRight))
+        {
+        }
 
         public Box2Rotated(Box2 box)
-            : this(box, 0) { }
+            : this(box, 0)
+        {
+        }
 
         public Box2Rotated(Box2 box, Angle rotation)
-            : this(box, rotation, Vector2.Zero) { }
+            : this(box, rotation, Vector2.Zero)
+        {
+        }
 
         public Box2Rotated(Box2 box, Angle rotation, Vector2 origin)
         {
@@ -45,6 +55,57 @@ namespace Robust.Shared.Maths
         /// calculates the smallest AABB that will encompass the rotated box. The AABB is in local space.
         /// </summary>
         public readonly Box2 CalcBoundingBox()
+        {
+            if (Sse.IsSupported && NumericsHelpers.Enabled)
+            {
+                return CalcBoundingBoxSse();
+            }
+
+            return CalcBoundingBoxSlow();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal readonly unsafe Box2 CalcBoundingBoxSse()
+        {
+            Vector128<float> boxVec;
+            fixed (float* lPtr = &Box.Left)
+            {
+                boxVec = Sse.LoadVector128(lPtr);
+            }
+
+            var originX = Vector128.Create(Origin.X);
+            var originY = Vector128.Create(Origin.Y);
+
+            var cos = Vector128.Create((float) Math.Cos(Rotation));
+            var sin = Vector128.Create((float) Math.Sin(Rotation));
+
+            var allX = Sse.Shuffle(boxVec, boxVec, 0b10_10_00_00);
+            var allY = Sse.Shuffle(boxVec, boxVec, 0b01_11_11_01);
+
+            allX = Sse.Subtract(allX, originX);
+            allY = Sse.Subtract(allY, originY);
+
+            var modX = Sse.Subtract(Sse.Multiply(allX, cos), Sse.Multiply(allY, sin));
+            var modY = Sse.Add(Sse.Multiply(allX, sin), Sse.Multiply(allY, cos));
+
+            allX = Sse.Add(modX, originX);
+            allY = Sse.Add(modY, originY);
+
+            var l = SimdHelpers.MinHorizontalSse(allX);
+            var b = SimdHelpers.MinHorizontalSse(allY);
+            var r = SimdHelpers.MaxHorizontalSse(allX);
+            var t = SimdHelpers.MaxHorizontalSse(allY);
+
+            var lb = Sse.UnpackLow(l, b);
+            var rt = Sse.UnpackLow(r, t);
+
+            var lbrt = Sse.Shuffle(lb, rt, 0b11_10_01_00);
+
+            return Unsafe.As<Vector128<float>, Box2>(ref lbrt);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal readonly unsafe Box2 CalcBoundingBoxSlow()
         {
             Span<float> allX = stackalloc float[4];
             Span<float> allY = stackalloc float[4];

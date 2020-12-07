@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Intrinsics.X86;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 
@@ -55,13 +56,26 @@ namespace Robust.UnitTesting.Shared.Maths
             };
 
         [Test]
-        public void TestCalcBoundingBox([ValueSource(nameof(CalcBoundingBoxData))]
+        public void TestCalcBoundingBoxSlow([ValueSource(nameof(CalcBoundingBoxData))]
             (Box2 baseBox, Vector2 origin, Angle rotation, Box2 expected) dat)
         {
             var (baseBox, origin, rotation, expected) = dat;
 
             var rotated = new Box2Rotated(baseBox, rotation, origin);
-            Assert.That(rotated.CalcBoundingBox(), Is.Approximately(expected));
+            Assert.That(rotated.CalcBoundingBoxSlow(), Is.Approximately(expected));
+        }
+
+        [Test]
+        public void TestCalcBoundingBoxSse([ValueSource(nameof(CalcBoundingBoxData))]
+            (Box2 baseBox, Vector2 origin, Angle rotation, Box2 expected) dat)
+        {
+            if (!Sse.IsSupported)
+                Assert.Ignore();
+
+            var (baseBox, origin, rotation, expected) = dat;
+
+            var rotated = new Box2Rotated(baseBox, rotation, origin);
+            Assert.That(rotated.CalcBoundingBoxSse(), Is.Approximately(expected));
         }
     }
 }

@@ -60,7 +60,7 @@ namespace Robust.Server.ServerStatus
             catch (Exception e)
             {
                 response.Respond(method, "Internal Server Error", HttpStatusCode.InternalServerError);
-                Logger.ErrorS(Sawmill, $"Exception in StatusHost: {e}");
+                _httpSawmill.Error($"Exception in StatusHost: {e}");
             }
 
             /*

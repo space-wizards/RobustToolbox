@@ -10,7 +10,7 @@ namespace Robust.Shared.Maths
     /// </summary>
     [Serializable]
     [StructLayout(LayoutKind.Explicit)]
-    public struct Box2 : IEquatable<Box2>
+    public struct Box2 : IEquatable<Box2>, IApproxEquatable<Box2>
     {
         /// <summary>
         ///     The X coordinate of the left edge of the box.
@@ -335,6 +335,22 @@ namespace Robust.Shared.Maths
             var cy = MathHelper.Clamp(position.Y, Bottom, Top);
 
             return new Vector2(cx, cy);
+        }
+
+        public bool EqualsApprox(Box2 other)
+        {
+            return MathHelper.CloseTo(Left, other.Left)
+                   && MathHelper.CloseTo(Bottom, other.Bottom)
+                   && MathHelper.CloseTo(Right, other.Right)
+                   && MathHelper.CloseTo(Top, other.Top);
+        }
+
+        public bool EqualsApprox(Box2 other, double tolerance)
+        {
+            return MathHelper.CloseTo(Left, other.Left, tolerance)
+                   && MathHelper.CloseTo(Bottom, other.Bottom, tolerance)
+                   && MathHelper.CloseTo(Right, other.Right, tolerance)
+                   && MathHelper.CloseTo(Top, other.Top, tolerance);
         }
     }
 }

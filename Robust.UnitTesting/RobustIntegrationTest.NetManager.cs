@@ -363,7 +363,7 @@ namespace Robust.UnitTesting
                 public int ConnectionUid { get; }
                 long INetChannel.ConnectionId => ConnectionUid;
 
-                public bool IsConnected { get; }
+                public bool IsConnected { get; set; }
 
                 // TODO: Should this port value make sense?
                 public IPEndPoint RemoteEndPoint { get; } = new(IPAddress.Loopback, 1212);
@@ -402,6 +402,8 @@ namespace Robust.UnitTesting
                 public void Disconnect(string reason)
                 {
                     OtherChannel.TryWrite(new DisconnectMessage(RemoteUid));
+
+                    IsConnected = false;
                 }
             }
 

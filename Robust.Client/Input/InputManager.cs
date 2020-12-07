@@ -406,38 +406,46 @@ namespace Robust.Client.Input
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var baseSerializer = YamlObjectSerializer.NewReader(mapping);
-            var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
 
-            foreach (var reg in baseKeyRegs)
+            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
+
+            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
             {
-                if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
+                foreach (var reg in baseKeyRegs)
                 {
-                    Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
-                        reg.Function.FunctionName);
-                    continue;
-                }
-
-                if (!userData)
-                {
-                    _defaultRegistrations.Add(reg);
-
-                    if (_modifiedKeyFunctions.Contains(reg.Function))
+                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        // Don't read key functions from preset files that have been modified.
-                        // So that we don't bulldoze a user's saved preferences.
+                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                            reg.Function.FunctionName);
                         continue;
                     }
-                }
 
-                RegisterBinding(reg, markModified: userData);
+                    if (!userData)
+                    {
+                        _defaultRegistrations.Add(reg);
+
+                        if (_modifiedKeyFunctions.Contains(reg.Function))
+                        {
+                            // Don't read key functions from preset files that have been modified.
+                            // So that we don't bulldoze a user's saved preferences.
+                            continue;
+                        }
+                    }
+
+                    RegisterBinding(reg, markModified: userData);
+                }
             }
 
             if (userData)
             {
-                // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
-                // Because they've been explicitly cleared.
-                var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
-                _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+
+                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
+                {
+                    // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
+                    // Because they've been explicitly cleared.
+                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                }
             }
         }
 

@@ -87,8 +87,10 @@ namespace Robust.Shared.Maths
         public Vector2 RotateVec(in Vector2 vec)
         {
             var (x, y) = vec;
-            var dx = Math.Cos(Theta) * x - Math.Sin(Theta) * y;
-            var dy = Math.Sin(Theta) * x + Math.Cos(Theta) * y;
+            var cos = Math.Cos(Theta);
+            var sin = Math.Sin(Theta);
+            var dx = cos * x - sin * y;
+            var dy = sin * x + cos * y;
 
             return new Vector2((float)dx, (float)dy);
         }
@@ -182,6 +184,11 @@ namespace Robust.Shared.Maths
         public static bool operator !=(Angle a, Angle b)
         {
             return !(a == b);
+        }
+
+        public Angle Opposite()
+        {
+            return new Angle(FlipPositive(Theta-Math.PI));
         }
 
         public Angle FlipPositive()

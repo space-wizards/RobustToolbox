@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UI;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -60,6 +61,7 @@ namespace Robust.Client.UserInterface
         ///     Gets an ordered enumerable over all the children of this control.
         /// </summary>
         [ViewVariables]
+        [Content]
         public OrderedChildCollection Children { get; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;

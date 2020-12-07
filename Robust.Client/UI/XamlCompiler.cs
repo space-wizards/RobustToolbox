@@ -1,12 +1,7 @@
 ﻿using System;
-using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.Controls;
-using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.IoC;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
@@ -16,86 +11,41 @@ using XamlX.TypeSystem;
 
 namespace Robust.Client.UI
 {
-    public partial class TestView : SS14Window
-    {
-        public TestView()
-        {
-            var comp = new XamlCompiler();
-            var content = File.ReadAllText("../../Robust.Client/UI/TestView.xaml");
-            var obj = comp.Compile(content).create(null!);
-            //throw new NotImplementedException();
-            /*
-
-            var thing = XDocumentXamlParser.Parse(content);
-
-            if (thing.Root is XamlAstObjectNode objectNode)
-            {
-                AddChild(ParseNode(objectNode));
-            }
-
-            System.Console.WriteLine("aaa");*/
-        }
-
-        /*Control ParseNode(XamlAstObjectNode node)
-        {
-            foreach (var astNode in node.Children)
-            {
-                switch (astNode)
-                {
-                    case XamlAstObjectNode objNode:
-                        var type = objNode.Type.GetClrType();
-                        break;
-                    case XamlAstXamlPropertyValueNode valueNode:
-                        break;
-                }
-            }
-
-            return null;
-        }*/
-    }
-
-
-
-    /*public class TestCompiler
+    public class XamlCompiler : IXamlCompiler
     {
         private readonly IXamlTypeSystem _typeSystem;
         public TransformerConfiguration Configuration { get; }
 
-        public TestCompiler() : this(new SreTypeSystem())
+        public XamlCompiler()
         {
-
-        }
-
-        private TestCompiler(IXamlTypeSystem typeSystem)
-        {
-            _typeSystem = typeSystem;
-            Configuration = new TransformerConfiguration(typeSystem,
-                typeSystem.FindAssembly("Robust.Client.UI"),
-                new XamlLanguageTypeMappings(typeSystem)
+            _typeSystem = new SreTypeSystem();
+            Configuration = new TransformerConfiguration(_typeSystem,
+                _typeSystem.FindAssembly("Robust.Client.UI"),
+                new XamlLanguageTypeMappings(_typeSystem)
                 {
                     XmlnsAttributes =
                     {
-                        typeSystem.GetType("Robust.Client.UI.XmlnsDefinitionAttribute"),
+                        _typeSystem.GetType("Robust.Client.UI.XmlnsDefinitionAttribute"),
 
                     },
                     ContentAttributes =
                     {
-                        typeSystem.GetType("Robust.Client.UI.ContentAttribute")
+                        _typeSystem.GetType("Robust.Client.UI.ContentAttribute")
                     },
                     UsableDuringInitializationAttributes =
                     {
-                        typeSystem.GetType("Robust.Client.UI.UsableDuringInitializationAttribute")
+                        _typeSystem.GetType("Robust.Client.UI.UsableDuringInitializationAttribute")
                     },
                     DeferredContentPropertyAttributes =
                     {
-                        typeSystem.GetType("Robust.Client.UI.DeferredContentAttribute")
+                        _typeSystem.GetType("Robust.Client.UI.DeferredContentAttribute")
                     },
-                    RootObjectProvider = typeSystem.GetType("Robust.Client.UI.ITestRootObjectProvider"),
-                    UriContextProvider = typeSystem.GetType("Robust.Client.UI.ITestUriContext"),
-                    ProvideValueTarget = typeSystem.GetType("Robust.Client.UI.ITestProvideValueTarget"),
-                    /*ParentStackProvider = typeSystem.GetType("XamlX.Runtime.IXamlParentStackProviderV1"),
-                    XmlNamespaceInfoProvider = typeSystem.GetType("XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1")*/
-                /*}
+                    RootObjectProvider = _typeSystem.GetType("Robust.Client.UI.ITestRootObjectProvider"),
+                    UriContextProvider = _typeSystem.GetType("Robust.Client.UI.ITestUriContext"),
+                    ProvideValueTarget = _typeSystem.GetType("Robust.Client.UI.ITestProvideValueTarget"),
+                    /*ParentStackProvider = _typeSystem.GetType("XamlX.Runtime.IXamlParentStackProviderV1"),
+                    XmlNamespaceInfoProvider = _typeSystem.GetType("XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1")*/
+                }
             );
         }
 
@@ -159,5 +109,42 @@ namespace Robust.Client.UI
 
             return (createCb, populateCb);
         }
-    }*/
+    }
+    public class ContentAttribute : Attribute
+    {
+    }
+
+    public class XmlnsDefinitionAttribute : Attribute
+    {
+        public XmlnsDefinitionAttribute(string xmlNamespace, string clrNamespace)
+        {
+        }
+    }
+
+    public class UsableDuringInitializationAttribute : Attribute
+    {
+        public UsableDuringInitializationAttribute(bool usable)
+        {
+        }
+    }
+
+    public class DeferredContentAttribute : Attribute
+    {
+    }
+
+    public interface ITestRootObjectProvider
+    {
+        object RootObject { get; }
+    }
+
+    public interface ITestProvideValueTarget
+    {
+        object TargetObject { get; }
+        object TargetProperty { get; }
+    }
+
+    public interface ITestUriContext
+    {
+        Uri BaseUri { get; set; }
+    }
 }

@@ -10,11 +10,11 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
-        private List<ButtonData> _buttonData = new();
-        private Dictionary<int, int> _idMap = new();
-        private Popup _popup;
-        private VBoxContainer _popupVBox;
-        private Label _label;
+        private readonly List<ButtonData> _buttonData = new();
+        private readonly Dictionary<int, int> _idMap = new();
+        private readonly Popup _popup;
+        private readonly VBoxContainer _popupVBox;
+        private readonly Label _label;
 
         public int ItemCount => _buttonData.Count;
 
@@ -22,7 +22,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public string Prefix { get; set; }
 
-        public OptionButton() : base()
+        public OptionButton()
         {
             AddStyleClass(StyleClassButton);
             Prefix = "";

@@ -16,9 +16,9 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
-        private List<ButtonData> _buttonData = new List<ButtonData>();
+        private List<ButtonData> _buttonData = new();
         // map from key to buttondata index
-        private Dictionary<TKey, int> _keyMap = new Dictionary<TKey, int>();
+        private Dictionary<TKey, int> _keyMap = new();
         private readonly Popup _popup;
         private readonly VBoxContainer _popupVBox;
         private readonly Label _label;
@@ -28,7 +28,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Tracks the order in which items were selected, latest going at the end.
         /// </summary>
-        private List<TKey> _selectedKeys = new List<TKey>();
+        private List<TKey> _selectedKeys = new();
 
         /// <summary>
         /// Ids of all currently selected items, ordered by most recently selected = last
@@ -55,7 +55,7 @@ namespace Robust.Client.UserInterface.Controls
             set => _label.Text = value;
         }
 
-        public MultiselectOptionButton() : base()
+        public MultiselectOptionButton()
         {
             AddStyleClass(StyleClassButton);
             OnPressed += OnPressedInternal;

@@ -142,6 +142,11 @@ namespace Robust.Client.UserInterface.Controls
             _idMap.Remove(data.Id);
             _popupVBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
+            var newIdx = 0;
+            foreach (var buttonData in _buttonData)
+            {
+                _idMap[buttonData.Id] = newIdx++;
+            }
         }
 
         public void Select(int idx)

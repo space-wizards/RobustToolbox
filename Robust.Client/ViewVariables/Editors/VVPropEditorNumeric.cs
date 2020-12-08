@@ -67,7 +67,7 @@ namespace Robust.Client.ViewVariables.Editors
             return convert.ToString(CultureInfo.InvariantCulture);
         }
 
-        public enum NumberType
+        public enum NumberType : byte
         {
             Byte,
             SByte,

@@ -10,7 +10,7 @@ namespace Robust.Client.Input
         /// <summary>
         ///     Represents one of three mouse buttons.
         /// </summary>
-        public enum Button
+        public enum Button : byte
         {
             Left = 1,
             Middle = 2,

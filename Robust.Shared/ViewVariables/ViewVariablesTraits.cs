@@ -8,7 +8,7 @@ namespace Robust.Shared.ViewVariables
     ///     Pre-defined simple VV traits used by the engine.
     /// </summary>
     [Serializable, NetSerializable]
-    public enum ViewVariablesTraits
+    public enum ViewVariablesTraits : byte
     {
         /// <summary>
         ///     This object has VV-accessible members (field or property with the <see cref="ViewVariablesAttribute"/>.

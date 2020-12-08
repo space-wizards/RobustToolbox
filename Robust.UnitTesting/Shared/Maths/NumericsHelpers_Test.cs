@@ -29,7 +29,7 @@ namespace Robust.UnitTesting.Shared.Maths
         }
 
         [Flags]
-        enum Intrinsics
+        enum Intrinsics : byte
         {
             None = 0,
             Sse  = 1 << 1,

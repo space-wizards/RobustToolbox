@@ -845,7 +845,7 @@ namespace Robust.Shared.ContentPack
         }
 
         [Flags]
-        public enum DumpFlags
+        public enum DumpFlags : byte
         {
             None = 0,
             Types = 1,

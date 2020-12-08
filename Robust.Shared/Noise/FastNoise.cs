@@ -46,7 +46,7 @@ namespace Robust.Shared.Noise
         private const MethodImplOptions FN_INLINE = MethodImplOptions.AggressiveInlining;
         private const int FN_CELLULAR_INDEX_MAX = 3;
 
-        public enum NoiseType
+        public enum NoiseType : byte
         {
             Value,
             ValueFractal,
@@ -60,28 +60,28 @@ namespace Robust.Shared.Noise
             CubicFractal
         };
 
-        public enum Interp
+        public enum Interp : byte
         {
             Linear,
             Hermite,
             Quintic
         };
 
-        public enum FractalType
+        public enum FractalType : byte
         {
             FBM,
             Billow,
             RigidMulti
         };
 
-        public enum CellularDistanceFunction
+        public enum CellularDistanceFunction : byte
         {
             Euclidean,
             Manhattan,
             Natural
         };
 
-        public enum CellularReturnType
+        public enum CellularReturnType : byte
         {
             CellValue,
             NoiseLookup,

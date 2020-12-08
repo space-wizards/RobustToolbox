@@ -98,7 +98,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(prototype.PlacementMode, Is.EqualTo("SnapgridCenter"));
         }
 
-        private enum YamlTestEnum
+        private enum YamlTestEnum : byte
         {
             Foo,
             Bar

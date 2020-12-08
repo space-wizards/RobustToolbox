@@ -37,6 +37,13 @@ namespace Robust.Client.UserInterface.Controls
             UserInterfaceManagerInternal.PushModal(this);
         }
 
+        public void Close()
+        {
+            if (!Visible) return;
+            UserInterfaceManagerInternal.RemoveModal(this);
+        }
+
+
         protected internal override void ModalRemoved()
         {
             base.ModalRemoved();

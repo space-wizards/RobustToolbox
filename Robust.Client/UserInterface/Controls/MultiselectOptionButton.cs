@@ -64,9 +64,9 @@ namespace Robust.Client.UserInterface.Controls
             AddChild(hBox);
 
             _popup = new Popup();
-            UserInterfaceManager.ModalRoot.AddChild(_popup);
             _popupVBox = new VBoxContainer();
             _popup.AddChild(_popupVBox);
+            _popup.OnPopupHide += OnPopupHide;
 
             _label = new Label
             {
@@ -107,9 +107,31 @@ namespace Robust.Client.UserInterface.Controls
             _popupVBox.AddChild(button);
         }
 
+        private void TogglePopup(bool show)
+        {
+            if (show)
+            {
+                var globalPos = GlobalPosition;
+                var (minX, minY) = _popupVBox.CombinedMinimumSize;
+                var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
+                UserInterfaceManager.ModalRoot.AddChild(_popup);
+                _popup.Open(box);
+            }
+            else
+            {
+                _popup.Close();
+            }
+        }
+
+        private void OnPopupHide()
+        {
+            UserInterfaceManager.ModalRoot.RemoveChild(_popup);
+        }
+
+
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
-            _popup.Visible = false;
+            TogglePopup(false);
             foreach (var buttonData in _buttonData)
             {
                 if (buttonData.Button == obj.Button)
@@ -250,17 +272,13 @@ namespace Robust.Client.UserInterface.Controls
 
         private void OnPressedInternal(ButtonEventArgs args)
         {
-            var globalPos = GlobalPosition;
-            var (minX, minY) = _popupVBox.CombinedMinimumSize;
-            var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
-            _popup.Open(box);
+            TogglePopup(true);
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
-
-            _popup?.Dispose();
+            base.ExitedTree();
+            TogglePopup(false);
         }
 
         public class ItemPressedEventArgs : EventArgs

@@ -36,6 +36,13 @@ namespace Robust.Shared.Utility
             return msg;
         }
 
+        public static FormattedMessage FromMarkupPermissive(string markup)
+        {
+            var msg = new FormattedMessage();
+            msg.AddMarkupPermissive(markup);
+            return msg;
+        }
+
         /// <summary>
         ///     Escape a string of text to be able to be formatted into markup.
         /// </summary>

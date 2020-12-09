@@ -95,34 +95,22 @@ namespace Robust.Shared.Utility
         }
 
         [Serializable, NetSerializable]
-        public abstract class Tag
+        public abstract record Tag
         {
         }
 
         [Serializable, NetSerializable]
-        public class TagText : Tag
+        public sealed record TagText(string Text) : Tag
         {
-            public readonly string Text;
-
-            public TagText(string text)
-            {
-                Text = text;
-            }
         }
 
         [Serializable, NetSerializable]
-        public class TagColor : Tag
+        public sealed record TagColor(Color Color) : Tag
         {
-            public readonly Color Color;
-
-            public TagColor(Color color)
-            {
-                Color = color;
-            }
         }
 
         [Serializable, NetSerializable]
-        public class TagPop : Tag
+        public sealed record TagPop : Tag
         {
             public static readonly TagPop Instance = new();
         }

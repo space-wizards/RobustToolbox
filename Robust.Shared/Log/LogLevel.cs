@@ -6,7 +6,7 @@ namespace Robust.Shared.Log
     ///     The value associated with the level determines the order in which they are filtered,
     ///     Under the default <see cref="LogManager"/>.
     /// </remarks>
-    public enum LogLevel : byte
+    public enum LogLevel
     {
         /// <summary>
         ///     When you're *really* trying to track down that bug.

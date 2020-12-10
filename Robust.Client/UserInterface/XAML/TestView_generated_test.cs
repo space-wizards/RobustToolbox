@@ -1,28 +1,61 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Reflection.Emit;
-using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
-using Robust.Shared.IoC;
-using XamlX.Ast;
-using XamlX.Emit;
-using XamlX.IL;
-using XamlX.Parsers;
-using XamlX.Transform;
-using XamlX.TypeSystem;
 
-namespace Robust.Client.UI
+namespace Robust.Client.UserInterface.XAML
 {
     public partial class TestView : SS14Window
     {
+        private class DummyService : IServiceProvider
+        {
+            public object? GetService(Type serviceType)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public delegate object CallbackExtensionCallback(IServiceProvider provider);
+        class DictionaryServiceProvider : Dictionary<Type, object>, IServiceProvider
+        {
+            public IServiceProvider Parent { get; set; }
+            public object GetService(Type serviceType)
+            {
+                if(TryGetValue(serviceType, out var impl))
+                    return impl;
+                return Parent?.GetService(serviceType);
+            }
+        }
+
         public TestView()
         {
             var comp = new XamlCompiler();
-            var content = File.ReadAllText("../../Robust.Client/UI/TestView.xaml");
-            var obj = comp.Compile(content).create(null!);
+            var content = File.ReadAllText("../../Robust.Client/UserInterface/XAML/TestView.xaml");
+            var (create, populate) = comp.Compile(content);
+
+            var testserv = new DictionaryServiceProvider
+            {
+                [typeof(CallbackExtensionCallback)] = (CallbackExtensionCallback) (cp =>
+                {
+                    System.Console.WriteLine("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+                    return null;
+                }),
+                [typeof(DummyService)] = new DummyService()
+            };
+
+            create(testserv);
+            populate(testserv, this);
+            var nameScope = new Dictionary<string, Control>();
+            foreach (var control in XamlChildren)
+            {
+                if(control.Name == null) continue;
+                nameScope.Add(control.Name, control);
+            }
+            AttachNameScope(nameScope);
+
+            //var obj = create(null!);
+            //AddChild((Control)obj);
             //throw new NotImplementedException();
             /*
 

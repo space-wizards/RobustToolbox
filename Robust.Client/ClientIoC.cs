@@ -31,7 +31,6 @@ using Robust.Client.Player;
 using Robust.Client.Reflection;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
-using Robust.Client.UI;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;

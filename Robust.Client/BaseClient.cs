@@ -6,7 +6,6 @@ using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.UI;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
@@ -18,6 +17,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
+using TestView = Robust.Client.UserInterface.XAML.TestView;
 
 namespace Robust.Client
 {

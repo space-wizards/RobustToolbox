@@ -9,7 +9,7 @@ using XamlX.Parsers;
 using XamlX.Transform;
 using XamlX.TypeSystem;
 
-namespace Robust.Client.UI
+namespace Robust.Client.UserInterface.XAML
 {
     public class XamlCompiler : IXamlCompiler
     {
@@ -20,29 +20,29 @@ namespace Robust.Client.UI
         {
             _typeSystem = new SreTypeSystem();
             Configuration = new TransformerConfiguration(_typeSystem,
-                _typeSystem.FindAssembly("Robust.Client.UI"),
+                _typeSystem.FindAssembly("Robust.Client.UserInterface.XAML"),
                 new XamlLanguageTypeMappings(_typeSystem)
                 {
                     XmlnsAttributes =
                     {
-                        _typeSystem.GetType("Robust.Client.UI.XmlnsDefinitionAttribute"),
+                        _typeSystem.GetType("Robust.Client.UserInterface.XAML.XmlnsDefinitionAttribute"),
 
                     },
                     ContentAttributes =
                     {
-                        _typeSystem.GetType("Robust.Client.UI.ContentAttribute")
+                        _typeSystem.GetType("Robust.Client.UserInterface.XAML.ContentAttribute")
                     },
                     UsableDuringInitializationAttributes =
                     {
-                        _typeSystem.GetType("Robust.Client.UI.UsableDuringInitializationAttribute")
+                        _typeSystem.GetType("Robust.Client.UserInterface.XAML.UsableDuringInitializationAttribute")
                     },
                     DeferredContentPropertyAttributes =
                     {
-                        _typeSystem.GetType("Robust.Client.UI.DeferredContentAttribute")
+                        _typeSystem.GetType("Robust.Client.UserInterface.XAML.DeferredContentAttribute")
                     },
-                    RootObjectProvider = _typeSystem.GetType("Robust.Client.UI.ITestRootObjectProvider"),
-                    UriContextProvider = _typeSystem.GetType("Robust.Client.UI.ITestUriContext"),
-                    ProvideValueTarget = _typeSystem.GetType("Robust.Client.UI.ITestProvideValueTarget"),
+                    RootObjectProvider = _typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestRootObjectProvider"),
+                    UriContextProvider = _typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestUriContext"),
+                    ProvideValueTarget = _typeSystem.GetType("Robust.Client.UserInterface.XAML.ITestProvideValueTarget"),
                     /*ParentStackProvider = _typeSystem.GetType("XamlX.Runtime.IXamlParentStackProviderV1"),
                     XmlNamespaceInfoProvider = _typeSystem.GetType("XamlX.Runtime.IXamlXmlNamespaceInfoProviderV1")*/
                 }
@@ -53,7 +53,7 @@ namespace Robust.Client.UI
         {
             var da = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(Guid.NewGuid().ToString("N")), AssemblyBuilderAccess.Run);
 
-            var dm = da.DefineDynamicModule("testasm.dll");
+            var dm = da.DefineDynamicModule("xaml_classes.dll");
             var t = dm.DefineType(Guid.NewGuid().ToString("N"), TypeAttributes.Public);
             var ct = dm.DefineType(t.Name + "Context");
             var ctb = ((SreTypeSystem)_typeSystem).CreateTypeBuilder(ct);

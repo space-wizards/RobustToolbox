@@ -1,0 +1,11 @@
+﻿<ui:Control xmlns:ui="clr-namespace:Robust.Client.UserInterface"
+            xmlns:controls="clr-namespace:Robust.Client.UserInterface.Controls"
+            xmlns:customControls="clr-namespace:Robust.Client.UserInterface.CustomControls">
+    <controls:Label Text="yes" Name="myLabel"></controls:Label>
+    <controls:GridContainer Name="MyMainContainer">
+        <controls:Button Name="Button1">
+
+        </controls:Button>
+        <controls:Button/>
+    </controls:GridContainer>
+</ui:Control>

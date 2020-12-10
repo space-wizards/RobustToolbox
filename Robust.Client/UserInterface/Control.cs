@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
-using Robust.Client.UI;
+using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -50,6 +50,39 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public Control? Parent { get; private set; }
 
+        private Dictionary<string, Control>? _nameScope;
+
+        public void AttachNameScope(Dictionary<string, Control> nameScope)
+        {
+            _nameScope = nameScope;
+        }
+
+        public IReadOnlyDictionary<string, Control>? FindNameScope()
+        {
+            foreach (var control in this.GetSelfAndLogicalAncestors())
+            {
+                if (control._nameScope != null) return control._nameScope;
+            }
+
+            return null;
+        }
+
+        public Control FindControl(string name)
+        {
+            var nameScope = FindNameScope();
+            if (nameScope == null)
+            {
+                throw new ArgumentException("No Namespace found for Control");
+            }
+
+            if (!nameScope.TryGetValue(name, out var value) || value == null)
+            {
+                throw new ArgumentException($"No Control with the name {name} found");
+            }
+
+            return value;
+        }
+
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
 
         /// <summary>
@@ -61,8 +94,10 @@ namespace Robust.Client.UserInterface
         ///     Gets an ordered enumerable over all the children of this control.
         /// </summary>
         [ViewVariables]
-        [Content]
         public OrderedChildCollection Children { get; }
+
+        [Content]
+        public virtual ICollection<Control> XamlChildren { get; protected set; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
@@ -349,6 +384,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
+            XamlChildren = Children;
         }
 
         /// <summary>

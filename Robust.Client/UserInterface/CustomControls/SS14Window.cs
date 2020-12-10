@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -77,6 +81,7 @@ namespace Robust.Client.UserInterface.CustomControls
             });
 
             CloseButton.OnPressed += CloseButtonPressed;
+            XamlChildren = new SS14ContentCollection(this);
         }
 
         public MarginContainer Contents { get; private set; }
@@ -176,6 +181,92 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             return mode;
+        }
+
+        public class SS14ContentCollection : ICollection<Control>, IReadOnlyCollection<Control>
+        {
+            private readonly SS14Window Owner;
+
+            public SS14ContentCollection(SS14Window owner)
+            {
+                Owner = owner;
+            }
+
+            public Enumerator GetEnumerator()
+            {
+                return new(Owner);
+            }
+
+            IEnumerator<Control> IEnumerable<Control>.GetEnumerator() => GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+            public void Add(Control item)
+            {
+                Owner.Contents.AddChild(item);
+            }
+
+            public void Clear()
+            {
+                Owner.Contents.RemoveAllChildren();
+            }
+
+            public bool Contains(Control item)
+            {
+                return item?.Parent == Owner.Contents;
+            }
+
+            public void CopyTo(Control[] array, int arrayIndex)
+            {
+                Owner.Contents.Children.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(Control item)
+            {
+                if (item?.Parent != Owner.Contents)
+                {
+                    return false;
+                }
+
+                DebugTools.AssertNotNull(Owner?.Contents);
+                Owner.Contents.RemoveChild(item);
+
+                return true;
+            }
+
+            int ICollection<Control>.Count => Owner.Contents.ChildCount;
+            int IReadOnlyCollection<Control>.Count => Owner.Contents.ChildCount;
+
+            public bool IsReadOnly => false;
+
+
+            public struct Enumerator : IEnumerator<Control>
+            {
+                private OrderedChildCollection.Enumerator _enumerator;
+
+                internal Enumerator(SS14Window ss14Window)
+                {
+                    _enumerator = ss14Window.Contents.Children.GetEnumerator();
+                }
+
+                public bool MoveNext()
+                {
+                    return _enumerator.MoveNext();
+                }
+
+                public void Reset()
+                {
+                    ((IEnumerator) _enumerator).Reset();
+                }
+
+                public Control Current => _enumerator.Current;
+
+                object IEnumerator.Current => Current;
+
+                public void Dispose()
+                {
+                    _enumerator.Dispose();
+                }
+            }
         }
     }
 }

@@ -44,7 +44,7 @@ namespace Robust.Shared.Serialization
         {
             if (!IoCManager.Resolve<IModLoader>().IsContentTypeAccessAllowed(type))
             {
-                throw new SandboxArgumentException("Type access for this type now allowed.");
+                throw new SandboxArgumentException("Type access for this type not allowed.");
             }
 
             CurrentType = type;

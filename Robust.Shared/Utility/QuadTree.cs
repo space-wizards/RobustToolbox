@@ -512,7 +512,7 @@ namespace Robust.Shared.Utility
         }
     }
 
-    public enum DiRectangleFion : int
+    public enum DiRectangleFion : byte
     {
         NW = 0,
         NE = 1,

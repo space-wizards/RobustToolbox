@@ -14,7 +14,7 @@ using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
 {
-    public enum MidiRendererStatus
+    public enum MidiRendererStatus : byte
     {
         None,
         Input,

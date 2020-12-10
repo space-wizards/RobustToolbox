@@ -347,7 +347,7 @@ namespace Robust.Client
         }
 
 
-        internal enum DisplayMode
+        internal enum DisplayMode : byte
         {
             Headless,
             Clyde,

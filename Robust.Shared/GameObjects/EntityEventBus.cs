@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [Flags]
-    public enum EventSource
+    public enum EventSource : byte
     {
         None    = 0b0000,
         Local   = 0b0001,

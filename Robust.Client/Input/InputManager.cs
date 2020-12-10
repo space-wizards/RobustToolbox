@@ -772,14 +772,14 @@ namespace Robust.Client.Input
         }
     }
 
-    public enum KeyBindingType
+    public enum KeyBindingType : byte
     {
         Unknown = 0,
         State,
         Toggle,
     }
 
-    public enum CommandState
+    public enum CommandState : byte
     {
         Unknown = 0,
         Enabled,

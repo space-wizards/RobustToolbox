@@ -618,7 +618,7 @@ namespace Robust.Client.Placement
             NetworkManager.ClientSendMessage(message);
         }
 
-        public enum PlacementTypes
+        public enum PlacementTypes : byte
         {
             None = 0,
             Line = 1,

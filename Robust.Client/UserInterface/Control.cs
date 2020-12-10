@@ -757,7 +757,7 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     Mode that will be tested when testing controls to invoke mouse button events on.
         /// </summary>
-        public enum MouseFilterMode
+        public enum MouseFilterMode : byte
         {
             /// <summary>
             ///     The control will be able to receive mouse buttons events.

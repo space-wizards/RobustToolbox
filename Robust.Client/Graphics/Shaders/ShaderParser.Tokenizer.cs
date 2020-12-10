@@ -593,7 +593,7 @@ namespace Robust.Client.Graphics.Shaders
             public Symbols Symbol { get; }
         }
 
-        private enum Symbols
+        private enum Symbols : byte
         {
             Semicolon,
             Comma,

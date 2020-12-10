@@ -223,6 +223,11 @@ namespace Robust.Client.UserInterface
         /// not move it around in the tree or move it out of PopupRoot, but may access and modify
         /// the control and its children via <see cref="SuppliedTooltip"/>.
         /// </summary>
+        /// <remarks>
+        /// Returning a new instance of a tooltip control every time is usually fine. If for some
+        /// reason constructing the tooltip control is expensive, it MAY be fine to cache + reuse a single instance but this
+        /// approach has not yet been tested.
+        /// </remarks>
         public TooltipSupplier? TooltipSupplier { get; set; }
 
         /// <summary>

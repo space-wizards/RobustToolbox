@@ -193,7 +193,8 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         /// Simple text tooltip that is shown when the mouse is hovered over this control for a bit.
-        /// See <see cref="OnShowTooltip"/> for a more customizable alternative.
+        /// See <see cref="TooltipSupplier"/> or <see cref="OnShowTooltip"/> for a more customizable alternative.
+        /// No effect when TooltipSupplier is specified.
         /// </summary>
         /// <remarks>
         /// If empty or null, no tooltip is shown in the first place (but OnShowTooltip and OnHideTooltip
@@ -208,8 +209,25 @@ namespace Robust.Client.UserInterface
         public float? TooltipDelay { get; set; }
 
         /// <summary>
+        /// When a tooltip should be shown for this control, this will be invoked to
+        /// produce a control which will serve as the tooltip (doing nothing if null is returned).
+        /// This is the generally recommended way to implement custom tooltips for controls, as it takes
+        /// care of the various edge cases for showing / hiding the tooltip.
+        /// For an even more customizable approach, <see cref="OnShowTooltip"/>
+        ///
+        /// The returned control will be added to PopupRoot, and positioned
+        /// within the user interface under the current mouse position to avoid going off the edge of the
+        /// screen. When the tooltip should be hidden, the control will be hidden by removing it from the tree.
+        ///
+        /// It is expected that the returned control remains within PopupRoot. Other classes should
+        /// not move it around in the tree or move it out of PopupRoot, but may access and modify
+        /// the control and its children via <see cref="SuppliedTooltip"/>.
+        /// </summary>
+        public TooltipSupplier? TooltipSupplier { get; set; }
+
+        /// <summary>
         /// Invoked when the mouse is hovered over this control for a bit and a tooltip
-        /// should be shown. Can be used as an alternative to ToolTip to perform custom tooltip
+        /// should be shown. Can be used as an alternative to ToolTip or TooltipSupplier to perform custom tooltip
         /// logic such as showing a more complex tooltip control.
         ///
         /// Any custom tooltip controls should typically be added
@@ -218,6 +236,23 @@ namespace Robust.Client.UserInterface
         /// custom tooltip controls.
         /// </summary>
         public event EventHandler? OnShowTooltip;
+
+
+
+        /// <summary>
+        /// If this control is currently showing a tooltip provided via TooltipSupplier,
+        /// returns that tooltip. Do not move this control within the tree, it should remain in PopupRoot.
+        /// Also, as it may be hidden (removed from tree) at any time, saving a reference to this is a Bad Idea.
+        /// </summary>
+        public Control? SuppliedTooltip => UserInterfaceManagerInternal.GetSuppliedTooltipFor(this);
+
+        /// <summary>
+        /// Manually hide the tooltip currently being shown for this control, if there is one.
+        /// </summary>
+        public void HideTooltip()
+        {
+            UserInterfaceManagerInternal.HideTooltipFor(this);
+        }
 
         internal void PerformShowTooltip()
         {
@@ -233,6 +268,7 @@ namespace Robust.Client.UserInterface
         {
             OnHideTooltip?.Invoke(this, EventArgs.Empty);
         }
+
 
         /// <summary>
         ///     The mode that controls how mouse filtering works. See the enum for how it functions.
@@ -871,4 +907,6 @@ namespace Robust.Client.UserInterface
             }
         }
     }
+
+    public delegate Control? TooltipSupplier(Control sender);
 }

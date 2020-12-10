@@ -81,6 +81,7 @@ namespace Robust.Client.UserInterface
         private float? _tooltipDelay;
         private Tooltip _tooltip = default!;
         private bool showingTooltip;
+        private Control? _suppliedTooltip;
         private const float TooltipDelay = 1;
 
         private readonly Queue<Control> _styleUpdateQueue = new();
@@ -524,6 +525,7 @@ namespace Robust.Client.UserInterface
             {
                 control.MouseExited();
                 CurrentlyHovered = null;
+                _clearTooltip();
             }
 
             if (control == _controlFocused)
@@ -710,6 +712,11 @@ namespace Robust.Client.UserInterface
         {
             if (!showingTooltip) return;
             _tooltip.Visible = false;
+            if (_suppliedTooltip != null)
+            {
+                PopupRoot.RemoveChild(_suppliedTooltip);
+                _suppliedTooltip = null;
+            }
             CurrentlyHovered?.PerformHideTooltip();
             _resetTooltipTimer();
             showingTooltip = false;
@@ -722,6 +729,11 @@ namespace Robust.Client.UserInterface
             {
                 _clearTooltip();
             }
+        }
+
+        public Control? GetSuppliedTooltipFor(Control control)
+        {
+            return CurrentlyHovered == control ? _suppliedTooltip : null;
         }
 
         private void _resetTooltipTimer()
@@ -739,9 +751,19 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            // show simple tooltip if there is one
-            if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
+            // show supplied tooltip if there is one
+            if (hovered.TooltipSupplier != null)
             {
+                _suppliedTooltip = hovered.TooltipSupplier.Invoke(hovered);
+                if (_suppliedTooltip != null)
+                {
+                    PopupRoot.AddChild(_suppliedTooltip);
+                    Tooltips.PositionTooltip(_suppliedTooltip);
+                }
+            }
+            else if (!String.IsNullOrWhiteSpace(hovered.ToolTip))
+            {
+                // show simple tooltip if there is one
                 _tooltip.Visible = true;
                 _tooltip.Text = hovered.ToolTip;
                Tooltips.PositionTooltip(_tooltip);

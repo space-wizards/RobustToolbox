@@ -515,7 +515,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public bool CanMove()
         {
-            return !Anchored && Mass > 0 && !Owner.Deleted;
+            return !Anchored && Mass > 0;
         }
     }
 }

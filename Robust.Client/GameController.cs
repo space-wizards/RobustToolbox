@@ -26,7 +26,6 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
@@ -39,9 +38,8 @@ namespace Robust.Client
 {
     internal sealed partial class GameController : IGameControllerInternal
     {
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _configurationManager = default!;
         [Dependency] private readonly IResourceCacheInternal _resourceCache = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -62,7 +60,7 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -92,6 +90,11 @@ namespace Robust.Client
 
             _configurationManager.Initialize(false);
 
+            // MUST load cvars before loading from config file so the cfg manager is aware of secure cvars.
+            // So SECURE CVars are blacklisted from config.
+            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
+            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
+
             if (LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, "client_config.toml");
@@ -107,9 +110,6 @@ namespace Robust.Client
                 }
             }
 
-            _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
-            _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
-
             _configurationManager.OverrideConVars(EnvironmentVariables.GetEnvironmentCVars());
 
             if (_commandLineArgs != null)
@@ -119,15 +119,7 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-#if FULL_RELEASE
-            _resourceCache.MountContentDirectory(@"Resources/");
-#else
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resourceCache.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resourceCache.MountContentDirectory($@"{contentRootDir}bin/Content.Client/",
-                new ResourcePath("/Assemblies/"));
-            _resourceCache.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client");
 
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())
@@ -142,23 +134,18 @@ namespace Robust.Client
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!_disableAssemblyLoadContext);
+            _modLoader.SetEnableSandboxing(true);
 
-            //identical code for server in baseserver
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resourceManager, $"Content.Shared"))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
-                throw new NotSupportedException("Cannot load client without content assembly");
+                Logger.Fatal("Errors while loading content assemblies.");
+                return false;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameClient>(_resourceManager, $"Content.Client"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Client DLL.");
-                throw new NotSupportedException("Cannot load client without content assembly");
+                _configurationManager.LoadCVarsFromAssembly(loadedModule);
             }
-
-
-            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Client"));
-            _configurationManager.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -299,7 +286,7 @@ namespace Robust.Client
         {
             logManager.RootSawmill.AddHandler(logHandlerFactory());
 
-            logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
+            //logManager.GetSawmill("res.typecheck").Level = LogLevel.Info;
             logManager.GetSawmill("res.tex").Level = LogLevel.Info;
             logManager.GetSawmill("console").Level = LogLevel.Info;
             logManager.GetSawmill("go.sys").Level = LogLevel.Info;
@@ -360,7 +347,7 @@ namespace Robust.Client
         }
 
 
-        internal enum DisplayMode
+        internal enum DisplayMode : byte
         {
             Headless,
             Clyde,

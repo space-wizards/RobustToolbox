@@ -17,7 +17,6 @@ namespace Robust.Shared.Network
     partial class NetManager
     {
         private const int RsaKeySize = 2048;
-        private const int VerifyTokenSize = 4; // Literally just what MC does idk.
 
         private RSA? _authRsaPrivateKey;
 
@@ -91,12 +90,25 @@ namespace Robust.Shared.Network
                     var msgEncResponse = new MsgEncryptionResponse();
                     msgEncResponse.ReadFromBuffer(incPacket);
 
-                    var verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
-                        msgEncResponse.VerifyToken,
-                        RSAEncryptionPadding.OaepSHA256);
-                    var sharedSecret = _authRsaPrivateKey!.Decrypt(
-                        msgEncResponse.SharedSecret,
-                        RSAEncryptionPadding.OaepSHA256);
+                    byte[] verifyTokenCheck;
+                    byte[] sharedSecret;
+                    try
+                    {
+                        verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
+                            msgEncResponse.VerifyToken,
+                            RSAEncryptionPadding.OaepSHA256);
+                        sharedSecret = _authRsaPrivateKey!.Decrypt(
+                            msgEncResponse.SharedSecret,
+                            RSAEncryptionPadding.OaepSHA256);
+                    }
+                    catch (CryptographicException)
+                    {
+                        // Launcher gives the client the public RSA key of the server BUT
+                        // that doesn't persist if the server restarts.
+                        // In that case, the decrypt can fail here.
+                        connection.Disconnect("Token decryption failed./nPlease reconnect to this server from the launcher.");
+                        return;
+                    }
 
                     if (!verifyToken.SequenceEqual(verifyTokenCheck))
                     {

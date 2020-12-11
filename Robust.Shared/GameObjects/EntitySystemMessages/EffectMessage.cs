@@ -48,12 +48,12 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect's x/y velocity
         /// </summary>
-        public Vector2 Velocity { get; set; } = new Vector2(0, 0);
+        public Vector2 Velocity { get; set; } = new(0, 0);
 
         /// <summary>
         /// Effect's x/y acceleration
         /// </summary>
-        public Vector2 Acceleration { get; set; } = new Vector2(0, 0);
+        public Vector2 Acceleration { get; set; } = new(0, 0);
 
         /// <summary>
         /// Effect's radial velocity - relative to EmitterPosition
@@ -98,7 +98,7 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect's current size
         /// </summary>
-        public Vector2 Size { get; set; } = new Vector2(1f, 1f);
+        public Vector2 Size { get; set; } = new(1f, 1f);
 
         /// <summary>
         /// Rate of change of effect's size change
@@ -108,12 +108,12 @@ namespace Robust.Shared.GameObjects.EntitySystemMessages
         /// <summary>
         /// Effect's current color
         /// </summary>
-        public Vector4 Color { get; set; } = new Vector4(1, 0, 0, 0);
+        public Vector4 Color { get; set; } = new(1, 0, 0, 0);
 
         /// <summary>
         /// Rate of change of effect's color
         /// </summary>
-        public Vector4 ColorDelta { get; set; } = new Vector4(-1, 0, 0, 0);
+        public Vector4 ColorDelta { get; set; } = new(-1, 0, 0, 0);
 
         /// <summary>
         ///     True if the effect is affected by lighting.

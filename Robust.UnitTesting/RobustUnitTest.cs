@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
@@ -8,11 +9,14 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
+using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
 {
-    public enum UnitTestProject
+    public enum UnitTestProject : byte
     {
         Server,
         Client
@@ -50,10 +54,14 @@ namespace Robust.UnitTesting
 
             foreach (var assembly in assemblies)
             {
-                IoCManager.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(assembly);
+                IoCManager.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
             }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
+
+            var modLoader = IoCManager.Resolve<TestingModLoader>();
+            modLoader.Assemblies = GetContentAssemblies();
+            modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
@@ -74,6 +82,13 @@ namespace Robust.UnitTesting
         /// Called after all IoC registration has been done, but before the graph has been built.
         /// This allows one to add new IoC types or overwrite existing ones if needed.
         /// </summary>
-        protected virtual void OverrideIoC() { }
+        protected virtual void OverrideIoC()
+        {
+        }
+
+        protected virtual Assembly[] GetContentAssemblies()
+        {
+            return Array.Empty<Assembly>();
+        }
     }
 }

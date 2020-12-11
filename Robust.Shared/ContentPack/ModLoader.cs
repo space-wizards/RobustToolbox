@@ -3,81 +3,40 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
 using System.Threading;
 using Robust.Shared.Interfaces.Log;
-using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
     /// <summary>
-    ///     Run levels of the Content entry point.
-    /// </summary>
-    public enum ModRunLevel
-    {
-        Error = 0,
-        Init = 1,
-        PostInit = 2,
-        PreInit = 3,
-    }
-
-    /// <summary>
-    ///     Levels at which point the content assemblies are getting updates.
-    /// </summary>
-    public enum ModUpdateLevel
-    {
-        /// <summary>
-        ///     This update is called before the main state manager on process frames.
-        /// </summary>
-        PreEngine,
-
-        /// <summary>
-        ///     This update is called before the main state manager on render frames, thus only applies to the client.
-        /// </summary>
-        FramePreEngine,
-
-        /// <summary>
-        ///     This update is called after the main state manager on process frames.
-        /// </summary>
-        PostEngine,
-
-        /// <summary>
-        ///     This update is called after the main state manager on render frames, thus only applies to the client.
-        /// </summary>
-        FramePostEngine,
-    }
-
-    /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal class ModLoader : IModLoader, IDisposable
+    internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable, IPostInjectInit
     {
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IResourceManager _resourceManager = default!;
+        [Dependency] private readonly IResourceManagerInternal _res = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
 
-        private readonly List<ModuleTestingCallbacks> _testingCallbacks = new List<ModuleTestingCallbacks>();
+        private AssemblyTypeChecker _typeChecker = default!;
 
-        /// <summary>
-        ///     Loaded assemblies.
-        /// </summary>
-        private readonly List<ModInfo> _mods = new List<ModInfo>();
-
-        private readonly List<Assembly> _sideModules = new List<Assembly>();
+        // List of extra assemblies side-loaded from the /Assemblies/ mounted path.
+        private readonly List<Assembly> _sideModules = new();
 
         private readonly AssemblyLoadContext _loadContext;
 
-        private readonly object _lock = new object();
+        private readonly object _lock = new();
 
         private static int _modLoaderId;
 
         private bool _useLoadContext = true;
+        private bool _sandboxingEnabled;
 
         public ModLoader()
         {
@@ -87,23 +46,130 @@ namespace Robust.Shared.ContentPack
             _loadContext = new AssemblyLoadContext($"ModLoader-{id}", true);
 
             _loadContext.Resolving += ResolvingAssembly;
+
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
+        }
+
+        void IPostInjectInit.PostInject()
+        {
+            _typeChecker = new AssemblyTypeChecker(_res);
         }
 
         public void SetUseLoadContext(bool useLoadContext)
         {
             _useLoadContext = useLoadContext;
+            Logger.DebugS("res", "{0} assembly load context", useLoadContext ? "ENABLING" : "DISABLING");
         }
 
-        public virtual void LoadGameAssembly<T>(Stream assembly, Stream? symbols = null)
-            where T : GameShared
+        public void SetEnableSandboxing(bool sandboxing)
         {
-            // TODO: Re-enable type check when it's not just a giant pain in the butt.
-            // It slows down development too much and we need other things like System.Type fixed
-            // before it can reasonably be re-enabled.
-            AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = false;
-            if (!AssemblyTypeChecker.CheckAssembly(assembly))
-                return;
+            _sandboxingEnabled = sandboxing;
+            _typeChecker.VerifyIL = sandboxing;
+            _typeChecker.DisableTypeCheck = !sandboxing;
+            Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
+        }
+
+        public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
+        {
+            var files = new Dictionary<string, (ResourcePath Path, string[] references)>();
+
+            // Find all modules we want to load.
+            foreach (var filePath in _res.ContentFindRelativeFiles(mountPath)
+                .Where(p => !p.ToString().Contains('/') && p.Filename.StartsWith(filterPrefix) && p.Extension == "dll"))
+            {
+                var fullPath = mountPath / filePath;
+                Logger.DebugS("res.mod", $"Found module '{fullPath}'");
+
+                var asmFile = _res.ContentFileRead(fullPath);
+                var (asmRefs, asmName) = GetAssemblyReferenceData(asmFile);
+
+                if (!files.TryAdd(asmName, (fullPath, asmRefs)))
+                {
+                    Logger.ErrorS("res.mod", "Found multiple modules with the same assembly name " +
+                                             $"'{asmName}', A: {files[asmName].Path}, B: {fullPath}.");
+                    return false;
+                }
+            }
+
+            // Actually load them in the order they depend on each other.
+            foreach (var path in TopologicalSortModules(files))
+            {
+                Logger.DebugS("res.mod", $"Loading module: '{path}'");
+                try
+                {
+                    // If possible, load from disk path instead.
+                    // This probably improves performance or something and makes debugging etc more reliable.
+                    if (_res.TryGetDiskFilePath(path, out var diskPath))
+                    {
+                        LoadGameAssembly(diskPath);
+                    }
+                    else
+                    {
+                        var assemblyStream = _res.ContentFileRead(path);
+                        var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
+                        LoadGameAssembly(assemblyStream, symbolsStream);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Logger.ErrorS("srv", $"Exception loading module '{path}':\n{e.ToStringBetter()}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static IEnumerable<ResourcePath> TopologicalSortModules(
+            IEnumerable<KeyValuePair<string, (ResourcePath Path, string[] references)>> modules)
+        {
+            var elems = modules.ToDictionary(
+                node => node.Key,
+                node => (node.Value.Path, refs: new HashSet<string>(node.Value.references)));
+
+            // Remove assembly references we aren't sorting for.
+            foreach (var (_, set) in elems.Values)
+            {
+                set.RemoveWhere(r => !elems.ContainsKey(r));
+            }
+
+            while (elems.Count > 0)
+            {
+                var elem = elems.FirstOrNull(x => x.Value.refs.Count == 0);
+                if (elem == null)
+                {
+                    throw new InvalidOperationException(
+                        "Found circular dependency in assembly dependency graph");
+                }
+
+                elems.Remove(elem.Value.Key);
+                foreach (var sElem in elems)
+                {
+                    sElem.Value.refs.Remove(elem.Value.Key);
+                }
+
+                yield return elem.Value.Value.Path;
+            }
+        }
+
+        private static (string[] refs, string name) GetAssemblyReferenceData(Stream stream)
+        {
+            using var reader = new PEReader(stream);
+            var metaReader = reader.GetMetadataReader();
+
+            var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);
+
+            return (metaReader.AssemblyReferences
+                .Select(a => metaReader.GetAssemblyReference(a))
+                .Select(a => metaReader.GetString(a.Name)).ToArray(), name);
+        }
+
+        public void LoadGameAssembly(Stream assembly, Stream? symbols = null)
+        {
+            if (!_typeChecker.CheckAssembly(assembly))
+            {
+                throw new TypeCheckFailedException();
+            }
 
             assembly.Position = 0;
 
@@ -117,20 +183,15 @@ namespace Robust.Shared.ContentPack
                 gameAssembly = Assembly.Load(assembly.CopyToArray(), symbols?.CopyToArray());
             }
 
-            InitMod<T>(gameAssembly);
+            InitMod(gameAssembly);
         }
 
-        public virtual void LoadGameAssembly<T>(string diskPath)
-            where T : GameShared
+        public void LoadGameAssembly(string diskPath)
         {
-            // TODO: Re-enable type check when it's not just a giant pain in the butt.
-            // It slows down development too much and we need other things like System.Type fixed
-            // before it can reasonably be re-enabled.
-            AssemblyTypeChecker.DisableTypeCheck = true;
-            AssemblyTypeChecker.DumpTypes = false;
-
-            if (!AssemblyTypeChecker.CheckAssembly(diskPath))
-                return;
+            if (!_typeChecker.CheckAssembly(diskPath))
+            {
+                throw new TypeCheckFailedException();
+            }
 
             Assembly assembly;
             if (_useLoadContext)
@@ -141,85 +202,20 @@ namespace Robust.Shared.ContentPack
             {
                 assembly = Assembly.LoadFrom(diskPath);
             }
-            InitMod<T>(assembly);
+
+            InitMod(assembly);
         }
 
-        public Assembly GetAssembly(string name)
-        {
-            return _mods.Select(p => p.GameAssembly).Single(p => p.GetName().Name == name);
-        }
-
-        protected void InitMod<T>(Assembly assembly) where T : GameShared
-        {
-            var mod = new ModInfo(assembly);
-
-            _reflectionManager.LoadAssemblies(mod.GameAssembly);
-
-            var entryPoints = mod.GameAssembly.GetTypes().Where(t => typeof(T).IsAssignableFrom(t)).ToArray();
-
-            if (entryPoints.Length == 0)
-                Logger.WarningS("res", $"Assembly has no entry points: {mod.GameAssembly.FullName}");
-
-            foreach (var entryPoint in entryPoints)
-            {
-                var entryPointInstance = (T) Activator.CreateInstance(entryPoint)!;
-                if (_testingCallbacks != null)
-                {
-                    entryPointInstance.SetTestingCallbacks(_testingCallbacks);
-                }
-                mod.EntryPoints.Add(entryPointInstance);
-            }
-
-            _mods.Add(mod);
-        }
-
-        public void BroadcastRunLevel(ModRunLevel level)
-        {
-            foreach (var mod in _mods)
-            {
-                foreach (var entry in mod.EntryPoints)
-                {
-                    switch (level)
-                    {
-                        case ModRunLevel.PreInit:
-                            entry.PreInit();
-                            break;
-                        case ModRunLevel.Init:
-                            entry.Init();
-                            break;
-                        case ModRunLevel.PostInit:
-                            entry.PostInit();
-                            break;
-                        default:
-                            Logger.ErrorS("res", $"Unknown RunLevel: {level}");
-                            break;
-                    }
-                }
-            }
-        }
-
-        public void BroadcastUpdate(ModUpdateLevel level, FrameEventArgs frameEventArgs)
-        {
-            foreach (var module in _mods)
-            {
-                foreach (var entryPoint in module.EntryPoints)
-                {
-                    entryPoint.Update(level, frameEventArgs);
-                }
-            }
-        }
-
-        public virtual bool TryLoadAssembly<T>(IResourceManager resMan, string assemblyName)
-            where T : GameShared
+        public bool TryLoadAssembly(string assemblyName)
         {
             var dllPath = new ResourcePath($@"/Assemblies/{assemblyName}.dll");
             // To prevent breaking debugging on Rider, try to load from disk if possible.
-            if (resMan.TryGetDiskFilePath(dllPath, out var path))
+            if (_res.TryGetDiskFilePath(dllPath, out var path))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
                 try
                 {
-                    LoadGameAssembly<T>(path);
+                    LoadGameAssembly(path);
                     return true;
                 }
                 catch (Exception e)
@@ -229,17 +225,18 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
-            if (resMan.TryContentFileRead(dllPath, out var gameDll))
+            if (_res.TryContentFileRead(dllPath, out var gameDll))
             {
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
 
                 // see if debug info is present
-                if (resMan.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"), out var gamePdb))
+                if (_res.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"),
+                    out var gamePdb))
                 {
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly<T>(gameDll, gamePdb);
+                        LoadGameAssembly(gameDll, gamePdb);
                         return true;
                     }
                     catch (Exception e)
@@ -252,7 +249,7 @@ namespace Robust.Shared.ContentPack
                 try
                 {
                     // load the assembly into the process, and bootstrap the GameServer entry point.
-                    LoadGameAssembly<T>(gameDll);
+                    LoadGameAssembly(gameDll);
                     return true;
                 }
                 catch (Exception e)
@@ -266,11 +263,6 @@ namespace Robust.Shared.ContentPack
             return false;
         }
 
-        public void SetModuleBaseCallbacks(ModuleTestingCallbacks testingCallbacks)
-        {
-            _testingCallbacks.Add(testingCallbacks);
-        }
-
         private Assembly? ResolvingAssembly(AssemblyLoadContext context, AssemblyName name)
         {
             try
@@ -280,7 +272,7 @@ namespace Robust.Shared.ContentPack
                     _logManager.GetSawmill("res").Debug("ResolvingAssembly {0}", name);
 
                     // Try main modules.
-                    foreach (var mod in _mods)
+                    foreach (var mod in Mods)
                     {
                         if (mod.GameAssembly.FullName == name.FullName)
                         {
@@ -288,19 +280,24 @@ namespace Robust.Shared.ContentPack
                         }
                     }
 
-                    foreach (var assembly in _sideModules)
+                    // Do not allow sideloading when sandboxing is enabled.
+                    // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
+                    if (!_sandboxingEnabled)
                     {
-                        if (assembly.FullName == name.FullName)
+                        foreach (var assembly in _sideModules)
                         {
+                            if (assembly.FullName == name.FullName)
+                            {
+                                return assembly;
+                            }
+                        }
+
+                        if (_res.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
+                        {
+                            var assembly = _loadContext.LoadFromStream(dll);
+                            _sideModules.Add(assembly);
                             return assembly;
                         }
-                    }
-
-                    if (_resourceManager.TryContentFileRead($"/Assemblies/{name.Name}.dll", out var dll))
-                    {
-                        var assembly = _loadContext.LoadFromStream(dll);
-                        _sideModules.Add(assembly);
-                        return assembly;
                     }
 
                     return null;
@@ -317,21 +314,34 @@ namespace Robust.Shared.ContentPack
         public void Dispose()
         {
             _loadContext.Unload();
+            AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
         }
 
-        /// <summary>
-        ///     Holds info about a loaded assembly.
-        /// </summary>
-        private class ModInfo
+        private Assembly? DefaultOnResolving(AssemblyLoadContext ctx, AssemblyName name)
         {
-            public ModInfo(Assembly gameAssembly)
+            // We have to hook AssemblyLoadContext.Default.Resolving so that C# interactive loads assemblies correctly.
+            // Otherwise it would load the assemblies a second time which is an amazing way to have everything break.
+            if (_useLoadContext)
             {
-                GameAssembly = gameAssembly;
-                EntryPoints = new List<GameShared>();
+                Logger.DebugS("res.mod", $"RESOLVING DEFAULT: {name}");
+                foreach (var module in LoadedModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
+
+                foreach (var module in _sideModules)
+                {
+                    if (module.GetName().Name == name.Name)
+                    {
+                        return module;
+                    }
+                }
             }
 
-            public Assembly GameAssembly { get; }
-            public List<GameShared> EntryPoints { get; }
+            return null;
         }
     }
 }

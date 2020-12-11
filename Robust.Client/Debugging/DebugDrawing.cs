@@ -92,7 +92,7 @@ namespace Robust.Client.Debugging
             private readonly Font _font;
 
             private Vector2 _hoverStartScreen = Vector2.Zero;
-            private List<IPhysBody> _hoverBodies = new List<IPhysBody>();
+            private List<IPhysBody> _hoverBodies = new();
 
             public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
                 : base(nameof(PhysicsOverlay))
@@ -227,6 +227,11 @@ namespace Robust.Client.Debugging
                 }
 
                 public override void DrawRect(in Box2 box, in Color color)
+                {
+                    _handle.DrawRect(box, color);
+                }
+
+                public override void DrawRect(in Box2Rotated box, in Color color)
                 {
                     _handle.DrawRect(box, color);
                 }

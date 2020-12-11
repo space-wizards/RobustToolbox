@@ -20,7 +20,7 @@ namespace Robust.Shared.Scripting
     internal static class ScriptInstanceShared
     {
         public static CSharpParseOptions ParseOptions { get; } =
-            new CSharpParseOptions(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
+            new(kind: SourceCodeKind.Script, languageVersion: LanguageVersion.Latest);
 
         private static readonly Func<Script, bool> _hasReturnValue;
 

@@ -37,6 +37,7 @@ using Robust.Shared;
 using Robust.Shared.Network.Messages;
 using Robust.Server.DataMetrics;
 using Robust.Server.Log;
+using Robust.Shared.Localization;
 using Robust.Shared.Serialization;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
@@ -70,7 +71,7 @@ namespace Robust.Server
                 Buckets = Histogram.ExponentialBuckets(0.000_01, 2, 13)
             });
 
-        [Dependency] private readonly IConfigurationManager _config = default!;
+        [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IComponentManager _components = default!;
         [Dependency] private readonly IServerEntityManager _entities = default!;
         [Dependency] private readonly ILogManager _log = default!;
@@ -84,15 +85,16 @@ namespace Robust.Server
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IRuntimeLog runtimeLog = default!;
-        [Dependency] private readonly IModLoader _modLoader = default!;
+        [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
+        [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
 
-        private readonly Stopwatch _uptimeStopwatch = new Stopwatch();
+        private readonly Stopwatch _uptimeStopwatch = new();
 
-        private CommandLineArgs _commandLineArgs = default!;
+        private CommandLineArgs? _commandLineArgs;
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
@@ -103,7 +105,7 @@ namespace Robust.Server
 
         private string? _shutdownReason;
 
-        private readonly ManualResetEventSlim _shutdownEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _shutdownEvent = new(false);
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
@@ -183,7 +185,6 @@ namespace Robust.Server
                 _config.OverrideConVars(_commandLineArgs.CVars);
             }
 
-
             //Sets up Logging
             _logHandlerFactory = logHandlerFactory;
 
@@ -253,34 +254,21 @@ namespace Robust.Server
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-#if FULL_RELEASE
-            _resources.MountContentDirectory(@"./Resources/");
-#else
-            // Load from the resources dir in the repo root instead.
-            // It's a debug build so this is fine.
-            var contentRootDir = ProgramShared.FindContentRootDir();
-            _resources.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");
-            _resources.MountContentDirectory($@"{contentRootDir}bin/Content.Server/", new ResourcePath("/Assemblies/"));
-            _resources.MountContentDirectory($@"{contentRootDir}Resources/");
-#endif
+            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server");
 
             _modLoader.SetUseLoadContext(!DisableLoadContext);
+            _modLoader.SetEnableSandboxing(false);
 
-            //identical code in game controller for client
-            if (!_modLoader.TryLoadAssembly<GameShared>(_resources, $"Content.Shared"))
+            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
             {
-                Logger.FatalS("eng", "Could not load any Shared DLL.");
+                Logger.Fatal("Errors while loading content assemblies.");
                 return true;
             }
 
-            if (!_modLoader.TryLoadAssembly<GameServer>(_resources, $"Content.Server"))
+            foreach (var loadedModule in _modLoader.LoadedModules)
             {
-                Logger.FatalS("eng", "Could not load any Server DLL.");
-                return true;
+                _config.LoadCVarsFromAssembly(loadedModule);
             }
-
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Server"));
-            _config.LoadCVarsFromAssembly(_modLoader.GetAssembly("Content.Shared"));
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
 
@@ -288,6 +276,8 @@ namespace Robust.Server
             // Else the content types won't be included.
             // TODO: solve this properly.
             _serializer.Initialize();
+
+            _loc.AddLoadedToStringSerializer();
 
             //IoCManager.Resolve<IMapLoader>().LoadedMapData +=
             //    IoCManager.Resolve<IRobustMappedStringSerializer>().AddStrings;
@@ -472,8 +462,6 @@ namespace Robust.Server
                 SendTickRateUpdateToClients(b);
             });
 
-            cfgMgr.SetCVar(CVars.GameType, (int) GameType.Game);
-
             _time.TickRate = (byte) _config.GetCVar(CVars.NetTickrate);
 
             Logger.InfoS("srv", $"Name: {ServerName}");
@@ -577,14 +565,5 @@ namespace Robust.Server
 
             _watchdogApi.Heartbeat();
         }
-    }
-
-    /// <summary>
-    ///     Type of game currently running.
-    /// </summary>
-    public enum GameType
-    {
-        MapEditor = 0,
-        Game,
     }
 }

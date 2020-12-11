@@ -11,7 +11,7 @@ namespace Robust.Server.ViewVariables
 {
     internal sealed class ViewVariablesesSession : IViewVariablesSession
     {
-        private readonly List<ViewVariablesTrait> _traits = new List<ViewVariablesTrait>();
+        private readonly List<ViewVariablesTrait> _traits = new();
         public IViewVariablesHost Host { get; }
         public IRobustSerializer RobustSerializer { get; }
         public NetUserId PlayerUser { get; }

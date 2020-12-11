@@ -47,7 +47,7 @@ namespace Robust.Server.GameObjects
 
         private int _nextServerEntityUid = (int) EntityUid.FirstUid;
 
-        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new List<(GameTick, EntityUid)>();
+        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
         public override void Update()
         {
@@ -169,7 +169,7 @@ namespace Robust.Server.GameObjects
         }
 
         private readonly Dictionary<IPlayerSession, SortedSet<EntityUid>> _seenMovers
-            = new Dictionary<IPlayerSession, SortedSet<EntityUid>>();
+            = new();
 
         // Is thread safe.
         private SortedSet<EntityUid> GetSeenMovers(IPlayerSession player)
@@ -199,9 +199,9 @@ namespace Robust.Server.GameObjects
         }
 
         private readonly Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>> _playerLastSeen
-            = new Dictionary<IPlayerSession, Dictionary<EntityUid, GameTick>>();
+            = new();
 
-        private static readonly Vector2 Vector2NaN = new Vector2(float.NaN, float.NaN);
+        private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private Dictionary<EntityUid, GameTick> GetLastSeen(IPlayerSession player)
         {
@@ -324,17 +324,17 @@ namespace Robust.Server.GameObjects
 
         private class PlayerSeenEntityStatesResources
         {
-            public readonly HashSet<EntityUid> IncludedEnts = new HashSet<EntityUid>();
+            public readonly HashSet<EntityUid> IncludedEnts = new();
 
-            public readonly List<EntityState> EntityStates = new List<EntityState>();
+            public readonly List<EntityState> EntityStates = new();
 
-            public readonly HashSet<EntityUid> NeededEnts = new HashSet<EntityUid>();
+            public readonly HashSet<EntityUid> NeededEnts = new();
 
-            public readonly HashSet<IEntity> Relatives = new HashSet<IEntity>();
+            public readonly HashSet<IEntity> Relatives = new();
         }
 
         private readonly ThreadLocal<PlayerSeenEntityStatesResources> _playerSeenEntityStatesResources
-            = new ThreadLocal<PlayerSeenEntityStatesResources>(() => new PlayerSeenEntityStatesResources());
+            = new(() => new PlayerSeenEntityStatesResources());
 
         /// <inheritdoc />
         public List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range)
@@ -452,7 +452,7 @@ namespace Robust.Server.GameObjects
                         entityStates.Add(new EntityState(uid,
                             new ComponentChanged[]
                             {
-                                new ComponentChanged(false, NetIDs.TRANSFORM, "Transform")
+                                new(false, NetIDs.TRANSFORM, "Transform")
                             },
                             new ComponentState[]
                             {
@@ -856,7 +856,7 @@ namespace Robust.Server.GameObjects
 
         protected override EntityUid GenerateEntityUid()
         {
-            return new EntityUid(_nextServerEntityUid++);
+            return new(_nextServerEntityUid++);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
@@ -947,14 +947,15 @@ namespace Robust.Server.GameObjects
 
         private void ExcludeInvisible(HashSet<IEntity> set, int visibilityMask)
         {
-            foreach (var entity in set.ToArray())
+            set.RemoveWhere(e =>
             {
-                if (!entity.TryGetComponent(out VisibilityComponent? visibility))
-                    continue;
+                if (!e.TryGetComponent(out VisibilityComponent? visibility))
+                {
+                    return false;
+                }
 
-                if ((visibilityMask & visibility.Layer) == 0)
-                    set.Remove(entity);
-            }
+                return (visibilityMask & visibility.Layer) == 0;
+            });
         }
 
         public override void Update(float frameTime, Histogram? histogram)

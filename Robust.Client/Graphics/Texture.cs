@@ -119,7 +119,7 @@ namespace Robust.Client.Graphics
             return loadParams;
         }
 
-        public static readonly TextureLoadParameters Default = new TextureLoadParameters
+        public static readonly TextureLoadParameters Default = new()
         {
             SampleParameters = TextureSampleParameters.Default,
             Srgb = true
@@ -178,7 +178,7 @@ namespace Robust.Client.Graphics
             return new TextureSampleParameters {Filter = filter, WrapMode = wrap};
         }
 
-        public static readonly TextureSampleParameters Default = new TextureSampleParameters
+        public static readonly TextureSampleParameters Default = new()
         {
             Filter = false,
             WrapMode = TextureWrapMode.None
@@ -189,7 +189,7 @@ namespace Robust.Client.Graphics
     ///     Controls behavior when reading texture coordinates outside 0-1, which usually wraps the texture somehow.
     /// </summary>
     [PublicAPI]
-    public enum TextureWrapMode
+    public enum TextureWrapMode : byte
     {
         /// <summary>
         ///     Do not wrap, instead clamp to edge.

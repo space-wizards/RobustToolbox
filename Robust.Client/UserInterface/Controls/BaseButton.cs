@@ -318,7 +318,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum DrawModeEnum
+        public enum DrawModeEnum : byte
         {
             Normal = 0,
             Pressed = 1,
@@ -361,7 +361,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     For use with <see cref="BaseButton.Mode"/>.
         /// </summary>
-        public enum ActionMode
+        public enum ActionMode : byte
         {
             /// <summary>
             ///     <see cref="BaseButton.OnPressed"/> fires when the mouse button causing them is pressed down.
@@ -385,6 +385,6 @@ namespace Robust.Client.UserInterface.Controls
     /// </remarks>
     public sealed class ButtonGroup
     {
-        internal readonly List<BaseButton> Buttons = new List<BaseButton>();
+        internal readonly List<BaseButton> Buttons = new();
     }
 }

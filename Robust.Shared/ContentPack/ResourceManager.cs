@@ -70,7 +70,8 @@ namespace Robust.Shared.ContentPack
         {
             prefix = SanitizePrefix(prefix);
 
-            pack = PathHelpers.ExecutableRelativeFile(pack);
+            if (!Path.IsPathRooted(pack))
+                pack = PathHelpers.ExecutableRelativeFile(pack);
 
             var packInfo = new FileInfo(pack);
 
@@ -93,7 +94,7 @@ namespace Robust.Shared.ContentPack
             AddRoot(prefix, loader);
         }
 
-        private void AddRoot(ResourcePath prefix, IContentRoot loader)
+        protected void AddRoot(ResourcePath prefix, IContentRoot loader)
         {
             loader.Mount();
             _contentRootsLock.EnterWriteLock();
@@ -126,7 +127,9 @@ namespace Robust.Shared.ContentPack
         {
             prefix = SanitizePrefix(prefix);
 
-            path = PathHelpers.ExecutableRelativeFile(path);
+            if (!Path.IsPathRooted(path))
+                path = PathHelpers.ExecutableRelativeFile(path);
+
             var pathInfo = new DirectoryInfo(path);
             if (!pathInfo.Exists)
             {
@@ -293,22 +296,8 @@ namespace Robust.Shared.ContentPack
 
         public void MountStreamAt(MemoryStream stream, ResourcePath path)
         {
-            if (!path.IsRooted)
-            {
-                throw new ArgumentException("Path must be rooted.", nameof(path));
-            }
-
             var loader = new SingleStreamLoader(stream, path.ToRelativePath());
-            loader.Mount();
-            _contentRootsLock.EnterWriteLock();
-            try
-            {
-                _contentRoots.Add((ResourcePath.Root, loader));
-            }
-            finally
-            {
-                _contentRootsLock.ExitWriteLock();
-            }
+            AddRoot(ResourcePath.Root, loader);
         }
 
         internal static bool IsPathValid(ResourcePath path)

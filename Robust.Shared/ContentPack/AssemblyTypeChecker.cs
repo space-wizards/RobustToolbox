@@ -42,6 +42,9 @@ namespace Robust.Shared.ContentPack
 
         private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
 
+        // Necessary for loads with launcher loader.
+        public Func<string, Stream?>? ExtraRobustLoader { get; set; }
+
         public AssemblyTypeChecker(IResourceManager res)
         {
             _res = res;
@@ -50,14 +53,24 @@ namespace Robust.Shared.ContentPack
         private Resolver CreateResolver()
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
-            var ourDir = Path.GetDirectoryName(typeof(AssemblyTypeChecker).Assembly.Location)!;
+            var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
+            string[] loadDirs;
+            if (string.IsNullOrEmpty(ourPath))
+            {
+                Logger.DebugS("res.typecheck", "Robust directory not available");
+                loadDirs = new[] {dotnetDir};
+            }
+            else
+            {
+                Logger.DebugS("res.typecheck", "Robust directory is {0}", ourPath);
+                loadDirs = new[] {dotnetDir, Path.GetDirectoryName(ourPath)!};
+            }
 
             Logger.DebugS("res.typecheck", ".NET runtime directory is {0}", dotnetDir);
-            Logger.DebugS("res.typecheck", "Robust directory is {0}", ourDir);
 
             return new Resolver(
                 this,
-                new[] {dotnetDir, ourDir},
+                loadDirs,
                 new[] {new ResourcePath("/Assemblies/")}
             );
         }
@@ -749,6 +762,12 @@ namespace Robust.Shared.ContentPack
                     catch (FileNotFoundException)
                     {
                     }
+                }
+
+                var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
+                if (extraStream != null)
+                {
+                    return new PEReader(extraStream);
                 }
 
                 return null;

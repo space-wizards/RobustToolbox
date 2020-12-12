@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -65,5 +66,7 @@ namespace Robust.Shared.ContentPack
 
         void SetUseLoadContext(bool useLoadContext);
         void SetEnableSandboxing(bool sandboxing);
+
+        Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
     }
 }

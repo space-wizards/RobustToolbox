@@ -21,6 +21,12 @@
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
+    <!--
+    If you upgrade Robust.Natives (and are even reading this instead of using a GUI...),
+    Make sure to edit the relevant build scripts like package_release_build.py and package_client_build.py
+    That is, if the upgraded added new .dll/.so/.dylib files.
+    -->
+    <PackageReference Include="Robust.Natives" Version="0.1.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />
@@ -44,9 +50,4 @@
 
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
   </ItemGroup>
-  <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <PropertyGroup>
-    <RobustToolsPath>../Tools</RobustToolsPath>
-  </PropertyGroup>
-  <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
 </Project>

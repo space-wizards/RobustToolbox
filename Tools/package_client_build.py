@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Packages a full release build of the client that can be unzipped and you'll have your client engine redistributable.
 
 import os
@@ -100,7 +100,6 @@ def build_windows(skip_build: bool) -> None:
 
     if not skip_build:
         publish_client("win-x64", "Windows")
-        subprocess.run(["Tools/download_natives.py", "x64", "Windows", "_", p("bin", "Client", "win-x64")])
         if sys.platform != "win32":
             subprocess.run(["Tools/exe_set_subsystem.py", p("bin", "Client", "win-x64", "publish", "Robust.Client"), "2"])
 
@@ -121,7 +120,6 @@ def build_macos(skip_build: bool) -> None:
 
     if not skip_build:
         publish_client("osx-x64", "MacOS")
-        subprocess.run(["Tools/download_natives.py", "x64", "MacOS", "_", p("bin", "Client", "osx-x64")])
 
     print(Fore.GREEN + "Packaging macOS x64 client..." + Style.RESET_ALL)
     # Client has to go in an app bundle.
@@ -141,7 +139,6 @@ def build_linux(skip_build: bool) -> None:
 
     if not skip_build:
         publish_client("linux-x64", "Linux")
-        subprocess.run(["Tools/download_natives.py", "x64", "Linux", "_", p("bin", "Client", "linux-x64")])
 
     print(Fore.GREEN + "Packaging Linux x64 client..." + Style.RESET_ALL)
 

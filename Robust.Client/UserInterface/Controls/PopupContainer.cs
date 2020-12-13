@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.Maths;
+using Robust.Shared.Interfaces.GameObjects;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -25,6 +26,18 @@ namespace Robust.Client.UserInterface.Controls
         public static readonly AttachedProperty AltOriginProperty = AttachedProperty.Create("AltOrigin",
             typeof(PopupContainer), typeof(Vector2?), changed: PopupOriginChangedCallback);
 
+        /// <summary>
+        ///     The target entity this popup relates to. If this is set then we will draw a line from the popup to this entity
+        /// </summary>
+        /// <remarks>
+        ///     If you click on or examine an item and it moves away, we want to draw a line from
+        ///     this popup to that entity so you know what it's relating to
+        /// </remarks>
+        public static readonly AttachedProperty TargetEntityProperty = AttachedProperty.Create("TargetEntityProperty",
+                                                                                             typeof(PopupContainer),
+                                                                                             typeof(IEntity),
+                                                                                             null);
+
         public PopupContainer()
         {
             RectClipContent = true;
@@ -48,6 +61,16 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public static void SetTargetEntityProperty(Control control, IEntity entity)
+        {
+            control.SetValue(TargetEntityProperty, entity);
+        }
+
+        public static void GetTargetEntityProperty(Control control, out IEntity entity)
+        {
+            entity = control.GetValue<IEntity>(TargetEntityProperty);
+        }
+
         protected override void LayoutUpdateOverride()
         {
             foreach (var child in Children)
@@ -59,51 +82,42 @@ namespace Robust.Client.UserInterface.Controls
                 var (r, b) = size + offset; // bottom right corner.
 
                 var isAltPos = false;
-                bool keepOnScreen = true;
-
-                if (child.GetType() == typeof(Popup))
+                
+                // Clamp the right edge.
+                if (r > Width)
                 {
-                    keepOnScreen = !((Popup)child).AllowDrawOffScreen;
+                    // Try to position at alt pos.
+                    if (altPos != null && altPos.Value.X - size.X > 0)
+                    {
+                        // There is horizontal room at the alt pos so there we go.
+                        isAltPos = true;
+                        offset = (altPos.Value.X - size.X, altPos.Value.Y);
+                        (_, b) = size + offset;
+                    }
+                    else
+                    {
+                        offset -= (r - Width, 0);
+                    }
                 }
 
-                if (keepOnScreen)
+                // Clamp the bottom edge.
+                if (b > Height)
                 {
-                    // Clamp the right edge.
-                    if (r > Width)
-                    {
-                        // Try to position at alt pos.
-                        if (altPos != null && altPos.Value.X - size.X > 0)
-                        {
-                            // There is horizontal room at the alt pos so there we go.
-                            isAltPos = true;
-                            offset = (altPos.Value.X - size.X, altPos.Value.Y);
-                            (_, b) = size + offset;
-                        }
-                        else
-                        {
-                            offset -= (r - Width, 0);
-                        }
-                    }
-
-                    // Clamp the bottom edge.
-                    if (b > Height)
-                    {
-                        offset -= (0, b - Height);
-                    }
-
-                    // Try to clamp the left edge.
-                    if (offset.X < 0 && !isAltPos)
-                    {
-                        offset -= (offset.X, 0);
-                    }
-
-                    // Try to clamp the top edge.
-                    if (offset.Y < 0)
-                    {
-                        offset -= (0, offset.Y);
-                    }
-
+                    offset -= (0, b - Height);
                 }
+
+                // Try to clamp the left edge.
+                if (offset.X < 0 && !isAltPos)
+                {
+                    offset -= (offset.X, 0);
+                }
+
+                // Try to clamp the top edge.
+                if (offset.Y < 0)
+                {
+                    offset -= (0, offset.Y);
+                }
+
                 FitChildInBox(child, UIBox2.FromDimensions(offset, size));
             }
         }

@@ -187,6 +187,7 @@ namespace Robust.Build.Tasks
 
                         //TODO there was a designloader here, is that important? i think not but meh
 
+                        trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Call, compiledPopulateMethod));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
@@ -217,7 +218,7 @@ namespace Robust.Build.Tasks
                                         && op.Name == "Load"
                                         && op.Parameters.Count == 1
                                         && op.Parameters[0].ParameterType.FullName == "System.Object"
-                                        && op.DeclaringType.FullName == "Robust.Shared.Markup.Xaml.RobustXamlLoader")
+                                        && op.DeclaringType.FullName == "Robust.Client.UserInterface.XAML.RobustXamlLoader")
                                     {
                                         if (MatchThisCall(i, c - 1))
                                         {

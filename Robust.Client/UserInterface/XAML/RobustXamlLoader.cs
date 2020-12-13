@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Robust.Shared.Markup.Xaml
+namespace Robust.Client.UserInterface.XAML
 {
     public class RobustXamlLoader
     {

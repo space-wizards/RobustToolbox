@@ -72,7 +72,7 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
-            _processor = new GameStateProcessor(_timing);
+            _processor = new GameStateProcessor(_timing, _entities);
 
             _network.RegisterNetMessage<MsgState>(MsgState.NAME, HandleStateMessage);
             _network.RegisterNetMessage<MsgStateAck>(MsgStateAck.NAME);

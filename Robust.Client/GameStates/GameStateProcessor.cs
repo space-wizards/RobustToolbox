@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
@@ -14,6 +16,7 @@ namespace Robust.Client.GameStates
     internal class GameStateProcessor : IGameStateProcessor
     {
         private readonly IGameTiming _timing;
+        private readonly IClientEntityManager _entityManager;
 
         private readonly List<GameState> _stateBuffer = new();
         private GameState? _lastFullState;
@@ -55,9 +58,11 @@ namespace Robust.Client.GameStates
         ///     Constructs a new instance of <see cref="GameStateProcessor"/>.
         /// </summary>
         /// <param name="timing">Timing information of the current state.</param>
-        public GameStateProcessor(IGameTiming timing)
+        /// <param name="entityManager">Entity manager of the current state.</param>
+        public GameStateProcessor(IGameTiming timing, IClientEntityManager entityManager)
         {
             _timing = timing;
+            _entityManager = entityManager;
         }
 
         /// <inheritdoc />
@@ -185,10 +190,15 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entityState in state.EntityStates)
                 {
-                    if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
+                    if (!_entityManager.TryGetClientId(entityState.Uid, out var cUid))
+                    {
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {entityState.Uid} with no client id.");
+                    }
+                    
+                    if (!_lastStateFullRep.TryGetValue(cUid, out var compData))
                     {
                         compData = new Dictionary<uint, ComponentState>();
-                        _lastStateFullRep.Add(entityState.Uid, compData);
+                        _lastStateFullRep.Add(cUid, compData);
                     }
 
                     if (entityState.ComponentChanges != null)

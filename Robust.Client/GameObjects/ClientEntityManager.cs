@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
-using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -26,6 +24,16 @@ namespace Robust.Client.GameObjects
 
         private int _nextClientEntityUid = EntityUid.ClientUid + 1;
 
+        /// <summary>
+        ///     A mapping of client entity ids to server entity ids
+        /// </summary>
+        private readonly Dictionary<EntityUid, EntityUid> _serverToClientIds = new();
+
+        /// <summary>
+        ///     A mapping of server entity ids to client entity ids
+        /// </summary>
+        private readonly Dictionary<EntityUid, EntityUid> _clientToServerIds = new();
+
         public override void Startup()
         {
             base.Startup();
@@ -37,6 +45,26 @@ namespace Robust.Client.GameObjects
 
             EntitySystemManager.Initialize();
             Started = true;
+        }
+
+        public EntityUid GetClientId(EntityUid serverId)
+        {
+            return _serverToClientIds[serverId];
+        }
+
+        public bool TryGetClientId(EntityUid serverId, out EntityUid clientId)
+        {
+            return _serverToClientIds.TryGetValue(serverId, out clientId);
+        }
+
+        public EntityUid GetServerId(EntityUid clientId)
+        {
+            return _clientToServerIds[clientId];
+        }
+
+        public bool TryGetServerId(EntityUid clientId, out EntityUid serverId)
+        {
+            return _clientToServerIds.TryGetValue(clientId, out serverId);
         }
 
         public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
@@ -51,8 +79,13 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var es in curEntStates)
                 {
+                    if (!TryGetClientId(es.Uid, out var cUid))
+                    {
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} with no client id.");
+                    }
+
                     //Known entities
-                    if (Entities.TryGetValue(es.Uid, out var entity))
+                    if (Entities.TryGetValue(cUid, out var entity))
                     {
                         toApply.Add(entity, (es, null));
                     }
@@ -62,9 +95,9 @@ namespace Robust.Client.GameObjects
                             ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
                         if (metaState == null)
                         {
-                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
+                            throw new InvalidOperationException($"Server sent new entity state for {cUid} without metadata component!");
                         }
-                        var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
+                        var newEntity = CreateEntity(metaState.PrototypeId, cUid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
                         created.Add(newEntity.Uid);
@@ -76,7 +109,12 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var es in nextEntStates)
                 {
-                    if (Entities.TryGetValue(es.Uid, out var entity))
+                    if (!TryGetClientId(es.Uid, out var cUid))
+                    {
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} with no client id.");
+                    }
+                    
+                    if (Entities.TryGetValue(cUid, out var entity))
                     {
                         if (toApply.TryGetValue(entity, out var state))
                         {
@@ -312,6 +350,16 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(
                         $"Component does not exist for state: entUid={eUid}, expectedNetId={netId}, expectedName={eRegisteredNetUidName}");
                 }
+            }
+        }
+
+        protected override void OnEntityCull(EntityUid clientUid)
+        {
+            base.OnEntityCull(clientUid);
+
+            if (_clientToServerIds.Remove(clientUid, out var serverUid))
+            {
+                _serverToClientIds.Remove(serverUid);
             }
         }
     }

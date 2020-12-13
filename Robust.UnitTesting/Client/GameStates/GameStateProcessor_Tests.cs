@@ -1,6 +1,7 @@
 ﻿using Moq;
 using NUnit.Framework;
 using Robust.Client.GameStates;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.Timing;
@@ -16,8 +17,11 @@ namespace Robust.UnitTesting.Client.GameStates
             var timingMock = new Mock<IGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
 
+            var entityManagerMock = new Mock<IClientEntityManager>();
+
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var entityManager = entityManagerMock.Object;
+            var processor = new GameStateProcessor(timing, entityManager);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2)); // buffer is at 2/3, so processing should be blocked
@@ -35,9 +39,12 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var timingMock = new Mock<IGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
+            
+            var entityManagerMock = new Mock<IClientEntityManager>();
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var entityManager = entityManagerMock.Object;
+            var processor = new GameStateProcessor(timing, entityManager);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));
@@ -63,9 +70,12 @@ namespace Robust.UnitTesting.Client.GameStates
         {
             var timingMock = new Mock<IGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
+            
+            var entityManagerMock = new Mock<IClientEntityManager>();
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var entityManager = entityManagerMock.Object;
+            var processor = new GameStateProcessor(timing, entityManager);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));
@@ -248,9 +258,12 @@ namespace Robust.UnitTesting.Client.GameStates
             var timingMock = new Mock<IGameTiming>();
             timingMock.SetupProperty(p => p.CurTick);
             timingMock.SetupProperty(p => p.TickTimingAdjustment);
+            
+            var entityManagerMock = new Mock<IClientEntityManager>();
 
             var timing = timingMock.Object;
-            var processor = new GameStateProcessor(timing);
+            var entityManager = entityManagerMock.Object;
+            var processor = new GameStateProcessor(timing, entityManager);
 
             processor.AddNewState(GameStateFactory(0, 1));
             processor.AddNewState(GameStateFactory(1, 2));

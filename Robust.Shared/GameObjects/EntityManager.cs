@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,7 +6,6 @@ using Prometheus;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -355,6 +353,8 @@ namespace Robust.Shared.GameObjects
             entity.StartAllComponents();
         }
 
+        protected virtual void OnEntityCull(EntityUid uid) { }
+
         private void CullDeletedEntities()
         {
             // Culling happens in updates.
@@ -370,6 +370,7 @@ namespace Robust.Shared.GameObjects
 
                 AllEntities.RemoveSwap(i);
                 Entities.Remove(entity.Uid);
+                OnEntityCull(entity.Uid);
                 RemoveFromEntityTrees(entity);
 
                 // Process the one we just swapped next.

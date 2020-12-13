@@ -134,7 +134,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid"></param>
         /// <returns>Entity or throws if the entity doesn't exist</returns>
-        public IEntity GetEntity(EntityUid uid)
+        public virtual IEntity GetEntity(EntityUid uid)
         {
             return Entities[uid];
         }
@@ -145,7 +145,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
+        public virtual bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
             if (Entities.TryGetValue(uid, out var cEntity) && !cEntity.Deleted)
             {

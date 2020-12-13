@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.GameObjects;
@@ -67,6 +68,26 @@ namespace Robust.Client.GameObjects
             return _clientToServerIds.TryGetValue(clientId, out serverId);
         }
 
+        public override IEntity GetEntity(EntityUid uid)
+        {
+            if (!uid.IsClientSide())
+            {
+                uid = GetClientId(uid);
+            }
+
+            return base.GetEntity(uid);
+        }
+
+        public override bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
+        {
+            if (!uid.IsClientSide())
+            {
+                uid = GetClientId(uid);
+            }
+
+            return base.TryGetEntity(uid, out entity);
+        }
+
         public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
             EntityState[]? nextEntStates)
         {
@@ -113,7 +134,7 @@ namespace Robust.Client.GameObjects
                     {
                         throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} with no client id.");
                     }
-                    
+
                     if (Entities.TryGetValue(cUid, out var entity))
                     {
                         if (toApply.TryGetValue(entity, out var state))

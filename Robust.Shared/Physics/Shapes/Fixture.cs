@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Shapes;
@@ -158,7 +159,7 @@ namespace Robust.Shared.Physics
 
         public bool RayCast(out RayCastOutput output, ref RayCastInput input, int childIndex)
         {
-            return Shape.RayCast(out output, ref input, ref Body.Transform, childIndex);
+            return Shape.RayCast(out output, ref input, ref Body.PhysicsTransform, childIndex);
         }
 
         /*
@@ -188,9 +189,10 @@ namespace Robust.Shared.Physics
                     Fixture = this,
                     ChildIndex = i,
                     AABB = Shape.ComputeAABB(transform, i),
-                    ProxyId = broadPhase.AddProxy(ref proxy.AABB);
                 };
 
+                // TODO: Replace this with just a ref or some shit
+                proxy.ProxyId = broadPhase.AddFixture(ref proxy.AABB);
                 broadPhase.SetProxy(proxy.ProxyId, ref proxy);
 
                 Proxies[i] = proxy;
@@ -201,32 +203,45 @@ namespace Robust.Shared.Physics
         ///     Originally called "DestroyProxies" in aether2d
         /// </summary>
         /// <param name="broadPhase"></param>
-        internal void RemoveFromBroadphase(IBroadPhase broadPhase)
+        internal void DestroyProxies(IBroadPhase broadPhase)
         {
-            // TODO
-            throw new NotImplementedException();
+            for (var i = 0; i < ProxyCount; ++i)
+            {
+                broadPhase.RemoveProxy(Proxies[i].ProxyId);
+                Proxies[i].ProxyId = -1;
+            }
+
+            ProxyCount = 0;
         }
 
         /// <summary>
         ///     Update this fixture in the broadphase
         /// </summary>
+        /// <remarks>
+        ///     This requires 2 transforms as our broadphase covers both the start and end transform (the swept shape).
+        /// </remarks>
         /// <param name="broadPhase"></param>
-        /// <param name="transform1"></param>
-        /// <param name="transform2"></param>
+        /// <param name="transform1">Transform relative to its broadphase parent</param>
+        /// <param name="transform2">Transform relative to its broadphase parent</param>
         internal void Synchronize(IBroadPhase broadPhase, PhysicsTransform transform1, PhysicsTransform transform2)
         {
-            // Fucking shitter
+            // Okay so because in our instance we need per-grid broadphase then this means that whoever's calling this
+            // needs to be the one to handle making sure each grid is updated.
 
-            // TODO: Okay so essentially every time we move we keep track of our swept AABB from our old position to our new position I think
-            // Or something? Fucked if I know.
-            // Okay looks like that may actually just be for DynamicTree purposes... I think? AHHHHHHHHHHH
+            for (var i = 0; i < ProxyCount; ++i)
+            {
+                FixtureProxy proxy = Proxies[i];
 
-            // Completely rewrote this given we don't need to fuck around with DynamicTree necessarily.
-            // Also the lack of comments in the original is :))))
+                // Compute an AABB that covers the swept Shape (may miss some rotation effect).
+                var aabb1 = Shape.ComputeAABB(transform1, proxy.ChildIndex);
+                var aabb2 = Shape.ComputeAABB(transform2, proxy.ChildIndex);
 
-            // TODO: Get grid position
-            // TODO: Update in broadphase
-            throw new NotImplementedException();
+                proxy.AABB.Combine(ref aabb1, ref aabb2);
+
+                var displacement = transform2.Position - transform1.Position;
+
+                broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
+            }
         }
 
         /// <summary>
@@ -245,7 +260,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <param name="body">The body you wish to clone the fixture onto.</param>
         /// <returns>The cloned fixture.</returns>
-        internal Fixture CloneOnto(IPhysBody body, Shape shape)
+        internal Fixture CloneOnto(PhysicsComponent body, Shape shape)
         {
             Fixture fixture = new Fixture(shape.Clone())
             {
@@ -256,7 +271,7 @@ namespace Robust.Shared.Physics
                 CollisionMask = CollisionMask
             };
 
-            body.Add(fixture);
+            body.AddFixture(fixture);
             return fixture;
         }
     }

@@ -95,7 +95,7 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="transform">The shape world transform.</param>
         /// <param name="point">A point in world coordinates.</param>
         /// <returns>True if the point is inside the shape</returns>
-        public abstract bool TestPoint(PhysicsTransform transform, ref Vector2 point);
+        public abstract bool TestPoint(ref PhysicsTransform transform, ref Vector2 point);
 
         /// <summary>
         /// Cast a ray against a child shape.

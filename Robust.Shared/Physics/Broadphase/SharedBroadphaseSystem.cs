@@ -22,39 +22,17 @@ namespace Robust.Shared.Physics.Broadphase
 
         [Dependency] protected readonly IMapManager MapManager = default!;
 
-        private readonly Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, PhysicsLookupChunk>>> _graph =
-                     new Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, PhysicsLookupChunk>>>();
+        private readonly Dictionary<MapId, Dictionary<GridId, IBroadPhase>> _graph =
+                     new Dictionary<MapId, Dictionary<GridId, IBroadPhase>>();
 
-        /// <summary>
-        ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
-        /// </summary>
-        private readonly Dictionary<IPhysBody, HashSet<PhysicsLookupNode>> _lastKnownNodes =
-                     new Dictionary<IPhysBody, HashSet<PhysicsLookupNode>>();
-
-        // TODO: Could potentially combine this with the EntityLookups and just have each node store multiple components or w/e
-        // Save muh memory.
-
-        /// <summary>
-        ///     Yields all of the entities intersecting a particular Vector2i
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="gridId"></param>
-        /// <param name="gridIndices"></param>
-        /// <returns></returns>
-        public IEnumerable<IPhysShape> GetShapesIntersecting(MapId mapId, GridId gridId, Vector2i gridIndices)
+        public IEnumerable<IBroadPhase> GetBroadphases(PhysicsComponent body)
         {
-            var grids = _graph[mapId];
-            var chunks = grids[gridId];
+            // TODO: Snowflake grids here
+            var grids = _graph[body.Owner.Transform.MapID];
 
-            var chunkIndices = GetChunkIndices(gridIndices);
-            if (!chunks.TryGetValue(chunkIndices, out var chunk))
+            foreach (var gridId in MapManager.FindGridIdsIntersecting(body.Owner.Transform.MapID, body.WorldAABB, true))
             {
-                yield break;
-            }
-
-            foreach (var shape in chunk.GetNode(gridIndices).PhysicsShapes)
-            {
-                yield return shape;
+                yield return grids[gridId];
             }
         }
 

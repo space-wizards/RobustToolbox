@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -31,10 +33,14 @@ namespace Robust.Shared.GameObjects.Components
 
         // _xf is body origin transform, fucking WHAT
 
+        internal bool Island { get; set; }
+
+        internal int IslandIndex { get; set; }
+
         /// <summary>
         ///     Swept motion for the CCD (Continuous Collision Detection).
         /// </summary>
-        internal Sweep Sweep { get; set; }
+        internal Sweep Sweep;
 
         /// <summary>
         ///     Can this body rotate at all?
@@ -42,6 +48,10 @@ namespace Robust.Shared.GameObjects.Components
         private bool _fixedRotation;
 
         public List<Fixture> FixtureList { get; set; } = new List<Fixture>();
+
+        public ContactEdge? ContactList { get; set; }
+
+        public JointEdge? JointList { get; internal set; }
 
         /// <summary>
         ///     Angular velocity of this component in radians / second.
@@ -92,7 +102,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(Sweep.LocalCentre, Sweep.LocalCentre);
+            get => _inertia + Mass * Vector2.Dot(Sweep.LocalCenter, Sweep.LocalCenter);
             set
             {
                 // TODO: Debug assert
@@ -102,7 +112,7 @@ namespace Robust.Shared.GameObjects.Components
                 if (value > 0f && !_fixedRotation)
                 {
                     _inertia = value - Mass * Vector2.Dot(LocalCentre, LocalCentre);
-                    _invI = 1f / _inertia;
+                    InvI = 1f / _inertia;
                 }
             }
         }
@@ -112,7 +122,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <summary>
         ///     Inverse inertia
         /// </summary>
-        private float _invI;
+        public float InvI { get; private set; }
 
         /// <summary>
         ///     Local position of the center of mass
@@ -156,6 +166,10 @@ namespace Robust.Shared.GameObjects.Components
         // TODO
         internal PhysicsMap Map { get; set; } = default!;
 
+        public float LinearDamping { get; set; }
+
+        public float AngularDamping { get; set; }
+
         /// <summary>
         ///     What type of body this, such as static or dynamic.
         ///     Readonly during callbacks.
@@ -176,8 +190,8 @@ namespace Robust.Shared.GameObjects.Components
                 {
                     _linearVelocity = Vector2.Zero;
                     _angularVelocity = 0.0f;
-                    _sweep.A0 = _sweep.A;
-                    _sweep.C0 = _sweep.C;
+                    Sweep.Angle0 = Sweep.Angle;
+                    Sweep.Center0 = Sweep.Center;
                     SynchronizeFixtures();
                 }
 
@@ -286,9 +300,9 @@ namespace Robust.Shared.GameObjects.Components
                 // TODO: fucking WAHT
                 // TODO: pretty sure this needs changing.
                 throw new NotImplementedException();
-                Sweep.C0 = Owner.Transform.WorldPosition;
-                Sweep.C = Owner.Transform.WorldPosition;
-                Sweep.A0 = _sweep.A;
+                Sweep.Center0 = Owner.Transform.WorldPosition;
+                Sweep.Center = Owner.Transform.WorldPosition;
+                Sweep.Angle0 = _sweep.A;
                 return;
             }
 
@@ -355,7 +369,24 @@ namespace Robust.Shared.GameObjects.Components
          /// </summary>
         internal void CreateProxies()
         {
+            foreach (var broadPhase in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
+            {
+                for (var i = 0; i < FixtureList.Count; i++)
+                {
+                    FixtureList[i].CreateProxies(broadPhase, ref this.PhysicsTransform);
+                }
+            }
+        }
 
+        internal void DestroyProxies()
+        {
+            foreach (var broadPhase in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
+            {
+                for (var i = 0; i < FixtureList.Count; i++)
+                {
+                    FixtureList[i].DestroyProxies(broadPhase);
+                }
+            }
         }
 
         internal void SynchronizeFixtures()

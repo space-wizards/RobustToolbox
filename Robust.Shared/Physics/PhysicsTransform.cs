@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics
     public struct PhysicsTransform
     {
         // TODO: Should we use this orrr just use the radians? idk...
-        public Complex Quarternion;
+        public Complex Quaternion;
         public Vector2 Position;
 
         public static PhysicsTransform Identity { get; } = new PhysicsTransform(Vector2.Zero, Complex.One);
@@ -21,7 +21,7 @@ namespace Robust.Shared.Physics
         /// <param name="rotation">The rotation</param>
         public PhysicsTransform(Vector2 position, Complex rotation)
         {
-            Quarternion = rotation;
+            Quaternion = rotation;
             Position = position;
         }
 
@@ -44,8 +44,8 @@ namespace Robust.Shared.Physics
         {
             // Opt: var result = Complex.Multiply(left, right.q) + right.p;
             return new Vector2(
-                (left.X * right.Quarternion.Real - left.Y * right.Quarternion.Imaginary) + right.Position.X,
-                (left.Y * right.Quarternion.Real + left.X * right.Quarternion.Imaginary) + right.Position.Y);
+                (left.X * right.Quaternion.Real - left.Y * right.Quaternion.Imaginary) + right.Position.X,
+                (left.Y * right.Quaternion.Real + left.X * right.Quaternion.Imaginary) + right.Position.Y);
         }
 
         public static Vector2 Divide(Vector2 left, ref PhysicsTransform right)
@@ -59,8 +59,8 @@ namespace Robust.Shared.Physics
             float px = left.X - right.Position.X;
             float py = left.Y - right.Position.Y;
             return new Vector2(
-                (px * right.Quarternion.Real + py * right.Quarternion.Imaginary),
-                (py * right.Quarternion.Real - px * right.Quarternion.Imaginary));
+                (px * right.Quaternion.Real + py * right.Quaternion.Imaginary),
+                (py * right.Quaternion.Real - px * right.Quaternion.Imaginary));
         }
 
         public static void Divide(Vector2 left, ref PhysicsTransform right, out Vector2 result)
@@ -68,40 +68,40 @@ namespace Robust.Shared.Physics
             // Opt: var result = Complex.Divide(left - right.p, right);
             float px = left.X - right.Position.X;
             float py = left.Y - right.Position.Y;
-            result.X = (px * right.Quarternion.Real + py * right.Quarternion.Imaginary);
-            result.Y = (py * right.Quarternion.Real - px * right.Quarternion.Imaginary);
+            result.X = (px * right.Quaternion.Real + py * right.Quaternion.Imaginary);
+            result.Y = (py * right.Quaternion.Real - px * right.Quaternion.Imaginary);
         }
 
         public static PhysicsTransform Multiply(ref PhysicsTransform left, ref PhysicsTransform right)
         {
             return new PhysicsTransform(
-                    Complex.Multiply(left.Position, ref right.Quarternion) + right.Position,
-                    Complex.Multiply(left.Quarternion, right.Quarternion));
+                    Complex.Multiply(left.Position, ref right.Quaternion) + right.Position,
+                    Complex.Multiply(left.Quaternion, right.Quaternion));
         }
 
         public static PhysicsTransform Divide(ref PhysicsTransform left, ref PhysicsTransform right)
         {
             return new PhysicsTransform(
-                Complex.Divide(left.Position - right.Position, ref right.Quarternion),
-                Complex.Divide(left.Quarternion, right.Quarternion));
+                Complex.Divide(left.Position - right.Position, ref right.Quaternion),
+                Complex.Divide(left.Quaternion, right.Quaternion));
         }
 
         public static void Divide(ref PhysicsTransform left, ref PhysicsTransform right, out PhysicsTransform result)
         {
-            Complex.Divide(left.Position - right.Position, ref right.Quarternion, out result.Position);
-            Complex.Divide(left.Quarternion, right.Quarternion, out result.Quarternion);
+            Complex.Divide(left.Position - right.Position, ref right.Quaternion, out result.Position);
+            Complex.Divide(left.Quaternion, right.Quaternion, out result.Quaternion);
         }
 
         public static void Multiply(ref PhysicsTransform left, Complex right, out PhysicsTransform result)
         {
             result.Position = Complex.Multiply(left.Position, ref right);
-            result.Quarternion = Complex.Multiply(left.Quarternion, right);
+            result.Quaternion = Complex.Multiply(left.Quaternion, right);
         }
 
         public static void Divide(ref PhysicsTransform left, Complex right, out PhysicsTransform result)
         {
             result.Position = Complex.Divide(left.Position, ref right);
-            result.Quarternion = Complex.Divide(left.Quarternion, right);
+            result.Quaternion = Complex.Divide(left.Quaternion, right);
         }
     }
 }

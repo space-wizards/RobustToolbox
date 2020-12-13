@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -17,22 +18,22 @@ namespace Robust.Shared.Physics
 
         [Dependency] private readonly IContactManager _contactManager = default!;
 
-        private HashSet<IPhysBody> _bodies = new HashSet<IPhysBody>();
+        private HashSet<PhysicsComponent> _bodies = new HashSet<PhysicsComponent>();
 
-        private HashSet<IPhysBody> _awakeBodies = new HashSet<IPhysBody>();
+        private HashSet<PhysicsComponent> _awakeBodies = new HashSet<PhysicsComponent>();
 
         // TODO: JointList
 
         private PhysicsIsland _island = new PhysicsIsland();
 
-        private IPhysBody[] _stack = new IPhysBody[64];
+        private PhysicsComponent[] _stack = new PhysicsComponent[64];
 
         /// <summary>
         ///     Whether the simulation will run. Bodies added and removed are still processed regardless.
         /// </summary>
         public bool Enabled { get; set; }
 
-        public bool AddBody(IPhysBody body)
+        public bool AddBody(PhysicsComponent body)
         {
             if (body.Awake)
                 _awakeBodies.Add(body);
@@ -52,7 +53,7 @@ namespace Robust.Shared.Physics
             return true;
         }
 
-        public bool RemoveBody(IPhysBody body)
+        public bool RemoveBody(PhysicsComponent body)
         {
             _awakeBodies.Remove(body);
 
@@ -99,10 +100,10 @@ namespace Robust.Shared.Physics
 
             var stackSize = _awakeBodies.Count;
             if (stackSize > _stack.Length)
-                _stack = new IPhysBody[Math.Max(_stack.Length * 2, stackSize)];
+                _stack = new PhysicsComponent[Math.Max(_stack.Length * 2, stackSize)];
 
-            var awakeBodyList = new List<IPhysBody>(_awakeBodies);
-            var islandSet = new HashSet<IPhysBody>();
+            var awakeBodyList = new List<PhysicsComponent>(_awakeBodies);
+            var islandSet = new HashSet<PhysicsComponent>();
 
             foreach (var seed in awakeBodyList)
             {
@@ -111,7 +112,7 @@ namespace Robust.Shared.Physics
                 // Rinse and repeat until every body is donesies.
 
                 // TODO: If we check Static elsewhere we can remove this check.
-                if (seed.Island || !seed.CanCollide || seed.BodyType == BodyType.Static)
+                if (seed.Island || !seed.Enabled || seed.BodyType == BodyType.Static)
                     continue;
 
                 _island.Clear();
@@ -129,7 +130,7 @@ namespace Robust.Shared.Physics
                 while (stackCount > 0)
                 {
                     var body = _stack[--stackCount];
-                    DebugTools.Assert(body.CanCollide);
+                    DebugTools.Assert(body.Enabled);
                     _island.Add(body);
 
                     body.Awake = true;
@@ -149,7 +150,7 @@ namespace Robust.Shared.Physics
                             continue;
 
                         // Skip non-hard because I guess we'll find out later on the next time on dragon ball Z.
-                        if (!contact.FixtureA.Hard || !contact.FixtureB.Hard)
+                        if (contact.FixtureA.IsSensor || contact.FixtureB.IsSensor)
                             continue;
 
                         _island.Add(contact);
@@ -186,7 +187,7 @@ namespace Robust.Shared.Physics
                         }
                         else
                         {
-                            if (!other.CanCollide)
+                            if (!other.Enabled)
                                 continue;
 
                             _island.Add(jointEdge.Joint);

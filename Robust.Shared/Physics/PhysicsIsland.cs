@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Solver;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -9,10 +10,16 @@ namespace Robust.Shared.Physics
     {
         private IContactManager _contactManager = default!;
 
+        private ContactSolver _contactSolver = new ContactSolver();
+
         private Contact[] _contacts = {};
         private Joint[] _joints = {};
 
-        internal IPhysBody[] Bodies { get; set; } = { };
+        internal PhysicsComponent[] Bodies { get; set; } = Array.Empty<PhysicsComponent>();
+
+        internal SolverVelocity[] _velocities = Array.Empty<SolverVelocity>();
+        internal SolverPosition[] _positions = Array.Empty<SolverPosition>();
+        // I didn't port the locks because some of the multi-threaded code was ICKY
 
         internal int BodyCount { get; set; }
         internal int ContactCount { get; set; }
@@ -24,7 +31,7 @@ namespace Robust.Shared.Physics
 
         private const int GrowSize = 32;
 
-        internal void Add(IPhysBody body)
+        internal void Add(PhysicsComponent body)
         {
             DebugTools.Assert(BodyCount < BodyCapacity);
             body.IslandIndex = BodyCount;
@@ -67,7 +74,7 @@ namespace Robust.Shared.Physics
                 // Grow by 32
                 var newBodyBufferCapacity = Math.Max(bodyCapacity, GrowSize);
                 newBodyBufferCapacity = (newBodyBufferCapacity + GrowSize - 1) & ~(GrowSize - 1);
-                Bodies = new IPhysBody[newBodyBufferCapacity];
+                Bodies = new PhysicsComponent[newBodyBufferCapacity];
                 // velocities
                 // positions
                 // locks eeeeeee
@@ -98,34 +105,27 @@ namespace Robust.Shared.Physics
             // Broadphase will probably be the only area we need to change it I HOPE.
             // TODO: Maybe add a method called "GridAABB" on transform we can call?
 
-            // TODO: Reduce
-            float h = frameTime;
-
             // Integrate velocities and apply damping. Initialize the body state.
-            for (int i = 0; i < BodyCount; ++i)
+            for (var i = 0; i < BodyCount; ++i)
             {
-                IPhysBody b = Bodies[i];
+                PhysicsComponent b = Bodies[i];
 
-                Vector2 c = b._sweep.C;
-                float a = b._sweep.A;
-                Vector2 v = b._linearVelocity;
-                float w = b._angularVelocity;
+                Vector2 c = b.Sweep.Center;
+                float a = b.Sweep.Angle;
+                Vector2 v = b.LinearVelocity;
+                float w = b.AngularVelocity;
 
                 // Store positions for continuous collision.
-                b._sweep.C0 = b._sweep.C;
-                b._sweep.A0 = b._sweep.A;
+                b.Sweep.Center0 = b.Sweep.Center;
+                b.Sweep.Angle0 = b.Sweep.Angle;
 
                 if (b.BodyType == BodyType.Dynamic)
                 {
                     // Integrate velocities.
 
                     // FPE: Only apply gravity if the body wants it.
-                    if (b.IgnoreGravity)
-                        v += h * (b._invMass * b._force);
-                    else
-                        v += h * (gravity + b._invMass * b._force);
-
-                    w += h * b._invI * b._torque;
+                    v += (b.Force * b.InvMass) * frameTime;
+                    w += b.InvI * b.Torque * frameTime;
 
                     // Apply damping.
                     // ODE: dv/dt + c * v = 0
@@ -134,15 +134,23 @@ namespace Robust.Shared.Physics
                     // v2 = exp(-c * dt) * v1
                     // Taylor expansion:
                     // v2 = (1.0f - c * dt) * v1
-                    v *= MathUtils.Clamp(1.0f - h * b.LinearDamping, 0.0f, 1.0f);
-                    w *= MathUtils.Clamp(1.0f - h * b.AngularDamping, 0.0f, 1.0f);
+                    v *=  Math.Clamp(1.0f - frameTime * b.LinearDamping, 0.0f, 1.0f);
+                    w *= Math.Clamp(1.0f - frameTime * b.AngularDamping, 0.0f, 1.0f);
                 }
 
-                _positions[i].c = c;
-                _positions[i].a = a;
-                _velocities[i].v = v;
-                _velocities[i].w = w;
+                _positions[i].C = c;
+                _positions[i].A = a;
+                _velocities[i].V = v;
+                _velocities[i].W = w;
             }
+
+            var solverData = new SolverData();
+            solverData.Positions = _positions;
+            solverData.Velocities = _velocities;
+
+            // Reset
+            //_contactSolver
+            // TODO: Up to warmstarting
         }
     }
 }

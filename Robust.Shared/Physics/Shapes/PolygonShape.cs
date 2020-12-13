@@ -194,9 +194,9 @@ namespace Robust.Shared.Physics.Shapes
             MassData.Inertia += MassData.Mass * (Vector2.Dot(MassData.Centroid, MassData.Centroid) - Vector2.Dot(center, center));
         }
 
-        public override bool TestPoint(ITransformComponent transform, ref Vector2 point)
+        public override bool TestPoint(ref PhysicsTransform transform, ref Vector2 point)
         {
-            Vector2 pLocal = Complex.Divide(point - transform.WorldPosition, transform.Q);
+            Vector2 pLocal = Complex.Divide(point - transform.Position, transform.Quaternion);
 
             for (int i = 0; i < Vertices.Count; ++i)
             {
@@ -210,13 +210,13 @@ namespace Robust.Shared.Physics.Shapes
             return true;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex)
         {
             output = new RayCastOutput();
 
             // Put the ray into the polygon's frame of reference.
-            Vector2 p1 = Complex.Divide(input.Point1 - transform.WorldPosition, transform.Q);
-            Vector2 p2 = Complex.Divide(input.Point2 - transform.WorldPosition, transform.Q);
+            Vector2 p1 = Complex.Divide(input.Point1 - transform.Position, transform.Quaternion);
+            Vector2 p2 = Complex.Divide(input.Point2 - transform.Position, transform.Quaternion);
             Vector2 d = p2 - p1;
 
             float lower = 0.0f, upper = input.MaxFraction;
@@ -274,7 +274,7 @@ namespace Robust.Shared.Physics.Shapes
             if (index >= 0)
             {
                 output.Fraction = lower;
-                output.Normal = Complex.Multiply(Normals[index], transform.Q);
+                output.Normal = Complex.Multiply(Normals[index], transform.Quaternion);
                 return true;
             }
 
@@ -296,16 +296,16 @@ namespace Robust.Shared.Physics.Shapes
 
             // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
             var vert = Vertices[0];
-            aabb.LowerBound.X = (vert.X * transform.Quarternion.Real - vert.Y * transform.Quarternion.Imaginary) + transform.Position.X;
-            aabb.LowerBound.Y = (vert.Y * transform.Quarternion.Real + vert.X * transform.Quarternion.Imaginary) + transform.Position.Y;
+            aabb.LowerBound.X = (vert.X * transform.Quaternion.Real - vert.Y * transform.Quaternion.Imaginary) + transform.Position.X;
+            aabb.LowerBound.Y = (vert.Y * transform.Quaternion.Real + vert.X * transform.Quaternion.Imaginary) + transform.Position.Y;
             aabb.UpperBound = aabb.LowerBound;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
                 // OPT: Vector2 v = Transform.Multiply(Vertices[i], ref transform);
                 vert = Vertices[i];
-                float vX = (vert.X * transform.Quarternion.Real - vert.Y * transform.Quarternion.Imaginary) + transform.Position.X;
-                float vY = (vert.Y * transform.Quarternion.Real + vert.X * transform.Quarternion.Imaginary) + transform.Position.Y;
+                float vX = (vert.X * transform.Quaternion.Real - vert.Y * transform.Quaternion.Imaginary) + transform.Position.X;
+                float vY = (vert.Y * transform.Quaternion.Real + vert.X * transform.Quaternion.Imaginary) + transform.Position.Y;
 
                 // OPT: Vector2.Min(ref aabb.LowerBound, ref v, out aabb.LowerBound);
                 // OPT: Vector2.Max(ref aabb.UpperBound, ref v, out aabb.UpperBound);

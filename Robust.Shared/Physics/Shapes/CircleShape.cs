@@ -51,14 +51,14 @@ namespace Robust.Shared.Physics.Shapes
 
         public override int ChildCount => 1;
 
-        public override bool TestPoint(ITransformComponent transform, ref Vector2 point)
+        public override bool TestPoint(ref PhysicsTransform transform, ref Vector2 point)
         {
-            var centre = transform.WorldPosition + Complex.Multiply(_position, transform.Q);
+            var centre = transform.Position + Complex.Multiply(_position, transform.Quaternion);
             var distance = point - centre;
             return Vector2.Dot(distance, distance) <= _2radius;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, ITransformComponent transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex)
         {
             // Collision Detection in Interactive 3D Environments by Gino van den Bergen
             // From Section 3.1.2
@@ -67,7 +67,7 @@ namespace Robust.Shared.Physics.Shapes
 
             output = new RayCastOutput();
 
-            var centre = transform.WorldPosition + Complex.Multiply(_position, transform.Q);
+            var centre = transform.Position + Complex.Multiply(_position, transform.Quaternion);
             Vector2 s = input.Point1 - centre;
             float b = Vector2.Dot(s, s) - _2radius;
 
@@ -101,16 +101,19 @@ namespace Robust.Shared.Physics.Shapes
         }
 
         // TODO: Anything World is giga sketchy when we need relative transforms
-        public override void ComputeAABB(out AABB aabb, ITransformComponent transform, int childIndex)
+        public override AABB ComputeAABB(PhysicsTransform transform, int childIndex)
         {
+            AABB aabb;
+
             // TODO: Optimise
-            var pX = (_position.X * transform.Q.Real - _position.Y * transform.Q.Imaginary) + transform.WorldPosition.X;
-            var pY = (_position.Y * transform.Q.Real + _position.X * transform.Q.Imaginary) + transform.WorldPosition.Y;
+            var pX = (_position.X * transform.Quaternion.Real - _position.Y * transform.Quaternion.Imaginary) + transform.Position.X;
+            var pY = (_position.Y * transform.Quaternion.Real + _position.X * transform.Quaternion.Imaginary) + transform.Position.Y;
 
             aabb.LowerBound.X = pX - Radius;
             aabb.LowerBound.Y = pY - Radius;
             aabb.UpperBound.X = pX + Radius;
             aabb.UpperBound.Y = pY + Radius;
+            return aabb;
         }
 
         protected override void ComputeProperties()

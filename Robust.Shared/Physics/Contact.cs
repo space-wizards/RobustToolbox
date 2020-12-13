@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Maths;
 
@@ -145,7 +146,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Other body we're connected to.
         /// </summary>
-        public IPhysBody Other { get; set; } = default!;
+        public PhysicsComponent Other { get; set; } = default!;
 
         /// <summary>
         ///     Next edge in our body's contact list.
@@ -159,7 +160,7 @@ namespace Robust.Shared.Physics
 
         public ContactEdge() {}
 
-        public ContactEdge(Contact contact, IPhysBody other, ContactEdge next, ContactEdge previous)
+        public ContactEdge(Contact contact, PhysicsComponent other, ContactEdge next, ContactEdge previous)
         {
             Contact = contact;
             Other = other;

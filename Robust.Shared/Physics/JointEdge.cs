@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Physics
+﻿using Robust.Shared.GameObjects.Components;
+
+namespace Robust.Shared.Physics
 {
     /// <summary>
     ///     Used to connect bodies and joints together in a graph where each body is a node and each joint is an edge.
@@ -12,7 +14,7 @@
         /// <summary>
         ///     The other body attached to this edge
         /// </summary>
-        public IPhysBody? Other { get; set; }
+        public PhysicsComponent? Other { get; set; }
 
         public JointEdge Previous { get; set; } = default!;
     }

@@ -383,5 +383,15 @@ namespace Robust.Client.GameObjects
                 _serverToClientIds.Remove(serverUid);
             }
         }
+
+        protected override void OnEntityAdd(Entity entity)
+        {
+            base.OnEntityAdd(entity);
+
+            var clientId = GenerateEntityUid();
+            
+            _clientToServerIds[clientId] = entity.Uid;
+            _serverToClientIds[entity.Uid] = clientId;
+        }
     }
 }

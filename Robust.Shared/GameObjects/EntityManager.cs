@@ -234,7 +234,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out var _);
+            return TryGetEntity(uid, out _);
         }
 
         /// <summary>
@@ -295,8 +295,7 @@ namespace Robust.Shared.GameObjects
             // allocate the required TransformComponent
             _componentManager.AddComponent<TransformComponent>(entity);
 
-            Entities[entity.Uid] = entity;
-            AllEntities.Add(entity);
+            OnEntityAdd(entity);
 
             return entity;
         }
@@ -353,7 +352,16 @@ namespace Robust.Shared.GameObjects
             entity.StartAllComponents();
         }
 
-        protected virtual void OnEntityCull(EntityUid uid) { }
+        protected virtual void OnEntityCull(EntityUid uid)
+        {
+            Entities.Remove(uid);
+        }
+
+        protected virtual void OnEntityAdd(Entity entity)
+        {
+            Entities[entity.Uid] = entity;
+            AllEntities.Add(entity);
+        }
 
         private void CullDeletedEntities()
         {
@@ -369,7 +377,6 @@ namespace Robust.Shared.GameObjects
                 }
 
                 AllEntities.RemoveSwap(i);
-                Entities.Remove(entity.Uid);
                 OnEntityCull(entity.Uid);
                 RemoveFromEntityTrees(entity);
 
@@ -589,7 +596,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (!entity.Initialized || !Entities.ContainsKey(entity.Uid))
+            if (!entity.Initialized || !EntityExists(entity.Uid))
             {
                 return false;
             }
@@ -670,7 +677,6 @@ namespace Robust.Shared.GameObjects
         public virtual void Update()
         {
         }
-
     }
 
     public enum EntityMessageType : byte

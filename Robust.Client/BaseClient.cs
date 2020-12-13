@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
@@ -6,6 +7,7 @@ using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
+using Robust.Client.UserInterface.XAML;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
@@ -61,7 +63,8 @@ namespace Robust.Client
             _playMan.Initialize();
             _debugDrawMan.Initialize();
             Reset();
-            new TestView();
+            var test = new TestView();
+            System.Console.WriteLine(test.Contents.Children.Count());
         }
 
         /// <inheritdoc />

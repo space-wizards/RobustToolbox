@@ -50,21 +50,43 @@ namespace Robust.Client.GameObjects
 
         public EntityUid GetClientId(EntityUid serverId)
         {
+            if (serverId.IsClientSide())
+            {
+                return serverId;
+            }
+
             return _serverToClientIds[serverId];
         }
 
         public bool TryGetClientId(EntityUid serverId, out EntityUid clientId)
         {
+            if (serverId.IsClientSide())
+            {
+                clientId = serverId;
+                return true;
+            }
+
             return _serverToClientIds.TryGetValue(serverId, out clientId);
         }
 
         public EntityUid GetServerId(EntityUid clientId)
         {
+            if (!clientId.IsClientSide())
+            {
+                return clientId;
+            }
+
             return _clientToServerIds[clientId];
         }
 
         public bool TryGetServerId(EntityUid clientId, out EntityUid serverId)
         {
+            if (!clientId.IsClientSide())
+            {
+                serverId = clientId;
+                return true;
+            }
+
             return _clientToServerIds.TryGetValue(clientId, out serverId);
         }
 
@@ -389,7 +411,7 @@ namespace Robust.Client.GameObjects
             base.OnEntityAdd(entity);
 
             var clientId = GenerateEntityUid();
-            
+
             _clientToServerIds[clientId] = entity.Uid;
             _serverToClientIds[entity.Uid] = clientId;
         }

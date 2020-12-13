@@ -140,7 +140,7 @@ namespace Robust.Client.GameObjects
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {cUid} without metadata component!");
                         }
-                        var newEntity = CreateEntity(metaState.PrototypeId, cUid);
+                        var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
                         toInitialize.Add(newEntity);
                         created.Add(newEntity.Uid);

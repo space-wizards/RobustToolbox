@@ -56,11 +56,34 @@
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
-    <AvaloniaResource Include="**\*.xaml">
-      <SubType>Designer</SubType>
-    </AvaloniaResource>
-
     <!-- Note this AdditionalFiles directive. -->
     <AdditionalFiles Include="**\*.xaml" />
   </ItemGroup>
+
+  <UsingTask TaskName="CompileRobustXamlTask"
+             AssemblyFile="..\Robust.Build.Tasks\bin\$(Configuration)\net5.0\Robust.Build.Tasks.dll"
+  />
+  <Target
+    Name="CompileRobustXaml"
+    AfterTargets="AfterCompile"
+  >
+    <PropertyGroup>
+      <RobustXamlReferencesTemporaryFilePath Condition="'$(RobustXamlReferencesTemporaryFilePath)' == ''">$(IntermediateOutputPath)/Robust/references</RobustXamlReferencesTemporaryFilePath>
+      <RobustXamlOriginalCopyFilePath Condition="'$(RobustXamlOriginalCopyFilePath)' == ''">$(IntermediateOutputPath)/Robust/original.dll</RobustXamlOriginalCopyFilePath>
+    </PropertyGroup>
+    <WriteLinesToFile
+      File="$(RobustXamlReferencesTemporaryFilePath)"
+      Lines="@(ReferencePathWithRefAssemblies)"
+      Overwrite="true" />
+    <CompileRobustXamlTask
+      AssemblyFile="@(IntermediateAssembly)"
+      ReferencesFilePath="$(RobustXamlReferencesTemporaryFilePath)"
+      OriginalCopyPath="$(RobustXamlOriginalCopyFilePath)"
+      ProjectDirectory="$(MSBuildProjectDirectory)"
+      AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)"
+      SignAssembly="$(SignAssembly)"
+      DelaySign="$(DelaySign)"
+    />
+  </Target>
+
 </Project>

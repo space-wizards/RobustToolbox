@@ -10,6 +10,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Shared.GameStates.GameStateMapData;
 
 namespace Robust.Shared.Map
 {
@@ -19,7 +20,7 @@ namespace Robust.Shared.Map
 
         public GameStateMapData? GetStateData(GameTick fromTick)
         {
-            var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
+            var gridDatums = new Dictionary<GridId, GridDatum>();
             foreach (var grid in _grids.Values)
             {
                 if (grid.LastModifiedTick < fromTick)
@@ -27,7 +28,7 @@ namespace Robust.Shared.Map
                     continue;
                 }
 
-                var chunkData = new List<GameStateMapData.ChunkDatum>();
+                var chunkData = new List<ChunkDatum>();
                 foreach (var (index, chunk) in grid.GetMapChunks())
                 {
                     if (chunk.LastModifiedTick < fromTick)
@@ -48,11 +49,11 @@ namespace Robust.Shared.Map
                         }
                     }
 
-                    chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
+                    chunkData.Add(new ChunkDatum(index, tileBuffer));
                 }
 
                 var gridDatum =
-                    new GameStateMapData.GridDatum(chunkData.ToArray(), new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
+                    new GridDatum(chunkData.ToArray(), new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
 
                 gridDatums.Add(grid.Index, gridDatum);
             }
@@ -60,9 +61,9 @@ namespace Robust.Shared.Map
             var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
             var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .Select(kv => kv.Key).ToArray();
+                .ToDictionary(kv => kv.Key, kv => new MapCreationDatum(GetMapEntityId(kv.Key))).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize, grid.SnapSize));
+                grid => new GridCreationDatum(grid.ChunkSize, grid.SnapSize));
 
             // no point sending empty collections
             if (gridDatums.Count        == 0)  gridDatums        = default;
@@ -93,7 +94,7 @@ namespace Robust.Shared.Map
                 return;
 
             var createdGrids = data.CreatedGrids != null
-                ? new Dictionary<GridId, GameStateMapData.GridCreationDatum>(data.CreatedGrids)
+                ? new Dictionary<GridId, GridCreationDatum>(data.CreatedGrids)
                 : null;
 
             // First we need to figure out all the NEW MAPS.
@@ -114,7 +115,7 @@ namespace Robust.Shared.Map
             if(data.CreatedGrids != null)
             {
                 var gridData = data.GridData != null
-                    ? new Dictionary<GridId, GameStateMapData.GridDatum>(data.GridData)
+                    ? new Dictionary<GridId, GridDatum>(data.GridData)
                     : null;
 
                 DebugTools.AssertNotNull(createdGrids);

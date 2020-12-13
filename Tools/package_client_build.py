@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 # Packages a full release build of the client that can be unzipped and you'll have your client engine redistributable.
 
 import os

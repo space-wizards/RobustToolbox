@@ -57,7 +57,7 @@
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
     <!-- Note this AdditionalFiles directive. -->
-    <AdditionalFiles Include="**\*.xaml" />
+    <EmbeddedResource Include="**\*.xaml" />
   </ItemGroup>
 
   <UsingTask TaskName="CompileRobustXamlTask"

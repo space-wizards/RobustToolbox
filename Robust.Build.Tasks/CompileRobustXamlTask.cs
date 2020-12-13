@@ -9,7 +9,7 @@ namespace Robust.Build.Tasks
     {
         public bool Execute()
         {
-            Debugger.Launch();
+            //Debugger.Launch();
             OutputPath = OutputPath ?? AssemblyFile;
             var outputPdb = GetPdbPath(OutputPath);
             var input = AssemblyFile;
@@ -21,13 +21,13 @@ namespace Robust.Build.Tasks
                 input = OriginalCopyPath;
                 File.Delete(AssemblyFile);
 
-                /*if (File.Exists(inputPdb)) IOException
+                if (File.Exists(inputPdb))
                 {
                     var copyPdb = GetPdbPath(OriginalCopyPath);
                     File.Copy(inputPdb, copyPdb, true);
                     File.Delete(inputPdb);
                     inputPdb = copyPdb;
-                }*/
+                }
             }
 
             var msg = $"CompileRobustXamlTask -> AssemblyFile:{AssemblyFile}, ProjectDirectory:{ProjectDirectory}, OutputPath:{OutputPath}";

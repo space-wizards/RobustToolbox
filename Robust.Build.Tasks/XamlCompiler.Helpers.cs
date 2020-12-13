@@ -9,9 +9,9 @@ namespace Robust.Build.Tasks
 {
     public partial class XamlCompiler
     {
-        static bool CheckXamlName(string name) => name.ToLowerInvariant().EndsWith(".xaml")
-                                                  || name.ToLowerInvariant().EndsWith(".paml")
-                                                  || name.ToLowerInvariant().EndsWith(".axaml");
+        static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")
+                                                  || r.Name.ToLowerInvariant().EndsWith(".paml")
+                                                  || r.Name.ToLowerInvariant().EndsWith(".axaml");
 
         private static bool MatchThisCall(Collection<Instruction> instructions, int idx)
         {

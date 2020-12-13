@@ -190,11 +190,8 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entityState in state.EntityStates)
                 {
-                    if (!_entityManager.TryGetClientId(entityState.Uid, out var cUid))
-                    {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {entityState.Uid} but no client id.");
-                    }
-                    
+                    var cUid = _entityManager.EnsureClientId(entityState.Uid);
+
                     if (!_lastStateFullRep.TryGetValue(cUid, out var compData))
                     {
                         compData = new Dictionary<uint, ComponentState>();

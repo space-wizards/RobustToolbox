@@ -14,6 +14,10 @@ namespace Robust.Client.Interfaces.GameObjects
 
         bool TryGetServerId(EntityUid clientId, out EntityUid serverId);
 
+        EntityUid CreateClientId(EntityUid serverId);
+
+        EntityUid EnsureClientId(EntityUid serverId);
+
         /// <returns>The list of new entities created.</returns>
         List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
             EntityState[]? nextEntStates);

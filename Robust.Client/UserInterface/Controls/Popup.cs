@@ -36,6 +36,11 @@ namespace Robust.Client.UserInterface.Controls
                 MinimumSizeChanged();
             }
 
+            if (targetEntity != null)
+            {
+                PopupContainer.SetTargetEntityProperty(this, targetEntity);
+            }
+
             Visible = true;
             UserInterfaceManagerInternal.PushModal(this);
         }

@@ -138,6 +138,13 @@ namespace Robust.Client.Interfaces.UserInterface
         /// Hides the tooltip for the indicated control, if tooltip for that control is currently showing.
         /// </summary>
         void HideTooltipFor(Control control);
+
+        /// <summary>
+        /// If the control is currently showing a tooltip,
+        /// gets the tooltip that was supplied via TooltipSupplier (null if tooltip
+        /// was not supplied by tooltip supplier or tooltip is not showing for the control).
+        /// </summary>
+        Control? GetSuppliedTooltipFor(Control control);
     }
 }
 

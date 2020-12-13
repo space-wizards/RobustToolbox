@@ -23,10 +23,11 @@ namespace Robust.Shared
         }
 #endif
 
-        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir)
+        internal static void DoMounts(IResourceManagerInternal res, MountOptions? options, string contentBuildDir, bool loader=false)
         {
 #if FULL_RELEASE
-            res.MountContentDirectory(@"Resources/");
+            if (!loader)
+                res.MountContentDirectory(@"Resources/");
 #else
             var contentRootDir = FindContentRootDir();
             res.MountContentDirectory($@"{contentRootDir}RobustToolbox/Resources/");

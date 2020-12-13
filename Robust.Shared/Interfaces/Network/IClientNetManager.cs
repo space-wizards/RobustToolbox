@@ -43,7 +43,7 @@ namespace Robust.Shared.Interfaces.Network
         void ClientDisconnect(string reason);
     }
 
-    public enum ClientConnectionState
+    public enum ClientConnectionState : byte
     {
         /// <summary>
         ///     We are not connected and not trying to get connected either. Quite lonely huh.

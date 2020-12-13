@@ -318,7 +318,7 @@ namespace Robust.Client.Graphics.Drawing
         ///     Describes margins of a style box.
         /// </summary>
         [Flags]
-        public enum Margin
+        public enum Margin : byte
         {
             None = 0,
 

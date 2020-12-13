@@ -27,7 +27,10 @@ namespace Robust.Client.UserInterface.Controls
                 UserInterfaceManagerInternal.RemoveModal(this);
             }
 
-            if (box != null && _desiredSize != box.Value.Size)
+            if (box != null &&
+                (_desiredSize != box.Value.Size ||
+                 PopupContainer.GetPopupOrigin(this) != box.Value.TopLeft ||
+                 PopupContainer.GetAltOrigin(this) != altPos))
             {
                 PopupContainer.SetPopupOrigin(this, box.Value.TopLeft);
                 PopupContainer.SetAltOrigin(this, altPos);
@@ -66,6 +69,12 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        public void Close()
+        {
+            if (!Visible) return;
+            UserInterfaceManagerInternal.RemoveModal(this);
+        }
+        
         protected internal override void ModalRemoved()
         {
             base.ModalRemoved();

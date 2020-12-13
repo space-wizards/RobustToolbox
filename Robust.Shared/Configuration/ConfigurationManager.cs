@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
 {
@@ -203,6 +204,9 @@ namespace Robust.Shared.Configuration
 
         private void RegisterCVar(string name, Type type, object? defaultValue, CVar flags, Action<object>? onValueChanged)
         {
+            DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
+                $"{name}: Enum cvars must have int as underlying type.");
+
             var only = _isServer ? CVar.CLIENTONLY : CVar.SERVERONLY;
 
             if ((flags & only) != 0)

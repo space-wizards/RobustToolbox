@@ -231,6 +231,11 @@ namespace Robust.Client.Debugging
                     _handle.DrawRect(box, color);
                 }
 
+                public override void DrawRect(in Box2Rotated box, in Color color)
+                {
+                    _handle.DrawRect(box, color);
+                }
+
                 public override void DrawCircle(Vector2 origin, float radius, in Color color)
                 {
                     _handle.DrawCircle(origin, radius, color);

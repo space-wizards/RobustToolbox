@@ -570,7 +570,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum ItemListSelectMode
+        public enum ItemListSelectMode : byte
         {
             None,
             Single,

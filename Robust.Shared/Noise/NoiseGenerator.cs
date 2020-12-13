@@ -8,7 +8,7 @@ namespace Robust.Shared.Noise
     public sealed class NoiseGenerator
     {
         [PublicAPI]
-        public enum NoiseType
+        public enum NoiseType : byte
         {
             Fbm = 0,
             Ridged = 1

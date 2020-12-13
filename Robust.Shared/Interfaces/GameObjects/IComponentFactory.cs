@@ -10,7 +10,7 @@ namespace Robust.Shared.Interfaces.GameObjects
     /// This distinction is important because prototypes are shared across client and server, but the two might have different components.
     /// </summary>
     /// <seealso cref="IComponentFactory" />
-    public enum ComponentAvailability
+    public enum ComponentAvailability : byte
     {
         /// <summary>
         /// The component is available and can be instantiated.
@@ -213,7 +213,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
         bool TryGetRegistration(IComponent component, [NotNullWhen(true)] out IComponentRegistration? registration);
-        
+
         /// <summary>
         ///     Automatically create registrations for all components with a <see cref="RegisterComponentAttribute" />
         /// </summary>

@@ -427,6 +427,9 @@ namespace Robust.Shared.GameObjects.Systems
                     continue;
                 }
 
+                if (collision.A.Owner.Deleted || collision.B.Owner.Deleted)
+                    continue;
+
                 var penetration = _physicsManager.CalculatePenetration(collision.A, collision.B);
 
                 if (penetration <= allowance)

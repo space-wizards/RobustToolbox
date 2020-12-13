@@ -168,6 +168,7 @@ namespace Robust.UnitTesting
                                     Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
 
                                     _channels.Remove(disconnect.Connection);
+                                    channel.IsConnected = false;
                                 }
                             }
                             else

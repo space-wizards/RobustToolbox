@@ -44,5 +44,7 @@ namespace Robust.UnitTesting
         {
             // Nada.
         }
+
+        public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
     }
 }

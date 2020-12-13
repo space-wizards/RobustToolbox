@@ -282,7 +282,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Methods the GameLoop can use to limit the Update rate.
     /// </summary>
-    public enum SleepMode
+    public enum SleepMode : sbyte
     {
         /// <summary>
         ///     Thread will not yield to the scheduler or sleep, and consume 100% cpu. Use this if you are

@@ -36,5 +36,4 @@
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
 </Project>

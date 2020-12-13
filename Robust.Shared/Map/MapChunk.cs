@@ -247,6 +247,7 @@ namespace Robust.Shared.Map
         {
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, ref _colBoxes, out _cachedBounds);
+            _grid.NotifyChunkCollisionRegenerated();
         }
 
         /// <inheritdoc />

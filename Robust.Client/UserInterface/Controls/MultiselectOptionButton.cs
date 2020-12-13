@@ -1,31 +1,63 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class OptionButton : ContainerButton
+    /// <summary>
+    /// Option button which allows toggling multiple elements.
+    /// </summary>
+    /// <typeparam name="TKey">type to use as the unique key for each option. Functions similarly
+    /// to dictionary key, so the type should make sure to respect dictionary key semantics.</typeparam>
+    public class MultiselectOptionButton<TKey> : ContainerButton where TKey : notnull
     {
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
-        private readonly List<ButtonData> _buttonData = new();
-        private readonly Dictionary<int, int> _idMap = new();
+        private List<ButtonData> _buttonData = new();
+        // map from key to buttondata index
+        private Dictionary<TKey, int> _keyMap = new();
         private readonly Popup _popup;
         private readonly VBoxContainer _popupVBox;
         private readonly Label _label;
 
+        public event Action<ItemPressedEventArgs>? OnItemSelected;
+
+        /// <summary>
+        /// Tracks the order in which items were selected, latest going at the end.
+        /// </summary>
+        private List<TKey> _selectedKeys = new();
+
+        /// <summary>
+        /// Ids of all currently selected items, ordered by most recently selected = last
+        /// </summary>
+        public IReadOnlyList<TKey> SelectedKeys => _selectedKeys;
+
         public int ItemCount => _buttonData.Count;
 
-        public event Action<ItemSelectedEventArgs>? OnItemSelected;
+        /// <summary>
+        /// Labels of all currently selected items, ordered by most recently selected = last
+        /// </summary>
+        public IEnumerable<string?> SelectedLabels => _selectedKeys
+            .Select(key => _buttonData[_keyMap[key]].Button.Label.Text);
 
-        public string Prefix { get; set; }
+        /// <summary>
+        /// Metadata of all currently selected items, ordered by most recently selected = last
+        /// </summary>
+        public IEnumerable<object?> SelectedMetadata => _selectedKeys
+            .Select(key => _buttonData[_keyMap[key]].Metadata);
 
-        public OptionButton()
+        public string? Label
+        {
+            get => _label.Text;
+            set => _label.Text = value;
+        }
+
+        public MultiselectOptionButton()
         {
             AddStyleClass(StyleClassButton);
-            Prefix = "";
             OnPressed += OnPressedInternal;
 
             var hBox = new HBoxContainer();
@@ -51,21 +83,16 @@ namespace Robust.Client.UserInterface.Controls
             hBox.AddChild(textureRect);
         }
 
-        public void AddItem(Texture icon, string label, int? id = null)
+        public void AddItem(Texture icon, string label, TKey key)
         {
-            AddItem(label, id);
+            AddItem(label, key);
         }
 
-        public void AddItem(string label, int? id = null)
+        public void AddItem(string label, TKey key)
         {
-            if (id == null)
+            if (_keyMap.ContainsKey(key))
             {
-                id = _buttonData.Count;
-            }
-
-            if (_idMap.ContainsKey(id.Value))
-            {
-                throw new ArgumentException("An item with the same ID already exists.");
+                throw new ArgumentException("An item with the same key already exists.");
             }
 
             var button = new Button
@@ -74,17 +101,10 @@ namespace Robust.Client.UserInterface.Controls
                 ToggleMode = true
             };
             button.OnPressed += ButtonOnPressed;
-            var data = new ButtonData(label, button)
-            {
-                Id = id.Value,
-            };
-            _idMap.Add(id.Value, _buttonData.Count);
+            var data = new ButtonData(label, button, key);
+            _keyMap.Add(key, _buttonData.Count);
             _buttonData.Add(data);
             _popupVBox.AddChild(button);
-            if (_buttonData.Count == 1)
-            {
-                Select(0);
-            }
         }
 
         private void TogglePopup(bool show)
@@ -108,15 +128,23 @@ namespace Robust.Client.UserInterface.Controls
             UserInterfaceManager.ModalRoot.RemoveChild(_popup);
         }
 
+
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
-            obj.Button.Pressed = false;
             TogglePopup(false);
             foreach (var buttonData in _buttonData)
             {
                 if (buttonData.Button == obj.Button)
                 {
-                    OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
+                    if (obj.Button.Pressed)
+                    {
+                        _selectedKeys.Add(buttonData.Key);
+                    }
+                    else
+                    {
+                        _selectedKeys.Remove(buttonData.Key);
+                    }
+                    OnItemSelected?.Invoke(new ItemPressedEventArgs(buttonData.Key, obj.Button.Pressed, this));
                     return;
                 }
             }
@@ -127,29 +155,25 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Clear()
         {
-            _idMap.Clear();
+            _keyMap.Clear();
             foreach (var buttonDatum in _buttonData)
             {
                 buttonDatum.Button.OnPressed -= ButtonOnPressed;
             }
             _buttonData.Clear();
             _popupVBox.DisposeAllChildren();
-            SelectedId = 0;
+            _selectedKeys = new List<TKey>();
         }
 
-        public int GetItemId(int idx)
+        public TKey GetItemKey(int idx)
         {
-            return _buttonData[idx].Id;
+            return _buttonData[idx].Key;
         }
 
         public object? GetItemMetadata(int idx)
         {
             return _buttonData[idx].Metadata;
         }
-
-        public int SelectedId { get; private set; }
-
-        public object? SelectedMetadata => _buttonData[_idMap[SelectedId]].Metadata;
 
         public bool IsItemDisabled(int idx)
         {
@@ -160,36 +184,58 @@ namespace Robust.Client.UserInterface.Controls
         {
             var data = _buttonData[idx];
             data.Button.OnPressed -= ButtonOnPressed;
-            _idMap.Remove(data.Id);
+            _keyMap.Remove(data.Key);
             _popupVBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
             var newIdx = 0;
             foreach (var buttonData in _buttonData)
             {
-                _idMap[buttonData.Id] = newIdx++;
+                _keyMap[buttonData.Key] = newIdx++;
             }
         }
 
         public void Select(int idx)
         {
-            if (_idMap.TryGetValue(SelectedId, out var prevIdx))
-            {
-                _buttonData[prevIdx].Button.Pressed = false;
-            }
             var data = _buttonData[idx];
-            SelectedId = data.Id;
-            _label.Text = Prefix + data.Text;
+            if (data.Button.Pressed) return;
+            _selectedKeys.Add(data.Key);
             data.Button.Pressed = true;
         }
 
-        public void SelectId(int id)
+        public void SelectKey(TKey key)
         {
-            Select(GetIdx(id));
+            Select(GetIdx(key));
         }
 
-        public int GetIdx(int id)
+        public void DeselectAll()
         {
-            return _idMap[id];
+            foreach (var buttonData in _buttonData)
+            {
+                Deselect(buttonData);
+            }
+        }
+
+        public void Deselect(int idx)
+        {
+            Deselect(_buttonData[idx]);
+        }
+
+        public void DeselectKey(TKey key)
+        {
+            Deselect(GetIdx(key));
+        }
+
+        private void Deselect(ButtonData data)
+        {
+            if (!data.Button.Pressed) return;
+            _selectedKeys.Remove(data.Key);
+            data.Button.Pressed = false;
+        }
+
+
+        public int GetIdx(TKey key)
+        {
+            return _keyMap[key];
         }
 
         public void SetItemDisabled(int idx, bool disabled)
@@ -199,17 +245,17 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Disabled = disabled;
         }
 
-        public void SetItemId(int idx, int id)
+        public void SetItemKey(int idx, TKey key)
         {
-            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != idx)
+            if (_keyMap.TryGetValue(key, out var existIdx) && existIdx != idx)
             {
-                throw new InvalidOperationException("An item with said ID already exists.");
+                throw new InvalidOperationException("An item with said key already exists.");
             }
 
             var data = _buttonData[idx];
-            _idMap.Remove(data.Id);
-            _idMap.Add(id, idx);
-            data.Id = id;
+            _keyMap.Remove(data.Key);
+            _keyMap.Add(key, idx);
+            data.Key = key;
         }
 
         public void SetItemMetadata(int idx, object metadata)
@@ -221,11 +267,6 @@ namespace Robust.Client.UserInterface.Controls
         {
             var data = _buttonData[idx];
             data.Text = text;
-            if (SelectedId == data.Id)
-            {
-                _label.Text = text;
-            }
-
             data.Button.Text = text;
         }
 
@@ -240,18 +281,27 @@ namespace Robust.Client.UserInterface.Controls
             TogglePopup(false);
         }
 
-        public class ItemSelectedEventArgs : EventArgs
+        public class ItemPressedEventArgs : EventArgs
         {
-            public OptionButton Button { get; }
+            public readonly MultiselectOptionButton<TKey> Button;
+            /// <summary>
+            /// True if item is being selected, false if being unselected
+            /// </summary>
+            public readonly bool Selected;
+            /// <summary>
+            /// True if item is being deselected, false if being selected
+            /// </summary>
+            public bool Deselected => !Selected;
 
             /// <summary>
-            ///     The ID of the item that has been selected.
+            /// The key of the item that has been selected or deselected.
             /// </summary>
-            public int Id { get; }
+            public readonly TKey Key;
 
-            public ItemSelectedEventArgs(int id, OptionButton button)
+            public ItemPressedEventArgs(TKey key, bool selected, MultiselectOptionButton<TKey> button)
             {
-                Id = id;
+                Key = key;
+                Selected = selected;
                 Button = button;
             }
         }
@@ -261,13 +311,14 @@ namespace Robust.Client.UserInterface.Controls
             public string Text;
             public bool Disabled;
             public object? Metadata;
-            public int Id;
+            public TKey Key;
             public Button Button;
 
-            public ButtonData(string text, Button button)
+            public ButtonData(string text, Button button, TKey key)
             {
                 Text = text;
                 Button = button;
+                Key = key;
             }
         }
     }

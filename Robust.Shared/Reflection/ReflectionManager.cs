@@ -204,7 +204,7 @@ namespace Robust.Shared.Reflection
             Type? found = null;
             foreach (var derivedType in GetAllChildren(baseType))
             {
-                if (derivedType.Name == typeName && derivedType.IsPublic)
+                if (derivedType.Name == typeName && (derivedType.IsPublic))
                 {
                     found = derivedType;
                     break;

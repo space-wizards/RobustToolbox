@@ -505,7 +505,7 @@ namespace Robust.Shared.GameObjects.Components
     }
 
     [Serializable, NetSerializable]
-    public enum BodyStatus
+    public enum BodyStatus: byte
     {
         OnGround,
         InAir

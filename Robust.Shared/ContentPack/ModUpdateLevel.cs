@@ -3,7 +3,7 @@
     /// <summary>
     ///     Levels at which point the content assemblies are getting updates.
     /// </summary>
-    public enum ModUpdateLevel
+    public enum ModUpdateLevel : byte
     {
         /// <summary>
         ///     This update is called before the main state manager on process frames.

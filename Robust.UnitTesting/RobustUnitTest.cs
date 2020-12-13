@@ -16,7 +16,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting
 {
-    public enum UnitTestProject
+    public enum UnitTestProject : byte
     {
         Server,
         Client

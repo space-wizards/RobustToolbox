@@ -196,7 +196,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         }
     }
 
-    public enum SnapGridOffset
+    public enum SnapGridOffset: byte
     {
         /// <summary>
         ///     Center snap grid (wires, pipes, ...).

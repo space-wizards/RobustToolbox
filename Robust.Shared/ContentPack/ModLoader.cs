@@ -69,6 +69,12 @@ namespace Robust.Shared.ContentPack
             Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
         }
 
+        public Func<string, Stream?>? VerifierExtraLoadHandler
+        {
+            get => _typeChecker.ExtraRobustLoader;
+            set => _typeChecker.ExtraRobustLoader = value;
+        }
+
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
             var files = new Dictionary<string, (ResourcePath Path, string[] references)>();

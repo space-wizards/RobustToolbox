@@ -167,8 +167,13 @@ namespace Robust.Shared.Map
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
             LastModifiedTick = _mapManager.GameTiming.CurTick;
-            UpdateAABB();
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
+        }
+
+        /// <inheritdoc />
+        public void NotifyChunkCollisionRegenerated()
+        {
+            UpdateAABB();
         }
 
         /// <inheritdoc />

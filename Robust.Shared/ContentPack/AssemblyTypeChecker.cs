@@ -752,6 +752,12 @@ namespace Robust.Shared.ContentPack
                     }
                 }
 
+                var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
+                if (extraStream != null)
+                {
+                    return new PEReader(extraStream);
+                }
+
                 foreach (var resLoadPath in _resLoadPaths)
                 {
                     try
@@ -762,12 +768,6 @@ namespace Robust.Shared.ContentPack
                     catch (FileNotFoundException)
                     {
                     }
-                }
-
-                var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
-                if (extraStream != null)
-                {
-                    return new PEReader(extraStream);
                 }
 
                 return null;

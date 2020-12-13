@@ -197,7 +197,7 @@ namespace Robust.Client
         {
             DebugTools.AssertNotNull(_loaderArgs);
 
-            if (!_loaderArgs!.FileApi.TryOpen(arg, out var stream))
+            if (_loaderArgs!.FileApi.TryOpen(arg, out var stream))
             {
                 return stream;
             }

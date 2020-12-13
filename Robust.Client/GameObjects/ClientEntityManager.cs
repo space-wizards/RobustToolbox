@@ -102,7 +102,7 @@ namespace Robust.Client.GameObjects
                 {
                     if (!TryGetClientId(es.Uid, out var cUid))
                     {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} with no client id.");
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} but client id.");
                     }
 
                     //Known entities
@@ -132,7 +132,7 @@ namespace Robust.Client.GameObjects
                 {
                     if (!TryGetClientId(es.Uid, out var cUid))
                     {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} with no client id.");
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} but no client id.");
                     }
 
                     if (Entities.TryGetValue(cUid, out var entity))

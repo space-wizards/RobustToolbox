@@ -192,7 +192,7 @@ namespace Robust.Client.GameStates
                 {
                     if (!_entityManager.TryGetClientId(entityState.Uid, out var cUid))
                     {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {entityState.Uid} with no client id.");
+                        throw new InvalidOperationException($"Server sent new state for entity with server id {entityState.Uid} but no client id.");
                     }
                     
                     if (!_lastStateFullRep.TryGetValue(cUid, out var compData))

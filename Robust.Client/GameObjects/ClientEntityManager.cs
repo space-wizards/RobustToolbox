@@ -57,6 +57,14 @@ namespace Robust.Client.GameObjects
             Started = true;
         }
 
+        public override void Shutdown()
+        {
+            _serverToClientIds.Clear();
+            _clientToServerIds.Clear();
+
+            base.Shutdown();
+        }
+
         public EntityUid GetClientId(EntityUid serverId)
         {
             if (serverId.IsClientSide())
@@ -463,11 +471,26 @@ namespace Robust.Client.GameObjects
 
         protected override void OnEntityCull(EntityUid clientUid)
         {
-            Entities.Remove(clientUid);
-
-            if (_clientToServerIds.Remove(clientUid, out var serverUid))
+            if (clientUid.IsClientSide())
             {
-                _serverToClientIds.Remove(serverUid);
+                if (_clientToServerIds.Remove(clientUid, out var serverUid))
+                {
+                    _serverToClientIds.Remove(serverUid);
+                    Entities.Remove(serverUid);
+                }
+
+                Entities.Remove(clientUid);
+            }
+            else
+            {
+                var serverUid = clientUid;
+
+                if (_serverToClientIds.Remove(serverUid, out clientUid))
+                {
+                    _clientToServerIds.Remove(clientUid);
+                    Entities.Remove(clientUid);
+                }
+
                 Entities.Remove(serverUid);
             }
         }

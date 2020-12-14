@@ -54,11 +54,12 @@ namespace Robust.Shared.Interfaces.Map
         /// <param name="mapID">
         ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
         /// </param>
+        /// <param name="serverId"></param>
         /// <returns>The new map.</returns>
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        MapId CreateMap(MapId? mapID = null);
+        MapId CreateMap(MapId? mapID = null, EntityUid serverId = default);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.

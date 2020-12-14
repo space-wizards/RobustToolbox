@@ -223,7 +223,7 @@ namespace Robust.Shared.GameObjects
             e.Shutdown();
         }
 
-        public void DeleteEntity(EntityUid uid)
+        public virtual void DeleteEntity(EntityUid uid)
         {
             if (TryGetEntity(uid, out var entity))
             {
@@ -232,7 +232,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public bool EntityExists(EntityUid uid)
+        public virtual bool EntityExists(EntityUid uid)
         {
             return TryGetEntity(uid, out _);
         }

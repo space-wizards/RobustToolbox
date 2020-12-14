@@ -100,14 +100,14 @@ namespace Robust.Shared.Map
             // First we need to figure out all the NEW MAPS.
             if(data.CreatedMaps != null)
             {
-                foreach (var mapId in data.CreatedMaps)
+                foreach (var map in data.CreatedMaps)
                 {
-                    if (_maps.Contains(mapId))
+                    if (_maps.Contains(map.Key))
                     {
                         continue;
                     }
 
-                    CreateMap(mapId);
+                    CreateMap(map.Key, map.Value.EntityUid);
                 }
             }
 
@@ -194,10 +194,11 @@ namespace Robust.Shared.Map
             // and delete the client entities
             if (data.CreatedMaps != null)
             {
-                foreach (var mapId in data.CreatedMaps)
+                foreach (var (mapId, datum) in data.CreatedMaps)
                 {
                     // CreateMap should have set this
                     DebugTools.Assert(_mapEntities.ContainsKey(mapId));
+                    DebugTools.Assert(_entityManager.EntityExists(datum.EntityUid));
 
                     // this was already linked in a previous state.
                     if(!_mapEntities[mapId].IsClientSide())

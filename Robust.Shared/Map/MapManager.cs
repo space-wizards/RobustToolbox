@@ -203,7 +203,7 @@ namespace Robust.Shared.Map
             _mapDeletionHistory.Add((_gameTiming.CurTick, mapID));
         }
 
-        public MapId CreateMap(MapId? mapID = null)
+        public MapId CreateMap(MapId? mapID = null, EntityUid serverId = default)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);

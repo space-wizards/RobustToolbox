@@ -140,6 +140,26 @@ namespace Robust.Client.GameObjects
             return base.TryGetEntity(uid, out entity);
         }
 
+        public override void DeleteEntity(EntityUid uid)
+        {
+            if (!uid.IsClientSide())
+            {
+                uid = GetClientId(uid);
+            }
+            
+            base.DeleteEntity(uid);
+        }
+
+        public override bool EntityExists(EntityUid uid)
+        {
+            if (!uid.IsClientSide())
+            {
+                uid = GetClientId(uid);
+            }
+            
+            return base.EntityExists(uid);
+        }
+
         public List<EntityUid> ApplyEntityStates(EntityState[]? curEntStates, IEnumerable<EntityUid>? deletions,
             EntityState[]? nextEntStates)
         {

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Loader;
 using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
@@ -19,12 +21,10 @@ namespace Robust.Shared.ContentPack
     /// <summary>
     ///     Class for managing the loading of assemblies into the engine.
     /// </summary>
-    internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable, IPostInjectInit
+    internal sealed class ModLoader : BaseModLoader, IModLoaderInternal, IDisposable
     {
         [Dependency] private readonly IResourceManagerInternal _res = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
-
-        private AssemblyTypeChecker _typeChecker = default!;
 
         // List of extra assemblies side-loaded from the /Assemblies/ mounted path.
         private readonly List<Assembly> _sideModules = new();
@@ -50,11 +50,6 @@ namespace Robust.Shared.ContentPack
             AssemblyLoadContext.Default.Resolving += DefaultOnResolving;
         }
 
-        void IPostInjectInit.PostInject()
-        {
-            _typeChecker = new AssemblyTypeChecker(_res);
-        }
-
         public void SetUseLoadContext(bool useLoadContext)
         {
             _useLoadContext = useLoadContext;
@@ -64,19 +59,15 @@ namespace Robust.Shared.ContentPack
         public void SetEnableSandboxing(bool sandboxing)
         {
             _sandboxingEnabled = sandboxing;
-            _typeChecker.VerifyIL = sandboxing;
-            _typeChecker.DisableTypeCheck = !sandboxing;
             Logger.DebugS("res", "{0} sandboxing", sandboxing ? "ENABLING" : "DISABLING");
         }
 
-        public Func<string, Stream?>? VerifierExtraLoadHandler
-        {
-            get => _typeChecker.ExtraRobustLoader;
-            set => _typeChecker.ExtraRobustLoader = value;
-        }
+        public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
 
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
+            var sw = Stopwatch.StartNew();
+            Logger.DebugS("res.mod", "LOADING modules");
             var files = new Dictionary<string, (ResourcePath Path, string[] references)>();
 
             // Find all modules we want to load.
@@ -97,6 +88,22 @@ namespace Robust.Shared.ContentPack
                 }
             }
 
+            if (_sandboxingEnabled)
+            {
+                var typeChecker = MakeTypeChecker();
+
+                Parallel.ForEach(files, pair =>
+                {
+                    var (name, (path, _)) = pair;
+
+                    using var stream = _res.ContentFileRead(path);
+                    if (!typeChecker.CheckAssembly(stream))
+                    {
+                        throw new TypeCheckFailedException($"Assembly {name} failed type checks.");
+                    }
+                });
+            }
+
             // Actually load them in the order they depend on each other.
             foreach (var path in TopologicalSortModules(files))
             {
@@ -107,13 +114,13 @@ namespace Robust.Shared.ContentPack
                     // This probably improves performance or something and makes debugging etc more reliable.
                     if (_res.TryGetDiskFilePath(path, out var diskPath))
                     {
-                        LoadGameAssembly(diskPath);
+                        LoadGameAssembly(diskPath, skipVerify: true);
                     }
                     else
                     {
                         var assemblyStream = _res.ContentFileRead(path);
                         var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
-                        LoadGameAssembly(assemblyStream, symbolsStream);
+                        LoadGameAssembly(assemblyStream, symbolsStream, skipVerify: true);
                     }
                 }
                 catch (Exception e)
@@ -122,6 +129,7 @@ namespace Robust.Shared.ContentPack
                     return false;
                 }
             }
+            Logger.DebugS("res.mod", $"DONE loading modules: {sw.Elapsed}");
 
             return true;
         }
@@ -170,9 +178,9 @@ namespace Robust.Shared.ContentPack
                 .Select(a => metaReader.GetString(a.Name)).ToArray(), name);
         }
 
-        public void LoadGameAssembly(Stream assembly, Stream? symbols = null)
+        public void LoadGameAssembly(Stream assembly, Stream? symbols = null, bool skipVerify = false)
         {
-            if (!_typeChecker.CheckAssembly(assembly))
+            if (!skipVerify && !MakeTypeChecker().CheckAssembly(assembly))
             {
                 throw new TypeCheckFailedException();
             }
@@ -192,9 +200,9 @@ namespace Robust.Shared.ContentPack
             InitMod(gameAssembly);
         }
 
-        public void LoadGameAssembly(string diskPath)
+        public void LoadGameAssembly(string diskPath, bool skipVerify = false)
         {
-            if (!_typeChecker.CheckAssembly(diskPath))
+            if (!skipVerify && !MakeTypeChecker().CheckAssembly(diskPath))
             {
                 throw new TypeCheckFailedException();
             }
@@ -221,7 +229,7 @@ namespace Robust.Shared.ContentPack
                 Logger.DebugS("srv", $"Loading {assemblyName} DLL");
                 try
                 {
-                    LoadGameAssembly(path);
+                    LoadGameAssembly(path, skipVerify: false);
                     return true;
                 }
                 catch (Exception e)
@@ -348,6 +356,16 @@ namespace Robust.Shared.ContentPack
             }
 
             return null;
+        }
+
+        private AssemblyTypeChecker MakeTypeChecker()
+        {
+            return new(_res, Logger.GetSawmill("res.typecheck"))
+            {
+                VerifyIL = _sandboxingEnabled,
+                DisableTypeCheck = !_sandboxingEnabled,
+                ExtraRobustLoader = VerifierExtraLoadHandler
+            };
         }
     }
 }

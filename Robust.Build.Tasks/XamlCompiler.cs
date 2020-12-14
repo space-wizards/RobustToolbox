@@ -81,8 +81,8 @@ namespace Robust.Build.Tasks
             };
             var emitConfig = new XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult>
             {
-                ProvideValueTargetPropertyEmitter = null, //TODO
-                //TODO something with namescopes ContextTypeBuilderCallback = (b,c) => Emitnamescopefield(xamlLanguage, typeSystem, b, c)
+                ContextTypeBuilderCallback = (b,c) => EmitNameScopeField(xamlLanguage, typeSystem, b, c)
+                //TODO needed? ProvideValueTargetPropertyEmitter = null, //TODO
             };
 
             var transformerconfig = new TransformerConfiguration(
@@ -98,8 +98,16 @@ namespace Robust.Build.Tasks
                 xamlLanguage, emitConfig);
 
             var compiler =
-                new XamlILCompiler(transformerconfig, emitConfig,
+                new RobustXamlILCompiler(transformerconfig, emitConfig,
                     true); //compilerConfig, emitConfig, contextClass) { EnableIlVerification = verifyIl };
+            //TODO
+            // transformers: AddNameScopeRegistration, AvaloniaXamlIlRootObjectScope
+            // emitters: AvaloniaNameScopeRegistrationXamlIlNodeEmitter, AvaloniaXamlIlRootObjectScope.Emitter
+
+            /*var runtimeHelpers = typeSystem.GetType("Avalonia.Markup.Xaml.XamlIl.Runtime.XamlIlRuntimeHelpers");
+            var createRootServiceProviderMethod = asm.MainModule.ImportReference(
+                typeSystem.GetTypeReference(runtimeHelpers).Resolve().Methods
+                    .First(x => x.Name == "CreateRootServiceProviderV2"));*/
 
             var loaderDispatcherDef = new TypeDefinition("CompiledRobustXaml", "!XamlLoader",
                 TypeAttributes.Class, asm.MainModule.TypeSystem.Object);
@@ -193,7 +201,7 @@ namespace Robust.Build.Tasks
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
 
                         var foundXamlLoader = false;
-                        // Find AvaloniaXamlLoader.Load(this) and replace it with !XamlIlPopulateTrampoline(this)
+                        // Find RobustXamlLoader.Load(this) and replace it with !XamlIlPopulateTrampoline(this)
                         foreach (var method in classTypeDefinition.Methods
                             .Where(m => !m.Attributes.HasFlag(MethodAttributes.Static)))
                         {
@@ -292,6 +300,23 @@ namespace Robust.Build.Tasks
             loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
             loaderDispatcherMethod.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
             return true;
+        }
+
+        public const string ContextNameScopeFieldName = "RobustNameScope";
+
+        private static void EmitNameScopeField(XamlLanguageTypeMappings xamlLanguage, CecilTypeSystem typeSystem, IXamlTypeBuilder<IXamlILEmitter> typeBuilder, IXamlILEmitter constructor)
+        {
+            var nameScopeType = typeSystem.FindType("Robust.Client.UserInterface.XAML.NameScope");
+            var field = typeBuilder.DefineField(nameScopeType,
+                ContextNameScopeFieldName, true, false);
+            constructor
+                //.Ldarg_0()
+                //.Ldarg(1)
+                //.Ldtype(nameScopeType)
+                .Newobj(nameScopeType.GetConstructor())
+                //.EmitCall(mappings.ServiceProvider.GetMethod(new FindMethodMethodSignature("GetService",
+                //    typeSystem.FindType("System.Object"), typeSystem.FindType("System.Type"))))
+                .Stfld(field);
         }
     }
 

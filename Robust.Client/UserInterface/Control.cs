@@ -50,14 +50,14 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public Control? Parent { get; private set; }
 
-        private Dictionary<string, Control>? _nameScope;
+        private NameScope? _nameScope;
 
-        public void AttachNameScope(Dictionary<string, Control> nameScope)
-        {
-            _nameScope = nameScope;
-        }
+        //public void AttachNameScope(Dictionary<string, Control> nameScope)
+        //{
+        //    _nameScope = nameScope;
+        //}
 
-        public IReadOnlyDictionary<string, Control>? FindNameScope()
+        public NameScope? FindNameScope()
         {
             foreach (var control in this.GetSelfAndLogicalAncestors())
             {
@@ -75,7 +75,8 @@ namespace Robust.Client.UserInterface
                 throw new ArgumentException("No Namespace found for Control");
             }
 
-            if (!nameScope.TryGetValue(name, out var value) || value == null)
+            var value = nameScope.Find(name);
+            if (value == null)
             {
                 throw new ArgumentException($"No Control with the name {name} found");
             }

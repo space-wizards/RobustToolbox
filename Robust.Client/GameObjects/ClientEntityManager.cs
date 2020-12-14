@@ -59,10 +59,11 @@ namespace Robust.Client.GameObjects
 
         public override void Shutdown()
         {
+            base.Shutdown();
+
+            // This needs to be run after the base method in order for flush entities to properly shut down entities and dispose of their components, otherwise there is no reference to what ids to actually use
             _serverToClientIds.Clear();
             _clientToServerIds.Clear();
-
-            base.Shutdown();
         }
 
         public EntityUid GetClientId(EntityUid serverId)
@@ -189,13 +190,9 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var es in curEntStates)
                 {
-                    if (!TryGetClientId(es.Uid, out var cUid))
-                    {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} but client id.");
-                    }
-
                     //Known entities
-                    if (Entities.TryGetValue(cUid, out var entity))
+                    if (TryGetClientId(es.Uid, out var cUid) &&
+                        Entities.TryGetValue(cUid, out var entity))
                     {
                         toApply.Add(entity, (es, null));
                     }
@@ -205,7 +202,7 @@ namespace Robust.Client.GameObjects
                             ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
                         if (metaState == null)
                         {
-                            throw new InvalidOperationException($"Server sent new entity state for {cUid} without metadata component!");
+                            throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
                         }
                         var newEntity = CreateEntity(metaState.PrototypeId, es.Uid);
                         toApply.Add(newEntity, (es, null));
@@ -219,12 +216,8 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var es in nextEntStates)
                 {
-                    if (!TryGetClientId(es.Uid, out var cUid))
-                    {
-                        throw new InvalidOperationException($"Server sent new state for entity with server id {es.Uid} but no client id.");
-                    }
-
-                    if (Entities.TryGetValue(cUid, out var entity))
+                    if (TryGetClientId(es.Uid, out var cUid) &&
+                        Entities.TryGetValue(cUid, out var entity))
                     {
                         if (toApply.TryGetValue(entity, out var state))
                         {

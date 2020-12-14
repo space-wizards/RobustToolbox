@@ -115,10 +115,12 @@ namespace Robust.Shared.GameObjects
         public abstract IEntity CreateEntityUninitialized(string? prototypeName);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates,
+            EntityUid? entityUid = null);
 
         /// <inheritdoc />
-        public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates);
+        public abstract IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates,
+            EntityUid? entityUid = null);
 
         /// <inheritdoc />
         public abstract IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates);
@@ -274,10 +276,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected Entity AllocEntity(EntityUid? uid = null)
         {
-            if (uid == null)
-            {
-                uid = GenerateEntityUid();
-            }
+            uid ??= GenerateEntityUid();
 
             if (EntityExists(uid.Value))
             {

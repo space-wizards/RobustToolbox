@@ -203,44 +203,36 @@ namespace Robust.Shared.Map
             _mapDeletionHistory.Add((_gameTiming.CurTick, mapID));
         }
 
-        public MapId CreateMap(MapId? mapID = null, EntityUid serverId = default)
+        public MapId CreateMap(MapId? mapID = null, EntityUid? serverId = null)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            MapId actualID;
-            if (mapID != null)
+            var actualId = mapID ?? new MapId(HighestMapID.Value + 1);
+
+            if (MapExists(actualId))
             {
-                actualID = mapID.Value;
-            }
-            else
-            {
-                actualID = new MapId(HighestMapID.Value + 1);
+                throw new InvalidOperationException($"A map with ID {actualId} already exists");
             }
 
-            if (MapExists(actualID))
+            if (HighestMapID.Value < actualId.Value)
             {
-                throw new InvalidOperationException($"A map with ID {actualID} already exists");
+                HighestMapID = actualId;
             }
 
-            if (HighestMapID.Value < actualID.Value)
-            {
-                HighestMapID = actualID;
-            }
+            _maps.Add(actualId);
+            _mapCreationTick.Add(actualId, _gameTiming.CurTick);
+            Logger.InfoS("map", $"Creating new map {actualId}");
 
-            _maps.Add(actualID);
-            _mapCreationTick.Add(actualID, _gameTiming.CurTick);
-            Logger.InfoS("map", $"Creating new map {actualID}");
-
-            if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
+            if (actualId != MapId.Nullspace) // nullspace isn't bound to an entity
             {
                 var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
                 {
-                    if (mapComp.WorldMap != actualID)
+                    if (mapComp.WorldMap != actualId)
                         continue;
 
                     result = mapComp;
@@ -249,25 +241,25 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    _mapEntities.Add(actualID, result.Owner.Uid);
-                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.Owner.Uid}");
+                    _mapEntities.Add(actualId, result.Owner.Uid);
+                    Logger.DebugS("map", $"Rebinding map {actualId} to entity {result.Owner.Uid}");
                 }
                 else
                 {
-                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, EntityCoordinates.Invalid);
-                    _mapEntities.Add(actualID, newEnt.Uid);
+                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, EntityCoordinates.Invalid, serverId);
+                    _mapEntities.Add(actualId, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
-                    mapComp.WorldMap = actualID;
+                    mapComp.WorldMap = actualId;
                     newEnt.InitializeComponents();
                     newEnt.StartAllComponents();
-                    Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
+                    Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt.Uid}");
                 }
             }
 
-            MapCreated?.Invoke(this, new MapEventArgs(actualID));
+            MapCreated?.Invoke(this, new MapEventArgs(actualId));
 
-            return actualID;
+            return actualId;
         }
 
         /// <inheritdoc />
@@ -383,49 +375,41 @@ namespace Robust.Shared.Map
             return _grids.Values;
         }
 
-        public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1)
+        public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1, EntityUid? entityUid = null)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, true);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, snapSize, true, entityUid);
         }
 
-        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, float snapSize,
-            bool createEntity)
+        private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID,
+            ushort chunkSize, float snapSize, bool createEntity, EntityUid? entityUid = null)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            GridId actualID;
-            if (gridID != null)
+            var actualId = gridID ?? new GridId(HighestGridID.Value + 1);
+
+            if (GridExists(actualId))
             {
-                actualID = gridID.Value;
-            }
-            else
-            {
-                actualID = new GridId(HighestGridID.Value + 1);
+                throw new InvalidOperationException($"A grid with ID {actualId} already exists");
             }
 
-            if (GridExists(actualID))
+            if (HighestGridID.Value < actualId.Value)
             {
-                throw new InvalidOperationException($"A grid with ID {actualID} already exists");
+                HighestGridID = actualId;
             }
 
-            if (HighestGridID.Value < actualID.Value)
-            {
-                HighestGridID = actualID;
-            }
+            var grid = new MapGrid(this, _entityManager, actualId, chunkSize, snapSize, currentMapID);
+            _grids.Add(actualId, grid);
+            Logger.DebugS("map", $"Creating new grid {actualId}");
 
-            var grid = new MapGrid(this, _entityManager, actualID, chunkSize, snapSize, currentMapID);
-            _grids.Add(actualID, grid);
-            Logger.DebugS("map", $"Creating new grid {actualID}");
-
-            if (actualID != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
+            if (actualId != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
                 foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>())
                 {
-                    if (comp.GridIndex != actualID)
+                    if (comp.GridIndex != actualId)
                         continue;
 
                     result = comp;
@@ -435,16 +419,16 @@ namespace Robust.Shared.Map
                 if (result != null)
                 {
                     grid.GridEntityId = result.Owner.Uid;
-                    Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntityId}");
+                    Logger.DebugS("map", $"Rebinding grid {actualId} to entity {grid.GridEntityId}");
                 }
                 else
                 {
                     var newEnt =
                         (Entity) _entityManager.CreateEntityUninitialized(null,
-                            new MapCoordinates(Vector2.Zero, currentMapID));
+                            new MapCoordinates(Vector2.Zero, currentMapID), entityUid);
                     grid.GridEntityId = newEnt.Uid;
 
-                    Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntityId}");
+                    Logger.DebugS("map", $"Binding grid {actualId} to entity {grid.GridEntityId}");
 
                     var gridComp = newEnt.AddComponent<MapGridComponent>();
                     gridComp.GridIndex = grid.Index;
@@ -460,7 +444,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            OnGridCreated?.Invoke(actualID);
+            OnGridCreated?.Invoke(actualId);
             return grid;
         }
 

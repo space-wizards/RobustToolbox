@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface;
@@ -27,7 +28,7 @@ namespace Robust.Client.ViewVariables.Instances
 
     internal class ViewVariablesInstanceEntity : ViewVariablesInstance
     {
-        private readonly IEntityManager _entityManager;
+        private readonly IClientEntityManager _entityManager;
 
         private const int TabClientVars = 0;
         private const int TabClientComponents = 1;
@@ -51,7 +52,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         private bool _serverLoaded;
 
-        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IResourceCache resCache, IEntityManager entityManager) : base(vvm, resCache)
+        public ViewVariablesInstanceEntity(IViewVariablesManagerInternal vvm, IResourceCache resCache, IClientEntityManager entityManager) : base(vvm, resCache)
         {
             _entityManager = entityManager;
         }
@@ -128,6 +129,42 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     clientVBox.AddChild(control);
                 }
+
+                clientVBox.AddChild(new PanelContainer
+                {
+                    CustomMinimumSize = new Vector2(0, 25),
+                    Children =
+                    {
+                        new VBoxContainer
+                        {
+                            SeparationOverride = 0,
+                            Children =
+                            {
+                                new HBoxContainer
+                                {
+                                    SizeFlagsVertical = SizeFlags.FillExpand,
+                                    Children =
+                                    {
+                                        new Label
+                                        {
+                                            Text = Loc.GetString("Client Uid"),
+                                            SizeFlagsHorizontal = SizeFlags.FillExpand
+                                        },
+                                        new LineEdit()
+                                        {
+                                            Text = Loc.GetString("{0}",
+                                                _entityManager.TryGetClientId(_entity.Uid, out var clientId) ? clientId : "None"),
+                                            Editable = false,
+                                            SizeFlagsHorizontal = SizeFlags.FillExpand
+                                        }
+                                    },
+                                }
+                            }
+                        }
+                    },
+
+                    PanelOverride = ViewVariablesPropertyControl.GetAlternatingStyleBox(false)
+                });
             }
 
             _clientComponents = new VBoxContainer {SeparationOverride = 0};
@@ -202,7 +239,7 @@ namespace Robust.Client.ViewVariables.Instances
                     button.Visible = false;
                     continue;
                 }
-                
+
                 button.Visible = true;
             }
         }
@@ -231,7 +268,7 @@ namespace Robust.Client.ViewVariables.Instances
                     button.Visible = false;
                     continue;
                 }
-                
+
                 if (!button.Text.Contains(searchStr, StringComparison.InvariantCultureIgnoreCase))
                 {
                     button.Visible = false;
@@ -328,7 +365,7 @@ namespace Robust.Client.ViewVariables.Instances
             var componentsBlob = await ViewVariablesManager.RequestData<ViewVariablesBlobEntityComponents>(_entitySession, new ViewVariablesRequestEntityComponents());
 
             _serverComponents.DisposeAllChildren();
-            
+
             _serverComponents.AddChild(_serverComponentsSearchBar = new LineEdit
             {
                 PlaceHolder = Loc.GetString("Search"),
@@ -336,7 +373,7 @@ namespace Robust.Client.ViewVariables.Instances
             });
 
             _serverComponentsSearchBar.OnTextChanged += OnServerComponentsSearchBarChanged;
-            
+
             componentsBlob.ComponentTypes.Sort();
 
             var componentTypes = componentsBlob.ComponentTypes.AsEnumerable();

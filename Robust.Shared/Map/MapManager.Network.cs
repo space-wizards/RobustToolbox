@@ -63,7 +63,7 @@ namespace Robust.Shared.Map
             var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
                 .ToDictionary(kv => kv.Key, kv => new MapCreationDatum(GetMapEntityId(kv.Key))).ToArray();
             var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GridCreationDatum(grid.ChunkSize, grid.SnapSize));
+                grid => new GridCreationDatum(grid.ChunkSize, grid.SnapSize, grid.GridEntityId));
 
             // no point sending empty collections
             if (gridDatums.Count        == 0)  gridDatums        = default;
@@ -127,8 +127,12 @@ namespace Robust.Shared.Map
                         continue;
                     }
 
-                    CreateGrid(gridData![gridId].Coordinates.MapId, gridId, creationDatum.ChunkSize,
-                        creationDatum.SnapSize);
+                    CreateGrid(
+                        gridData![gridId].Coordinates.MapId,
+                        gridId,
+                        creationDatum.ChunkSize,
+                        creationDatum.SnapSize,
+                        creationDatum.EntityUid);
                 }
             }
 

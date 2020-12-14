@@ -382,8 +382,10 @@ namespace Robust.Client.GameStates
 
         public void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data)
         {
-            foreach (var (uid, compData) in data)
+            foreach (var datum in data)
             {
+                var uid = _entityManager.GetClientId(datum.Key);
+                var compData = datum.Value;
                 var fullRep = _lastStateFullRep[uid];
 
                 foreach (var (netId, compState) in compData)

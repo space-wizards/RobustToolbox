@@ -42,11 +42,13 @@ namespace Robust.Shared.GameStates
         {
             public readonly ushort ChunkSize;
             public readonly float SnapSize;
+            public readonly EntityUid EntityUid;
 
-            public GridCreationDatum(ushort chunkSize, float snapSize)
+            public GridCreationDatum(ushort chunkSize, float snapSize, EntityUid entityUid)
             {
                 ChunkSize = chunkSize;
                 SnapSize = snapSize;
+                EntityUid = entityUid;
             }
         }
 

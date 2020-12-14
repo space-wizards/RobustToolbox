@@ -35,6 +35,15 @@ namespace Robust.Client.GameObjects
         /// </summary>
         private readonly Dictionary<EntityUid, EntityUid> _clientToServerIds = new();
 
+        public override void Initialize()
+        {
+            base.Initialize();
+
+            // Invalid ids are the same on the client and server
+            _serverToClientIds[EntityUid.Invalid] = EntityUid.Invalid;
+            _clientToServerIds[EntityUid.Invalid] = EntityUid.Invalid;
+        }
+
         public override void Startup()
         {
             base.Startup();
@@ -96,7 +105,7 @@ namespace Robust.Client.GameObjects
             {
                 throw new ArgumentException($"{serverId} is a client id.");
             }
-            
+
             var clientId = GenerateEntityUid();
 
             _clientToServerIds[clientId] = serverId;
@@ -111,7 +120,7 @@ namespace Robust.Client.GameObjects
             {
                 throw new ArgumentException($"{serverId} is a client id.");
             }
-            
+
             if (!TryGetClientId(serverId, out var clientId))
             {
                 clientId = CreateClientId(serverId);
@@ -146,7 +155,7 @@ namespace Robust.Client.GameObjects
             {
                 uid = GetClientId(uid);
             }
-            
+
             base.DeleteEntity(uid);
         }
 
@@ -156,7 +165,7 @@ namespace Robust.Client.GameObjects
             {
                 uid = GetClientId(uid);
             }
-            
+
             return base.EntityExists(uid);
         }
 
@@ -306,9 +315,12 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates,
+            EntityUid? entityUid = null)
         {
-            var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
+            entityUid ??= GenerateEntityUid();
+
+            var newEntity = CreateEntity(prototypeName, entityUid);
 
             if (TryGetEntity(coordinates.EntityId, out var entity))
             {
@@ -320,9 +332,12 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates,
+            EntityUid? entityUid = null)
         {
-            var newEntity = CreateEntity(prototypeName, GenerateEntityUid());
+            entityUid ??= GenerateEntityUid();
+
+            var newEntity = CreateEntity(prototypeName, entityUid);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
             newEntity.Transform.WorldPosition = coordinates.Position;
             return newEntity;
@@ -448,19 +463,26 @@ namespace Robust.Client.GameObjects
 
         protected override void OnEntityCull(EntityUid clientUid)
         {
-            base.OnEntityCull(clientUid);
+            Entities.Remove(clientUid);
 
             if (_clientToServerIds.Remove(clientUid, out var serverUid))
             {
                 _serverToClientIds.Remove(serverUid);
+                Entities.Remove(serverUid);
             }
         }
 
         protected override void OnEntityAdd(Entity entity)
         {
-            base.OnEntityAdd(entity);
+            var uid = entity.Uid;
 
-            CreateClientId(entity.Uid);
+            if (!uid.IsClientSide())
+            {
+                uid = EnsureClientId(uid);
+            }
+
+            Entities[uid] = entity;
+            AllEntities.Add(entity);
         }
     }
 }

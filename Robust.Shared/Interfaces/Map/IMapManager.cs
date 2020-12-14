@@ -59,7 +59,7 @@ namespace Robust.Shared.Interfaces.Map
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        MapId CreateMap(MapId? mapID = null, EntityUid serverId = default);
+        MapId CreateMap(MapId? mapID = null, EntityUid? serverId = null);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.
@@ -93,7 +93,7 @@ namespace Robust.Shared.Interfaces.Map
 
         void DeleteMap(MapId mapID);
 
-        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1);
+        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16, float snapSize = 1, EntityUid? entityUid = null);
         IMapGrid GetGrid(GridId gridID);
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(GridId gridID);

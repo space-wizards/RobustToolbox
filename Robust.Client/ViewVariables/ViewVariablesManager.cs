@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -24,7 +25,7 @@ namespace Robust.Client.ViewVariables
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IResourceCache _resourceCache = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
 
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
@@ -212,7 +213,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is IEntity entity && !entity.Deleted)
+            if (obj is IEntity {Deleted: false})
             {
                 instance = new ViewVariablesInstanceEntity(this, _resourceCache, _entityManager);
             }

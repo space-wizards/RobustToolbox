@@ -5,6 +5,7 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Debugging;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Interfaces.Input;
@@ -26,7 +27,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
         private bool _debugColliders;
@@ -48,7 +49,7 @@ namespace Robust.Client.Debugging
                 if (value)
                 {
                     _overlayManager.AddOverlay(new PhysicsOverlay(_componentManager, _eyeManager,
-                        _prototypeManager, _inputManager));
+                        _prototypeManager, _inputManager, _entityManager));
                 }
                 else
                 {
@@ -86,6 +87,7 @@ namespace Robust.Client.Debugging
             private readonly IComponentManager _componentManager;
             private readonly IEyeManager _eyeManager;
             private readonly IInputManager _inputManager;
+            private readonly IClientEntityManager _entityManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
             private readonly ShaderInstance _shader;
@@ -94,12 +96,13 @@ namespace Robust.Client.Debugging
             private Vector2 _hoverStartScreen = Vector2.Zero;
             private List<IPhysBody> _hoverBodies = new();
 
-            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager)
+            public PhysicsOverlay(IComponentManager compMan, IEyeManager eyeMan, IPrototypeManager protoMan, IInputManager inputManager, IClientEntityManager entityManager)
                 : base(nameof(PhysicsOverlay))
             {
                 _componentManager = compMan;
                 _eyeManager = eyeMan;
                 _inputManager = inputManager;
+                _entityManager = entityManager;
 
                 _shader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
                 var cache = IoCManager.Resolve<IResourceCache>();
@@ -135,7 +138,7 @@ namespace Robust.Client.Debugging
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity} (Client Uid: {(_entityManager.TryGetClientId(body.Entity.Uid, out var clientId) ? clientId : "None")})");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;

@@ -62,9 +62,10 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates,
+            EntityUid? entityUid = null)
         {
-            var newEntity = CreateEntityServer(prototypeName);
+            var newEntity = CreateEntityServer(prototypeName, entityUid);
 
             if (TryGetEntity(coordinates.EntityId, out var entity))
             {
@@ -76,7 +77,8 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public override IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates,
+            EntityUid? entityUid = null)
         {
             var newEntity = CreateEntityServer(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
@@ -84,9 +86,9 @@ namespace Robust.Server.GameObjects
             return newEntity;
         }
 
-        private Entity CreateEntityServer(string? prototypeName)
+        private Entity CreateEntityServer(string? prototypeName, EntityUid? entityUid = null)
         {
-            var entity = CreateEntity(prototypeName);
+            var entity = CreateEntity(prototypeName, entityUid);
 
             if (prototypeName != null)
             {

@@ -225,7 +225,7 @@ namespace Robust.Shared.GameObjects
             e.Shutdown();
         }
 
-        public virtual void DeleteEntity(EntityUid uid)
+        public void DeleteEntity(EntityUid uid)
         {
             if (TryGetEntity(uid, out var entity))
             {

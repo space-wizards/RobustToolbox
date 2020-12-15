@@ -86,7 +86,7 @@ internal sealed class GenerateTypedNameReferencesAttribute : Attribute { }
             CSharpCompilation comp)
         {
             var className = classSymbol.Name;
-            var nameSpace = classSymbol.ContainingNamespace.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var nameSpace = classSymbol.ContainingNamespace.ToDisplayString();
             var parsed = XDocumentXamlParser.Parse(xamlFile);
             var typeSystem = new RoslynTypeSystem(comp);
             var compiler =
@@ -186,7 +186,6 @@ namespace {nameSpace}
                             Location.None));
                     return;
                 }
-
             }
 
             /*foreach (var additionalFile in context.AdditionalFiles)

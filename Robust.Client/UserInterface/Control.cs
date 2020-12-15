@@ -50,7 +50,7 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public Control? Parent { get; private set; }
 
-        private NameScope? _nameScope;
+        public NameScope? NameScope;
 
         //public void AttachNameScope(Dictionary<string, Control> nameScope)
         //{
@@ -61,7 +61,7 @@ namespace Robust.Client.UserInterface
         {
             foreach (var control in this.GetSelfAndLogicalAncestors())
             {
-                if (control._nameScope != null) return control._nameScope;
+                if (control.NameScope != null) return control.NameScope;
             }
 
             return null;

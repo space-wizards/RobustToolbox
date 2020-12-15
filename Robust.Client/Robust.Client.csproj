@@ -50,14 +50,15 @@
   </PropertyGroup>
   <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
   <ItemGroup>
-    <ProjectReference Include="..\RobustToolbox\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>
     </Compile>
-    <!-- Note this AdditionalFiles directive. -->
     <EmbeddedResource Include="**\*.xaml" />
+    <AdditionalFiles Include="**\*.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="..\Robust.Build.Tasks\bin\$(Configuration)\net5.0\Robust.Build.Tasks.dll" />

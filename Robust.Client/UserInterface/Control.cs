@@ -67,7 +67,7 @@ namespace Robust.Client.UserInterface
             return null;
         }
 
-        public Control FindControl(string name)
+        public T FindControl<T>(string name) where T : Control
         {
             var nameScope = FindNameScope();
             if (nameScope == null)
@@ -81,7 +81,12 @@ namespace Robust.Client.UserInterface
                 throw new ArgumentException($"No Control with the name {name} found");
             }
 
-            return value;
+            if (value is not T ret)
+            {
+                throw new ArgumentException($"Control with name {name} had invalid type {value.GetType()}");
+            }
+
+            return ret;
         }
 
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }

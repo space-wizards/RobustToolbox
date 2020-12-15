@@ -10,9 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Compression\NetCompression.cs" />
+    <Compile Include="Compression\NetZstdCompression.cs" />
     <Compile Include="Lidgren.Network\Lidgren.Network\**\*.cs">
      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ImpromptuNinjas.ZStd" Version="1.4.5.5" />
   </ItemGroup>
 
 </Project>

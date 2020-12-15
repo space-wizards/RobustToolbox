@@ -123,7 +123,7 @@ namespace {nameSpace}
             {
                 return;
             }
-            Debugger.Launch();
+            //Debugger.Launch();
 
             var comp = (CSharpCompilation) context.Compilation;
             var symbols = UnpackAnnotatedTypes(context, comp, receiver);

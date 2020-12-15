@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Lidgren.Network;
+using Lidgren.Network.Compression;
 using Robust.Shared.Interfaces.Network;
 
 namespace Robust.Shared.Network
@@ -40,6 +41,9 @@ namespace Robust.Shared.Network
 
         // Only used on server, contains the encryption to use for this channel.
         public NetEncryption? Encryption { get; set; }
+
+        // Used on the server and client, contains the compression to use for this channel.
+        public NetCompression? Compression { get; set; } = new NetZstdCompression();
 
         /// <summary>
         ///     Creates a new instance of a NetChannel.

@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Lidgren.Network.Compression;
 using Newtonsoft.Json;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
@@ -64,6 +65,7 @@ namespace Robust.Shared.Network
                 }
 
                 NetEncryption? encryption = null;
+                NetCompression? compression = null;
                 NetUserId userId;
                 string userName;
                 LoginType type;
@@ -208,7 +210,7 @@ namespace Robust.Shared.Network
                     connection.RemoteEndPoint, userName, userId);
 
                 // Handshake complete!
-                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption, type);
+                HandleInitialHandshakeComplete(peer, connection, userId, userName, encryption, compression, type);
             }
             catch (ClientDisconnectedException)
             {

@@ -10,6 +10,7 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
+using Lidgren.Network.Compression;
 using Prometheus;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;
@@ -141,6 +142,7 @@ namespace Robust.Shared.Network
         public IReadOnlyDictionary<Type, long> MessageBandwidthUsage => _bandwidthUsage;
 
         private NetEncryption? _clientEncryption;
+        private NetCompression? _clientCompression = new NetZstdCompression();
 
         /// <inheritdoc />
         public bool IsServer { get; private set; }
@@ -650,6 +652,7 @@ namespace Robust.Shared.Network
             NetUserId userId,
             string userName,
             NetEncryption? encryption,
+            NetCompression? compression,
             LoginType loginType)
         {
             var channel = new NetChannel(this, sender, userId, userName, loginType);
@@ -753,6 +756,11 @@ namespace Robust.Shared.Network
             if (encryption != null)
             {
                 msg.Decrypt(encryption);
+            }
+
+            if (channel.Compression != null)
+            {
+                msg.Decompress(channel.Compression);
             }
 
             var id = msg.ReadByte();
@@ -945,6 +953,12 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
+
+            if (channel.Compression != null)
+            {
+                packet.Compress(channel.Compression);
+            }
+
             if (channel.Encryption != null)
             {
                 packet.Encrypt(channel.Encryption);
@@ -982,6 +996,12 @@ namespace Robust.Shared.Network
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer.Peer);
             var method = message.DeliveryMethod;
+
+            if (_clientCompression != null)
+            {
+                packet.Compress(_clientCompression);
+            }
+
             if (_clientEncryption != null)
             {
                 packet.Encrypt(_clientEncryption);

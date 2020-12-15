@@ -195,7 +195,6 @@ namespace Robust.Shared.Map
 
             // maps created on the client in pre-state are linked to client entities
             // resolve new maps with their shared component that the server just gave us
-            // and delete the client entities
             if (data.CreatedMaps != null)
             {
                 foreach (var (mapId, datum) in data.CreatedMaps)
@@ -203,10 +202,6 @@ namespace Robust.Shared.Map
                     // CreateMap should have set this
                     DebugTools.Assert(_mapEntities.ContainsKey(mapId));
                     DebugTools.Assert(_entityManager.EntityExists(datum.EntityUid));
-
-                    // this was already linked in a previous state.
-                    if(!_mapEntities[mapId].IsClientSide())
-                        continue;
 
                     // get the existing client entity for the map.
                     var cEntity = _entityManager.GetEntity(_mapEntities[mapId]);
@@ -216,7 +211,7 @@ namespace Robust.Shared.Map
                     var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>();
                     foreach (var mapComp in mapComps)
                     {
-                        if (!mapComp.Owner.Uid.IsClientSide() && mapComp.WorldMap == mapId)
+                        if (mapComp.WorldMap == mapId)
                         {
                             sharedMapEntity = mapComp.Owner;
                             _mapEntities[mapId] = mapComp.Owner.Uid;
@@ -227,26 +222,18 @@ namespace Robust.Shared.Map
 
                     // verify shared entity was found (the server sent us one)
                     DebugTools.AssertNotNull(sharedMapEntity);
-                    DebugTools.Assert(!_mapEntities[mapId].IsClientSide());
 
                     // Transfer client child grids made in GameStatePre to the shared component
-                    // so they are not deleted
                     foreach (var childGridTrans in cEntity.Transform.Children.ToList())
                     {
                         childGridTrans.AttachParent(sharedMapEntity!);
                     }
-
-                    // remove client entity
-                    var cGridComp = cEntity.GetComponent<IMapComponent>();
-                    cGridComp.ClearMapId();
-                    cEntity.Delete();
                 }
             }
 
 
             // grids created on the client in pre-state are linked to client entities
             // resolve new grids with their shared component that the server just gave us
-            // and delete the client entities
             if (data.CreatedGrids != null)
             {
                 foreach (var kvNewGrid in data.CreatedGrids)
@@ -257,11 +244,7 @@ namespace Robust.Shared.Map
                     if(!grid.GridEntityId.IsClientSide())
                         continue;
 
-                    // remove the existing client entity.
                     var cEntity = _entityManager.GetEntity(grid.GridEntityId);
-                    var cGridComp = cEntity.GetComponent<IMapGridComponent>();
-                    cGridComp.ClearGridId();
-                    cEntity.Delete(); // normal entities are already parented to the shared comp, client comp has no children
 
                     var gridComps = _entityManager.ComponentManager.EntityQuery<IMapGridComponent>();
                     foreach (var gridComp in gridComps)
@@ -278,7 +261,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            if(data.DeletedGrids != null)
+            if (data.DeletedGrids != null)
             {
                 foreach (var grid in data.DeletedGrids)
                 {
@@ -289,7 +272,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            if(data.DeletedMaps != null)
+            if (data.DeletedMaps != null)
             {
                 foreach (var map in data.DeletedMaps)
                 {

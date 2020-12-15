@@ -190,12 +190,10 @@ namespace Robust.Client.GameStates
             {
                 foreach (var entityState in state.EntityStates)
                 {
-                    var cUid = _entityManager.EnsureClientId(entityState.Uid);
-
-                    if (!_lastStateFullRep.TryGetValue(cUid, out var compData))
+                    if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
                     {
                         compData = new Dictionary<uint, ComponentState>();
-                        _lastStateFullRep.Add(cUid, compData);
+                        _lastStateFullRep.Add(entityState.Uid, compData);
                     }
 
                     if (entityState.ComponentChanges != null)
@@ -382,11 +380,10 @@ namespace Robust.Client.GameStates
 
         public void MergeImplicitData(Dictionary<EntityUid, Dictionary<uint, ComponentState>> data)
         {
-            foreach (var datum in data)
+            foreach (var (uid, compData) in data)
             {
-                var uid = _entityManager.GetClientId(datum.Key);
-                var compData = datum.Value;
-                var fullRep = _lastStateFullRep[uid];
+                var serverId = _entityManager.GetServerId(uid);
+                var fullRep = _lastStateFullRep[serverId];
 
                 foreach (var (netId, compState) in compData)
                 {
@@ -400,13 +397,20 @@ namespace Robust.Client.GameStates
 
         public Dictionary<uint, ComponentState> GetLastServerStates(EntityUid entity)
         {
-            return _lastStateFullRep[entity];
+            var serverId = _entityManager.GetServerId(entity);
+            return _lastStateFullRep[serverId];
         }
 
         public bool TryGetLastServerStates(EntityUid entity,
             [NotNullWhen(true)] out Dictionary<uint, ComponentState>? dictionary)
         {
-            return _lastStateFullRep.TryGetValue(entity, out dictionary);
+            if (!_entityManager.TryGetServerId(entity, out var serverId))
+            {
+                dictionary = null;
+                return false;
+            }
+
+            return _lastStateFullRep.TryGetValue(serverId, out dictionary);
         }
 
         public int CalculateBufferSize(GameTick fromTick)

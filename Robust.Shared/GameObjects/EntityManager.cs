@@ -274,7 +274,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(EntityUid? uid = null)
+        private protected virtual Entity AllocEntity(EntityUid? uid = null)
         {
             uid ??= GenerateEntityUid();
 
@@ -294,7 +294,8 @@ namespace Robust.Shared.GameObjects
             // allocate the required TransformComponent
             _componentManager.AddComponent<TransformComponent>(entity);
 
-            OnEntityAdd(entity);
+            Entities[entity.Uid] = entity;
+            AllEntities.Add(entity);
 
             return entity;
         }
@@ -354,12 +355,6 @@ namespace Robust.Shared.GameObjects
         protected virtual void OnEntityCull(EntityUid uid)
         {
             Entities.Remove(uid);
-        }
-
-        protected virtual void OnEntityAdd(Entity entity)
-        {
-            Entities[entity.Uid] = entity;
-            AllEntities.Add(entity);
         }
 
         private void CullDeletedEntities()

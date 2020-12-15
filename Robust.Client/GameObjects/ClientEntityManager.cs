@@ -295,6 +295,19 @@ namespace Robust.Client.GameObjects
             return created;
         }
 
+        private protected override Entity AllocEntity(EntityUid? uid = null)
+        {
+            if (uid == null || uid.Value.IsClientSide())
+            {
+                return base.AllocEntity(uid);
+            }
+
+            var serverUid = uid.Value;
+            var clientUid = CreateClientId(serverUid);
+
+            return base.AllocEntity(clientUid);
+        }
+
         /// <inheritdoc />
         public override IEntity CreateEntityUninitialized(string? prototypeName)
         {
@@ -472,19 +485,6 @@ namespace Robust.Client.GameObjects
 
                 Entities.Remove(serverUid);
             }
-        }
-
-        protected override void OnEntityAdd(Entity entity)
-        {
-            var uid = entity.Uid;
-
-            if (!uid.IsClientSide())
-            {
-                uid = EnsureClientId(uid);
-            }
-
-            Entities[uid] = entity;
-            AllEntities.Add(entity);
         }
     }
 }

@@ -313,6 +313,7 @@ namespace Robust.Build.Tasks
                 //.Ldarg_0()
                 //.Ldarg(1)
                 //.Ldtype(nameScopeType)
+                .Ldarg_0()
                 .Newobj(nameScopeType.GetConstructor())
                 //.EmitCall(mappings.ServiceProvider.GetMethod(new FindMethodMethodSignature("GetService",
                 //    typeSystem.FindType("System.Object"), typeSystem.FindType("System.Type"))))

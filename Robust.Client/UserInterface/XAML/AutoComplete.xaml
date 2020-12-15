@@ -1,0 +1,8 @@
+﻿<customControls:SS14Window Name="Yes" xmlns:customControls="clr-namespace:Robust.Client.UserInterface.CustomControls"
+                           xmlns:controls="clr-namespace:Robust.Client.UserInterface.Controls">
+    <controls:HBoxContainer>
+        <controls:Button/>
+        <controls:Label Text="Hi there" Name="ImightWannaUseThis"  />
+        <controls:Button/>
+    </controls:HBoxContainer>
+</customControls:SS14Window>

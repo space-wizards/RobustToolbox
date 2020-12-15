@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Interfaces.GameObjects;
+// ReSharper disable once RedundantUsingDirective
+// Used with IRuntimeLog below
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;

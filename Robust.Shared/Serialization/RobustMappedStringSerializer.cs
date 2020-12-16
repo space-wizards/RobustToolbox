@@ -480,7 +480,7 @@ namespace Robust.Shared.Serialization
             var hashStr = Convert.ToBase64String(MappedStringsHash);
             hashStr = ConvertToBase64Url(hashStr);
 
-            var fileName = CacheForHash(hashStr);
+            var fileName = CacheForHash(hashStr)!;
             using var file = File.OpenWrite(fileName);
             stream.CopyTo(file);
 

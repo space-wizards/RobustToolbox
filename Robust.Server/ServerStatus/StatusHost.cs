@@ -141,24 +141,20 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            BuildInfo? info = null;
             try
             {
                 var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
-                info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+
+                _configurationManager.SetCVar(CVars.BuildEngineVersion, info.EngineVersion);
+                _configurationManager.SetCVar(CVars.BuildForkId, info.ForkId);
+                _configurationManager.SetCVar(CVars.BuildVersion, info.Version);
+                _configurationManager.SetCVar(CVars.BuildDownloadUrl, info.Download);
+                _configurationManager.SetCVar(CVars.BuildHash, info.Hash ?? "");
             }
             catch (FileNotFoundException)
             {
             }
-
-            _configurationManager.SetCVar(CVars.BuildForkId, info?.ForkId ?? "");
-            _configurationManager.SetCVar(CVars.BuildVersion, info?.Version ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlWindows, info?.Downloads.Windows ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlMacOS, info?.Downloads.MacOS ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlLinux, info?.Downloads.Linux ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashWindows, info?.Hashes.Windows ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashMacOS, info?.Hashes.MacOS ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashLinux, info?.Hashes.Linux ?? "");
         }
 
         public void Dispose()
@@ -175,18 +171,11 @@ namespace Robust.Server.ServerStatus
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
-            [JsonProperty("hashes")] public PlatformData Hashes { get; set; } = default!;
-            [JsonProperty("downloads")] public PlatformData Downloads { get; set; } = default!;
-            [JsonProperty("fork_id")] public string ForkId { get; set; } = default!;
-            [JsonProperty("version")] public string Version { get; set; } = default!;
-        }
-
-        [JsonObject(ItemRequired = Required.DisallowNull)]
-        private sealed class PlatformData
-        {
-            [JsonProperty("windows")] public string Windows { get; set; } = default!;
-            [JsonProperty("linux")] public string Linux { get; set; } = default!;
-            [JsonProperty("macos")] public string MacOS { get; set; } = default!;
+            [JsonProperty("engine_version")] public string EngineVersion = default!;
+            [JsonProperty("hashes")] public string? Hash;
+            [JsonProperty("downloads")] public string Download = default!;
+            [JsonProperty("fork_id")] public string ForkId = default!;
+            [JsonProperty("version")] public string Version = default!;
         }
     }
 }

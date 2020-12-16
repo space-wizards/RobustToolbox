@@ -6,7 +6,7 @@ namespace Robust.Shared.Configuration
     /// Extra flags for changing the behavior of a config var.
     /// </summary>
     [Flags]
-    public enum CVar
+    public enum CVar : short
     {
         /// <summary>
         /// No special flags.
@@ -52,7 +52,7 @@ namespace Robust.Shared.Configuration
         SERVERONLY = 64,
 
         /// <summary>
-        ///     Ignore registration of this cvar on the client.
+        ///     Ignore registration of this cvar on the server.
         /// </summary>
         /// <remarks>
         ///     This is intended to aid shared code.

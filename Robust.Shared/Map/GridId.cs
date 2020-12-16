@@ -9,7 +9,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// An invalid grid ID.
         /// </summary>
-        public static readonly GridId Invalid = new GridId(0);
+        public static readonly GridId Invalid = new(0);
 
         internal readonly int Value;
 

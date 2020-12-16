@@ -994,7 +994,7 @@ namespace Robust.Client.Graphics.Clyde
             public Color Color;
         }
 
-        private enum RenderCommandType
+        private enum RenderCommandType : byte
         {
             DrawBatch,
 

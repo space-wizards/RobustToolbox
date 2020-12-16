@@ -5,13 +5,19 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
 {
+    /// <summary>
+    /// A physics shape that represents an OBB.
+    /// This box DOES rotate with the entity, and will always be offset from the
+    /// entity origin in world space.
+    /// </summary>
     [Serializable, NetSerializable]
     public class PhysShapeRect : IPhysShape
     {
         private int _collisionLayer;
         private int _collisionMask;
-        private Box2 _rectangle = Box2.UnitCentered;
 
+        private Box2 _rectangle = Box2.UnitCentered;
+        [ViewVariables(VVAccess.ReadWrite)]
         public Box2 Rectangle
         {
             get => _rectangle;
@@ -52,8 +58,9 @@ namespace Robust.Shared.Physics
         public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
             float sleepPercent)
         {
-            handle.SetTransform(modelMatrix);
-            handle.DrawRect(Rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
+            var rotationMatrix = Matrix3.CreateRotation(Math.PI);
+            handle.SetTransform(rotationMatrix * modelMatrix);
+            handle.DrawRect(_rectangle, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
             handle.SetTransform(Matrix3.Identity);
         }
 
@@ -69,8 +76,7 @@ namespace Robust.Shared.Physics
 
         public Box2 CalculateLocalBounds(Angle rotation)
         {
-            var rect = new Box2Rotated(_rectangle, rotation);
-            return rect.CalcBoundingBox();
+            return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox();
         }
     }
 }

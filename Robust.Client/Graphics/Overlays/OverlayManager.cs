@@ -1,4 +1,4 @@
-﻿using Robust.Client.Interfaces;
+using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;

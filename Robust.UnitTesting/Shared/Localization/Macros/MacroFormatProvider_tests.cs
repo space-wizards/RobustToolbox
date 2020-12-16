@@ -29,10 +29,10 @@ namespace Robust.UnitTesting.Shared.Localization.Macros
             }
         }
 
-        private readonly GenderedPerson female = new GenderedPerson("Lisa", Gender.Female);
-        private readonly GenderedPerson male = new GenderedPerson("Bob", Gender.Male);
-        private readonly GenderedPerson epicene = new GenderedPerson("Michel", Gender.Epicene);
-        private readonly GenderedPerson neuter = new GenderedPerson("D.O.O.R.K.N.O.B.", Gender.Neuter);
+        private readonly GenderedPerson female = new("Lisa", Gender.Female);
+        private readonly GenderedPerson male = new("Bob", Gender.Male);
+        private readonly GenderedPerson epicene = new("Michel", Gender.Epicene);
+        private readonly GenderedPerson neuter = new("D.O.O.R.K.N.O.B.", Gender.Neuter);
 
         [SetUp]
         public void SetUp()

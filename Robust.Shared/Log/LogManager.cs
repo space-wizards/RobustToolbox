@@ -13,8 +13,8 @@ namespace Robust.Shared.Log
         private readonly Sawmill rootSawmill;
         public ISawmill RootSawmill => rootSawmill;
 
-        private readonly Dictionary<string, Sawmill> sawmills = new Dictionary<string, Sawmill>();
-        private readonly ReaderWriterLockSlim _sawmillsLock = new ReaderWriterLockSlim();
+        private readonly Dictionary<string, Sawmill> sawmills = new();
+        private readonly ReaderWriterLockSlim _sawmillsLock = new();
 
         public ISawmill GetSawmill(string name)
         {

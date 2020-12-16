@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics.Drawing;
+using Robust.Client.Graphics.Drawing;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Shared.IoC;
@@ -51,7 +51,7 @@ namespace Robust.Client.Graphics.Overlays
 
         private bool _isDirty = true;
 
-        private readonly List<DrawingHandleBase> TempHandles = new List<DrawingHandleBase>();
+        private readonly List<DrawingHandleBase> TempHandles = new();
 
         private bool Disposed;
 
@@ -107,5 +107,4 @@ namespace Robust.Client.Graphics.Overlays
             Draw(handle, currentSpace);
         }
     }
-
 }

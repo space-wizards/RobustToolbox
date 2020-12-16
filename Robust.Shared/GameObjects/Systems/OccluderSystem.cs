@@ -18,13 +18,13 @@ namespace Robust.Shared.GameObjects.Systems
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
         private readonly Dictionary<MapId, Dictionary<GridId, DynamicTree<OccluderComponent>>> _gridTrees =
-                     new Dictionary<MapId, Dictionary<GridId, DynamicTree<OccluderComponent>>>();
+                     new();
 
         private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderAddQueue =
-                     new List<(OccluderComponent Occluder, EntityCoordinates Coordinates)>();
+                     new();
 
         private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderRemoveQueue =
-            new List<(OccluderComponent Occluder, EntityCoordinates Coordinates)>();
+            new();
 
         internal bool TryGetOccluderTreeForGrid(MapId mapId, GridId gridId, [NotNullWhen(true)] out DynamicTree<OccluderComponent>? gridTree)
         {

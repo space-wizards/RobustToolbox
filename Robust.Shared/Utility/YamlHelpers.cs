@@ -16,7 +16,7 @@ namespace Robust.Shared.Utility
         // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
         // Obviously thread local to avoid threading issues.
         private static readonly ThreadLocal<YamlScalarNode> FetchNode =
-            new ThreadLocal<YamlScalarNode>(() => new YamlScalarNode());
+            new(() => new YamlScalarNode());
 
         // Easy conversions for YamlScalarNodes.
         // All of these take regular nodes, to make the API easier and less copy paste.
@@ -129,7 +129,7 @@ namespace Robust.Shared.Utility
         [Pure]
         public static ResourcePath AsResourcePath(this YamlNode node)
         {
-            return new ResourcePath(node.ToString());
+            return new(node.ToString());
         }
 
         // Mapping specific helpers.

@@ -50,11 +50,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, Entity> Entities = new Dictionary<EntityUid, Entity>();
+        protected readonly Dictionary<EntityUid, Entity> Entities = new();
 
-        protected readonly List<Entity> AllEntities = new List<Entity>();
+        protected readonly List<Entity> AllEntities = new();
 
-        private readonly EntityEventBus _eventBus = new EntityEventBus();
+        private readonly EntityEventBus _eventBus = new();
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -322,7 +322,7 @@ namespace Robust.Shared.GameObjects
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
                 DeleteEntity(entity);
-                throw new EntityCreationException("Exception inside CreateEntity", e);
+                throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototypeName}", e);
             }
         }
 
@@ -578,7 +578,7 @@ namespace Robust.Shared.GameObjects
         #region Entity DynamicTree
 
         private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new Dictionary<MapId, DynamicTree<IEntity>>();
+            new();
 
         public virtual bool UpdateEntityTree(IEntity entity)
         {
@@ -646,7 +646,7 @@ namespace Robust.Shared.GameObjects
         }
 
         private static DynamicTree<IEntity> EntityTreeFactory() =>
-            new DynamicTree<IEntity>(
+            new(
                 GetWorldAabbFromEntity,
                 capacity: 16,
                 growthFunc: x => x == 16 ? 3840 : x + 256
@@ -672,7 +672,7 @@ namespace Robust.Shared.GameObjects
 
     }
 
-    public enum EntityMessageType
+    public enum EntityMessageType : byte
     {
         Error = 0,
         ComponentMessage,

@@ -20,7 +20,7 @@ namespace Robust.Client.UserInterface.Controls
         private int _totalContentHeight;
 
         private VScrollBar _scrollBar;
-        private readonly List<Item> _itemList = new List<Item>();
+        private readonly List<Item> _itemList = new();
         public event Action<ItemListSelectedEventArgs>? OnItemSelected;
         public event Action<ItemListDeselectedEventArgs>? OnItemDeselected;
         public event Action<ItemListHoverEventArgs>? OnItemHover;
@@ -570,7 +570,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum ItemListSelectMode
+        public enum ItemListSelectMode : byte
         {
             None,
             Single,

@@ -10,29 +10,31 @@ namespace Robust.Client.UserInterface.Controls
         public const string StyleClassOptionButton = "optionButton";
         public const string StyleClassOptionTriangle = "optionTriangle";
 
-        private List<ButtonData> _buttonData = new List<ButtonData>();
-        private Dictionary<int, int> _idMap = new Dictionary<int, int>();
-        private Popup _popup;
-        private VBoxContainer _popupVBox;
-        private Label _label;
+        private readonly List<ButtonData> _buttonData = new();
+        private readonly Dictionary<int, int> _idMap = new();
+        private readonly Popup _popup;
+        private readonly VBoxContainer _popupVBox;
+        private readonly Label _label;
+
+        public int ItemCount => _buttonData.Count;
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
         public string Prefix { get; set; }
 
-        public OptionButton() : base()
+        public OptionButton()
         {
             AddStyleClass(StyleClassButton);
             Prefix = "";
-            OnPressed += _onPressed;
+            OnPressed += OnPressedInternal;
 
             var hBox = new HBoxContainer();
             AddChild(hBox);
 
             _popup = new Popup();
-            UserInterfaceManager.ModalRoot.AddChild(_popup);
             _popupVBox = new VBoxContainer();
             _popup.AddChild(_popupVBox);
+            _popup.OnPopupHide += OnPopupHide;
 
             _label = new Label
             {
@@ -85,10 +87,31 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
+        private void TogglePopup(bool show)
+        {
+            if (show)
+            {
+                var globalPos = GlobalPosition;
+                var (minX, minY) = _popupVBox.CombinedMinimumSize;
+                var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
+                UserInterfaceManager.ModalRoot.AddChild(_popup);
+                _popup.Open(box);
+            }
+            else
+            {
+                _popup.Close();
+            }
+        }
+
+        private void OnPopupHide()
+        {
+            UserInterfaceManager.ModalRoot.RemoveChild(_popup);
+        }
+
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
             obj.Button.Pressed = false;
-            _popup.Visible = false;
+            TogglePopup(false);
             foreach (var buttonData in _buttonData)
             {
                 if (buttonData.Button == obj.Button)
@@ -105,12 +128,14 @@ namespace Robust.Client.UserInterface.Controls
         public void Clear()
         {
             _idMap.Clear();
+            foreach (var buttonDatum in _buttonData)
+            {
+                buttonDatum.Button.OnPressed -= ButtonOnPressed;
+            }
             _buttonData.Clear();
             _popupVBox.DisposeAllChildren();
             SelectedId = 0;
         }
-
-        public int ItemCount => _buttonData.Count;
 
         public int GetItemId(int idx)
         {
@@ -134,9 +159,15 @@ namespace Robust.Client.UserInterface.Controls
         public void RemoveItem(int idx)
         {
             var data = _buttonData[idx];
+            data.Button.OnPressed -= ButtonOnPressed;
             _idMap.Remove(data.Id);
             _popupVBox.RemoveChild(data.Button);
             _buttonData.RemoveAt(idx);
+            var newIdx = 0;
+            foreach (var buttonData in _buttonData)
+            {
+                _idMap[buttonData.Id] = newIdx++;
+            }
         }
 
         public void Select(int idx)
@@ -168,13 +199,9 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Disabled = disabled;
         }
 
-        public void SetItemIcon(int idx, Texture texture)
-        {
-        }
-
         public void SetItemId(int idx, int id)
         {
-            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != id)
+            if (_idMap.TryGetValue(id, out var existIdx) && existIdx != idx)
             {
                 throw new InvalidOperationException("An item with said ID already exists.");
             }
@@ -202,19 +229,15 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Text = text;
         }
 
-        private void _onPressed(ButtonEventArgs args)
+        private void OnPressedInternal(ButtonEventArgs args)
         {
-            var globalPos = GlobalPosition;
-            var (minX, minY) = _popupVBox.CombinedMinimumSize;
-            var box = UIBox2.FromDimensions(globalPos, (Math.Max(minX, Width), minY));
-            _popup.Open(box);
+            TogglePopup(true);
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void ExitedTree()
         {
-            base.Dispose(disposing);
-
-            _popup?.Dispose();
+            base.ExitedTree();
+            TogglePopup(false);
         }
 
         public class ItemSelectedEventArgs : EventArgs

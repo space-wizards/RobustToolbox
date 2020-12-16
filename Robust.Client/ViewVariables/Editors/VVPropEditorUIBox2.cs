@@ -174,7 +174,7 @@ namespace Robust.Client.ViewVariables.Editors
             return hBoxContainer;
         }
 
-        public enum BoxType
+        public enum BoxType : byte
         {
             Box2,
             Box2i,

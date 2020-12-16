@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects.Components.Animations
         public override string Name => "AnimationPlayer";
 
         private readonly Dictionary<string, AnimationPlayback> _playingAnimations
-            = new Dictionary<string, AnimationPlayback>();
+            = new();
 
         /// <summary>
         ///     Start playing an animation.

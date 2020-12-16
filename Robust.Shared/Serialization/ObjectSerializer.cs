@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -29,15 +30,31 @@ namespace Robust.Shared.Serialization
         public const string LogCategory = "serialization";
 
         public delegate void ReadFunctionDelegate<in T>(T value);
+
         public delegate T WriteFunctionDelegate<out T>();
 
         public delegate TSource WriteConvertFunc<in TTarget, out TSource>(TTarget target) where TSource : notnull;
+
         public delegate TTarget ReadConvertFunc<out TTarget, in TSource>(TSource source) where TSource : notnull;
+
+        // Must be set for Expression DataField to work  to ensure no sandbox escape.
+        internal Type? CurrentType { get; set; }
+
+        public void SetDeserializingType(Type type)
+        {
+            if (!IoCManager.Resolve<IModLoader>().IsContentTypeAccessAllowed(type))
+            {
+                throw new SandboxArgumentException("Type access for this type not allowed.");
+            }
+
+            CurrentType = type;
+        }
 
         /// <summary>
         ///     True if this serializer is reading, false if it is writing.
         /// </summary>
         public bool Reading { get; protected set; }
+
         public bool Writing => !Reading;
 
         /// <summary>
@@ -62,7 +79,8 @@ namespace Robust.Shared.Serialization
         /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
         /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
-        public abstract void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat, bool alwaysWrite = false);
+        public abstract void DataField<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat,
+            bool alwaysWrite = false);
 
         /// <summary>
         ///     Writes or reads a field or property via reflection.
@@ -79,7 +97,8 @@ namespace Robust.Shared.Serialization
         ///     szr.DataField(this, x => x.SomeProperty, "some-property", SomeDefaultValue);
         /// </example>
         /// </remarks>
-        public virtual void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot,T>> expr, string name, T defaultValue, bool alwaysWrite = false)
+        public virtual void DataField<TRoot, T>(TRoot o, Expression<Func<TRoot, T>> expr, string name, T defaultValue,
+            bool alwaysWrite = false)
         {
             if (o == null)
             {
@@ -96,6 +115,12 @@ namespace Robust.Shared.Serialization
                 throw new NotSupportedException("Cannot handle expressions of types other than MemberExpression.");
             }
 
+            if ((CurrentType == null || !o.GetType().IsAssignableTo(CurrentType)) &&
+                !IoCManager.Resolve<IModLoader>().IsContentTypeAccessAllowed(o.GetType()))
+            {
+                throw new SandboxArgumentException(
+                    "Expression-based DataField requires this serializer to be correctly configured for sandboxing.");
+            }
 
             WriteFunctionDelegate<T> getter;
             ReadFunctionDelegate<T> setter;
@@ -110,7 +135,8 @@ namespace Robust.Shared.Serialization
                     setter = v => pi.SetValue(o, v);
                     break;
                 default:
-                    throw new NotSupportedException("Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
+                    throw new NotSupportedException(
+                        "Cannot handle member expressions of types other than FieldInfo or PropertyInfo.");
             }
 
             DataReadWriteFunction(name, defaultValue, setter, getter, alwaysWrite);
@@ -145,7 +171,8 @@ namespace Robust.Shared.Serialization
         /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
         /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
-        public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat, bool alwaysWrite = false)
+        public virtual void DataFieldCached<T>(ref T value, string name, T defaultValue, WithFormat<T> withFormat,
+            bool alwaysWrite = false)
         {
             DataField(ref value, name, defaultValue, withFormat, alwaysWrite);
         }
@@ -282,7 +309,8 @@ namespace Robust.Shared.Serialization
             return TryReadDataFieldCached(name, WithFormat<T>.NoFormat, out value);
         }
 
-        public virtual bool TryReadDataFieldCached<T>(string name, WithFormat<T> format, [MaybeNullWhen(false)] out T value)
+        public virtual bool TryReadDataFieldCached<T>(string name, WithFormat<T> format,
+            [MaybeNullWhen(false)] out T value)
         {
             return TryReadDataField(name, format, out value);
         }
@@ -337,13 +365,15 @@ namespace Robust.Shared.Serialization
         /// <param name="func">A delegate that produces simpler data based on the internal state of the caller.</param>
         /// <param name="alwaysWrite">If true, data will always be written even if it matches <paramref name="defaultValue" />.</param>
         /// <typeparam name="T">The type of the data that will be written to the storage medium.</typeparam>
-        public abstract void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func, bool alwaysWrite = false);
+        public abstract void DataWriteFunction<T>(string name, T defaultValue, WriteFunctionDelegate<T> func,
+            bool alwaysWrite = false);
 
         /// <summary>
         ///     It's <see cref="DataReadFunction" /> and <see cref="DataWriteFunction" /> in one, so you don't need to pass name and default twice!
         ///     Marvelous!
         /// </summary>
-        public virtual void DataReadWriteFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> readFunc, WriteFunctionDelegate<T> writeFunc, bool alwaysWrite = false)
+        public virtual void DataReadWriteFunction<T>(string name, T defaultValue, ReadFunctionDelegate<T> readFunc,
+            WriteFunctionDelegate<T> writeFunc, bool alwaysWrite = false)
         {
             if (Reading)
             {

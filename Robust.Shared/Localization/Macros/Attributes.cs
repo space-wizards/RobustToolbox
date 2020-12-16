@@ -6,7 +6,7 @@ namespace Robust.Shared.Localization.Macros
     /// <summary>
     /// Genders for grammatical usage only.
     /// </summary>
-    public enum Gender
+    public enum Gender : byte
     {
         Epicene,
         Female,

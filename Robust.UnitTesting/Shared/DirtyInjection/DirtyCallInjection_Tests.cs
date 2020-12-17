@@ -136,13 +136,13 @@ namespace Robust.UnitTesting.Shared.DirtyInjection
     {
         public override string Name => "TestComp";
 
-        [Dirty] public string StringTest { get; set; }
+        [Dirty] public string? StringTest { get; set; }
 
         [Dirty] public float FloatTest { get; set; }
 
         [Dirty] public int IntTest { get; set; }
 
-        [Dirty] public Component CompTest { get; set; }
+        [Dirty] public Component? CompTest { get; set; }
 
         [Dirty] public Int32 StructTest { get; set; }
 

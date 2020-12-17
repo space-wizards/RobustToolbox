@@ -189,7 +189,7 @@ namespace Robust.Client.Graphics
     ///     Controls behavior when reading texture coordinates outside 0-1, which usually wraps the texture somehow.
     /// </summary>
     [PublicAPI]
-    public enum TextureWrapMode
+    public enum TextureWrapMode : byte
     {
         /// <summary>
         ///     Do not wrap, instead clamp to edge.

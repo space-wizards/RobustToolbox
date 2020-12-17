@@ -108,7 +108,7 @@ namespace Robust.Shared.ContentPack
         }
 #pragma warning restore 649
 
-        private enum InheritMode
+        private enum InheritMode : byte
         {
             // Allow if All is set, block otherwise
             Default,

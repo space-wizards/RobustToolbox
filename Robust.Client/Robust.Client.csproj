@@ -21,6 +21,7 @@
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
+    <PackageReference Include="Robust.Natives" Version="0.1.0" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />
@@ -32,6 +33,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
+    <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
@@ -70,5 +72,4 @@
     <WriteLinesToFile File="$(RobustXamlReferencesTemporaryFilePath)" Lines="@(ReferencePathWithRefAssemblies)" Overwrite="true" />
     <CompileRobustXamlTask AssemblyFile="@(IntermediateAssembly)" ReferencesFilePath="$(RobustXamlReferencesTemporaryFilePath)" OriginalCopyPath="$(RobustXamlOriginalCopyFilePath)" ProjectDirectory="$(MSBuildProjectDirectory)" AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)" SignAssembly="$(SignAssembly)" DelaySign="$(DelaySign)" />
   </Target>
-
 </Project>

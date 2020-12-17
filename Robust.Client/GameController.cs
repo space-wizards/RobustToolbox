@@ -17,6 +17,7 @@ using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
+using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -67,6 +68,8 @@ namespace Robust.Client
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
+        // Arguments for loader-load. Not used otherwise.
+        private IMainArgs? _loaderArgs;
 
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
@@ -119,7 +122,12 @@ namespace Robust.Client
 
             _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
 
-            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client");
+            ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
+            if (_loaderArgs != null)
+            {
+                _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
+                _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
+            }
 
             // Bring display up as soon as resources are mounted.
             if (!_clyde.Initialize())
@@ -183,6 +191,18 @@ namespace Robust.Client
             }
 
             return true;
+        }
+
+        private Stream? VerifierExtraLoadHandler(string arg)
+        {
+            DebugTools.AssertNotNull(_loaderArgs);
+
+            if (_loaderArgs!.FileApi.TryOpen(arg, out var stream))
+            {
+                return stream;
+            }
+
+            return null;
         }
 
         private void ReadInitialLaunchState()
@@ -347,7 +367,7 @@ namespace Robust.Client
         }
 
 
-        internal enum DisplayMode
+        internal enum DisplayMode : byte
         {
             Headless,
             Clyde,

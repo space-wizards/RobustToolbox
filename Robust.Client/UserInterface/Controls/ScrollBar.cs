@@ -225,7 +225,7 @@ namespace Robust.Client.UserInterface.Controls
             return _getGrabberStyleBox()?.MinimumSize ?? Vector2.Zero;
         }
 
-        protected enum OrientationMode
+        protected enum OrientationMode : byte
         {
             Horizontal,
             Vertical

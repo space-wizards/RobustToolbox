@@ -672,7 +672,7 @@ namespace Robust.Shared.GameObjects
 
     }
 
-    public enum EntityMessageType
+    public enum EntityMessageType : byte
     {
         Error = 0,
         ComponentMessage,

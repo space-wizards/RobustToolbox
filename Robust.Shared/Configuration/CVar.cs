@@ -6,7 +6,7 @@ namespace Robust.Shared.Configuration
     /// Extra flags for changing the behavior of a config var.
     /// </summary>
     [Flags]
-    public enum CVar
+    public enum CVar : short
     {
         /// <summary>
         /// No special flags.

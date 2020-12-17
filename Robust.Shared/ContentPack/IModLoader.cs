@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -41,12 +42,13 @@ namespace Robust.Shared.ContentPack
         /// </summary>
         /// <param name="assembly">Byte array of the assembly.</param>
         /// <param name="symbols">Optional byte array of the debug symbols.</param>
-        void LoadGameAssembly(Stream assembly, Stream? symbols = null);
+        /// <param name="skipVerify">Whether to skip checking the loaded assembly for sandboxing.</param>
+        void LoadGameAssembly(Stream assembly, Stream? symbols = null, bool skipVerify = false);
 
         /// <summary>
         ///     Loads an assembly into the current AppDomain.
         /// </summary>
-        void LoadGameAssembly(string diskPath);
+        void LoadGameAssembly(string diskPath, bool skipVerify = false);
 
         /// <summary>
         ///     Broadcasts a run level change to all loaded entry point.
@@ -65,5 +67,7 @@ namespace Robust.Shared.ContentPack
 
         void SetUseLoadContext(bool useLoadContext);
         void SetEnableSandboxing(bool sandboxing);
+
+        Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
     }
 }

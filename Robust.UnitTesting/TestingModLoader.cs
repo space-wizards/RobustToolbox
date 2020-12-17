@@ -20,12 +20,12 @@ namespace Robust.UnitTesting
             return true;
         }
 
-        public void LoadGameAssembly(Stream assembly, Stream? symbols = null)
+        public void LoadGameAssembly(Stream assembly, Stream? symbols = null, bool skipVerify = false)
         {
             throw new NotSupportedException();
         }
 
-        public void LoadGameAssembly(string diskPath)
+        public void LoadGameAssembly(string diskPath, bool skipVerify = false)
         {
             throw new NotSupportedException();
         }
@@ -44,5 +44,7 @@ namespace Robust.UnitTesting
         {
             // Nada.
         }
+
+        public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
     }
 }

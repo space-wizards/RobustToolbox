@@ -228,7 +228,7 @@ namespace Robust.Client
     /// <summary>
     ///     Enumeration of the run levels of the BaseClient.
     /// </summary>
-    public enum ClientRunLevel
+    public enum ClientRunLevel : byte
     {
         Error = 0,
 

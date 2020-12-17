@@ -230,7 +230,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Defines how user-initiated moving of the split should work
         /// </summary>
-        public enum SplitResizeMode
+        public enum SplitResizeMode : sbyte
         {
             /// <summary>
             /// Don't allow user to move the split.
@@ -249,7 +249,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Defines how the split position should be determined
         /// </summary>
-        private enum SplitState
+        private enum SplitState : byte
         {
             /// <summary>
             /// Automatically adjust the split based on the width of the children

@@ -173,7 +173,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public enum StretchMode
+        public enum StretchMode : byte
         {
             /// <summary>
             ///     The texture is stretched to fit the entire area of the control.

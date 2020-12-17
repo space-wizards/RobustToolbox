@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
@@ -146,14 +147,21 @@ namespace Robust.Server.ServerStatus
                 var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
                 var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
 
-                _configurationManager.SetCVar(CVars.BuildEngineVersion, info.EngineVersion);
-                _configurationManager.SetCVar(CVars.BuildForkId, info.ForkId);
-                _configurationManager.SetCVar(CVars.BuildVersion, info.Version);
-                _configurationManager.SetCVar(CVars.BuildDownloadUrl, info.Download);
-                _configurationManager.SetCVar(CVars.BuildHash, info.Hash ?? "");
+                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
             }
             catch (FileNotFoundException)
             {
+            }
+
+            void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
+            {
+                if (_configurationManager.GetCVar(cvar) == "")
+                    _configurationManager.SetCVar(cvar, val);
             }
         }
 
@@ -173,7 +181,7 @@ namespace Robust.Server.ServerStatus
         {
             [JsonProperty("engine_version")] public string EngineVersion = default!;
             [JsonProperty("hash")] public string? Hash;
-            [JsonProperty("download")] public string Download = default!;
+            [JsonProperty("download")] public string? Download;
             [JsonProperty("fork_id")] public string ForkId = default!;
             [JsonProperty("version")] public string Version = default!;
         }

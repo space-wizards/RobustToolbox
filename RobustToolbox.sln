@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetSerializer", "NetSeriali
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Physics", "Robust.Physics\Robust.Physics.csproj", "{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.XamlUI", "Robust.Client.XamlUI\Robust.Client.XamlUI.csproj", "{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.XAMLUI", "Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj", "{992092A1-B3FE-47B6-9F6D-AB04AB99B55E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XamlX", "XamlX", "{86DB4849-B02B-4AA7-BFCF-1AAE69178272}"
 EndProject
@@ -35,7 +35,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.IL.Cecil", "XamlX\src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.Runtime", "XamlX\src\XamlX.Runtime\XamlX.Runtime.csproj", "{07D55A7C-7812-452B-A1D7-86555A081B83}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Build.Tasks", "Robust.Build.Tasks\Robust.Build.Tasks.csproj", "{A8CDC820-4A4B-4AA5-802C-B66C0E29D181}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.Injectors", "Robust.Client.Injectors\Robust.Client.Injectors.csproj", "{A8CDC820-4A4B-4AA5-802C-B66C0E29D181}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

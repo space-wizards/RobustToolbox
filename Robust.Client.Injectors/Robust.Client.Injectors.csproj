@@ -13,5 +13,4 @@
     <ItemGroup>
       <ProjectReference Include="..\XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj" />
     </ItemGroup>
-
 </Project>

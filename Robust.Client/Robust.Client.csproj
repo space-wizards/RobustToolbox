@@ -35,7 +35,6 @@
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
-    <!--<ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />-->
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json" Condition="'$(Configuration)' == 'Debug'">
@@ -58,7 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj"/>
     <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
     <ProjectReference Include="..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false"/>
   </ItemGroup>

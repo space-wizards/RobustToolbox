@@ -123,10 +123,10 @@ namespace Robust.Build.Injections
 
                     var ilProcessor = propDef.SetMethod.Body.GetILProcessor();
                     var instr = ilProcessor.Body.Instructions;
-                    var first = instr[0];
-                    var second = instr[1];
-                    var third = instr[2];
-                    var fourth = instr[3];
+                    var setterThis = instr[0];
+                    var setterValue = instr[1];
+                    var setterStoreInField = instr[2];
+                    var setterReturn = instr[3];
                     ilProcessor.Clear();
                     if (shouldDoCheck)
                     {
@@ -139,17 +139,17 @@ namespace Robust.Build.Injections
                         {
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_1));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
-                            ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)third.Operand));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)setterStoreInField.Operand));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Call, equalsMethod));
-                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brfalse, fourth));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brfalse, setterReturn));
                         }
                     }
+                    ilProcessor.Append(setterThis);
+                    ilProcessor.Append(setterValue);
+                    ilProcessor.Append(setterStoreInField);
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Call, internalDirtyMethod));
-                    ilProcessor.Append(first);
-                    ilProcessor.Append(second);
-                    ilProcessor.Append(third);
-                    ilProcessor.Append(fourth);
+                    ilProcessor.Append(setterReturn);
                 }
             }
 

@@ -28,4 +28,9 @@
     </Content>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
+
+  <UsingTask TaskName="DirtyCallInjectionTask" AssemblyFile="..\Robust.Build.Injections\bin\$(Configuration)\net5.0\Robust.Build.Injections.dll" />
+  <Target Name="DirtyCallInjection" AfterTargets="AfterCompile">
+    <DirtyCallInjectionTask AssemblyFile="@(IntermediateAssembly)" IntermediatePath="$(IntermediateOutputPath)" AssemblyReferencePath="$(OutputPath)" />
+  </Target>
 </Project>

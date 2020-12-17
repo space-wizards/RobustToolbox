@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Robust.LoaderApi", "Robust.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.LoaderApi", "Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj", "{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Build.Injections", "Robust.Build.Injections\Robust.Build.Injections.csproj", "{D14A6635-3492-4B05-B067-1D717E72728A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,14 @@ Global
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Release|x64.ActiveCfg = Release|Any CPU
 		{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}.Release|x64.Build.0 = Release|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Debug|x64.Build.0 = Debug|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Release|x64.ActiveCfg = Release|Any CPU
+		{D14A6635-3492-4B05-B067-1D717E72728A}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

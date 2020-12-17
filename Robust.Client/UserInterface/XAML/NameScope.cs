@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Robust.Client.UserInterface.XAML
 {
@@ -17,8 +16,14 @@ namespace Robust.Client.UserInterface.XAML
         {
             if (IsCompleted)
                 throw new InvalidOperationException("NameScope is completed, no further registrations are allowed");
-            Contract.Requires<ArgumentNullException>(name != null);
-            Contract.Requires<ArgumentNullException>(element != null);
+            if (name == null)
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+            if (element == null)
+            {
+                throw new ArgumentNullException(nameof(element));
+            }
 
             if (_inner.TryGetValue(name, out Control? existing))
             {
@@ -35,7 +40,8 @@ namespace Robust.Client.UserInterface.XAML
 
         public Control Find(string name)
         {
-            Contract.Requires<ArgumentNullException>(name != null);
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
 
             _inner.TryGetValue(name, out var result);
             return result;

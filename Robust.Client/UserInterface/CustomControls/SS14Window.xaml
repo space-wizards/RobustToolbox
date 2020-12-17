@@ -1,0 +1,15 @@
+﻿<customControls:SS14Window xmlns:customControls="clr-namespace:Robust.Client.UserInterface.CustomControls"
+                           xmlns:controls="clr-namespace:Robust.Client.UserInterface.Controls">
+    <controls:PanelContainer StyleClasses="windowPanel"/>
+    <controls:VBoxContainer SeparationOverride="0">
+        <controls:PanelContainer Name="WindowHeader" StyleClasses="windowHeader">
+            <controls:HBoxContainer>
+                <controls:MarginContainer MarginLeftOverride="5" SizeFlagsHorizontal="FillExpand">
+                    <controls:Label Name="TitleLabel" StyleIdentifier="foo" ClipText="True" Text="Exemplary Window Title Here" VAlign="Center" StyleClasses="windowTitle"/>
+                </controls:MarginContainer>
+                <controls:TextureButton Name="CloseButton" StyleClasses="windowCloseButton" SizeFlagsVertical="ShrinkCenter"></controls:TextureButton>
+            </controls:HBoxContainer>
+        </controls:PanelContainer>
+        <controls:MarginContainer Name="ContentsContainer" MarginBottomOverride="10" MarginLeftOverride="10" MarginRightOverride="10" MarginTopOverride="10" RectClipContent="True" SizeFlagsVertical="FillExpand" />
+    </controls:VBoxContainer>
+</customControls:SS14Window>

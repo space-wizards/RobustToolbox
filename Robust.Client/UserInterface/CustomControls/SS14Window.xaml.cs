@@ -9,83 +9,27 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
+    [GenerateTypedNameReferences]
     // ReSharper disable once InconsistentNaming
-    public class SS14Window : BaseWindow
+    public partial class SS14Window : BaseWindow
     {
-        public const string StyleClassWindowTitle = "windowTitle";
-        public const string StyleClassWindowPanel = "windowPanel";
-        public const string StyleClassWindowHeader = "windowHeader";
-        public const string StyleClassWindowCloseButton = "windowCloseButton";
-
         protected virtual Vector2? CustomSize => null;
 
         public SS14Window()
         {
+            RobustXamlLoader.Load(this);
             MouseFilter = MouseFilterMode.Stop;
 
-            AddChild(new PanelContainer
-            {
-                StyleClasses = {StyleClassWindowPanel}
-            });
+            WindowHeader.CustomMinimumSize = (0, HEADER_SIZE_Y);
 
-            AddChild(new VBoxContainer
-            {
-                SeparationOverride = 0,
-                Children =
-                {
-                    new PanelContainer
-                    {
-                        StyleClasses = {StyleClassWindowHeader},
-                        CustomMinimumSize = (0, HEADER_SIZE_Y),
-                        Children =
-                        {
-                            new HBoxContainer
-                            {
-                                Children =
-                                {
-                                    new MarginContainer
-                                    {
-                                        MarginLeftOverride = 5,
-                                        SizeFlagsHorizontal = SizeFlags.FillExpand,
-                                        Children =
-                                        {
-                                            (TitleLabel = new Label
-                                            {
-                                                StyleIdentifier = "foo",
-                                                ClipText = true,
-                                                Text = "Exemplary Window Title Here",
-                                                VAlign = Label.VAlignMode.Center,
-                                                StyleClasses = {StyleClassWindowTitle}
-                                            })
-                                        }
-                                    },
-                                    (CloseButton = new TextureButton
-                                    {
-                                        StyleClasses = {StyleClassWindowCloseButton},
-                                        SizeFlagsVertical = SizeFlags.ShrinkCenter
-                                    })
-                                }
-                            }
-                        }
-                    },
-                    (Contents = new MarginContainer
-                    {
-                        MarginBottomOverride = 10,
-                        MarginLeftOverride = 10,
-                        MarginRightOverride = 10,
-                        MarginTopOverride = 10,
-                        RectClipContent = true,
-                        SizeFlagsVertical = SizeFlags.FillExpand
-                    })
-                }
-            });
+            Contents = ContentsContainer;
 
             CloseButton.OnPressed += CloseButtonPressed;
             XamlChildren = new SS14ContentCollection(this);
         }
 
         public MarginContainer Contents { get; private set; }
-        private TextureButton CloseButton;
+        //private TextureButton CloseButton;
 
         private const int DRAG_MARGIN_SIZE = 7;
 
@@ -108,7 +52,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
-        private Label TitleLabel;
+        //private Label TitleLabel;
 
         public string? Title
         {

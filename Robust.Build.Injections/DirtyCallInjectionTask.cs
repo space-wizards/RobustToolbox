@@ -19,7 +19,7 @@ namespace Robust.Build.Injections
         public string IntermediatePath { get; set; }
 
         [Required]
-        public string AssemblyReferencePath { get; set; }
+        public string AssemblyReferencesPath { get; set; }
 
         public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
@@ -51,7 +51,15 @@ namespace Robust.Build.Injections
             BuildEngine.LogMessage($"DirtyCallInjection -> AssemblyFile:{AssemblyFile}", MessageImportance.Low);
 
             var resolver = new DefaultAssemblyResolver();
-            resolver.AddSearchDirectory(AssemblyReferencePath);
+            if (!File.Exists(AssemblyReferencesPath))
+            {
+                BuildEngine.LogError("AssemblyReferencesLoading", $"AssemblyReferencesFile was not found at path {AssemblyReferencesPath}", "");
+            }
+
+            foreach (var reference in File.ReadAllLines(AssemblyReferencesPath).Where(l => !string.IsNullOrWhiteSpace(l)))
+            {
+                resolver.AddSearchDirectory(Path.GetDirectoryName(reference));
+            }
             var readerParameters = new ReaderParameters { AssemblyResolver = resolver };
             if (pdbExists)
             {
@@ -69,10 +77,8 @@ namespace Robust.Build.Injections
                     BuildEngine.LogError("DirtyMethodFinder","No IComponent-Type found!", "");
                     return false;
                 }
-                else
-                {
-                    iCompType = iCompTypeRef.Resolve();
-                }
+
+                iCompType = iCompTypeRef.Resolve();
             }
 
             var dirtyMethod = iCompType.Methods.FirstOrDefault(m => m.Name == "Dirty");

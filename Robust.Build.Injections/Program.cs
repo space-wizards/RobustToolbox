@@ -12,7 +12,7 @@ namespace Robust.Build.Injections
             {
                 AssemblyFile = args[0],
                 IntermediatePath = args[1],
-                AssemblyReferencePath = args[2],
+                AssemblyReferencesPath = args[2],
                 BuildEngine = new ConsoleBuildEngine()
             }.Execute()
                 ? 0

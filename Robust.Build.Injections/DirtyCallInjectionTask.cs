@@ -27,17 +27,25 @@ namespace Robust.Build.Injections
         public bool Execute()
         {
             var originalCopyPath = $"{IntermediatePath}dirty_call_injector_copy.dll";
-            File.Copy(AssemblyFile, originalCopyPath, true);
-            File.Delete(AssemblyFile);
-
-            var inputPdb = GetPdbPath(AssemblyFile);
             var pdbExists = false;
-            if (File.Exists(inputPdb))
+            try
             {
-                var copyPdb = GetPdbPath(originalCopyPath);
-                File.Copy(inputPdb, copyPdb, true);
-                File.Delete(inputPdb);
-                pdbExists = true;
+                File.Copy(AssemblyFile, originalCopyPath, true);
+                File.Delete(AssemblyFile);
+
+                var inputPdb = GetPdbPath(AssemblyFile);
+                if (File.Exists(inputPdb))
+                {
+                    var copyPdb = GetPdbPath(originalCopyPath);
+                    File.Copy(inputPdb, copyPdb, true);
+                    File.Delete(inputPdb);
+                    pdbExists = true;
+                }
+            }
+            catch (Exception e)
+            {
+                BuildEngine.LogError("AssemblyLoading",$"Error while copying Assembly: {e}!", "");
+                return false;
             }
 
             BuildEngine.LogMessage($"DirtyCallInjection -> AssemblyFile:{AssemblyFile}", MessageImportance.Low);
@@ -52,6 +60,15 @@ namespace Robust.Build.Injections
 
             var asdef = AssemblyDefinition.ReadAssembly(originalCopyPath, readerParameters);
 
+            try
+            {
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
             var iCompType = asdef.MainModule.GetType("Robust.Shared.Interfaces.GameObjects.IComponent");
             if(iCompType == null)
             {
@@ -90,8 +107,20 @@ namespace Robust.Build.Injections
                         return false;
                     }
 
-                    //only needed for comparison
-                    //var backingField = (FieldReference)propDef.SetMethod.Body.Instructions[2].Operand;
+                    bool shouldDoCheck;
+                    try
+                    {
+                        shouldDoCheck = (bool) propDef.CustomAttributes.First(a =>
+                                a.AttributeType.FullName == "Robust.Shared.Injections.DirtyAttribute")
+                            .ConstructorArguments
+                            .First().Value;
+                    }
+                    catch (Exception e)
+                    {
+                        BuildEngine.LogError("OnlyOnNewValueGetter", $"Error while getting OnlyOnNewValue-Value: {e}", propDef.FullName);
+                        return false;
+                    }
+
                     var ilProcessor = propDef.SetMethod.Body.GetILProcessor();
                     var instr = ilProcessor.Body.Instructions;
                     var first = instr[0];
@@ -99,11 +128,22 @@ namespace Robust.Build.Injections
                     var third = instr[2];
                     var fourth = instr[3];
                     ilProcessor.Clear();
-                    //TODO add comparison OPTION, have a bool field in the attribute to specify whether dirty should be called only on value change or not
-                    //ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
-                    //ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, backingField));
-                    //ilProcessor.Append( ilProcessor.Create(OpCodes.Ldarg_1));
-                    //ilProcessor.Append(ilProcessor.Create(OpCodes.Beq, fourth));
+                    if (shouldDoCheck)
+                    {
+                        var equalsMethod = GetEqualsMethodRecursive(asdef.MainModule, propDef.PropertyType.Resolve());
+                        if (equalsMethod == null)
+                        {
+                            BuildEngine.LogWarning("EqualsMethodGetter", $"Failed trying to get Equals-Method for type {propDef.PropertyType}, skipping Equals-Injection.", propDef.FullName);
+                        }
+                        else
+                        {
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_1));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)third.Operand));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Call, equalsMethod));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brfalse, fourth));
+                        }
+                    }
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Call, internalDirtyMethod));
                     ilProcessor.Append(first);
@@ -122,6 +162,7 @@ namespace Robust.Build.Injections
                 asdef.Write(AssemblyFile);
             }
 
+            resolver.Dispose();
             asdef.Dispose();
             return true;
         }

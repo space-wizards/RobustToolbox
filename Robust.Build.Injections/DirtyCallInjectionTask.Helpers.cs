@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -24,7 +25,7 @@ namespace Robust.Build.Injections
             {
                 return IsComponent(typeDef.BaseType.Resolve());
             }
-            catch (Exception) //it sometimes fails to load assemblies n stuff so we just do this :D
+            catch (Exception) //resolve fails or basetype is null
             {
                 return false;
             }
@@ -38,6 +39,27 @@ namespace Robust.Build.Injections
             if (d != null)
                 rv = Path.Combine(d, rv);
             return rv;
+        }
+
+        static MethodReference GetEqualsMethodRecursive(ModuleDefinition module, TypeDefinition typeDef)
+        {
+            var equalsMethod =
+                typeDef.Methods.FirstOrDefault(m => m.Name == "Equals" && m.Parameters.Count == 1 && !m.IsStatic);
+            if (equalsMethod != null)
+            {
+                return module.ImportReference(equalsMethod);
+            }
+
+            if (typeDef.BaseType == null) return null;
+
+            try
+            {
+                return GetEqualsMethodRecursive(module, typeDef.BaseType.Resolve());
+            }
+            catch (Exception e) //resolve failed
+            {
+                return null;
+            }
         }
     }
 }

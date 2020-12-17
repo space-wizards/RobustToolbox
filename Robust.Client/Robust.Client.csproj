@@ -35,7 +35,7 @@
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
-    <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />
+    <!--<ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj" />-->
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Graphics\RSI\RSISchema.json" Condition="'$(Configuration)' == 'Debug'">
@@ -58,14 +58,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\XamlX\src\XamlX\XamlX.csproj"/>
+    <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
+    <ProjectReference Include="..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 
-  <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="..\Robust.Build.Tasks\bin\$(Configuration)\net5.0\Robust.Build.Tasks.dll" />
+  <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="..\Robust.Client.Injectors\bin\$(Configuration)\net5.0\Robust.Client.Injectors.dll" />
   <Target Name="CompileRobustXaml" AfterTargets="AfterCompile">
     <PropertyGroup>
-      <RobustXamlReferencesTemporaryFilePath Condition="'$(RobustXamlReferencesTemporaryFilePath)' == ''">$(IntermediateOutputPath)/Robust/references</RobustXamlReferencesTemporaryFilePath>
-      <RobustXamlOriginalCopyFilePath Condition="'$(RobustXamlOriginalCopyFilePath)' == ''">$(IntermediateOutputPath)/Robust/original.dll</RobustXamlOriginalCopyFilePath>
+      <RobustXamlReferencesTemporaryFilePath Condition="'$(RobustXamlReferencesTemporaryFilePath)' == ''">$(IntermediateOutputPath)XAML/references</RobustXamlReferencesTemporaryFilePath>
+      <RobustXamlOriginalCopyFilePath Condition="'$(RobustXamlOriginalCopyFilePath)' == ''">$(IntermediateOutputPath)XAML/original.dll</RobustXamlOriginalCopyFilePath>
     </PropertyGroup>
     <WriteLinesToFile File="$(RobustXamlReferencesTemporaryFilePath)" Lines="@(ReferencePathWithRefAssemblies)" Overwrite="true" />
     <CompileRobustXamlTask AssemblyFile="@(IntermediateAssembly)" ReferencesFilePath="$(RobustXamlReferencesTemporaryFilePath)" OriginalCopyPath="$(RobustXamlOriginalCopyFilePath)" ProjectDirectory="$(MSBuildProjectDirectory)" AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)" SignAssembly="$(SignAssembly)" DelaySign="$(DelaySign)" />

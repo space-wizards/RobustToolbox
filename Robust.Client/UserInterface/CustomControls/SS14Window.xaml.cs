@@ -13,6 +13,11 @@ namespace Robust.Client.UserInterface.CustomControls
     // ReSharper disable once InconsistentNaming
     public partial class SS14Window : BaseWindow
     {
+        public const string StyleClassWindowTitle = "windowTitle";
+        public const string StyleClassWindowPanel = "windowPanel";
+        public const string StyleClassWindowHeader = "windowHeader";
+        public const string StyleClassWindowCloseButton = "windowCloseButton";
+
         protected virtual Vector2? CustomSize => null;
 
         public SS14Window()

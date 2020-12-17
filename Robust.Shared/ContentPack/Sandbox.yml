@@ -845,6 +845,7 @@ Types:
     Func`15: { All: True }
     Func`16: { All: True }
     Func`17: { All: True }
+    Guid: { All: True }
     HashCode: { All: True }
     IAsyncDisposable: { All: True }
     IAsyncResult: { }

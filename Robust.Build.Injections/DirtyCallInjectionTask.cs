@@ -74,7 +74,7 @@ namespace Robust.Build.Injections
                 return false;
             }
 
-            var internalDirtyMethid = asdef.MainModule.ImportReference(dirtyMethod);
+            var internalDirtyMethod = asdef.MainModule.ImportReference(dirtyMethod);
 
             foreach (var typeDef in asdef.MainModule.Types)
             {
@@ -105,7 +105,7 @@ namespace Robust.Build.Injections
                     //ilProcessor.Append( ilProcessor.Create(OpCodes.Ldarg_1));
                     //ilProcessor.Append(ilProcessor.Create(OpCodes.Beq, fourth));
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
-                    ilProcessor.Append(ilProcessor.Create(OpCodes.Call, internalDirtyMethid));
+                    ilProcessor.Append(ilProcessor.Create(OpCodes.Call, internalDirtyMethod));
                     ilProcessor.Append(first);
                     ilProcessor.Append(second);
                     ilProcessor.Append(third);

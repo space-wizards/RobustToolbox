@@ -108,6 +108,18 @@ namespace Robust.UnitTesting.Shared.DirtyInjection
         }
 
         [Test]
+        public void DirtyInjectionBooleanTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.CreateEntityUninitialized("dummy");
+            var testComp = dummy.GetComponent<DirtyInjectionTestComponent>();
+            var tick = testComp.LastModifiedTick;
+            IoCManager.Resolve<IGameTiming>().CurTick = new GameTick(1);
+            testComp.BooleanTest = true;
+            Assert.That(tick, NUnit.Framework.Is.Not.EqualTo(testComp.LastModifiedTick));
+        }
+
+        [Test]
         public void DirtyInjectionNoEqualsTest()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
@@ -135,6 +147,8 @@ namespace Robust.UnitTesting.Shared.DirtyInjection
         [Dirty] public Int32 StructTest { get; set; }
 
         [Dirty] public DirtyCallTestEnum EnumTest { get; set; } = DirtyCallTestEnum.Value1;
+
+        [Dirty] public bool BooleanTest { get; set; }
 
         [Dirty(false)] public bool SomeFlag { get; set; }
     }

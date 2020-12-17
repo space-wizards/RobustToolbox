@@ -59,16 +59,7 @@ namespace Robust.Build.Injections
             }
 
             var asdef = AssemblyDefinition.ReadAssembly(originalCopyPath, readerParameters);
-
-            try
-            {
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            
             var iCompType = asdef.MainModule.GetType("Robust.Shared.Interfaces.GameObjects.IComponent");
             if(iCompType == null)
             {

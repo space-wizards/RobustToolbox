@@ -59,7 +59,7 @@ namespace Robust.Build.Injections
             }
 
             var asdef = AssemblyDefinition.ReadAssembly(originalCopyPath, readerParameters);
-            
+
             var iCompType = asdef.MainModule.GetType("Robust.Shared.Interfaces.GameObjects.IComponent");
             if(iCompType == null)
             {
@@ -132,7 +132,7 @@ namespace Robust.Build.Injections
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)setterStoreInField.Operand));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Call, equalsMethod));
-                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brfalse, setterReturn));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brtrue, setterReturn));
                         }
                     }
                     ilProcessor.Append(setterThis);

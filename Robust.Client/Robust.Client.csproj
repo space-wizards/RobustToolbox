@@ -49,7 +49,7 @@
   <PropertyGroup>
     <RobustToolsPath>../Tools</RobustToolsPath>
   </PropertyGroup>
-  <Target Name="RobustAfterBuild" DependsOnTargets="ClientAfterBuild" AfterTargets="Build" />
+  <Target Name="RobustAfterBuild" AfterTargets="Build" />
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">
       <DependentUpon>%(Filename)</DependentUpon>

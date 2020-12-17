@@ -1,4 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <ItemGroup>
+    <ProjectReference Include="../Robust.Build.Injections/Robust.Build.Injections.csproj" ReferenceOutputAssembly="false"/>
+  </ItemGroup>
   <UsingTask TaskName="DirtyCallInjectionTask" AssemblyFile="..\Robust.Build.Injections\bin\$(Configuration)\net5.0\Robust.Build.Injections.dll" />
   <Target Name="DirtyCallInjection" AfterTargets="AfterCompile">
     <PropertyGroup>

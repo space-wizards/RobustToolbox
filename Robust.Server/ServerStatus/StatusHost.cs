@@ -172,8 +172,8 @@ namespace Robust.Server.ServerStatus
         private sealed class BuildInfo
         {
             [JsonProperty("engine_version")] public string EngineVersion = default!;
-            [JsonProperty("hashes")] public string? Hash;
-            [JsonProperty("downloads")] public string Download = default!;
+            [JsonProperty("hash")] public string? Hash;
+            [JsonProperty("download")] public string Download = default!;
             [JsonProperty("fork_id")] public string ForkId = default!;
             [JsonProperty("version")] public string Version = default!;
         }

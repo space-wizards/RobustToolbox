@@ -38,7 +38,7 @@ namespace Robust.Client.UserInterface.XAML
             }
         }
 
-        public Control Find(string name)
+        public Control? Find(string name)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));

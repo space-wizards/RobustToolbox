@@ -172,7 +172,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
 
                 DebugTools.AssertNotNull(Owner?.Contents);
-                Owner.Contents.RemoveChild(item);
+                Owner!.Contents.RemoveChild(item);
 
                 return true;
             }

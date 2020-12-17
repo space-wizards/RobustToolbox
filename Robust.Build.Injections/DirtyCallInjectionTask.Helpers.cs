@@ -56,7 +56,7 @@ namespace Robust.Build.Injections
             {
                 return GetEqualsMethodRecursive(module, typeDef.BaseType.Resolve());
             }
-            catch (Exception e) //resolve failed
+            catch (Exception) //resolve failed
             {
                 return null;
             }

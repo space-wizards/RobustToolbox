@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Shared.DirtyInjection
 {
     [TestFixture]
-    public class DirtyInjection_Tests : RobustUnitTest
+    public class DirtyCallInjection_Tests : RobustUnitTest
     {
         private const string PROTOTYPE = @"
 - type: entity

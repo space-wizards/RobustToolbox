@@ -61,5 +61,15 @@ namespace Robust.Build.Injections
                 return null;
             }
         }
+
+        static bool CanUseBeq(TypeReference typeDef, TypeSystem system)
+        {
+            //return typeDef.IsPrimitive;
+            return typeDef == system.Int16 || typeDef == system.UInt16 || typeDef == system.Int32 ||
+                   typeDef == system.UInt32 || typeDef == system.Int64 || typeDef == system.UInt64 ||
+                   typeDef == system.Single || typeDef == system.Double || typeDef == system.Byte ||
+                   typeDef == system.SByte || typeDef == system.IntPtr || typeDef == system.UIntPtr ||
+                   typeDef == system.Char;
+        }
     }
 }

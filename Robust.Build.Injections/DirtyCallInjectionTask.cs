@@ -121,25 +121,35 @@ namespace Robust.Build.Injections
                     ilProcessor.Clear();
                     if (shouldDoCheck)
                     {
-                        var equalsMethod = GetEqualsMethodRecursive(asdef.MainModule, propDef.PropertyType.Resolve());
-                        if (equalsMethod == null)
-                        {
-                            BuildEngine.LogWarning("EqualsMethodGetter", $"Failed trying to get Equals-Method for type {propDef.PropertyType}, skipping Equals-Injection.", propDef.FullName);
-                        }
-                        else
+                        if (CanUseBeq(propDef.PropertyType, asdef.MainModule.TypeSystem))
                         {
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_1));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
                             ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)setterStoreInField.Operand));
-                            ilProcessor.Append(ilProcessor.Create(OpCodes.Call, equalsMethod));
-                            ilProcessor.Append(ilProcessor.Create(OpCodes.Brtrue, setterReturn));
+                            ilProcessor.Append(ilProcessor.Create(OpCodes.Beq_S, setterReturn));
+                        }
+                        else
+                        {
+                            var equalsMethod = GetEqualsMethodRecursive(asdef.MainModule, propDef.PropertyType.Resolve());
+                            if (equalsMethod == null)
+                            {
+                                BuildEngine.LogWarning("EqualsMethodGetter", $"Failed trying to get Equals-Method for type {propDef.PropertyType}, skipping Equals-Injection.", propDef.FullName);
+                            }
+                            else
+                            {
+                                ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_1));
+                                ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
+                                ilProcessor.Append(ilProcessor.Create(OpCodes.Ldfld, (FieldReference)setterStoreInField.Operand));
+                                ilProcessor.Append(ilProcessor.Create(OpCodes.Call, equalsMethod));
+                                ilProcessor.Append(ilProcessor.Create(OpCodes.Brtrue_S, setterReturn));
+                            }
                         }
                     }
                     ilProcessor.Append(setterThis);
                     ilProcessor.Append(setterValue);
                     ilProcessor.Append(setterStoreInField);
                     ilProcessor.Append(ilProcessor.Create(OpCodes.Ldarg_0));
-                    ilProcessor.Append(ilProcessor.Create(OpCodes.Call, internalDirtyMethod));
+                    ilProcessor.Append(ilProcessor.Create(OpCodes.Callvirt, internalDirtyMethod));
                     ilProcessor.Append(setterReturn);
                 }
             }

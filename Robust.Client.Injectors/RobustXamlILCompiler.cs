@@ -99,7 +99,7 @@ namespace Robust.Build.Tasks
                             .FindType("Robust.Client.UserInterface.XAML.NameScope").Methods
                             .First(m => m.Name == "Register");
 
-                        using (var targetLoc = context.GetLocalOfType(context.Configuration.WellKnownTypes.Object))
+                        using (var targetLoc = context.GetLocalOfType(context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control")))
                         {
 
                             codeGen

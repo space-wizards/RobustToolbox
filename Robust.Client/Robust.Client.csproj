@@ -60,7 +60,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="true" />
-    <ProjectReference Include="..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="..\Robust.Client.Injectors\bin\$(Configuration)\net5.0\Robust.Client.Injectors.dll" />

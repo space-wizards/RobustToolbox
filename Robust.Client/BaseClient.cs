@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
@@ -7,7 +6,6 @@ using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
-using Robust.Client.UserInterface.XAML;
 using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
@@ -19,7 +17,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
-using TestView = Robust.Client.UserInterface.XAML.TestView;
 
 namespace Robust.Client
 {
@@ -63,8 +60,6 @@ namespace Robust.Client
             _playMan.Initialize();
             _debugDrawMan.Initialize();
             Reset();
-            var test = new TestView();
-            System.Console.WriteLine(test.Contents.Children.Count());
         }
 
         /// <inheritdoc />

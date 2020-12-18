@@ -260,6 +260,11 @@ namespace Robust.Shared.ContentPack
                             // See II.14.2 in ECMA-335.
                             return;
                         }
+                        case MTypeDefined:
+                        {
+                            // Valid for this to show up, safe to ignore.
+                            return;
+                        }
                         default:
                         {
                             throw new ArgumentOutOfRangeException();
@@ -471,6 +476,20 @@ namespace Robust.Shared.ContentPack
 
                             break;
                         }
+                        case HandleKind.TypeDefinition:
+                        {
+                            try
+                            {
+                                parent = ParseTypeReference(reader, (TypeReferenceHandle) memRef.Parent);
+                            }
+                            catch (UnsupportedMetadataException u)
+                            {
+                                errors.Add(new SandboxError(u));
+                                return null;
+                            }
+
+                            break;
+                        }
                         case HandleKind.TypeSpecification:
                         {
                             var typeSpec = reader.GetTypeSpecification((TypeSpecificationHandle) memRef.Parent);
@@ -501,7 +520,7 @@ namespace Robust.Shared.ContentPack
                         default:
                         {
                             errors.Add(new SandboxError(
-                                $"Unsupported member ref parent type: {memRef.Parent}. Name: {memName}"));
+                                $"Unsupported member ref parent type: {memRef.Parent.Kind}. Name: {memName}"));
                             return null;
                         }
                     }

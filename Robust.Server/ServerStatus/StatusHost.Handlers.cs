@@ -38,13 +38,6 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            if (OnStatusRequest == null)
-            {
-                _httpSawmill.Warning("OnStatusRequest is not set, responding with a 501.");
-                response.Respond(method, "Not Implemented", HttpStatusCode.NotImplemented);
-                return true;
-            }
-
             response.StatusCode = (int) HttpStatusCode.OK;
             response.ContentType = "application/json";
 
@@ -53,7 +46,13 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var jObject = new JObject();
+            var jObject = new JObject
+            {
+                // We need to send at LEAST name and player count to have the launcher work with us.
+                // Content can override these if it wants (e.g. stealthmins).
+                ["name"] = _serverNameCache,
+                ["players"] = _playerManager.PlayerCount
+            };
 
             OnStatusRequest?.Invoke(jObject);
 

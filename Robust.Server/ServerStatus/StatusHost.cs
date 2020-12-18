@@ -7,6 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Robust.Server.Interfaces;
+using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -29,12 +31,16 @@ namespace Robust.Server.ServerStatus
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IBaseServer _baseServer = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandler> _handlers = new();
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
+
+        private string? _serverNameCache;
 
         public Task ProcessRequestAsync(HttpListenerContext context)
         {
@@ -85,6 +91,10 @@ namespace Robust.Server.ServerStatus
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
             RegisterCVars();
+
+            // Cache this in a field to avoid thread safety shenanigans.
+            // Writes/reads of references are atomic in C# so no further synchronization necessary.
+            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n);
 
             if (!_configurationManager.GetCVar(CVars.StatusEnabled))
             {

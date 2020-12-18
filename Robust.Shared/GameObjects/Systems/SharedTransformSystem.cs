@@ -18,7 +18,11 @@ namespace Robust.Shared.GameObjects.Systems
         {
             base.Update(frameTime);
 
-            foreach (var ev in _deferredMoveEvents.OrderBy(e => e.Sender.HasComponent<IMapGridComponent>()))
+            var events = _deferredMoveEvents
+                .OrderBy(e => e.Sender.HasComponent<IMapGridComponent>())
+                .ToArray();
+
+            foreach (var ev in events)
             {
                 ev.Sender.EntityManager.EventBus.RaiseEvent(EventSource.Local, ev);
                 ev.Handled = true;

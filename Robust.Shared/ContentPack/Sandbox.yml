@@ -298,7 +298,6 @@ Types:
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
   System.ComponentModel:
-    IServiceProvider: { All: True }
     PropertyDescriptor: { }
     ISite: { All: True }
     IComponent: { All: True }
@@ -658,6 +657,7 @@ Types:
     CancellationTokenSource: { All: True }
     Interlocked: { All: True }
   System:
+    IServiceProvider: { All: True }
     Action: { All: True }
     Action`1: { All: True }
     Action`2: { All: True }

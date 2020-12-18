@@ -480,7 +480,7 @@ namespace Robust.Shared.ContentPack
                         {
                             try
                             {
-                                parent = ParseTypeReference(reader, (TypeReferenceHandle) memRef.Parent);
+                                parent = GetTypeFromDefinition(reader, (TypeDefinitionHandle) memRef.Parent);
                             }
                             catch (UnsupportedMetadataException u)
                             {

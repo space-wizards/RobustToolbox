@@ -297,6 +297,13 @@ Types:
     IEnumerable: { All: True }
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
+  System.ComponentModel:
+    IServiceProvider: { All: True }
+    PropertyDescriptor: { }
+    ISite: { All: True }
+    IComponent: { All: True }
+    IContainer: { All: True }
+    ITypeDescriptorContext: { All: True }
   System.Diagnostics.CodeAnalysis:
     AllowNullAttribute: { All: True }
     DisallowNullAttribute: { All: True }
@@ -845,6 +852,7 @@ Types:
     Func`15: { All: True }
     Func`16: { All: True }
     Func`17: { All: True }
+    Guid: { All: True }
     HashCode: { All: True }
     IAsyncDisposable: { All: True }
     IAsyncResult: { }
@@ -1131,6 +1139,7 @@ Types:
       # Content should never touch that.
       Methods:
       - "bool Equals(object)"
+      - "bool Equals(System.Type)"
       - "bool get_ContainsGenericParameters()"
       - "bool get_HasElementType()"
       - "bool get_IsAbstract()"
@@ -1250,6 +1259,7 @@ Types:
     UInt32: { All: True }
     UInt64: { All: True }
     UIntPtr: { All: True }
+    Uri: { All: True }
     ValueTuple: { All: True }
     ValueTuple`1: { All: True }
     ValueTuple`2: { All: True }

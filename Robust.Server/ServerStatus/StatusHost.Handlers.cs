@@ -83,32 +83,29 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var downloadUrlWindows = _configurationManager.GetCVar(CVars.BuildDownloadUrlWindows);
+            var downloadUrl = _configurationManager.GetCVar(CVars.BuildDownloadUrl);
 
             JObject? buildInfo;
 
-            if (string.IsNullOrEmpty(downloadUrlWindows))
+            if (string.IsNullOrEmpty(downloadUrl))
             {
                 buildInfo = null;
             }
             else
             {
+                var hash = _configurationManager.GetCVar(CVars.BuildHash);
+                if (hash == "")
+                {
+                    hash = null;
+                }
+
                 buildInfo = new JObject
                 {
-                    ["download_urls"] = new JObject
-                    {
-                        ["Windows"] = downloadUrlWindows,
-                        ["MacOS"] = _configurationManager.GetCVar(CVars.BuildDownloadUrlMacOS),
-                        ["Linux"] = _configurationManager.GetCVar(CVars.BuildDownloadUrlLinux)
-                    },
+                    ["engine_version"] = _configurationManager.GetCVar(CVars.BuildEngineVersion),
                     ["fork_id"] = _configurationManager.GetCVar(CVars.BuildForkId),
                     ["version"] = _configurationManager.GetCVar(CVars.BuildVersion),
-                    ["hashes"] = new JObject
-                    {
-                        ["Windows"] = _configurationManager.GetCVar(CVars.BuildHashWindows),
-                        ["MacOS"] = _configurationManager.GetCVar(CVars.BuildHashMacOS),
-                        ["Linux"] = _configurationManager.GetCVar(CVars.BuildHashLinux),
-                    },
+                    ["download_url"] = downloadUrl,
+                    ["hash"] = hash,
                 };
             }
 

@@ -38,6 +38,21 @@ namespace Robust.Client.UserInterface.XAML
             }
         }
 
+        public void Absorb(NameScope nameScope)
+        {
+            foreach (var (name, control) in nameScope._inner)
+            {
+                try
+                {
+                    Register(name, control);
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException($"Exception occured when trying to absorb NameScope (at name {name})", e);
+                }
+            }
+        }
+
         public Control? Find(string name)
         {
             if (name == null)

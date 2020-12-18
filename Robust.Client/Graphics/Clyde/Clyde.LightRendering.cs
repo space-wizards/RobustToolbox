@@ -377,6 +377,7 @@ namespace Robust.Client.Graphics.Clyde
             var lastRange = float.NaN;
             var lastPower = float.NaN;
             var lastColor = new Color(float.NaN, float.NaN, float.NaN, float.NaN);
+            var lastSoftness = float.NaN;
             Texture? lastMask = null;
 
             for (var i = 0; i < count; i++)
@@ -422,6 +423,12 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     lastColor = component.Color;
                     lightShader.SetUniformMaybe("lightColor", lastColor);
+                }
+
+                if (_enableSoftShadows && !MathHelper.CloseTo(lastSoftness, component.Softness))
+                {
+                    lastSoftness = component.Softness;
+                    lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
                 }
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);

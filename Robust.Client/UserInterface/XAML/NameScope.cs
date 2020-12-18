@@ -38,8 +38,10 @@ namespace Robust.Client.UserInterface.XAML
             }
         }
 
-        public void Absorb(NameScope nameScope)
+        public void Absorb(NameScope? nameScope)
         {
+            if (nameScope == null) return;
+
             foreach (var (name, control) in nameScope._inner)
             {
                 try

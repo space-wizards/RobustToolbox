@@ -157,27 +157,35 @@ namespace Robust.Build.Tasks
                     var controlType = context.Configuration.TypeSystem.FindType("Robust.Client.UserInterface.Control");
 
                     var next = codeGen.DefineLabel();
+                    var dontAbsorb = codeGen.DefineLabel();
+                    var end = codeGen.DefineLabel();
                     var contextScopeField = context.RuntimeContext.ContextType.Fields.First(f =>
                         f.Name == XamlCompiler.ContextNameScopeFieldName);
-                    var controlScopeField = controlType.Fields.First(f => f.Name == "NameScope");
-                    var nameScopeCompleteMethod = context.Configuration.TypeSystem
-                        .FindType("Robust.Client.UserInterface.XAML.NameScope").Methods.First(m => m.Name == "Complete");
+                    var controlNameScopeField = controlType.Fields.First(f => f.Name == "NameScope");
+                    var nameScopeType = context.Configuration.TypeSystem
+                        .FindType("Robust.Client.UserInterface.XAML.NameScope");
+                    var nameScopeCompleteMethod = nameScopeType.Methods.First(m => m.Name == "Complete");
+                    var nameScopeAbsorbMethod = nameScopeType.Methods.First(m => m.Name == "Absorb");
                     using (var local = codeGen.LocalsPool.GetLocal(controlType))
                     {
                         codeGen
                             .Isinst(controlType)
                             .Dup()
-                            .Stloc(local.Local)
-                            .Brfalse(next)
-                            .Ldloc(local.Local)
+                            .Stloc(local.Local) //store control in local field
+                            .Brfalse(next) //if control is null, move to next (this should never happen but whatev, avalonia does it)
                             .Ldloc(context.ContextLocal)
                             .Ldfld(contextScopeField)
-                            .Stfld(controlScopeField)
-                            //.EmitCall(types.NameScopeSetNameScope, true)
+                            .Ldloc(local.Local) //load control from local field
+                            .Ldfld(controlNameScopeField) //load namescope field from control
+                            .EmitCall(nameScopeAbsorbMethod, true)
+                            .Ldloc(local.Local) //load control
+                            .Ldloc(context.ContextLocal) //load contextObject
+                            .Ldfld(contextScopeField) //load namescope field from context obj
+                            .Stfld(controlNameScopeField) //store namescope field in control
                             .MarkLabel(next)
                             .Ldloc(context.ContextLocal)
                             .Ldfld(contextScopeField)
-                            .EmitCall(nameScopeCompleteMethod, true);
+                            .EmitCall(nameScopeCompleteMethod, true); //set the namescope as complete
                     }
 
                     return XamlILNodeEmitResult.Void(1);

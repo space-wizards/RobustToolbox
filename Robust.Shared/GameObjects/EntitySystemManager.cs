@@ -30,6 +30,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
 #pragma warning restore 649
 
+        [ViewVariables]
+        private readonly List<Type> _extraLoadedTypes = new();
+
         private readonly Stopwatch _stopwatch = new();
 
         /// <summary>
@@ -99,45 +102,48 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        private IEntitySystem AddSystem(Type type, HashSet<Type> excludedTypes)
+        /// <inheritdoc />
+        public void Initialize()
         {
-            Logger.DebugS("go.sys", "Initializing entity system {0}", type);
-            // Force IoC inject
-            var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type);
+            HashSet<Type> excludedTypes = new();
 
-            _systems.Add(type, instance);
-
-            // also register systems under their supertypes, so they can be retrieved by their supertype.
-            // We don't do this if there are multiple subtype systems of that supertype though, otherwise
-            // it wouldn't be clear which instance to return when asking for the supertype
-            foreach (var baseType in GetBaseTypes(type))
+            foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
             {
-                // already known that there are multiple subtype systems of this type,
-                // so don't register under the supertype because it would be unclear
-                // which instance to return if we retrieved it by the supertype
-                if (excludedTypes.Contains(baseType)) continue;
-                if (_supertypeSystems.ContainsKey(baseType))
+                Logger.DebugS("go.sys", "Initializing entity system {0}", type);
+                // Force IoC inject of all systems
+                var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type);
+
+                _systems.Add(type, instance);
+
+                // also register systems under their supertypes, so they can be retrieved by their supertype.
+                // We don't do this if there are multiple subtype systems of that supertype though, otherwise
+                // it wouldn't be clear which instance to return when asking for the supertype
+                foreach (var baseType in GetBaseTypes(type))
                 {
-                    _supertypeSystems.Remove(baseType);
-                    excludedTypes.Add(baseType);
+                    // already known that there are multiple subtype systems of this type,
+                    // so don't register under the supertype because it would be unclear
+                    // which instance to return if we retrieved it by the supertype
+                    if (excludedTypes.Contains(baseType)) continue;
+                    if (_supertypeSystems.ContainsKey(baseType))
+                    {
+                        _supertypeSystems.Remove(baseType);
+                        excludedTypes.Add(baseType);
+                    }
+                    else
+                    {
+                        _supertypeSystems.Add(baseType, instance);
+                    }
                 }
-                else
-                {
-                    _supertypeSystems.Add(baseType, instance);
-                }
+
             }
 
-            return instance;
-        }
+            foreach (var system in _systems.Values)
+            {
+                system.Initialize();
+                SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
+            }
 
-        private void InitializeSystem(IEntitySystem system)
-        {
-            system.Initialize();
-            SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
-        }
-
-        private void CreateUpdateOrder()
-        {
+            // Create update order for entity systems.
             var (fUpdate, update) = CalculateUpdateOrder(_systems.Values);
 
             _frameUpdateOrder = fUpdate.ToArray();
@@ -148,22 +154,6 @@ namespace Robust.Shared.GameObjects
                     Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
                 })
                 .ToArray();
-        }
-
-        /// <inheritdoc />
-        public void Initialize()
-        {
-            foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>())
-            {
-                AddSystem(type, new HashSet<Type>());
-            }
-
-            foreach (var system in _systems.Values)
-            {
-                InitializeSystem(system);
-            }
-
-            CreateUpdateOrder();
 
             _initialized = true;
         }
@@ -306,10 +296,13 @@ namespace Robust.Shared.GameObjects
 
         public void LoadExtraSystemType<T>() where T : IEntitySystem, new()
         {
-            var system = AddSystem(typeof(T), new HashSet<Type>());
+            if (_initialized)
+            {
+                throw new InvalidOperationException(
+                    "Cannot use LoadExtraSystemType when the entity system manager is initialized.");
+            }
 
-            InitializeSystem(system);
-            CreateUpdateOrder();
+            _extraLoadedTypes.Add(typeof(T));
         }
 
         private static bool NeedsUpdate(Type type)

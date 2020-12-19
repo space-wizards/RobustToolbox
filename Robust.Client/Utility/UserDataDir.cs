@@ -29,7 +29,7 @@ namespace Robust.Client.Utility
             appDataDir = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 #endif
 
-            return Path.Combine(appDataDir, "Space Station 14");
+            return Path.Combine(appDataDir, "Space Station 14", "data");
         }
 
     }

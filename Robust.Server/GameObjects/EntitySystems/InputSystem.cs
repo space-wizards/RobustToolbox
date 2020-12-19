@@ -18,10 +18,10 @@ namespace Robust.Server.GameObjects.EntitySystems
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new Dictionary<IPlayerSession, IPlayerCommandStates>();
+        private readonly Dictionary<IPlayerSession, IPlayerCommandStates> _playerInputs = new();
 
 
-        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new Dictionary<IPlayerSession, uint>();
+        private readonly Dictionary<IPlayerSession, uint> _lastProcessedInputCmd = new();
 
         /// <inheritdoc />
         public override void Initialize()

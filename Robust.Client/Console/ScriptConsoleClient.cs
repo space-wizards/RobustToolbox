@@ -27,7 +27,7 @@ namespace Robust.Client.Console
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 #pragma warning restore 649
 
-        private readonly StringBuilder _inputBuffer = new StringBuilder();
+        private readonly StringBuilder _inputBuffer = new();
         private int _linesEntered;
 
         // Necessary for syntax highlighting.

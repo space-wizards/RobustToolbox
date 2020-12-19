@@ -20,12 +20,14 @@ namespace Robust.Shared.Reflection
         /// </remarks>
         protected abstract IEnumerable<string> TypePrefixes { get; }
 
-        private readonly List<Assembly> assemblies = new List<Assembly>();
+        private readonly List<Assembly> assemblies = new();
 
         public event EventHandler<ReflectionUpdateEventArgs>? OnAssemblyAdded;
 
         [ViewVariables]
         public IReadOnlyList<Assembly> Assemblies => assemblies;
+
+        private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
 
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
@@ -190,6 +192,27 @@ namespace Robust.Shared.Reflection
             }
 
             throw new ArgumentException("Could not resolve enum reference.");
+        }
+
+        public Type? YamlTypeTagLookup(Type baseType, string typeName)
+        {
+            if (_yamlTypeTagCache.TryGetValue((baseType, typeName), out var type))
+            {
+                return type;
+            }
+
+            Type? found = null;
+            foreach (var derivedType in GetAllChildren(baseType))
+            {
+                if (derivedType.Name == typeName && (derivedType.IsPublic))
+                {
+                    found = derivedType;
+                    break;
+                }
+            }
+
+            _yamlTypeTagCache.Add((baseType, typeName), found);
+            return found;
         }
     }
 }

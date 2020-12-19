@@ -6,7 +6,7 @@ namespace Robust.Shared.Interfaces.Network
     ///     Defines on which side of the network a net message can be accepted.
     /// </summary>
     [Flags]
-    public enum NetMessageAccept
+    public enum NetMessageAccept : byte
     {
         None = 0,
 

@@ -78,7 +78,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Set to hold snapping categories that this object has applied to it such as pipe/wire/wallmount
         /// </summary>
-        private readonly HashSet<string> _snapFlags = new HashSet<string>();
+        private readonly HashSet<string> _snapFlags = new();
 
         private bool _snapOverriden = false;
 
@@ -106,7 +106,7 @@ namespace Robust.Shared.GameObjects
         /// A list of children inheriting from this prototype.
         /// </summary>
         [ViewVariables]
-        public List<EntityPrototype> Children { get; private set; } = new List<EntityPrototype>();
+        public List<EntityPrototype> Children { get; private set; } = new();
 
         public bool IsRoot => Parent == null;
 
@@ -118,21 +118,21 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, YamlMappingNode> Components { get; } = new Dictionary<string, YamlMappingNode>();
+        public Dictionary<string, YamlMappingNode> Components { get; } = new();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
         /// </summary>
         public YamlMappingNode? DataNode { get; set; }
 
-        private readonly HashSet<Type> ReferenceTypes = new HashSet<Type>();
+        private readonly HashSet<Type> ReferenceTypes = new();
 
         string? CurrentDeserializingComponent;
 
         readonly Dictionary<string, Dictionary<(string, Type), object?>> FieldCache =
-            new Dictionary<string, Dictionary<(string, Type), object?>>();
+            new();
 
-        readonly Dictionary<string, object?> DataCache = new Dictionary<string, object?>();
+        readonly Dictionary<string, object?> DataCache = new();
 
         public EntityPrototype()
         {
@@ -474,6 +474,7 @@ namespace Robust.Shared.GameObjects
         private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, ObjectSerializer ser)
         {
             var compType = factory.GetRegistration(compName).Type;
+            ser.CurrentType = compType;
 
             if (!entity.TryGetComponent(compType, out var component))
             {

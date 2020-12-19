@@ -41,18 +41,18 @@ namespace Robust.Client.Input
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
 
-        private readonly List<KeyBindingRegistration> _defaultRegistrations = new List<KeyBindingRegistration>();
+        private readonly List<KeyBindingRegistration> _defaultRegistrations = new();
 
         private readonly Dictionary<BoundKeyFunction, InputCmdHandler> _commands =
-            new Dictionary<BoundKeyFunction, InputCmdHandler>();
+            new();
 
         private readonly Dictionary<BoundKeyFunction, List<KeyBinding>> _bindingsByFunction
-            = new Dictionary<BoundKeyFunction, List<KeyBinding>>();
+            = new();
 
         // For knowing what to write to config.
-        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new HashSet<BoundKeyFunction>();
+        private readonly HashSet<BoundKeyFunction> _modifiedKeyFunctions = new();
 
-        [ViewVariables] private readonly List<KeyBinding> _bindings = new List<KeyBinding>();
+        [ViewVariables] private readonly List<KeyBinding> _bindings = new();
         private readonly bool[] _keysPressed = new bool[256];
 
         /// <inheritdoc />
@@ -149,7 +149,7 @@ namespace Robust.Client.Input
 
             var path = new ResourcePath(KeybindsPath);
             using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
-            var stream = new YamlStream {new YamlDocument(mapping)};
+            var stream = new YamlStream {new(mapping)};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
@@ -406,38 +406,46 @@ namespace Robust.Client.Input
             var mapping = (YamlMappingNode) yamlStream.Documents[0].RootNode;
 
             var baseSerializer = YamlObjectSerializer.NewReader(mapping);
-            var baseKeyRegs = baseSerializer.ReadDataField<KeyBindingRegistration[]>("binds");
 
-            foreach (var reg in baseKeyRegs)
+            var foundBinds = baseSerializer.TryReadDataField<KeyBindingRegistration[]>("binds", out var baseKeyRegs);
+
+            if (foundBinds && baseKeyRegs != null && baseKeyRegs.Length > 0)
             {
-                if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
+                foreach (var reg in baseKeyRegs)
                 {
-                    Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
-                        reg.Function.FunctionName);
-                    continue;
-                }
-
-                if (!userData)
-                {
-                    _defaultRegistrations.Add(reg);
-
-                    if (_modifiedKeyFunctions.Contains(reg.Function))
+                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
-                        // Don't read key functions from preset files that have been modified.
-                        // So that we don't bulldoze a user's saved preferences.
+                        Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
+                            reg.Function.FunctionName);
                         continue;
                     }
-                }
 
-                RegisterBinding(reg, markModified: userData);
+                    if (!userData)
+                    {
+                        _defaultRegistrations.Add(reg);
+
+                        if (_modifiedKeyFunctions.Contains(reg.Function))
+                        {
+                            // Don't read key functions from preset files that have been modified.
+                            // So that we don't bulldoze a user's saved preferences.
+                            continue;
+                        }
+                    }
+
+                    RegisterBinding(reg, markModified: userData);
+                }
             }
 
             if (userData)
             {
-                // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
-                // Because they've been explicitly cleared.
-                var leaveEmpty = baseSerializer.ReadDataField<BoundKeyFunction[]>("leaveEmpty");
-                _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                var foundLeaveEmpty = baseSerializer.TryReadDataField<BoundKeyFunction[]>("leaveEmpty", out var leaveEmpty);
+
+                if (foundLeaveEmpty && leaveEmpty != null && leaveEmpty.Length > 0)
+                {
+                    // Adding to _modifiedKeyFunctions means that these keybinds won't be loaded from the base file.
+                    // Because they've been explicitly cleared.
+                    _modifiedKeyFunctions.UnionWith(leaveEmpty);
+                }
             }
         }
 
@@ -764,14 +772,14 @@ namespace Robust.Client.Input
         }
     }
 
-    public enum KeyBindingType
+    public enum KeyBindingType : byte
     {
         Unknown = 0,
         State,
         Toggle,
     }
 
-    public enum CommandState
+    public enum CommandState : byte
     {
         Unknown = 0,
         Enabled,

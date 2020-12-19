@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [Flags]
-    public enum EventSource
+    public enum EventSource : byte
     {
         None    = 0b0000,
         Local   = 0b0001,
@@ -98,16 +98,16 @@ namespace Robust.Shared.GameObjects
         private delegate void EventHandler(object ev);
 
         private readonly Dictionary<Type, List<Registration>> _eventSubscriptions
-            = new Dictionary<Type, List<Registration>>();
+            = new();
 
         private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Registration>> _inverseEventSubscriptions
-            = new Dictionary<IEntityEventSubscriber, Dictionary<Type, Registration>>();
+            = new();
 
-        private readonly Queue<(EventSource source, object args)> _eventQueue = new Queue<(EventSource source, object args)>();
+        private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
         private readonly Dictionary<Type, (EventSource, CancellationTokenRegistration, TaskCompletionSource<object>)>
             _awaitingMessages
-                = new Dictionary<Type, (EventSource, CancellationTokenRegistration, TaskCompletionSource<object>)>();
+                = new();
 
         /// <inheritdoc />
         public void UnsubscribeEvents(IEntityEventSubscriber subscriber)

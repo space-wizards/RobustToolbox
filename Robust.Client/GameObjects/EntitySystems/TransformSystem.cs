@@ -27,7 +27,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         // Only keep track of transforms actively lerping.
         // Much faster than iterating 3000+ transforms every frame.
-        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new List<TransformComponent>();
+        [ViewVariables] private readonly List<TransformComponent> _lerpingTransforms = new();
 
         public override void Initialize()
         {

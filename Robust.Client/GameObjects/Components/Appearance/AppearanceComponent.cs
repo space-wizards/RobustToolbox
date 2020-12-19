@@ -18,9 +18,9 @@ namespace Robust.Client.GameObjects
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]
-        private Dictionary<object, object> data = new Dictionary<object, object>();
+        private Dictionary<object, object> data = new();
         [ViewVariables]
-        internal List<AppearanceVisualizer> Visualizers = new List<AppearanceVisualizer>();
+        internal List<AppearanceVisualizer> Visualizers = new();
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 

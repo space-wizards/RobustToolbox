@@ -15,11 +15,11 @@ namespace Robust.Server.Console
         [Dependency] private readonly ITaskManager _taskManager = default!;
         [Dependency] private readonly IBaseServer _baseServer = default!;
 
-        private readonly Dictionary<int, string> commandHistory = new Dictionary<int, string>();
+        private readonly Dictionary<int, string> commandHistory = new();
         private string currentBuffer = "";
         private int historyIndex;
         private int internalCursor;
-        private List<string> tabCompleteList = new List<string>();
+        private List<string> tabCompleteList = new();
         private int tabCompleteIndex;
         private ConsoleKey lastKeyPressed = ConsoleKey.NoName;
 

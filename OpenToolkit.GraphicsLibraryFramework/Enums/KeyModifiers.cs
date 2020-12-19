@@ -15,7 +15,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
     /// Key modifiers, such as Shift or CTRL.
     /// </summary>
     [Flags]
-    public enum KeyModifiers
+    public enum KeyModifiers : byte
     {
         /// <summary>
         /// if one or more Shift keys were held down.

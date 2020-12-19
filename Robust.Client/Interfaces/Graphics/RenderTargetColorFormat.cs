@@ -3,7 +3,7 @@ namespace Robust.Client.Interfaces.Graphics
     /// <summary>
     ///     Formats for the color component of a render target.
     /// </summary>
-    public enum RenderTargetColorFormat
+    public enum RenderTargetColorFormat : byte
     {
         /// <summary>
         ///     8 bits per channel linear RGBA.

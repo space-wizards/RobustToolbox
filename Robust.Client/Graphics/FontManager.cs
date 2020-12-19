@@ -24,7 +24,7 @@ namespace Robust.Client.Graphics
         private readonly Library _library;
 
         private readonly Dictionary<(FontFaceHandle, int fontSize), FontInstanceHandle> _loadedInstances =
-            new Dictionary<(FontFaceHandle, int), FontInstanceHandle>();
+            new();
 
         public FontManager()
         {
@@ -281,7 +281,7 @@ namespace Robust.Client.Graphics
         {
             public FontFaceHandle FaceHandle { get; }
             public int Size { get; }
-            private readonly Dictionary<float, ScaledFontData> _scaledData = new Dictionary<float, ScaledFontData>();
+            private readonly Dictionary<float, ScaledFontData> _scaledData = new();
             public readonly IReadOnlyDictionary<char, uint> GlyphMap;
             private readonly FontManager _fontManager;
 

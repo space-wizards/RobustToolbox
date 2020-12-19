@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestOf(typeof(ResourcePath))]
     public class ResourcePath_Test
     {
-        public static List<(string, string)> InputClean_Values = new List<(string, string)>
+        public static List<(string, string)> InputClean_Values = new()
         {
             ("/Textures", "/Textures"),
             ("Textures", "Textures"),
@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(respath.ToString(), Is.EqualTo(path.expected));
         }
 
-        public static List<(string, string)> Extension_Values = new List<(string, string)>
+        public static List<(string, string)> Extension_Values = new()
         {
             ("foo", ""),
             ("foo.png", "png"),
@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(respath.Extension, Is.EqualTo(data.expected));
         }
 
-        public static List<(string, string)> Filename_Values = new List<(string, string)>
+        public static List<(string, string)> Filename_Values = new()
         {
             ("foo", "foo"),
             ("foo.png", "foo.png"),
@@ -71,7 +71,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(respath.Filename, Is.EqualTo(data.expected));
         }
 
-        public static List<(string, string)> FilenameWithoutExtension_Values = new List<(string, string)>
+        public static List<(string, string)> FilenameWithoutExtension_Values = new()
         {
             ("foo", "foo"),
             ("foo.png", "foo"),
@@ -120,7 +120,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That((path1 / "z").ToString(), Is.EqualTo("/a/b/z"));
         }
 
-        public static List<(string, string)> Clean_Values = new List<(string, string)>
+        public static List<(string, string)> Clean_Values = new()
         {
             ("//a/b/../c/./ss14.png", "/a/c/ss14.png"),
             ("../a", "../a"),
@@ -162,7 +162,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(relative.ToRootedPath(), Is.EqualTo(path));
         }
 
-        public static List<(string, string, string)> RelativeTo_Values = new List<(string, string, string)>
+        public static List<(string, string, string)> RelativeTo_Values = new()
         {
             ("/a/b", "/a", "b"),
             ("/a", "/", "a"),
@@ -180,7 +180,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(path.RelativeTo(basePath), Is.EqualTo(new ResourcePath(value.expected)));
         }
 
-        public static List<(string, string)> RelativeToFail_Values = new List<(string, string)>
+        public static List<(string, string)> RelativeToFail_Values = new()
         {
             ("/a/b", "/b"),
             ("/a", "/c/d"),
@@ -197,7 +197,7 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(() => path.RelativeTo(basePath), Throws.ArgumentException);
         }
 
-        public static List<(string, string, string)> CommonBase_Values = new List<(string, string, string)>
+        public static List<(string, string, string)> CommonBase_Values = new()
         {
             ("/a/b", "/a/c", "/a"),
             ("a/b", "a/c", "a"),
@@ -239,6 +239,16 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(() => path.WithName("."), Throws.ArgumentException);
             Assert.That(() => path.WithName(""), Throws.ArgumentException);
             Assert.That(() => path.WithName(null!), Throws.ArgumentException);
+        }
+
+        [Test]
+        [TestCase("/a/b.txt", "png", "/a/b.png")]
+        [TestCase("/a/b.txt.bak", "png", "/a/b.txt.png")]
+        public void WithExtensionTest(string start, string newExt, string expected)
+        {
+            var startPath = new ResourcePath(start);
+            Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
+            Assert.That(startPath.WithExtension(newExt).ToString(), Is.EqualTo(expected));
         }
 
         [Test]

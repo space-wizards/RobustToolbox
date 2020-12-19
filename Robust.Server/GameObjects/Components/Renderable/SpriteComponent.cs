@@ -16,7 +16,7 @@ namespace Robust.Server.GameObjects
     {
         const string LayerSerializationCache = "spritelayersrv";
         [ViewVariables]
-        private List<PrototypeLayerData> Layers = new List<PrototypeLayerData>();
+        private List<PrototypeLayerData> Layers = new();
 
         private bool _visible;
         private int _drawDepth = DrawDepthTag.Default;

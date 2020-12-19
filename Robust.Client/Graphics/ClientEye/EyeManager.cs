@@ -23,7 +23,7 @@ namespace Robust.Client.Graphics.ClientEye
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         // We default to this when we get set to a null eye.
-        private readonly FixedEye _defaultEye = new FixedEye();
+        private readonly FixedEye _defaultEye = new();
 
         private IEye? _currentEye;
 
@@ -105,7 +105,7 @@ namespace Robust.Client.Graphics.ClientEye
 
         public ScreenCoordinates MapToScreen(MapCoordinates point)
         {
-            return new ScreenCoordinates(WorldToScreen(point.Position));
+            return new(WorldToScreen(point.Position));
         }
 
         /// <inheritdoc />

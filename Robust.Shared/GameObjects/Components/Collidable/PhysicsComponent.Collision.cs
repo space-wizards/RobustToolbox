@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects.Components
         private bool _isHard;
         private BodyStatus _status;
         private BodyType _bodyType;
-        private List<IPhysShape> _physShapes = new List<IPhysShape>();
+        private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -505,7 +505,7 @@ namespace Robust.Shared.GameObjects.Components
     }
 
     [Serializable, NetSerializable]
-    public enum BodyStatus
+    public enum BodyStatus: byte
     {
         OnGround,
         InAir

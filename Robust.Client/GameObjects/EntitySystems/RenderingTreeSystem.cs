@@ -22,10 +22,10 @@ namespace Robust.Client.GameObjects.EntitySystems
 
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
-        private readonly Dictionary<MapId, MapTrees> _mapTrees = new Dictionary<MapId, MapTrees>();
+        private readonly Dictionary<MapId, MapTrees> _mapTrees = new();
 
-        private readonly List<SpriteComponent> _spriteQueue = new List<SpriteComponent>();
-        private readonly List<PointLightComponent> _lightQueue = new List<PointLightComponent>();
+        private readonly List<SpriteComponent> _spriteQueue = new();
+        private readonly List<PointLightComponent> _lightQueue = new();
 
         internal DynamicTree<SpriteComponent> GetSpriteTreeForMap(MapId map)
         {

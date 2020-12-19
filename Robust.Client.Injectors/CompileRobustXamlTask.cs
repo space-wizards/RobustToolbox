@@ -5,6 +5,9 @@ using Microsoft.Build.Framework;
 
 namespace Robust.Build.Tasks
 {
+    /// <summary>
+    /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/CompileAvaloniaXamlTask.cs
+    /// </summary>
     public class CompileRobustXamlTask : ITask
     {
         public bool Execute()

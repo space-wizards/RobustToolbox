@@ -7,6 +7,11 @@ using XamlX.TypeSystem;
 
 namespace Robust.Build.Tasks
 {
+    /// <summary>
+    /// Emitters & Transformers based on:
+    /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlRootObjectScopeTransformer.cs
+    /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AddNameScopeRegistration.cs
+    /// </summary>
     public class RobustXamlILCompiler : XamlILCompiler
     {
         public RobustXamlILCompiler(TransformerConfiguration configuration, XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult> emitMappings, bool fillWithDefaults) : base(configuration, emitMappings, fillWithDefaults)

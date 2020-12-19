@@ -16,6 +16,10 @@ using XamlX.TypeSystem;
 
 namespace Robust.Client.XamlUI
 {
+    /// <summary>
+    /// Based on https://github.com/AvaloniaUI/Avalonia.NameGenerator/blob/ecc9677a23de5cbc90af07ccac14e31c0da41d6a/src/Avalonia.NameGenerator/NameReferenceGenerator.cs
+    /// Adjusted for our UI-Framework & needs.
+    /// </summary>
     [Generator]
     public class XamlUiPartialClassGenerator : ISourceGenerator
     {
@@ -127,7 +131,6 @@ namespace {nameSpace}
             {
                 return;
             }
-            //Debugger.Launch();
 
             var symbols = UnpackAnnotatedTypes(context, comp, receiver);
             if(symbols == null)
@@ -144,13 +147,13 @@ namespace {nameSpace}
                         Diagnostic.Create(
                             new DiagnosticDescriptor(
                                 "RXN0001",
-                                "Unable to discover the relevant Robust XAML file.",
+                                $"Unable to discover the relevant Robust XAML file for {typeSymbol}.",
                                 "Unable to discover the relevant Robust XAML file " +
                                 $"expected at {xamlFileName}",
                                 "Usage",
                                 DiagnosticSeverity.Error,
                                 true),
-                            Location.None));
+                            typeSymbol.Locations[0]));
                     return;
                 }
 
@@ -166,7 +169,7 @@ namespace {nameSpace}
                                 "Usage",
                                 DiagnosticSeverity.Error,
                                 true),
-                            Location.None));
+                            Location.Create(xamlFileName, new TextSpan(0,0), new LinePositionSpan(new LinePosition(0,0),new LinePosition(0,0)))));
                     return;
                 }
 
@@ -186,84 +189,10 @@ namespace {nameSpace}
                                 "Usage",
                                 DiagnosticSeverity.Error,
                                 true),
-                            Location.None));
+                            typeSymbol.Locations[0]));
                     return;
                 }
             }
-
-            /*foreach (var additionalFile in context.AdditionalFiles)
-            {
-                if(!additionalFile.Path.EndsWith(".xaml")) continue;
-
-                var txt = additionalFile.GetText()?.ToString();
-                if(txt == null) continue; //TODO maybe log something here, i dunno
-
-                var sourceCode = GenerateSourceCode(, txt);
-
-                var parsed = XDocumentXamlParser.Parse(txt);
-                var initialRoot = (XamlAstObjectNode) parsed.Root;
-                var names = NameVisitor.GetNames(initialRoot);
-
-                var classDirective = initialRoot.Children.OfType<XamlAstXmlDirective>()
-                    .FirstOrDefault(d => d.Namespace == XamlNamespaces.Xaml2006 && d.Name == "Class");
-                string classname;
-                if (classDirective != null && classDirective.Values[0] is XamlAstTextNode tn)
-                {
-                    classname = tn.Text;
-                }
-                else
-                {
-                    classname = additionalFile.Path.Replace(".xaml","");
-                }
-
-                var classname_split = classname.Split('.');
-                var @namespace = classname_split.Take(classname_split.Length - 2);
-                var @class = classname_split[classname_split.Length-1];
-
-                StringBuilder sourceBuilder = new StringBuilder($@"
-                    using System;
-                    namespace {@namespace}
-                    {{
-                        public static class {@class}
-                        {{
-                    ");
-
-                foreach (var name in names)
-                {
-                    sourceBuilder.AppendLine($@"public {name.Type} {name.Name} => FindControl(""{name.Name}"");");
-                }
-
-                context.AddSource("helloWorldGenerated", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
-            }*/
-
-            // begin creating the source we'll inject into the users compilation
-            /*StringBuilder sourceBuilder = new StringBuilder(@"
-namespace HelloWorldGenerated
-{
-    public static class HelloWorld
-    {
-");
-            foreach (var additionalFile in context.AdditionalFiles)
-            {
-                if (additionalFile.Path.EndsWith(".xaml"))
-                {
-                    var lines = additionalFile.GetText()?.Lines;
-                    foreach (var line in lines)
-                    {
-                        var txt = line.ToString();
-                        if(txt.Length != 0)
-                            sourceBuilder.AppendLine($@"public static void {txt}(){{ Console.WriteLine(""yes"");}}");
-                    }
-                }
-            }
-
-            // finish creating the source to inject
-            sourceBuilder.Append(@"
-    }
-}");
-
-            // inject the created source into the users compilation
-            context.AddSource("helloWorldGenerated", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));*/
         }
 
         private IReadOnlyList<INamedTypeSymbol> UnpackAnnotatedTypes(in GeneratorExecutionContext context, CSharpCompilation comp, NameReferenceSyntaxReceiver receiver)

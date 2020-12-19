@@ -7,6 +7,11 @@ using XamlX.TypeSystem;
 
 namespace Robust.Build.Tasks
 {
+    /// <summary>
+    /// Helpers taken from:
+    /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
+    /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.Helpers.cs
+    /// </summary>
     public partial class XamlCompiler
     {
         static bool CheckXamlName(IResource r) => r.Name.ToLowerInvariant().EndsWith(".xaml")

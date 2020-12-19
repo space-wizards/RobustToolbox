@@ -16,10 +16,14 @@ using XamlX.TypeSystem;
 
 namespace Robust.Build.Tasks
 {
+    /// <summary>
+    /// Based on https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Avalonia.Build.Tasks/XamlCompilerTaskExecutor.cs
+    /// Adjusted for our UI-Framework
+    /// </summary>
     public partial class XamlCompiler
     {
         public static (bool success, bool writtentofile) Compile(IBuildEngine engine, string input, string[] references,
-            string projectDirectory, string output, string strongNameKey)//, bool patchCom)
+            string projectDirectory, string output, string strongNameKey)
         {
             var typeSystem = new CecilTypeSystem(references
                 .Where(r => !r.ToLowerInvariant().EndsWith("robust.build.tasks.dll"))
@@ -27,14 +31,11 @@ namespace Robust.Build.Tasks
 
             var asm = typeSystem.TargetAssemblyDefinition;
 
-            var compileRes = CompileCore(engine, typeSystem, projectDirectory);
-            if (compileRes == null) // && !patchCom)
+            var compileRes = CompileCore(engine, typeSystem);
+            if (compileRes == null)
                 return (true, false);
             if (compileRes == false)
                 return (false, false);
-
-            //if (patchCom)
-                //ComInteropHelper.PatchAssembly(asm, typeSystem);
 
             var writerParameters = new WriterParameters { WriteSymbols = asm.MainModule.HasSymbols };
             if (!string.IsNullOrWhiteSpace(strongNameKey))
@@ -46,8 +47,7 @@ namespace Robust.Build.Tasks
 
         }
 
-        static bool? CompileCore(IBuildEngine engine, CecilTypeSystem typeSystem,
-            string projectDirectory)
+        static bool? CompileCore(IBuildEngine engine, CecilTypeSystem typeSystem)
         {
             var asm = typeSystem.TargetAssemblyDefinition;
             var embrsc = new EmbeddedResources(asm);
@@ -82,7 +82,6 @@ namespace Robust.Build.Tasks
             var emitConfig = new XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult>
             {
                 ContextTypeBuilderCallback = (b,c) => EmitNameScopeField(xamlLanguage, typeSystem, b, c)
-                //TODO needed? ProvideValueTargetPropertyEmitter = null, //TODO
             };
 
             var transformerconfig = new TransformerConfiguration(
@@ -98,16 +97,7 @@ namespace Robust.Build.Tasks
                 xamlLanguage, emitConfig);
 
             var compiler =
-                new RobustXamlILCompiler(transformerconfig, emitConfig,
-                    true); //compilerConfig, emitConfig, contextClass) { EnableIlVerification = verifyIl };
-            //TODO
-            // transformers: AddNameScopeRegistration, AvaloniaXamlIlRootObjectScope
-            // emitters: AvaloniaNameScopeRegistrationXamlIlNodeEmitter, AvaloniaXamlIlRootObjectScope.Emitter
-
-            /*var runtimeHelpers = typeSystem.GetType("Avalonia.Markup.Xaml.XamlIl.Runtime.XamlIlRuntimeHelpers");
-            var createRootServiceProviderMethod = asm.MainModule.ImportReference(
-                typeSystem.GetTypeReference(runtimeHelpers).Resolve().Methods
-                    .First(x => x.Name == "CreateRootServiceProviderV2"));*/
+                new RobustXamlILCompiler(transformerconfig, emitConfig, true);
 
             var loaderDispatcherDef = new TypeDefinition("CompiledRobustXaml", "!XamlLoader",
                 TypeAttributes.Class, asm.MainModule.TypeSystem.Object);
@@ -177,7 +167,7 @@ namespace Robust.Build.Tasks
                             compiler.DefinePopulateMethod(populateBuilder, parsed, populateName,
                                 classTypeDefinition == null),
                             compiler.DefineBuildMethod(builder, parsed, buildName, true),
-                            null,//builder.DefineSubType(transformerconfig.WellKnownTypes.Object, "NamespaceInfo:" + res.Name, true),
+                            null,
                             (closureName, closureBaseType) =>
                                 populateBuilder.DefineSubType(closureBaseType, closureName, false),
                             res.Uri, res
@@ -192,8 +182,6 @@ namespace Robust.Build.Tasks
                             MethodAttributes.Static | MethodAttributes.Private, asm.MainModule.TypeSystem.Void);
                         trampoline.Parameters.Add(new ParameterDefinition(classTypeDefinition));
                         classTypeDefinition.Methods.Add(trampoline);
-
-                        //TODO there was a designloader here, is that important? i think not but meh
 
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldnull));
                         trampoline.Body.Instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
@@ -212,9 +200,6 @@ namespace Robust.Build.Tasks
                                 {
                                     var op = i[c].Operand as MethodReference;
 
-                                    // TODO: Throw an error
-                                    // This usually happens when same XAML resource was added twice for some weird reason
-                                    // We currently support it for dual-named default theme resource
                                     if (op != null
                                         && op.Name == TrampolineName)
                                     {
@@ -310,13 +295,8 @@ namespace Robust.Build.Tasks
             var field = typeBuilder.DefineField(nameScopeType,
                 ContextNameScopeFieldName, true, false);
             constructor
-                //.Ldarg_0()
-                //.Ldarg(1)
-                //.Ldtype(nameScopeType)
                 .Ldarg_0()
                 .Newobj(nameScopeType.GetConstructor())
-                //.EmitCall(mappings.ServiceProvider.GetMethod(new FindMethodMethodSignature("GetService",
-                //    typeSystem.FindType("System.Object"), typeSystem.FindType("System.Type"))))
                 .Stfld(field);
         }
     }

@@ -31,7 +31,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.LoaderApi", "Robust.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.Injectors", "Robust.Client.Injectors\Robust.Client.Injectors.csproj", "{EEF2C805-5E03-41EA-A916-49C1DD15EF41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.XAMLUI", "Robust.Client.XAMLUI\Robust.Client.XAMLUI.csproj", "{EFB7A05D-71D0-47D1-B7B4-35D4FF661F13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.NameGenerator", "Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj", "{EFB7A05D-71D0-47D1-B7B4-35D4FF661F13}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XamlX", "XamlX", "{1B1FC7C4-0212-4B3E-90D4-C7B58759E4B0}"
 EndProject

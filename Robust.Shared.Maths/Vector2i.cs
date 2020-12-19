@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 
@@ -69,6 +70,7 @@ namespace Robust.Shared.Maths
         /// Returns the hash code for this instance.
         /// </summary>
         /// <returns>A unique hash code for this instance.</returns>
+        [SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
         public override readonly int GetHashCode()
         {
             unchecked

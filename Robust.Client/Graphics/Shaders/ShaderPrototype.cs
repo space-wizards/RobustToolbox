@@ -7,16 +7,9 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using OpenToolkit.Mathematics;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
-using Matrix3 = Robust.Shared.Maths.Matrix3;
-using Matrix4 = Robust.Shared.Maths.Matrix4;
-using Vector2 = Robust.Shared.Maths.Vector2;
-using Vector2i = Robust.Shared.Maths.Vector2i;
-using Vector3 = Robust.Shared.Maths.Vector3;
-using Vector4 = Robust.Shared.Maths.Vector4;
 
 namespace Robust.Client.Graphics.Shaders
 {

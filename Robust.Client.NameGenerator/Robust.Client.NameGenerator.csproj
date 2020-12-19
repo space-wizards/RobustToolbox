@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <RootNamespace>Robust.Client.XAMLUI</RootNamespace>
     </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +13,6 @@
   <ItemGroup>
     <Compile Link="XamlX\filename" Include="../XamlX/src/XamlX/**/*.cs" />
     <Compile Remove="../XamlX/src/XamlX/**/SreTypeSystem.cs" />
-    <Compile Remove="../XamlX/src/XamlX/obj/**"/>
+    <Compile Remove="../XamlX/src/XamlX/obj/**" />
   </ItemGroup>
 </Project>

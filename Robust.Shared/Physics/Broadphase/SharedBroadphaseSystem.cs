@@ -38,256 +38,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         // TODO: Probably just snowflake grids.
 
-        public IEnumerable<IPhysBody> GetBodiesIntersecting(
-            MapId mapId,
-            Box2 worldBox,
-            bool approximate = true)
-        {
-            var checkedEntities = new HashSet<IPhysBody>();
-
-            foreach (var node in GetNodesInRange(mapId, worldBox))
-            {
-                foreach (var comp in node.PhysicsComponents)
-                {
-                    if (checkedEntities.Contains(comp))
-                        continue;
-
-                    checkedEntities.Add(comp);
-
-                    if (approximate || worldBox.Intersects(comp.WorldAABB))
-                    {
-                        yield return comp;
-                    }
-                }
-            }
-        }
-
-        private IEnumerable<PhysicsLookupNode> GetNodesInRange(MapId mapId, Box2 worldBox)
-        {
-            var range = (worldBox.BottomLeft - worldBox.Center).Length;
-
-            // This is the max in any direction that we can get a chunk (e.g. max 2 chunks away of data).
-            var (maxXDiff, maxYDiff) = ((int) (range / PhysicsLookupChunk.ChunkSize) + 1, (int) (range / PhysicsLookupChunk.ChunkSize) + 1);
-
-            foreach (var grid in MapManager.FindGridsIntersecting(mapId, worldBox))
-            {
-                var localCenter = grid.WorldToLocal(worldBox.Center);
-                var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
-                var chunks = _graph[mapId][grid.Index];
-
-                var bottomLeftNodeBound = new Vector2i((int) Math.Floor(centerTile.X - range), (int) Math.Floor(centerTile.Y - range));
-                var topRightNodeBound = new Vector2i((int) Math.Floor(centerTile.X + range + 1), (int) Math.Floor(centerTile.Y + range + 1));
-
-                for (var x = -maxXDiff; x <= maxXDiff; x++)
-                {
-                    for (var y = -maxYDiff; y <= maxYDiff; y++)
-                    {
-                        var chunkIndices = GetChunkIndices(new Vector2i(centerTile.X + x * PhysicsLookupChunk.ChunkSize, centerTile.Y + y * PhysicsLookupChunk.ChunkSize));
-
-                        if (!chunks.TryGetValue(chunkIndices, out var chunk)) continue;
-
-                        // Now we'll check if it's in range and relevant for us
-                        // (e.g. if we're on the very edge of a chunk we may need more chunks).
-                        foreach (var node in chunk.GetNodes(bottomLeftNodeBound, topRightNodeBound))
-                        {
-                            yield return node;
-                        }
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<IPhysBody> GetBodiesIntersecting(MapId mapId, Vector2 position)
-        {
-            var grids = _graph[mapId];
-
-            if (MapManager.TryFindGridAt(mapId, position, out var grid))
-            {
-                var chunkIndices = GetChunkIndices(position);
-                var offsetIndices = new Vector2i((int) (Math.Floor(position.X)), (int) (Math.Floor(position.Y)));
-                var node = grids[grid.Index][chunkIndices].GetNode(offsetIndices - chunkIndices);
-
-                foreach (var comp in node.PhysicsComponents)
-                {
-                    yield return comp;
-                }
-            }
-        }
-
-        public IEnumerable<IPhysBody> GetBodiesIntersecting(GridId gridId, Vector2i index)
-        {
-            var mapId = MapManager.GetGrid(gridId).ParentMapId;
-            var grids = _graph[mapId];
-
-            var chunkIndices = GetChunkIndices(index);
-
-            if (!grids[gridId].TryGetValue(chunkIndices, out var chunk))
-                yield break;
-
-            foreach (var comp in chunk.GetPhysicsComponents(index))
-            {
-                yield return comp;
-            }
-        }
-
-        public List<Vector2i> GetIndices(IPhysBody entity)
-        {
-            var results = new List<Vector2i>();
-
-            if (!_lastKnownNodes.TryGetValue(entity, out var nodes))
-            {
-                return results;
-            }
-
-            foreach (var node in nodes)
-            {
-                results.Add(node.Indices);
-            }
-
-            return results;
-        }
-
-        private PhysicsLookupChunk GetOrCreateChunk(MapId mapId, GridId gridId, Vector2i indices)
-        {
-            var chunkIndices = GetChunkIndices(indices);
-
-            if (!_graph.TryGetValue(mapId, out var grids))
-            {
-                grids = new Dictionary<GridId, Dictionary<Vector2i, PhysicsLookupChunk>>();
-                _graph[mapId] = grids;
-            }
-
-            if (!grids.TryGetValue(gridId, out var gridChunks))
-            {
-                gridChunks = new Dictionary<Vector2i, PhysicsLookupChunk>();
-                grids[gridId] = gridChunks;
-            }
-
-            if (!gridChunks.TryGetValue(chunkIndices, out var chunk))
-            {
-                chunk = new PhysicsLookupChunk(mapId, gridId, chunkIndices);
-                gridChunks[chunkIndices] = chunk;
-            }
-
-            return chunk;
-        }
-
-        private Vector2i GetChunkIndices(Vector2i indices)
-        {
-            return new Vector2i(
-                (int) (Math.Floor((float) indices.X / PhysicsLookupChunk.ChunkSize) * PhysicsLookupChunk.ChunkSize),
-                (int) (Math.Floor((float) indices.Y / PhysicsLookupChunk.ChunkSize) * PhysicsLookupChunk.ChunkSize));
-        }
-
-        private Vector2i GetChunkIndices(Vector2 indices)
-        {
-            return new Vector2i(
-                (int) (Math.Floor(indices.X / PhysicsLookupChunk.ChunkSize) * PhysicsLookupChunk.ChunkSize),
-                (int) (Math.Floor(indices.Y / PhysicsLookupChunk.ChunkSize) * PhysicsLookupChunk.ChunkSize));
-        }
-
-        private HashSet<PhysicsLookupNode> GetOrCreateNodes(IPhysBody physicsComponent)
-        {
-            if (_lastKnownNodes.TryGetValue(physicsComponent, out var nodes))
-                return nodes;
-
-            var grids = GetEntityIndices(physicsComponent);
-            var results = new HashSet<PhysicsLookupNode>();
-            var mapId = physicsComponent.Owner.Transform.MapID;
-
-            foreach (var (grid, indices) in grids)
-            {
-                foreach (var index in indices)
-                {
-                    results.Add(GetOrCreateNode(mapId, grid, index));
-                }
-            }
-
-            _lastKnownNodes[physicsComponent] = results;
-            return results;
-        }
-
-        private HashSet<PhysicsLookupNode> GetNodes(IPhysBody physicsComponent)
-        {
-            var grids = GetEntityIndices(physicsComponent);
-            var results = new HashSet<PhysicsLookupNode>();
-            var mapId = physicsComponent.Owner.Transform.MapID;
-
-            foreach (var (grid, indices) in grids)
-            {
-                foreach (var index in indices)
-                {
-                    results.Add(GetOrCreateNode(mapId, grid, index));
-                }
-            }
-
-            return results;
-        }
-
-        /// <summary>
-        ///     Return the corresponding TileLookupNode for these indices
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="gridId"></param>
-        /// <param name="indices"></param>
-        /// <returns></returns>
-        private PhysicsLookupNode GetOrCreateNode(MapId mapId, GridId gridId, Vector2i indices)
-        {
-            var chunk = GetOrCreateChunk(mapId, gridId, indices);
-
-            return chunk.GetNode(indices);
-        }
-
-        /// <summary>
-        ///     Get the relevant GridId and Vector2i for this entity for lookup.
-        /// </summary>
-        /// <param name="physicsComponent"></param>
-        /// <returns></returns>
-        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(IPhysBody physicsComponent)
-        {
-            var entityBounds = GetEntityBox(physicsComponent);
-            var results = new Dictionary<GridId, List<Vector2i>>();
-            var onlyOnGrid = false;
-
-            foreach (var grid in MapManager.FindGridsIntersecting(physicsComponent.Owner.Transform.MapID, GetEntityBox(physicsComponent)))
-            {
-                var indices = new List<Vector2i>();
-
-                foreach (var tile in grid.GetTilesIntersecting(entityBounds))
-                {
-                    indices.Add(tile.GridIndices);
-                }
-
-                results[grid.Index] = indices;
-
-                if (grid.WorldBounds.Encloses(entityBounds))
-                    onlyOnGrid = true;
-            }
-
-            if (!onlyOnGrid)
-            {
-                var gridlessIndices = new List<Vector2i>();
-                var leftFloor = (int) Math.Floor(entityBounds.Left);
-                var bottomFloor = (int) Math.Floor(entityBounds.Bottom);
-
-                for (var x = 0; x < Math.Ceiling(entityBounds.Width); x++)
-                {
-                    for (var y = 0; y < Math.Ceiling(entityBounds.Height); y++)
-                    {
-                        gridlessIndices.Add(new Vector2i(x + leftFloor, y + bottomFloor));
-                    }
-                }
-
-                results[GridId.Invalid] = gridlessIndices;
-            }
-
-            return results;
-        }
-
-        private Box2 GetEntityBox(IPhysBody physicsComponent)
-        {
-            return physicsComponent.WorldAABB;
-        }
+        // TODO: For now I'm just using DynamicTree
 
         public override void Initialize()
         {
@@ -310,7 +61,7 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleCollisionChange(CollisionChangeMessage message)
         {
-            if (message.CanCollide)
+            if (message.Enabled)
             {
                 HandlePhysicsAdd(message.PhysicsComponent);
             }
@@ -320,29 +71,23 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        /*
-        private void HandleEntityDeleted(EntityDeletedMessage message)
-        {
-            HandlePhysicsRemove(message.Entity);
-        }
-        */
-
-        private void HandleTileChanged(object? sender, TileChangedEventArgs eventArgs)
-        {
-            GetOrCreateNode(eventArgs.NewTile.MapIndex, eventArgs.NewTile.GridIndex, eventArgs.NewTile.GridIndices);
-        }
-
         private void HandleGridCreated(GridId gridId)
         {
             var mapId = MapManager.GetGrid(gridId).ParentMapId;
 
             if (!_graph.TryGetValue(mapId, out var grids))
             {
-                grids = new Dictionary<GridId, Dictionary<Vector2i, PhysicsLookupChunk>>();
+                grids = new Dictionary<GridId, IBroadPhase>();
                 _graph[mapId] = grids;
             }
 
-            grids[gridId] = new Dictionary<Vector2i, PhysicsLookupChunk>();
+            /*
+             * The reason I didn't just use our existing DynamicTree was mainly because I'd need to fuck around with making
+             * it use IBroadphase (for now I'm more concerned about a 1-1 port than trying to optimise it).
+             * It seemed easier to just use a chunked version for now.
+             */
+
+            grids[gridId] = new ChunkBroadphase();
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)

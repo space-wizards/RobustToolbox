@@ -2,13 +2,13 @@ namespace Robust.Shared.GameObjects.Components
 {
     public class CollisionChangeMessage : EntitySystemMessage
     {
-        public EntityUid Owner { get; }
-        public bool CanCollide { get; }
+        public PhysicsComponent PhysicsComponent { get; }
+        public bool Enabled { get; }
 
-        public CollisionChangeMessage(EntityUid owner, bool canCollide)
+        public CollisionChangeMessage(PhysicsComponent physicsComponent, bool enabled)
         {
-            Owner = owner;
-            CanCollide = canCollide;
+            PhysicsComponent = physicsComponent;
+            Enabled = enabled;
         }
     }
 }

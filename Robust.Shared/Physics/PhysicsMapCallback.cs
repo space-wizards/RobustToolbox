@@ -1,7 +1,7 @@
 ﻿namespace Robust.Shared.Physics
 {
-    internal sealed class PhysicsMapCallback
+    public sealed class PhysicsMapCallback
     {
-        internal delegate void BroadphaseDelegate(int proxyIdA, int proxyIdB);
+        public delegate void BroadphaseDelegate(int proxyIdA, int proxyIdB);
     }
 }

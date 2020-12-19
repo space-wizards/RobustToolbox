@@ -192,7 +192,7 @@ namespace Robust.Shared.Physics
                 };
 
                 // TODO: Replace this with just a ref or some shit
-                proxy.ProxyId = broadPhase.AddFixture(ref proxy.AABB);
+                proxy.ProxyId = broadPhase.AddProxy(ref proxy.AABB);
                 broadPhase.SetProxy(proxy.ProxyId, ref proxy);
 
                 Proxies[i] = proxy;

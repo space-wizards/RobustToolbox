@@ -10,23 +10,13 @@ namespace Robust.Shared.Physics.Broadphase
         internal const byte ChunkSize = 16;
 
         /// <summary>
-        ///     Parent MapId for this chunk
-        /// </summary>
-        internal MapId MapId { get; }
-
-        /// <summary>
-        ///     Parent GridId for this chunk
-        /// </summary>
-        internal GridId GridId { get; }
-
-        /// <summary>
         ///     Bottom-left corner of the chunk
         /// </summary>
         internal Vector2i Origin { get; }
 
         private PhysicsLookupNode[,] _nodes = new PhysicsLookupNode[ChunkSize,ChunkSize];
 
-        internal PhysicsLookupChunk(MapId mapId, GridId gridId, Vector2i origin)
+        internal PhysicsLookupChunk(Vector2i origin)
         {
             MapId = mapId;
             GridId = gridId;

@@ -11,11 +11,11 @@ namespace Robust.Shared.Physics
 
         bool TestOverlap(int proxyIdA, int proxyIdB);
 
-        int AddFixture(ref AABB aabb);
+        int AddProxy(ref Box2 aabb);
 
         void RemoveProxy(int proxyId);
 
-        void MoveProxy(int proxyId, ref AABB aabb, Vector2 displacement);
+        void MoveProxy(int proxyId, ref Box2 aabb, Vector2 displacement);
 
         void SetProxy(int proxyId, ref FixtureProxy proxy);
 
@@ -23,7 +23,7 @@ namespace Robust.Shared.Physics
 
         void TouchProxy(int proxyId);
 
-        void Query(BroadPhaseQueryCallback callback, ref AABB aabb);
+        void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
 
         void RayCast(BroadPhaseRayCastCallback callback, ref RayCastInput input);
     }

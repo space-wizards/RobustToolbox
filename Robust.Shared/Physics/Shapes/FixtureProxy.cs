@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Physics.Shapes;
+﻿using Robust.Shared.Maths;
+using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics
 {
@@ -11,7 +12,7 @@ namespace Robust.Shared.Physics
      */
     public struct FixtureProxy
     {
-        public AABB AABB;
+        public Box2 AABB;
         public int ChildIndex;
         public Fixture Fixture;
         public int ProxyId;

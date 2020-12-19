@@ -534,7 +534,7 @@ namespace Robust.Client.UserInterface
         /// <exception cref="ArgumentNullException">
         ///     <paramref name="child" /> is <c>null</c>.
         /// </exception>
-        protected void InsertChild(int index, Control child)
+        public void InsertChild(int index, Control child)
         {
             if (!ChildParentCheck(child))
                 return;

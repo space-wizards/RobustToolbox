@@ -33,7 +33,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
     <ProjectReference Include="..\OpenToolkit.GraphicsLibraryFramework\OpenToolkit.GraphicsLibraryFramework.csproj" />
-    <ProjectReference Include="..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" />
     <ProjectReference Include="..\Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
@@ -60,6 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 

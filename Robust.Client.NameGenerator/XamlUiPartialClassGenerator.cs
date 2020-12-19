@@ -13,8 +13,7 @@ using XamlX.Transform;
 using XamlX.Transform.Transformers;
 using XamlX.TypeSystem;
 
-
-namespace Robust.Client.XamlUI
+namespace Robust.Client.NameGenerator
 {
     /// <summary>
     /// Based on https://github.com/AvaloniaUI/Avalonia.NameGenerator/blob/ecc9677a23de5cbc90af07ccac14e31c0da41d6a/src/Avalonia.NameGenerator/NameReferenceGenerator.cs

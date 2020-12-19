@@ -7,6 +7,8 @@ using Robust.Shared.Utility;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using Pidgin;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Shared.Maths;
 using YamlDotNet.RepresentationModel;
@@ -203,7 +205,7 @@ namespace Robust.Client.Graphics.Shaders
             foreach (var (name, def) in prototype.Source.ParsedShader.Uniforms)
             {
                 shaderParams.TryAdd(name, (def.DefaultValue != null
-                    ? _parseUniformValue(def.DefaultValue, def.Type.Type)
+                    ? ParseGlslValue(def.DefaultValue, def.Type.Type)
                     : def.Type.Type switch
                     {
                         ShaderDataType.Void => null,
@@ -223,7 +225,7 @@ namespace Robust.Client.Graphics.Shaders
                         ShaderDataType.Vec2 => default(Vector2),
                         ShaderDataType.Vec3 => default(Vector3),
                         ShaderDataType.Vec4 => default(Vector4),
-                        ShaderDataType.Mat2 => (0u, 0u, 0u, 0u),
+                        ShaderDataType.Mat2 => (0f, 0f, 0f, 0f),
                         ShaderDataType.Mat3 => default(Matrix3),
                         ShaderDataType.Mat4 => default(Matrix4),
                         ShaderDataType.Sampler2D => throw new NotImplementedException(),
@@ -232,6 +234,30 @@ namespace Robust.Client.Graphics.Shaders
                         _ => throw new NotImplementedException()
                     })!);
             }
+        }
+
+        private static object ParseGlslValue(string value, ShaderDataType typeType)
+        {
+            return typeType switch
+            {
+                ShaderDataType.Bool => bool.Parse(value),
+                ShaderDataType.BVec2 => GlslParser.ParserBVec2.ParseOrThrow(value),
+                ShaderDataType.BVec3 => GlslParser.ParserBVec3.ParseOrThrow(value),
+                ShaderDataType.BVec4 => GlslParser.ParserBVec4.ParseOrThrow(value),
+                ShaderDataType.Int => int.Parse(value, CultureInfo.InvariantCulture),
+                ShaderDataType.IVec2 => GlslParser.ParserIVec2.ParseOrThrow(value),
+                ShaderDataType.IVec3 => GlslParser.ParserIVec3.ParseOrThrow(value),
+                ShaderDataType.IVec4 => GlslParser.ParserIVec4.ParseOrThrow(value),
+                ShaderDataType.UInt => uint.Parse(value, CultureInfo.InvariantCulture),
+                ShaderDataType.UVec2 => GlslParser.ParserUVec2.ParseOrThrow(value),
+                ShaderDataType.UVec3 => GlslParser.ParserUVec3.ParseOrThrow(value),
+                ShaderDataType.UVec4 => GlslParser.ParserUVec4.ParseOrThrow(value),
+                ShaderDataType.Float => float.Parse(value, CultureInfo.InvariantCulture),
+                ShaderDataType.Vec2 => GlslParser.ParserVec2.ParseOrThrow(value),
+                ShaderDataType.Vec3 => GlslParser.ParserVec3.ParseOrThrow(value),
+                ShaderDataType.Vec4 => GlslParser.ParserVec4.ParseOrThrow(value),
+                _ => throw new NotImplementedException()
+            };
         }
 
         private void ReadCanvasKind(YamlMappingNode mapping)

@@ -43,6 +43,16 @@ namespace Robust.Shared.Network
             return new(message.ReadInt32());
         }
 
+        public static EntityUid? ReadEntityUid_(this NetIncomingMessage message)
+        {
+            var uid = message.ReadInt32();
+            return uid > 0 ? new(uid) : null;
+        }
+        public static void Write(this NetOutgoingMessage message, EntityUid? entityUid)
+        {
+            message.Write(entityUid == null ? 0 : (int)entityUid);
+        }
+
         public static void Write(this NetOutgoingMessage message, EntityUid entityUid)
         {
             message.Write((int)entityUid);

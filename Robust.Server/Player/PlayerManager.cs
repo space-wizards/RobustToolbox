@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -8,6 +8,7 @@ using Prometheus;
 using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.Interfaces.GameObjects;
@@ -378,6 +379,7 @@ namespace Robust.Server.Player
             }
 
             PlayerCountMetric.Set(PlayerCount);
+            Dirty();
         }
 
         private void OnPlayerStatusChanged(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
@@ -449,7 +451,8 @@ namespace Robust.Server.Player
                     UserId = client.UserId,
                     Name = client.Name,
                     Status = client.Status,
-                    Ping = client.ConnectedClient.Ping
+                    Ping = client.ConnectedClient.Ping,
+                    ControlledEntity = client.AttachedEntityUid
                 };
                 list.Add(info);
             }

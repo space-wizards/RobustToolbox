@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces;
@@ -150,32 +150,41 @@ namespace Robust.Client.Player
             var dirty = false;
 
             var hitSet = new List<NetUserId>();
-
             foreach (var state in remotePlayers)
             {
                 hitSet.Add(state.UserId);
 
                 if (_sessions.TryGetValue(state.UserId, out var local))
                 {
-                    // Exists, update data.
-                    if (local.Name == state.Name && local.Status == state.Status && local.Ping == state.Ping)
-                        continue;
-
-                    dirty = true;
-                    local.Name = state.Name;
-                    local.Status = state.Status;
-                    local.Ping = state.Ping;
+                    if (state.ControlledEntity != null)
+                    {
+                        var data_changed = local.Name != state.Name || local.Status != state.Status || local.Ping != state.Ping;
+                        var entity_changed = local.AttachedEntity == null || local.AttachedEntity.Uid != state.ControlledEntity;
+                        if (data_changed || entity_changed)
+                        {
+                            var updated_session = new PlayerSession(state.UserId)
+                            {
+                                Name = state.Name,
+                                Status = state.Status,
+                                Ping = state.Ping,
+                            };
+                            if (_entityManager.TryGetEntity(state.ControlledEntity.Value, out var entity))
+                            {
+                                updated_session.AttachedEntity = entity;
+                            }
+                            _sessions[local.UserId] = updated_session;
+                            dirty = true;
+                        }
+                    }
                 }
                 else
                 {
-                    // New, give him a slot.
                     dirty = true;
-
                     var newSession = new PlayerSession(state.UserId)
                     {
                         Name = state.Name,
                         Status = state.Status,
-                        Ping = state.Ping
+                        Ping = state.Ping,
                     };
                     _sessions.Add(state.UserId, newSession);
                     if (state.UserId == LocalPlayer!.UserId)

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Players;
@@ -31,7 +32,8 @@ namespace Robust.Shared.Network.Messages
                     UserId = new NetUserId(buffer.ReadGuid()),
                     Name = buffer.ReadString(),
                     Status = (SessionStatus)buffer.ReadByte(),
-                    Ping = buffer.ReadInt16()
+                    Ping = buffer.ReadInt16(),
+                    ControlledEntity = buffer.ReadEntityUid_()
                 };
                 Plyrs.Add(plyNfo);
             }
@@ -45,8 +47,9 @@ namespace Robust.Shared.Network.Messages
             {
                 buffer.Write(ply.UserId.UserId);
                 buffer.Write(ply.Name);
-                buffer.Write((byte) ply.Status);
+                buffer.Write((byte)ply.Status);
                 buffer.Write(ply.Ping);
+                buffer.Write(ply.ControlledEntity);
             }
         }
     }

@@ -1,11 +1,8 @@
 using System;
-using System.IO;
 using System.Net;
-using System.Net.Http;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
@@ -20,30 +17,22 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleInfo);
         }
 
-        private static bool HandleTeapot(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        private static bool HandleTeapot(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/teapot")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/teapot")
             {
                 return false;
             }
 
-            response.Respond(method, "I am a teapot.", (HttpStatusCode) 418);
+            context.Respond("I am a teapot.", (HttpStatusCode) 418);
             return true;
         }
 
-        private bool HandleStatus(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        private bool HandleStatus(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/status")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/status")
             {
                 return false;
-            }
-
-            response.StatusCode = (int) HttpStatusCode.OK;
-            response.ContentType = "application/json";
-
-            if (method == HttpMethod.Head)
-            {
-                return true;
             }
 
             var jObject = new JObject
@@ -56,30 +45,16 @@ namespace Robust.Server.ServerStatus
 
             OnStatusRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8);
-
-            using var jsonWriter = new JsonTextWriter(streamWriter);
-
-            JsonSerializer.Serialize(jsonWriter, jObject);
-
-            jsonWriter.Flush();
+            context.RespondJson(jObject);
 
             return true;
         }
 
-        private bool HandleInfo(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        private bool HandleInfo(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Url!.AbsolutePath != "/info")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/info")
             {
                 return false;
-            }
-
-            response.StatusCode = (int) HttpStatusCode.OK;
-            response.ContentType = "application/json";
-
-            if (method == HttpMethod.Head)
-            {
-                return true;
             }
 
             var downloadUrl = _configurationManager.GetCVar(CVars.BuildDownloadUrl);
@@ -125,13 +100,7 @@ namespace Robust.Server.ServerStatus
 
             OnInfoRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.OutputStream, EncodingHelpers.UTF8);
-
-            using var jsonWriter = new JsonTextWriter(streamWriter);
-
-            JsonSerializer.Serialize(jsonWriter, jObject);
-
-            jsonWriter.Flush();
+            context.RespondJson(jObject);
 
             return true;
         }

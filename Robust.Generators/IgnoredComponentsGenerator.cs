@@ -14,12 +14,12 @@ namespace Content.Generators
     [Generator]
     public class IgnoredComponentsGenerator : ISourceGenerator
     {
-        static IEnumerable<SyntaxTree> GetSyntaxTrees(string projectpath)
+        static SyntaxTree[] GetSyntaxTrees(string projectpath)
         {
             return Directory
                 .EnumerateFiles($"{projectpath}", "*.cs", SearchOption.AllDirectories)
                 .Where(f => !f.StartsWith($"{projectpath}/obj"))
-                .Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), CSharpParseOptions.Default));
+                .Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), CSharpParseOptions.Default)).ToArray();
         }
 
         public void Initialize(GeneratorInitializationContext context)
@@ -59,67 +59,69 @@ namespace Content.Generators
 
             var split = solutionPath.Split('/');
             solutionPath = string.Join("/", split.Take(split.Length-1));
-            var serverPath = $"{solutionPath}/Content.Server";
-            var clientPath = $"{solutionPath}/Content.Client";
-            var sharedPath = $"{solutionPath}/Content.Shared";
 
-            if (!Directory.Exists(serverPath))
+            bool TryGetProjectPath(string subdir, out string path)
             {
-                var msg = $"Could not find server dir at: {serverPath}.";
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        new DiagnosticDescriptor("RIC0000",
-                            msg,
-                            msg, "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
+                path = $"{solutionPath}{subdir}";
+                if (!Directory.Exists(path))
+                {
+                    var msg = $"Could not expected project at dir: {path}.";
+                    context.ReportDiagnostic(
+                        Diagnostic.Create(
+                            new DiagnosticDescriptor("RIC0000",
+                                msg,
+                                msg, "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
+                    return false;
+                }
+
+                return true;
+            }
+
+            if (!TryGetProjectPath("/Content.Server", out var serverPath) ||
+                !TryGetProjectPath("/Content.Shared", out var sharedPath) ||
+                !TryGetProjectPath("/Content.Client", out var clientPath) ||
+                !TryGetProjectPath("/RobustToolbox/Robust.Server", out var robustServerPath) ||
+                !TryGetProjectPath("/RobustToolbox/Robust.Shared", out var robustSharedPath) ||
+                !TryGetProjectPath("/RobustToolbox/Robust.Client", out var robustClientPath))
+            {
                 return;
             }
 
-            if (!Directory.Exists(clientPath))
+            var sharedTrees = GetSyntaxTrees(sharedPath).Concat(GetSyntaxTrees(robustSharedPath)).ToArray();
+            var sharedComp = CSharpCompilation.Create("shared", sharedTrees);
+            var sharedWalker = new ComponentNameSearchWalker(sharedComp);
+            foreach (var syntaxTree in sharedTrees)
             {
-                var msg = $"Could not find client dir at: {clientPath}.";
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        new DiagnosticDescriptor("RIC0000",
-                            msg,
-                            msg, "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
-                return;
+                sharedWalker.Visit(syntaxTree.GetRoot());
             }
 
-            if (!Directory.Exists(sharedPath))
+            var clientTrees = GetSyntaxTrees(clientPath).Concat(GetSyntaxTrees(robustClientPath)).ToArray();
+            var clientComp = CSharpCompilation.Create("client", clientTrees);
+            clientComp = clientComp.AddSyntaxTrees(sharedTrees);
+            var clientWalker = new ComponentNameSearchWalker(clientComp);
+            foreach (var syntaxTree in clientTrees)
             {
-                var msg = $"Could not find shared dir at: {sharedPath}.";
-                context.ReportDiagnostic(
-                    Diagnostic.Create(
-                        new DiagnosticDescriptor("RIC0000",
-                            msg,
-                            msg, "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
-                return;
-            }
-            var sharedTrees = GetSyntaxTrees(sharedPath);
-
-            var serverComp = CSharpCompilation.Create("Server", GetSyntaxTrees(serverPath).Concat(sharedTrees));
-            var serverWalker = new ComponentNameSearchWalker();
-            foreach (var syntaxTree in GetSyntaxTrees(serverPath))
-            {
-                serverWalker.Model = comp.GetSemanticModel(syntaxTree);
-                serverWalker.Visit(syntaxTree.GetRoot());
-            }
-
-            var clientComp = CSharpCompilation.Create("Client", GetSyntaxTrees(clientPath).Concat(sharedTrees));
-            var clientWalker = new ComponentNameSearchWalker();
-            foreach (var syntaxTree in GetSyntaxTrees(clientPath))
-            {
-                clientWalker.Model = comp.GetSemanticModel(syntaxTree);
+                //clientWalker.Model = comp.GetSemanticModel(syntaxTree);
                 clientWalker.Visit(syntaxTree.GetRoot());
             }
 
-            var sharedComp = CSharpCompilation.Create("Shared", sharedTrees);
+            var serverTrees = GetSyntaxTrees(serverPath).Concat(GetSyntaxTrees(robustServerPath)).ToArray();
+            var serverComp = CSharpCompilation.Create("server", serverTrees);
+            serverComp = serverComp.AddSyntaxTrees(sharedTrees);
+            var serverWalker = new ComponentNameSearchWalker(serverComp);
+            foreach (var syntaxTree in serverTrees)
+            {
+                //clientWalker.Model = comp.GetSemanticModel(syntaxTree);
+                serverWalker.Visit(syntaxTree.GetRoot());
+            }
+
+            /*var sharedComp = CSharpCompilation.Create("Shared", sharedTrees);
             var sharedWalker = new ComponentNameSearchWalker();
             foreach (var syntaxTree in GetSyntaxTrees(sharedPath))
             {
                 sharedWalker.Model = comp.GetSemanticModel(syntaxTree);
                 sharedWalker.Visit(syntaxTree.GetRoot());
-            }
+            }*/
 
 
             IEnumerable<string> names;
@@ -157,7 +159,12 @@ namespace Content.AutoGenerated
         private class ComponentNameSearchWalker : CSharpSyntaxWalker
         {
             private readonly List<string> _names = new List<string>();
-            public SemanticModel Model;
+            private CSharpCompilation _comp;
+
+            public ComponentNameSearchWalker(CSharpCompilation comp)
+            {
+                _comp = comp;
+            }
 
             public IReadOnlyList<string> Names => _names;
 
@@ -169,7 +176,8 @@ namespace Content.AutoGenerated
 
             public override void VisitClassDeclaration(ClassDeclarationSyntax node)
             {
-                var typeSymbol = Model.GetDeclaredSymbol(node);
+                var model = _comp.GetSemanticModel(node.SyntaxTree);
+                var typeSymbol = model.GetDeclaredSymbol(node);
                 if(IsComponent(typeSymbol))
                 {
                     base.VisitClassDeclaration(node);

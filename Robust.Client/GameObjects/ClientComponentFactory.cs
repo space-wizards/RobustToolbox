@@ -38,7 +38,7 @@ namespace Robust.Client.GameObjects
             Register<PhysicsComponent>();
             RegisterReference<PhysicsComponent, IPhysBody>();
             RegisterReference<PhysicsComponent, IPhysicsComponent>();
-            RegisterIgnore("KeyBindingInput");
+            //RegisterIgnore("KeyBindingInput");
             Register<PointLightComponent>();
 
             Register<InputComponent>();
@@ -55,14 +55,14 @@ namespace Robust.Client.GameObjects
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
-            
+
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
             Register<ClientUserInterfaceComponent>();
             RegisterReference<ClientUserInterfaceComponent, SharedUserInterfaceComponent>();
 
-            RegisterIgnore("IgnorePause");
+            //RegisterIgnore("IgnorePause");
 
             Register<AnimationPlayerComponent>();
 

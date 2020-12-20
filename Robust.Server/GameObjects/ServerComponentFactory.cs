@@ -45,7 +45,7 @@ namespace Robust.Server.GameObjects
             Register<PointLightComponent>();
             Register<OccluderComponent>();
 
-            RegisterIgnore("Input");
+            //RegisterIgnore("Input");
             Register<SpriteComponent>();
             RegisterReference<SpriteComponent, SharedSpriteComponent>();
             RegisterReference<SpriteComponent, ISpriteRenderableComponent>();
@@ -65,7 +65,7 @@ namespace Robust.Server.GameObjects
 
             Register<TimerComponent>();
 
-            RegisterIgnore("AnimationPlayer");
+            //RegisterIgnore("AnimationPlayer");
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();

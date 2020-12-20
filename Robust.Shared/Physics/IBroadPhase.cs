@@ -7,21 +7,19 @@ namespace Robust.Shared.Physics
 {
     internal interface IBroadPhase
     {
+        // Rolled SetProxy into AddProxy
         void UpdatePairs(PhysicsMapCallback.BroadphaseDelegate callback);
 
-        bool TestOverlap(int proxyIdA, int proxyIdB);
+        bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB);
 
-        int AddProxy(ref Box2 aabb);
+        void AddProxy(FixtureProxy proxy);
 
-        void RemoveProxy(int proxyId);
+        void RemoveProxy(FixtureProxy proxy);
 
-        void MoveProxy(int proxyId, ref Box2 aabb, Vector2 displacement);
+        void MoveProxy(FixtureProxy proxy);
 
-        void SetProxy(int proxyId, ref FixtureProxy proxy);
-
-        FixtureProxy GetProxy(int proxyId);
-
-        void TouchProxy(int proxyId);
+        // TODO: What de fak does this do
+        void TouchProxy(FixtureProxy proxy);
 
         void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
 

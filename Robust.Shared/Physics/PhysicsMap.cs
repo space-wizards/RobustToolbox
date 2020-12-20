@@ -69,8 +69,8 @@ namespace Robust.Shared.Physics
         ///     Solve physics for this map.
         ///     Go through and build a small an island as possible to solve.
         /// </summary>
-        /// <param name="frameTime"></param>
-        public void Solve(float frameTime)
+        /// <param name="step"></param>
+        public void Solve(PhysicsStep step)
         {
             // TODO: Solve grids first and handle their movement as they're isolated.
             // Then, check for entities in the grid's new worldspace (reason for this is if we're moving in space
@@ -209,7 +209,7 @@ namespace Robust.Shared.Physics
                 }
 
                 // wew this island is done
-                _island.Solve(frameTime);
+                _island.Solve(step);
 
                 // Let static bodies participate in as many islands as they want.
                 for (var i = 0; i < _island.BodyCount; i++)

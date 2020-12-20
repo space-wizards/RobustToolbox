@@ -4,15 +4,15 @@ namespace Robust.Shared.Physics.Solver
 {
     internal struct SolverPosition
     {
-        public Vector2 C;
-        public float A;
+        public Vector2 Center;
+        public float Angle;
     }
 
     internal struct SolverVelocity
     {
-        public Vector2 V;
+        public Vector2 LinearVelocity;
         // TODO: wtf is this
-        public float W;
+        public float AngularVelocity;
     }
 
     internal struct SolverData

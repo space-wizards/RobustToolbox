@@ -112,7 +112,7 @@ namespace Robust.Shared.Physics.Shapes
         /// </summary>
         /// <param name="transform">The world transform of the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
-        public abstract AABB ComputeAABB(PhysicsTransform transform, int childIndex);
+        public abstract Box2 ComputeAABB(PhysicsTransform transform, int childIndex);
 
         /// <summary>
         /// Compute the mass properties of this shape using its dimensions and density.

@@ -25,14 +25,15 @@ namespace Robust.Shared.Physics.Broadphase
         private readonly Dictionary<MapId, Dictionary<GridId, IBroadPhase>> _graph =
                      new Dictionary<MapId, Dictionary<GridId, IBroadPhase>>();
 
-        public IEnumerable<IBroadPhase> GetBroadphases(PhysicsComponent body)
+        // Look for now I've hardcoded grids
+        public IEnumerable<(IBroadPhase Broadphase, IMapGrid Grid)> GetBroadphases(PhysicsComponent body)
         {
             // TODO: Snowflake grids here
             var grids = _graph[body.Owner.Transform.MapID];
 
             foreach (var gridId in MapManager.FindGridIdsIntersecting(body.Owner.Transform.MapID, body.WorldAABB, true))
             {
-                yield return grids[gridId];
+                yield return (grids[gridId], MapManager.GetGrid(gridId));
             }
         }
 

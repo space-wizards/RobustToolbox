@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -7,6 +8,8 @@ namespace Robust.Shared.Physics.Broadphase
 {
     internal sealed class PhysicsLookupChunk
     {
+        // TODO: Look at sussing out a sweep and prune implementation
+
         internal const byte ChunkSize = 16;
 
         /// <summary>
@@ -18,8 +21,6 @@ namespace Robust.Shared.Physics.Broadphase
 
         internal PhysicsLookupChunk(Vector2i origin)
         {
-            MapId = mapId;
-            GridId = gridId;
             Origin = origin;
 
             for (var x = 0; x < ChunkSize; x++)
@@ -36,25 +37,33 @@ namespace Robust.Shared.Physics.Broadphase
         /// </summary>
         public bool CanDeleteChunk()
         {
-            if (GridId != GridId.Invalid)
-                return false;
-
-            foreach (var _ in GetEntities())
-            {
-                return false;
-            }
-
-            return true;
+            return !GetProxies().Any();
         }
 
-        public IEnumerable<IPhysShape> GetShapes()
+        public void AddProxy(FixtureProxy proxy)
+        {
+            foreach (var node in GetNodes(proxy.AABB))
+            {
+                node.AddProxy(proxy);
+            }
+        }
+
+        public void RemoveProxy(FixtureProxy proxy)
+        {
+            foreach (var node in GetNodes(proxy.AABB))
+            {
+                node.RemoveProxy(proxy);
+            }
+        }
+
+        public IEnumerable<FixtureProxy> GetProxies()
         {
             for (var x = 0; x < ChunkSize; x++)
             {
                 for (var y = 0; y < ChunkSize; y++)
                 {
                     var node = _nodes[x, y];
-                    foreach (var shape in node.PhysicsShapes)
+                    foreach (var shape in node.Proxies)
                     {
                         yield return shape;
                     }
@@ -62,39 +71,13 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public IEnumerable<IPhysShape> GetEntities()
-        {
-            for (var x = 0; x < ChunkSize; x++)
-            {
-                for (var y = 0; y < ChunkSize; y++)
-                {
-                    var node = _nodes[x, y];
-
-                    foreach (var shape in node.PhysicsShapes)
-                    {
-                        yield return shape;
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<IPhysShape> GetPhysicsShapes(Vector2i index)
+        public IEnumerable<FixtureProxy> GetPhysicsShapes(Vector2i index)
         {
             var node = _nodes[index.X - Origin.X, index.Y - Origin.Y];
 
-            foreach (var shape in node.PhysicsShapes)
+            foreach (var shape in node.Proxies)
             {
                 yield return shape;
-            }
-        }
-
-        public IEnumerable<IPhysBody> GetPhysicsComponents(Vector2i index)
-        {
-            var node = _nodes[index.X - Origin.X, index.Y - Origin.Y];
-
-            foreach (var comp in node.PhysicsComponents)
-            {
-                yield return comp;
             }
         }
 
@@ -109,14 +92,24 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
+        private List<PhysicsLookupNode> GetNodes(Box2 aabb)
+        {
+            var botLeft = new Vector2i((int) MathF.Floor(aabb.Bottom), (int) MathF.Floor(aabb.Left));
+            var topRight = new Vector2i((int) MathF.Ceiling(aabb.Top), (int) MathF.Ceiling(aabb.Right));
+
+            return GetNodes(botLeft, topRight);
+        }
+
         /// <summary>
         ///     Bounded nodes
         /// </summary>
         /// <param name="bottomLeft"></param>
         /// <param name="topRight"></param>
         /// <returns></returns>
-        public IEnumerable<PhysicsLookupNode> GetNodes(Vector2i bottomLeft, Vector2i topRight)
+        private List<PhysicsLookupNode> GetNodes(Vector2i bottomLeft, Vector2i topRight)
         {
+            var nodes = new List<PhysicsLookupNode>(1);
+
             var bottomLeftBound = new Vector2i(Math.Max(bottomLeft.X - Origin.X, 0), Math.Max(bottomLeft.Y - Origin.Y, 0));
             var topRightBound = new Vector2i(Math.Min(topRight.X - Origin.X, ChunkSize - 1), Math.Min(topRight.Y - Origin.Y, ChunkSize - 1));
 
@@ -124,14 +117,11 @@ namespace Robust.Shared.Physics.Broadphase
             {
                 for (var y = bottomLeftBound.Y; y <= topRightBound.Y; y++)
                 {
-                    yield return _nodes[x, y];
+                    nodes.Add(_nodes[x, y]);
                 }
             }
-        }
 
-        internal PhysicsLookupNode GetNode(Vector2i nodeIndices)
-        {
-            return _nodes[nodeIndices.X - Origin.X, nodeIndices.Y - Origin.Y];
+            return nodes;
         }
     }
 }

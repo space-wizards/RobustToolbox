@@ -28,7 +28,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Parent body of this fixture.
         /// </summary>
-        public IPhysBody Body { get; private set; } = default!;
+        public PhysicsComponent Body { get; internal set; } = default!;
 
         /// <summary>
         ///     Our child shape.
@@ -144,7 +144,7 @@ namespace Robust.Shared.Physics
         internal void TouchProxies(IBroadPhase broadPhase)
         {
             for (var i = 0; i < ProxyCount; i++)
-                broadPhase.TouchProxies(Proxies[i].ProxyId);
+                broadPhase.TouchProxy(Proxies[i]);
         }
 
         /// <summary>
@@ -191,10 +191,7 @@ namespace Robust.Shared.Physics
                     AABB = Shape.ComputeAABB(transform, i),
                 };
 
-                // TODO: Replace this with just a ref or some shit
-                proxy.ProxyId = broadPhase.AddProxy(ref proxy.AABB);
-                broadPhase.SetProxy(proxy.ProxyId, ref proxy);
-
+                broadPhase.AddProxy(proxy);
                 Proxies[i] = proxy;
             }
         }
@@ -207,8 +204,7 @@ namespace Robust.Shared.Physics
         {
             for (var i = 0; i < ProxyCount; ++i)
             {
-                broadPhase.RemoveProxy(Proxies[i].ProxyId);
-                Proxies[i].ProxyId = -1;
+                broadPhase.RemoveProxy(Proxies[i]);
             }
 
             ProxyCount = 0;
@@ -236,11 +232,9 @@ namespace Robust.Shared.Physics
                 var aabb1 = Shape.ComputeAABB(transform1, proxy.ChildIndex);
                 var aabb2 = Shape.ComputeAABB(transform2, proxy.ChildIndex);
 
-                proxy.AABB.Combine(ref aabb1, ref aabb2);
+                proxy.AABB = aabb1.Combine(aabb2);
 
-                var displacement = transform2.Position - transform1.Position;
-
-                broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
+                broadPhase.MoveProxy(proxy);
             }
         }
 
@@ -249,7 +243,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         /// <param name="body">The body you wish to clone the fixture onto.</param>
         /// <returns>The cloned fixture.</returns>
-        public Fixture CloneOnto(IPhysBody body)
+        public Fixture CloneOnto(PhysicsComponent body)
         {
             return CloneOnto(body, Shape);
         }

@@ -237,6 +237,17 @@ namespace Robust.Shared.Maths
                 center + halfSize);
         }
 
+        /// <summary>
+        ///     Returns the a Box2 that contains both boxes.
+        /// </summary>
+        /// <param name="boxA"></param>
+        /// <param name="boxB"></param>
+        /// <returns></returns>
+        public Box2 Combine(Box2 boxB)
+        {
+            return new Box2(Vector2.ComponentMin(BottomLeft, boxB.BottomLeft), Vector2.ComponentMax(TopRight, boxB.TopRight));
+        }
+
         /// <summary>Returns a Box2 translated by the given amount.</summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Box2 Translated(Vector2 point)

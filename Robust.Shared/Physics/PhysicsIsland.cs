@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Solver;
 using Robust.Shared.Utility;
@@ -8,6 +10,13 @@ namespace Robust.Shared.Physics
 {
     internal sealed class PhysicsIsland
     {
+        /*
+         * Sloth notes:
+         * I considered doing islands per-grid to simplify things but then figured it might make for some jank
+         * cross-shuttle collisions. The main downside of doing it in the world afaik is that you might get
+         * issues with velocity differences between entities on shuttles and whatnot but I guess we'll see how we go.
+         */
+
         private IContactManager _contactManager = default!;
 
         private ContactSolver _contactSolver = new ContactSolver();
@@ -98,7 +107,12 @@ namespace Robust.Shared.Physics
             }
         }
 
-        internal void Solve(float frameTime)
+        // TODO: Gravity but not so important for us
+
+        // TODO: Just have the one Sweep motion that is done in worldposition and don't do per-grid.
+        // The ideal is that we can do collisions with entities spanning multiple grids and not have it bug the fuck out
+
+        internal void Solve(PhysicsStep step)
         {
             // TODO: Our AABBs are going to need to be relative to the grid we are on most likely
             // So I'll need to change a bunch of internal shit for that (RIP me).
@@ -109,23 +123,27 @@ namespace Robust.Shared.Physics
             for (var i = 0; i < BodyCount; ++i)
             {
                 PhysicsComponent b = Bodies[i];
+                var sweep = b.Sweeps[GridId];
 
-                Vector2 c = b.Sweep.Center;
-                float a = b.Sweep.Angle;
+                // TODO: Need to suss out where relative velocity done because if the shuttle's travelling at high speeds
+                // we don't want collisions to be fucked.
+
+                Vector2 c = sweep.Center;
+                float a = sweep.Angle;
                 Vector2 v = b.LinearVelocity;
                 float w = b.AngularVelocity;
 
                 // Store positions for continuous collision.
-                b.Sweep.Center0 = b.Sweep.Center;
-                b.Sweep.Angle0 = b.Sweep.Angle;
+                sweep.Center0 = sweep.Center;
+                sweep.Angle0 = sweep.Angle;
 
                 if (b.BodyType == BodyType.Dynamic)
                 {
                     // Integrate velocities.
 
                     // FPE: Only apply gravity if the body wants it.
-                    v += (b.Force * b.InvMass) * frameTime;
-                    w += b.InvI * b.Torque * frameTime;
+                    v += (b.Force * b.InvMass) * step.DeltaTime;
+                    w += b.InvI * b.Torque * step.DeltaTime;
 
                     // Apply damping.
                     // ODE: dv/dt + c * v = 0
@@ -134,23 +152,34 @@ namespace Robust.Shared.Physics
                     // v2 = exp(-c * dt) * v1
                     // Taylor expansion:
                     // v2 = (1.0f - c * dt) * v1
-                    v *=  Math.Clamp(1.0f - frameTime * b.LinearDamping, 0.0f, 1.0f);
-                    w *= Math.Clamp(1.0f - frameTime * b.AngularDamping, 0.0f, 1.0f);
+                    v *=  Math.Clamp(1.0f - step.DeltaTime * b.LinearDamping, 0.0f, 1.0f);
+                    w *= Math.Clamp(1.0f - step.DeltaTime * b.AngularDamping, 0.0f, 1.0f);
                 }
 
-                _positions[i].C = c;
-                _positions[i].A = a;
-                _velocities[i].V = v;
-                _velocities[i].W = w;
+                _positions[i].Center = c;
+                _positions[i].Angle = a;
+                _velocities[i].LinearVelocity = v;
+                _velocities[i].AngularVelocity = w;
             }
 
             var solverData = new SolverData();
             solverData.Positions = _positions;
             solverData.Velocities = _velocities;
 
-            // Reset
-            //_contactSolver
             // TODO: Up to warmstarting
+            _contactSolver.Reset();
+            _contactSolver.InitializeVelocityConstraints();
+
+            if (step.WarmStarting)
+            {
+                _contactSolver.WarmStart();
+            }
+
+            for (var i = 0; i < JointCount; i++)
+            {
+                if (_joints[i].Enabled)
+                    _joints[i].InitVelocityConstraints(solverData);
+            }
         }
     }
 }

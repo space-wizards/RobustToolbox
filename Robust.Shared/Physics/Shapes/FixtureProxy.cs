@@ -15,6 +15,6 @@ namespace Robust.Shared.Physics
         public Box2 AABB;
         public int ChildIndex;
         public Fixture Fixture;
-        public int ProxyId;
+        // Can't use ProxyId as this FixtureProxy may be used across multiple grids.
     }
 }

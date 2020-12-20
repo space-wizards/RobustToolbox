@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects.Components
         void PostCollide(uint collisionCount) { }
     }
 
-    public sealed class PhysicsComponent : Component
+    public sealed class PhysicsComponent : Component, IPhysBody
     {
         public override string Name => "Physics";
         public override uint? NetID => NetIDs.PHYSICS;
@@ -37,9 +37,7 @@ namespace Robust.Shared.GameObjects.Components
 
         internal int IslandIndex { get; set; }
 
-        /// <summary>
-        ///     Swept motion for the CCD (Continuous Collision Detection).
-        /// </summary>
+
         internal Sweep Sweep;
 
         /// <summary>
@@ -52,6 +50,11 @@ namespace Robust.Shared.GameObjects.Components
         public ContactEdge? ContactList { get; set; }
 
         public JointEdge? JointList { get; internal set; }
+
+        /// <summary>
+        ///     We need to keep track of which grids we are relevant to for collision.
+        /// </summary>
+        private List<GridId> _grids = new List<GridId>();
 
         /// <summary>
         ///     Angular velocity of this component in radians / second.
@@ -171,6 +174,14 @@ namespace Robust.Shared.GameObjects.Components
         public float AngularDamping { get; set; }
 
         /// <summary>
+        ///     Given we can intersect multiple grids we'll need a swept shape for each one.
+        /// </summary>
+        /// <remarks>
+        ///     It's also probably just easier to make this also double as our GridId storage.
+        /// </remarks>
+        private Dictionary<GridId, Sweep> _sweeps = new Dictionary<GridId, Sweep>();
+
+        /// <summary>
         ///     What type of body this, such as static or dynamic.
         ///     Readonly during callbacks.
         /// </summary>
@@ -283,6 +294,11 @@ namespace Robust.Shared.GameObjects.Components
             base.ExposeData(serializer);
         }
 
+        private PhysicsTransform GetTransform(IMapGrid grid)
+        {
+            throw new NotImplementedException();
+        }
+
         /// <summary>
         ///     Resets the mass of this component to the sum of the fixtures.
         ///     You don't normally need to call this unless you have directly edited this component's mass.
@@ -293,7 +309,7 @@ namespace Robust.Shared.GameObjects.Components
             _mass = 0f;
             InvMass = 0f;
             _inertia = 0f;
-            _invI = 0f;
+            InvI = 0f;
 
             if (BodyType == BodyType.Kinematic)
             {
@@ -302,7 +318,7 @@ namespace Robust.Shared.GameObjects.Components
                 throw new NotImplementedException();
                 Sweep.Center0 = Owner.Transform.WorldPosition;
                 Sweep.Center = Owner.Transform.WorldPosition;
-                Sweep.Angle0 = _sweep.A;
+                Sweep.Angle0 = _sweep.Angle;
                 return;
             }
 
@@ -316,8 +332,8 @@ namespace Robust.Shared.GameObjects.Components
 
                 var massData = fixture.Shape.MassData;
                 _mass += massData.Mass;
-                localCentre += massData.Mass * massData.Centroid;
-                _interia += massData.Inertia;
+                localCentre += massData.Centroid * massData.Mass;
+                _inertia += massData.Inertia;
             }
 
             // OG comment from farseer here.
@@ -325,14 +341,14 @@ namespace Robust.Shared.GameObjects.Components
             if (BodyType == BodyType.Static)
             {
                 throw new NotImplementedException()
-                _sweep.C0 = _sweep.C = _xf.p;
+                _sweep.Center0 = _sweep.Center = _xf.p;
                 return;
             }
 
             if (_mass > 0f)
             {
                 _invMass = 1f / _mass;
-                _localCentre *= _invMass;
+                _localCenter *= InvMass;
             }
             else
             {
@@ -364,23 +380,34 @@ namespace Robust.Shared.GameObjects.Components
             _linearVelocity += new Vector2(-_angularVelocity * a.Y, _angularVelocity * a.X);
         }
 
+        public void AddFixture(Fixture fixture)
+        {
+            // TODO: The rest of the fucking owl
+            fixture.Body = this;
+            throw new NotImplementedException();
+        }
+
         /// <summary>
          ///    Create all proxies.
          /// </summary>
         internal void CreateProxies()
         {
-            foreach (var broadPhase in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
+            foreach (var (broadPhase, grid) in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
             {
+                _grids.Add(grid.Index);
+                // Need to get our positions relative to the grid for each.
+                var transform = GetTransform(grid);
+
                 for (var i = 0; i < FixtureList.Count; i++)
                 {
-                    FixtureList[i].CreateProxies(broadPhase, ref this.PhysicsTransform);
+                    FixtureList[i].CreateProxies(broadPhase, transform);
                 }
             }
         }
 
         internal void DestroyProxies()
         {
-            foreach (var broadPhase in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
+            foreach (var (broadPhase, _) in EntitySystem.Get<SharedBroadphaseSystem>().GetBroadphases(this))
             {
                 for (var i = 0; i < FixtureList.Count; i++)
                 {
@@ -391,8 +418,13 @@ namespace Robust.Shared.GameObjects.Components
 
         internal void SynchronizeFixtures()
         {
-            Transform xf1 = new Transform(Vector2.Zero, _sweep.A0);
-            xf1.p = _sweep.C0 - Complex.Multiply(ref _sweep.LocalCenter, ref xf1.q);
+            // TODO: Go through each oldGrid and remove us or w/e
+            // Then go through each retained / new grid and update us with our relative positions
+            //
+            var oldGrids = IoCManager.Resolve<IMapManager>()
+
+            PhysicsTransform xf1 = new PhysicsTransform(Vector2.Zero, _sweep.A0);
+            xf1.Position = _sweep.C0 - Complex.Multiply(ref _sweep.LocalCenter, ref xf1.q);
 
             IBroadPhase broadPhase = World.ContactManager.BroadPhase;
             for (int i = 0; i < FixtureList.Count; i++)
@@ -414,9 +446,9 @@ namespace Robust.Shared.GameObjects.Components
     /// </summary>
     public sealed class PhysicsUpdateMessage : EntitySystemMessage
     {
-        public IPhysicsComponent Component { get; }
+        public PhysicsComponent Component { get; }
 
-        public PhysicsUpdateMessage(IPhysicsComponent component)
+        public PhysicsUpdateMessage(PhysicsComponent component)
         {
             Component = component;
         }

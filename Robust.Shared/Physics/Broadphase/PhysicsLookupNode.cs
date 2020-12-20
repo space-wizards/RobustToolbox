@@ -10,42 +10,9 @@ namespace Robust.Shared.Physics.Broadphase
 
         internal Vector2i Indices { get; }
 
-        internal IEnumerable<IPhysShape> PhysicsShapes
-        {
-            get
-            {
-                for (var i = 0; i < _entities.Count; i++)
-                {
-                    var comp = _entities[i];
-                    if (comp.Deleted)
-                        continue;
+        internal IReadOnlyCollection<FixtureProxy> Proxies => _proxies;
 
-                    for (var j = 0; j < comp.PhysicsShapes.Count; j++)
-                    {
-                        var shape = comp.PhysicsShapes[j];
-
-                        yield return shape;
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<IPhysBody> PhysicsComponents
-        {
-            get
-            {
-                for (var i = 0; i < _entities.Count; i++)
-                {
-                    var comp = _entities[i];
-                    if (comp.Deleted)
-                        continue;
-
-                    yield return comp;
-                }
-            }
-        }
-
-        private readonly List<IPhysBody> _entities = new List<IPhysBody>();
+        private readonly List<FixtureProxy> _proxies = new List<FixtureProxy>();
 
         internal PhysicsLookupNode(PhysicsLookupChunk parentChunk, Vector2i indices)
         {
@@ -53,16 +20,16 @@ namespace Robust.Shared.Physics.Broadphase
             Indices = indices;
         }
 
-        internal void AddPhysics(IPhysBody comp)
+        internal void AddProxy(FixtureProxy proxy)
         {
-            DebugTools.Assert(!_entities.Contains(comp));
-            _entities.Add(comp);
+            DebugTools.Assert(!_proxies.Contains(proxy));
+            _proxies.Add(proxy);
         }
 
-        internal void RemovePhysics(IPhysBody comp)
+        internal void RemoveProxy(FixtureProxy proxy)
         {
-            DebugTools.Assert(_entities.Contains(comp));
-            _entities.Remove(comp);
+            DebugTools.Assert(_proxies.Contains(proxy));
+            _proxies.Remove(proxy);
         }
     }
 }

@@ -51,7 +51,7 @@ namespace Content.Generators
                 var msg = "SolutionPathForGenerator-File was empty!";
                 context.ReportDiagnostic(
                     Diagnostic.Create(
-                        new DiagnosticDescriptor("RIC0000",
+                        new DiagnosticDescriptor("RIC0001",
                             msg,
                             msg, "MsBuild", DiagnosticSeverity.Error, true), Location.None));
                 return;
@@ -68,7 +68,7 @@ namespace Content.Generators
                     var msg = $"Could not expected project at dir: {path}.";
                     context.ReportDiagnostic(
                         Diagnostic.Create(
-                            new DiagnosticDescriptor("RIC0000",
+                            new DiagnosticDescriptor("RIC0002",
                                 msg,
                                 msg, "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
                     return false;
@@ -136,7 +136,7 @@ namespace Content.Generators
                 default:
                     context.ReportDiagnostic(
                         Diagnostic.Create(
-                            new DiagnosticDescriptor("RIC0000",
+                            new DiagnosticDescriptor("RIC0003",
                                 $"Unknown AssemblyName: {comp.AssemblyName}.",
                                 "", "MsBuild", DiagnosticSeverity.Warning, true), Location.None));
                     return;

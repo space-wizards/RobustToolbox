@@ -12,7 +12,7 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
-  <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(Configuration)\net5.0\Robust.Client.Injectors.dll" />
+  <UsingTask TaskName="CompileRobustXamlTask" AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(Configuration)\netstandard2.0\Robust.Client.Injectors.dll" />
   <Target Name="CompileRobustXaml" AfterTargets="AfterCompile">
     <PropertyGroup>
       <RobustXamlReferencesTemporaryFilePath Condition="'$(RobustXamlReferencesTemporaryFilePath)' == ''">$(IntermediateOutputPath)XAML/references</RobustXamlReferencesTemporaryFilePath>

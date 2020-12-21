@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Robust.Server.Interfaces;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
@@ -18,6 +19,9 @@ using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
+using HttpListener = ManagedHttpListener.HttpListener;
+using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -32,7 +36,6 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IBaseServer _baseServer = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandler> _handlers = new();
@@ -44,17 +47,16 @@ namespace Robust.Server.ServerStatus
 
         public Task ProcessRequestAsync(HttpListenerContext context)
         {
-            var response = context.Response;
-            var request = context.Request;
-            var method = new HttpMethod(request.HttpMethod);
+            var apiContext = (IStatusHandlerContext) new ContextImpl(context);
 
-            _httpSawmill.Info($"{method} {context.Request.Url?.PathAndQuery} from {request.RemoteEndPoint}");
+            _httpSawmill.Info(
+                $"{apiContext.RequestMethod} {apiContext.Url.PathAndQuery} from {apiContext.RemoteEndPoint}");
 
             try
             {
                 foreach (var handler in _handlers)
                 {
-                    if (handler(method, request, response))
+                    if (handler(apiContext))
                     {
                         return Task.CompletedTask;
                     }
@@ -62,11 +64,11 @@ namespace Robust.Server.ServerStatus
 
                 // No handler returned true, assume no handlers care about this.
                 // 404.
-                response.Respond(method, "Not Found", HttpStatusCode.NotFound);
+                apiContext.Respond("Not Found", HttpStatusCode.NotFound);
             }
             catch (Exception e)
             {
-                response.Respond(method, "Internal Server Error", HttpStatusCode.InternalServerError);
+                apiContext.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
                 _httpSawmill.Error($"Exception in StatusHost: {e}");
             }
 
@@ -194,6 +196,79 @@ namespace Robust.Server.ServerStatus
             [JsonProperty("download")] public string? Download;
             [JsonProperty("fork_id")] public string ForkId = default!;
             [JsonProperty("version")] public string Version = default!;
+        }
+
+        private sealed class ContextImpl : IStatusHandlerContext
+        {
+            private readonly HttpListenerContext _context;
+            public HttpMethod RequestMethod { get; }
+            public IPEndPoint RemoteEndPoint => _context.Request.RemoteEndPoint!;
+            public Uri Url => _context.Request.Url!;
+            public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
+            public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+            public ContextImpl(HttpListenerContext context)
+            {
+                _context = context;
+                RequestMethod = new HttpMethod(context.Request.HttpMethod!);
+
+                var headers = new Dictionary<string, StringValues>();
+                foreach (string? key in context.Request.Headers.Keys)
+                {
+                    if (key == null)
+                        continue;
+
+                    headers.Add(key, context.Request.Headers.GetValues(key));
+                }
+
+                RequestHeaders = headers;
+            }
+
+            [return: MaybeNull]
+            public T RequestBodyJson<T>()
+            {
+                using var streamReader = new StreamReader(_context.Request.InputStream, EncodingHelpers.UTF8);
+                using var jsonReader = new JsonTextReader(streamReader);
+
+                var serializer = new JsonSerializer();
+                return serializer.Deserialize<T>(jsonReader);
+            }
+
+            public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
+            {
+                Respond(text, (int) code, contentType);
+            }
+
+            public void Respond(string text, int code = 200, string contentType = "text/plain")
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+
+                if (RequestMethod == HttpMethod.Head)
+                {
+                    return;
+                }
+
+                using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                writer.Write(text);
+            }
+
+            public void RespondError(HttpStatusCode code)
+            {
+                Respond(code.ToString(), code);
+            }
+
+            public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
+            {
+                using var streamWriter = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                using var jsonWriter = new JsonTextWriter(streamWriter);
+
+                JsonSerializer.Serialize(jsonWriter, jsonData);
+
+                jsonWriter.Flush();
+            }
         }
     }
 }

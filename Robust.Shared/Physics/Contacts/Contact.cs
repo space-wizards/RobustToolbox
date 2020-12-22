@@ -2,6 +2,8 @@
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Shapes;
+using Robust.Shared.Physics.Solver;
 
 namespace Robust.Shared.Physics
 {
@@ -9,7 +11,7 @@ namespace Robust.Shared.Physics
     ///     Represents a contact between 2 shapes. Even if this exists it doesn't mean that their is an overlap as
     ///     it only represents the AABB overlapping.
     /// </summary>
-    public sealed class Contact
+    public class Contact
     {
         private ContactType _contactType;
 
@@ -30,8 +32,8 @@ namespace Robust.Shared.Physics
         /// </summary>
         public float _toi;
 
-        public Fixture FixtureA { get; set; }
-        public Fixture FixtureB { get; set; }
+        public Fixture? FixtureA { get; set; }
+        public Fixture? FixtureB { get; set; }
 
         /// <summary>
         ///     Friction of the contact.
@@ -43,8 +45,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public float Restitution { get; set; }
 
-        // TODO
-        public Manifold Manifold { get; } = default!;
+        public Manifold Manifold { get; set; }
 
         /// <summary>
         ///     Get / set desired tangent speed for conveyor belt behavior in m/s.
@@ -90,29 +91,39 @@ namespace Robust.Shared.Physics
 
         public void ResetRestitution()
         {
-            throw new NotImplementedException();
+            Restitution = PhysicsSettings.MixRestitution(FixtureA.Restitution, FixtureB.Restitution);
         }
 
         public void ResetFriction()
         {
-            throw new NotImplementedException();
+            Friction = PhysicsSettings.MixFriction(FixtureA.Friction, FixtureB.Friction);
         }
 
-        protected Contact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        protected Contact(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 
-        public void GetMapManifold(out Vector2 normal, out Vector2[] points)
+        // TODO: Probs delete coz never used
+        public void GetMapManifold(out Vector2 normal, out FixedArray2<Vector2> points)
         {
-            throw new NotImplementedException();
+            PhysicsComponent bodyA = FixtureA.Body;
+            PhysicsComponent bodyB = FixtureB.Body;
+            Shape shapeA = FixtureA.Shape;
+            Shape shapeB = FixtureB.Shape;
+
+            var aTransform = bodyA.GetTransform();
+            var bTransform = bodyB.GetTransform();
+            ContactSolver.WorldManifold.Initialize(Manifold, ref aTransform, shapeA.Radius, ref bTransform, shapeB.Radius, out normal, out points);
         }
 
-        private void Reset(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        private void Reset(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
         {
             Enabled = true;
             IsTouching = false;
-            // TODO: Flags
+            IslandFlag = false;
+            FilterFlag = false;
+            TOIFlag = false;
 
             FixtureA = fixtureA;
             FixtureB = fixtureB;
@@ -120,19 +131,38 @@ namespace Robust.Shared.Physics
             ChildIndexA = indexA;
             ChildIndexB = indexB;
 
-            Manifold.PointCount = 0;
+            Manifold = new Manifold
+            {
+                Points = Manifold.Points,
+                Type = Manifold.Type,
+                LocalNormal = Manifold.LocalNormal,
+                LocalPoint = Manifold.LocalPoint,
+                PointCount = 0,
+            };
 
             Next = null;
             Previous = null;
 
-            // TODO: Node stuff
+            _nodeA.Contact = null;
+            _nodeA.Other = null;
+            _nodeA.Next = null;
+            _nodeA.Prev = null;
 
-            throw new NotImplementedException();
+            _nodeB.Contact = null;
+            _nodeB.Other = null;
+            _nodeB.Next = null;
+            _nodeB.Prev = null;
 
+            _toiCount = 0;
+
+            //FPE: We only set the friction and restitution if we are not destroying the contact
             if (FixtureA != null && FixtureB != null)
             {
-
+                Friction = PhysicsSettings.MixFriction(FixtureA.Friction, FixtureB.Friction);
+                Restitution = PhysicsSettings.MixRestitution(FixtureA.Restitution, FixtureB.Restitution);
             }
+
+            TangentSpeed = 0;
         }
     }
 
@@ -141,22 +171,22 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Parent contact for this edge.
         /// </summary>
-        public Contact Contact { get; set; } = default!;
+        public Contact? Contact { get; set; } = default!;
 
         /// <summary>
         ///     Other body we're connected to.
         /// </summary>
-        public PhysicsComponent Other { get; set; } = default!;
+        public PhysicsComponent? Other { get; set; } = default!;
 
         /// <summary>
         ///     Next edge in our body's contact list.
         /// </summary>
-        public ContactEdge Next { get; set; } = default!;
+        public ContactEdge? Next { get; set; } = default!;
 
         /// <summary>
         ///     Previous edge in our body's contact list.
         /// </summary>
-        public ContactEdge Previous { get; set; } = default!;
+        public ContactEdge? Prev { get; set; } = default!;
 
         public ContactEdge() {}
 
@@ -165,7 +195,7 @@ namespace Robust.Shared.Physics
             Contact = contact;
             Other = other;
             Next = next;
-            Previous = previous;
+            Prev = previous;
         }
     }
 

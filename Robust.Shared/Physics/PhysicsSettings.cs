@@ -31,6 +31,11 @@ namespace Robust.Shared.Physics
         public static bool UseConvexHullPolygons = true;
 
         /// <summary>
+        /// The number of velocity iterations in the TOI solver
+        /// </summary>
+        public static int TOIVelocityIterations = VelocityIterations;
+
+        /// <summary>
         /// The number of position iterations in the TOI solver
         /// </summary>
         public static int TOIPositionIterations = 20;
@@ -80,7 +85,7 @@ namespace Robust.Shared.Physics
         /// A small angle used as a collision and constraint tolerance. Usually it is
         /// chosen to be numerically significant, but visually insignificant.
         /// </summary>
-        public const float AngularSlop = (2.0f / 180.0f * Constant.Pi);
+        public const float AngularSlop = (2.0f / 180.0f * MathF.PI);
 
         /// <summary>
         /// The radius of the polygon/edge shape skin. This should not be modified. Making
@@ -112,7 +117,7 @@ namespace Robust.Shared.Physics
         /// The maximum angular position correction used when solving constraints. This helps to
         /// prevent overshoot.
         /// </summary>
-        public const float MaxAngularCorrection = (8.0f / 180.0f * Constant.Pi);
+        public const float MaxAngularCorrection = (8.0f / 180.0f * MathF.PI);
 
         /// <summary>
         /// This scale factor controls how fast overlap is resolved. Ideally this would be 1 so

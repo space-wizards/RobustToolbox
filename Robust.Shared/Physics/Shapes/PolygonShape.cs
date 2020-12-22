@@ -287,18 +287,19 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="aabb">The aabb results.</param>
         /// <param name="transform">The world transform of the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
-        public override AABB ComputeAABB(PhysicsTransform transform, int childIndex)
+        public override Box2 ComputeAABB(PhysicsTransform transform, int childIndex)
         {
             // TODO: This is used by the fixture to put the proxies onto the broadphase
             // Ergo, we need to get our GRID-LOCAL AABB.
 
-            var aabb = new AABB();
+            var aabb = new Box2();
 
             // OPT: aabb.LowerBound = Transform.Multiply(Vertices[0], ref transform);
             var vert = Vertices[0];
-            aabb.LowerBound.X = (vert.X * transform.Quaternion.Real - vert.Y * transform.Quaternion.Imaginary) + transform.Position.X;
-            aabb.LowerBound.Y = (vert.Y * transform.Quaternion.Real + vert.X * transform.Quaternion.Imaginary) + transform.Position.Y;
-            aabb.UpperBound = aabb.LowerBound;
+            aabb.Left = (vert.X * transform.Quaternion.Real - vert.Y * transform.Quaternion.Imaginary) + transform.Position.X;
+            aabb.Bottom = (vert.Y * transform.Quaternion.Real + vert.X * transform.Quaternion.Imaginary) + transform.Position.Y;
+            aabb.Right = aabb.Left;
+            aabb.Top = aabb.Bottom;
 
             for (int i = 1; i < Vertices.Count; ++i)
             {
@@ -309,21 +310,21 @@ namespace Robust.Shared.Physics.Shapes
 
                 // OPT: Vector2.Min(ref aabb.LowerBound, ref v, out aabb.LowerBound);
                 // OPT: Vector2.Max(ref aabb.UpperBound, ref v, out aabb.UpperBound);
-                DebugTools.Assert(aabb.LowerBound.X <= aabb.UpperBound.X);
-                if (vX < aabb.LowerBound.X) aabb.LowerBound.X = vX;
-                else if (vX > aabb.UpperBound.X) aabb.UpperBound.X = vX;
-                DebugTools.Assert(aabb.LowerBound.Y <= aabb.UpperBound.Y);
-                if (vY < aabb.LowerBound.Y) aabb.LowerBound.Y = vY;
-                else if (vY > aabb.UpperBound.Y) aabb.UpperBound.Y = vY;
+                DebugTools.Assert(aabb.Left <= aabb.Right);
+                if (vX < aabb.Left) aabb.Left = vX;
+                else if (vX > aabb.Right) aabb.Right = vX;
+                DebugTools.Assert(aabb.Bottom <= aabb.Top);
+                if (vY < aabb.Bottom) aabb.Bottom = vY;
+                else if (vY > aabb.Top) aabb.Top = vY;
             }
 
             // OPT: Vector2 r = new Vector2(Radius, Radius);
             // OPT: aabb.LowerBound = aabb.LowerBound - r;
             // OPT: aabb.UpperBound = aabb.UpperBound + r;
-            aabb.LowerBound.X -= Radius;
-            aabb.LowerBound.Y -= Radius;
-            aabb.UpperBound.X += Radius;
-            aabb.UpperBound.Y += Radius;
+            aabb.Left -= Radius;
+            aabb.Bottom -= Radius;
+            aabb.Right += Radius;
+            aabb.Top += Radius;
             return aabb;
         }
 

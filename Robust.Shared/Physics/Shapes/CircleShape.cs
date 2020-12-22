@@ -2,6 +2,7 @@
 using System.Numerics;
 using System.Reflection.Metadata;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -101,18 +102,18 @@ namespace Robust.Shared.Physics.Shapes
         }
 
         // TODO: Anything World is giga sketchy when we need relative transforms
-        public override AABB ComputeAABB(PhysicsTransform transform, int childIndex)
+        public override Box2 ComputeAABB(PhysicsTransform physicsTransform, int childIndex)
         {
-            AABB aabb;
+            Box2 aabb = new Box2();
 
             // TODO: Optimise
-            var pX = (_position.X * transform.Quaternion.Real - _position.Y * transform.Quaternion.Imaginary) + transform.Position.X;
-            var pY = (_position.Y * transform.Quaternion.Real + _position.X * transform.Quaternion.Imaginary) + transform.Position.Y;
+            var pX = (_position.X * physicsTransform.Quaternion.Real - _position.Y * physicsTransform.Quaternion.Imaginary) + physicsTransform.Position.X;
+            var pY = (_position.Y * physicsTransform.Quaternion.Real + _position.X * physicsTransform.Quaternion.Imaginary) + physicsTransform.Position.Y;
 
-            aabb.LowerBound.X = pX - Radius;
-            aabb.LowerBound.Y = pY - Radius;
-            aabb.UpperBound.X = pX + Radius;
-            aabb.UpperBound.Y = pY + Radius;
+            aabb.Left = pX - Radius;
+            aabb.Bottom = pY - Radius;
+            aabb.Right = pX + Radius;
+            aabb.Top = pY + Radius;
             return aabb;
         }
 

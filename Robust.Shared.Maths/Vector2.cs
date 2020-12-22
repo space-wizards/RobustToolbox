@@ -254,6 +254,14 @@ namespace Robust.Shared.Maths
             return a.X * b.X + a.Y * b.Y;
         }
 
+        public static float Distance(Vector2 a, Vector2 b)
+        {
+            var x = a.X - b.X;
+            var y = a.Y - b.Y;
+
+            return MathF.Sqrt(x * x + y * y);
+        }
+
         /// <summary>
         ///     Perform the cross product on two vectors. In 2D this produces a scalar.
         /// </summary>
@@ -278,6 +286,24 @@ namespace Robust.Shared.Maths
         public static Vector2 Cross(float s, in Vector2 a)
         {
             return new Vector2(-s * a.Y, s * a.X);
+        }
+
+        // TODO: This looks like it modifies it on the original aether2d which is a what the fuck
+        public static float DistanceSquared(Vector2 a, Vector2 b)
+        {
+            var x = a.X - b.X;
+            var y = a.Y - b.Y;
+            return (x * x + y * y);
+        }
+
+        public static Vector2 Rot270(Vector2 a)
+        {
+            return new Vector2(a.Y, -a.X);
+        }
+
+        public static Vector2 Rot90(Vector2 a)
+        {
+            return new Vector2(-a.Y, a.X);
         }
 
         /// <summary>

@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Shapes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -34,6 +37,30 @@ namespace Robust.Shared.Physics
         ///     Our child shape.
         /// </summary>
         public Shape Shape { get; set; } = default!;
+
+        /// <summary>
+        /// Fires after two shapes has collided and are solved. This gives you a chance to get the impact force.
+        /// </summary>
+        public AfterCollisionEventHandler? AfterCollision;
+
+        /// <summary>
+        /// Fires when two fixtures are close to each other.
+        /// Due to how the broadphase works, this can be quite inaccurate as shapes are approximated using AABBs.
+        /// </summary>
+        public BeforeCollisionEventHandler? BeforeCollision;
+
+        /// <summary>
+        /// Fires when two shapes collide and a contact is created between them.
+        /// Note that the first fixture argument is always the fixture that the delegate is subscribed to.
+        /// </summary>
+        public OnCollisionEventHandler? OnCollision;
+
+        /// <summary>
+        /// Fires when two shapes separate and a contact is removed between them.
+        /// Note: This can in some cases be called multiple times, as a fixture can have multiple contacts.
+        /// Note The first fixture argument is always the fixture that the delegate is subscribed to.
+        /// </summary>
+        public OnSeparationEventHandler? OnSeparation;
 
         /// <summary>
         ///     Are we hard-collidable or just used for collision events.
@@ -118,30 +145,25 @@ namespace Robust.Shared.Physics
             while (edge != null)
             {
                 var contact = edge.Contact;
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
+                var fixtureA = contact?.FixtureA;
+                var fixtureB = contact?.FixtureB;
 
-                if (fixtureA == this || fixtureB == this)
+                if ((fixtureA == this || fixtureB == this) && contact != null)
                     contact.FilterFlag = true;
 
                 edge = edge.Next;
             }
 
             // Touch each proxy to create new pairs
-            var map = Body.PhysicsMap;
 
-            if (map == null)
-                return;
-
-            var broadPhase = map.ContactManager.Broadphase;
-            TouchProxies(broadPhase);
+            TouchProxies(IoCManager.Resolve<IBroadPhaseManager>());
         }
 
         /// <summary>
         ///     Touch each proxy to create new pairs AKA did we move.
         /// </summary>
         /// <param name="broadPhase"></param>
-        internal void TouchProxies(IBroadPhase broadPhase)
+        internal void TouchProxies(IBroadPhaseManager broadPhase)
         {
             for (var i = 0; i < ProxyCount; i++)
                 broadPhase.TouchProxy(Proxies[i]);
@@ -154,12 +176,14 @@ namespace Robust.Shared.Physics
         /// <returns></returns>
         public bool TestPoint(ref Vector2 point)
         {
-            return Shape.TestPoint(Body.PhysicsTransform, ref point);
+            var transform = Body.GetTransform();
+            return Shape.TestPoint(ref transform, ref point);
         }
 
         public bool RayCast(out RayCastOutput output, ref RayCastInput input, int childIndex)
         {
-            return Shape.RayCast(out output, ref input, ref Body.PhysicsTransform, childIndex);
+            var transform = Body.GetTransform();
+            return Shape.RayCast(out output, ref input, transform, childIndex);
         }
 
         /*
@@ -173,11 +197,11 @@ namespace Robust.Shared.Physics
          * Then when we move broadphase re-computes our grids intersecting and updates them all
          */
 
-        /// <summary>
-        ///     Add to broadphase
-        /// </summary>
-        internal void CreateProxies(IBroadPhase broadPhase, PhysicsTransform transform)
+        internal FixtureProxy[] CreateProxies(PhysicsTransform transform)
         {
+            // The original created them plus added them to broadphase which was clunky and not a good
+            // separation of responsibilities so this solely creates them and we'll handle broadphase
+            // elsewhere
             DebugTools.Assert(ProxyCount == 0);
 
             ProxyCount = Shape.ChildCount;
@@ -191,9 +215,10 @@ namespace Robust.Shared.Physics
                     AABB = Shape.ComputeAABB(transform, i),
                 };
 
-                broadPhase.AddProxy(proxy);
                 Proxies[i] = proxy;
             }
+
+            return Proxies;
         }
 
         /// <summary>

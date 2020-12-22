@@ -47,6 +47,11 @@
     <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
       <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
+    <Compile Remove="Physics\FilterData.cs" />
+    <Compile Remove="Physics\CollisionSolver.cs" />
+    <Compile Remove="Physics\VirtualController.cs" />
+    <Compile Remove="Physics\PhysicsManager.cs" />
+    <Compile Remove="GameObjects\Systems\SharedPhysicsSystem.cs" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

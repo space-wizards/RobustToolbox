@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Robust.Shared.Physics.Decomposition;
 
-namespace Robust.Shared.Physics
+namespace Robust.Shared.Physics.Decomposition
 {
     public enum TriangulationAlgorithm : byte
     {
@@ -117,13 +116,18 @@ namespace Robust.Shared.Physics
                     results = FlipcodeDecomposer.ConvexPartition(vertices);
                     break;
                 case TriangulationAlgorithm.Seidel:
-                    results = SeidelDecomposer.ConvexPartition(vertices, tolerance);
+                    // TODO: Lots of files for this too
+                    throw new NotImplementedException();
+                    // results = SeidelDecomposer.ConvexPartition(vertices, tolerance);
                     break;
                 case TriangulationAlgorithm.SeidelTrapezoids:
-                    results = SeidelDecomposer.ConvexPartitionTrapezoid(vertices, tolerance);
+                    throw new NotImplementedException();
+                    // results = SeidelDecomposer.ConvexPartitionTrapezoid(vertices, tolerance);
                     break;
                 case TriangulationAlgorithm.Delauny:
-                    results = CDTDecomposer.ConvexPartition(vertices);
+                    // TODO: I left out the CDTDecomposer as it has a LOT of files.
+                    throw new NotImplementedException();
+                    //results = CDTDecomposer.ConvexPartition(vertices);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("algorithm");

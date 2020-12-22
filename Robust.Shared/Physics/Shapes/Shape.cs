@@ -110,9 +110,9 @@ namespace Robust.Shared.Physics.Shapes
         /// <summary>
         /// Given a transform, compute the associated axis aligned bounding box for a child shape.
         /// </summary>
-        /// <param name="transform">The world transform of the shape.</param>
+        /// <param name="physicsTransform">The world transform of the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
-        public abstract Box2 ComputeAABB(PhysicsTransform transform, int childIndex);
+        public abstract Box2 ComputeAABB(PhysicsTransform physicsTransform, int childIndex);
 
         /// <summary>
         /// Compute the mass properties of this shape using its dimensions and density.

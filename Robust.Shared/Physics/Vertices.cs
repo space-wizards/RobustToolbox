@@ -7,7 +7,7 @@ using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics
 {
-    public sealed class Vertices : List<Vector2>
+    public class Vertices : List<Vector2>
     {
         internal Vertices() { }
 
@@ -24,7 +24,7 @@ namespace Robust.Shared.Physics
         /// You can add holes to this collection.
         /// It will get respected by some of the triangulation algorithms, but otherwise not used.
         /// </summary>
-        public List<Vertices> Holes { get; set; }
+        public List<Vertices> Holes { get; set; } = default!;
 
         /// <summary>
         /// Gets the next index. Used for iterating all the edges with wrap-around.
@@ -136,9 +136,9 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Returns an AABB that fully contains this polygon.
         /// </summary>
-        internal AABB GetAABB()
+        internal Box2 GetAABB()
         {
-            AABB aabb;
+            var aabb = new Box2();
             Vector2 lowerBound = new Vector2(float.MaxValue, float.MaxValue);
             Vector2 upperBound = new Vector2(float.MinValue, float.MinValue);
 
@@ -163,8 +163,10 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            aabb.LowerBound = lowerBound;
-            aabb.UpperBound = upperBound;
+            aabb.Left = lowerBound.X;
+            aabb.Bottom = lowerBound.Y;
+            aabb.Right = upperBound.X;
+            aabb.Top = upperBound.Y;
 
             return aabb;
         }
@@ -364,13 +366,13 @@ namespace Robust.Shared.Physics
         /// <returns>PolygonError.NoError if there were no error.</returns>
         public PolygonError CheckPolygon()
         {
-            if (Count < 3 || Count > Settings.MaxPolygonVertices)
+            if (Count < 3 || Count > PhysicsSettings.MaxPolygonVertices)
                 return PolygonError.InvalidAmountOfVertices;
 
             if (!IsSimple())
                 return PolygonError.NotSimple;
 
-            if (GetArea() <= Settings.Epsilon)
+            if (GetArea() <= float.Epsilon)
                 return PolygonError.AreaTooSmall;
 
             if (!IsConvex())
@@ -381,7 +383,7 @@ namespace Robust.Shared.Physics
             {
                 int next = i + 1 < Count ? i + 1 : 0;
                 Vector2 edge = this[next] - this[i];
-                if (edge.LengthSquared() <= Settings.Epsilon*Settings.Epsilon)
+                if (edge.LengthSquared <= float.Epsilon * float.Epsilon)
                 {
                     return PolygonError.SideTooSmall;
                 }
@@ -445,7 +447,7 @@ namespace Robust.Shared.Physics
 
                 // Test if a point is directly on the edge
                 Vector2 edge = p2 - p1;
-                float area = MathUtils.Area(ref p1, ref p2, ref point);
+                float area = PhysicsMath.Area(ref p1, ref p2, ref point);
                 if (area == 0f && Vector2.Dot(point - p1, edge) >= 0f && Vector2.Dot(point - p2, edge) <= 0f)
                 {
                     return 0;
@@ -485,7 +487,7 @@ namespace Robust.Shared.Physics
                 Vector2 p1 = this[i] - point;
                 Vector2 p2 = this[NextIndex(i)] - point;
 
-                angle += MathUtils.VectorAngle(ref p1, ref p2);
+                angle += PhysicsMath.VectorAngle(ref p1, ref p2);
             }
 
             if (Math.Abs(angle) < Math.PI)
@@ -495,31 +497,6 @@ namespace Robust.Shared.Physics
 
             return true;
         }
-
-#if XNAAPI
-        /// <summary>
-        /// Transforms the polygon using the defined matrix.
-        /// </summary>
-        /// <param name="transform">The matrix to use as transformation.</param>
-        public void Transform(ref Matrix transform)
-        {
-            // Transform main polygon
-            for (int i = 0; i < Count; i++)
-                this[i] = Vector2.Transform(this[i], transform);
-
-            // Transform holes
-            if (Holes != null && Holes.Count > 0)
-            {
-                for (int i = 0; i < Holes.Count; i++)
-                {
-                    Vector2[] temp = Holes[i].ToArray();
-                    Vector2.Transform(temp, ref transform, temp);
-
-                    Holes[i] = new Vertices(temp);
-                }
-            }
-        }
-#endif
 
         public override string ToString()
         {
@@ -536,7 +513,7 @@ namespace Robust.Shared.Physics
         }
     }
 
-    internal enum PolygonError : byte
+    public enum PolygonError : byte
     {
         /// <summary>
         ///     There were no errors in the polygon

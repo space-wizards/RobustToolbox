@@ -8,7 +8,7 @@ namespace Robust.Shared.Physics
     internal interface IBroadPhase
     {
         // Rolled SetProxy into AddProxy
-        void UpdatePairs(PhysicsMapCallback.BroadphaseDelegate callback);
+        void UpdatePairs(BroadphaseDelegate callback);
 
         bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB);
 
@@ -21,12 +21,10 @@ namespace Robust.Shared.Physics
         // TODO: What de fak does this do
         void TouchProxy(FixtureProxy proxy);
 
-        void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
+        bool Contains(FixtureProxy proxy);
 
-        void RayCast(BroadPhaseRayCastCallback callback, ref RayCastInput input);
+        // TODO: Query and Raycast
     }
-
-    public delegate bool BroadPhaseQueryCallback(int proxyId);
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 

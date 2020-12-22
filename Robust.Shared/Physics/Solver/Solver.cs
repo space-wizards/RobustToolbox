@@ -17,6 +17,7 @@ namespace Robust.Shared.Physics.Solver
 
     internal struct SolverData
     {
+        internal PhysicsStep Step;
         internal SolverPosition[] Positions;
         internal SolverVelocity[] Velocities;
     }

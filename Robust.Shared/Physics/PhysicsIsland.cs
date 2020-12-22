@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Joints;
 using Robust.Shared.Physics.Solver;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
-    internal sealed class PhysicsIsland
+    public sealed class PhysicsIsland
     {
         /*
          * Sloth notes:
@@ -17,12 +18,15 @@ namespace Robust.Shared.Physics
          * issues with velocity differences between entities on shuttles and whatnot but I guess we'll see how we go.
          */
 
-        private IContactManager _contactManager = default!;
+        private ContactManager? _contactManager = default!;
 
         private ContactSolver _contactSolver = new ContactSolver();
 
         private Contact[] _contacts = {};
         private Joint[] _joints = {};
+
+        private const float LinTolSqr = PhysicsSettings.LinearSleepTolerance * PhysicsSettings.LinearSleepTolerance;
+        private const float AngTolSqr = PhysicsSettings.AngularSleepTolerance * PhysicsSettings.AngularSleepTolerance;
 
         internal PhysicsComponent[] Bodies { get; set; } = Array.Empty<PhysicsComponent>();
 
@@ -37,6 +41,8 @@ namespace Robust.Shared.Physics
         internal int BodyCapacity { get; set; }
         internal int ContactCapacity { get; set; }
         internal int JointCapacity { get; set; }
+
+        public TimeSpan JointUpdateTime;
 
         private const int GrowSize = 32;
 
@@ -66,17 +72,15 @@ namespace Robust.Shared.Physics
             JointCount = 0;
         }
 
-        internal void Reset(int bodyCapacity, int contactCapacity, int jointsCapacity, IContactManager contactManager)
+        internal void Reset(int bodyCapacity, int contactCapacity, int jointsCapacity, ContactManager contactManager)
         {
+            _contactManager = contactManager;
             BodyCapacity = bodyCapacity;
             ContactCapacity = contactCapacity;
             JointCapacity = jointsCapacity;
             BodyCount = 0;
             ContactCount = 0;
             JointCount = 0;
-
-            // TODO: Make this a dependency instead?
-            _contactManager = contactManager;
 
             if (Bodies.Length < bodyCapacity)
             {
@@ -118,12 +122,13 @@ namespace Robust.Shared.Physics
             // So I'll need to change a bunch of internal shit for that (RIP me).
             // Broadphase will probably be the only area we need to change it I HOPE.
             // TODO: Maybe add a method called "GridAABB" on transform we can call?
+            var h = step.DeltaTime;
 
             // Integrate velocities and apply damping. Initialize the body state.
             for (var i = 0; i < BodyCount; ++i)
             {
                 PhysicsComponent b = Bodies[i];
-                var sweep = b.Sweeps[GridId];
+                var sweep = b.Sweep;
 
                 // TODO: Need to suss out where relative velocity done because if the shuttle's travelling at high speeds
                 // we don't want collisions to be fucked.
@@ -142,8 +147,8 @@ namespace Robust.Shared.Physics
                     // Integrate velocities.
 
                     // FPE: Only apply gravity if the body wants it.
-                    v += (b.Force * b.InvMass) * step.DeltaTime;
-                    w += b.InvI * b.Torque * step.DeltaTime;
+                    v += (b.Force * b.InvMass) * h;
+                    w += b.InvI * b.Torque * h;
 
                     // Apply damping.
                     // ODE: dv/dt + c * v = 0
@@ -152,8 +157,8 @@ namespace Robust.Shared.Physics
                     // v2 = exp(-c * dt) * v1
                     // Taylor expansion:
                     // v2 = (1.0f - c * dt) * v1
-                    v *=  Math.Clamp(1.0f - step.DeltaTime * b.LinearDamping, 0.0f, 1.0f);
-                    w *= Math.Clamp(1.0f - step.DeltaTime * b.AngularDamping, 0.0f, 1.0f);
+                    v *=  Math.Clamp(1.0f - h * b.LinearDamping, 0.0f, 1.0f);
+                    w *= Math.Clamp(1.0f - h * b.AngularDamping, 0.0f, 1.0f);
                 }
 
                 _positions[i].Center = c;
@@ -162,12 +167,14 @@ namespace Robust.Shared.Physics
                 _velocities[i].AngularVelocity = w;
             }
 
-            var solverData = new SolverData();
-            solverData.Positions = _positions;
-            solverData.Velocities = _velocities;
+            var solverData = new SolverData
+            {
+                Positions = _positions,
+                Velocities = _velocities
+            };
 
             // TODO: Up to warmstarting
-            _contactSolver.Reset();
+            _contactSolver.Reset(ref step, ContactCount, _contacts, _positions, _velocities);
             _contactSolver.InitializeVelocityConstraints();
 
             if (step.WarmStarting)
@@ -178,7 +185,253 @@ namespace Robust.Shared.Physics
             for (var i = 0; i < JointCount; i++)
             {
                 if (_joints[i].Enabled)
-                    _joints[i].InitVelocityConstraints(solverData);
+                    _joints[i].InitVelocityConstraints(ref solverData);
+            }
+
+            // Solve velocity constraints.
+            for (int i = 0; i < step.VelocityIterations; ++i)
+            {
+                for (int j = 0; j < JointCount; ++j)
+                {
+                    Joint joint = _joints[j];
+
+                    if (!joint.Enabled)
+                        continue;
+
+                    joint.SolveVelocityConstraints(ref solverData);
+                    joint.Validate(step.InvDt);
+                }
+
+                _contactSolver.SolveVelocityConstraints();
+            }
+
+            // Store impulses for warm starting.
+            _contactSolver.StoreImpulses();
+
+            // Integrate positions
+            for (int i = 0; i < BodyCount; ++i)
+            {
+                Vector2 c = _positions[i].Center;
+                float a = _positions[i].Angle;
+                Vector2 v = _velocities[i].LinearVelocity;
+                float w = _velocities[i].AngularVelocity;
+
+                // Check for large velocities
+                Vector2 translation = v * h;
+                if (Vector2.Dot(translation, translation) > PhysicsSettings.MaxTranslationSquared)
+                {
+                    float ratio = PhysicsSettings.MaxTranslation / translation.Length;
+                    v *= ratio;
+                }
+
+                float rotation = h * w;
+                if (rotation * rotation > PhysicsSettings.MaxRotationSquared)
+                {
+                    float ratio = PhysicsSettings.MaxRotation / Math.Abs(rotation);
+                    w *= ratio;
+                }
+
+                // Integrate
+                c += v * h;
+                a += h * w;
+
+                _positions[i].Center = c;
+                _positions[i].Angle = a;
+                _velocities[i].LinearVelocity = v;
+                _velocities[i].AngularVelocity = w;
+            }
+
+            // TODO: I Should probably enable some kind of perf stuff back onto physics
+
+            // Solve position constraints
+            bool positionSolved = false;
+            for (int i = 0; i < step.PositionIterations; ++i)
+            {
+                bool contactsOkay = _contactSolver.SolvePositionConstraints();
+
+                bool jointsOkay = true;
+                for (int j = 0; j < JointCount; ++j)
+                {
+                    Joint joint = _joints[j];
+
+                    if (!joint.Enabled)
+                        continue;
+
+                    bool jointOkay = joint.SolvePositionConstraints(ref solverData);
+
+                    jointsOkay = jointsOkay && jointOkay;
+                }
+
+                if (contactsOkay && jointsOkay)
+                {
+                    // Exit early if the position errors are small.
+                    positionSolved = true;
+                    break;
+                }
+            }
+
+            // Copy state buffers back to the bodies
+            for (int i = 0; i < BodyCount; ++i)
+            {
+                PhysicsComponent body = Bodies[i];
+                body.Sweep.Center = _positions[i].Center;
+                body.Sweep.Angle = _positions[i].Angle;
+                body.LinearVelocity = _velocities[i].LinearVelocity;
+                body.AngularVelocity = _velocities[i].AngularVelocity;
+                body.SynchronizeTransform();
+            }
+
+            Report(_contactSolver._velocityConstraints);
+
+            if (PhysicsSettings.AllowSleep)
+            {
+                float minSleepTime = float.MaxValue;
+
+                for (int i = 0; i < BodyCount; ++i)
+                {
+                    PhysicsComponent b = Bodies[i];
+
+                    if (b.BodyType == BodyType.Static)
+                        continue;
+
+                    if (!b.SleepingAllowed ||
+                        b.AngularVelocity * b.AngularVelocity > AngTolSqr ||
+                        Vector2.Dot(b.LinearVelocity, b.LinearVelocity) > LinTolSqr)
+                    {
+                        b.SleepTime = 0.0f;
+                        minSleepTime = 0.0f;
+                    }
+                    else
+                    {
+                        b.SleepTime += h;
+                        minSleepTime = Math.Min(minSleepTime, b.SleepTime);
+                    }
+                }
+
+                if (minSleepTime >= PhysicsSettings.TimeToSleep && positionSolved)
+                {
+                    for (int i = 0; i < BodyCount; ++i)
+                    {
+                        PhysicsComponent b = Bodies[i];
+                        b.Awake = false;
+                    }
+                }
+            }
+        }
+
+        internal void SolveTOI(ref PhysicsStep subStep, int toiIndexA, int toiIndexB)
+        {
+            DebugTools.Assert(toiIndexA < BodyCount);
+            DebugTools.Assert(toiIndexB < BodyCount);
+
+            // Initialize the body state.
+            for (int i = 0; i < BodyCount; ++i)
+            {
+                PhysicsComponent b = Bodies[i];
+                _positions[i].Center = b.Sweep.Center;
+                _positions[i].Angle = b.Sweep.Angle;
+                _velocities[i].LinearVelocity = b.LinearVelocity;
+                _velocities[i].AngularVelocity = b.AngularVelocity;
+            }
+
+            _contactSolver.Reset(ref subStep, ContactCount, _contacts, _positions, _velocities);
+
+            // Solve position constraints.
+            for (int i = 0; i < subStep.PositionIterations; ++i)
+            {
+                bool contactsOkay = _contactSolver.SolveTOIPositionConstraints(toiIndexA, toiIndexB);
+                if (contactsOkay)
+                {
+                    break;
+                }
+            }
+
+            // Leap of faith to new safe state.
+            Bodies[toiIndexA].Sweep.Center0 = _positions[toiIndexA].Center;
+            Bodies[toiIndexA].Sweep.Angle0 = _positions[toiIndexA].Angle;
+            Bodies[toiIndexB].Sweep.Center0 = _positions[toiIndexB].Center;
+            Bodies[toiIndexB].Sweep.Angle0 = _positions[toiIndexB].Angle;
+
+            // No warm starting is needed for TOI events because warm
+            // starting impulses were applied in the discrete solver.
+            _contactSolver.InitializeVelocityConstraints();
+
+            // Solve velocity constraints.
+            for (int i = 0; i < subStep.VelocityIterations; ++i)
+            {
+                _contactSolver.SolveVelocityConstraints();
+            }
+
+            // Don't store the TOI contact forces for warm starting
+            // because they can be quite large.
+
+            float h = subStep.DeltaTime;
+
+            // Integrate positions.
+            for (int i = 0; i < BodyCount; ++i)
+            {
+                Vector2 c = _positions[i].Center;
+                float a = _positions[i].Angle;
+                Vector2 v = _velocities[i].LinearVelocity;
+                float w = _velocities[i].AngularVelocity;
+
+                // Check for large velocities
+                Vector2 translation = v * h;
+                if (Vector2.Dot(translation, translation) > PhysicsSettings.MaxTranslationSquared)
+                {
+                    float ratio = PhysicsSettings.MaxTranslation / translation.Length;
+                    v *= ratio;
+                }
+
+                float rotation = h * w;
+                if (rotation * rotation > PhysicsSettings.MaxRotationSquared)
+                {
+                    float ratio = PhysicsSettings.MaxRotation / Math.Abs(rotation);
+                    w *= ratio;
+                }
+
+                // Integrate
+                c += v * h;
+                a += h * w;
+
+                _positions[i].Center = c;
+                _positions[i].Angle = a;
+                _velocities[i].LinearVelocity = v;
+                _velocities[i].AngularVelocity = w;
+
+                // Sync bodies
+                PhysicsComponent body = Bodies[i];
+                body.Sweep.Center = c;
+                body.Sweep.Angle = a;
+                body.LinearVelocity = v;
+                body.AngularVelocity = w;
+                body.SynchronizeTransform();
+            }
+
+            Report(_contactSolver._velocityConstraints);
+        }
+
+        private void Report(ContactVelocityConstraint[] constraints)
+        {
+            if (_contactManager == null)
+                return;
+
+            for (int i = 0; i < ContactCount; ++i)
+            {
+                Contact c = _contacts[i];
+
+                //FPE optimization: We don't store the impulses and send it to the delegate. We just send the whole contact.
+                //FPE feature: added after collision
+                if (c.FixtureA?.AfterCollision != null)
+                    c.FixtureA.AfterCollision(c.FixtureA, c.FixtureB, c, constraints[i]);
+
+                if (c.FixtureB?.AfterCollision != null)
+                    c.FixtureB.AfterCollision(c.FixtureB, c.FixtureA, c, constraints[i]);
+
+                if (_contactManager.PostSolve != null)
+                {
+                    _contactManager.PostSolve(c, constraints[i]);
+                }
             }
         }
     }

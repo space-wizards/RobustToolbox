@@ -17,11 +17,16 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\Robust.Client.Injectors.csproj" ReferenceOutputAssembly="false"/>
   </ItemGroup>
 
-  <UsingTask 
-    Condition="'$(_RobustUseExternalMSBuild)' != 'true'"
-    TaskName="CompileRobustXamlTask" 
+  <UsingTask
+    Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
+    TaskName="CompileRobustXamlTask"
     AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Client.Injectors\bin\$(Configuration)\netstandard2.0\Robust.Client.Injectors.dll"/>
-  <Target Name="CompileRobustXaml" AfterTargets="AfterCompile">
+  <Target
+    Name="CompileRobustXaml"
+    Condition="Exists('@(IntermediateAssembly)')"
+    AfterTargets="AfterCompile"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
+    Outputs="$(IntermediateOutputPath)XAML/doot">
     <PropertyGroup>
       <RobustXamlReferencesTemporaryFilePath Condition="'$(RobustXamlReferencesTemporaryFilePath)' == ''">$(IntermediateOutputPath)XAML/references</RobustXamlReferencesTemporaryFilePath>
       <RobustXamlOriginalCopyFilePath Condition="'$(RobustXamlOriginalCopyFilePath)' == ''">$(IntermediateOutputPath)XAML/original.dll</RobustXamlOriginalCopyFilePath>
@@ -32,6 +37,11 @@
       Lines="@(ReferencePathWithRefAssemblies)"
       Overwrite="true"/>
 
+    <!--
+    UpdateBuildIndicator is done so that we can use MSBuild Inputs and Outputs on the target
+    to avoid unecessary execution of this target
+    Saves compile time if e.g. ONLY Robust.Client changes (Content.Client doesn't have to re-xaml).
+    -->
     <CompileRobustXamlTask
       Condition="'$(_RobustUseExternalMSBuild)' != 'true'"
       AssemblyFile="@(IntermediateAssembly)"
@@ -40,7 +50,8 @@
       ProjectDirectory="$(MSBuildProjectDirectory)"
       AssemblyOriginatorKeyFile="$(AssemblyOriginatorKeyFile)"
       SignAssembly="$(SignAssembly)"
-      DelaySign="$(DelaySign)"/>
+      DelaySign="$(DelaySign)"
+      UpdateBuildIndicator="$(IntermediateOutputPath)XAML/doot"/>
 
     <Exec
       Condition="'$(_RobustUseExternalMSBuild)' == 'true'"

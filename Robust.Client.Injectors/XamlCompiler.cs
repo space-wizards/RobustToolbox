@@ -31,6 +31,16 @@ namespace Robust.Build.Tasks
 
             var asm = typeSystem.TargetAssemblyDefinition;
 
+            if (asm.MainModule.GetType("CompiledRobustXaml", "XamlIlContext") != null)
+            {
+                // If this type exists, the assembly has already been processed by us.
+                // Do not run again, it would corrupt the file.
+                // This *shouldn't* be possible due to Inputs/Outputs dependencies in the build system,
+                // but better safe than sorry eh?
+                engine.LogWarningEvent(new BuildWarningEventArgs("XAMLIL", "", "", 0, 0, 0, 0, "Ran twice on same assembly file; ignoring.", "", ""));
+                return (true, false);
+            }
+
             var compileRes = CompileCore(engine, typeSystem);
             if (compileRes == null)
                 return (true, false);

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -48,6 +49,19 @@ namespace Robust.Build.Tasks
                 if(File.Exists(inputPdb))
                     File.Copy(inputPdb, outputPdb, true);
             }
+
+            if (!string.IsNullOrEmpty(UpdateBuildIndicator))
+            {
+                if (!File.Exists(UpdateBuildIndicator))
+                {
+                    File.Create(UpdateBuildIndicator).Dispose();
+                }
+                else
+                {
+                    File.SetLastWriteTime(UpdateBuildIndicator, DateTime.Now);
+                }
+            }
+
             return true;
         }
 
@@ -64,6 +78,7 @@ namespace Robust.Build.Tasks
         public string OriginalCopyPath { get; set; }
 
         public string OutputPath { get; set; }
+        public string UpdateBuildIndicator { get; set; }
 
         public string AssemblyOriginatorKeyFile { get; set; }
         public bool SignAssembly { get; set; }

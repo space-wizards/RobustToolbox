@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Contacts;
 
@@ -89,7 +90,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public PreSolveDelegate? PreSolve;
 
-        private SharedBroadPhaseSystem _broadPhase = default!;
+        [Dependency] private IBroadPhaseManager _broadPhase = default!;
 
         internal ContactManager()
         {
@@ -98,7 +99,6 @@ namespace Robust.Shared.Physics
             _contactPoolList = new ContactListHead();
 
             OnBroadphaseCollision = AddPair;
-            _broadPhase = Get<SharedBroadPhaseSystem>();
         }
 
         // Broad-phase callback.
@@ -227,9 +227,9 @@ namespace Robust.Shared.Physics
             }
         }
 
-        internal void FindNewContacts()
+        internal void FindNewContacts(MapId mapId)
         {
-            _broadPhase.UpdatePairs(OnBroadphaseCollision);
+            _broadPhase.UpdatePairs(mapId, OnBroadphaseCollision);
         }
 
         internal void Destroy(Contact contact)
@@ -326,7 +326,7 @@ namespace Robust.Shared.Physics
                 PhysicsComponent bodyA = fixtureA.Body;
                 PhysicsComponent bodyB = fixtureB.Body;
 
-                //Do no try to collide disabled bodies
+                // Do no try to collide disabled bodies
                 if (!bodyA.Enabled || !bodyB.Enabled)
                 {
                     // TODO: Do we need this with USE_ACTIVE_CONTACT_SET? c = c.Next;
@@ -340,7 +340,7 @@ namespace Robust.Shared.Physics
                     if (bodyB.ShouldCollide(bodyA) == false)
                     {
                         Contact cNuke = c;
-                        c = c.Next;
+                        // c = c.Next;
                         Destroy(cNuke);
                         continue;
                     }
@@ -349,7 +349,7 @@ namespace Robust.Shared.Physics
                     if (ShouldCollide(fixtureA, fixtureB) == false)
                     {
                         Contact cNuke = c;
-                        c = c.Next;
+                        // c = c.Next;
                         Destroy(cNuke);
                         continue;
                     }
@@ -358,7 +358,7 @@ namespace Robust.Shared.Physics
                     if (ContactFilter != null && ContactFilter(fixtureA, fixtureB) == false)
                     {
                         Contact cNuke = c;
-                        c = c.Next;
+                        // c = c.Next;
                         Destroy(cNuke);
                         continue;
                     }
@@ -384,11 +384,11 @@ namespace Robust.Shared.Physics
                 bool overlap = _broadPhase.TestOverlap(proxyA, proxyB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
-                if (overlap == false)
+                if (!overlap)
                 {
                     Contact cNuke = c;
                     Debug.Assert(c.Next != null);
-                    c = c.Next;
+                    //c = c.Next;
                     Destroy(cNuke);
                     continue;
                 }
@@ -397,7 +397,7 @@ namespace Robust.Shared.Physics
                 c.Update(this);
 
                 Debug.Assert(c.Next != null);
-                c = c.Next;
+                // c = c.Next;
             }
 
 			ActiveList.Clear();

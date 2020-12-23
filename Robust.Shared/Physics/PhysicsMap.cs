@@ -315,7 +315,7 @@ namespace Robust.Shared.Physics
             IslandSet.Clear();
 
             // Look for new contacts.
-            ContactManager.FindNewContacts();
+            ContactManager.FindNewContacts(MapId);
 
             AwakeBodyList.Clear();
         }
@@ -660,7 +660,7 @@ namespace Robust.Shared.Physics
 
                 // Commit fixture proxy movements to the broad-phase so that new contacts are created.
                 // Also, some contacts can be destroyed.
-                ContactManager.FindNewContacts();
+                ContactManager.FindNewContacts(MapId);
 
                 if (_subStepping)
                 {
@@ -674,12 +674,7 @@ namespace Robust.Shared.Physics
         }
 
         #region Body
-        /// <summary>
-        /// Add a rigid body.
-        /// Warning: This method is locked during callbacks.
-        /// </summary>
-        /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
-        public virtual void Add(PhysicsComponent body)
+        public void Add(PhysicsComponent body)
         {
             if (body.PhysicsMap == this)
                 throw new ArgumentException("You are adding the same body more than once.", "body");
@@ -712,16 +707,9 @@ namespace Robust.Shared.Physics
                 body.CreateProxies();
             }
 
-            ContactManager.FindNewContacts();
+            ContactManager.FindNewContacts(MapId);
         }
 
-        /// <summary>
-        /// Destroy a rigid body.
-        /// Warning: This automatically deletes all associated shapes and joints.
-        /// Warning: This method is locked during callbacks.
-        /// </summary>
-        /// <param name="body">The body.</param>
-        /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
         public virtual void Remove(PhysicsComponent body)
         {
             if (body.PhysicsMap != this)
@@ -970,7 +958,7 @@ namespace Robust.Shared.Physics
             // If new fixtures were added, we need to find the new contacts.
             if (_worldHasNewFixture)
             {
-                ContactManager.FindNewContacts();
+                ContactManager.FindNewContacts(MapId);
                 _worldHasNewFixture = false;
             }
 
@@ -987,9 +975,13 @@ namespace Robust.Shared.Physics
             try
             {
                 // Update controllers
-                foreach (var controller in EntitySystem.Get<SharedPhysicsSystem>().GetControllers(this))
+                // Modified from Aether2D where it uses system-wide controllers
+                foreach (var body in AwakeBodySet)
                 {
-                    controller.Update(dt);
+                    foreach (var controller in body.Controllers)
+                    {
+                        controller.Update(dt);
+                    }
                 }
 
                 // Update contacts. This is where some contacts are destroyed.

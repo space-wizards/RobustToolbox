@@ -40,14 +40,6 @@ namespace Robust.Shared.Physics
 
     public delegate void PostSolveDelegate(Contact contact, ContactVelocityConstraint impulse);
 
-    public delegate void FixtureDelegate(PhysicsMap sender, PhysicsComponent body, Fixture fixture);
-
-    public delegate void JointDelegate(PhysicsMap sender, Joint joint);
-
-    public delegate void BodyDelegate(PhysicsMap sender, PhysicsComponent body);
-
-    public delegate void ControllerDelegate(PhysicsMap sender, AetherController controller);
-
     public delegate bool CollisionFilterDelegate(Fixture fixtureA, Fixture fixtureB);
 
     public delegate void BroadphaseDelegate(FixtureProxy proxyA, FixtureProxy proxyB);

@@ -76,7 +76,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
-        
+
         [ViewVariables]
         public bool Paused { get; set; }
 
@@ -152,7 +152,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 
@@ -191,7 +191,7 @@ namespace Robust.Shared.GameObjects
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
-                    IPhysicsComponent _ => 1,
+                    IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
 

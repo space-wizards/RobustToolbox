@@ -374,7 +374,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (entity.TryGetComponent(out IPhysicsComponent? body))
+                if (entity.TryGetComponent(out IPhysBody? body))
                 {
                     if (body.LinearVelocity.EqualsApprox(Vector2.Zero, MinimumMotionForMovers))
                     {
@@ -541,7 +541,7 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (!entity.TryGetComponent(out IPhysicsComponent? body))
+                if (!entity.TryGetComponent(out IPhysBody? body))
                 {
                     // can't be a mover w/o physics
                     continue;
@@ -795,7 +795,7 @@ namespace Robust.Server.GameObjects
                     {
                         addToMovers = true;
                     }
-                    else if (entity.TryGetComponent(out IPhysicsComponent? physics)
+                    else if (entity.TryGetComponent(out IPhysBody? physics)
                              && physics.LastModifiedTick >= currentTick)
                     {
                         addToMovers = true;

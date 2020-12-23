@@ -1,11 +1,15 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Timing;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 
 namespace Robust.Shared.Physics
 {
     public class SharedPhysicsSystem : EntitySystem
     {
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+
         // World / PhysicsMap was heavily modified to make a lot of stuff not map specific so some of it was dumped here
         private Dictionary<MapId, List<AetherController>>
             _controllers = new Dictionary<MapId, List<AetherController>>();
@@ -14,48 +18,20 @@ namespace Robust.Shared.Physics
 
         private Dictionary<MapId, PhysicsMap> _maps = new Dictionary<MapId, PhysicsMap>();
 
-        /// <summary>
-        /// Fires every time a controller is added to the World.
-        /// </summary>
-        public ControllerDelegate? ControllerAdded;
-
-        /// <summary>
-        /// Fires every time a controlelr is removed form the World.
-        /// </summary>
-        public ControllerDelegate? ControllerRemoved;
-
-        // TODO: Re-do queries and Raycast in a less janky way
-
-        public override void Initialize()
+        public override void Update(float frameTime)
         {
-            base.Initialize();
+            base.Update(frameTime);
 
-            // TODO: On MapId changed for entities need to call the relevant PhysicsMap functions for shit.
-        }
+            var predicted = !_gameTiming.InSimulation || _gameTiming.IsFirstTimePredicted;
 
-        public void AddController(PhysicsComponent component, AetherController controller)
-        {
-            var mapId = component.Owner.Transform.MapID;
+            foreach (var (_, map) in _maps)
+            {
+                map.Step(frameTime);
 
-            controller.World = _maps[mapId];
-            _controllers[mapId].Add(controller);
-
-            ControllerAdded?.Invoke(_maps[mapId], controller);
-        }
-
-        public void RemoveController(AetherController controller)
-        {
-            var mapId = component.Owner.Transform.MapID;
-
-            controller.World = _maps[mapId];
-            _controllers[mapId].Add(controller);
-
-            ControllerAdded?.Invoke(_maps[mapId], controller);
-        }
-
-        public IEnumerable<AetherController> GetControllers(PhysicsMap world)
-        {
-            return _controllers[world.MapId];
+                // See AutoClearForces
+                if (!predicted)
+                    map.ClearForces();
+            }
         }
     }
 }

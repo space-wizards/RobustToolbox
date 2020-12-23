@@ -40,7 +40,7 @@ namespace Robust.Server.GameObjects
             RegisterReference<BasicActorComponent, IActorComponent>();
 
             Register<PhysicsComponent>();
-            RegisterReference<PhysicsComponent, IPhysicsComponent>();
+            RegisterReference<PhysicsComponent, IPhysBody>();
             Register<PointLightComponent>();
             Register<OccluderComponent>();
 

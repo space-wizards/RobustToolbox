@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Joints;
@@ -422,16 +424,25 @@ namespace Robust.Shared.Physics
 
                 //FPE optimization: We don't store the impulses and send it to the delegate. We just send the whole contact.
                 //FPE feature: added after collision
-                if (c.FixtureA?.AfterCollision != null)
-                    c.FixtureA.AfterCollision(c.FixtureA, c.FixtureB, c, constraints[i]);
+                c.FixtureA?.AfterCollision?.Invoke(c.FixtureA, c.FixtureB, c, constraints[i]);
 
-                if (c.FixtureB?.AfterCollision != null)
-                    c.FixtureB.AfterCollision(c.FixtureB, c.FixtureA, c, constraints[i]);
+                c.FixtureB?.AfterCollision?.Invoke(c.FixtureB, c.FixtureA, c, constraints[i]);
 
-                if (_contactManager.PostSolve != null)
+                // TODO: Need to start calling PostCollide again
+                if (c.FixtureA != null && c.FixtureB != null)
                 {
-                    _contactManager.PostSolve(c, constraints[i]);
+                    foreach (var component in c.FixtureA.Body.Owner.GetAllComponents<ICollideBehavior>())
+                    {
+                        component.CollideWith(c.FixtureB.Body.Owner);
+                    }
+
+                    foreach (var component in c.FixtureB.Body.Owner.GetAllComponents<ICollideBehavior>())
+                    {
+                        component.CollideWith(c.FixtureA.Body.Owner);
+                    }
                 }
+
+                _contactManager.PostSolve?.Invoke(c, constraints[i]);
             }
         }
     }

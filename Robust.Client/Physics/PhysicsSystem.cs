@@ -31,7 +31,7 @@ namespace Robust.Client.Physics
         {
             var player = _playerManager.LocalPlayer?.ControlledEntity;
 
-            if (player == null || !player.TryGetComponent(out IPhysicsComponent? physicsComponent)) return;
+            if (player == null || !player.TryGetComponent(out IPhysBody? physicsComponent)) return;
 
             // tl;dr anything we've collided with mark as predicted to avoid the JANK
             foreach (var collision in CollisionCache)

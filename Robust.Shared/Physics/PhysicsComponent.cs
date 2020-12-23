@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameObjects.Systems;
-using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -29,6 +27,9 @@ namespace Robust.Shared.Physics
         internal Sweep Sweep;
 
         public PhysicsMap? PhysicsMap { get; set; }
+
+        // Aether2D uses these system-wide but for us we're just gonna store it on the component and call it a day.
+        public HashSet<AetherController> Controllers { get; set; } = new HashSet<AetherController>();
 
         /// <summary>
         /// Gets or sets a value indicating whether this body should be included in the CCD solver.
@@ -592,6 +593,7 @@ namespace Robust.Shared.Physics
             _linearVelocity += new Vector2(-_angularVelocity * a.Y, _angularVelocity * a.X);
         }
 
+        #region Fixtures
         /// <summary>
         /// Warning: This method is locked during callbacks.
         /// </summary>>
@@ -602,16 +604,10 @@ namespace Robust.Shared.Physics
                 throw new InvalidOperationException("The World is locked.");
             if (fixture == null)
                 throw new ArgumentNullException("fixture");
-            if (fixture.Body != null)
-            {
-                if (fixture.Body == this)
-                    throw new ArgumentException("You are adding the same fixture more than once.", "fixture");
-                else
-                    throw new ArgumentException("fixture belongs to another body.", "fixture");
-            }
 
             fixture.Body = this;
-            this.FixtureList.Add(fixture);
+            FixtureList.Add(fixture);
+            // TODO Wat dis
 #if DEBUG
             if (fixture.Shape.ShapeType == ShapeType.Polygon)
                 ((PolygonShape) fixture.Shape).Vertices.AttachedToBody = true;
@@ -633,6 +629,76 @@ namespace Robust.Shared.Physics
                 PhysicsMap._worldHasNewFixture = true;
             }
         }
+
+        /// <summary>
+        /// Destroy a fixture. This removes the fixture from the broad-phase and
+        /// destroys all contacts associated with this fixture. This will
+        /// automatically adjust the mass of the body if the body is dynamic and the
+        /// fixture has positive density.
+        /// All fixtures attached to a body are implicitly destroyed when the body is destroyed.
+        /// Warning: This method is locked during callbacks.
+        /// </summary>
+        /// <param name="fixture">The fixture to be removed.</param>
+        /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
+        public virtual void RemoveFixture(Fixture fixture)
+        {
+            if (PhysicsMap != null && PhysicsMap.IsLocked)
+                throw new InvalidOperationException("The World is locked.");
+            if (fixture.Body != this)
+                throw new ArgumentException("You are removing a fixture that does not belong to this Body.", "fixture");
+
+            // Destroy any contacts associated with the fixture.
+            ContactEdge? edge = ContactList;
+            while (edge != null)
+            {
+                Debug.Assert(edge.Contact != null);
+                Contact c = edge.Contact;
+                Debug.Assert(c != null);
+                edge = edge?.Next;
+
+                Fixture? fixtureA = c.FixtureA;
+                Fixture? fixtureB = c.FixtureB;
+
+                if (fixture == fixtureA || fixture == fixtureB)
+                {
+                    // This destroys the contact and removes it from
+                    // this body's contact list.
+                    PhysicsMap?.ContactManager.Destroy(c);
+                }
+            }
+
+            if (Enabled)
+            {
+                IoCManager.Resolve<IBroadPhaseManager>().DestroyProxies(fixture);
+            }
+
+            // TODO? fixture.Body = null;
+            FixtureList.Remove(fixture);
+#if DEBUG
+            if (fixture.Shape.ShapeType == ShapeType.Polygon)
+                ((PolygonShape)fixture.Shape).Vertices.AttachedToBody = false;
+#endif
+            ResetMassData();
+        }
+
+        #endregion
+        #region Joints
+        /// <summary>
+        /// Create a joint to constrain bodies together. This may cause the connected bodies to cease colliding.
+        /// Warning: This method is locked during callbacks.
+        /// </summary>
+        /// <param name="joint">The joint.</param>
+        /// <exception cref="System.InvalidOperationException">Thrown when the world is Locked/Stepping.</exception>
+        public void AddJoint(Joint joint)
+        {
+            PhysicsMap?.Add(joint);
+        }
+
+        public void RemoveJoint(Joint joint)
+        {
+            PhysicsMap?.Remove(joint);
+        }
+        #endregion
 
         public List<FixtureProxy> GetProxies()
         {

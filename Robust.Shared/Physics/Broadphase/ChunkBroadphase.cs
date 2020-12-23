@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Shapes;
 
@@ -8,6 +10,10 @@ namespace Robust.Shared.Physics.Broadphase
 {
     public class ChunkBroadphase : IBroadPhase
     {
+        public MapId MapId { get; set; }
+
+        public GridId GridId { get; set; }
+
         private const byte ChunkSize = PhysicsLookupChunk.ChunkSize;
 
         private Dictionary<Vector2i, PhysicsLookupChunk> _graph = new Dictionary<Vector2i, PhysicsLookupChunk>();
@@ -34,14 +40,14 @@ namespace Robust.Shared.Physics.Broadphase
                 (int) (Math.Floor((float) indices.Y / ChunkSize) * ChunkSize));
         }
 
-        public void UpdatePairs(PhysicsMapCallback.BroadphaseDelegate callback)
+        public void UpdatePairs(BroadphaseDelegate callback)
         {
-            throw new NotImplementedException();
-        }
+            // TODO: Go through each awake body on our grid and get our neighbors
 
-        public bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB)
-        {
-            throw new NotImplementedException();
+            foreach (var body in EntitySystem.Get<SharedBroadPhaseSystem>().GetAwakeBodies(MapId, GridId))
+            {
+
+            }
         }
 
         public void AddProxy(FixtureProxy proxy)
@@ -91,6 +97,11 @@ namespace Robust.Shared.Physics.Broadphase
                 throw new InvalidOperationException();
         }
 
+        public void MoveProxy(FixtureProxy proxy)
+        {
+            throw new NotImplementedException();
+        }
+
         public void MoveProxy(FixtureProxy proxy, Vector2 displacement)
         {
             var newAABB = proxy.AABB.Translated(displacement);
@@ -123,6 +134,11 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         public void TouchProxy(FixtureProxy proxy)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Contains(FixtureProxy proxy)
         {
             throw new NotImplementedException();
         }

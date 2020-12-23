@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
@@ -12,21 +9,26 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics.Broadphase
 {
     internal interface IBroadPhaseManager
     {
+        // More or less a clone of IBroadPhase but this one doesn't really care about what map it's on.
+
         void AddBody(PhysicsComponent component);
 
         void RemoveBody(PhysicsComponent component);
 
         void SynchronizeFixtures(PhysicsComponent component, PhysicsTransform xf1, PhysicsTransform xf2);
 
-        void AddProxy(FixtureProxy proxy);
+        void DestroyProxies(Fixture fixture);
 
         void TouchProxy(FixtureProxy proxy);
+
+        void UpdatePairs(MapId mapId, BroadphaseDelegate callback);
+
+        bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB);
 
         /// <summary>
         ///     Call when a fixture is added directly to a body that's already in broadphase.
@@ -87,8 +89,14 @@ namespace Robust.Shared.Physics.Broadphase
 
         public bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB)
         {
-            // TODO: Hacky af. Maybe store the GridId on the proxy.
-            foreach (var broad in BroadPhases())
+            var mapA = proxyA.Fixture.Body.Owner.Transform.MapID;
+            var mapB = proxyB.Fixture.Body.Owner.Transform.MapID;
+
+            if (mapA != mapB)
+                return false;
+
+            // TODO: Hacky af. Maybe store the GridIds on the body
+            foreach (var (_, broad) in _graph[mapA])
             {
                 if (broad.Contains(proxyA) && broad.Contains(proxyB))
                 {
@@ -99,10 +107,12 @@ namespace Robust.Shared.Physics.Broadphase
             return false;
         }
 
-        public void UpdatePairs(BroadphaseDelegate callback)
+        public void UpdatePairs(MapId mapId, BroadphaseDelegate callback)
         {
-            // TODO: This thing
-            throw new NotImplementedException();
+            foreach (var (_, broadPhase) in _graph[mapId])
+            {
+                broadPhase.UpdatePairs(callback);
+            }
         }
 
         // TODO: Probably just snowflake grids.
@@ -167,6 +177,12 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
+        private void HandlePhysicsMove(MoveEvent moveEvent)
+        {
+            // TODO: Remove from old grids and add to new grids
+            // TODO: Update existing grids
+        }
+
         private void HandleCollisionChange(CollisionChangeMessage message)
         {
             if (message.Enabled)
@@ -209,141 +225,6 @@ namespace Robust.Shared.Physics.Broadphase
             // Migrate all entities to their new home or some shit maybe idk, depends on order
             _mapManager.GetM
             _graph[]
-        }
-
-        /// <summary>
-        ///     Tries to add the entity to the relevant TileLookupNode
-        /// </summary>
-        /// The node will filter it to the correct category (if possible)
-        /// <param name="physicsComponent"></param>
-        private void HandlePhysicsAdd(IPhysBody physicsComponent)
-        {
-            // TODO: I DON'T THINK TRANSFORM IS CORRECT FOR CONTAINED ENTITIES
-            //PROBABLY CALL THIS WHEN AN ENTITY'S PARENT IS CHANGED
-            if (physicsComponent.Deleted ||
-                physicsComponent.Owner.Transform.MapID == MapId.Nullspace)
-            {
-                return;
-            }
-
-            // TODO: We still need grids to show up.... riiiggghhhttt?
-            // Might need to look at parents I guess...? Or maybe have a separate grid collision thing?
-            // TODO: Also should look if they have the physics grid shape...
-            if (physicsComponent.Owner.TryGetComponent(out IMapGridComponent? mapGridComponent))
-            {
-                return;
-            }
-
-            var entityNodes = GetOrCreateNodes(physicsComponent);
-            var newIndices = new Dictionary<GridId, List<Vector2i>>();
-
-            foreach (var node in entityNodes)
-            {
-                node.AddPhysics(physicsComponent);
-                if (!newIndices.TryGetValue(node.ParentChunk.GridId, out var existing))
-                {
-                    existing = new List<Vector2i>();
-                    newIndices[node.ParentChunk.GridId] = existing;
-                }
-
-                existing.Add(node.Indices);
-            }
-
-            _lastKnownNodes[physicsComponent] = entityNodes;
-            //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(newIndices));
-        }
-
-        /// <summary>
-        ///     Removes this entity from all of the applicable nodes.
-        /// </summary>
-        /// <param name="entity"></param>
-        private void HandlePhysicsRemove(IPhysBody entity)
-        {
-            var toDelete = new List<PhysicsLookupChunk>();
-            var checkedChunks = new HashSet<PhysicsLookupChunk>();
-
-            if (_lastKnownNodes.TryGetValue(entity, out var nodes))
-            {
-                foreach (var node in nodes)
-                {
-                    if (!checkedChunks.Contains(node.ParentChunk))
-                    {
-                        checkedChunks.Add(node.ParentChunk);
-                        if (node.ParentChunk.CanDeleteChunk())
-                        {
-                            toDelete.Add(node.ParentChunk);
-                        }
-                    }
-
-                    node.RemovePhysics(entity);
-                }
-            }
-
-            _lastKnownNodes.Remove(entity);
-
-            foreach (var chunk in toDelete)
-            {
-                _graph[chunk.MapId][chunk.GridId].Remove(chunk.Origin);
-            }
-
-            //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(null));
-        }
-
-        /// <summary>
-        ///     When an entity moves around we'll remove it from its old node and add it to its new node (if applicable)
-        /// </summary>
-        /// <param name="moveEvent"></param>
-        private void HandlePhysicsMove(MoveEvent moveEvent)
-        {
-            if (!moveEvent.Sender.TryGetComponent(out IPhysBody? physicsComponent))
-                return;
-
-            if (moveEvent.Sender.Deleted ||
-                !moveEvent.NewPosition.IsValid(EntityManager))
-            {
-                // TODO: Need an event when a body is removed
-                HandlePhysicsRemove(physicsComponent);
-                return;
-            }
-
-            // This probably means it's a grid
-            // TODO: REALLY NEED TO HANDLE IT BUDDY
-            if (!_lastKnownNodes.TryGetValue(physicsComponent, out var oldNodes))
-                return;
-
-            // TODO: Need to add entity parenting to transform (when _localPosition is set then check its parent
-            var newNodes = GetNodes(physicsComponent);
-            if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))
-            {
-                return;
-            }
-
-            var toRemove = oldNodes.Where(oldNode => !newNodes.Contains(oldNode));
-            var toAdd = newNodes.Where(newNode => !oldNodes.Contains(newNode));
-
-            foreach (var node in toRemove)
-            {
-                node.RemovePhysics(physicsComponent);
-            }
-
-            foreach (var node in toAdd)
-            {
-                node.AddPhysics(physicsComponent);
-            }
-
-            var newIndices = new Dictionary<GridId, List<Vector2i>>();
-            foreach (var node in newNodes)
-            {
-                if (!newIndices.TryGetValue(node.ParentChunk.GridId, out var existing))
-                {
-                    existing = new List<Vector2i>();
-                    newIndices[node.ParentChunk.GridId] = existing;
-                }
-
-                existing.Add(node.Indices);
-            }
-
-            _lastKnownNodes[physicsComponent] = newNodes;
         }
 
         public void AddBody(PhysicsComponent component)
@@ -434,7 +315,7 @@ namespace Robust.Shared.Physics.Broadphase
             return aabb.Combine(proxy.Fixture.Shape.ComputeAABB(xf2, proxy.ChildIndex));
         }
 
-        public void AddProxy(FixtureProxy proxy)
+        public void DestroyProxies(Fixture fixture)
         {
             throw new NotImplementedException();
         }
@@ -454,6 +335,18 @@ namespace Robust.Shared.Physics.Broadphase
                 {
                     broadPhase.AddProxy(proxy);
                 }
+            }
+        }
+
+        // This is dirty but so is a lot of other shit so it'll get refactored at some stage tm
+        public IEnumerable<PhysicsComponent> GetAwakeBodies(MapId mapId, GridId gridId)
+        {
+            var map = Get<SharedPhysicsSystem>().Maps[mapId];
+
+            foreach (var body in map.AwakeBodySet)
+            {
+                if (body.Owner.Transform.GridID == gridId)
+                    yield return body;
             }
         }
     }

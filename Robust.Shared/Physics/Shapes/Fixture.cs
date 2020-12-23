@@ -28,6 +28,7 @@ namespace Robust.Shared.Physics
         // TODO: Just return Proxies.Count?
         public int ProxyCount { get; private set; }
 
+        // todo: this should be nullable at some stage ahhhh
         /// <summary>
         ///     Parent body of this fixture.
         /// </summary>
@@ -39,7 +40,7 @@ namespace Robust.Shared.Physics
         public Shape Shape { get; set; } = default!;
 
         /// <summary>
-        /// Fires after two shapes has collided and are solved. This gives you a chance to get the impact force.
+        /// Fires after two shapes have collided and are solved. This gives you a chance to get the impact force.
         /// </summary>
         public AfterCollisionEventHandler? AfterCollision;
 
@@ -221,10 +222,6 @@ namespace Robust.Shared.Physics
             return Proxies;
         }
 
-        /// <summary>
-        ///     Originally called "DestroyProxies" in aether2d
-        /// </summary>
-        /// <param name="broadPhase"></param>
         internal void DestroyProxies(IBroadPhase broadPhase)
         {
             for (var i = 0; i < ProxyCount; ++i)

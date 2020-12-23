@@ -163,6 +163,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public const int MaxGJKIterations = 20;
 
+        // Sloth note: this defaulted to off
         /// <summary>
         /// By default, forces are cleared automatically after each call to Step.
         /// The default behavior is modified with this setting.
@@ -171,7 +172,7 @@ namespace Robust.Shared.Physics
         /// When you perform sub-stepping you should disable auto clearing of forces and instead call
         /// ClearForces after all sub-steps are complete in one pass of your game loop.
         /// </summary>
-        public const bool AutoClearForces = true;
+        public const bool AutoClearForces = false;
 
         /// <summary>
         /// Friction mixing law. Feel free to customize this.

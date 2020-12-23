@@ -1,18 +1,7 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.Physics;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Joints;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
 {
@@ -35,7 +24,7 @@ namespace Robust.Shared.GameObjects.Components
     }
 
     /// <summary>
-    ///     Sent whenever a <see cref="IPhysicsComponent"/> is changed.
+    ///     Sent whenever a <see cref="IPhysBody"/> is changed.
     /// </summary>
     public sealed class PhysicsUpdateMessage : EntitySystemMessage
     {

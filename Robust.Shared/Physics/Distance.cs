@@ -139,12 +139,12 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Vertices on shape A
         /// </summary>
-        public unsafe fixed byte IndexA[3];
+        public FixedArray3<byte> IndexA;
 
         /// <summary>
         /// Vertices on shape B
         /// </summary>
-        public unsafe fixed byte IndexB[3];
+        public FixedArray3<byte> IndexB;
 
         public float Metric;
     }
@@ -221,9 +221,6 @@ namespace Robust.Shared.Physics
     internal struct Simplex
     {
         internal int Count;
-        internal fixed SimplexVertex V2[3];
-
-
         internal FixedArray3<SimplexVertex> V;
 
         internal void ReadCache(ref SimplexCache cache, ref DistanceProxy proxyA, ref PhysicsTransform transformA, ref DistanceProxy proxyB, ref PhysicsTransform transformB)

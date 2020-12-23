@@ -10,16 +10,18 @@ namespace Robust.Shared.Physics
         // Rolled SetProxy into AddProxy
         void UpdatePairs(BroadphaseDelegate callback);
 
-        bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB);
-
         void AddProxy(FixtureProxy proxy);
 
         void RemoveProxy(FixtureProxy proxy);
 
         void MoveProxy(FixtureProxy proxy);
 
-        // TODO: What de fak does this do
-        void TouchProxy(FixtureProxy proxy);
+        // TODO: Okay so Box2D uses TouchProxy to say "hey this proxy is moving" to know which pairs to update.
+        // The problem with this is if we're driving a station and we try to run over an entity then
+        // none of the entities involved in the collision are moving in their own frame of reference
+        // Thus it's probably better to just always use UpdatePairs on awake bodies given most of our bodies are sleeping
+        // In other games sleeping is probably not too common so it's less advantageous for them.
+        //void TouchProxy(FixtureProxy proxy);
 
         bool Contains(FixtureProxy proxy);
 

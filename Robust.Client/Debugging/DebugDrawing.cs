@@ -141,7 +141,7 @@ namespace Robust.Client.Debugging
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((IPhysicsComponent)body).Anchored}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((IPhysBody)body).Anchored}");
                     row++;
                 }
 
@@ -158,7 +158,7 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos;
 
                 var viewport = _eyeManager.GetWorldViewport();
-                foreach (var boundingBox in _componentManager.EntityQuery<IPhysicsComponent>())
+                foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>())
                 {
                     var physBody = (IPhysBody) boundingBox;
 

@@ -460,11 +460,19 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 entityManager.CreateEntityUninitialized("dummyFive");
             }
-            catch (ComponentDependencyValueTypeException e)
+            catch (Exception? e)
             {
-                Assert.NotNull(e);
-                return;
+                do
+                {
+                    if (e is ComponentDependencyValueTypeException)
+                    {
+                        Assert.Pass();
+                    }
+
+                    e = e.InnerException;
+                } while (e != null);
             }
+
             Assert.Fail("No exception thrown");
         }
 
@@ -478,11 +486,19 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 entityManager.CreateEntityUninitialized("dummySix");
             }
-            catch (ComponentDependencyNotNullableException e)
+            catch (Exception? e)
             {
-                Assert.That(e, Is.Not.Null);
-                return;
+                do
+                {
+                    if (e is ComponentDependencyNotNullableException)
+                    {
+                        Assert.Pass();
+                    }
+
+                    e = e.InnerException;
+                } while (e != null);
             }
+
             Assert.Fail("No exception thrown");
         }
 

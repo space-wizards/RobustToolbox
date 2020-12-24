@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects.Components;
+using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Shapes;
@@ -17,15 +20,17 @@ namespace Robust.Shared.Physics
     public sealed class Fixture : IExposeData
     {
         // TODO: Need to call Dirty on shit I guess
-        // TODO: All of this shit is stored in the broadphase directly
 
         /// <summary>
         ///     Proxies are essentially a wrapper around shape children.
         ///     Currently it's only used for chain shapes as all the other types have 1 child only.
         /// </summary>
-        public FixtureProxy[] Proxies { get; private set; } = default!;
+        /// <remarks>
+        ///     Originally Aether2D had this as an array and I wasn't entirely sure how to handle spanning multiple grids
+        ///     so for now I've just made it so proxies are stored per-grid.
+        /// </remarks>
+        public Dictionary<GridId, FixtureProxy[]> Proxies { get; private set; } = default!;
 
-        // TODO: Just return Proxies.Count?
         public int ProxyCount { get; private set; }
 
         // todo: this should be nullable at some stage ahhhh
@@ -130,7 +135,7 @@ namespace Robust.Shared.Physics
         {
             Shape = shape.Clone();
 
-            Proxies = new FixtureProxy[Shape.ChildCount];
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
             ProxyCount = 0;
         }
 
@@ -166,8 +171,11 @@ namespace Robust.Shared.Physics
         /// <param name="broadPhase"></param>
         internal void TouchProxies(IBroadPhaseManager broadPhase)
         {
-            for (var i = 0; i < ProxyCount; i++)
-                broadPhase.TouchProxy(Proxies[i]);
+            foreach (var (_, proxies) in Proxies)
+            {
+                for (var i = 0; i < ProxyCount; i++)
+                    broadPhase.TouchProxy(proxies[i]);
+            }
         }
 
         /// <summary>
@@ -187,25 +195,35 @@ namespace Robust.Shared.Physics
             return Shape.RayCast(out output, ref input, transform, childIndex);
         }
 
-        /*
-         * Okay TODO Sloth because you're falling asleep
-         * Suss out AddProxy and Set Proxy and try to replace it with the C H U N K equivalent
-         * The main thing im slowing down on is trying to add this shit to the broadphase but it looks like
-         * Synchronize just uses the swept motion to update it.
-         * Ideally:
-         * For each fixture, get grids intersecting, then, work out grid-local positions for each and update it
-         * ComputeAABB stuff should just work out our AABB relative to ourself I think...
-         * Then when we move broadphase re-computes our grids intersecting and updates them all
-         */
-
-        internal FixtureProxy[] CreateProxies(PhysicsTransform transform)
+        /// <summary>
+        ///
+        /// </summary>
+        /// <param name="gridId"></param>
+        /// <param name="transform">In grid-space</param>
+        /// <returns></returns>
+        internal FixtureProxy[] CreateProxies(GridId gridId, in PhysicsTransform transform, IMapManager? mapManager = null)
         {
             // The original created them plus added them to broadphase which was clunky and not a good
             // separation of responsibilities so this solely creates them and we'll handle broadphase
             // elsewhere
             DebugTools.Assert(ProxyCount == 0);
+            mapManager ??= IoCManager.Resolve<IMapManager>();
+
+            PhysicsTransform gridTransform;
+            if (gridId != GridId.Invalid)
+            {
+                var grid = mapManager.GetGrid(gridId);
+                // TODO: Need to get grids rotation
+                gridTransform = new PhysicsTransform(grid.WorldToLocal(transform.Position), transform.Quaternion);
+            }
+            else
+            {
+                gridTransform = transform;
+            }
 
             ProxyCount = Shape.ChildCount;
+
+            Proxies[gridId] = new FixtureProxy[ProxyCount];
 
             for (var i = 0; i < ProxyCount; i++)
             {
@@ -213,51 +231,26 @@ namespace Robust.Shared.Physics
                 {
                     Fixture = this,
                     ChildIndex = i,
-                    AABB = Shape.ComputeAABB(transform, i),
+                    AABB = Shape.ComputeAABB(gridTransform, i),
+                    ProxyId = new DynamicTree.Proxy(i),
                 };
 
-                Proxies[i] = proxy;
+                Proxies[gridId][i] = proxy;
             }
 
-            return Proxies;
+            return Proxies[gridId];
         }
 
-        internal void DestroyProxies(IBroadPhase broadPhase)
+        internal void DestroyProxies()
         {
-            for (var i = 0; i < ProxyCount; ++i)
+            foreach (var (gridId, proxies) in Proxies)
             {
-                broadPhase.RemoveProxy(Proxies[i]);
+                var broadPhase = EntitySystem.Get<SharedBroadPhaseSystem>().GetBroadPhase(gridId);
+                for (var i = 0; i < ProxyCount; i++)
+                    broadPhase.RemoveProxy(proxies[i].ProxyId);
             }
 
             ProxyCount = 0;
-        }
-
-        /// <summary>
-        ///     Update this fixture in the broadphase
-        /// </summary>
-        /// <remarks>
-        ///     This requires 2 transforms as our broadphase covers both the start and end transform (the swept shape).
-        /// </remarks>
-        /// <param name="broadPhase"></param>
-        /// <param name="transform1">Transform relative to its broadphase parent</param>
-        /// <param name="transform2">Transform relative to its broadphase parent</param>
-        internal void Synchronize(IBroadPhase broadPhase, PhysicsTransform transform1, PhysicsTransform transform2)
-        {
-            // Okay so because in our instance we need per-grid broadphase then this means that whoever's calling this
-            // needs to be the one to handle making sure each grid is updated.
-
-            for (var i = 0; i < ProxyCount; ++i)
-            {
-                FixtureProxy proxy = Proxies[i];
-
-                // Compute an AABB that covers the swept Shape (may miss some rotation effect).
-                var aabb1 = Shape.ComputeAABB(transform1, proxy.ChildIndex);
-                var aabb2 = Shape.ComputeAABB(transform2, proxy.ChildIndex);
-
-                proxy.AABB = aabb1.Combine(aabb2);
-
-                broadPhase.MoveProxy(proxy);
-            }
         }
 
         /// <summary>

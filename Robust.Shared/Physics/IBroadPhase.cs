@@ -10,11 +10,19 @@ namespace Robust.Shared.Physics
         // Rolled SetProxy into AddProxy
         void UpdatePairs(BroadphaseDelegate callback);
 
-        void AddProxy(FixtureProxy proxy);
+        bool TestOverlap(DynamicTree.Proxy proxyIdA, DynamicTree.Proxy proxyIdB);
 
-        void RemoveProxy(FixtureProxy proxy);
+        DynamicTree.Proxy AddProxy(FixtureProxy proxy);
 
-        void MoveProxy(FixtureProxy proxy);
+        void RemoveProxy(DynamicTree.Proxy proxy);
+
+        void MoveProxy(DynamicTree.Proxy proxy, ref Box2 aabb, Vector2 displacement);
+
+        FixtureProxy GetProxy(DynamicTree.Proxy proxy);
+
+        void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
+
+        void RayCast(BroadPhaseRayCastCallback callback, ref RayCastInput input);
 
         // TODO: Okay so Box2D uses TouchProxy to say "hey this proxy is moving" to know which pairs to update.
         // The problem with this is if we're driving a station and we try to run over an entity then
@@ -23,10 +31,11 @@ namespace Robust.Shared.Physics
         // In other games sleeping is probably not too common so it's less advantageous for them.
         //void TouchProxy(FixtureProxy proxy);
 
-        bool Contains(FixtureProxy proxy);
-
-        // TODO: Query and Raycast
+        void ShiftOrigin(Vector2 newOrigin);
     }
+
+    public delegate bool BroadPhaseQueryCallback(DynamicTree.Proxy proxyId);
+    public delegate float BroadPhaseRayCastCallback(ref RayCastInput input, DynamicTree.Proxy proxyId);
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 

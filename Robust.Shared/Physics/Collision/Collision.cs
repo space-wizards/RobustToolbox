@@ -179,46 +179,6 @@ namespace Robust.Shared.Physics.Shapes
         public Vector2 V;
     }
 
-    /// <summary>
-    /// Ray-cast input data.
-    /// </summary>
-    public struct RayCastInput
-    {
-        /// <summary>
-        /// The ray extends from p1 to p1 + maxFraction * (p2 - p1).
-        /// If you supply a max fraction of 1, the ray extends from p1 to p2.
-        /// A max fraction of 0.5 makes the ray go from p1 and half way to p2.
-        /// </summary>
-        public float MaxFraction;
-
-        /// <summary>
-        /// The starting point of the ray.
-        /// </summary>
-        public Vector2 Point1;
-
-        /// <summary>
-        /// The ending point of the ray.
-        /// </summary>
-        public Vector2 Point2;
-    }
-
-    /// <summary>
-    /// Ray-cast output data.
-    /// </summary>
-    public struct RayCastOutput
-    {
-        /// <summary>
-        /// The ray hits at p1 + fraction * (p2 - p1), where p1 and p2 come from RayCastInput.
-        /// Contains the actual fraction of the ray where it has the intersection point.
-        /// </summary>
-        public float Fraction;
-
-        /// <summary>
-        /// The normal of the face of the shape the ray has hit.
-        /// </summary>
-        public Vector2 Normal;
-    }
-
     // AABB should be here but we already have Box2
 
     /// <summary>

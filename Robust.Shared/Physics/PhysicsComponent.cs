@@ -153,24 +153,6 @@ namespace Robust.Shared.Physics
 
         private float _inertia;
 
-        public Box2 WorldAABB
-        {
-            get
-            {
-                var aabb = new Box2();
-
-                foreach (var fixture in FixtureList)
-                {
-                    foreach (var proxy in fixture.Proxies)
-                    {
-                        aabb = aabb.Combine(proxy.AABB);
-                    }
-                }
-
-                return aabb;
-            }
-        }
-
         /// <summary>
         ///     Inverse inertia
         /// </summary>
@@ -242,14 +224,6 @@ namespace Robust.Shared.Physics
         public float LinearDamping { get; set; }
 
         public float AngularDamping { get; set; }
-
-        /// <summary>
-        ///     Given we can intersect multiple grids we'll need a swept shape for each one.
-        /// </summary>
-        /// <remarks>
-        ///     It's also probably just easier to make this also double as our GridId storage.
-        /// </remarks>
-        private Dictionary<GridId, Sweep> Sweeps = new Dictionary<GridId, Sweep>();
 
         /// <summary>
         ///     What type of body this, such as static or dynamic.
@@ -700,12 +674,12 @@ namespace Robust.Shared.Physics
         }
         #endregion
 
-        public List<FixtureProxy> GetProxies()
+        public List<FixtureProxy> GetProxies(GridId gridId)
         {
             var proxies = new List<FixtureProxy>();
             foreach (var fixture in FixtureList)
             {
-                foreach (var proxy in fixture.Proxies)
+                foreach (var proxy in fixture.Proxies[gridId])
                 {
                     proxies.Add(proxy);
                 }

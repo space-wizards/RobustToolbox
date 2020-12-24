@@ -71,13 +71,11 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public IEnumerable<FixtureProxy> GetPhysicsShapes(Vector2i index)
+        public IEnumerable<FixtureProxy> GetProxies(Box2 aabb)
         {
-            var node = _nodes[index.X - Origin.X, index.Y - Origin.Y];
-
-            foreach (var shape in node.Proxies)
+            foreach (var node in GetNodes(aabb))
             {
-                yield return shape;
+
             }
         }
 

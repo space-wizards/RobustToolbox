@@ -408,6 +408,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         List<Contact> updateList = new List<Contact>();
 
+        /*
 #if NET40 || NET45 || NETSTANDARD2_0 || PORTABLE40 || PORTABLE45 || W10 || W8_1 || WP8_1
         internal void CollideMultiCore()
         {
@@ -547,6 +548,7 @@ namespace Robust.Shared.Physics
             updateList.Clear();
         }
 #endif
+*/
 
         private static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
         {

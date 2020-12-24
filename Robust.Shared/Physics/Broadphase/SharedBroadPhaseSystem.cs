@@ -75,6 +75,12 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
+        public IBroadPhase GetBroadPhase(GridId gridId)
+        {
+            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+            return _graph[mapId][gridId];
+        }
+
         // Look for now I've hardcoded grids
         public IEnumerable<(IBroadPhase Broadphase, IMapGrid Grid)> GetBroadphases(PhysicsComponent body)
         {
@@ -219,6 +225,12 @@ namespace Robust.Shared.Physics.Broadphase
             _graph[eventArgs.Map] = new Dictionary<GridId, IBroadPhase>();
         }
 
+
+        /*
+         * TODO: Just use b2DynamicTree again this stuff sucks, at least for now.
+         */
+
+
         private void HandleGridRemoval(GridId gridId)
         {
             // TODO: Get relevant map and remove the grid from it, then also shutdown the broadphase
@@ -235,18 +247,17 @@ namespace Robust.Shared.Physics.Broadphase
             var transform = component.GetTransform();
             _lastBroadPhases[component] = new List<IBroadPhase>();
 
-            foreach (var fixture in fixtures)
-            {
-                fixture.CreateProxies(transform);
-            }
-
-            // Can't use CreateProxies as we need the proxy from every fixture to be added.
-            var proxies = component.GetProxies();
-
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId,
                 component.WorldAABB, true))
             {
                 var broadPhase = grids[gridId];
+
+                foreach (var fixture in fixtures)
+                {
+                    fixture.CreateProxies(gridId, transform);
+                }
+
+                var proxies = component.GetProxies(gridId);
 
                 foreach (var proxy in proxies)
                 {

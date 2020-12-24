@@ -589,18 +589,18 @@ namespace Robust.Client.UserInterface.Controls
             return index;
         }
 
-        protected internal override void FocusEntered()
+        protected internal override void KeyboardFocusEntered()
         {
-            base.FocusEntered();
+            base.KeyboardFocusEntered();
 
             // Reset this so the cursor is always visible immediately after gaining focus..
             _resetCursorBlink();
             OnFocusEnter?.Invoke(new LineEditEventArgs(this, _text));
         }
 
-        protected internal override void FocusExited()
+        protected internal override void KeyboardFocusExited()
         {
-            base.FocusExited();
+            base.KeyboardFocusExited();
             OnFocusExit?.Invoke(new LineEditEventArgs(this, _text));
         }
 

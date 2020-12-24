@@ -57,9 +57,7 @@ namespace Robust.Client.UserInterface
 
         public Control? KeyboardFocused { get; private set; }
 
-        // When a control receives a mouse down it must also receive a mouse up and mouse moves, always.
-        // So we keep track of which control is "focused" by the mouse.
-        private Control? _controlFocused;
+        public Control? ControlFocused { get; private set; }
 
         public LayoutContainer StateRoot { get; private set; } = default!;
         public PopupContainer ModalRoot { get; private set; } = default!;
@@ -244,7 +242,8 @@ namespace Robust.Client.UserInterface
                         RemoveModal(top);
                     else
                     {
-                        _controlFocused = top;
+                        ControlFocused?.ControlFocusExited();
+                        ControlFocused = top;
                         return false; // prevent anything besides the top modal control from receiving input
                     }
                 }
@@ -260,12 +259,12 @@ namespace Robust.Client.UserInterface
             {
                 return false;
             }
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = control;
 
-            _controlFocused = control;
-
-            if (_controlFocused.CanKeyboardFocus && _controlFocused.KeyboardFocusOnClick)
+            if (ControlFocused.CanKeyboardFocus && ControlFocused.KeyboardFocusOnClick)
             {
-                _controlFocused.GrabKeyboardFocus();
+                ControlFocused.GrabKeyboardFocus();
             }
 
             return true;
@@ -273,7 +272,8 @@ namespace Robust.Client.UserInterface
 
         public void HandleCanFocusUp()
         {
-            _controlFocused = null;
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = null;
         }
 
         public void KeyBindDown(BoundKeyEventArgs args)
@@ -290,7 +290,7 @@ namespace Robust.Client.UserInterface
                 return;
             }
 
-            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
 
             if (control == null)
             {
@@ -311,7 +311,7 @@ namespace Robust.Client.UserInterface
 
         public void KeyBindUp(BoundKeyEventArgs args)
         {
-            var control = _controlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
+            var control = ControlFocused ?? KeyboardFocused ?? MouseGetControl(args.PointerLocation.Position);
             if (control == null)
             {
                 return;
@@ -352,7 +352,7 @@ namespace Robust.Client.UserInterface
                 _needUpdateActiveCursor = true;
             }
 
-            var target = _controlFocused ?? newHovered;
+            var target = ControlFocused ?? newHovered;
             if (target != null)
             {
                 var guiArgs = new GUIMouseMoveEventArgs(mouseMoveEventArgs.Relative / UIScale,
@@ -368,7 +368,7 @@ namespace Robust.Client.UserInterface
         private void UpdateActiveCursor()
         {
             // Consider mouse input focus first so that dragging windows don't act up etc.
-            var cursorTarget = _controlFocused ?? CurrentlyHovered;
+            var cursorTarget = ControlFocused ?? CurrentlyHovered;
 
             if (cursorTarget == null)
             {
@@ -478,13 +478,13 @@ namespace Robust.Client.UserInterface
 
             KeyboardFocused = control;
 
-            KeyboardFocused.FocusEntered();
+            KeyboardFocused.KeyboardFocusEntered();
         }
 
         public void ReleaseKeyboardFocus()
         {
             var oldFocused = KeyboardFocused;
-            oldFocused?.FocusExited();
+            oldFocused?.KeyboardFocusExited();
             KeyboardFocused = null;
         }
 
@@ -528,10 +528,9 @@ namespace Robust.Client.UserInterface
                 _clearTooltip();
             }
 
-            if (control == _controlFocused)
-            {
-                _controlFocused = null;
-            }
+            if (control != ControlFocused) return;
+            ControlFocused?.ControlFocusExited();
+            ControlFocused = null;
         }
 
         public void PushModal(Control modal)
@@ -569,7 +568,7 @@ namespace Robust.Client.UserInterface
 
         public void CursorChanged(Control control)
         {
-            if (control == _controlFocused || control == CurrentlyHovered)
+            if (control == ControlFocused || control == CurrentlyHovered)
             {
                 _needUpdateActiveCursor = true;
             }

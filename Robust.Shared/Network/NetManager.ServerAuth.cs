@@ -5,7 +5,6 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Lidgren.Network.Compression;
 using Newtonsoft.Json;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;

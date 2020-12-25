@@ -10,7 +10,6 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Lidgren.Network.Compression;
 using Prometheus;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Network;

@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
+using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -49,6 +50,45 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public Control? Parent { get; private set; }
 
+        public NameScope? NameScope;
+
+        //public void AttachNameScope(Dictionary<string, Control> nameScope)
+        //{
+        //    _nameScope = nameScope;
+        //}
+
+        public NameScope? FindNameScope()
+        {
+            foreach (var control in this.GetSelfAndLogicalAncestors())
+            {
+                if (control.NameScope != null) return control.NameScope;
+            }
+
+            return null;
+        }
+
+        public T FindControl<T>(string name) where T : Control
+        {
+            var nameScope = FindNameScope();
+            if (nameScope == null)
+            {
+                throw new ArgumentException("No Namespace found for Control");
+            }
+
+            var value = nameScope.Find(name);
+            if (value == null)
+            {
+                throw new ArgumentException($"No Control with the name {name} found");
+            }
+
+            if (value is not T ret)
+            {
+                throw new ArgumentException($"Control with name {name} had invalid type {value.GetType()}");
+            }
+
+            return ret;
+        }
+
         internal IUserInterfaceManagerInternal UserInterfaceManagerInternal { get; }
 
         /// <summary>
@@ -61,6 +101,9 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [ViewVariables]
         public OrderedChildCollection Children { get; }
+
+        [Content]
+        public virtual ICollection<Control> XamlChildren { get; protected set; }
 
         [ViewVariables] public int ChildCount => _orderedChildren.Count;
 
@@ -394,6 +437,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
+            XamlChildren = Children;
         }
 
         /// <summary>

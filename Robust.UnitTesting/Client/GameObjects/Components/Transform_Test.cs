@@ -1,10 +1,10 @@
 ﻿using System.IO;
+using Moq;
 using NUnit.Framework;
 using Robust.Client.Interfaces.GameObjects;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -34,6 +34,17 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         private IMapGrid GridA = default!;
         private MapId MapB;
         private IMapGrid GridB = default!;
+
+        protected override void OverrideIoC()
+        {
+            base.OverrideIoC();
+
+            var mock = new Mock<IEntitySystemManager>();
+            var system = new SharedTransformSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(system);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+        }
 
         [OneTimeSetUp]
         public void Setup()

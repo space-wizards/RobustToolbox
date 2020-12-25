@@ -104,7 +104,7 @@ namespace Robust.Client.Audio.Midi
         private const string OsxSoundfont =
             "/System/Library/Components/CoreAudio.component/Contents/Resources/gs_instruments.dls";
 
-        private const string FallbackSoundfont = "/Resources/Midi/fallback.sf2";
+        private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
         private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
 
@@ -207,13 +207,10 @@ namespace Robust.Client.Audio.Midi
 
                 var renderer = new MidiRenderer(_settings!, soundfontLoader);
 
-                foreach (var file in _resourceManager.ContentFindFiles(new ResourcePath("/Audio/MidiCustom/")))
+                foreach (var file in _resourceManager.ContentFindFiles(("/Audio/MidiCustom/")))
                 {
                     if (file.Extension != "sf2" && file.Extension != "dls") continue;
-                    if (_resourceManager.TryGetDiskFilePath(file, out var path))
-                    {
-                        renderer.LoadSoundfont(path);
-                    }
+                    renderer.LoadSoundfont(file.ToString());
                 }
 
                 // Since the last loaded soundfont takes priority, we load the fallback soundfont before the soundfont.
@@ -383,9 +380,10 @@ namespace Robust.Client.Audio.Midi
             public override IntPtr Open(string filename)
             {
                 Stream? stream;
-                if (filename.StartsWith("/Resources/"))
+                var resourceCache = IoCManager.Resolve<IResourceCache>();
+                if (resourceCache.ContentFileExists(filename))
                 {
-                    if (!IoCManager.Resolve<IResourceCache>().TryContentFileRead(filename.Substring(10), out stream))
+                    if (!resourceCache.TryContentFileRead(filename, out stream))
                         return IntPtr.Zero;
                 }
                 else if (File.Exists(filename))

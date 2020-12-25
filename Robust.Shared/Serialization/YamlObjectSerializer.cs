@@ -614,6 +614,11 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
+        public T NodeToType<T>(YamlNode node)
+        {
+            return (T) NodeToType(typeof(T), node);
+        }
+
         private static Type ResolveConcreteType(Type baseType, string typeName)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();

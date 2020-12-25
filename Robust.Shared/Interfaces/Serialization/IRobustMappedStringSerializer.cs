@@ -40,6 +40,8 @@ namespace Robust.Shared.Serialization
         /// </exception>
         ReadOnlySpan<byte> MappedStringsHash { get; }
 
+        bool EnableCaching { get; set; }
+
         /// <summary>
         /// Add a string to the constant mapping.
         /// </summary>

@@ -118,29 +118,20 @@ namespace Robust.Shared
          * BUILD
          */
 
+        public static readonly CVarDef<string> BuildEngineVersion =
+            CVarDef.Create("build.engine_version", "", CVar.SERVERONLY);
+
         public static readonly CVarDef<string> BuildForkId =
-            CVarDef.Create("build.fork_id", "", CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("build.fork_id", "", CVar.SERVERONLY);
 
         public static readonly CVarDef<string> BuildVersion =
-            CVarDef.Create("build.version", "", CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("build.version", "", CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> BuildDownloadUrlWindows =
-            CVarDef.Create("build.download_url_windows", string.Empty, CVar.ARCHIVE | CVar.SERVERONLY);
+        public static readonly CVarDef<string> BuildDownloadUrl =
+            CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
 
-        public static readonly CVarDef<string> BuildDownloadUrlMacOS =
-            CVarDef.Create("build.download_url_macos", "", CVar.ARCHIVE | CVar.SERVERONLY);
-
-        public static readonly CVarDef<string> BuildDownloadUrlLinux =
-            CVarDef.Create("build.download_url_linux", "", CVar.ARCHIVE | CVar.SERVERONLY);
-
-        public static readonly CVarDef<string> BuildHashWindows =
-            CVarDef.Create("build.hash_windows", "", CVar.ARCHIVE | CVar.SERVERONLY);
-
-        public static readonly CVarDef<string> BuildHashMacOS =
-            CVarDef.Create("build.hash_macos", "", CVar.ARCHIVE | CVar.SERVERONLY);
-
-        public static readonly CVarDef<string> BuildHashLinux =
-            CVarDef.Create("build.hash_linux", "", CVar.ARCHIVE | CVar.SERVERONLY);
+        public static readonly CVarDef<string> BuildHash =
+            CVarDef.Create("build.hash", "", CVar.SERVERONLY);
 
         /*
          * WATCHDOG
@@ -242,10 +233,10 @@ namespace Robust.Shared
             CVarDef.Create("display.height", 720, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayLightMapDivider =
-            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY);
+            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> DisplaySoftShadows =
-            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
@@ -270,7 +261,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * PLAYER

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -199,8 +199,6 @@ namespace Robust.Client.Input
 
             _keysPressed[(int) args.Key] = true;
 
-            PackedKeyCombo matchedCombo = default;
-
             var bindsDown = new List<KeyBinding>();
             var hasCanFocus = false;
 
@@ -215,18 +213,10 @@ namespace Robust.Client.Input
                 {
                     // this statement *should* always be true first
                     // Keep triggering keybinds of the same PackedKeyCombo until Handled or no bindings left
-                    if ((matchedCombo == default || binding.PackedKeyCombo == matchedCombo) &&
-                        PackedContainsKey(binding.PackedKeyCombo, args.Key))
+                    if (PackedContainsKey(binding.PackedKeyCombo, args.Key))
                     {
-                        matchedCombo = binding.PackedKeyCombo;
-
                         bindsDown.Add(binding);
                         hasCanFocus |= binding.CanFocus;
-                    }
-                    else if (PackedIsSubPattern(matchedCombo, binding.PackedKeyCombo))
-                    {
-                        // kill any lower level matches
-                        UpBind(binding);
                     }
                 }
             }
@@ -378,8 +368,8 @@ namespace Robust.Client.Input
         {
             for (var i = 0; i < 32; i += 8)
             {
-                var key = (Key) (subPackedCombo.Packed >> i);
-                if (!PackedContainsKey(packedCombo, key))
+                var key = (Key)((subPackedCombo.Packed >> i) & 0b_1111_1111);
+                if (key != Key.Unknown && !PackedContainsKey(packedCombo, key))
                 {
                     return false;
                 }

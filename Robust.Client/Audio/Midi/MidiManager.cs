@@ -379,9 +379,16 @@ namespace Robust.Client.Audio.Midi
 
             public override IntPtr Open(string filename)
             {
+                if (string.IsNullOrEmpty(filename))
+                {
+                    return IntPtr.Zero;
+                }
+
                 Stream? stream;
                 var resourceCache = IoCManager.Resolve<IResourceCache>();
-                if (resourceCache.ContentFileExists(filename))
+                var resourcePath = new ResourcePath(filename);
+
+                if (resourcePath.IsRooted && resourceCache.ContentFileExists(filename))
                 {
                     if (!resourceCache.TryContentFileRead(filename, out stream))
                         return IntPtr.Zero;

@@ -618,21 +618,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private void MapIdChanged(MapId oldId)
         {
-            IPhysBody? collider;
-
             if (oldId != MapId.Nullspace)
             {
                 _entityManager.RemoveFromEntityTree(Owner, oldId);
-
-                if (Initialized && Owner.TryGetComponent(out collider))
-                {
-                    collider.RemovedFromPhysicsTree(oldId);
-                }
-            }
-
-            if (MapID != MapId.Nullspace && Initialized && Owner.TryGetComponent(out collider))
-            {
-                collider.AddedToPhysicsTree(MapID);
             }
 
             _entityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
@@ -814,8 +802,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
         private bool TryUpdatePhysicsTree() => Initialized && UpdatePhysicsTree();
 
-        private bool UpdatePhysicsTree() =>
-            Owner.TryGetComponent(out IPhysBody? collider) && collider.UpdatePhysicsTree();
+        private bool UpdatePhysicsTree() => true;
 
         private bool UpdateEntityTree() => _entityManager.UpdateEntityTree(Owner);
 

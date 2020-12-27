@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
-using Robust.Client.Physics;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects.Systems;
@@ -43,7 +42,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             UpdatesBefore.Add(typeof(SpriteSystem));
             UpdatesAfter.Add(typeof(TransformSystem));
-            UpdatesAfter.Add(typeof(PhysicsSystem));
+            UpdatesAfter.Add(typeof(SharedPhysicsSystem));
 
             _mapManager.MapCreated += MapManagerOnMapCreated;
             _mapManager.MapDestroyed += MapManagerOnMapDestroyed;
@@ -131,7 +130,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
                 newMapTrees?.SpriteTree.AddOrUpdate(sprite);
             }
-            
+
             if (ev.Entity.TryGetComponent(out PointLightComponent? light))
             {
                 oldMapTrees?.LightTree.Remove(light);

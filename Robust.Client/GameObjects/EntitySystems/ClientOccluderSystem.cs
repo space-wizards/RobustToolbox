@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using Robust.Client.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Systems;
@@ -10,6 +9,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {
@@ -33,7 +33,7 @@ namespace Robust.Client.GameObjects.EntitySystems
             base.Initialize();
 
             UpdatesAfter.Add(typeof(TransformSystem));
-            UpdatesAfter.Add(typeof(PhysicsSystem));
+            UpdatesAfter.Add(typeof(SharedPhysicsSystem));
 
             SubscribeLocalEvent<OccluderDirtyEvent>(HandleDirtyEvent);
         }

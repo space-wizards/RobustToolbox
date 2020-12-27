@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using Robust.Server.Interfaces.Debugging;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Network.Messages;
 
@@ -9,15 +8,18 @@ namespace Robust.Server.Debugging
 {
     internal class DebugDrawingManager : IDebugDrawingManager
     {
+        // TODO
         [Dependency] private readonly IServerNetManager _net = default!;
-        [Dependency] private readonly IPhysicsManager _physics = default!;
+
+        //[Dependency] private readonly IPhysicsManager _physics = default!;
 
         public void Initialize()
         {
             _net.RegisterNetMessage<MsgRay>(MsgRay.NAME);
-            _physics.DebugDrawRay += data => PhysicsOnDebugDrawRay(data);
+            //_physics.DebugDrawRay += data => PhysicsOnDebugDrawRay(data);
         }
 
+        /*
         [Conditional("DEBUG")]
         private void PhysicsOnDebugDrawRay(DebugRayData data)
         {
@@ -35,5 +37,6 @@ namespace Robust.Server.Debugging
 
             _net.ServerSendToAll(msg);
         }
+        */
     }
 }

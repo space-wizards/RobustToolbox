@@ -33,11 +33,14 @@ namespace Robust.Shared.Physics
         private float _invDt0;
         private PhysicsComponent[] _stack = new PhysicsComponent[64];
 
-        private TOIInput _input = new TOIInput();
+        private TOIInput _input = new();
 
         public MapId MapId { get; set; }
 
         internal bool _worldHasNewFixture;
+
+        // TODO: This
+        public List<AetherController> ControllerList { get; } = new List<AetherController>();
 
         /// <summary>
         /// Change the global gravity vector.
@@ -45,7 +48,7 @@ namespace Robust.Shared.Physics
         /// <value>The gravity.</value>
         public Vector2 Gravity
         {
-            get { return _gravity; }
+            get => _gravity;
             set
             {
                 if (IsLocked)
@@ -975,13 +978,9 @@ namespace Robust.Shared.Physics
             try
             {
                 // Update controllers
-                // Modified from Aether2D where it uses system-wide controllers
-                foreach (var body in AwakeBodySet)
+                foreach (var controller in ControllerList)
                 {
-                    foreach (var controller in body.Controllers)
-                    {
-                        controller.Update(dt);
-                    }
+                    controller.Update(dt);
                 }
 
                 // Update contacts. This is where some contacts are destroyed.

@@ -12,7 +12,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Network;
-using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
@@ -37,7 +36,6 @@ namespace Robust.Client.Placement
 {
     public partial class PlacementManager : IPlacementManager, IDisposable
     {
-        [Dependency] public readonly IPhysicsManager PhysicsManager = default!;
         [Dependency] private readonly IClientNetManager NetworkManager = default!;
         [Dependency] public readonly IPlayerManager PlayerManager = default!;
         [Dependency] public readonly IResourceCache ResourceCache = default!;

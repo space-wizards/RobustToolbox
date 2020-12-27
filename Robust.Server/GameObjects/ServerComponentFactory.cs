@@ -12,6 +12,7 @@ using Robust.Shared.GameObjects.Components.Timers;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.Components.UserInterface;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {

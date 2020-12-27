@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -39,7 +41,7 @@ namespace Robust.Shared.Physics.Broadphase
         // TODO: Query and RayCast using the old methods
     }
 
-    internal sealed class SharedBroadPhaseSystem : EntitySystem, IBroadPhaseManager
+    public sealed class SharedBroadPhaseSystem : EntitySystem, IBroadPhaseManager
     {
         /*
          * That's right both the system implements IBroadPhase and also each grid has its own as well.
@@ -93,6 +95,32 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
+        public bool TryCollideRect(Box2 collider, MapId mapId, bool approximate = true)
+        {
+            var state = (collider, mapId, found: false);
+
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, collider, true))
+            {
+                var gridCollider = _mapManager.GetGrid(gridId).WorldToLocal(collider.Center);
+                var gridBox = collider.Translated(gridCollider);
+
+                _graph[mapId][gridId].QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
+                {
+                    if (proxy.Fixture.CollisionLayer == 0x0)
+                        return true;
+
+                    if (proxy.AABB.Intersects(gridBox))
+                    {
+                        state.found = true;
+                        return false;
+                    }
+                    return true;
+                }, gridBox, approximate);
+            }
+
+            return state.found;
+        }
+
         public bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB)
         {
             // TODO: This should only ever be called on the same grid I think so maybe just assert
@@ -120,7 +148,6 @@ namespace Robust.Shared.Physics.Broadphase
         public override void Initialize()
         {
             SubscribeLocalEvent<MoveEvent>(HandlePhysicsMove);
-            SubscribeLocalEvent<CollisionChangeMessage>(HandleCollisionChange);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
             _mapManager.OnGridCreated += HandleGridCreated;
             _mapManager.OnGridRemoved += HandleGridRemoval;
@@ -133,6 +160,14 @@ namespace Robust.Shared.Physics.Broadphase
             _mapManager.OnGridCreated -= HandleGridCreated;
             _mapManager.OnGridRemoved -= HandleGridRemoval;
             _mapManager.MapCreated -= HandleMapCreated;
+        }
+
+        private void HandlePhysicsMove(MoveEvent moveEvent)
+        {
+            if (!moveEvent.Sender.TryGetComponent(out PhysicsComponent? physicsComponent))
+                return;
+
+            physicsComponent.SynchronizeFixtures();
         }
 
         /// <summary>
@@ -152,44 +187,40 @@ namespace Robust.Shared.Physics.Broadphase
             var newMap = Get<SharedPhysicsSystem>().Maps[message.Entity.Transform.MapID];
             newMap.Add(physicsComponent);
 
-            // TODO: Broadphases
-            var proxies = physicsComponent.GetProxies();
-
             foreach (var broadPhase in _lastBroadPhases[physicsComponent])
             {
+                var proxies = physicsComponent.GetProxies(GetGridId(broadPhase));
+
                 foreach (var proxy in proxies)
                 {
-                    broadPhase.RemoveProxy(proxy);
+                    broadPhase.RemoveProxy(proxy.ProxyId);
                 }
             }
 
             _lastBroadPhases[physicsComponent].Clear();
-
-            foreach (var (broadPhase, _) in GetBroadphases(physicsComponent))
+            foreach (var fixture in physicsComponent.FixtureList)
             {
+                fixture.DestroyProxies();
+            }
+
+            foreach (var (broadPhase, grid) in GetBroadphases(physicsComponent))
+            {
+                var transform = physicsComponent.GetTransform();
+
                 _lastBroadPhases[physicsComponent].Add(broadPhase);
-                foreach (var proxy in proxies)
+                foreach (var fixture in physicsComponent.FixtureList)
                 {
-                    broadPhase.AddProxy(proxy);
+                    fixture.CreateProxies(grid.Index, transform);
                 }
-            }
-        }
 
-        private void HandlePhysicsMove(MoveEvent moveEvent)
-        {
-            // TODO: Remove from old grids and add to new grids
-            // TODO: Update existing grids
-        }
+                var proxies = physicsComponent.GetProxies(grid.Index);
 
-        private void HandleCollisionChange(CollisionChangeMessage message)
-        {
-            if (message.Enabled)
-            {
-                HandlePhysicsAdd(message.PhysicsComponent);
-            }
-            else
-            {
-                HandlePhysicsRemove(message.PhysicsComponent);
+                for (var i = 0; i < proxies.Count; i++)
+                {
+                    // TODO: mutating this struct disgusts me
+                    var proxy = proxies[i];
+                    proxy.ProxyId = broadPhase.AddProxy(proxy);
+                }
             }
         }
 
@@ -203,13 +234,7 @@ namespace Robust.Shared.Physics.Broadphase
                 _graph[mapId] = grids;
             }
 
-            /*
-             * The reason I didn't just use our existing DynamicTree was mainly because I'd need to fuck around with making
-             * it use IBroadphase (for now I'm more concerned about a 1-1 port than trying to optimise it).
-             * It seemed easier to just use a chunked version for now.
-             */
-
-            grids[gridId] = new ChunkBroadphase();
+            grids[gridId] = new DynamicTreeBroadPhase(mapId, gridId);
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -217,18 +242,10 @@ namespace Robust.Shared.Physics.Broadphase
             _graph[eventArgs.Map] = new Dictionary<GridId, IBroadPhase>();
         }
 
-
-        /*
-         * TODO: Just use b2DynamicTree again this stuff sucks, at least for now.
-         */
-
-
         private void HandleGridRemoval(GridId gridId)
         {
-            // TODO: Get relevant map and remove the grid from it, then also shutdown the broadphase
-            // Migrate all entities to their new home or some shit maybe idk, depends on order
-            _mapManager.GetM
-            _graph[]
+            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+            _graph[mapId].Remove(gridId);
         }
 
         public void AddBody(PhysicsComponent component)
@@ -262,13 +279,14 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void RemoveBody(PhysicsComponent component)
         {
-            var proxies = component.GetProxies();
-
             foreach (var broadPhase in _lastBroadPhases[component])
             {
-                foreach (var proxy in proxies)
+                foreach (var fixture in component.FixtureList)
                 {
-                    broadPhase.RemoveProxy(proxy);
+                    foreach (var proxy in fixture.Proxies[GetGridId(broadPhase)])
+                    {
+                        broadPhase.RemoveProxy(proxy.ProxyId);
+                    }
                 }
             }
 
@@ -277,35 +295,59 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void SynchronizeFixtures(PhysicsComponent component, PhysicsTransform xf1, PhysicsTransform xf2)
         {
-            var proxies = component.GetProxies();
-
-            // TODO: Optimise this shit, should move on the retained ones.
-            foreach (var broadPhase in _lastBroadPhases[component])
-            {
-                for (var i = 0; i < proxies.Count; i++)
-                {
-                    broadPhase.RemoveProxy(proxies[i]);
-                }
-            }
-
             var mapId = component.Owner.Transform.MapID;
-            var grids = _graph[mapId];
-            _lastBroadPhases[component] = new List<IBroadPhase>();
-
-            for (var i = 0; i < proxies.Count; i++)
-            {
-                var proxy = proxies[i];
-                proxy.AABB = SynchronizeAABB(proxy, xf1, xf2);
-            }
-
+            var oldGridIds = _lastBroadPhases[component].Select(o => GetGridId(o)).ToList();
+            var newGridIds = new List<GridId>();
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId,
                 component.WorldAABB, true))
             {
-                var broadPhase = grids[gridId];
+                newGridIds.Add(gridId);
+            }
 
-                for (var i = 0; i < proxies.Count; i++)
+            // Remove old broadPhases
+            foreach (var gridId in oldGridIds.Where(o => !newGridIds.Contains(o)))
+            {
+                var broadPhase = GetBroadPhase(gridId);
+
+                foreach (var fixture in component.FixtureList)
                 {
-                    broadPhase.AddProxy(proxies[i]);
+                    foreach (var proxy in fixture.Proxies[gridId])
+                    {
+                        broadPhase.RemoveProxy(proxy.ProxyId);
+                    }
+                }
+
+                _lastBroadPhases[component].Remove(broadPhase);
+            }
+
+            // Move on existing ones
+            foreach (var gridId in newGridIds.Where(o => oldGridIds.Contains(o)))
+            {
+                var broadPhase = GetBroadPhase(gridId);
+
+                foreach (var fixture in component.FixtureList)
+                {
+                    for (var i = 0; i < fixture.ProxyCount; i++)
+                    {
+                        var proxy = fixture.Proxies[gridId][i];
+                        proxy.AABB = SynchronizeAABB(proxy, xf1, xf2);
+                        var displacement = xf2.Position - xf1.Position;
+                        broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
+                    }
+                }
+            }
+
+            // Add to new ones
+            foreach (var gridId in newGridIds.Where(o => !oldGridIds.Contains(o)))
+            {
+                var broadPhase = GetBroadPhase(gridId);
+
+                foreach (var fixture in component.FixtureList)
+                {
+                    foreach (var proxy in fixture.Proxies[gridId])
+                    {
+                        broadPhase.AddProxy(proxy);
+                    }
                 }
 
                 _lastBroadPhases[component].Add(broadPhase);
@@ -320,25 +362,103 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void DestroyProxies(Fixture fixture)
         {
-            throw new NotImplementedException();
+            foreach (var (gridId, proxies) in fixture.Proxies)
+            {
+                var broadPhase = GetBroadPhase(gridId);
+
+                foreach (var proxy in proxies)
+                {
+                    broadPhase.RemoveProxy(proxy.ProxyId);
+                }
+            }
         }
 
         public void TouchProxy(FixtureProxy proxy)
         {
             throw new NotImplementedException();
+
+            foreach (var broadPhase in _lastBroadPhases[proxy.Fixture.Body])
+            {
+                //broadPhase.TouchProxy(proxy);
+            }
+        }
+
+        private GridId GetGridId(IBroadPhase broadPhase)
+        {
+            foreach (var (_, grids) in _graph)
+            {
+                foreach (var (gridId, broad) in grids)
+                {
+                    if (broadPhase == broad)
+                    {
+                        return gridId;
+                    }
+                }
+            }
+
+            throw new InvalidOperationException("Unable to find GridId for broadPhase");
         }
 
         public void CreateProxies(Fixture fixture)
         {
-            var proxies = fixture.CreateProxies(fixture.Body.GetTransform());
-
             foreach (var broadPhase in _lastBroadPhases[fixture.Body])
             {
+                var gridId = GetGridId(broadPhase);
+
+                var proxies = fixture.CreateProxies(gridId, fixture.Body.GetTransform(), _mapManager);
+
                 foreach (var proxy in proxies)
                 {
                     broadPhase.AddProxy(proxy);
                 }
             }
+        }
+
+        public IEnumerable<IEntity> GetCollidingEntities(IPhysBody body, Vector2 offset, bool approximate = true)
+        {
+            var modifiers = body.Owner.GetAllComponents<ICollideSpecial>();
+            var entities = new List<IEntity>();
+
+            var state = (body, modifiers, entities);
+
+            foreach (var broadPhase in _lastBroadPhases[(PhysicsComponent) body])
+            {
+                foreach (var fixture in body.FixtureList)
+                {
+                    foreach (var proxy in fixture.Proxies[GetGridId(broadPhase)])
+                    {
+                        broadPhase.QueryAabb(ref state,
+                            (ref (IPhysBody body, IEnumerable<ICollideSpecial> modifiers, List<IEntity> entities) state,
+                                in FixtureProxy other) =>
+                            {
+                                if (body.Owner.Deleted)
+                                    return true;
+
+                                if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) != 0)
+                                {
+                                    var preventCollision = false;
+                                    var otherModifiers = other.Fixture.Body.Owner.GetAllComponents<ICollideSpecial>();
+                                    foreach (var modifier in state.modifiers)
+                                    {
+                                        preventCollision |= modifier.PreventCollide(other.Fixture.Body);
+                                    }
+                                    foreach (var modifier in otherModifiers)
+                                    {
+                                        preventCollision |= modifier.PreventCollide(body);
+                                    }
+
+                                    if (preventCollision)
+                                        return true;
+
+                                    state.entities.Add(body.Owner);
+                                }
+                                return true;
+                            }, proxy.AABB, approximate);
+                    }
+                }
+            }
+
+            return entities;
         }
 
         // This is dirty but so is a lot of other shit so it'll get refactored at some stage tm
@@ -351,6 +471,89 @@ namespace Robust.Shared.Physics.Broadphase
                 if (body.Owner.Transform.GridID == gridId)
                     yield return body;
             }
+        }
+
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
+            float maxLength = 50F,
+            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
+        {
+            List<RayCastResults> results = new();
+
+            var rayBox = new Box2();
+
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
+            {
+                _graph[mapId][gridId].QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                {
+
+                    if (returnOnFirstHit && results.Count > 0) return true;
+
+                    if (distFromOrigin > maxLength)
+                    {
+                        return true;
+                    }
+
+                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                    {
+                        return true;
+                    }
+
+                    var entity = proxy.Fixture.Body.Owner;
+
+                    if (predicate != null && predicate.Invoke(entity))
+                    {
+                        return true;
+                    }
+
+                    var result = new RayCastResults(distFromOrigin, point, entity);
+                    results.Add(result);
+                    //DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
+                    return true;
+                }, ray);
+            }
+
+            results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
+            return results;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
+            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
+
+        /// <inheritdoc />
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, IEntity? ignoredEnt = null)
+        {
+            var penetration = 0f;
+            var rayBox = new Box2();
+            throw new NotImplementedException();
+
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
+            {
+                _graph[mapId][gridId].QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
+                {
+                    if (distFromOrigin > ray.Distance)
+                    {
+                        return true;
+                    }
+
+                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
+                    {
+                        return true;
+                    }
+
+                    /*
+                    if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
+                        body.WorldAABB, out _, out var exitPoint))
+                    {
+                        penetration += (point - exitPoint).Length;
+                    }
+                    */
+
+                    return true;
+                }, ray);
+
+            }
+            return penetration;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using JetBrains.Annotations;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects.EntitySystems
 {
@@ -10,7 +11,7 @@ namespace Robust.Server.GameObjects.EntitySystems
         {
             base.Initialize();
 
-            UpdatesAfter.Add(typeof(PhysicsSystem));
+            UpdatesAfter.Add(typeof(SharedPhysicsSystem));
         }
     }
 }

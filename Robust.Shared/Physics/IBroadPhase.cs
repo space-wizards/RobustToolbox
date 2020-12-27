@@ -5,7 +5,7 @@ using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics
 {
-    internal interface IBroadPhase
+    public interface IBroadPhase
     {
         // Rolled SetProxy into AddProxy
         void UpdatePairs(BroadphaseDelegate callback);
@@ -20,11 +20,6 @@ namespace Robust.Shared.Physics
 
         FixtureProxy GetProxy(DynamicTree.Proxy proxy);
 
-        // TODO: Replace these with what we were using
-        void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
-
-        void RayCast(BroadPhaseRayCastCallback callback, ref CollisionRay input);
-
         // TODO: Okay so Box2D uses TouchProxy to say "hey this proxy is moving" to know which pairs to update.
         // The problem with this is if we're driving a station and we try to run over an entity then
         // none of the entities involved in the collision are moving in their own frame of reference
@@ -32,11 +27,44 @@ namespace Robust.Shared.Physics
         // In other games sleeping is probably not too common so it's less advantageous for them.
         //void TouchProxy(FixtureProxy proxy);
 
+        void QueryAabb(
+            DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
+            Box2 aabb,
+            bool approx = false);
+
+        void QueryAabb<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback,
+            Box2 aabb,
+            bool approx = false);
+
+        IEnumerable<FixtureProxy> QueryAabb(Box2 aabb, bool approx = false);
+
+        void QueryPoint(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
+            Vector2 point,
+            bool approx = false);
+
+        void QueryPoint<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.QueryCallbackDelegate<TState> callback,
+            Vector2 point,
+            bool approx = false);
+
+        IEnumerable<FixtureProxy> QueryPoint(Vector2 point, bool approx = false);
+
+        void QueryRay(
+            DynamicTree<FixtureProxy>.RayQueryCallbackDelegate callback,
+            in Ray ray,
+            bool approx = false);
+
+        void QueryRay<TState>(
+            ref TState state,
+            DynamicTree<FixtureProxy>.RayQueryCallbackDelegate<TState> callback,
+            in Ray ray,
+            bool approx = false);
+
         void ShiftOrigin(Vector2 newOrigin);
     }
-
-    public delegate bool BroadPhaseQueryCallback(DynamicTree.Proxy proxyId);
-    public delegate float BroadPhaseRayCastCallback(ref CollisionRay input, DynamicTree.Proxy proxyId);
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 

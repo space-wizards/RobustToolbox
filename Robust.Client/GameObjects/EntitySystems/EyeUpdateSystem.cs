@@ -1,12 +1,12 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
-using Robust.Client.Physics;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 #nullable enable
 
@@ -40,7 +40,7 @@ namespace Robust.Client.GameObjects.EntitySystems
 
             // Make sure this runs *after* entities have been moved by interpolation and movement.
             UpdatesAfter.Add(typeof(TransformSystem));
-            UpdatesAfter.Add(typeof(PhysicsSystem));
+            UpdatesAfter.Add(typeof(SharedPhysicsSystem));
         }
 
         /// <inheritdoc />

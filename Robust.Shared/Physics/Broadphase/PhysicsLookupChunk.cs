@@ -73,9 +73,11 @@ namespace Robust.Shared.Physics.Broadphase
 
         public IEnumerable<FixtureProxy> GetProxies(Box2 aabb)
         {
+            throw new NotImplementedException();
+
             foreach (var node in GetNodes(aabb))
             {
-                throw new NotImplementedException();
+
             }
         }
 

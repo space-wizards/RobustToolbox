@@ -1,7 +1,10 @@
+using Robust.Shared.Physics;
+
 namespace Robust.Shared.GameObjects.Components
 {
     public class CollisionChangeMessage : EntitySystemMessage
     {
+        // TODO
         public PhysicsComponent PhysicsComponent { get; }
         public bool Enabled { get; }
 

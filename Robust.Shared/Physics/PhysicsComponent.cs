@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -13,6 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
+    [ComponentReference(typeof(IPhysBody))]
     public partial class PhysicsComponent : Component, IPhysBody
     {
         public override string Name => "Physics";
@@ -27,9 +29,6 @@ namespace Robust.Shared.Physics
         internal Sweep Sweep;
 
         public PhysicsMap? PhysicsMap { get; set; }
-
-        // Aether2D uses these system-wide but for us we're just gonna store it on the component and call it a day.
-        public HashSet<AetherController> Controllers { get; set; } = new HashSet<AetherController>();
 
         /// <summary>
         /// Gets or sets a value indicating whether this body should be included in the CCD solver.
@@ -257,6 +256,35 @@ namespace Robust.Shared.Physics
         }
 
         private BodyType _bodyType;
+
+        public Box2 WorldAABB
+        {
+            get
+            {
+                // TODO: Defo need a test for this.
+                var mapManager = IoCManager.Resolve<IMapManager>();
+                var aabb = new Box2();
+
+                foreach (var fixture in FixtureList)
+                {
+                    foreach (var (gridId, proxies) in fixture.Proxies)
+                    {
+                        var offset = Owner
+                            .EntityManager
+                            .GetEntity(mapManager.GetGrid(gridId).GridEntityId)
+                            .Transform
+                            .WorldPosition;
+
+                        foreach (var proxy in proxies)
+                        {
+                            aabb.Combine(proxy.AABB.Translated(offset));
+                        }
+                    }
+                }
+
+                return aabb;
+            }
+        }
 
         /// <summary>
         ///     Is this body enabled.

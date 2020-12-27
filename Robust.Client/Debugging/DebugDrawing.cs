@@ -129,20 +129,23 @@ namespace Robust.Client.Debugging
 
                 foreach (var body in _hoverBodies)
                 {
+                    // TODO
+                    continue;
                     if (body != _hoverBodies[0])
                     {
                         DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), "------");
                         row++;
                     }
 
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Entity}");
+                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
                     row++;
-                    DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
+                    /*DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
                     row++;
                     DrawString(screenHandle, _font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {((IPhysBody)body).Anchored}");
                     row++;
+                    */
                 }
 
             }
@@ -163,7 +166,7 @@ namespace Robust.Client.Debugging
                     var physBody = (IPhysBody) boundingBox;
 
                     // all entities have a TransformComponent
-                    var transform = physBody.Entity.Transform;
+                    var transform = physBody.Owner.Transform;
 
                     // if not on the same map, continue
                     if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
@@ -176,10 +179,12 @@ namespace Robust.Client.Debugging
                     if (!worldBox.Intersects(in viewport) || worldBox.IsEmpty())
                         continue;
 
+                    /* TODO
                     foreach (var shape in physBody.PhysicsShapes)
                     {
                         shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, physBody.SleepAccumulator / (float) physBody.SleepThreshold);
                     }
+                    */
 
                     if (worldBox.Contains(mouseWorldPos))
                     {

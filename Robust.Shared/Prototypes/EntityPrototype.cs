@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, YamlMappingNode> Components { get; } = new();
+        public Dictionary<string, Dictionary<string, object?>> Components { get; } = new();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -136,10 +136,11 @@ namespace Robust.Shared.GameObjects
 
         public EntityPrototype()
         {
+            var compDataMgr = IoCManager.Resolve<IComponentDataManager>();
             // Everybody gets a transform component!
-            Components.Add("Transform", new YamlMappingNode());
+            Components.Add("Transform", compDataMgr.GetEmptyComponentData("Transform"));
             // And a metadata component too!
-            Components.Add("MetaData", new YamlMappingNode());
+            Components.Add("MetaData", compDataMgr.GetEmptyComponentData("MetaData"));
         }
 
         public void LoadFrom(YamlMappingNode mapping)
@@ -341,26 +342,21 @@ namespace Robust.Shared.GameObjects
 
         private static void PushInheritance(EntityPrototype source, EntityPrototype target)
         {
+            var dataMgr = IoCManager.Resolve<IComponentDataManager>();
             // Copy component data over.
-            foreach (KeyValuePair<string, YamlMappingNode> component in source.Components)
+            foreach (var(type, component) in source.Components)
             {
-                if (target.Components.TryGetValue(component.Key, out var targetComponent))
+                if (target.Components.TryGetValue(type, out var targetComponent))
                 {
                     // Copy over values the target component does not have.
-                    foreach (YamlNode key in component.Value.Children.Keys)
-                    {
-                        if (!targetComponent.Children.ContainsKey(key))
-                        {
-                            targetComponent.Children[key] = component.Value[key];
-                        }
-                    }
+                    dataMgr.PushInheritance(type, component, targetComponent);
                 }
                 else
                 {
                     // Copy component into the target, since it doesn't have it yet.
                     // Unless it'd cause a conflict.
                     var factory = IoCManager.Resolve<IComponentFactory>();
-                    foreach (var refType in factory.GetRegistration(component.Key).References)
+                    foreach (var refType in factory.GetRegistration(type).References)
                     {
                         if (target.ReferenceTypes.Contains(refType))
                         {
@@ -369,7 +365,7 @@ namespace Robust.Shared.GameObjects
                         }
                     }
 
-                    target.Components[component.Key] = new YamlMappingNode(component.Value.AsEnumerable());
+                    target.Components[type] = component.ShallowClone(); //todo is this sufficient?
                 }
 
                 next: ;
@@ -440,13 +436,16 @@ namespace Robust.Shared.GameObjects
                     ObjectSerializer ser;
                     if (context != null)
                     {
-                        ser = context.GetComponentSerializer(name, data);
+                        ser = context.GetComponentSerializer(name, null);
                     }
                     else
                     {
                         prototype.CurrentDeserializingComponent = name;
-                        ser = YamlObjectSerializer.NewReader(data, defaultContext);
+                        ser = YamlObjectSerializer.NewReader(new YamlMappingNode(), defaultContext);
                     }
+                    ser.CurrentType = factory.GetRegistration(name).Type;
+
+                    var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
                     EnsureCompExistsAndDeserialize(entity, factory, name, ser);
                 }
@@ -471,10 +470,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, ObjectSerializer ser)
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, Dictionary<string, object?> data)
         {
             var compType = factory.GetRegistration(compName).Type;
-            ser.CurrentType = compType;
 
             if (!entity.TryGetComponent(compType, out var component))
             {
@@ -484,7 +482,7 @@ namespace Robust.Shared.GameObjects
                 component = newComponent;
             }
 
-            component.ExposeData(ser);
+            IoCManager.Resolve<IComponentDataManager>().PopulateComponent(component, data);
         }
 
         private void ReadComponent(YamlMappingNode mapping, IComponentFactory factory)
@@ -516,7 +514,9 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            Components[type] = copy;
+            var data = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(type, copy);
+
+            Components[type] = data;
         }
 
         public override string ToString()

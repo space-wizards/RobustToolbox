@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Interfaces.GameObjects.Components;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -105,7 +106,7 @@ namespace Robust.Shared.Physics.Shapes
         /// <param name="transform">The transform to be applied to the shape.</param>
         /// <param name="childIndex">The child shape index.</param>
         /// <returns>True if the ray-cast hits the shape</returns>
-        public abstract bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex);
+        public abstract bool RayCast(out RayCastOutput output, ref CollisionRay input, PhysicsTransform transform, int childIndex);
 
         /// <summary>
         /// Given a transform, compute the associated axis aligned bounding box for a child shape.
@@ -125,6 +126,23 @@ namespace Robust.Shared.Physics.Shapes
         //Used for the buoyancy controller
         //</summary>
         //public abstract float ComputeSubmergedArea(ref Vector2 normal, float offset, ITransformComponent transform, out Vector2 sc);
+    }
+
+    /// <summary>
+    /// Ray-cast output data.
+    /// </summary>
+    public struct RayCastOutput
+    {
+        /// <summary>
+        /// The ray hits at p1 + fraction * (p2 - p1), where p1 and p2 come from RayCastInput.
+        /// Contains the actual fraction of the ray where it has the intersection point.
+        /// </summary>
+        public float Fraction;
+
+        /// <summary>
+        /// The normal of the face of the shape the ray has hit.
+        /// </summary>
+        public Vector2 Normal;
     }
 
     public enum ShapeType : sbyte

@@ -13,25 +13,34 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Specifies the starting point of the ray.
         /// </summary>
-        public Vector2 Position;
+        public Vector2 Start;
 
         /// <summary>
         ///     Specifies the direction the ray is pointing.
         /// </summary>
-        public Vector2 Direction;
+        public Vector2 End;
+
+        public Vector2 Direction => (End - Start).Normalized;
 
         /// <summary>
         ///     Creates a new instance of a Ray.
         /// </summary>
-        /// <param name="position">Starting position of the ray.</param>
+        /// <param name="start">Starting position of the ray.</param>
         /// <param name="direction">Unit direction vector that the ray is pointing.</param>
-        public Ray(Vector2 position, Vector2 direction)
+        /// <param name="distance"></param>
+        public Ray(Vector2 start, Vector2 direction, float distance)
         {
-            Position = position;
-            Direction = direction;
+            DebugTools.Assert(distance > 0f);
+            Start = start;
+            DebugTools.Assert(MathHelper.CloseTo(direction.LengthSquared, 1));
+            End = start + direction * distance;
+        }
 
-            DebugTools.Assert(MathHelper.CloseTo(Direction.LengthSquared, 1));
-
+        public Ray(Vector2 start, Vector2 end)
+        {
+            Start = start;
+            End = end;
+            DebugTools.Assert((end - start).LengthSquared > 0f);
         }
 
         #region Intersect Tests
@@ -50,7 +59,7 @@ namespace Robust.Shared.Maths
                 if (MathF.Abs(Direction.X) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (Position.X < MathF.Min(box.Left, box.Right) || Position.X > MathF.Max(box.Left, box.Right))
+                    if (Start.X < MathF.Min(box.Left, box.Right) || Start.X > MathF.Max(box.Left, box.Right))
                     {
                         return false;
                     }
@@ -58,8 +67,8 @@ namespace Robust.Shared.Maths
 
                 // calculate intersection t value of ray with near and far plane of slab
                 var ood = 1.0f / Direction.X;
-                var t1 = (MathF.Min(box.Left, box.Right) - Position.X) * ood;
-                var t2 = (MathF.Max(box.Left, box.Right) - Position.X) * ood;
+                var t1 = (MathF.Min(box.Left, box.Right) - Start.X) * ood;
+                var t2 = (MathF.Max(box.Left, box.Right) - Start.X) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
@@ -81,7 +90,7 @@ namespace Robust.Shared.Maths
                 if (MathF.Abs(Direction.Y) < epsilon)
                 {
                     // ray is parallel to this slab, it will never hit unless ray is inside box
-                    if (Position.Y < MathF.Min(box.Top, box.Bottom) || Position.Y > MathF.Max(box.Top, box.Bottom))
+                    if (Start.Y < MathF.Min(box.Top, box.Bottom) || Start.Y > MathF.Max(box.Top, box.Bottom))
                     {
                         return false;
                     }
@@ -89,8 +98,8 @@ namespace Robust.Shared.Maths
 
                 // calculate intersection t value of ray with near and far plane of slab
                 var ood = 1.0f / Direction.Y;
-                var t1 = (MathF.Min(box.Top, box.Bottom) - Position.Y) * ood;
-                var t2 = (MathF.Max(box.Top, box.Bottom) - Position.Y) * ood;
+                var t1 = (MathF.Min(box.Top, box.Bottom) - Start.Y) * ood;
+                var t2 = (MathF.Max(box.Top, box.Bottom) - Start.Y) * ood;
 
                 // Make t1 be the intersection with near plane, t2 with far plane
                 if (t1 > t2)
@@ -108,7 +117,7 @@ namespace Robust.Shared.Maths
             }
 
             // Ray intersects all slabs. Return point and intersection t value
-            hitPos = Position + Direction * tmin;
+            hitPos = Start + Direction * tmin;
             distance = tmin;
             return true;
         }
@@ -123,7 +132,7 @@ namespace Robust.Shared.Maths
         /// <param name="other">Ray to compare to.</param>
         public readonly bool Equals(Ray other)
         {
-            return Position.Equals(other.Position) && Direction.Equals(other.Direction);
+            return Start.Equals(other.Start) && Direction.Equals(other.Direction);
         }
 
         /// <summary>
@@ -143,7 +152,7 @@ namespace Robust.Shared.Maths
         {
             unchecked
             {
-                return (Position.GetHashCode() * 397) ^ Direction.GetHashCode();
+                return (Start.GetHashCode() * 397) ^ Direction.GetHashCode();
             }
         }
 

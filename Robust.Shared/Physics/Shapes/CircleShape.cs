@@ -59,7 +59,7 @@ namespace Robust.Shared.Physics.Shapes
             return Vector2.Dot(distance, distance) <= _2radius;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref CollisionRay input, PhysicsTransform transform, int childIndex)
         {
             // Collision Detection in Interactive 3D Environments by Gino van den Bergen
             // From Section 3.1.2
@@ -69,11 +69,11 @@ namespace Robust.Shared.Physics.Shapes
             output = new RayCastOutput();
 
             var centre = transform.Position + Complex.Multiply(_position, transform.Quaternion);
-            Vector2 s = input.Point1 - centre;
+            Vector2 s = input.Start - centre;
             float b = Vector2.Dot(s, s) - _2radius;
 
             // Solve quadratic equation.
-            Vector2 r = input.Point2 - input.Point1;
+            Vector2 r = input.Point2 - input.Start;
             float c = Vector2.Dot(s, r);
             float rr = Vector2.Dot(r, r);
             float sigma = c * c - rr * b;

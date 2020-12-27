@@ -20,9 +20,10 @@ namespace Robust.Shared.Physics
 
         FixtureProxy GetProxy(DynamicTree.Proxy proxy);
 
+        // TODO: Replace these with what we were using
         void Query(BroadPhaseQueryCallback callback, ref Box2 aabb);
 
-        void RayCast(BroadPhaseRayCastCallback callback, ref RayCastInput input);
+        void RayCast(BroadPhaseRayCastCallback callback, ref CollisionRay input);
 
         // TODO: Okay so Box2D uses TouchProxy to say "hey this proxy is moving" to know which pairs to update.
         // The problem with this is if we're driving a station and we try to run over an entity then
@@ -35,7 +36,7 @@ namespace Robust.Shared.Physics
     }
 
     public delegate bool BroadPhaseQueryCallback(DynamicTree.Proxy proxyId);
-    public delegate float BroadPhaseRayCastCallback(ref RayCastInput input, DynamicTree.Proxy proxyId);
+    public delegate float BroadPhaseRayCastCallback(ref CollisionRay input, DynamicTree.Proxy proxyId);
 
     public interface IBroadPhase<T> : ICollection<T> where T : notnull {
 

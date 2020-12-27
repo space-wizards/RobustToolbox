@@ -210,12 +210,12 @@ namespace Robust.Shared.Physics.Shapes
             return true;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform transform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref CollisionRay input, PhysicsTransform transform, int childIndex)
         {
             output = new RayCastOutput();
 
             // Put the ray into the polygon's frame of reference.
-            Vector2 p1 = Complex.Divide(input.Point1 - transform.Position, transform.Quaternion);
+            Vector2 p1 = Complex.Divide(input.Start - transform.Position, transform.Quaternion);
             Vector2 p2 = Complex.Divide(input.Point2 - transform.Position, transform.Quaternion);
             Vector2 d = p2 - p1;
 

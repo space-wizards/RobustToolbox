@@ -95,22 +95,14 @@ namespace Robust.Shared.Physics.Broadphase
 
         public bool TestOverlap(FixtureProxy proxyA, FixtureProxy proxyB)
         {
+            // TODO: This should only ever be called on the same grid I think so maybe just assert
             var mapA = proxyA.Fixture.Body.Owner.Transform.MapID;
             var mapB = proxyB.Fixture.Body.Owner.Transform.MapID;
 
             if (mapA != mapB)
                 return false;
 
-            // TODO: Hacky af. Maybe store the GridIds on the body
-            foreach (var (_, broad) in _graph[mapA])
-            {
-                if (broad.Contains(proxyA) && broad.Contains(proxyB))
-                {
-                    return proxyA.AABB.Intersects(proxyB.AABB);
-                }
-            }
-
-            return false;
+            return proxyA.AABB.Intersects(proxyB.AABB);
         }
 
         public void UpdatePairs(MapId mapId, BroadphaseDelegate callback)

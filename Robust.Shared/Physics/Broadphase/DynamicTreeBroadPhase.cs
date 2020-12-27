@@ -86,8 +86,7 @@ namespace Robust.Shared.Physics.Broadphase
             _tree.RayCast(ref results,
                 (ref List<RayCastResults> state, DynamicTree.Proxy proxy, in Vector2 pos, float distance) =>
                 {
-                    throw new NotImplementedException();
-                    callback()
+                    callback(input, proxy);
                     return true;
                 }, input);
         }

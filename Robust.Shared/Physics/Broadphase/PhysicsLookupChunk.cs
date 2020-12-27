@@ -75,7 +75,7 @@ namespace Robust.Shared.Physics.Broadphase
         {
             foreach (var node in GetNodes(aabb))
             {
-
+                throw new NotImplementedException();
             }
         }
 

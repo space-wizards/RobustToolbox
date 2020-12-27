@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
@@ -47,6 +48,8 @@ namespace Robust.Shared.Physics
         public readonly ContactListHead ContactList;
         public int ContactCount { get; private set; }
         internal readonly ContactListHead _contactPoolList;
+
+        public GridId GridId => throw new NotImplementedException();
 
         /// <summary>
         /// The set of active contacts.
@@ -374,12 +377,12 @@ namespace Robust.Shared.Physics
                 if (activeA == false && activeB == false)
                 {
                     ActiveContacts.Remove(c);
-                    c = c.Next;
+                    // c = c.Next;
                     continue;
                 }
 
-                var proxyA = fixtureA.Proxies[indexA];
-                var proxyB = fixtureB.Proxies[indexB];
+                var proxyA = fixtureA.Proxies[GridId][indexA];
+                var proxyB = fixtureB.Proxies[GridId][indexB];
 
                 bool overlap = _broadPhase.TestOverlap(proxyA, proxyB);
 

@@ -157,7 +157,7 @@ namespace Robust.Shared.Physics.Shapes
             return false;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform physicsTransform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref CollisionRay input, PhysicsTransform physicsTransform, int childIndex)
         {
             DebugTools.Assert(childIndex < Vertices.Count);
 

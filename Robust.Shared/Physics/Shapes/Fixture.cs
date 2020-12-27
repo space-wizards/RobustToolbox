@@ -189,7 +189,7 @@ namespace Robust.Shared.Physics
             return Shape.TestPoint(ref transform, ref point);
         }
 
-        public bool RayCast(out RayCastOutput output, ref RayCastInput input, int childIndex)
+        public bool RayCast(out RayCastOutput output, ref CollisionRay input, int childIndex)
         {
             var transform = Body.GetTransform();
             return Shape.RayCast(out output, ref input, transform, childIndex);

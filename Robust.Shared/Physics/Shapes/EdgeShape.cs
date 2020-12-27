@@ -1,4 +1,5 @@
-﻿using Robust.Shared.Maths;
+﻿using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics
@@ -111,7 +112,7 @@ namespace Robust.Shared.Physics
             return false;
         }
 
-        public override bool RayCast(out RayCastOutput output, ref RayCastInput input, PhysicsTransform physicsTransform, int childIndex)
+        public override bool RayCast(out RayCastOutput output, ref CollisionRay input, PhysicsTransform physicsTransform, int childIndex)
         {
             // p = p1 + t * d
             // v = v1 + s * e
@@ -121,7 +122,7 @@ namespace Robust.Shared.Physics
             output = new RayCastOutput();
 
             // Put the ray into the edge's frame of reference.
-            Vector2 p1 = Complex.Divide(input.Point1 - physicsTransform.Position, ref physicsTransform.Quaternion);
+            Vector2 p1 = Complex.Divide(input.Start - physicsTransform.Position, ref physicsTransform.Quaternion);
             Vector2 p2 = Complex.Divide(input.Point2 - physicsTransform.Position, ref physicsTransform.Quaternion);
             Vector2 d = p2 - p1;
 
@@ -174,6 +175,7 @@ namespace Robust.Shared.Physics
             {
                 output.Normal = normal;
             }
+
             return true;
         }
 

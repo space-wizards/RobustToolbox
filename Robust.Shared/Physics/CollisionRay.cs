@@ -17,25 +17,34 @@ namespace Robust.Shared.Maths
         /// <summary>
         ///     Specifies the starting point of the ray.
         /// </summary>
-        public Vector2 Position => _ray.Position;
+        public Vector2 Start => _ray.Start;
 
+        // TODO: Should just be endpoint and rest can be inferred?
         /// <summary>
         ///     Specifies the direction the ray is pointing.
         /// </summary>
         public Vector2 Direction => _ray.Direction;
 
+        public float Distance => (_ray.End - _ray.Start).Length;
+
+        public Vector2 Point2 => _ray.End;
+
         public int CollisionMask => _collisionMask;
+
+        // TODO: WAT
+        public float MaxFraction => 1f;
 
         /// <summary>
         ///     Creates a new instance of a Ray.
         /// </summary>
         /// <param name="position">Starting position of the ray.</param>
         /// <param name="direction">Unit direction vector that the ray is pointing.</param>
-        public CollisionRay(Vector2 position, Vector2 direction, int collisionMask)
+        /// <param name="distance"></param>
+        /// <param name="collisionMask"></param>
+        public CollisionRay(Vector2 position, Vector2 direction, float distance, int collisionMask)
         {
-            _ray = new Ray(position, direction);
+            _ray = new Ray(position, direction, distance);
             _collisionMask = collisionMask;
-
         }
 
         #region Intersect Tests
@@ -53,7 +62,7 @@ namespace Robust.Shared.Maths
         /// <param name="other">Ray to compare to.</param>
         public bool Equals(CollisionRay other)
         {
-            return Position.Equals(other.Position) && Direction.Equals(other.Direction);
+            return Start.Equals(other.Start) && Direction.Equals(other.Direction);
         }
 
         /// <summary>
@@ -73,7 +82,7 @@ namespace Robust.Shared.Maths
         {
             unchecked
             {
-                return (Position.GetHashCode() * 397) ^ Direction.GetHashCode();
+                return (Start.GetHashCode() * 397) ^ Direction.GetHashCode();
             }
         }
 

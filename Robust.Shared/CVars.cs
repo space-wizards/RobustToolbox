@@ -233,10 +233,10 @@ namespace Robust.Shared
             CVarDef.Create("display.height", 720, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayLightMapDivider =
-            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY);
+            CVarDef.Create("display.lightmapdivider", 2, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> DisplaySoftShadows =
-            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
@@ -261,7 +261,7 @@ namespace Robust.Shared
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
 
         public static readonly CVarDef<float> AudioMasterVolume =
-            CVarDef.Create("audio.mastervolume", 1.0f, CVar.CLIENTONLY);
+            CVarDef.Create("audio.mastervolume", 1.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
         /*
          * PLAYER

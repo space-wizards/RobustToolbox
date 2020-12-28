@@ -55,7 +55,7 @@ namespace Robust.Client.GameObjects
 
             Register<AppearanceComponent>();
             RegisterReference<AppearanceComponent, SharedAppearanceComponent>();
-            
+
             Register<AppearanceTestComponent>();
             Register<SnapGridComponent>();
 
@@ -73,7 +73,6 @@ namespace Robust.Client.GameObjects
 
 #if DEBUG
             Register<DebugExceptionOnAddComponent>();
-            Register<DebugExceptionExposeDataComponent>();
             Register<DebugExceptionInitializeComponent>();
             Register<DebugExceptionStartupComponent>();
 #endif

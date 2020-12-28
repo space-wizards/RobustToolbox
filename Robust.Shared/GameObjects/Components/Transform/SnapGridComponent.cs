@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects.Components.Transform
@@ -21,6 +22,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public sealed override string Name => "SnapGrid";
 
         private bool IsSet;
+        [YamlField("offset")]
         private SnapGridOffset _offset = SnapGridOffset.Center;
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -53,13 +55,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
                 IsSet = false;
             }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataFieldCached(ref _offset, "offset", SnapGridOffset.Center);
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -25,7 +26,8 @@ namespace Robust.Shared.GameObjects.Components.Map
         [Dependency] private readonly IMapManager _mapManager = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
-        private GridId _gridIndex;
+        [YamlField("index")]
+        private GridId _gridIndex = GridId.Invalid;
 
         /// <inheritdoc />
         public override string Name => "MapGrid";
@@ -79,14 +81,6 @@ namespace Robust.Shared.GameObjects.Components.Map
 
             _gridIndex = state.GridIndex;
             Grid.HasGravity = state.HasGravity;
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _gridIndex, "index", GridId.Invalid);
         }
     }
 

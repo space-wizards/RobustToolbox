@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Localization.Macros;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -17,6 +18,7 @@ namespace Robust.Shared.GameObjects.Components
 
         private bool _proper;
 
+        [YamlField("proper")]
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Proper
         {
@@ -26,11 +28,6 @@ namespace Robust.Shared.GameObjects.Components
                 _proper = value;
                 Dirty();
             }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataField(this, x => x.Proper, "proper", false);
         }
 
         public override ComponentState GetComponentState()

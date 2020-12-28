@@ -2,6 +2,7 @@ using System;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -12,7 +13,9 @@ namespace Robust.Shared.GameObjects
         public sealed override string Name => "Occluder";
         public sealed override uint? NetID => NetIDs.OCCLUDER;
 
+        [YamlField("enabled")]
         private bool _enabled = true;
+        [YamlField("boundingBox")]
         private Box2 _boundingBox = new(-0.5f, -0.5f, 0.5f, 0.5f);
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -51,14 +54,6 @@ namespace Robust.Shared.GameObjects
             base.Startup();
 
             EntitySystem.Get<OccluderSystem>().AddOrUpdateEntity(Owner, Owner.Transform.Coordinates);
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _enabled, "enabled", true);
-            serializer.DataField(ref _boundingBox, "boundingBox", new Box2(-0.5f, -0.5f, 0.5f, 0.5f));
         }
 
         public override void OnRemove()

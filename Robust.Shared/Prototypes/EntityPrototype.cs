@@ -421,7 +421,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context)
+        internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context) //yeah officer this method right here
         {
             YamlObjectSerializer.Context? defaultContext = null;
             if (context == null)
@@ -436,16 +436,16 @@ namespace Robust.Shared.GameObjects
                     ObjectSerializer ser;
                     if (context != null)
                     {
-                        ser = context.GetComponentSerializer(name, null);
+                        ser = context.GetComponentSerializer(name, data);
                     }
                     else
                     {
                         prototype.CurrentDeserializingComponent = name;
-                        ser = YamlObjectSerializer.NewReader(new YamlMappingNode(), defaultContext);
+                        ser = YamlObjectSerializer.NewReader(data, defaultContext);
                     }
-                    ser.CurrentType = factory.GetRegistration(name).Type;
+                    //ser.CurrentType = factory.GetRegistration(name).Type;
 
-                    var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
+                    //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
                     EnsureCompExistsAndDeserialize(entity, factory, name, ser);
                 }

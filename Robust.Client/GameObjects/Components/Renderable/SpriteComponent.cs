@@ -36,6 +36,7 @@ namespace Robust.Client.GameObjects
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
+        [YamlField("visible")]
         private bool _visible = true;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -45,6 +46,8 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
+        [YamlField("drawdepth")]
+        //todo WithFormat.Constants<DrawDepthTag>()
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -57,6 +60,7 @@ namespace Robust.Client.GameObjects
             set => drawDepth = value;
         }
 
+        [YamlField("scale")]
         private Vector2 scale = Vector2.One;
 
         /// <summary>
@@ -70,7 +74,8 @@ namespace Robust.Client.GameObjects
             set => scale = value;
         }
 
-        private Angle rotation;
+        [YamlField("rotation")]
+        private Angle rotation = Angle.Zero;
 
         [Animatable]
         [ViewVariables(VVAccess.ReadWrite)]
@@ -80,6 +85,7 @@ namespace Robust.Client.GameObjects
             set => rotation = value;
         }
 
+        [YamlField("offset")]
         private Vector2 offset = Vector2.Zero;
 
         /// <summary>
@@ -93,6 +99,7 @@ namespace Robust.Client.GameObjects
             set => offset = value;
         }
 
+        [YamlField("color")]
         private Color color = Color.White;
 
         [Animatable]
@@ -116,11 +123,13 @@ namespace Robust.Client.GameObjects
             set => _directional = value;
         }
 
+        [YamlField("directional")]
         private bool _directional = true;
 
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
+        [YamlField("sprite")]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -1056,38 +1065,7 @@ namespace Robust.Client.GameObjects
 
         public override void ExposeData(ObjectSerializer serializer)
         {
-            base.ExposeData(serializer);
 
-            serializer.DataFieldCached(ref scale, "scale", Vector2.One);
-            serializer.DataFieldCached(ref rotation, "rotation", Angle.Zero);
-            serializer.DataFieldCached(ref offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref drawDepth, "drawdepth", DrawDepthTag.Default,
-                WithFormat.Constants<DrawDepthTag>());
-            serializer.DataFieldCached(ref color, "color", Color.White);
-            serializer.DataFieldCached(ref _directional, "directional", true);
-            serializer.DataFieldCached(ref _visible, "visible", true);
-
-            // TODO: Writing?
-            if (!serializer.Reading)
-            {
-                return;
-            }
-
-            {
-                var rsi = serializer.ReadDataField<string?>("sprite", null);
-                if (!string.IsNullOrWhiteSpace(rsi))
-                {
-                    var rsiPath = TextureRoot / rsi;
-                    try
-                    {
-                        BaseRSI = resourceCache.GetResource<RSIResource>(rsiPath).RSI;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, e);
-                    }
-                }
-            }
 
             List<Layer> CloneLayers(List<Layer> source)
             {

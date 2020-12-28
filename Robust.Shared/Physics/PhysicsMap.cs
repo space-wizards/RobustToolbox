@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Joints;
 
@@ -105,6 +108,8 @@ namespace Robust.Shared.Physics
 
             ContactManager = new ContactManager();
             Gravity = new Vector2(0f, -9.80665f);
+
+            ControllerList = EntitySystem.Get<SharedPhysicsSystem>().GetControllers(this);
         }
 
         /// <summary>

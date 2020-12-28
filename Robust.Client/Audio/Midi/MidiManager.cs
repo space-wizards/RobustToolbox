@@ -299,7 +299,7 @@ namespace Robust.Client.Audio.Midi
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
-                                occlusion = EntitySystem.Get<SharedBroadPhaseSystem>().IntersectRayPenetration(
+                                occlusion = IoCManager.Resolve<IBroadPhaseManager>().IntersectRayPenetration(
                                     pos.MapId,
                                     new CollisionRay(
                                         pos.Position,

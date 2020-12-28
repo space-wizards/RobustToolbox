@@ -27,7 +27,7 @@ namespace Robust.Shared.Maths
 
         public float Distance => (_ray.End - _ray.Start).Length;
 
-        public Vector2 Point2 => _ray.End;
+        public Vector2 End => _ray.End;
 
         public int CollisionMask => _collisionMask;
 
@@ -44,6 +44,12 @@ namespace Robust.Shared.Maths
         public CollisionRay(Vector2 position, Vector2 direction, float distance, int collisionMask)
         {
             _ray = new Ray(position, direction, distance);
+            _collisionMask = collisionMask;
+        }
+
+        public CollisionRay(Vector2 start, Vector2 end, int collisionMask)
+        {
+            _ray = new Ray(start, end);
             _collisionMask = collisionMask;
         }
 

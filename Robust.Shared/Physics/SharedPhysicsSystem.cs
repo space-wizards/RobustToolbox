@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects.Systems;
+using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -10,13 +12,23 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
-        // World / PhysicsMap was heavily modified to make a lot of stuff not map specific so some of it was dumped here
-        private Dictionary<MapId, List<AetherController>>
-            _controllers = new Dictionary<MapId, List<AetherController>>();
-
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
 
-        private Dictionary<MapId, PhysicsMap> _maps = new Dictionary<MapId, PhysicsMap>();
+        private List<Type> _controllerTypes = new();
+
+        private Dictionary<MapId, PhysicsMap> _maps = new();
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+
+            foreach (var type in reflectionManager.GetAllChildren(typeof(AetherController)))
+            {
+                if (type.IsAbstract) continue;
+                _controllerTypes.Add(type);
+            }
+        }
 
         public override void Update(float frameTime)
         {
@@ -32,6 +44,21 @@ namespace Robust.Shared.Physics
                 if (!predicted)
                     map.ClearForces();
             }
+        }
+
+        public List<AetherController> GetControllers(PhysicsMap map)
+        {
+            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
+            var result = new List<AetherController>();
+
+            foreach (var type in _controllerTypes)
+            {
+                var controller = (AetherController) typeFactory.CreateInstance(type);
+                controller.World = map;
+                result.Add(controller);
+            }
+
+            return result;
         }
     }
 }

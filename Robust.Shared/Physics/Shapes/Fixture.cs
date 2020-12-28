@@ -74,7 +74,7 @@ namespace Robust.Shared.Physics
         public bool IsSensor
         {
             get => _isSensor;
-            private set
+            set
             {
                 if (_isSensor == value)
                     return;

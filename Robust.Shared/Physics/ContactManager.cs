@@ -93,7 +93,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public PreSolveDelegate? PreSolve;
 
-        [Dependency] private IBroadPhaseManager _broadPhase = default!;
+        [Dependency] internal IBroadPhaseManager BroadPhase = default!;
 
         internal ContactManager()
         {
@@ -232,7 +232,7 @@ namespace Robust.Shared.Physics
 
         internal void FindNewContacts(MapId mapId)
         {
-            _broadPhase.UpdatePairs(mapId, OnBroadphaseCollision);
+            BroadPhase.UpdatePairs(mapId, OnBroadphaseCollision);
         }
 
         internal void Destroy(Contact contact)
@@ -384,7 +384,7 @@ namespace Robust.Shared.Physics
                 var proxyA = fixtureA.Proxies[GridId][indexA];
                 var proxyB = fixtureB.Proxies[GridId][indexB];
 
-                bool overlap = _broadPhase.TestOverlap(proxyA, proxyB);
+                bool overlap = BroadPhase.TestOverlap(proxyA, proxyB);
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (!overlap)

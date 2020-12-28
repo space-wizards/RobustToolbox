@@ -216,7 +216,7 @@ namespace Robust.Shared.Physics.Shapes
 
             // Put the ray into the polygon's frame of reference.
             Vector2 p1 = Complex.Divide(input.Start - transform.Position, transform.Quaternion);
-            Vector2 p2 = Complex.Divide(input.Point2 - transform.Position, transform.Quaternion);
+            Vector2 p2 = Complex.Divide(input.End - transform.Position, transform.Quaternion);
             Vector2 d = p2 - p1;
 
             float lower = 0.0f, upper = input.MaxFraction;

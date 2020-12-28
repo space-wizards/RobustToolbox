@@ -452,7 +452,7 @@ namespace Robust.Shared.Map
                     // TODO: Should have an event for this probably
                     /*
                     var collideComp = newEnt.AddComponent<PhysicsComponent>();
-                    collideComp.CanCollide = true;
+                    collideComp.Enabled = true;
                     collideComp.PhysicsShapes.Add(new PhysShapeGrid(grid));
                     */
 

@@ -14,7 +14,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics.Broadphase
 {
-    internal interface IBroadPhaseManager
+    public interface IBroadPhaseManager
     {
         // More or less a clone of IBroadPhase but this one doesn't really care about what map it's on.
 
@@ -38,7 +38,11 @@ namespace Robust.Shared.Physics.Broadphase
         /// <param name="fixture"></param>
         void CreateProxies(Fixture fixture);
 
-        // TODO: Query and RayCast using the old methods
+        IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray, Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true);
+
+        IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, IEntity? ignoredEnt = null, bool returnOnFirstHit = true);
+
+        float IntersectRayPenetration(MapId mapId, CollisionRay ray, IEntity? ignoredEnt = null);
     }
 
     public sealed class SharedBroadPhaseSystem : EntitySystem, IBroadPhaseManager
@@ -461,6 +465,22 @@ namespace Robust.Shared.Physics.Broadphase
             return entities;
         }
 
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
+        {
+            var bodies = new HashSet<PhysicsComponent>();
+
+            foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
+            {
+                foreach (var proxy in _graph[mapId][gridId].QueryAabb(worldAABB, false))
+                {
+                    if (bodies.Contains(proxy.Fixture.Body)) continue;
+                    bodies.Add(proxy.Fixture.Body);
+                }
+            }
+
+            return bodies;
+        }
+
         // This is dirty but so is a lot of other shit so it'll get refactored at some stage tm
         public IEnumerable<PhysicsComponent> GetAwakeBodies(MapId mapId, GridId gridId)
         {
@@ -474,7 +494,6 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
@@ -488,7 +507,7 @@ namespace Robust.Shared.Physics.Broadphase
 
                     if (returnOnFirstHit && results.Count > 0) return true;
 
-                    if (distFromOrigin > maxLength)
+                    if (distFromOrigin > ray.Distance)
                     {
                         return true;
                     }
@@ -517,40 +536,38 @@ namespace Robust.Shared.Physics.Broadphase
         }
 
         /// <inheritdoc />
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
+            => IntersectRayWithPredicate(mapId, ray, entity => entity == ignoredEnt, returnOnFirstHit);
 
         /// <inheritdoc />
         public float IntersectRayPenetration(MapId mapId, CollisionRay ray, IEntity? ignoredEnt = null)
         {
             var penetration = 0f;
-            var rayBox = new Box2();
-            throw new NotImplementedException();
+            var bottomLeft = new Vector2(Math.Min(ray.Start.X, ray.End.X), Math.Min(ray.Start.Y, ray.End.Y));
+            var topRight = new Vector2(Math.Max(ray.Start.X, ray.End.X), Math.Max(ray.Start.Y, ray.End.Y));
+            var rayBox = new Box2(bottomLeft, topRight);
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
             {
+                var gridOrigin = _mapManager.GetGrid(gridId).WorldPosition;
+                var translatedRay = new Ray(ray.Start + gridOrigin, ray.End + gridOrigin);
+
                 _graph[mapId][gridId].QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
                     if (distFromOrigin > ray.Distance)
-                    {
                         return true;
-                    }
 
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
                         return true;
-                    }
 
-                    /*
-                    if (new Ray(point + ray.Direction * body.WorldAABB.Size.Length * 2, -ray.Direction).Intersects(
-                        body.WorldAABB, out _, out var exitPoint))
+                    if (new Ray(point + translatedRay.Direction * proxy.AABB.Size.Length * 2, -translatedRay.Direction).Intersects(
+                        proxy.AABB, out _, out var exitPoint))
                     {
                         penetration += (point - exitPoint).Length;
                     }
-                    */
 
                     return true;
-                }, ray);
+                }, translatedRay);
 
             }
             return penetration;

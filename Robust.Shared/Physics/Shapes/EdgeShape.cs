@@ -123,7 +123,7 @@ namespace Robust.Shared.Physics
 
             // Put the ray into the edge's frame of reference.
             Vector2 p1 = Complex.Divide(input.Start - physicsTransform.Position, ref physicsTransform.Quaternion);
-            Vector2 p2 = Complex.Divide(input.Point2 - physicsTransform.Position, ref physicsTransform.Quaternion);
+            Vector2 p2 = Complex.Divide(input.End - physicsTransform.Position, ref physicsTransform.Quaternion);
             Vector2 d = p2 - p1;
 
             Vector2 v1 = _vertex1;

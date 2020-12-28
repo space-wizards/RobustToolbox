@@ -31,12 +31,83 @@ namespace Robust.Shared.Physics
         public PhysicsMap? PhysicsMap { get; set; }
 
         /// <summary>
+        ///     True if any fixture is a sensor
+        /// </summary>
+        public bool IsSensor
+        {
+            get
+            {
+                foreach (var fixture in FixtureList)
+                {
+                    if (!fixture.IsSensor) return false;
+                }
+
+                return true;
+            }
+            set
+            {
+                foreach (var fixture in FixtureList)
+                {
+                    fixture.IsSensor = value;
+                }
+            }
+        }
+
+        [Obsolete("Use BodyType instead")]
+        public bool Anchored
+        {
+            get => BodyType == BodyType.Static;
+            set
+            {
+                if (value)
+                {
+                    BodyType = BodyType.Static;
+                }
+                else
+                {
+                    BodyType = BodyType.Dynamic;
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating whether this body should be included in the CCD solver.
         /// </summary>
         /// <value><c>true</c> if this instance is included in CCD; otherwise, <c>false</c>.</value>
         public bool IsBullet { get; set; }
 
         public bool IgnoreCCD { get; set; }
+
+        // TODO: Caching
+        public int CollisionLayer
+        {
+            get
+            {
+                var layer = 0x0;
+
+                foreach (var fixture in FixtureList)
+                {
+                    layer |= fixture.CollisionLayer;
+                }
+
+                return layer;
+            }
+        }
+
+        public int CollisionMask
+        {
+            get
+            {
+                var mask = 0x0;
+
+                foreach (var fixture in FixtureList)
+                {
+                    mask |= fixture.CollisionMask;
+                }
+
+                return mask;
+            }
+        }
 
         /// <summary>
         /// Set this body to have fixed rotation. This causes the mass
@@ -60,7 +131,10 @@ namespace Robust.Shared.Physics
 
         private bool _fixedRotation;
 
-        public List<Fixture> FixtureList { get; set; } = new List<Fixture>();
+        /// <inheritdoc />
+        public bool Predict { get; set; }
+
+        public List<Fixture> FixtureList { get; set; } = new();
 
         public ContactEdge? ContactList { get; set; }
 
@@ -250,8 +324,30 @@ namespace Robust.Shared.Physics
                 }
 
                 Awake = true;
+                Force = Vector2.Zero;
+                Torque = 0.0f;
 
-                // TODO: All the other shit
+                // Delete the attached contacts.
+                ContactEdge? ce = ContactList;
+
+                while (ce != null)
+                {
+                    ContactEdge ce0 = ce;
+                    ce = ce.Next;
+                    Debug.Assert(ce0.Contact != null);
+                    PhysicsMap?.ContactManager.Destroy(ce0.Contact);
+                }
+
+                ContactList = null;
+
+                if (PhysicsMap != null)
+                {
+                    // Touch the proxies so that new contacts will be created (when appropriate)
+                    var broadPhase = PhysicsMap.ContactManager.BroadPhase;
+
+                    foreach (Fixture fixture in FixtureList)
+                        fixture.TouchProxies(broadPhase);
+                }
             }
         }
 
@@ -269,11 +365,7 @@ namespace Robust.Shared.Physics
                 {
                     foreach (var (gridId, proxies) in fixture.Proxies)
                     {
-                        var offset = Owner
-                            .EntityManager
-                            .GetEntity(mapManager.GetGrid(gridId).GridEntityId)
-                            .Transform
-                            .WorldPosition;
+                        var offset = mapManager.GetGrid(gridId).WorldPosition;
 
                         foreach (var proxy in proxies)
                         {
@@ -294,18 +386,28 @@ namespace Robust.Shared.Physics
             get => _enabled;
             set
             {
+                if (PhysicsMap != null && PhysicsMap.IsLocked)
+                    throw new InvalidOperationException("The World is locked.");
+
                 if (value == _enabled)
                     return;
 
                 _enabled = value;
 
-                if (_enabled)
+                if (Enabled)
                 {
-                    // TODO: If world not null create proxies?
+                    if (PhysicsMap != null)
+                        CreateProxies();
+
+                    // Contacts are created the next time step.
                 }
                 else
                 {
-                    // TODO: If world not null destroy proxies + contacts.
+                    if (PhysicsMap != null)
+                    {
+                        DestroyProxies();
+                        DestroyContacts();
+                    }
                 }
             }
         }
@@ -340,6 +442,9 @@ namespace Robust.Shared.Physics
             get => _awake;
             set
             {
+                if (_awake == value)
+                    return;
+
                 if (!_awake)
                 {
                     SleepTime = 0f;
@@ -373,6 +478,17 @@ namespace Robust.Shared.Physics
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
+        }
+
+        public override ComponentState GetComponentState()
+        {
+            return base.GetComponentState();
+        }
+
+        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
+        {
+            base.HandleComponentState(curState, nextState);
+            Dirty();
         }
 
         // TODO: These 2 need testing
@@ -512,6 +628,12 @@ namespace Robust.Shared.Physics
             Sweep.Angle0 = angle;
 
             IoCManager.Resolve<IBroadPhaseManager>().SynchronizeFixtures(this, transform, transform);
+        }
+
+        public bool IsColliding(Vector2 offset, bool approximate)
+        {
+            // TODO: Re-do
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -729,11 +851,122 @@ namespace Robust.Shared.Physics
             IoCManager.Resolve<IBroadPhaseManager>().RemoveBody(this);
         }
 
+        /// <summary>
+        /// Destroy the attached contacts.
+        /// </summary>
+        private void DestroyContacts()
+        {
+            ContactEdge? ce = ContactList;
+            while (ce != null)
+            {
+                ContactEdge ce0 = ce;
+                ce = ce.Next;
+                if (ce0.Contact == null) continue;
+                PhysicsMap?.ContactManager.Destroy(ce0.Contact);
+            }
+
+            ContactList = null;
+        }
+
         internal void SynchronizeFixtures()
         {
             PhysicsTransform xf1 = new PhysicsTransform(Vector2.Zero, Sweep.Angle0);
             xf1.Position = Sweep.Center0 - Complex.Multiply(Sweep.LocalCenter, ref xf1.Quaternion);
             IoCManager.Resolve<IBroadPhaseManager>().SynchronizeFixtures(this, xf1, GetTransform());
+        }
+
+        /// <summary>
+        /// Applies a force at the center of mass.
+        /// </summary>
+        /// <param name="force">The force.</param>
+        public void ApplyForce(Vector2 force)
+        {
+            ApplyForce(force, Owner.Transform.WorldPosition);
+        }
+
+        /// <summary>
+        /// Apply a force at a world point. If the force is not
+        /// applied at the center of mass, it will generate a torque and
+        /// affect the angular velocity. This wakes up the body.
+        /// </summary>
+        /// <param name="force">The world force vector, usually in Newtons (N).</param>
+        /// <param name="point">The world position of the point of application.</param>
+        public void ApplyForce(Vector2 force, Vector2 point)
+        {
+            Debug.Assert(!float.IsNaN(force.X));
+            Debug.Assert(!float.IsNaN(force.Y));
+            Debug.Assert(!float.IsNaN(point.X));
+            Debug.Assert(!float.IsNaN(point.Y));
+
+            if (_bodyType != BodyType.Dynamic) return;
+
+            Awake = true;
+
+            Force += force;
+            Torque += (point.X - Sweep.Center.X) * force.Y - (point.Y - Sweep.Center.Y) * force.X;
+        }
+
+        /// <summary>
+        /// Apply a torque. This affects the angular velocity
+        /// without affecting the linear velocity of the center of mass.
+        /// This wakes up the body.
+        /// </summary>
+        /// <param name="torque">The torque about the z-axis (out of the screen), usually in N-m.</param>
+        public void ApplyTorque(float torque)
+        {
+            Debug.Assert(!float.IsNaN(torque));
+
+            if (_bodyType != BodyType.Dynamic) return;
+
+            Awake = true;
+            Torque += torque;
+        }
+
+        /// <summary>
+        /// Apply an impulse at a point. This immediately modifies the velocity.
+        /// This wakes up the body.
+        /// </summary>
+        /// <param name="impulse">The world impulse vector, usually in N-seconds or kg-m/s.</param>
+        public void ApplyLinearImpulse(Vector2 impulse)
+        {
+            if (_bodyType != BodyType.Dynamic)
+                return;
+
+            Awake = true;
+
+            _linearVelocity += impulse * InvMass;
+        }
+
+        /// <summary>
+        /// Apply an impulse at a point. This immediately modifies the velocity.
+        /// It also modifies the angular velocity if the point of application
+        /// is not at the center of mass.
+        /// This wakes up the body.
+        /// </summary>
+        /// <param name="impulse">The world impulse vector, usually in N-seconds or kg-m/s.</param>
+        /// <param name="point">The world position of the point of application.</param>
+        public void ApplyLinearImpulse(Vector2 impulse, Vector2 point)
+        {
+            if (_bodyType != BodyType.Dynamic)
+                return;
+
+            Awake = true;
+
+            _linearVelocity += impulse * InvMass;
+            _angularVelocity += InvI * ((point.X - Sweep.Center.X) * impulse.Y - (point.Y - Sweep.Center.Y) * impulse.X);
+        }
+
+        /// <summary>
+        /// Apply an angular impulse.
+        /// </summary>
+        /// <param name="impulse">The angular impulse in units of kg*m*m/s.</param>
+        public void ApplyAngularImpulse(float impulse)
+        {
+            if (_bodyType != BodyType.Dynamic)
+                return;
+
+            Awake = true;
+            _angularVelocity += InvI * impulse;
         }
     }
 }

@@ -73,7 +73,7 @@ namespace Robust.Shared.Physics.Shapes
             float b = Vector2.Dot(s, s) - _2radius;
 
             // Solve quadratic equation.
-            Vector2 r = input.Point2 - input.Start;
+            Vector2 r = input.End - input.Start;
             float c = Vector2.Dot(s, r);
             float rr = Vector2.Dot(r, r);
             float sigma = c * c - rr * b;

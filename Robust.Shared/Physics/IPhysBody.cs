@@ -12,11 +12,20 @@ namespace Robust.Shared.Physics
     /// </summary>
     public interface IPhysBody
     {
+        /// <summary>
+        ///     Should the client update this body in FrameUpdates?
+        /// </summary>
+        bool Predict { get; }
+
         List<Fixture> FixtureList { get; }
 
         IEntity Owner { get; }
 
         Box2 WorldAABB { get; }
+
+        int CollisionLayer { get; }
+
+        int CollisionMask { get; }
 
         /// <summary>
         ///     Relative to our grid

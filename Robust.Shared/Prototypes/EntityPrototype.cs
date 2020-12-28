@@ -423,31 +423,31 @@ namespace Robust.Shared.GameObjects
 
         internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory, IEntityLoadContext? context) //yeah officer this method right here
         {
-            YamlObjectSerializer.Context? defaultContext = null;
+            /*YamlObjectSerializer.Context? defaultContext = null;
             if (context == null)
             {
                 defaultContext = new PrototypeSerializationContext(prototype);
-            }
+            }*/
 
             if (prototype != null)
             {
                 foreach (var (name, data) in prototype.Components)
                 {
-                    ObjectSerializer ser;
+                    Dictionary<string, object?> fullData = data;
                     if (context != null)
                     {
-                        ser = context.GetComponentSerializer(name, data);
+                        fullData = context.GetComponentData(name, data);
                     }
-                    else
+                    /*else
                     {
                         prototype.CurrentDeserializingComponent = name;
                         ser = YamlObjectSerializer.NewReader(data, defaultContext);
-                    }
+                    }*/
                     //ser.CurrentType = factory.GetRegistration(name).Type;
 
                     //var contextData = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(name, )
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, ser);
+                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData);
                 }
             }
 
@@ -463,7 +463,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    var ser = context.GetComponentSerializer(name, null);
+                    var ser = context.GetComponentData(name, null);
 
                     EnsureCompExistsAndDeserialize(entity, factory, name, ser);
                 }
@@ -514,7 +514,7 @@ namespace Robust.Shared.GameObjects
             // Also maybe deep copy this? Right now it's pretty error prone.
             copy.Children.Remove(new YamlScalarNode("type"));
 
-            var data = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(type, copy);
+            var data = IoCManager.Resolve<IComponentDataManager>().ParseComponentData(type, copy); //todo handle cached fields
 
             Components[type] = data;
         }
@@ -524,7 +524,7 @@ namespace Robust.Shared.GameObjects
             return $"EntityPrototype({ID})";
         }
 
-        private class PrototypeSerializationContext : YamlObjectSerializer.Context
+        /*private class PrototypeSerializationContext : YamlObjectSerializer.Context
         {
             readonly EntityPrototype? prototype;
 
@@ -590,6 +590,6 @@ namespace Robust.Shared.GameObjects
 
                 return prototype.DataCache.TryGetValue(field, out value);
             }
-        }
+        }*/
     }
 }

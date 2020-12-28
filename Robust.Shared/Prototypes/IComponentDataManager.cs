@@ -10,10 +10,7 @@ namespace Robust.Shared.Prototypes
 {
     public interface IComponentDataManager
     {
-        Dictionary<string, object?> ParseComponentData(string compName, YamlMappingNode mapping) =>
-            ParseComponentData(compName, YamlObjectSerializer.NewReader(mapping));
-
-        Dictionary<string, object?> ParseComponentData(string compName, ObjectSerializer ser);
+        Dictionary<string, object?> ParseComponentData(string compName, YamlMappingNode mapping);
 
         IYamlFieldDefinition[] GetComponentDataDefinition(string compName);
 

@@ -771,25 +771,31 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            ObjectSerializer IEntityLoadContext.GetComponentSerializer(string componentName, YamlMappingNode? protoData)
+            Dictionary<string, object?> IEntityLoadContext.GetComponentData(string componentName,
+                Dictionary<string, object?>? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
                     throw new InvalidOperationException();
                 }
 
-                var list = new List<YamlMappingNode>();
+                var dataMgr = IoCManager.Resolve<IComponentDataManager>();
+
+                var data = dataMgr.GetEmptyComponentData(componentName);
+
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    list.Add(mapping);
+                    //TODO Paul: maybe replace mapping with dict
+                    var contextData = dataMgr.ParseComponentData(componentName, mapping);
+                    dataMgr.PushInheritance(componentName, contextData, data);
                 }
 
                 if (protoData != null)
                 {
-                    list.Add(protoData);
+                    dataMgr.PushInheritance(componentName, protoData, data);
                 }
 
-                return YamlObjectSerializer.NewReader(list, this);
+                return data;
             }
 
             public IEnumerable<string> GetExtraComponentTypes()
@@ -811,8 +817,7 @@ namespace Robust.Server.Maps
                     return false;
                 }
 
-                var testSer = YamlObjectSerializer.NewReader(compData);
-                if (testSer.TryReadDataFieldCached(field, format, out var prototypeVal))
+                if (compData.TryGetValue(field, out var prototypeVal))
                 {
                     if (value == null)
                     {

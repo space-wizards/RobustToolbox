@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.Prototypes
 {
@@ -6,7 +7,7 @@ namespace Robust.Shared.Prototypes
     {
         public readonly string Tag;
 
-        public YamlFieldAttribute(string tag)
+        public YamlFieldAttribute([NotNull] string tag)
         {
             Tag = tag;
         }

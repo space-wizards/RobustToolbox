@@ -11,6 +11,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using System;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Client.GameObjects
 {
@@ -72,6 +73,7 @@ namespace Robust.Client.GameObjects
         ///     Set a mask texture that will be applied to the light while rendering.
         ///     The mask's red channel will be linearly multiplied.p
         /// </summary>
+        /// todo Paul: IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value)
         [ViewVariables(VVAccess.ReadWrite)]
         public Texture? Mask { get; set; }
 
@@ -118,16 +120,24 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private float _radius = 5;
+        [YamlField("radius")]
+        private float _radius = 5f;
+        [YamlField("nestedvisible")]
         private bool _visibleNested = true;
         private bool _lightOnParent = false;
+        [YamlField("color")]
         private Color _color = Color.White;
-        private Vector2 _offset;
+        [YamlField("offset")]
+        private Vector2 _offset = Vector2.Zero;
+        [YamlField("enabled")]
         private bool _enabled = true;
+        [YamlField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
-        private float _energy;
-        private float _softness;
+        [YamlField("energy")]
+        private float _energy = 1f;
+        [YamlField("softness")]
+        private float _softness = 1f;
 
         /// <summary>
         ///     Radius, in meters.
@@ -170,23 +180,6 @@ namespace Robust.Client.GameObjects
             else
             {
                 _lightOnParent = false;
-            }
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref _radius, "radius", 5f);
-            serializer.DataFieldCached(ref _color, "color", Color.White);
-            serializer.DataFieldCached(ref _enabled, "enabled", true);
-            serializer.DataFieldCached(ref _energy, "energy", 1f);
-            serializer.DataFieldCached(ref _softness, "softness", 1f);
-            serializer.DataFieldCached(ref _maskAutoRotate, "autoRot", false);
-            serializer.DataFieldCached(ref _visibleNested, "nestedvisible", true);
-
-            if (serializer.Reading && serializer.TryReadDataField<string>("mask", out var value))
-            {
-                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(value);
             }
         }
 

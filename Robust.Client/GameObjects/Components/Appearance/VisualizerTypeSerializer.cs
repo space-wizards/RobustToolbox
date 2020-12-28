@@ -9,11 +9,15 @@ namespace Robust.Client.GameObjects
 {
     public class VisualizerTypeSerializer : YamlObjectSerializer.TypeSerializer
     {
-        private IReflectionManager? _reflectionManager;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+
+        public VisualizerTypeSerializer()
+        {
+            IoCManager.InjectDependencies(this);
+        }
 
         public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
         {
-            _reflectionManager ??= IoCManager.Resolve<IReflectionManager>();
             var mapping = (YamlMappingNode) node;
             var nodeType = mapping.GetNode("type");
             switch (nodeType.AsString())
@@ -48,7 +52,6 @@ namespace Robust.Client.GameObjects
 
         public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
         {
-            _reflectionManager ??= IoCManager.Resolve<IReflectionManager>();
             switch (obj)
             {
                 case AppearanceComponent.SpriteLayerToggle spriteLayerToggle:

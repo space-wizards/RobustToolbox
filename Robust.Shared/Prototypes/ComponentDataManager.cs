@@ -67,6 +67,17 @@ namespace Robust.Shared.Prototypes
 
         private readonly Dictionary<string, IYamlFieldDefinition[]> _dataDefinitions = new();
 
+        public YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp)
+        {
+            var mapping = new YamlMappingNode
+            {
+                {"type", comp.Name}
+            };
+            //todo Paul: serialize all non-default (default & prototype) values#
+            //todo Paul: return null if no non-default values
+            throw new NotImplementedException();
+        }
+
         public IYamlFieldDefinition[] GetComponentDataDefinition(string compName)
         {
             if (!_dataDefinitions.TryGetValue(compName, out var dataDefinition))

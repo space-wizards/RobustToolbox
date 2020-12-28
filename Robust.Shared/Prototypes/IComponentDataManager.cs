@@ -12,6 +12,8 @@ namespace Robust.Shared.Prototypes
     {
         Dictionary<string, object?> ParseComponentData(string compName, YamlMappingNode mapping);
 
+        YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp);
+
         IYamlFieldDefinition[] GetComponentDataDefinition(string compName);
 
         Dictionary<string, object?> GetEmptyComponentData(string compName);

@@ -618,6 +618,7 @@ namespace Robust.Server.Maps
 
             private void WriteEntitySection()
             {
+                var dataMgr = IoCManager.Resolve<IComponentDataManager>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -638,17 +639,12 @@ namespace Robust.Server.Maps
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in entity.GetAllComponents())
                     {
-                        var compMapping = new YamlMappingNode();
-                        CurrentWritingComponent = component.Name;
-                        var compSerializer = YamlObjectSerializer.NewWriter(compMapping, this);
-
-                        component.ExposeData(compSerializer);
+                        var compMapping = dataMgr.SerializeNonDefaultComponentData(component);
 
                         // Don't need to write it if nothing was written!
-                        if (compMapping.Children.Count != 0)
+                        if (compMapping != null)
                         {
                             // Something actually got written!
-                            compMapping.Add("type", component.Name);
                             components.Add(compMapping);
                         }
                     }

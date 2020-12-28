@@ -65,7 +65,7 @@ namespace Content.Generators
                 path = $"{solutionPath}{subdir}";
                 if (!Directory.Exists(path))
                 {
-                    var msg = $"Could not expected project at dir: {path}.";
+                    var msg = $"Could not find expected project at dir: {path}.";
                     context.ReportDiagnostic(
                         Diagnostic.Create(
                             new DiagnosticDescriptor("RIC0002",

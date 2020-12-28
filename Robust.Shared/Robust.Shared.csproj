@@ -49,4 +49,11 @@
     </Compile>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <Target Name="WriteSolutionPathForGenerator" BeforeTargets="Compile">
+    <WriteLinesToFile File="../Robust.Shared.Generators/obj/SolutionPathForGenerator" Lines="$(SolutionPath)" Overwrite="true" />
+  </Target>
+  <ItemGroup>
+    <AdditionalFiles Include="../Robust.Generators/obj/SolutionPathForGenerator" />
+    <ProjectReference Include="..\Robust.Shared.Generators\Robust.Shared.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+  </ItemGroup>
 </Project>

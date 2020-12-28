@@ -24,13 +24,11 @@ namespace Content.Generators
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            context.RegisterForSyntaxNotifications(() => new ComponentSyntaxReceiver());
+            //no init
         }
 
         public void Execute(GeneratorExecutionContext context)
         {
-            if(!(context.SyntaxReceiver is ComponentSyntaxReceiver receiver)) return;
-
             var comp = (CSharpCompilation) context.Compilation;
 
             var solutionPathFile = context.AdditionalFiles.FirstOrDefault(f => f.Path.EndsWith("SolutionPathForGenerator"));
@@ -101,7 +99,6 @@ namespace Content.Generators
             var clientWalker = new ComponentNameSearchWalker(clientComp);
             foreach (var syntaxTree in clientTrees)
             {
-                //clientWalker.Model = comp.GetSemanticModel(syntaxTree);
                 clientWalker.Visit(syntaxTree.GetRoot());
             }
 
@@ -111,18 +108,8 @@ namespace Content.Generators
             var serverWalker = new ComponentNameSearchWalker(serverComp);
             foreach (var syntaxTree in serverTrees)
             {
-                //clientWalker.Model = comp.GetSemanticModel(syntaxTree);
                 serverWalker.Visit(syntaxTree.GetRoot());
             }
-
-            /*var sharedComp = CSharpCompilation.Create("Shared", sharedTrees);
-            var sharedWalker = new ComponentNameSearchWalker();
-            foreach (var syntaxTree in GetSyntaxTrees(sharedPath))
-            {
-                sharedWalker.Model = comp.GetSemanticModel(syntaxTree);
-                sharedWalker.Visit(syntaxTree.GetRoot());
-            }*/
-
 
             IEnumerable<string> names;
             switch (comp.AssemblyName)

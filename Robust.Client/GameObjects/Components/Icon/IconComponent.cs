@@ -1,9 +1,11 @@
-﻿using Robust.Client.Graphics;
+﻿using System.Collections.Generic;
+using Robust.Client.Graphics;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -20,46 +22,32 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
-        public override void ExposeData(ObjectSerializer serializer)
+        private static IDirectionalTextureProvider TextureForConfig(Dictionary<string, object?> compData, IResourceCache resourceCache)
         {
-            base.ExposeData(serializer);
-
-            // TODO: Does this need writing?
-            if (serializer.Reading)
+            IDirectionalTextureProvider dirTex;
+            if (compData.TryGetValue(SerializationCache, out var cachedDirText))
             {
-                Icon = TextureForConfig(serializer, _resourceCache);
-            }
-        }
-
-        private static IDirectionalTextureProvider TextureForConfig(ObjectSerializer serializer, IResourceCache resourceCache)
-        {
-            DebugTools.Assert(serializer.Reading);
-
-            if (serializer.TryGetCacheData<IDirectionalTextureProvider>(SerializationCache, out var dirTex))
-            {
-                return dirTex;
+                return (IDirectionalTextureProvider)cachedDirText!;
             }
 
-            var tex = serializer.ReadDataField<string?>("texture", null);
-            if (!string.IsNullOrWhiteSpace(tex))
+            //var tex = compData.ReadDataField<string?>("texture", null);
+            if (compData.TryGetValue("texture", out var texObj) && !string.IsNullOrWhiteSpace((string?)texObj))
             {
-                dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / tex).Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
+                dirTex = resourceCache.GetResource<TextureResource>(SpriteComponent.TextureRoot / (string)texObj).Texture;
+                //todo compData.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
 
             RSI rsi;
 
-            var rsiPath = serializer.ReadDataField<string?>("sprite", null);
-
-            if (string.IsNullOrWhiteSpace(rsiPath))
+            if (compData.TryGetValue("sprite", out var rsiPathObj) && string.IsNullOrWhiteSpace((string?)rsiPathObj))
             {
                 dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
+                //todo compData.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
 
-            var path = SpriteComponent.TextureRoot / rsiPath;
+            var path = SpriteComponent.TextureRoot / (string)rsiPathObj!;
 
             try
             {
@@ -68,38 +56,37 @@ namespace Robust.Client.GameObjects
             catch
             {
                 dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
+                //todo compData.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
 
-            var stateId = serializer.ReadDataField<string?>("state", null);
-            if (string.IsNullOrWhiteSpace(stateId))
+            if (compData.TryGetValue("state", out var stateObj) && string.IsNullOrWhiteSpace((string?)stateObj))
             {
                 Logger.ErrorS(LogCategory, "No state specified.");
                 dirTex = resourceCache.GetFallback<TextureResource>().Texture;
-                serializer.SetCacheData(SerializationCache, dirTex);
+                //todo compData.SetCacheData(SerializationCache, dirTex);
                 return dirTex;
             }
 
-            if (rsi.TryGetState(stateId, out var state))
+            if (rsi.TryGetState((string)stateObj!, out var state))
             {
-                serializer.SetCacheData(SerializationCache, state);
+                //todo compData.SetCacheData(SerializationCache, state);
                 return state;
             }
             else
             {
-                Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", stateId);
+                Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", (string)stateObj!);
                 return resourceCache.GetFallback<TextureResource>().Texture;
             }
         }
 
         public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
-            if (!prototype.Components.TryGetValue("Icon", out var mapping))
+            if (!prototype.Components.TryGetValue("Icon", out var compData))
             {
                 return null;
             }
-            return TextureForConfig(YamlObjectSerializer.NewReader(mapping), resourceCache);
+            return TextureForConfig(compData, resourceCache);
         }
     }
 }

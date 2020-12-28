@@ -130,8 +130,7 @@ namespace Robust.Client.Placement
                     if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Physics"))
                     {
                         var map = value.Components["BoundingBox"];
-                        var serializer = YamlObjectSerializer.NewReader(map);
-                        serializer.DataField(ref _colliderAABB, "aabb", new Box2(0f, 0f, 0f, 0f));
+                        _colliderAABB = (Box2)(map["aabb"] ?? new Box2(0f, 0f, 0f, 0f));
                         return;
                     }
                 }

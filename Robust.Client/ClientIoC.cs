@@ -44,6 +44,7 @@ using Robust.Shared.Interfaces.Resources;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 
 namespace Robust.Client
 {
@@ -115,6 +116,9 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
+
+            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer),
+                new VisualizerTypeSerializer());
             //IoCManager.Register<IXamlCompiler, XamlCompiler>();
         }
     }

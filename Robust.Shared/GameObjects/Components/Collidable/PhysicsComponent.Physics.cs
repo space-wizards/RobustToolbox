@@ -5,6 +5,7 @@ using Robust.Shared.Interfaces.Physics;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Prototypes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components
@@ -168,11 +169,13 @@ namespace Robust.Shared.GameObjects.Components
     {
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
 
-        private float _mass = 1;
+        [YamlField("mass")]
+        private float _mass = 1.0f;
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
         private Dictionary<Type, VirtualController> _controllers = new();
+        [YamlField("anchored")]
         private bool _anchored = true;
         private float _friction = 1;
 

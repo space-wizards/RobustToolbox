@@ -34,7 +34,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     Whether the Owner has been paused.
         /// </summary>
         bool Paused { get; }
-        
+
         /// <summary>
         ///     Whether the client should synchronize component additions and removals.
         ///     If this is false and the component gets added or removed server side, the client will not do the same.
@@ -101,13 +101,6 @@ namespace Robust.Shared.Interfaces.GameObjects
         ///     But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
         void Initialize();
-
-        /// <summary>
-        ///     This allows setting of the component's parameters from YAML once it is instantiated.
-        ///     This should basically be overridden by every inheriting component, as parameters will be different
-        ///     across the board.
-        /// </summary>
-        void ExposeData(ObjectSerializer serializer);
 
         /// <summary>
         ///     Handles a local incoming component message.

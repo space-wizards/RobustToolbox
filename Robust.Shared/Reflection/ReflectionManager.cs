@@ -29,6 +29,8 @@ namespace Robust.Shared.Reflection
 
         private readonly Dictionary<(Type baseType, string typeName), Type?> _yamlTypeTagCache = new();
 
+        private readonly Dictionary<string, Type> _looseTypeCache = new();
+
         /// <inheritdoc />
         public IEnumerable<Type> GetAllChildren<T>(bool inclusive = false)
         {
@@ -134,6 +136,9 @@ namespace Robust.Shared.Reflection
 
         public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
         {
+            if (_looseTypeCache.TryGetValue(name, out type))
+                return true;
+
             foreach (var assembly in assemblies)
             {
                 foreach (var tryType in assembly.DefinedTypes)
@@ -141,6 +146,7 @@ namespace Robust.Shared.Reflection
                     if (tryType.FullName!.EndsWith(name))
                     {
                         type = tryType;
+                        _looseTypeCache[name] = type;
                         return true;
                     }
                 }

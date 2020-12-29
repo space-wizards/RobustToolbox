@@ -22,8 +22,8 @@ namespace Robust.Shared.GameObjects.Components.Appearance
         public abstract T GetData<T>(string key);
         public abstract T GetData<T>(Enum key);
 
-        public abstract bool TryGetData<T>(string key, [MaybeNullWhen(false)] out T data);
-        public abstract bool TryGetData<T>(Enum key, [MaybeNullWhen(false)] out T data);
+        public abstract bool TryGetData<T>(string key, [NotNullWhen(true)] out T data);
+        public abstract bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data);
 
         [Serializable, NetSerializable]
         protected class AppearanceComponentState : ComponentState

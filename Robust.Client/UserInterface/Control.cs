@@ -521,7 +521,7 @@ namespace Robust.Client.UserInterface
         {
             DebugTools.Assert(!Disposed, "Control has been disposed.");
 
-            foreach (var child in Children.ToList())
+            foreach (var child in Children.ToArray())
             {
                 RemoveChild(child);
             }

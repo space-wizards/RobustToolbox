@@ -38,7 +38,10 @@ namespace Robust.Client.ResourceManagement
             {
                 foreach (var relPath in _api.AllFiles)
                 {
-                    var resP = new ResourcePath(relPath);
+                    if (!relPath.StartsWith(_prefix))
+                        continue;
+
+                    var resP = new ResourcePath(relPath[_prefix.Length..]);
                     if (resP.TryRelativeTo(path, out _))
                     {
                         yield return resP;

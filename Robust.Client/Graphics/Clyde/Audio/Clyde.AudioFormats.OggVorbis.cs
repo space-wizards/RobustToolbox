@@ -18,7 +18,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 while (readSamples < totalSamples)
                 {
-                    var read = vorbis.ReadSamples(buffer, readSamples * channels, (int)totalSamples - readSamples);
+                    var read = vorbis.ReadSamples(buffer, readSamples * channels, buffer.Length - readSamples);
                     if (read == 0)
                     {
                         break;

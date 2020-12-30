@@ -63,20 +63,13 @@ namespace Robust.Shared.GameObjects
         public bool Initializing
         {
             get => _initializing;
-            private set
-            {
-                _initializing = value;
-                if (value)
-                {
-                    EntityManager.UpdateEntityTree(this);
-                }
-            }
+            private set => _initializing = value;
         }
 
         /// <inheritdoc />
         [ViewVariables]
         public bool Deleted { get; private set; }
-        
+
         [ViewVariables]
         public bool Paused { get; set; }
 
@@ -202,8 +195,6 @@ namespace Robust.Shared.GameObjects
                     comp.Running = true;
                 }
             }
-
-            EntityManager.UpdateEntityTree(this);
         }
 
         #endregion Initialization

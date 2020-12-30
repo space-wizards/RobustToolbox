@@ -9,6 +9,7 @@ using Robust.Server.Interfaces.GameState;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
@@ -20,6 +21,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -67,13 +69,6 @@ namespace Robust.Server.GameStates
         private void HandleClientDisconnect(object? sender, NetChannelArgs e)
         {
             _ackedStates.Remove(e.Channel.ConnectionId);
-
-            if (!_playerManager.TryGetSessionByChannel(e.Channel, out var session))
-            {
-                return;
-            }
-
-            _entityManager.DropPlayerState(session);
         }
 
         private void HandleStateAck(MsgStateAck msg)
@@ -127,6 +122,7 @@ namespace Robust.Server.GameStates
             var deps = new DependencyCollection();
             deps.RegisterInstance<ILogManager>(new ProxyLogManager(IoCManager.Resolve<ILogManager>()));
             deps.BuildGraph();
+            var currentTick = _gameTiming.CurTick;
 
             (MsgState, INetChannel) GenerateMail(IPlayerSession session)
             {
@@ -144,9 +140,10 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
+                // TODO: Other method should be called GetAllEntityStates
                 var entStates = lastAck == GameTick.Zero || !PvsEnabled
                     ? _entityManager.GetEntityStates(lastAck)
-                    : _entityManager.UpdatePlayerSeenEntityStates(lastAck, session, _entityManager.MaxUpdateRange);
+                    : _entityManager.GetEntityStates(lastAck, currentTick, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
@@ -176,8 +173,7 @@ namespace Robust.Server.GameStates
                 return (stateUpdateMessage, channel);
             }
 
-            var mailBag = _playerManager.GetAllPlayers()
-                .AsParallel().Select(GenerateMail).ToList();
+            var mailBag = _playerManager.GetAllPlayers().Select(GenerateMail).AsParallel().ToList();
 
             // TODO: oh god oh fuck kill it with fire.
             // PLINQ *seems* to be scheduling to the main thread partially (I guess that makes sense?)

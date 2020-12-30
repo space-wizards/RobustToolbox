@@ -178,7 +178,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <param name="range"></param>
         /// <param name="approximate">If true, will not recalculate precise entity AABBs, resulting in a perf increase. </param>
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
-        
+
         /// <summary>
         /// Gets entities within a certain *square* range of this entity
         /// </summary>
@@ -215,12 +215,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <returns></returns>
         IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction, float arcWidth, bool approximate = false);
 
-        #endregion
-
-        #region Spatial Updates
-
-        bool UpdateEntityTree(IEntity entity);
-        bool RemoveFromEntityTree(IEntity entity, MapId mapId);
+        Box2 GetWorldAabbFromEntity(in IEntity ent);
 
         #endregion
 

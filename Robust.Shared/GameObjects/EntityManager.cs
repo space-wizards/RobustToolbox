@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using Prometheus;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
-using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
+using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -25,10 +23,10 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [Dependency] private readonly IEntityNetworkManager EntityNetworkManager = default!;
+        [Dependency] private readonly IEntityNetworkManager _entityNetworkManager = default!;
         [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -42,7 +40,7 @@ namespace Robust.Shared.GameObjects
         public IComponentManager ComponentManager => _componentManager;
 
         /// <inheritdoc />
-        public IEntityNetworkManager EntityNetManager => EntityNetworkManager;
+        public IEntityNetworkManager EntityNetManager => _entityNetworkManager;
 
         /// <inheritdoc />
         public IEntitySystemManager EntitySysManager => EntitySystemManager;
@@ -63,9 +61,9 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Initialize()
         {
-            EntityNetworkManager.SetupNetworking();
-            EntityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
-            EntityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
+            _entityNetworkManager.SetupNetworking();
+            _entityNetworkManager.ReceivedComponentMessage += (sender, compMsg) => DispatchComponentMessage(compMsg);
+            _entityNetworkManager.ReceivedSystemMessage += (sender, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             ComponentManager.Initialize();
             _componentManager.ComponentRemoved += (sender, args) => _eventBus.UnsubscribeEvents(args.Component);
@@ -87,7 +85,7 @@ namespace Robust.Shared.GameObjects
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
-                EntityNetworkManager.Update();
+                _entityNetworkManager.Update();
             }
 
             using (histogram?.WithLabels("EntitySystems").NewTimer())
@@ -168,36 +166,27 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
         {
-            if (!_entityTreesPerMap.TryGetValue(mapId, out var trees))
-                yield break;
-
-            foreach (var entity in trees)
+            foreach (var entity in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesInMap(mapId))
             {
-                if (!entity.Deleted)
-                    yield return entity;
+                yield return entity;
             }
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false)
         {
-            var list = new List<IEntity>();
+            if (mapId == MapId.Nullspace)
+                yield break;
 
-            var state = (list, position);
-
-            _entityTreesPerMap[mapId].QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+            foreach (var entity in GetEntitiesIntersecting(mapId, position))
             {
-                var transform = ent.Transform;
-                if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
-                    MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
+                var transform = entity.Transform;
+                if (MathHelper.CloseTo(transform.Coordinates.X, position.X) &&
+                    MathHelper.CloseTo(transform.Coordinates.Y, position.Y))
                 {
-                    state.list.Add(ent);
+                    yield return entity;
                 }
-
-                return true;
-            }, position, approximate);
-
-            return list;
+            }
         }
 
         public IEnumerable<IEntity> GetEntities()
@@ -230,7 +219,7 @@ namespace Robust.Shared.GameObjects
             if (TryGetEntity(uid, out var entity))
             {
                 DeleteEntity(entity);
-                UpdateEntityTree(entity);
+                // TODO: Broadcast to EntityLookupSystem?
             }
         }
 
@@ -314,7 +303,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, uid);
             try
             {
-                EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, null);
+                EntityPrototype.LoadEntity(entity.Prototype, entity, _componentFactory, null);
                 return entity;
             }
             catch (Exception e)
@@ -328,7 +317,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(Entity entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
+            EntityPrototype.LoadEntity(entity.Prototype, entity, _componentFactory, context);
         }
 
         private protected void InitializeAndStartEntity(Entity entity)
@@ -370,7 +359,6 @@ namespace Robust.Shared.GameObjects
 
                 AllEntities.RemoveSwap(i);
                 Entities.Remove(entity.Uid);
-                RemoveFromEntityTrees(entity);
 
                 // Process the one we just swapped next.
                 i--;
@@ -408,66 +396,40 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
         {
-            var found = false;
-            _entityTreesPerMap[mapId].QueryAabb(ref found, (ref bool found, in IEntity ent) =>
-            {
-                if (!ent.Deleted)
-                {
-                    found = true;
-                    return false;
-                }
+            if (mapId == MapId.Nullspace)
+                return false;
 
+            foreach (var _ in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesIntersecting(mapId, box))
+            {
                 return true;
-            }, box, approximate);
-            return found;
+            }
+
+            return false;
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
         {
             if (mapId == MapId.Nullspace)
+                yield break;
+
+            foreach (var entity in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesIntersecting(mapId, position, approximate: approximate))
             {
-                return Enumerable.Empty<IEntity>();
+                yield return entity;
             }
-
-            var list = new List<IEntity>();
-
-            _entityTreesPerMap[mapId].QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
-            {
-                if (!ent.Deleted)
-                {
-                    list.Add(ent);
-                }
-                return true;
-            }, position, approximate);
-
-            return list;
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false)
         {
-            const float range = .00001f / 2;
-            var aabb = new Box2(position, position).Enlarged(range);
-
             if (mapId == MapId.Nullspace)
+                yield break;
+
+            foreach (var entity in EntitySystem.Get<SharedEntityLookupSystem>().GetEntitiesIntersecting(mapId, position))
             {
-                return Enumerable.Empty<IEntity>();
+                if (!Intersecting(entity, position)) continue;
+                yield return entity;
             }
-
-            var list = new List<IEntity>();
-            var state = (list, position);
-
-            _entityTreesPerMap[mapId].QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
-            {
-                if (Intersecting(ent, state.position))
-                {
-                    state.list.Add(ent);
-                }
-                return true;
-            }, aabb, approximate);
-
-            return list;
         }
 
         /// <inheritdoc />
@@ -573,89 +535,8 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
-
-        #region Entity DynamicTree
-
-        private readonly Dictionary<MapId, DynamicTree<IEntity>> _entityTreesPerMap =
-            new Dictionary<MapId, DynamicTree<IEntity>>();
-
-        public virtual bool UpdateEntityTree(IEntity entity)
+        public Box2 GetWorldAabbFromEntity(in IEntity ent)
         {
-            if (entity.Deleted)
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
-
-            if (!entity.Initialized || !Entities.ContainsKey(entity.Uid))
-            {
-                return false;
-            }
-
-            var transform = entity.Transform;
-
-            DebugTools.Assert(transform.Initialized);
-
-            var mapId = transform.MapID;
-
-            if (!_entityTreesPerMap.TryGetValue(mapId, out var entTree))
-            {
-                entTree = EntityTreeFactory();
-                _entityTreesPerMap.Add(mapId, entTree);
-            }
-
-            // for debugging
-            var necessary = 0;
-
-            if (entTree.AddOrUpdate(entity))
-            {
-                ++necessary;
-            }
-
-            foreach (var childTx in entity.Transform.Children)
-            {
-                if (UpdateEntityTree(childTx.Owner))
-                {
-                    ++necessary;
-                }
-            }
-
-            return necessary > 0;
-        }
-
-        public bool RemoveFromEntityTree(IEntity entity, MapId mapId)
-        {
-            if (_entityTreesPerMap.TryGetValue(mapId, out var tree))
-            {
-                return tree.Remove(entity);
-            }
-
-            return false;
-        }
-
-        private void RemoveFromEntityTrees(IEntity entity)
-        {
-            foreach (var mapId in _mapManager.GetAllMapIds())
-            {
-                if (_entityTreesPerMap.TryGetValue(mapId, out var entTree))
-                {
-                    entTree.Remove(entity);
-                }
-            }
-        }
-
-        private static DynamicTree<IEntity> EntityTreeFactory() =>
-            new DynamicTree<IEntity>(
-                GetWorldAabbFromEntity,
-                capacity: 16,
-                growthFunc: x => x == 16 ? 3840 : x + 256
-            );
-
-        protected static Box2 GetWorldAabbFromEntity(in IEntity ent)
-        {
-            if (ent.Deleted)
-                return new Box2(0, 0, 0, 0);
-
             if (ent.TryGetComponent(out IPhysicsComponent? collider))
                 return collider.WorldAABB;
 
@@ -663,12 +544,10 @@ namespace Robust.Shared.GameObjects
             return new Box2(pos, pos);
         }
 
-        #endregion
-
+        // TODO: Do we need this?
         public virtual void Update()
         {
         }
-
     }
 
     public enum EntityMessageType

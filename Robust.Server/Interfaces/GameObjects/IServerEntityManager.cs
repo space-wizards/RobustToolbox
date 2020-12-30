@@ -1,7 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using Robust.Server.Interfaces.Player;
 using Robust.Shared.Timing;
 
@@ -17,7 +16,7 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <summary>
         ///     Gets all entity states within an AABB that have been modified after and including the provided tick.
         /// </summary>
-        List<EntityState>? UpdatePlayerSeenEntityStates(GameTick fromTick, IPlayerSession player, float range);
+        List<EntityState>? GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range);
 
         // Keep track of deleted entities so we can sync deletions with the client.
         /// <summary>
@@ -31,13 +30,6 @@ namespace Robust.Server.Interfaces.GameObjects
         /// <param name="toTick">The last tick to delete the history for. Inclusive.</param>
         void CullDeletionHistory(GameTick toTick);
 
-        /// <summary>
-        ///     Removes entity state persistence information from the entity manager for a player.
-        /// </summary>
-        /// <param name="player"></param>
-        void DropPlayerState(IPlayerSession player);
-
         float MaxUpdateRange { get; }
-
     }
 }

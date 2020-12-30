@@ -256,8 +256,6 @@ namespace Robust.Shared.Map
                             break;
                         }
                     }
-
-                    DebugTools.Assert(!grid.GridEntityId.IsClientSide());
                 }
             }
 

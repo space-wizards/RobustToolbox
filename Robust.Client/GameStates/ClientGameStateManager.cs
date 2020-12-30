@@ -309,14 +309,14 @@ namespace Robust.Client.GameStates
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
-                if (entity.Uid.IsClientSide() || entity.LastModifiedTick < curTick)
+                if (!_entities.TryGetServerId(entity.Uid, out var serverId) || entity.LastModifiedTick < curTick)
                 {
                     continue;
                 }
 
                 Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
 
-                if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
+                if (!_processor.TryGetLastServerStates(serverId, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
                     continue;

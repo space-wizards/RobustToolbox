@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Interfaces;
-using Robust.Shared.Configuration;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Interfaces.Configuration;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -27,7 +26,7 @@ namespace Robust.Client.Player
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
         [Dependency] private readonly IConfigurationManager _config = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -41,10 +40,12 @@ namespace Robust.Client.Player
         public int MaxPlayers => _client.GameInfo?.ServerMaxPlayers ?? 0;
 
         /// <inheritdoc />
-        [ViewVariables] public LocalPlayer? LocalPlayer { get; private set; }
+        [ViewVariables]
+        public LocalPlayer? LocalPlayer { get; private set; }
 
         /// <inheritdoc />
-        [ViewVariables] public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
+        [ViewVariables]
+        public IEnumerable<IPlayerSession> Sessions => _sessions.Values;
 
         /// <inheritdoc />
         public IReadOnlyDictionary<NetUserId, IPlayerSession> SessionsDict => _sessions;
@@ -90,6 +91,7 @@ namespace Robust.Client.Player
                 // This happens when the server says "nothing changed!"
                 return;
             }
+
             DebugTools.Assert(_network.IsConnected, "Received player state without being connected?");
             DebugTools.Assert(LocalPlayer != null, "Call Startup()");
             DebugTools.Assert(LocalPlayer!.Session != null, "Received player state before Session finished setup.");
@@ -98,7 +100,9 @@ namespace Robust.Client.Player
 
             if (myState != null)
             {
-                UpdateAttachedEntity(myState.ControlledEntity);
+                UpdateAttachedEntity(myState.ControlledEntity != null
+                    ? _entityManager.GetClientId(myState.ControlledEntity.Value)
+                    : null);
                 UpdateSessionStatus(myState.Status);
             }
 
@@ -193,7 +197,8 @@ namespace Robust.Client.Player
                 // clear slot, player left
                 if (!hitSet.Contains(existing))
                 {
-                    DebugTools.Assert(LocalPlayer!.UserId != existing, "I'm still connected to the server, but i left?");
+                    DebugTools.Assert(LocalPlayer!.UserId != existing,
+                        "I'm still connected to the server, but i left?");
                     _sessions.Remove(existing);
                     dirty = true;
                 }

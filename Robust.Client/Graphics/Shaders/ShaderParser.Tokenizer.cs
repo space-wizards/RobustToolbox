@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics.Shaders
     {
         private TextParser? _currentParser;
         private string? _currentFileName;
-        private readonly Stack<(TextParser? parser, string? fileName)> _parserStack = new Stack<(TextParser?, string?)>();
+        private readonly Stack<(TextParser? parser, string? fileName)> _parserStack = new();
 
         private void PushTokenize(TextReader reader, string fileName)
         {
@@ -593,7 +593,7 @@ namespace Robust.Client.Graphics.Shaders
             public Symbols Symbol { get; }
         }
 
-        private enum Symbols
+        private enum Symbols : byte
         {
             Semicolon,
             Comma,
@@ -637,7 +637,7 @@ namespace Robust.Client.Graphics.Shaders
             Colon,
         }
 
-        private static readonly Dictionary<Symbols, string> _symbolStringMap = new Dictionary<Symbols, string>
+        private static readonly Dictionary<Symbols, string> _symbolStringMap = new()
         {
             {Symbols.Semicolon, ";\n"},
             {Symbols.Comma, ","},

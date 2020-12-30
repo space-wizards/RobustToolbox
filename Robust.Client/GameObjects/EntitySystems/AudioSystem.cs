@@ -29,7 +29,7 @@ namespace Robust.Client.GameObjects.EntitySystems
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private readonly List<PlayingStream> _playingClydeStreams = new List<PlayingStream>();
+        private readonly List<PlayingStream> _playingClydeStreams = new();
 
         public int OcclusionCollisionMask;
 

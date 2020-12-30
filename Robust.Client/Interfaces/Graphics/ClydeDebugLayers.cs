@@ -1,6 +1,6 @@
 namespace Robust.Client.Interfaces.Graphics
 {
-    internal enum ClydeDebugLayers
+    internal enum ClydeDebugLayers : byte
     {
         None,
         Fov,

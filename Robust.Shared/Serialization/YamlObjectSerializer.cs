@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
+using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
@@ -72,6 +72,14 @@ namespace Robust.Shared.Serialization
             return NewReader(new List<YamlMappingNode>(1) { readMap }, context);
         }
 
+        public static YamlObjectSerializer NewReader(YamlMappingNode readMap, Type deserializingType,
+            Context? context = null)
+        {
+            var r = NewReader(readMap, context);
+            r.SetDeserializingType(deserializingType);
+            return r;
+        }
+
         /// <summary>
         ///     Creates a new serializer to be used for reading from YAML data.
         /// </summary>
@@ -84,7 +92,7 @@ namespace Robust.Shared.Serialization
         /// </param>
         public static YamlObjectSerializer NewReader(List<YamlMappingNode> readMaps, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 ReadMaps = readMaps,
                 _context = context,
@@ -104,7 +112,7 @@ namespace Robust.Shared.Serialization
         /// </param>
         public static YamlObjectSerializer NewWriter(YamlMappingNode writeMap, Context? context = null)
         {
-            return new YamlObjectSerializer
+            return new()
             {
                 WriteMap = writeMap,
                 _context = context,
@@ -563,10 +571,9 @@ namespace Robust.Shared.Serialization
                     if (string.IsNullOrWhiteSpace(tag))
                         throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
 
-                    var args = tag.Split(':');
-                    if (args.Length == 2 && args[0] == "!type")
+                    if (tag.StartsWith("!type:"))
                     {
-                        concreteType = ResolveConcreteType(type, args[1]);
+                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
                     }
                     else
                     {
@@ -582,6 +589,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewReader(mapNode, _context);
+                fork.CurrentType = concreteType;
                 if (_context != null)
                 {
                     _context.StackDepth--;
@@ -606,18 +614,21 @@ namespace Robust.Shared.Serialization
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));
         }
 
+        public T NodeToType<T>(YamlNode node)
+        {
+            return (T) NodeToType(typeof(T), node);
+        }
+
         private static Type ResolveConcreteType(Type baseType, string typeName)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
-            foreach (var derivedType in reflection.GetAllChildren(baseType))
+            var type = reflection.YamlTypeTagLookup(baseType, typeName);
+            if (type == null)
             {
-                if (derivedType.Name == typeName)
-                {
-                    return derivedType;
-                }
+                throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
             }
 
-            throw new YamlException($"Type '{baseType}' is abstract, but could not find concrete type '{typeName}'.");
+            return type;
         }
 
         public YamlNode TypeToNode(object obj)
@@ -757,6 +768,7 @@ namespace Robust.Shared.Serialization
                     _context.StackDepth++;
                 }
                 var fork = NewWriter(mapping, _context);
+                fork.CurrentType = type;
                 if (_context != null)
                 {
                     _context.StackDepth--;

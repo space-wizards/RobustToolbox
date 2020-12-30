@@ -12,7 +12,7 @@ namespace Robust.Shared.Log
 
         public FileLogHandler(string path)
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
             writer = TextWriter.Synchronized(new StreamWriter(path, true, EncodingHelpers.UTF8));
         }
 

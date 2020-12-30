@@ -1,12 +1,2 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
-  <PropertyGroup>
-    <RobustToolsPath>$(MSBuildThisFileDirectory)/../Tools/</RobustToolsPath>
-  </PropertyGroup>
-  <Target Name="CopyClientNatives">
-    <CombinePath BasePath="$(RobustToolsPath)" Paths="download_natives.py">
-      <Output TaskParameter="CombinedPaths" PropertyName="ScriptPath" />
-    </CombinePath>
-    <Exec Command="$(Python) &quot;$(ScriptPath)&quot; $(Platform) $(TargetOS) Client $(OutputPath)" CustomErrorRegularExpression="^Error" />
-  </Target>
-  <Target Name="ClientAfterBuild" DependsOnTargets="CopyClientNatives" />
 </Project>

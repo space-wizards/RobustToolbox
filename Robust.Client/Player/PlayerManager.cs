@@ -32,7 +32,7 @@ namespace Robust.Client.Player
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
-        private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new Dictionary<NetUserId, IPlayerSession>();
+        private readonly Dictionary<NetUserId, IPlayerSession> _sessions = new();
 
         /// <inheritdoc />
         public int PlayerCount => _sessions.Values.Count;
@@ -55,8 +55,6 @@ namespace Robust.Client.Player
         /// <inheritdoc />
         public void Initialize()
         {
-            _config.RegisterCVar("player.name", "JoeGenero", CVar.ARCHIVE);
-
             _network.RegisterNetMessage<MsgPlayerListReq>(MsgPlayerListReq.NAME);
             _network.RegisterNetMessage<MsgPlayerList>(MsgPlayerList.NAME, HandlePlayerList);
         }

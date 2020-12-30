@@ -8,6 +8,7 @@ using Robust.Client.Graphics.ClientEye;
 using Robust.Client.Graphics.Overlays;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -25,7 +26,7 @@ namespace Robust.Client.Graphics.Clyde
         private readonly RefList<(SpriteComponent sprite, Matrix3 worldMatrix, Angle worldRotation, float yWorldPos)>
             _drawingSpriteList
                 =
-                new RefList<(SpriteComponent, Matrix3, Angle, float)>();
+                new();
 
         public void Render()
         {
@@ -124,7 +125,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds)
+        private void DrawEntitiesAndWorldOverlay(Viewport viewport, Box2 worldBounds)
         {
             if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
             {
@@ -140,6 +141,18 @@ namespace Robust.Client.Graphics.Clyde
 
             ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
 
+            var worldOverlays = new List<Overlay>();
+
+            foreach (var overlay in _overlayManager.AllOverlays)
+            {
+                if ((overlay.Space & OverlaySpace.WorldSpace) != 0)
+                {
+                    worldOverlays.Add(overlay);
+                }
+            }
+
+            worldOverlays.Sort(OverlayComparer.Instance);
+
             // We use a separate list for indexing so that the sort is faster.
             var indexList = ArrayPool<int>.Shared.Rent(_drawingSpriteList.Count);
 
@@ -148,11 +161,34 @@ namespace Robust.Client.Graphics.Clyde
                 indexList[i] = i;
             }
 
+            var overlayIndex = 0;
             Array.Sort(indexList, 0, _drawingSpriteList.Count, new SpriteDrawingOrderComparer(_drawingSpriteList));
 
             for (var i = 0; i < _drawingSpriteList.Count; i++)
             {
                 ref var entry = ref _drawingSpriteList[indexList[i]];
+                var flushed = false;
+
+                for (var j = overlayIndex; j < worldOverlays.Count; j++)
+                {
+                    var overlay = worldOverlays[j];
+
+                    if (overlay.ZIndex <= entry.sprite.DrawDepth)
+                    {
+                        if (!flushed)
+                        {
+                            FlushRenderQueue();
+                            flushed = true;
+                        }
+
+                        overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+                        overlayIndex = j;
+                        continue;
+                    }
+
+                    break;
+                }
+
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
@@ -197,7 +233,16 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            ArrayPool<int>.Shared.Return(indexList);
+
             _drawingSpriteList.Clear();
+            FlushRenderQueue();
+
+            // Cleanup remainders
+            foreach (var overlay in worldOverlays)
+            {
+                overlay.ClydeRender(_renderHandle, OverlaySpace.WorldSpace);
+            }
 
             FlushRenderQueue();
         }
@@ -290,14 +335,13 @@ namespace Robust.Client.Graphics.Clyde
                         _drawGrids(worldBounds);
                     }
 
+                    // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds);
+                        DrawEntitiesAndWorldOverlay(viewport, worldBounds);
                     }
 
-                    RenderOverlays(OverlaySpace.WorldSpace);
-
-                    if (_lightManager.Enabled && eye.DrawFov)
+                    if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
                         ApplyFovToBuffer(viewport, eye);
                     }
@@ -339,7 +383,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed class OverlayComparer : IComparer<Overlay>
         {
-            public static readonly OverlayComparer Instance = new OverlayComparer();
+            public static readonly OverlayComparer Instance = new();
 
             public int Compare(Overlay? x, Overlay? y)
             {

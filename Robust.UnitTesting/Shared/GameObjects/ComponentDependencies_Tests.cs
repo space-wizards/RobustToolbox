@@ -70,13 +70,25 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             public override string Name => "TestOne";
 
-            [ComponentDependency]
+            [ComponentDependency(nameof(TestTwoAdded), nameof(TestTwoRemoved))]
             public readonly TestTwoComponent? TestTwo = default!;
 
             [ComponentDependency]
             public readonly TestThreeComponent? TestThree = default!;
 
             [ComponentDependency] public readonly TestFourComponent? TestFour = default!;
+
+            public bool TestTwoIsAdded { get; private set; }
+
+            private void TestTwoAdded()
+            {
+                TestTwoIsAdded = true;
+            }
+
+            private void TestTwoRemoved()
+            {
+                TestTwoIsAdded = false;
+            }
         }
 
         private class TestTwoComponent : Component
@@ -121,7 +133,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             public override string Name => "TestFive";
 
+#pragma warning disable 649
             [ComponentDependency] public bool? thing;
+#pragma warning restore 649
         }
 
         private class TestSixComponent : Component
@@ -129,6 +143,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public override string Name => "TestSix";
 
             [ComponentDependency] public TestFiveComponent thing = null!;
+        }
+
+        private class TestSevenComponent : Component
+        {
+            public override string Name => "TestSeven";
+
+            [ComponentDependency("ABCDEF")] public TestFiveComponent? thing = null!;
         }
 
         [OneTimeSetUp]
@@ -143,6 +164,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.Register<TestFourComponent>();
             componentFactory.Register<TestFiveComponent>();
             componentFactory.Register<TestSixComponent>();
+            componentFactory.Register<TestSevenComponent>();
 
             var componentManager = IoCManager.Resolve<IComponentManager>();
             componentManager.Initialize();
@@ -458,9 +480,45 @@ namespace Robust.UnitTesting.Shared.GameObjects
             }
             catch (ComponentDependencyNotNullableException e)
             {
-                Assert.NotNull(e);
+                Assert.That(e, Is.Not.Null);
                 return;
             }
+            Assert.Fail("No exception thrown");
+        }
+
+        [Test]
+        public void OnAddRemoveMethodTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var entity = entityManager.CreateEntityUninitialized("dummy");
+            var t1comp = entity.AddComponent<TestOneComponent>();
+
+            Assert.That(t1comp.TestTwoIsAdded, Is.False);
+
+            entity.AddComponent<TestTwoComponent>();
+
+            Assert.That(t1comp.TestTwoIsAdded, Is.True);
+
+            entity.RemoveComponent<TestTwoComponent>();
+
+            Assert.That(t1comp.TestTwoIsAdded, Is.False);
+        }
+
+        [Test]
+        public void OnAddRemoveMethodInvalidTest()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var entity = entityManager.CreateEntityUninitialized("dummy");
+            try
+            {
+                var t7comp = entity.AddComponent<TestSevenComponent>();
+            }
+            catch (ComponentDependencyInvalidMethodNameException invEx)
+            {
+                Assert.That(invEx, Is.Not.Null);
+                return;
+            }
+
             Assert.Fail("No exception thrown");
         }
     }

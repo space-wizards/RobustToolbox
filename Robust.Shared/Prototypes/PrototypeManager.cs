@@ -103,18 +103,18 @@ namespace Robust.Shared.Prototypes
     public class PrototypeManager : IPrototypeManager, IPostInjectInit
     {
         [Dependency] private readonly IReflectionManager ReflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
         [Dependency] private readonly IResourceManager _resources = default!;
 
-        private readonly Dictionary<string, Type> prototypeTypes = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> prototypeTypes = new();
 
         private bool _hasEverBeenReloaded;
 
         #region IPrototypeManager members
-        private readonly Dictionary<Type, List<IPrototype>> prototypes = new Dictionary<Type, List<IPrototype>>();
-        private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new Dictionary<Type, Dictionary<string, IIndexedPrototype>>();
+        private readonly Dictionary<Type, List<IPrototype>> prototypes = new();
+        private readonly Dictionary<Type, Dictionary<string, IIndexedPrototype>> indexedPrototypes = new();
 
-        private readonly HashSet<string> IgnoredPrototypeTypes = new HashSet<string>();
+        private readonly HashSet<string> IgnoredPrototypeTypes = new();
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
         {
@@ -308,7 +308,7 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = prototypeTypes[type];
-                var prototype = _dynamicTypeFactory.CreateInstance<IPrototype>(prototypeType);
+                var prototype = _dynamicTypeFactory.CreateInstanceUnchecked<IPrototype>(prototypeType);
                 prototype.LoadFrom(node);
                 prototypes[prototypeType].Add(prototype);
                 var indexedPrototype = prototype as IIndexedPrototype;

@@ -15,10 +15,10 @@ namespace Robust.Shared.Utility
         private readonly Vector2 minLeafSizeF;
         private readonly int maxObjectsPerLeaf;
         private QuadNode root = null;
-        private Dictionary<T, QuadNode> objectToNodeLookup = new Dictionary<T, QuadNode>();
-        private Dictionary<T, int> objectSortOrder = new Dictionary<T, int>();
+        private Dictionary<T, QuadNode> objectToNodeLookup = new();
+        private Dictionary<T, int> objectSortOrder = new();
         public QuadNode Root { get { return root; } }
-        private object syncLock = new object();
+        private object syncLock = new();
         private int objectSortId = 0;
 
         public QuadTree(Vector2 minLeafSizeF, int maxObjectsPerLeaf)
@@ -488,7 +488,7 @@ namespace Robust.Shared.Utility
             }
 
             public ReadOnlyCollection<QuadNode> Nodes { get; set; }
-            internal List<T> quadObjects = new List<T>();
+            internal List<T> quadObjects = new();
             public Box2 Bounds { get; internal set; }
             public ReadOnlyCollection<T> Objects { get; set; }
 
@@ -512,7 +512,7 @@ namespace Robust.Shared.Utility
         }
     }
 
-    public enum DiRectangleFion : int
+    public enum DiRectangleFion : byte
     {
         NW = 0,
         NE = 1,

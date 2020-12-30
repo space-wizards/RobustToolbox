@@ -14,7 +14,7 @@ namespace Robust.Shared.Asynchronous
     public sealed class RobustTaskScheduler : TaskScheduler
     {
 
-        public static readonly RobustTaskScheduler Instance = new RobustTaskScheduler();
+        public static readonly RobustTaskScheduler Instance = new();
 
         private RobustTaskScheduler()
         {

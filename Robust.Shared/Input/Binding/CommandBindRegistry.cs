@@ -10,12 +10,12 @@ namespace Robust.Shared.Input.Binding
     public class CommandBindRegistry : ICommandBindRegistry
     {
         // all registered bindings
-        private List<TypedCommandBind> _bindings = new List<TypedCommandBind>();
+        private List<TypedCommandBind> _bindings = new();
         // handlers in the order they should be resolved for the given key function.
         // internally we use a graph to construct this but we render it down to a flattened
         // list so we don't need to do any graph traversal at query time
         private Dictionary<BoundKeyFunction, List<InputCmdHandler>> _bindingsForKey =
-            new Dictionary<BoundKeyFunction, List<InputCmdHandler>>();
+            new();
 
         /// <inheritdoc />
         public void Register<TOwner>(CommandBinds commandBinds)
@@ -106,8 +106,8 @@ namespace Robust.Shared.Input.Binding
             //TODO: Probably could be optimized if needed! Generally shouldn't be a big issue since there is a relatively
             // tiny amount of bindings
 
-            List<GraphNode> allNodes = new List<GraphNode>();
-            Dictionary<Type,List<GraphNode>> typeToNode = new Dictionary<Type, List<GraphNode>>();
+            List<GraphNode> allNodes = new();
+            Dictionary<Type,List<GraphNode>> typeToNode = new();
             // build the dict for quick lookup on type
             foreach (var binding in bindingsForFunction)
             {
@@ -153,7 +153,7 @@ namespace Robust.Shared.Input.Binding
 
             //use toposort to build the final result
             var topoSorted = TopologicalSort(allNodes, function);
-            List<InputCmdHandler> result = new List<InputCmdHandler>();
+            List<InputCmdHandler> result = new();
 
             foreach (var node in topoSorted)
             {
@@ -193,7 +193,7 @@ namespace Robust.Shared.Input.Binding
         /// </summary>
         private class GraphNode
         {
-            public List<GraphNode> DependsOn = new List<GraphNode>();
+            public List<GraphNode> DependsOn = new();
             public readonly TypedCommandBind TypedCommandBind;
 
             public GraphNode(TypedCommandBind typedCommandBind)

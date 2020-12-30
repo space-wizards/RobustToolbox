@@ -22,6 +22,11 @@ namespace Robust.Shared.GameObjects.Components
         Vector2 Momentum { get; set; }
 
         /// <summary>
+        ///     Apply an impulse to an entity. Velocity += impulse / InvMass.
+        /// </summary>
+        void ApplyImpulse(Vector2 impulse);
+
+        /// <summary>
         ///     The current status of the object
         /// </summary>
         BodyStatus Status { get; set; }
@@ -167,7 +172,7 @@ namespace Robust.Shared.GameObjects.Components
         private float _angularMass = 1;
         private Vector2 _linVelocity;
         private float _angVelocity;
-        private Dictionary<Type, VirtualController> _controllers = new Dictionary<Type, VirtualController>();
+        private Dictionary<Type, VirtualController> _controllers = new();
         private bool _anchored = true;
         private float _friction = 1;
 
@@ -190,7 +195,7 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         public float InvMass
         {
-            get => Mass > 0 ? 1f / Mass : 0f;
+            get => CanMove() ? Mass : 0.0f; // Infinite mass, hopefully you didn't fuck up physics anywhere.
             set => Mass = value > 0 ? 1f / value : 0f;
         }
 
@@ -247,6 +252,11 @@ namespace Robust.Shared.GameObjects.Components
             set => _friction = value;
         }
 
+        public void ApplyImpulse(Vector2 impulse)
+        {
+            LinearVelocity += impulse * InvMass;
+        }
+
         /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
@@ -256,11 +266,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _linVelocity;
             set
             {
-                if (_linVelocity == value)
+                if (value != Vector2.Zero)
+                    WakeBody();
+
+                if (_linVelocity.EqualsApprox(value, 0.0001))
                     return;
 
                 _linVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -274,11 +286,13 @@ namespace Robust.Shared.GameObjects.Components
             get => _angVelocity;
             set
             {
-                if (_angVelocity.Equals(value))
+                if (value != 0.0f)
+                    WakeBody();
+
+                if (Math.Abs(_angVelocity - value) < 0.0001)
                     return;
 
                 _angVelocity = value;
-                WakeBody();
                 Dirty();
             }
         }
@@ -302,6 +316,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _status;
             set
             {
+                if (_status == value)
+                    return;
+
                 _status = value;
                 Dirty();
             }
@@ -323,6 +340,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _anchored;
             set
             {
+                if (_anchored == value)
+                    return;
+
                 _anchored = value;
                 AnchoredChanged?.Invoke();
                 Dirty();
@@ -495,7 +515,7 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public bool CanMove()
         {
-            return !Anchored && !Mass.Equals(0) && !Deleted;
+            return !Anchored && Mass > 0;
         }
     }
 }

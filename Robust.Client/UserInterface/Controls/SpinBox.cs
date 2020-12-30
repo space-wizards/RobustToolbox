@@ -1,6 +1,7 @@
 ﻿using Robust.Shared.Maths;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -9,9 +10,12 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     public class SpinBox : HBoxContainer
     {
+        public const string LeftButtonStyle = "spinbox-left";
+        public const string RightButtonStyle = "spinbox-right";
+        public const string MiddleButtonStyle = "spinbox-middle";
         private LineEdit _lineEdit;
-        private List<Button> _leftButtons = new List<Button>();
-        private List<Button> _rightButtons = new List<Button>();
+        private List<Button> _leftButtons = new();
+        private List<Button> _rightButtons = new();
         private int _stepSize = 1;
 
         /// <summary>
@@ -83,6 +87,12 @@ namespace Robust.Client.UserInterface.Controls
             var button = new Button { Text = text };
             button.OnPressed += (args) => Value += num;
             AddChild(button);
+            button.AddStyleClass(RightButtonStyle);
+            if (_rightButtons.Count > 0)
+            {
+                _rightButtons[^1].RemoveStyleClass(RightButtonStyle);
+                _rightButtons[^1].AddStyleClass(MiddleButtonStyle);
+            }
             _rightButtons.Add(button);
         }
 
@@ -95,6 +105,10 @@ namespace Robust.Client.UserInterface.Controls
             button.OnPressed += (args) => Value += num;
             AddChild(button);
             button.SetPositionInParent(_leftButtons.Count);
+            button.AddStyleClass(_leftButtons.Count == 0 ? LeftButtonStyle : MiddleButtonStyle);
+            if (_leftButtons.Count == 0)
+            {
+            }
             _leftButtons.Add(button);
         }
 

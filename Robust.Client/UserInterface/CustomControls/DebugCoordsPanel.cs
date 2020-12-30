@@ -9,45 +9,36 @@ using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.State;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
     internal class DebugCoordsPanel : PanelContainer
     {
-        private readonly IPlayerManager playerManager;
-        private readonly IEyeManager eyeManager;
-        private readonly IInputManager inputManager;
-        private readonly IStateManager stateManager;
-        private readonly IClyde _displayManager;
-        private readonly IMapManager _mapManager;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IClyde _displayManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Label contents;
+        private readonly Label _contents;
         private UIBox2i _uiBox;
 
-        //TODO: Think about a factory for this
-        public DebugCoordsPanel(IPlayerManager playerMan,
-            IEyeManager eyeMan,
-            IInputManager inputMan,
-            IStateManager stateMan,
-            IClyde displayMan,
-            IMapManager mapMan)
+        public DebugCoordsPanel()
         {
-            playerManager = playerMan;
-            eyeManager = eyeMan;
-            inputManager = inputMan;
-            stateManager = stateMan;
-            _displayManager = displayMan;
-            _mapManager = mapMan;
+            IoCManager.InjectDependencies(this);
 
             SizeFlagsHorizontal = SizeFlags.None;
 
-            contents = new Label
+            _contents = new Label
             {
                 FontColorShadowOverride = Color.Black,
             };
-            AddChild(contents);
+            AddChild(_contents);
 
             PanelOverride = new StyleBoxFlat
             {
@@ -56,7 +47,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 ContentMarginTopOverride = 5
             };
 
-            MouseFilter = contents.MouseFilter = MouseFilterMode.Ignore;
+            MouseFilter = _contents.MouseFilter = MouseFilterMode.Ignore;
         }
 
         protected override void FrameUpdate(FrameEventArgs args)
@@ -68,14 +59,14 @@ namespace Robust.Client.UserInterface.CustomControls
 
             var stringBuilder = new StringBuilder();
 
-            var mouseScreenPos = inputManager.MouseScreenPosition;
+            var mouseScreenPos = _inputManager.MouseScreenPosition;
             var screenSize = _displayManager.ScreenSize;
 
             MapCoordinates mouseWorldMap;
             EntityCoordinates mouseGridPos;
             TileRef tile;
 
-            mouseWorldMap = eyeManager.ScreenToMap(mouseScreenPos);
+            mouseWorldMap = _eyeManager.ScreenToMap(mouseScreenPos);
 
             if (_mapManager.TryFindGridAt(mouseWorldMap, out var mouseGrid))
             {
@@ -84,8 +75,8 @@ namespace Robust.Client.UserInterface.CustomControls
             }
             else
             {
-                mouseGridPos = new EntityCoordinates(EntityUid.Invalid, mouseWorldMap.Position);
-                tile = default;
+                mouseGridPos = new EntityCoordinates(_mapManager.GetMapEntityId(mouseWorldMap.MapId), mouseWorldMap.Position);
+                tile = new TileRef(mouseWorldMap.MapId, GridId.Invalid, mouseGridPos.ToVector2i(_entityManager, _mapManager), Tile.Empty);
             }
 
             var controlHovered = UserInterfaceManager.CurrentlyHovered;
@@ -101,22 +92,23 @@ Mouse Pos:
                 tile, controlHovered);
 
             stringBuilder.AppendLine("\nAttached Entity:");
-            if (playerManager.LocalPlayer?.ControlledEntity == null)
+            if (_playerManager.LocalPlayer?.ControlledEntity == null)
             {
                 stringBuilder.AppendLine("No attached entity.");
             }
             else
             {
-                var entityTransform = playerManager.LocalPlayer.ControlledEntity.Transform;
+                var entityTransform = _playerManager.LocalPlayer.ControlledEntity.Transform;
                 var playerWorldOffset = entityTransform.MapPosition;
-                var playerScreen = eyeManager.WorldToScreen(playerWorldOffset.Position);
+                var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = playerManager.LocalPlayer.ControlledEntity.Transform.Coordinates;
+                var playerCoordinates = _playerManager.LocalPlayer.ControlledEntity.Transform.Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
-    EntityUid: {3}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid);
+    EntId: {3}
+    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid, entityTransform.GridID);
             }
 
             if (controlHovered != null)
@@ -124,7 +116,7 @@ Mouse Pos:
                 _uiBox = UIBox2i.FromDimensions(controlHovered.GlobalPixelPosition, controlHovered.PixelSize);
             }
 
-            contents.Text = stringBuilder.ToString();
+            _contents.Text = stringBuilder.ToString();
             MinimumSizeChanged();
         }
 
@@ -149,7 +141,7 @@ Mouse Pos:
 
         protected override Vector2 CalculateMinimumSize()
         {
-            return new Vector2(175, contents.CombinedMinimumSize.Y + 10);
+            return new(175, _contents.CombinedMinimumSize.Y + 10);
         }
     }
 }

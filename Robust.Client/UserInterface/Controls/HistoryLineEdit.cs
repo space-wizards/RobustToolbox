@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface.Controls
         private const int MaxHistorySize = 100;
         private string? _historyTemp;
 
-        public List<string> History { get; } = new List<string>();
+        public List<string> History { get; } = new();
         public int HistoryIndex { get; set; } = 0;
 
         public event Action? OnHistoryChanged;

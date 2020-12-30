@@ -37,26 +37,25 @@ namespace Robust.Server.Player
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public BoundKeyMap KeyMap { get; private set; } = default!;
 
         private GameTick _lastStateUpdate;
 
-        private readonly ReaderWriterLockSlim _sessionsLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim _sessionsLock = new();
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
         /// </summary>
         [ViewVariables]
-        private readonly Dictionary<NetUserId, PlayerSession> _sessions = new Dictionary<NetUserId, PlayerSession>();
+        private readonly Dictionary<NetUserId, PlayerSession> _sessions = new();
 
         [ViewVariables]
-        private readonly Dictionary<NetUserId, PlayerData> _playerData = new Dictionary<NetUserId, PlayerData>();
+        private readonly Dictionary<NetUserId, PlayerData> _playerData = new();
 
         [ViewVariables]
-        private readonly Dictionary<string, NetUserId> _userIdMap = new Dictionary<string, NetUserId>();
+        private readonly Dictionary<string, NetUserId> _userIdMap = new();
 
 
         /// <inheritdoc />

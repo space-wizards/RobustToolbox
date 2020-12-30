@@ -1,12 +1,8 @@
 using System;
-using System.IO;
 using System.Net;
-using System.Net.Http;
-using Microsoft.AspNetCore.Http;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Robust.Shared.Log;
-using Robust.Shared.Utility;
+using Robust.Server.Interfaces.ServerStatus;
+using Robust.Shared;
 
 namespace Robust.Server.ServerStatus
 {
@@ -21,96 +17,69 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleInfo);
         }
 
-        private static bool HandleTeapot(HttpMethod method, HttpRequest request, HttpResponse response)
+        private static bool HandleTeapot(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Path != "/teapot")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/teapot")
             {
                 return false;
             }
 
-            response.StatusCode = StatusCodes.Status418ImATeapot;
-            response.Respond("I am a teapot.", StatusCodes.Status418ImATeapot);
+            context.Respond("I am a teapot.", (HttpStatusCode) 418);
             return true;
         }
 
-        private bool HandleStatus(HttpMethod method, HttpRequest request, HttpResponse response)
+        private bool HandleStatus(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Path != "/status")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/status")
             {
                 return false;
             }
 
-            if (OnStatusRequest == null)
+            var jObject = new JObject
             {
-                Logger.WarningS(Sawmill, "OnStatusRequest is not set, responding with a 501.");
-                response.Respond("Not Implemented", HttpStatusCode.NotImplemented);
-                return true;
-            }
-
-            response.StatusCode = (int) HttpStatusCode.OK;
-            response.ContentType = "application/json";
-
-            if (method == HttpMethod.Head)
-            {
-                return true;
-            }
-
-            var jObject = new JObject();
+                // We need to send at LEAST name and player count to have the launcher work with us.
+                // Content can override these if it wants (e.g. stealthmins).
+                ["name"] = _serverNameCache,
+                ["players"] = _playerManager.PlayerCount
+            };
 
             OnStatusRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.Body, EncodingHelpers.UTF8);
-
-            using var jsonWriter = new JsonTextWriter(streamWriter);
-
-            JsonSerializer.Serialize(jsonWriter, jObject);
-
-            jsonWriter.Flush();
+            context.RespondJson(jObject);
 
             return true;
         }
 
-        private bool HandleInfo(HttpMethod method, HttpRequest request, HttpResponse response)
+        private bool HandleInfo(IStatusHandlerContext context)
         {
-            if (!method.IsGetLike() || request.Path != "/info")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/info")
             {
                 return false;
             }
 
-            response.StatusCode = (int) HttpStatusCode.OK;
-            response.ContentType = "application/json";
-
-            if (method == HttpMethod.Head)
-            {
-                return true;
-            }
-
-            var downloadUrlWindows = _configurationManager.GetCVar<string>("build.download_url_windows");
+            var downloadUrl = _configurationManager.GetCVar(CVars.BuildDownloadUrl);
 
             JObject? buildInfo;
 
-            if (string.IsNullOrEmpty(downloadUrlWindows))
+            if (string.IsNullOrEmpty(downloadUrl))
             {
                 buildInfo = null;
             }
             else
             {
+                var hash = _configurationManager.GetCVar(CVars.BuildHash);
+                if (hash == "")
+                {
+                    hash = null;
+                }
+
                 buildInfo = new JObject
                 {
-                    ["download_urls"] = new JObject
-                    {
-                        ["Windows"] = downloadUrlWindows,
-                        ["MacOS"] = _configurationManager.GetCVar<string>("build.download_url_macos"),
-                        ["Linux"] = _configurationManager.GetCVar<string>("build.download_url_linux")
-                    },
-                    ["fork_id"] = _configurationManager.GetCVar<string>("build.fork_id"),
-                    ["version"] = _configurationManager.GetCVar<string>("build.version"),
-                    ["hashes"] = new JObject
-                    {
-                        ["Windows"] = _configurationManager.GetCVar<string>("build.hash_windows"),
-                        ["MacOS"] = _configurationManager.GetCVar<string>("build.hash_macos"),
-                        ["Linux"] = _configurationManager.GetCVar<string>("build.hash_linux"),
-                    },
+                    ["engine_version"] = _configurationManager.GetCVar(CVars.BuildEngineVersion),
+                    ["fork_id"] = _configurationManager.GetCVar(CVars.BuildForkId),
+                    ["version"] = _configurationManager.GetCVar(CVars.BuildVersion),
+                    ["download_url"] = downloadUrl,
+                    ["hash"] = hash,
                 };
             }
 
@@ -124,20 +93,14 @@ namespace Robust.Server.ServerStatus
 
             var jObject = new JObject
             {
-                ["connect_address"] = _configurationManager.GetCVar<string>("status.connectaddress"),
+                ["connect_address"] = _configurationManager.GetCVar(CVars.StatusConnectAddress),
                 ["auth"] = authInfo,
                 ["build"] = buildInfo
             };
 
             OnInfoRequest?.Invoke(jObject);
 
-            using var streamWriter = new StreamWriter(response.Body, EncodingHelpers.UTF8);
-
-            using var jsonWriter = new JsonTextWriter(streamWriter);
-
-            JsonSerializer.Serialize(jsonWriter, jObject);
-
-            jsonWriter.Flush();
+            context.RespondJson(jObject);
 
             return true;
         }

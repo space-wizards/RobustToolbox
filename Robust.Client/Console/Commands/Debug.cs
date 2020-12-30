@@ -729,6 +729,20 @@ namespace Robust.Client.Console.Commands
         }
     }
 
+    internal class ToggleHardFOV : IConsoleCommand
+    {
+        public string Command => "togglehardfov";
+        public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
+        public string Help => "togglehardfov";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            var mgr = IoCManager.Resolve<ILightManager>();
+            mgr.DrawHardFov = !mgr.DrawHardFov;
+            return false;
+        }
+    }
+
     internal class ToggleShadows : IConsoleCommand
     {
         public string Command => "toggleshadows";
@@ -762,6 +776,21 @@ namespace Robust.Client.Console.Commands
                 else
                     console.AddLine("Failed to parse argument.",Color.Red);
             }
+
+            return false;
+        }
+    }
+
+    internal class GcFullCommand : IConsoleCommand
+    {
+        public string Command => "gcf";
+        public string Description => "Run the GC, fully, compacting LOH and everything.";
+        public string Help => "gcf";
+
+        public bool Execute(IDebugConsole console, params string[] args)
+        {
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Forced, true, true);
 
             return false;
         }
@@ -874,11 +903,11 @@ namespace Robust.Client.Console.Commands
 
         public static Dictionary<string, FileSystemWatcher>? _watchers;
 
-        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new ConcurrentDictionary<string, bool>();
+        public static ConcurrentDictionary<string, bool>? _reloadShadersQueued = new();
 
         public bool Execute(IDebugConsole console, params string[] args)
         {
-            IResourceCache resC;
+            IResourceCacheInternal resC;
             if (args.Length == 1)
             {
                 if (args[0] == "+watch")
@@ -888,7 +917,7 @@ namespace Robust.Client.Console.Commands
                         console.AddLine("Already watching.");
                         return false;
                     }
-                    resC = IoCManager.Resolve<IResourceCache>();
+                    resC = IoCManager.Resolve<IResourceCacheInternal>();
 
                     _watchers = new Dictionary<string, FileSystemWatcher>();
 
@@ -1015,7 +1044,7 @@ namespace Robust.Client.Console.Commands
 
             console.AddLine("Reloading content shader resources...");
 
-            resC = IoCManager.Resolve<IResourceCache>();
+            resC = IoCManager.Resolve<IResourceCacheInternal>();
 
             foreach (var (path, _) in resC.GetAllResources<ShaderSourceResource>())
             {

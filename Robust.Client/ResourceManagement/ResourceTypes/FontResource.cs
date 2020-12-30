@@ -13,17 +13,20 @@ namespace Robust.Client.ResourceManagement
 
         public override void Load(IResourceCache cache, ResourcePath path)
         {
-            if (!cache.ContentFileExists(path))
+            if (!cache.TryContentFileRead(path, out var stream))
             {
                 throw new FileNotFoundException("Content file does not exist for font");
             }
 
-            FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(cache.ContentFileRead(path));
+            using (stream)
+            {
+                FontFaceHandle = IoCManager.Resolve<IFontManagerInternal>().Load(stream);
+            }
         }
 
         public VectorFont MakeDefault()
         {
-            return new VectorFont(this, 12);
+            return new(this, 12);
         }
     }
 }

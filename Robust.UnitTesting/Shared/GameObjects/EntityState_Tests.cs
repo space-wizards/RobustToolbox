@@ -40,16 +40,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             container.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             container.BuildGraph();
 
-            container.Resolve<IConfigurationManager>().Initialize(true);
-            container.Resolve<IConfigurationManager>().LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly);
+            var cfg = container.Resolve<IConfigurationManagerInternal>();
+            cfg.Initialize(true);
+            cfg.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly);
 
             container.Resolve<IReflectionManager>().LoadAssemblies(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
 
             IoCManager.InitThread(container);
 
-            IoCManager.Resolve<IConfigurationManager>()
-                .LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
-            
+            cfg.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Robust.Shared
+
             container.Resolve<INetManager>().Initialize(true);
 
             var serializer = container.Resolve<IRobustSerializer>();

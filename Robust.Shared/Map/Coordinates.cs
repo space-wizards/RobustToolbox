@@ -100,7 +100,7 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly struct MapCoordinates : IEquatable<MapCoordinates>
     {
-        public static readonly MapCoordinates Nullspace = new MapCoordinates(Vector2.Zero, MapId.Nullspace);
+        public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
 
         /// <summary>
         ///     World Position coordinates.
@@ -236,7 +236,7 @@ namespace Robust.Shared.Map
     [Serializable, NetSerializable]
     public readonly struct EntityCoordinates : IEquatable<EntityCoordinates>
     {
-        public static readonly EntityCoordinates Invalid = new EntityCoordinates(EntityUid.Invalid, Vector2.Zero);
+        public static readonly EntityCoordinates Invalid = new(EntityUid.Invalid, Vector2.Zero);
 
         /// <summary>
         ///     ID of the entity that this position is relative to.
@@ -382,7 +382,7 @@ namespace Robust.Shared.Map
 
             var (x, y) = ToMapPos(entityManager);
 
-            return new Vector2i((int) x, (int) y);
+            return new Vector2i((int)Math.Floor(x), (int)Math.Floor(y));
         }
 
         /// <summary>
@@ -393,7 +393,7 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates with the specified position and same <see cref="EntityId"/> as this one.</returns>
         public EntityCoordinates WithPosition(Vector2 newPosition)
         {
-            return new EntityCoordinates(EntityId, newPosition);
+            return new(EntityId, newPosition);
         }
 
         /// <summary>
@@ -478,7 +478,7 @@ namespace Robust.Shared.Map
         /// <returns>Newly offset coordinates.</returns>
         public EntityCoordinates Offset(Vector2 position)
         {
-            return new EntityCoordinates(EntityId, Position + position);
+            return new(EntityId, Position + position);
         }
 
         /// <summary>
@@ -605,7 +605,7 @@ namespace Robust.Shared.Map
         /// <exception cref="ArgumentException">When the parents aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, float right)
         {
-            return new EntityCoordinates(left.EntityId, left.Position * right);
+            return new(left.EntityId, left.Position * right);
         }
 
         /// <summary>
@@ -614,7 +614,7 @@ namespace Robust.Shared.Map
         /// <exception cref="ArgumentException">When the parents aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, int right)
         {
-            return new EntityCoordinates(left.EntityId, left.Position * right);
+            return new(left.EntityId, left.Position * right);
         }
 
         #endregion

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +9,7 @@ using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
 using Robust.Client.Interfaces.Graphics;
+using Robust.Shared;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -19,22 +20,22 @@ namespace Robust.Client.Graphics.Clyde
         private ALDevice _openALDevice;
         private ALContext _openALContext;
 
-        private readonly List<LoadedAudioSample> _audioSampleBuffers = new List<LoadedAudioSample>();
+        private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
 
         private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
-            new Dictionary<int, WeakReference<AudioSource>>();
+            new();
 
         private readonly Dictionary<int, WeakReference<BufferedAudioSource>> _bufferedAudioSources =
-            new Dictionary<int, WeakReference<BufferedAudioSource>>();
+            new();
 
-        private readonly HashSet<string> _alcDeviceExtensions = new HashSet<string>();
-        private readonly HashSet<string> _alContextExtensions = new HashSet<string>();
+        private readonly HashSet<string> _alcDeviceExtensions = new();
+        private readonly HashSet<string> _alContextExtensions = new();
 
         // Used to track audio sources that were disposed in the finalizer thread,
         // so we need to properly send them off in the main thread.
-        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _sourceDisposeQueue = new ConcurrentQueue<(int, int)>();
-        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new ConcurrentQueue<(int, int)>();
-        private readonly ConcurrentQueue<int> _bufferDisposeQueue = new ConcurrentQueue<int>();
+        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _sourceDisposeQueue = new();
+        private readonly ConcurrentQueue<(int sourceHandle, int filterHandle)> _bufferedSourceDisposeQueue = new();
+        private readonly ConcurrentQueue<int> _bufferDisposeQueue = new();
 
         public bool HasAlDeviceExtension(string extension) => _alcDeviceExtensions.Contains(extension);
         public bool HasAlContextExtension(string extension) => _alContextExtensions.Contains(extension);
@@ -49,6 +50,8 @@ namespace Robust.Client.Graphics.Clyde
             _audioCreateContext();
 
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
+
+            _configurationManager.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
         }
 
         private void _audioCreateContext()
@@ -76,8 +79,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _audioOpenDevice()
         {
-
-            var preferredDevice = _configurationManager.GetCVar<string>("audio.device");
+            var preferredDevice = _configurationManager.GetCVar(CVars.AudioDevice);
 
             // Open device.
             if (!string.IsNullOrEmpty(preferredDevice))
@@ -177,6 +179,11 @@ namespace Robust.Client.Graphics.Clyde
         private static void RemoveEfx((int sourceHandle, int filterHandle) handles)
         {
             if (handles.filterHandle != 0) EFX.DeleteFilter(handles.filterHandle);
+        }
+
+        public void SetMasterVolume(float newVolume)
+        {
+            AL.Listener(ALListenerf.Gain, newVolume);
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -553,7 +560,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private int? SourceHandle = null;
             private int[] BufferHandles;
-            private Dictionary<int, int> BufferMap = new Dictionary<int, int>();
+            private Dictionary<int, int> BufferMap = new();
             private readonly Clyde _master;
             private bool _mono = true;
             private bool _float = false;

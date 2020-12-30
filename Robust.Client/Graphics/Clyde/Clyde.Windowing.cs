@@ -11,6 +11,7 @@ using Robust.Client.Input;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.Utility;
+using Robust.Shared;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
@@ -104,6 +105,18 @@ namespace Robust.Client.Graphics.Clyde
             return GLFW.GetKeyScancode(Keyboard.ConvertGlfwKeyReverse(key));
         }
 
+        public uint? GetX11WindowId()
+        {
+            try
+            {
+                return GLFW.GetX11Window(_glfwWindow);
+            }
+            catch (EntryPointNotFoundException)
+            {
+                return null;
+            }
+        }
+
         private List<Exception>? _glfwExceptionList;
         private bool _isMinimized;
 
@@ -140,8 +153,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindow()
         {
-            var width = _configurationManager.GetCVar<int>("display.width");
-            var height = _configurationManager.GetCVar<int>("display.height");
+            var width = _configurationManager.GetCVar(CVars.DisplayWidth);
+            var height = _configurationManager.GetCVar(CVars.DisplayHeight);
 
             Monitor* monitor = null;
 
@@ -159,7 +172,7 @@ namespace Robust.Client.Graphics.Clyde
             GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
             GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
 
-            var renderer = (Renderer) _configurationManager.GetCVar<int>("display.renderer");
+            var renderer = (Renderer) _configurationManager.GetCVar<int>(CVars.DisplayRenderer);
 
             Span<Renderer> renderers = (renderer == Renderer.Default) ? stackalloc Renderer[] {
                 Renderer.OpenGL33,

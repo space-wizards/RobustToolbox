@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects.Components
         private bool _isHard;
         private BodyStatus _status;
         private BodyType _bodyType;
-        private List<IPhysShape> _physShapes = new List<IPhysShape>();
+        private List<IPhysShape> _physShapes = new();
 
         /// <inheritdoc />
         public override string Name => "Physics";
@@ -76,7 +76,7 @@ namespace Robust.Shared.GameObjects.Components
             {
                 if (_sleepAccumulator == value)
                     return;
-                
+
                 _sleepAccumulator = value;
                 Awake = _physicsManager.SleepTimeThreshold > SleepAccumulator;
             }
@@ -111,7 +111,8 @@ namespace Robust.Shared.GameObjects.Components
         /// <inheritdoc />
         public void WakeBody()
         {
-            SleepAccumulator = 0;
+            if (CanMove())
+                SleepAccumulator = 0;
         }
 
         public PhysicsComponent()
@@ -130,6 +131,7 @@ namespace Robust.Shared.GameObjects.Components
             serializer.DataField(ref _bodyType, "bodyType", BodyType.Static);
             serializer.DataField(ref _physShapes, "shapes", new List<IPhysShape> {new PhysShapeAabb()});
             serializer.DataField(ref _anchored, "anchored", true);
+            serializer.DataField(ref _mass, "mass", 1.0f);
         }
 
         /// <inheritdoc />
@@ -149,21 +151,15 @@ namespace Robust.Shared.GameObjects.Components
             _canCollide = newState.CanCollide;
             _status = newState.Status;
             _isHard = newState.Hard;
+            _physShapes = newState.PhysShapes;
 
-            //TODO: Is this always true?
-            if (newState.PhysShapes != null)
+            foreach (var shape in _physShapes)
             {
-                _physShapes = newState.PhysShapes;
-
-                foreach (var shape in _physShapes)
-                {
-                    shape.ApplyState();
-                }
-
-                Dirty();
-                UpdateEntityTree();
+                shape.ApplyState();
             }
 
+            Dirty();
+            UpdateEntityTree();
             Mass = newState.Mass / 1000f; // gram to kilogram
 
             LinearVelocity = newState.LinearVelocity;
@@ -222,6 +218,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _canCollide;
             set
             {
+                if (_canCollide == value)
+                    return;
+
                 _canCollide = value;
 
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
@@ -243,6 +242,9 @@ namespace Robust.Shared.GameObjects.Components
             get => _isHard;
             set
             {
+                if (_isHard == value)
+                    return;
+
                 _isHard = value;
                 Dirty();
             }
@@ -303,6 +305,7 @@ namespace Robust.Shared.GameObjects.Components
                 controller.ControlledComponent = this;
             }
 
+            Dirty();
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
                 new CollisionChangeMessage(Owner.Uid, _canCollide));
         }
@@ -502,7 +505,7 @@ namespace Robust.Shared.GameObjects.Components
     }
 
     [Serializable, NetSerializable]
-    public enum BodyStatus
+    public enum BodyStatus: byte
     {
         OnGround,
         InAir

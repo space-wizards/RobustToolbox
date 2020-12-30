@@ -12,7 +12,7 @@ namespace Robust.Shared.Timers
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private readonly List<(Timer, CancellationToken)> _timers
-            = new List<(Timer, CancellationToken)>();
+            = new();
 
         public void AddTimer(Timer timer, CancellationToken cancellationToken = default)
         {

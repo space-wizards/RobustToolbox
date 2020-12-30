@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects.Components.Animations
         public override string Name => "AnimationPlayer";
 
         private readonly Dictionary<string, AnimationPlayback> _playingAnimations
-            = new Dictionary<string, AnimationPlayback>();
+            = new();
 
         /// <summary>
         ///     Start playing an animation.
@@ -48,11 +48,21 @@ namespace Robust.Client.GameObjects.Components.Animations
                 return;
             }
 
+            List<string>? toRemove = null;
             // TODO: Get rid of this ToArray() allocation.
             foreach (var (key, playback) in _playingAnimations.ToArray())
             {
                 var keep = UpdatePlayback(Owner, playback, frameTime);
                 if (!keep)
+                {
+                    toRemove ??= new List<string>();
+                    toRemove.Add(key);
+                }
+            }
+
+            if (toRemove != null)
+            {
+                foreach (var key in toRemove)
                 {
                     _playingAnimations.Remove(key);
                     AnimationCompleted?.Invoke(key);

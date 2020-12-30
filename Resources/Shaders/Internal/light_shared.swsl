@@ -13,6 +13,7 @@ uniform highp vec4 lightColor;
 uniform highp vec2 lightCenter;
 uniform highp float lightRange;
 uniform highp float lightPower;
+uniform highp float lightSoftness;
 uniform highp float lightIndex;
 uniform sampler2D shadowMap;
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
+using Robust.Shared;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.Configuration;
@@ -19,7 +20,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// The server implementation of the Entity Network Manager.
     /// </summary>
-    public class ServerEntityNetworkManager : IServerEntityNetworkManager, IPostInjectInit
+    public class ServerEntityNetworkManager : IServerEntityNetworkManager
     {
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -32,10 +33,10 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
 
-        private readonly PriorityQueue<MsgEntity> _queue = new PriorityQueue<MsgEntity>(new MessageSequenceComparer());
+        private readonly PriorityQueue<MsgEntity> _queue = new(new MessageSequenceComparer());
 
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
-            new Dictionary<IPlayerSession, uint>();
+            new();
 
         private bool _logLateMsgs;
 
@@ -46,7 +47,7 @@ namespace Robust.Server.GameObjects
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
-            _logLateMsgs = _configurationManager.GetCVar<bool>("net.log_late_msg");
+            _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
 
         public void Update()
@@ -192,11 +193,6 @@ namespace Robust.Server.GameObjects
 
                 return y.Sequence.CompareTo(x.Sequence);
             }
-        }
-
-        void IPostInjectInit.PostInject()
-        {
-            _configurationManager.RegisterCVar("net.log_late_msg", true, onValueChanged: b => _logLateMsgs = b);
         }
     }
 }

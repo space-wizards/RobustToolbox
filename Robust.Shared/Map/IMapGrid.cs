@@ -14,12 +14,6 @@ namespace Robust.Shared.Map
     public interface IMapGrid : IDisposable
     {
         /// <summary>
-        ///     True if we are the default grid of our map.
-        /// </summary>
-        [Obsolete("The concept of 'default grids' is being removed.")]
-        bool IsDefaultGrid { get; }
-
-        /// <summary>
         ///     The integer ID of the map this grid is currently located within.
         /// </summary>
         MapId ParentMapId { get; set; }

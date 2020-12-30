@@ -22,7 +22,7 @@ namespace Robust.Shared.Physics.Chunks
             }
         }
 
-        private readonly HashSet<IEntity> _entities = new HashSet<IEntity>();
+        private readonly HashSet<IEntity> _entities = new();
 
         internal EntityLookupNode(EntityLookupChunk parentChunk, Vector2i indices)
         {

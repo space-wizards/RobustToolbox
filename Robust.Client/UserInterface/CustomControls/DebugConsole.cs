@@ -23,19 +23,17 @@ namespace Robust.Client.UserInterface.CustomControls
     // (At least from the main thread, which is what's throwing the exceptions..)
     public class DebugConsole : Control, IDebugConsole
     {
-        private const int MaxHistorySize = 100;
-
         private readonly IClientConsole _console;
         private readonly IResourceManager _resourceManager;
 
-        private static readonly ResourcePath HistoryPath = new ResourcePath("/debug_console_history.json");
+        private static readonly ResourcePath HistoryPath = new("/debug_console_history.json");
 
         private readonly HistoryLineEdit CommandBar;
         private readonly OutputPanel Output;
         private readonly Control MainControl;
 
         public IReadOnlyDictionary<string, IConsoleCommand> Commands => _console.Commands;
-        private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new ConcurrentQueue<FormattedMessage>();
+        private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
 
         private bool _targetVisible;
 
@@ -89,15 +87,6 @@ namespace Robust.Client.UserInterface.CustomControls
             _console.ClearText += (_, args) => Clear();
 
             _loadHistoryFromDisk();
-
-            CommandBar.OnKeyBindDown += args =>
-            {
-                if (args.Function == EngineKeyFunctions.ShowDebugConsole)
-                {
-                    Toggle();
-                    args.Handle();
-                }
-            };
 
             searchResults = new List<string>();
         }
@@ -202,10 +191,15 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void CommandBarOnOnKeyBindDown(GUIBoundKeyEventArgs args)
         {
-            if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+            if (args.Function == EngineKeyFunctions.ShowDebugConsole)
             {
                 Toggle();
-                return;
+                args.Handle();
+            }
+            else if (args.Function == EngineKeyFunctions.TextReleaseFocus)
+            {
+                Toggle();
+                args.Handle();
             }
             else if (args.Function == EngineKeyFunctions.TextScrollToBottom)
             {
@@ -216,13 +210,11 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 NextCommand();
                 args.Handle();
-                return;
             }
             else if(args.Function == EngineKeyFunctions.GuiTabNavigatePrev)
             {
                 PrevCommand();
                 args.Handle();
-                return;
             }
         }
 

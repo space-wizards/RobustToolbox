@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private readonly List<Effect> _Effects = new List<Effect>();
+        private readonly List<Effect> _Effects = new();
 
         public override void Initialize()
         {
@@ -182,7 +182,7 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Effect's current size
             /// </summary>
-            public Vector2 Size = new Vector2(1f, 1f);
+            public Vector2 Size = new(1f, 1f);
 
             /// <summary>
             /// Rate of change of effect's size change
@@ -192,12 +192,12 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Effect's current color
             /// </summary>
-            public Vector4 Color = new Vector4(255, 255, 255, 255);
+            public Vector4 Color = new(255, 255, 255, 255);
 
             /// <summary>
             /// Rate of change of effect's color
             /// </summary>
-            public Vector4 ColorDelta = new Vector4(0, 0, 0, 0);
+            public Vector4 ColorDelta = new(0, 0, 0, 0);
 
             /// <summary>
             ///     True if the effect is affected by lighting.
@@ -372,7 +372,7 @@ namespace Robust.Client.GameObjects
                 foreach (var effect in _owner._Effects)
                 {
                     if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
-                        _mapManager.GetGrid(effect.Coordinates.GetGridId(_entityManager)).ParentMapId != map)
+                        effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }

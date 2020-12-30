@@ -102,12 +102,6 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (grid.IsDefaultGrid)
-            {
-                shell.SendText(player, "Cannot save a default grid.");
-                return;
-            }
-
             IoCManager.Resolve<IMapLoader>().SaveBlueprint(gridId, args[1]);
             shell.SendText(player, "Save successful. Look in the user data directory.");
         }
@@ -231,9 +225,9 @@ namespace Robust.Server.Console.Commands
 
             var pos = player.AttachedEntity.Transform.Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var gridId = pos.GetGridId(entityManager);
 
-            shell.SendText(player, $"MapID:{IoCManager.Resolve<IMapManager>().GetGrid(gridId).ParentMapId} GridID:{gridId} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.SendText(player,
+                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
@@ -409,8 +403,8 @@ namespace Robust.Server.Console.Commands
 
             foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
-                msg.AppendFormat("{0}: default grid: {1}, init: {2}, paused: {3}, ent: {5}, grids: {4}\n",
-                    mapId, mapManager.GetDefaultGridId(mapId), pauseManager.IsMapInitialized(mapId),
+                msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
+                    mapId, pauseManager.IsMapInitialized(mapId),
                     pauseManager.IsMapPaused(mapId),
                     string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
                     mapManager.GetMapEntityId(mapId));
@@ -434,8 +428,8 @@ namespace Robust.Server.Console.Commands
 
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
-                msg.AppendFormat("{0}: map: {1}, ent: {4}, default: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMapId, grid.IsDefaultGrid, grid.WorldPosition, grid.GridEntityId);
+                msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3} \n",
+                    grid.Index, grid.ParentMapId, grid.WorldPosition, grid.GridEntityId);
             }
 
             shell.SendText(player, msg.ToString());

@@ -903,6 +903,15 @@ namespace Robust.Client.Graphics.Clyde
             _queuedShader = _defaultShader.Handle;
         }
 
+        private void ResetBlendFunc()
+        {
+            GL.BlendFuncSeparate(
+                BlendingFactorSrc.SrcAlpha,
+                BlendingFactorDest.OneMinusSrcAlpha,
+                BlendingFactorSrc.One,
+                BlendingFactorDest.OneMinusSrcAlpha);
+        }
+
         [StructLayout(LayoutKind.Explicit)]
         private struct RenderCommand
         {
@@ -961,7 +970,7 @@ namespace Robust.Client.Graphics.Clyde
             public Color Color;
         }
 
-        private enum RenderCommandType
+        private enum RenderCommandType : byte
         {
             DrawBatch,
 

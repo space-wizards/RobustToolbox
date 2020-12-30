@@ -8,6 +8,7 @@ using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Configuration;
@@ -43,11 +44,11 @@ namespace Robust.Server.GameObjects
         private float? _maxUpdateRangeCache;
 
         public float MaxUpdateRange => _maxUpdateRangeCache
-            ??= _configurationManager.GetCVar<float>("net.maxupdaterange");
+            ??= _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
 
         private int _nextServerEntityUid = (int) EntityUid.FirstUid;
 
-        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new List<(GameTick, EntityUid)>();
+        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
         public override void Update()
         {
@@ -263,7 +264,7 @@ namespace Robust.Server.GameObjects
 
         protected override EntityUid GenerateEntityUid()
         {
-            return new EntityUid(_nextServerEntityUid++);
+            return new(_nextServerEntityUid++);
         }
 
         void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)

@@ -4,3 +4,12 @@
 [submodule "Lidgren.Network"]
 	path = Lidgren.Network/Lidgren.Network
 	url = https://github.com/space-wizards/lidgren-network-gen3.git
+[submodule "XamlX"]
+	path = XamlX
+	url = https://github.com/space-wizards/XamlX
+[submodule "Robust.LoaderApi"]
+	path = Robust.LoaderApi
+	url = https://github.com/space-wizards/Robust.LoaderApi.git
+[submodule "ManagedHttpListener"]
+	path = ManagedHttpListener
+	url = https://github.com/space-wizards/ManagedHttpListener.git

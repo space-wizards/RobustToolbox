@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Drawing;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -15,7 +16,7 @@ namespace Robust.Client.UserInterface
     internal struct RichTextEntry
     {
         private static readonly FormattedMessage.TagColor TagBaseColor
-            = new FormattedMessage.TagColor(new Color(200, 200, 200));
+            = new(new Color(200, 200, 200));
 
         public readonly FormattedMessage Message;
 
@@ -172,8 +173,29 @@ namespace Robust.Client.UserInterface
             // This needs to happen because word wrapping doesn't get checked for the last word.
             if (posX > maxSizeX)
             {
-                DebugTools.Assert(wordStartBreakIndex.HasValue,
-                    "wordStartBreakIndex can only be null if the word begins at a new line, in which case this branch shouldn't be reached as the word would be split due to being longer than a single line.");
+                if (!wordStartBreakIndex.HasValue)
+                {
+                    Logger.Error(
+                        "Assert fail inside RichTextEntry.Update, " +
+                        "wordStartBreakIndex is null on method end w/ word wrap required. " +
+                        "Dumping relevant stuff. Send this to PJB.");
+                    Logger.Error($"Message: {Message}");
+                    Logger.Error($"maxSizeX: {maxSizeX}");
+                    Logger.Error($"maxUsedWidth: {maxUsedWidth}");
+                    Logger.Error($"breakIndexCounter: {breakIndexCounter}");
+                    Logger.Error("wordStartBreakIndex: null (duh)");
+                    Logger.Error($"wordSizePixels: {wordSizePixels}");
+                    Logger.Error($"posX: {posX}");
+                    Logger.Error($"lastChar: {lastChar}");
+                    Logger.Error($"forceSplitData: {forceSplitData}");
+                    Logger.Error($"LineBreaks: {string.Join(", ", LineBreaks)}");
+
+                    throw new Exception(
+                        "wordStartBreakIndex can only be null if the word begins at a new line," +
+                        "in which case this branch shouldn't be reached as" +
+                        "the word would be split due to being longer than a single line.");
+                }
+
                 LineBreaks.Add(wordStartBreakIndex!.Value.index);
                 Height += font.GetLineHeight(uiScale);
                 maxUsedWidth = Math.Max(maxUsedWidth, wordStartBreakIndex.Value.lineSize);

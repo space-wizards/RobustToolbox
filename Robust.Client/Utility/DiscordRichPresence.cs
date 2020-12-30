@@ -1,15 +1,16 @@
 ﻿using DiscordRPC;
 using DiscordRPC.Logging;
 using Robust.Client.Interfaces.Utility;
+using Robust.Shared;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.IoC;
 
 namespace Robust.Client.Utility
 {
-    internal sealed class DiscordRichPresence : IDiscordRichPresence, IPostInjectInit
+    internal sealed class DiscordRichPresence : IDiscordRichPresence
     {
-        private static readonly RichPresence _defaultPresence = new RichPresence
+        private static readonly RichPresence _defaultPresence = new()
         {
             Details = "In Main Menu",
             State = "In Main Menu",
@@ -32,7 +33,27 @@ namespace Robust.Client.Utility
 
         public void Initialize()
         {
-            if (_configurationManager.GetCVar<bool>("discord.enabled"))
+            _configurationManager.OnValueChanged(CVars.DiscordEnabled, newValue =>
+            {
+                if (!_initialized)
+                {
+                    return;
+                }
+
+                if (newValue)
+                {
+                    if (_client == null || _client.IsDisposed)
+                    {
+                        _start();
+                    }
+                }
+                else
+                {
+                    _stop();
+                }
+            });
+            
+            if (_configurationManager.GetCVar(CVars.DiscordEnabled))
             {
                 _start();
             }
@@ -96,29 +117,6 @@ namespace Robust.Client.Utility
         public void Dispose()
         {
             _stop();
-        }
-
-        public void PostInject()
-        {
-            _configurationManager.RegisterCVar("discord.enabled", true, onValueChanged: newValue =>
-            {
-                if (!_initialized)
-                {
-                    return;
-                }
-
-                if (newValue)
-                {
-                    if (_client == null || _client.IsDisposed)
-                    {
-                        _start();
-                    }
-                }
-                else
-                {
-                    _stop();
-                }
-            });
         }
 
         private sealed class NativeLogger : ILogger

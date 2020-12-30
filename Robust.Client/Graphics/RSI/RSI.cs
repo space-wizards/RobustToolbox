@@ -21,7 +21,7 @@ namespace Robust.Client.Graphics
         [ViewVariables]
         public Vector2i Size { get; private set; }
         [ViewVariables]
-        private Dictionary<StateId, State> States = new Dictionary<StateId, State>();
+        private Dictionary<StateId, State> States = new();
 
         /// <summary>
         ///     The original path of this RSI or null.
@@ -88,7 +88,7 @@ namespace Robust.Client.Graphics
 
             public static implicit operator StateId(string? key)
             {
-                return new StateId(key);
+                return new(key);
             }
 
             public override bool Equals(object? obj)

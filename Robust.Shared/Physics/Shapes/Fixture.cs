@@ -131,6 +131,12 @@ namespace Robust.Shared.Physics
 
         private int _collisionMask;
 
+        public Fixture()
+        {
+            Proxies = new Dictionary<GridId, FixtureProxy[]>();
+            ProxyCount = 0;
+        }
+
         public Fixture(Shape shape)
         {
             Shape = shape.Clone();
@@ -141,8 +147,12 @@ namespace Robust.Shared.Physics
 
         public void ExposeData(ObjectSerializer serializer)
         {
-            serializer.DataReadWriteFunction("restitution", 0f, value => Restitution = value, () => Restitution);
-            serializer.DataReadWriteFunction("friction", 0.2f, value => Friction = value, () => Friction);
+            serializer.DataField(this, x => x.Shape, "shape", null);
+            serializer.DataField(ref _isSensor, "isSensor", false);
+            serializer.DataField(this, x => x.Friction, "friction", 0.2f);
+            serializer.DataField(this, x => x.Restitution, "restitution", 0.2f);
+            serializer.DataField(ref _collisionLayer, "layer", 0, WithFormat.Flags<CollisionMask>());
+            serializer.DataField(ref _collisionMask, "mask", 0, WithFormat.Flags<CollisionMask>());
         }
 
         private void Refilter()
@@ -162,7 +172,7 @@ namespace Robust.Shared.Physics
 
             // Touch each proxy to create new pairs
 
-            TouchProxies(IoCManager.Resolve<IBroadPhaseManager>());
+            TouchProxies(EntitySystem.Get<SharedBroadPhaseSystem>());
         }
 
         /// <summary>

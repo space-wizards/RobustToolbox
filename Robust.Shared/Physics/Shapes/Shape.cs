@@ -1,6 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.Interfaces.GameObjects.Components;
+﻿using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Shapes
@@ -10,7 +10,7 @@ namespace Robust.Shared.Physics.Shapes
     /// Shapes used for simulation in World are created automatically when a Fixture
     /// is created. Shapes may encapsulate a one or more child shapes.
     /// </summary>
-    public abstract class Shape
+    public abstract class Shape : IExposeData
     {
         /// <summary>
         /// Gets or sets the density.
@@ -126,6 +126,10 @@ namespace Robust.Shared.Physics.Shapes
         //Used for the buoyancy controller
         //</summary>
         //public abstract float ComputeSubmergedArea(ref Vector2 normal, float offset, ITransformComponent transform, out Vector2 sc);
+        public virtual void ExposeData(ObjectSerializer serializer)
+        {
+            serializer.DataField(ref _density, "density", 1.0f);
+        }
     }
 
     /// <summary>

@@ -12,6 +12,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -50,6 +51,7 @@ namespace Robust.Shared.Serialization
                 { typeof(MapId), new MapIdSerializer() },
                 { typeof(SpriteSpecifier), new SpriteSpecifierSerializer() },
                 { typeof(TimeSpan), new TimeSpanSerializer() },
+                { typeof(Vertices), new VerticesSerializer() },
             };
         }
 
@@ -1333,6 +1335,33 @@ namespace Robust.Shared.Serialization
             {
                 var seconds = ((TimeSpan) obj).TotalSeconds;
                 return new YamlScalarNode(seconds.ToString(CultureInfo.InvariantCulture));
+            }
+        }
+
+        class VerticesSerializer : TypeSerializer
+        {
+            public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
+            {
+                var verts = new List<Vector2>();
+
+                foreach (var sub in node.AllNodes)
+                {
+                    verts.Add(sub.AsVector2());
+                }
+
+                return new Vertices(verts);
+            }
+
+            public override YamlNode TypeToNode(object obj, YamlObjectSerializer serializer)
+            {
+                var verts = (Vertices) obj;
+                var node = new YamlMappingNode();
+                foreach (var vert in verts)
+                {
+                    node.Add("vertices", $"{vert.X.ToString(CultureInfo.InvariantCulture)},{vert.Y.ToString(CultureInfo.InvariantCulture)}");
+                }
+
+                return node;
             }
         }
     }

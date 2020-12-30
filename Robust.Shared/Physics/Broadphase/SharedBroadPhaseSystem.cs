@@ -502,33 +502,33 @@ namespace Robust.Shared.Physics.Broadphase
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId, rayBox, true))
             {
+                var gridOrigin = _mapManager.GetGrid(gridId).WorldPosition;
+                var translatedRay = new CollisionRay(ray.Start + gridOrigin, ray.End + gridOrigin, ray.CollisionMask);
+
                 _graph[mapId][gridId].QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-
-                    if (returnOnFirstHit && results.Count > 0) return true;
+                    if (returnOnFirstHit && results.Count > 0)
+                        return true;
 
                     if (distFromOrigin > ray.Distance)
-                    {
                         return true;
-                    }
 
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
                         return true;
-                    }
+
+                    if (!proxy.Fixture.RayCast(out _, ref ray, proxy.ChildIndex))
+                        return true;
 
                     var entity = proxy.Fixture.Body.Owner;
 
                     if (predicate != null && predicate.Invoke(entity))
-                    {
                         return true;
-                    }
 
                     var result = new RayCastResults(distFromOrigin, point, entity);
                     results.Add(result);
                     //DebugDrawRay?.Invoke(new DebugRayData(ray, maxLength, result));
                     return true;
-                }, ray);
+                }, translatedRay);
             }
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
@@ -560,10 +560,14 @@ namespace Robust.Shared.Physics.Broadphase
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (new Ray(point + translatedRay.Direction * proxy.AABB.Size.Length * 2, -translatedRay.Direction).Intersects(
-                        proxy.AABB, out _, out var exitPoint))
+                    var newRay = new CollisionRay(point + translatedRay.Direction * proxy.AABB.Size.Length * 2,
+                        -translatedRay.Direction, 0x0);
+
+                    // TODO: Somewhat sketch of this
+                    if (proxy.Fixture.RayCast(out var hit, ref newRay, proxy.ChildIndex))
                     {
-                        penetration += (point - exitPoint).Length;
+                        var hitPos = (newRay.End - newRay.Start) * hit.Fraction;
+                        penetration += (point - hitPos).Length;
                     }
 
                     return true;

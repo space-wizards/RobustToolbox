@@ -107,7 +107,8 @@ namespace Robust.Shared.Physics
             TOISet = new HashSet<PhysicsComponent>();
 
             ContactManager = new ContactManager();
-            Gravity = new Vector2(0f, -9.80665f);
+            ContactManager.Initialize();
+            Gravity = new Vector2(0f, 0f); //-9.80665f
 
             ControllerList = EntitySystem.Get<SharedPhysicsSystem>().GetControllers(this);
         }

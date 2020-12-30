@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -19,8 +20,6 @@ namespace Robust.Shared.Physics
     {
         public override string Name => "Physics";
         public override uint? NetID => NetIDs.PHYSICS;
-
-        // _xf is body origin transform, fucking WHAT
 
         internal bool Island { get; set; }
 
@@ -140,11 +139,6 @@ namespace Robust.Shared.Physics
 
         public JointEdge? JointList { get; internal set; }
 
-        /// <summary>
-        ///     We need to keep track of which grids we are relevant to for collision.
-        /// </summary>
-        private List<GridId> _grids = new List<GridId>();
-
         internal OnCollisionEventHandler? onCollisionEventHandler;
 
         public event OnCollisionEventHandler OnCollision
@@ -218,7 +212,7 @@ namespace Robust.Shared.Physics
 
                 if (value > 0f && !_fixedRotation)
                 {
-                    _inertia = value - Mass * Vector2.Dot(LocalCentre, LocalCentre);
+                    _inertia = value - Mass * Vector2.Dot(LocalCenter, LocalCenter);
                     InvI = 1f / _inertia;
                 }
             }
@@ -229,12 +223,11 @@ namespace Robust.Shared.Physics
         /// <summary>
         ///     Inverse inertia
         /// </summary>
-        public float InvI { get; private set; }
-
-        /// <summary>
-        ///     Local position of the center of mass
-        /// </summary>
-        public Vector2 LocalCentre { get; set; }
+        public float InvI
+        {
+            get;
+            private set;
+        }
 
         /// <summary>
         ///     Inverse mass. Typically this is used over Mass.
@@ -478,6 +471,18 @@ namespace Robust.Shared.Physics
         public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
+            // TODO: Some of these should just affect the fields directly
+            serializer.DataField(this, x => x.IsBullet, "isBullet", false);
+            serializer.DataField(this, x => x.IgnoreCCD, "ignoreCCD", false);
+            serializer.DataField(this, x => x.FixedRotation, "fixedRotation", false);
+            serializer.DataField(this, x => x.Mass, "mass", 1f);// TODO Is 1f good
+            serializer.DataField(this, x => x.LinearDamping, "linearDamping", 1f);
+            serializer.DataField(this, x => x.AngularDamping, "angularDamping", 1f);
+            serializer.DataField(this, x => x._bodyType, "bodyType", BodyType.Dynamic);
+            serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
+            serializer.DataField(this, x => x.Awake, "awake", true);
+            serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), value => FixtureList = value, () => FixtureList);
+            serializer.DataField(this, x => x.Enabled, "enabled", true);
         }
 
         public override ComponentState GetComponentState()
@@ -627,7 +632,7 @@ namespace Robust.Shared.Physics
             Sweep.Center0 = Sweep.Center;
             Sweep.Angle0 = angle;
 
-            IoCManager.Resolve<IBroadPhaseManager>().SynchronizeFixtures(this, transform, transform);
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this, transform, transform);
         }
 
         public bool IsColliding(Vector2 offset, bool approximate)
@@ -745,7 +750,7 @@ namespace Robust.Shared.Physics
             {
                 if (Enabled)
                 {
-                    IoCManager.Resolve<IBroadPhaseManager>().CreateProxies(fixture);
+                    EntitySystem.Get<SharedBroadPhaseSystem>().CreateProxies(fixture);
                 }
 
                 // Let the world know we have a new fixture. This will cause new contacts
@@ -793,7 +798,7 @@ namespace Robust.Shared.Physics
 
             if (Enabled)
             {
-                IoCManager.Resolve<IBroadPhaseManager>().DestroyProxies(fixture);
+                EntitySystem.Get<SharedBroadPhaseSystem>().DestroyProxies(fixture);
             }
 
             // TODO? fixture.Body = null;
@@ -843,12 +848,12 @@ namespace Robust.Shared.Physics
          /// </summary>
         internal void CreateProxies()
         {
-            IoCManager.Resolve<IBroadPhaseManager>().AddBody(this);
+            EntitySystem.Get<SharedBroadPhaseSystem>().AddBody(this);
         }
 
         internal void DestroyProxies()
         {
-            IoCManager.Resolve<IBroadPhaseManager>().RemoveBody(this);
+            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveBody(this);
         }
 
         /// <summary>
@@ -872,7 +877,7 @@ namespace Robust.Shared.Physics
         {
             PhysicsTransform xf1 = new PhysicsTransform(Vector2.Zero, Sweep.Angle0);
             xf1.Position = Sweep.Center0 - Complex.Multiply(Sweep.LocalCenter, ref xf1.Quaternion);
-            IoCManager.Resolve<IBroadPhaseManager>().SynchronizeFixtures(this, xf1, GetTransform());
+            EntitySystem.Get<SharedBroadPhaseSystem>().SynchronizeFixtures(this, xf1, GetTransform());
         }
 
         /// <summary>

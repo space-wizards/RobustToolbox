@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Reflection.Metadata;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -51,6 +52,13 @@ namespace Robust.Shared.Physics.Shapes
         }
 
         public override int ChildCount => 1;
+
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+            serializer.DataField(ref _radius, "radius", 1.0f);
+            ComputeProperties();
+        }
 
         public override bool TestPoint(ref PhysicsTransform transform, ref Vector2 point)
         {

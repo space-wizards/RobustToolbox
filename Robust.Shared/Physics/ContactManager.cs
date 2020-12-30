@@ -10,15 +10,16 @@ using Robust.Shared.Physics.Contacts;
 
 namespace Robust.Shared.Physics
 {
+    // TODO
     internal interface IContactManager
     {
-        HashSet<Contact> ActiveContacts { get; }
-
-        void FindNewContacts();
+        void Initialize();
     }
 
-    public sealed class ContactManager : EntitySystem
+    public sealed class ContactManager : IContactManager
     {
+        // Stored per physicsmap (subject to change)
+
         #region Settings
         /// <summary>
         /// A threshold for activating multiple cores to solve VelocityConstraints.
@@ -45,9 +46,9 @@ namespace Robust.Shared.Physics
         public int CollideMultithreadThreshold = int.MaxValue;
         #endregion
 
-        public readonly ContactListHead ContactList;
+        private ContactListHead ContactList = default!;
         public int ContactCount { get; private set; }
-        internal readonly ContactListHead _contactPoolList;
+        internal ContactListHead _contactPoolList = default!;
 
         public GridId GridId => throw new NotImplementedException();
 
@@ -81,7 +82,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Fires when the broadphase detects that two Fixtures are close to each other.
         /// </summary>
-        public BroadphaseDelegate OnBroadphaseCollision;
+        public BroadphaseDelegate? OnBroadphaseCollision;
 
         /// <summary>
         /// Fires after the solver has run
@@ -93,13 +94,14 @@ namespace Robust.Shared.Physics
         /// </summary>
         public PreSolveDelegate? PreSolve;
 
-        [Dependency] internal IBroadPhaseManager BroadPhase = default!;
+        internal SharedBroadPhaseSystem BroadPhase = default!;
 
-        internal ContactManager()
+        public void Initialize()
         {
             ContactList = new ContactListHead();
             ContactCount = 0;
             _contactPoolList = new ContactListHead();
+            BroadPhase = EntitySystem.Get<SharedBroadPhaseSystem>();
 
             OnBroadphaseCollision = AddPair;
         }
@@ -232,6 +234,7 @@ namespace Robust.Shared.Physics
 
         internal void FindNewContacts(MapId mapId)
         {
+            if (OnBroadphaseCollision == null) return;
             BroadPhase.UpdatePairs(mapId, OnBroadphaseCollision);
         }
 

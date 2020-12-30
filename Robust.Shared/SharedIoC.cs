@@ -20,6 +20,7 @@ using Robust.Shared.Localization.Macros;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Random;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timers;

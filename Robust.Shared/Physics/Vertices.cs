@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Shapes;
 
 namespace Robust.Shared.Physics
 {
     public class Vertices : List<Vector2>
     {
         internal Vertices() { }
+
+        internal Vertices(params float[] verts)
+        {
+
+        }
 
         internal Vertices(int capacity) : base(capacity) { }
 

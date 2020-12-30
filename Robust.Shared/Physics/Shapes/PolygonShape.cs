@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Shapes
@@ -12,8 +14,8 @@ namespace Robust.Shared.Physics.Shapes
     public sealed class PolygonShape : Shape
     {
         // TODO: These are initialized in the constructor so need to mark it somehow
-        private Vertices _vertices = null!;
-        private Vertices _normals = null!;
+        private Vertices _vertices = default!;
+        private Vertices _normals = default!;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PolygonShape"/> class.
@@ -100,6 +102,18 @@ namespace Robust.Shared.Physics.Shapes
         public Vertices Normals => _normals;
 
         public override int ChildCount => 1;
+
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);
+            // TODO: Just use IExposeData on Vertices? ehhh idk
+            // Counter-clockwise order
+            // For consistency sake I started BL
+            // If it's < 3 vertices it'll throw
+            serializer.DataField(this, x => x.Vertices, "vertices", new Vertices());
+
+            ComputeProperties();
+        }
 
         protected override void ComputeProperties()
         {

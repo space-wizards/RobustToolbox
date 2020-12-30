@@ -24,6 +24,7 @@ using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Client.GameObjects.EntitySystems;
 using Robust.Client.Graphics.Drawing;
+using Robust.Client.Interfaces.GameObjects;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Player;
@@ -47,7 +48,7 @@ namespace Robust.Client.Placement
         [Dependency] public readonly IEyeManager eyeManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
-        [Dependency] public readonly IEntityManager EntityManager = default!;
+        [Dependency] public readonly IClientEntityManager EntityManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
         [Dependency] private readonly IBaseClient _baseClient = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
@@ -391,7 +392,7 @@ namespace Robust.Client.Placement
 
             var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity.Uid;
+            msg.EntityUid = EntityManager.GetServerId(entity.Uid);
             NetworkManager.ClientSendMessage(msg);
         }
 
@@ -611,7 +612,7 @@ namespace Robust.Client.Placement
                 message.EntityTemplateName = CurrentPermission.EntityType;
 
             // world x and y
-            message.EntityCoordinates = coordinates;
+            message.EntityCoordinates = EntityManager.ToServerCoordinates(coordinates);
 
             message.DirRcv = Direction;
 

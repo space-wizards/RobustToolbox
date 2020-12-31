@@ -4,6 +4,9 @@ using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects.EntitySystemMessages;
+using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Timing;
@@ -11,26 +14,42 @@ using Robust.Shared.Timing;
 namespace Robust.Server.GameObjects.EntitySystems
 {
     [UsedImplicitly]
-    public sealed class ServerEntityLookupSystem : SharedEntityLookupSystem
+    public sealed class EntityLookupSystem : SharedEntityLookupSystem
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         /// <summary>
         ///     Last tick the player saw a particular entity.
         /// </summary>
-        private Dictionary<IPlayerSession, PlayerLookupChunks> _lastSeen =
-            new Dictionary<IPlayerSession, PlayerLookupChunks>();
+        private Dictionary<IPlayerSession, PlayerLookupChunks> _lastSeen = new();
 
         public override void Initialize()
         {
             base.Initialize();
             _playerManager.PlayerStatusChanged += HandlePlayerStatusChanged;
+            SubscribeLocalEvent<DirtyEntityMessage>(HandleDirtyEntity);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
             _playerManager.PlayerStatusChanged -= HandlePlayerStatusChanged;
+            UnsubscribeLocalEvent<DirtyEntityMessage>();
+        }
+
+        private void HandleDirtyEntity(DirtyEntityMessage message)
+        {
+            // Removing from lookup should be handled elsewhere already.
+            if (message.Entity.Deleted) return;
+
+            var aabb = EntityManager.GetWorldAabbFromEntity(message.Entity);
+            var mapId = message.Entity.Transform.MapID;
+
+            foreach (var chunk in GetChunksInRange(mapId, aabb))
+            {
+                chunk.LastModifiedTick = _gameTiming.CurTick;
+            }
         }
 
         private void HandlePlayerStatusChanged(object? sender, SessionStatusEventArgs eventArgs)
@@ -54,10 +73,9 @@ namespace Robust.Server.GameObjects.EntitySystems
 
 internal sealed class PlayerLookupChunks
 {
-    public Dictionary<EntityUid, GameTick> EntityLastSeen { get; set; } = new Dictionary<EntityUid, GameTick>();
+    public Dictionary<EntityUid, GameTick> EntityLastSeen { get; set; } = new();
 
-    public readonly Dictionary<EntityLookupChunk, GameTick> KnownChunks =
-        new Dictionary<EntityLookupChunk, GameTick>();
+    public readonly Dictionary<EntityLookupChunk, GameTick> KnownChunks = new();
 
     public bool TryLastSeen(EntityUid uid, out GameTick lastSeen)
     {
@@ -69,9 +87,12 @@ internal sealed class PlayerLookupChunks
         return false;
     }
 
-    public GameTick LastSeen(EntityLookupChunk chunk)
+    public GameTick? LastSeen(EntityLookupChunk chunk)
     {
-        return KnownChunks[chunk];
+        if (KnownChunks.TryGetValue(chunk, out var lastTick))
+            return lastTick;
+
+        return null;
     }
 
     public void UpdateChunk(GameTick currentTick, EntityLookupChunk chunk)

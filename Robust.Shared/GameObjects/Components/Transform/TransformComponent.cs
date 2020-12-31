@@ -603,8 +603,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
 
             if (oldId != MapId.Nullspace)
             {
-                _entityManager.RemoveFromEntityTree(Owner, oldId);
-
                 if (Initialized && Owner.TryGetComponent(out collider))
                 {
                     collider.RemovedFromPhysicsTree(oldId);

@@ -45,14 +45,12 @@ namespace Robust.Shared.Physics.Chunks
 
         [Dependency] protected readonly IMapManager MapManager = default!;
 
-        private readonly Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, EntityLookupChunk>>> _graph =
-                     new Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, EntityLookupChunk>>>();
+        private readonly Dictionary<MapId, Dictionary<GridId, Dictionary<Vector2i, EntityLookupChunk>>> _graph = new();
 
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
-        private readonly Dictionary<IEntity, HashSet<EntityLookupNode>> _lastKnownNodes =
-                     new Dictionary<IEntity, HashSet<EntityLookupNode>>();
+        private readonly Dictionary<IEntity, HashSet<EntityLookupNode>> _lastKnownNodes = new();
 
         public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
         {
@@ -108,14 +106,22 @@ namespace Robust.Shared.Physics.Chunks
             }
         }
 
-        public IEnumerable<IEntity> GetEntitiesIntersecting(
+        public IReadOnlyList<IEntity> GetEntitiesIntersecting(
             MapId mapId,
             Box2 worldBox,
             bool includeContainers = true,
             bool includeGrids = false,
+            bool includeMap = false,
             bool approximate = true)
         {
+            var entities = new List<IEntity>();
+
             var checkedEntities = new HashSet<EntityUid>();
+
+            if (includeMap)
+            {
+                entities.Add(MapManager.GetMapEntity(mapId));
+            }
 
             if (includeGrids)
             {
@@ -131,11 +137,11 @@ namespace Robust.Shared.Physics.Chunks
                         if (checkedEntities.Contains(contained.Uid))
                             continue;
 
-                        yield return contained;
+                        entities.Add(contained);
                     }
 
                     checkedEntities.Add(grid.GridEntityId);
-                    yield return gridEntity;
+                    entities.Add(gridEntity);
                 }
             }
 
@@ -153,14 +159,16 @@ namespace Robust.Shared.Physics.Chunks
                             if (checkedEntities.Contains(contained.Uid))
                                 continue;
 
-                            yield return contained;
+                            entities.Add(contained);
                         }
 
                         checkedEntities.Add(entity.Uid);
-                        yield return entity;
+                        entities.Add(entity);
                     }
                 }
             }
+
+            return entities;
         }
 
         // Yeah I made a helper, seemed easier than pasting it everywhere.
@@ -183,8 +191,33 @@ namespace Robust.Shared.Physics.Chunks
             }
         }
 
-        private IEnumerable<EntityLookupNode> GetNodesInRange(MapId mapId, Box2 worldBox)
+        private IList<EntityLookupNode> GetNodesInRange(MapId mapId, Box2 worldBox)
         {
+            var nodes = new List<EntityLookupNode>();
+            var range = (worldBox.BottomLeft - worldBox.Center).Length;
+
+            foreach (var chunk in GetChunksInRange(mapId, worldBox))
+            {
+                // TODO: Don't need this every time
+                var localCenter = MapManager.GetGrid(chunk.GridId).WorldToLocal(worldBox.Center);
+                var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
+                var bottomLeftNodeBound = new Vector2i((int) Math.Floor(centerTile.X - range), (int) Math.Floor(centerTile.Y - range));
+                var topRightNodeBound = new Vector2i((int) Math.Floor(centerTile.X + range + 1), (int) Math.Floor(centerTile.Y + range + 1));
+
+                // Now we'll check if it's in range and relevant for us
+                // (e.g. if we're on the very edge of a chunk we may need more chunks).
+                foreach (var node in chunk.GetNodes(bottomLeftNodeBound, topRightNodeBound))
+                {
+                    nodes.Add(node);
+                }
+            }
+
+            return nodes;
+        }
+
+        public IList<EntityLookupChunk> GetChunksInRange(MapId mapId, Box2 worldBox)
+        {
+            var results = new List<EntityLookupChunk>();
             var range = (worldBox.BottomLeft - worldBox.Center).Length;
 
             // This is the max in any direction that we can get a chunk (e.g. max 2 chunks away of data).
@@ -196,9 +229,6 @@ namespace Robust.Shared.Physics.Chunks
                 var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
                 var chunks = _graph[mapId][grid.Index];
 
-                var bottomLeftNodeBound = new Vector2i((int) Math.Floor(centerTile.X - range), (int) Math.Floor(centerTile.Y - range));
-                var topRightNodeBound = new Vector2i((int) Math.Floor(centerTile.X + range + 1), (int) Math.Floor(centerTile.Y + range + 1));
-
                 for (var x = -maxXDiff; x <= maxXDiff; x++)
                 {
                     for (var y = -maxYDiff; y <= maxYDiff; y++)
@@ -207,15 +237,12 @@ namespace Robust.Shared.Physics.Chunks
 
                         if (!chunks.TryGetValue(chunkIndices, out var chunk)) continue;
 
-                        // Now we'll check if it's in range and relevant for us
-                        // (e.g. if we're on the very edge of a chunk we may need more chunks).
-                        foreach (var node in chunk.GetNodes(bottomLeftNodeBound, topRightNodeBound))
-                        {
-                            yield return node;
-                        }
+                        results.Add(chunk);
                     }
                 }
             }
+
+            return results;
         }
 
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position)
@@ -247,6 +274,7 @@ namespace Robust.Shared.Physics.Chunks
 
             foreach (var entity in chunk.GetEntities(index))
             {
+                if (entity.Deleted) continue;
                 yield return entity;
             }
         }
@@ -431,6 +459,8 @@ namespace Robust.Shared.Physics.Chunks
         public override void Shutdown()
         {
             base.Shutdown();
+            UnsubscribeLocalEvent<MoveEvent>();
+            UnsubscribeLocalEvent<EntityInitializedMessage>();
             MapManager.OnGridCreated -= HandleGridCreated;
             MapManager.OnGridRemoved -= HandleGridRemoval;
             MapManager.TileChanged -= HandleTileChanged;

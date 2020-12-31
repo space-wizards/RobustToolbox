@@ -159,7 +159,6 @@ namespace Robust.Shared.GameObjects.Components
             }
 
             Dirty();
-            UpdateEntityTree();
             Mass = newState.Mass / 1000f; // gram to kilogram
 
             LinearVelocity = newState.LinearVelocity;
@@ -378,8 +377,6 @@ namespace Robust.Shared.GameObjects.Components
         {
             _physicsManager.AddedToMap(this, mapId);
         }
-
-        private bool UpdateEntityTree() => Owner.EntityManager.UpdateEntityTree(Owner);
 
         public bool IsOnGround()
         {

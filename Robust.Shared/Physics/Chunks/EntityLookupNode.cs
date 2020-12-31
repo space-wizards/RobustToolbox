@@ -4,23 +4,13 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics.Chunks
 {
-    internal sealed class EntityLookupNode
+    public sealed class EntityLookupNode
     {
         internal EntityLookupChunk ParentChunk { get; }
 
         internal Vector2i Indices { get; }
 
-        internal IEnumerable<IEntity> Entities
-        {
-            get
-            {
-                foreach (var entity in _entities)
-                {
-                    if (!entity.Deleted)
-                        yield return entity;
-                }
-            }
-        }
+        internal IReadOnlySet<IEntity> Entities => _entities;
 
         private readonly HashSet<IEntity> _entities = new();
 

@@ -31,15 +31,13 @@ namespace Robust.Server.GameObjects
             "robust_entities_count",
             "Amount of alive entities.");
 
-        private const float MinimumMotionForMovers = 1 / 128f;
-
         #region IEntityManager Members
 
         [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [Shared.IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
         [Shared.IoC.Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        private ServerEntityLookupSystem _lookupSystem = default!;
+        private EntityLookupSystem _lookupSystem = default!;
 
         private float? _maxUpdateRangeCache;
 
@@ -147,7 +145,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState>? GetEntityStates(GameTick fromTick)
+        public List<EntityState>? GetAllEntityStates(GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -167,13 +165,11 @@ namespace Robust.Server.GameObjects
             return stateEntities.Count == 0 ? default : stateEntities;
         }
 
-        // TODO: Physics chunks doesn't need any of this shit, just needs to subscribe to MoveEvent IMO.
-
         public List<EntityState> GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
         {
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
-                // TODO: Return ALL
+                // TODO: Return ALL?
                 return new List<EntityState>();
 
             var data = _lookupSystem.GetPlayerLastSeen(player);
@@ -193,33 +189,44 @@ namespace Robust.Server.GameObjects
             // TODO: Ideally each chunk has "LastModifiedTick" that is the latest of any entity contained within
             // Then we can just do a quicker check... stuff gets modified frequently but I think this will still work well...
             // Would also need to store last time we sent a chunk to a particular player given they don't get sent the whole chunk
-            foreach (var entity in _lookupSystem.GetEntitiesIntersecting(mapId, viewbox, includeGrids: true, approximate: true))
+
+            foreach (var chunk in _lookupSystem.GetChunksInRange(mapId, viewbox))
             {
-                // TODO: Probably don't send container data to clients maybe? Though we need to fix containers so they
-                // don't throw if we don't send it (coz currently they do).
-                // Though I guess sending contents is useful for prediction ahhhhhhhh
+                var chunkLastSeen = data.LastSeen(chunk);
 
-                // Get whether we need to send dat state
-                // If we haven't seen it ever then force send that baby
-                if (data.EntityLastSeen.TryGetValue(entity.Uid, out var lastSeen))
-                {
-                    if (entity.LastModifiedTick <= lastSeen ||
-                        (entity.TryGetComponent(out VisibilityComponent? visibility) &&
-                         (player.VisibilityMask & visibility.Layer) == 0))
-                    {
-                        continue;
-                    }
-                }
-
-                var state = GetEntityState(ComponentManager, entity.Uid, fromTick);
-                data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
-
-                // Sending nothing at all
-                if (state.ComponentStates == null)
+                if (chunkLastSeen != null && chunk.LastModifiedTick <= chunkLastSeen)
                     continue;
 
-                entityStates.Add(state);
-                // TODO: Look at that transform shit.
+                data.UpdateChunk(currentTick, chunk);
+
+                foreach (var entity in chunk.GetEntities())
+                {
+                    // TODO: Probably don't send container data to clients maybe? Though we need to fix containers so they
+                    // don't throw if we don't send it (coz currently they do).
+                    // Though I guess sending contents is useful for prediction ahhhhhhhh
+
+                    // Get whether we need to send dat state
+                    // If we haven't seen it ever then force send that baby
+                    if (data.EntityLastSeen.TryGetValue(entity.Uid, out var lastSeen))
+                    {
+                        if (entity.LastModifiedTick <= lastSeen ||
+                            entity.TryGetComponent(out VisibilityComponent? visibility) &&
+                            (player.VisibilityMask & visibility.Layer) == 0)
+                        {
+                            continue;
+                        }
+                    }
+
+                    var state = GetEntityState(ComponentManager, entity.Uid, fromTick);
+                    data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
+
+                    // Sending nothing at all
+                    if (state.ComponentStates == null)
+                        continue;
+
+                    entityStates.Add(state);
+                    // TODO: Look at that transform shit.
+                }
             }
 
             // Sort for the client.
@@ -287,7 +294,7 @@ namespace Robust.Server.GameObjects
         {
             base.Startup();
             EntitySystemManager.Initialize();
-            _lookupSystem = EntitySystem.Get<ServerEntityLookupSystem>();
+            _lookupSystem = EntitySystem.Get<EntityLookupSystem>();
             Started = true;
         }
 

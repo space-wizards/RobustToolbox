@@ -138,9 +138,10 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                // TODO: Other method should be called GetAllEntityStates
+                // TODO: Suss out not sending all entity states on connect to make it faster (though obv you still need
+                // to send all maps and grids).
                 var entStates = lastAck == GameTick.Zero || !PvsEnabled
-                    ? _entityManager.GetEntityStates(lastAck)
+                    ? _entityManager.GetAllEntityStates(lastAck)
                     : _entityManager.GetEntityStates(lastAck, currentTick, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);

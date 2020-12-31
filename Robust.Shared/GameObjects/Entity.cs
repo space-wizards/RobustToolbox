@@ -357,6 +357,7 @@ namespace Robust.Shared.GameObjects
         public void Dirty()
         {
             LastModifiedTick = EntityManager.CurrentTick;
+            EntityManager.EventBus.QueueEvent(EventSource.Local, new DirtyEntityMessage(this));
         }
 
         #endregion GameState

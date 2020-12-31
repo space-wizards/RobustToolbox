@@ -145,7 +145,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public List<EntityState>? GetAllEntityStates(GameTick fromTick)
+        public List<EntityState>? GetAllEntityStates(GameTick fromTick, IPlayerSession? session)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in AllEntities)
@@ -161,16 +161,28 @@ namespace Robust.Server.GameObjects
                 stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick));
             }
 
+            if (session != null)
+            {
+                var data = _lookupSystem.GetPlayerLastSeen(session);
+                if (data != null)
+                {
+                    foreach (var state in stateEntities)
+                    {
+                        data.EntityLastSeen[state.Uid] = fromTick;
+                    }
+                }
+            }
+
             // no point sending an empty collection
             return stateEntities.Count == 0 ? default : stateEntities;
         }
 
-        public List<EntityState> GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
+        public List<EntityState>? GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
         {
+            // Old PVS used to just get all for no session...
             var playerEnt = player.AttachedEntity;
             if (playerEnt == null)
-                // TODO: Return ALL?
-                return new List<EntityState>();
+                return GetAllEntityStates(fromTick, player);
 
             var data = _lookupSystem.GetPlayerLastSeen(player);
             if (data == null)
@@ -182,14 +194,26 @@ namespace Robust.Server.GameObjects
             var mapId = transform.MapID;
 
             // TODO: This is based on the old method but ideally it iterates through all of their eyes enlarged
-            // TODO: We should also consider some stuff like lights which necessitate a higher PVS range
-            // Probably just have a separate component that the lookups tracks separately
             var viewbox = new Box2(playerPos, playerPos).Enlarged(range);
 
-            // TODO: Ideally each chunk has "LastModifiedTick" that is the latest of any entity contained within
-            // Then we can just do a quicker check... stuff gets modified frequently but I think this will still work well...
-            // Would also need to store last time we sent a chunk to a particular player given they don't get sent the whole chunk
+            var seenEntities = new HashSet<IEntity>();
 
+            // Send important entities (maps and grids)
+            var mapEntity = _mapManager.GetMapEntity(mapId);
+            seenEntities.Add(mapEntity);
+
+            AddEntityState(data, player, fromTick, mapEntity, entityStates);
+
+            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
+            {
+                var gridEntity = GetEntity(grid.GridEntityId);
+                seenEntities.Add(gridEntity);
+                AddEntityState(data, player, fromTick, gridEntity, entityStates);
+            }
+
+            // TODO: For stuff that needs a higher pvs range (e.g. lights) can either
+            // A) Store the comps in the chunks directly and use an enlarged viewbox or
+            // B) Make a separate DynamicTree for them (probably preferable?)
             foreach (var chunk in _lookupSystem.GetChunksInRange(mapId, viewbox))
             {
                 var chunkLastSeen = data.LastSeen(chunk);
@@ -201,38 +225,56 @@ namespace Robust.Server.GameObjects
 
                 foreach (var entity in chunk.GetEntities())
                 {
-                    // TODO: Probably don't send container data to clients maybe? Though we need to fix containers so they
-                    // don't throw if we don't send it (coz currently they do).
+                    if (entity.Deleted || seenEntities.Contains(entity)) continue;
+                    seenEntities.Add(entity);
+                    // TODO: Probably don't send container data to clients maybe?
                     // Though I guess sending contents is useful for prediction ahhhhhhhh
 
-                    // Get whether we need to send dat state
-                    // If we haven't seen it ever then force send that baby
-                    if (data.EntityLastSeen.TryGetValue(entity.Uid, out var lastSeen))
-                    {
-                        if (entity.LastModifiedTick <= lastSeen ||
-                            entity.TryGetComponent(out VisibilityComponent? visibility) &&
-                            (player.VisibilityMask & visibility.Layer) == 0)
-                        {
-                            continue;
-                        }
-                    }
-
-                    var state = GetEntityState(ComponentManager, entity.Uid, fromTick);
-                    data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
-
-                    // Sending nothing at all
-                    if (state.ComponentStates == null)
-                        continue;
-
-                    entityStates.Add(state);
-                    // TODO: Look at that transform shit.
+                    AddEntityState(data, player, fromTick, entity, entityStates);
                 }
             }
 
             // Sort for the client.
             entityStates.Sort((a, b) => a.Uid.CompareTo(b.Uid));
             return entityStates;
+        }
 
+        /// <summary>
+        ///     Try to add the entity state if it needs an update
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="player"></param>
+        /// <param name="fromTick"></param>
+        /// <param name="entity"></param>
+        /// <param name="entityStates"></param>
+        private void AddEntityState(PlayerLookupChunks data, IPlayerSession player, GameTick fromTick, IEntity entity, List<EntityState> entityStates)
+        {
+            EntityState state;
+
+            if (data.EntityLastSeen.TryGetValue(entity.Uid, out var lastSeen))
+            {
+                if (entity.LastModifiedTick <= lastSeen ||
+                    entity.TryGetComponent(out VisibilityComponent? visibility) &&
+                    (player.VisibilityMask & visibility.Layer) == 0x0)
+                {
+                    return;
+                }
+
+                state = GetEntityState(ComponentManager, entity.Uid, fromTick);
+            }
+            // Never before seen entity
+            else
+            {
+                state = GetEntityState(ComponentManager, entity.Uid, fromTick, true);
+            }
+
+            data.EntityLastSeen[entity.Uid] = entity.LastModifiedTick;
+
+            // No net components most likely (e.g. spawners)
+            if (state.ComponentStates == null)
+                return;
+
+            entityStates.Add(state);
         }
 
         public override void DeleteEntity(IEntity e)
@@ -305,14 +347,18 @@ namespace Robust.Server.GameObjects
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <returns>New entity State for the given entity.</returns>
-        public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick)
+        public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity = false)
         {
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 
+            var lastTick = newEntity ? GameTick.Zero : fromTick;
+
             foreach (var comp in compMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(comp.Initialized);
+
+                // TODO: This comment is a lie as A) It's being set to Tick 1 and B) Client throws
 
                 // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
                 // "not different from entity creation".
@@ -321,22 +367,28 @@ namespace Robust.Server.GameObjects
                 // to what the component state / ComponentChanged would send.
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
-                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
+                if (comp.NetSyncEnabled &&
+                    comp.LastModifiedTick != GameTick.Zero &&
+                    comp.LastModifiedTick >= lastTick)
+                {
                     compStates.Add(comp.GetComponentState());
+                }
 
-                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
+                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= lastTick && !comp.Deleted)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
                     changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
                 }
-                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
+                else if (comp.Deleted && comp.LastModifiedTick >= lastTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
                     changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
                 }
             }
+
+            // TODO: If above TODO done then force send metadata as we always need that
 
             return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
         }

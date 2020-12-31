@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
@@ -43,8 +44,21 @@ namespace Robust.Server.GameObjects.EntitySystems
             // Removing from lookup should be handled elsewhere already.
             if (message.Entity.Deleted) return;
 
-            var aabb = EntityManager.GetWorldAabbFromEntity(message.Entity);
-            var mapId = message.Entity.Transform.MapID;
+            var entity = message.Entity;
+
+            while (true)
+            {
+                if (entity.TryGetContainer(out var container))
+                {
+                    entity = container.Owner;
+                    continue;
+                }
+
+                break;
+            }
+
+            var aabb = EntityManager.GetWorldAabbFromEntity(entity);
+            var mapId = entity.Transform.MapID;
 
             foreach (var chunk in GetChunksInRange(mapId, aabb))
             {
@@ -73,19 +87,9 @@ namespace Robust.Server.GameObjects.EntitySystems
 
 internal sealed class PlayerLookupChunks
 {
-    public Dictionary<EntityUid, GameTick> EntityLastSeen { get; set; } = new();
+    public Dictionary<EntityUid, GameTick> EntityLastSeen { get; } = new();
 
     public readonly Dictionary<EntityLookupChunk, GameTick> KnownChunks = new();
-
-    public bool TryLastSeen(EntityUid uid, out GameTick lastSeen)
-    {
-        if (EntityLastSeen.TryGetValue(uid, out lastSeen))
-        {
-            return true;
-        }
-
-        return false;
-    }
 
     public GameTick? LastSeen(EntityLookupChunk chunk)
     {

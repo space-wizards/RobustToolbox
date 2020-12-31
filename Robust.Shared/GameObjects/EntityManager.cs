@@ -29,7 +29,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
 
         #endregion Dependencies
 

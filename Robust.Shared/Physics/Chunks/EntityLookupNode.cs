@@ -22,12 +22,14 @@ namespace Robust.Shared.Physics.Chunks
 
         internal void AddEntity(IEntity entity)
         {
-            _entities.Add(entity);
+            if (_entities.Add(entity))
+                ParentChunk.EntityCount += 1;
         }
 
         internal void RemoveEntity(IEntity entity)
         {
-            _entities.Remove(entity);
+            if (_entities.Remove(entity))
+                ParentChunk.EntityCount -= 1;
         }
     }
 }

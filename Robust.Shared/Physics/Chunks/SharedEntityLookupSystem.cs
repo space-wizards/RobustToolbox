@@ -22,7 +22,6 @@ namespace Robust.Shared.Physics.Chunks
     /// <summary>
     ///     Stores what entities intersect a particular tile.
     /// </summary>
-    [UsedImplicitly]
     public abstract class SharedEntityLookupSystem : EntitySystem
     {
         /*
@@ -132,7 +131,7 @@ namespace Robust.Shared.Physics.Chunks
 
                     var gridEntity = EntityManager.GetEntity(grid.GridEntityId);
 
-                    foreach (var contained in GetContained(includeContainers, gridEntity))
+                    foreach (var contained in gridEntity.GetContained())
                     {
                         if (checkedEntities.Contains(contained.Uid))
                             continue;
@@ -149,17 +148,20 @@ namespace Robust.Shared.Physics.Chunks
             {
                 foreach (var entity in node.Entities)
                 {
-                    if (approximate || worldBox.Intersects(EntityManager.GetWorldAabbFromEntity(entity)))
+                    if (!entity.Deleted && (approximate || worldBox.Intersects(EntityManager.GetWorldAabbFromEntity(entity))))
                     {
                         if (checkedEntities.Contains(entity.Uid))
                             continue;
 
-                        foreach (var contained in GetContained(includeContainers, entity))
+                        if (includeContainers)
                         {
-                            if (checkedEntities.Contains(contained.Uid))
-                                continue;
+                            foreach (var contained in entity.GetContained())
+                            {
+                                if (checkedEntities.Contains(contained.Uid))
+                                    continue;
 
-                            entities.Add(contained);
+                                entities.Add(contained);
+                            }
                         }
 
                         checkedEntities.Add(entity.Uid);
@@ -171,26 +173,6 @@ namespace Robust.Shared.Physics.Chunks
             return entities;
         }
 
-        // Yeah I made a helper, seemed easier than pasting it everywhere.
-        private IEnumerable<IEntity> GetContained(bool includeContainers, IEntity entity)
-        {
-            if (!includeContainers || !entity.TryGetComponent(out IContainerManager? containerManager))
-                yield break;
-
-            var cast = (SharedContainerManagerComponent) containerManager;
-
-            foreach (var container in cast.GetAllContainers())
-            {
-                foreach (var contained in container.ContainedEntities)
-                {
-                    if (contained == null)
-                        continue;
-
-                    yield return contained;
-                }
-            }
-        }
-
         private IList<EntityLookupNode> GetNodesInRange(MapId mapId, Box2 worldBox)
         {
             var nodes = new List<EntityLookupNode>();
@@ -198,14 +180,12 @@ namespace Robust.Shared.Physics.Chunks
 
             foreach (var chunk in GetChunksInRange(mapId, worldBox))
             {
-                // TODO: Don't need this every time
-                var localCenter = MapManager.GetGrid(chunk.GridId).WorldToLocal(worldBox.Center);
+                var localCenter = chunk.GridId == GridId.Invalid ? worldBox.Center : MapManager.GetGrid(chunk.GridId).WorldToLocal(worldBox.Center);
                 var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
                 var bottomLeftNodeBound = new Vector2i((int) Math.Floor(centerTile.X - range), (int) Math.Floor(centerTile.Y - range));
+                // TODO: Just use ceiling?
                 var topRightNodeBound = new Vector2i((int) Math.Floor(centerTile.X + range + 1), (int) Math.Floor(centerTile.Y + range + 1));
 
-                // Now we'll check if it's in range and relevant for us
-                // (e.g. if we're on the very edge of a chunk we may need more chunks).
                 foreach (var node in chunk.GetNodes(bottomLeftNodeBound, topRightNodeBound))
                 {
                     nodes.Add(node);
@@ -215,7 +195,7 @@ namespace Robust.Shared.Physics.Chunks
             return nodes;
         }
 
-        public IList<EntityLookupChunk> GetChunksInRange(MapId mapId, Box2 worldBox)
+        public IList<EntityLookupChunk> GetChunksInRange(MapId mapId, Box2 worldBox, GridId? gridId=null)
         {
             var results = new List<EntityLookupChunk>();
             var range = (worldBox.BottomLeft - worldBox.Center).Length;
@@ -223,11 +203,15 @@ namespace Robust.Shared.Physics.Chunks
             // This is the max in any direction that we can get a chunk (e.g. max 2 chunks away of data).
             var (maxXDiff, maxYDiff) = ((int) (range / EntityLookupChunk.ChunkSize) + 1, (int) (range / EntityLookupChunk.ChunkSize) + 1);
 
-            foreach (var grid in MapManager.FindGridsIntersecting(mapId, worldBox))
+            var gridIds = gridId != null
+                ? new List<GridId> {gridId.Value}
+                : MapManager.FindGridIdsIntersecting(mapId, worldBox, true);
+
+            foreach (var gid in gridIds)
             {
-                var localCenter = grid.WorldToLocal(worldBox.Center);
+                var localCenter = gid == GridId.Invalid ? worldBox.Center : MapManager.GetGrid(gid).WorldToLocal(worldBox.Center);
                 var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
-                var chunks = _graph[mapId][grid.Index];
+                if (!_graph[mapId].TryGetValue(gid, out var chunks)) continue;
 
                 for (var x = -maxXDiff; x <= maxXDiff; x++)
                 {
@@ -450,6 +434,7 @@ namespace Robust.Shared.Physics.Chunks
         {
             SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
+            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
             MapManager.OnGridCreated += HandleGridCreated;
             MapManager.OnGridRemoved += HandleGridRemoval;
             MapManager.TileChanged += HandleTileChanged;
@@ -461,6 +446,7 @@ namespace Robust.Shared.Physics.Chunks
             base.Shutdown();
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<EntityInitializedMessage>();
+            UnsubscribeLocalEvent<EntParentChangedMessage>();
             MapManager.OnGridCreated -= HandleGridCreated;
             MapManager.OnGridRemoved -= HandleGridRemoval;
             MapManager.TileChanged -= HandleTileChanged;
@@ -470,6 +456,14 @@ namespace Robust.Shared.Physics.Chunks
         private void HandleEntityInitialized(EntityInitializedMessage message)
         {
             HandleEntityAdd(message.Entity);
+        }
+
+        private void HandleParentChanged(EntParentChangedMessage message)
+        {
+            if (message.Entity.IsInContainer())
+            {
+                HandleEntityRemove(message.Entity);
+            }
         }
 
         /*
@@ -545,21 +539,15 @@ namespace Robust.Shared.Physics.Chunks
         /// <param name="entity"></param>
         private void HandleEntityAdd(IEntity entity)
         {
-            // TODO: I DON'T THINK TRANSFORM IS CORRECT FOR CONTAINED ENTITIES
-            //PROBABLY CALL THIS WHEN AN ENTITY'S PARENT IS CHANGED
-            if (!entity.IsValid() ||
+            if (entity.HasComponent<MapGridComponent>() ||
+                entity.IsInContainer() ||
+                !entity.IsValid() ||
                 entity.Transform.MapID == MapId.Nullspace)
             {
                 return;
             }
 
-            // TODO: This stops grids from showing up on lookups which uhhhhhh idk.
-            // Might just be better to take an arg on the intersecting methods so they can also get the grid back if they want it?
-            if (MapManager.TryFindGridAt(entity.Transform.MapID, entity.Transform.WorldPosition, out var grid) &&
-                entity.Uid == grid.GridEntityId)
-            {
-                return;
-            }
+            // TODO: Update transform children with their own
 
             var entityNodes = GetOrCreateNodes(entity);
             var newIndices = new Dictionary<GridId, List<Vector2i>>();
@@ -623,7 +611,9 @@ namespace Robust.Shared.Physics.Chunks
         private void HandleEntityMove(MoveEvent moveEvent)
         {
             if (moveEvent.Sender.Deleted ||
-                !moveEvent.NewPosition.IsValid(EntityManager))
+                !moveEvent.NewPosition.IsValid(EntityManager) ||
+                moveEvent.Sender.IsInContainer() ||
+                moveEvent.Sender.HasComponent<MapGridComponent>())
             {
                 HandleEntityRemove(moveEvent.Sender);
                 return;
@@ -633,24 +623,40 @@ namespace Robust.Shared.Physics.Chunks
             if (!_lastKnownNodes.TryGetValue(moveEvent.Sender, out var oldNodes))
                 return;
 
-            // TODO: Need to add entity parenting to transform (when _localPosition is set then check its parent
             var newNodes = GetNodes(moveEvent.Sender);
             if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))
-            {
                 return;
-            }
 
             var toRemove = oldNodes.Where(oldNode => !newNodes.Contains(oldNode));
             var toAdd = newNodes.Where(newNode => !oldNodes.Contains(newNode));
 
+            // TODO: Update transform children with their own
+
+            foreach (var child in moveEvent.Sender.Transform.Children)
+            {
+                // TODO: Handle move
+            }
+
+            var canDelete = new HashSet<EntityLookupChunk>();
+
             foreach (var node in toRemove)
             {
                 node.RemoveEntity(moveEvent.Sender);
+                if (node.ParentChunk.CanDeleteChunk())
+                {
+                    canDelete.Add(node.ParentChunk);
+                }
             }
 
             foreach (var node in toAdd)
             {
                 node.AddEntity(moveEvent.Sender);
+                canDelete.Remove(node.ParentChunk);
+            }
+
+            foreach (var chunk in canDelete)
+            {
+                _graph[chunk.MapId][chunk.GridId].Remove(chunk.Origin);
             }
 
             var newIndices = new Dictionary<GridId, List<Vector2i>>();

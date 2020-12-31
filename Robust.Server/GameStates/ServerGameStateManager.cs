@@ -138,10 +138,10 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                // TODO: Suss out not sending all entity states on connect to make it faster (though obv you still need
-                // to send all maps and grids).
+                // TODO: Need to optimise entity spawning and states significantly more before not sending
+                // every state on connection becomes viable as there is a noticeable stutter right now unfortunately.
                 var entStates = lastAck == GameTick.Zero || !PvsEnabled
-                    ? _entityManager.GetAllEntityStates(lastAck)
+                    ? _entityManager.GetAllEntityStates(lastAck, session)
                     : _entityManager.GetEntityStates(lastAck, currentTick, session, _entityManager.MaxUpdateRange);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var deletions = _entityManager.GetDeletedEntities(lastAck);

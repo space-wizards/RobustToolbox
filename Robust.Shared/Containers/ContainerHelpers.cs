@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Map;
@@ -201,6 +203,31 @@ namespace Robust.Shared.Containers
 
             // Both entities are in the same container
             return userContainer == otherContainer;
+        }
+
+        public static List<IEntity> GetContained(this IEntity entity, List<IEntity>? existing = null)
+        {
+            existing ??= new List<IEntity>();
+
+            if (entity.Deleted || !entity.TryGetComponent(out IContainerManager? containerManager))
+                return existing;
+
+            var cast = (SharedContainerManagerComponent) containerManager;
+
+            foreach (var container in cast.GetAllContainers())
+            {
+                foreach (var contained in container.ContainedEntities)
+                {
+                    if (contained == null)
+                        continue;
+
+                    existing.Add(contained);
+                    // Recursion time
+                    GetContained(contained, existing);
+                }
+            }
+
+            return existing;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -31,6 +32,8 @@ namespace Robust.Shared.Physics.Chunks
 
         public GameTick LastModifiedTick { get; set; } = GameTick.Zero;
 
+        public int EntityCount = 0;
+
         internal EntityLookupChunk(MapId mapId, GridId gridId, Vector2i origin)
         {
             MapId = mapId;
@@ -54,18 +57,15 @@ namespace Robust.Shared.Physics.Chunks
         /// </summary>
         public bool CanDeleteChunk()
         {
-            if (GridId != GridId.Invalid)
-                return false;
-
-            foreach (var _ in GetEntities())
-            {
-                return false;
-            }
-
-            return true;
+            return EntityCount <= 0;
         }
 
-        public IReadOnlySet<IEntity> GetEntities()
+        /// <summary>
+        ///     Get all entities that intersect this chunk
+        /// </summary>
+        /// <param name="includeContainers">Whether to include entities within our containermanager component</param>
+        /// <returns></returns>
+        public IReadOnlySet<IEntity> GetEntities(bool includeContainers=true)
         {
             var entities = new HashSet<IEntity>();
 
@@ -76,6 +76,21 @@ namespace Robust.Shared.Physics.Chunks
                     var node = _nodes[x, y];
                     entities.UnionWith(node.Entities);
                 }
+            }
+
+            if (includeContainers)
+            {
+                var contained = new HashSet<IEntity>();
+
+                foreach (var entity in entities)
+                {
+                    foreach (var con in entity.GetContained())
+                    {
+                        contained.Add(con);
+                    }
+                }
+
+                entities.UnionWith(contained);
             }
 
             return entities;

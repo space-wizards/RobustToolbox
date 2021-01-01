@@ -16,6 +16,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client.GameObjects
 {
+    [AutoDataClass]
     public sealed class AppearanceComponent : SharedAppearanceComponent
     {
         [ViewVariables]

@@ -120,8 +120,6 @@ namespace Robust.Client
 
             YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer),
                 new VisualizerTypeSerializer());
-            YamlObjectSerializer.RegisterTypeSerializer(typeof(RSI),
-                new RSITypeSerializer());
         }
     }
 }

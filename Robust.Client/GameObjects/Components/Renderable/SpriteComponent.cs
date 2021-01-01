@@ -25,6 +25,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using System.Linq;
+using Robust.Client.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Timing;
@@ -33,6 +34,7 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 
 namespace Robust.Client.GameObjects
 {
+    [CustomDataClass(typeof(SpriteComponentDataClass))]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug
     {
@@ -129,7 +131,7 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [YamlField("sprite")]
+        [YamlField("rsi")]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -173,9 +175,24 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] private Dictionary<object, int> LayerMap = new();
+        [ViewVariables] [YamlField("layermap")] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = default!;
+
+        [YamlField("layers")]
+        private List<Layer> LayersSetter
+        {
+            get => Layers;
+            set
+            {
+                Layers.Clear();
+                foreach (var layer in value)
+                {
+                    Layers.Add(new Layer(layer, this));
+                }
+                UpdateIsInert();
+            }
+        }
 
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
@@ -1487,7 +1504,7 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        private class Layer : ISpriteLayer
+        public class Layer : ISpriteLayer
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 

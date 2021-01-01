@@ -10,6 +10,7 @@ namespace Robust.Client.GameObjects.Components
     /// <summary>
     ///     Defines data fields used in the <see cref="InputSystem"/>.
     /// </summary>
+    [AutoDataClass]
     class InputComponent : Component
     {
         /// <inheritdoc />

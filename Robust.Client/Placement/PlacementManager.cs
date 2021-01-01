@@ -27,8 +27,10 @@ using Robust.Client.Graphics.Drawing;
 using Robust.Client.Interfaces.Graphics;
 using Robust.Client.Interfaces.Graphics.Overlays;
 using Robust.Client.Player;
+using Robust.Shared.GameObjects.Components;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
+using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
@@ -127,10 +129,9 @@ namespace Robust.Client.Placement
                 {
                     PlacementOffset = value.PlacementOffset;
 
-                    if (value.Components.ContainsKey("BoundingBox") && value.Components.ContainsKey("Physics"))
+                    if (value.Components.TryGetValue("Physics", out var physicsComp) && physicsComp is PhysicsComponent_AUTODATA physicsComponentAutodata && physicsComponentAutodata.shapes is List<IPhysShape> shapes)
                     {
-                        var map = value.Components["BoundingBox"];
-                        _colliderAABB = (Box2)(map.GetValue("aabb") ?? new Box2(0f, 0f, 0f, 0f));
+                        _colliderAABB = shapes.FirstOrDefault()?.CalculateLocalBounds(0f) ?? new Box2(0f, 0f, 0f, 0f);
                         return;
                     }
                 }

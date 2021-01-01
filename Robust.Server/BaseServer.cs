@@ -300,6 +300,8 @@ namespace Robust.Server
 
             _entities.Initialize();
 
+            IoCManager.Resolve<IComponentDataManager>().RegisterCustomDataClasses();
+
             // because of 'reasons' this has to be called after the last assembly is loaded
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();

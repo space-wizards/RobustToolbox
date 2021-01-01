@@ -37,13 +37,13 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
-                var className = attribute.ClassName;
-                var customDataClass = _reflectionManager.GetType(className);
-                if (customDataClass == null)
+                var customDataClass = attribute.ClassName;
+                //var customDataClass = _reflectionManager.GetType(className);
+                /*if (customDataClass == null)
                 {
                     Logger.Error("CustomDataClass {0} could not be found for type {1}.",className, type);
                     continue;
-                }
+                }*/
 
                 _customDataClasses.Add(type, customDataClass);
             }
@@ -165,25 +165,14 @@ namespace Robust.Shared.Prototypes
 
         public ComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)
         {
-            var dataDefinition = GetComponentDataDefinition(compName);
+            //var dataDefinition = GetComponentDataDefinition(compName);
             var ser = YamlObjectSerializer.NewReader(mapping, context);
 
             var data = GetEmptyComponentData(compName);
-            foreach (var fieldDef in dataDefinition)
-            {
-                object? value = null;
+            data.ExposeData(ser);
 
-                if(mapping.TryGetNode(fieldDef.Tag, out var node))
-                {
-                    value = ser.NodeToType(fieldDef.FieldType, node);
-                    mapping.Children.Remove(fieldDef.Tag);
-                }
-
-                data.SetValue(fieldDef.Tag, value);
-            }
-
-            if (mapping.Children.Count != 0)
-                throw new PrototypeLoadException($"Not all values of component {compName} were consumed (Not consumed: {string.Join(',',mapping.Children.Select(n => n.Key))})");
+            //todo if (mapping.Children.Count != 0)
+            //    throw new PrototypeLoadException($"Not all values of component {compName} were consumed (Not consumed: {string.Join(',',mapping.Children.Select(n => n.Key))})");
 
             return data;
         }

@@ -8,11 +8,10 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IComponent))]
     public class CustomDataClassAttribute : Attribute
     {
-        public readonly string ClassName;
+        public readonly Type ClassName;
 
-        public CustomDataClassAttribute(string className)
+        public CustomDataClassAttribute(Type className)
         {
-            throw new NotImplementedException();
             ClassName = className;
         }
     }

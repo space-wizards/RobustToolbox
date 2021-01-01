@@ -1,8 +1,10 @@
 using System;
+using Robust.Shared.Interfaces.Serialization;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Prototypes
 {
-    public abstract class ComponentData
+    public abstract class ComponentData : IExposeData
     {
         public virtual string[] Tags { get; } = Array.Empty<string>();
 
@@ -20,6 +22,11 @@ namespace Robust.Shared.Prototypes
         public virtual void SetValue(string tag, object? value)
         {
             throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
+        }
+
+        public virtual void ExposeData(ObjectSerializer serializer)
+        {
+            //throw new NotImplementedException();
         }
     }
 }

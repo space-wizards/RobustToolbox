@@ -167,6 +167,7 @@ namespace Robust.Client
             _serializer.Initialize();
             _inputManager.Initialize();
             _console.Initialize();
+            IoCManager.Resolve<IComponentDataManager>().RegisterCustomDataClasses();
             _prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes/"));
             _prototypeManager.Resync();
             _mapManager.Initialize();

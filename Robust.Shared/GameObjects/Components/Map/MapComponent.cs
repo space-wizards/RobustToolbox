@@ -18,6 +18,7 @@ namespace Robust.Shared.GameObjects.Components.Map
     }
 
     /// <inheritdoc cref="IMapComponent"/>
+    [AutoDataClass]
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]

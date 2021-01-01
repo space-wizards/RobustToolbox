@@ -8,6 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [AutoDataClass]
     public class OccluderComponent : Component
     {
         public sealed override string Name => "Occluder";

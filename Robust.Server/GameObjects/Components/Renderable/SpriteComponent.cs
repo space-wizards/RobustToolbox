@@ -390,7 +390,8 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public override void ExposeData(ObjectSerializer serializer)
+        //TODO Paul: fix dis
+        /*public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 
@@ -441,7 +442,7 @@ namespace Robust.Server.GameObjects
 
             serializer.SetCacheData(LayerSerializationCache, layerData.ShallowClone());
             Layers = layerData;
-        }
+        }*/
 
         public override ComponentState GetComponentState()
         {

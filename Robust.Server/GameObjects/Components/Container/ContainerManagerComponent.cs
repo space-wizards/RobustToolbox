@@ -194,7 +194,8 @@ namespace Robust.Server.GameObjects.Components.Container
             EntityContainers.Clear();
         }
 
-        public override void ExposeData(ObjectSerializer serializer)
+        //TODO Paul: fix dis
+        /*public override void ExposeData(ObjectSerializer serializer)
         {
             base.ExposeData(serializer);
 
@@ -237,7 +238,7 @@ namespace Robust.Server.GameObjects.Components.Container
                 serializer.DataWriteFunction<Dictionary<string, ContainerPrototypeData>?>("containers", null,
                     () => dict);
             }
-        }
+        }*/
 
         public override void Initialize()
         {

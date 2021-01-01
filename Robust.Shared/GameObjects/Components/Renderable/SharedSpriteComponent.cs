@@ -58,7 +58,7 @@ namespace Robust.Shared.GameObjects.Components.Renderable
         }
 
         [Serializable, NetSerializable]
-        protected struct PrototypeLayerData : IExposeData
+        public struct PrototypeLayerData : IExposeData
         {
             public string? Shader;
             public string? TexturePath;

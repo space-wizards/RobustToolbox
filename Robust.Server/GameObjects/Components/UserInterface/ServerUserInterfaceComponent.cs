@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 
 namespace Robust.Server.GameObjects.Components.UserInterface
@@ -28,26 +29,23 @@ namespace Robust.Server.GameObjects.Components.UserInterface
         private readonly Dictionary<object, BoundUserInterface> _interfaces =
             new();
 
+        [YamlField("interfaces")]
+        private List<PrototypeData> interfaceReceiver
+        {
+            set
+            {
+                _interfaces.Clear();
+                foreach (var data in value)
+                {
+                    _interfaces[data.UiKey] = new BoundUserInterface(data.UiKey, this);
+                }
+            }
+        }
+
         /// <summary>
         ///     Enumeration of all the interfaces this component provides.
         /// </summary>
         public IEnumerable<BoundUserInterface> Interfaces => _interfaces.Values;
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            if (!serializer.Reading)
-            {
-                return;
-            }
-
-            var data = serializer.ReadDataFieldCached("interfaces", new List<PrototypeData>());
-            foreach (var prototypeData in data)
-            {
-                _interfaces[prototypeData.UiKey] = new BoundUserInterface(prototypeData.UiKey, this);
-            }
-        }
 
         public BoundUserInterface GetBoundUserInterface(object uiKey)
         {
@@ -162,7 +160,7 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             _stateDirty = true;
         }
 
-        
+
         /// <summary>
         ///     Switches between closed and open for a specific client.
         /// </summary>
@@ -183,8 +181,8 @@ namespace Robust.Server.GameObjects.Components.UserInterface
             }
         }
 
-        
-        
+
+
         /// <summary>
         ///     Opens this interface for a specific client.
         /// </summary>

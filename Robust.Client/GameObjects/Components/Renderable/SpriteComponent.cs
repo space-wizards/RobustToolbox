@@ -1063,9 +1063,10 @@ namespace Robust.Client.GameObjects
             return texture;
         }
 
-        public override void ExposeData(ObjectSerializer serializer)
+        //TODO PAUL: AAAAA D
+        /*public override void ExposeData(ObjectSerializer serializer)
         {
-
+//todo Paul: ur not done!
 
             List<Layer> CloneLayers(List<Layer> source)
             {
@@ -1078,16 +1079,7 @@ namespace Robust.Client.GameObjects
                 return clone;
             }
 
-            if (serializer.TryGetCacheData<List<Layer>>(LayerSerializationCache, out var layers))
-            {
-                LayerMap = serializer.GetCacheData<Dictionary<object, int>>(LayerMapSerializationCache);
-                _layerMapShared = true;
-                Layers = CloneLayers(layers);
-                UpdateIsInert();
-                return;
-            }
-
-            layers = new List<Layer>();
+            var layers = new List<Layer>();
 
             var layerMap = new Dictionary<object, int>();
 
@@ -1226,7 +1218,7 @@ namespace Robust.Client.GameObjects
             serializer.SetCacheData(LayerSerializationCache, CloneLayers(Layers));
             serializer.SetCacheData(LayerMapSerializationCache, layerMap);
             UpdateIsInert();
-        }
+        }*/
 
         public override void OnRemove()
         {

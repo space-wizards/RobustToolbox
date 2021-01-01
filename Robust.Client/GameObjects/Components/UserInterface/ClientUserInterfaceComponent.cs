@@ -6,6 +6,7 @@ using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
@@ -16,35 +17,24 @@ namespace Robust.Client.GameObjects.Components.UserInterface
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new();
 
-        private Dictionary<object, PrototypeData> _interfaceData = default!;
-#pragma warning disable 649
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-#pragma warning restore 649
+        private Dictionary<object, PrototypeData> _interfaceData = new();
 
-        public override void ExposeData(ObjectSerializer serializer)
+        [YamlField("interfaces")]
+        private List<PrototypeData> _dataReceiver
         {
-            base.ExposeData(serializer);
-
-            const string cache = "ui_cache";
-
-            if (serializer.TryGetCacheData<Dictionary<object, PrototypeData>>(cache, out var interfaceData))
+            set
             {
-                _interfaceData = interfaceData;
-                return;
+                _interfaceData.Clear();
+                foreach (var data in value)
+                {
+                    _interfaceData[data.UiKey] = data;
+                }
             }
-
-            var data = serializer.ReadDataFieldCached("interfaces", new List<PrototypeData>());
-            interfaceData = new Dictionary<object, PrototypeData>();
-            foreach (var prototypeData in data)
-            {
-                interfaceData[prototypeData.UiKey] = prototypeData;
-            }
-
-            serializer.SetCacheData(cache, interfaceData);
-            _interfaceData = interfaceData;
         }
 
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        
         public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
             ICommonSession? session = null)
         {

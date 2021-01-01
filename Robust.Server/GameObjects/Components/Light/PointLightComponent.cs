@@ -1,5 +1,6 @@
 ﻿using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -7,10 +8,14 @@ namespace Robust.Server.GameObjects
 {
     public class PointLightComponent : Component
     {
-        private Color _color;
-        private bool _enabled;
-        private float _radius;
-        private Vector2 _offset;
+        [YamlField("color")]
+        private Color _color = new(200, 200, 200);
+        [YamlField("enabled")]
+        private bool _enabled = true;
+        [YamlField("radius")]
+        private float _radius = 10;
+        [YamlField("offset")]
+        private Vector2 _offset = Vector2.Zero;
 
         public override string Name => "PointLight";
         public override uint? NetID => NetIDs.POINT_LIGHT;
@@ -57,17 +62,6 @@ namespace Robust.Server.GameObjects
                 _offset = value;
                 Dirty();
             }
-        }
-
-        /// <inheritdoc />
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _enabled, "enabled", true);
-            serializer.DataField(ref _color, "color", new Color(200, 200, 200));
-            serializer.DataField(ref _radius, "radius", 10);
-            serializer.DataField(ref _offset, "offset", Vector2.Zero);
         }
 
         public override ComponentState GetComponentState()

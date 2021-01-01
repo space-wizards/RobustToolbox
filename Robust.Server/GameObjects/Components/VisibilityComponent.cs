@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -7,6 +8,7 @@ namespace Robust.Server.GameObjects.Components
     [RegisterComponent]
     public class VisibilityComponent : Component
     {
+        [YamlField("layer")]
         private int _layer = 1;
         public override string Name => "Visibility";
 
@@ -19,13 +21,6 @@ namespace Robust.Server.GameObjects.Components
         {
             get => _layer;
             set => _layer = value;
-        }
-
-        public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataField(ref _layer, "layer", 1);
         }
     }
 }

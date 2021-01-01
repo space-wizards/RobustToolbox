@@ -104,18 +104,9 @@ entities:
         {
             public override string Name => "MapDeserializeTest";
 
-            public int Foo { get; set; }
-            public int Bar { get; set; }
-            public int Baz { get; set; }
-
-            public override void ExposeData(ObjectSerializer serializer)
-            {
-                base.ExposeData(serializer);
-
-                serializer.DataField(this, p => p.Foo, "foo", -1);
-                serializer.DataField(this, p => p.Bar, "bar", -1);
-                serializer.DataField(this, p => p.Baz, "baz", -1);
-            }
+            [YamlField("foo")] public int Foo { get; set; } = -1;
+            [YamlField("bar")] public int Bar { get; set; } = -1;
+            [YamlField("baz")] public int Baz { get; set; } = -1;
         }
     }
 }

@@ -22,6 +22,8 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
+        //TODO Paul: fix dis, also dont forget about exposedata to set the icon
+        //TODO actually, do we even need this now?
         private static IDirectionalTextureProvider TextureForConfig(ComponentData compData, IResourceCache resourceCache)
         {
             /*IDirectionalTextureProvider dirTex;

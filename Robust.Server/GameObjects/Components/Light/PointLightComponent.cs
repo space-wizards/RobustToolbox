@@ -6,6 +6,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [AutoDataClass]
     public class PointLightComponent : Component
     {
         [YamlField("color")]

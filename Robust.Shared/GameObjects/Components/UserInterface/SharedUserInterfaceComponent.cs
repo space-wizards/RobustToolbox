@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
         public sealed override string Name => "UserInterface";
         public sealed override uint? NetID => NetIDs.USERINTERFACE;
 
-        protected sealed class PrototypeData : IExposeData
+        public sealed class PrototypeData : IExposeData
         {
             public object UiKey { get; private set; } = default!;
             public string ClientType { get; private set; } = default!;

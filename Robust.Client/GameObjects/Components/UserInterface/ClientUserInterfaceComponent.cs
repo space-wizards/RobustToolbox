@@ -12,6 +12,7 @@ using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
 namespace Robust.Client.GameObjects.Components.UserInterface
 {
+    [AutoDataClass]
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
@@ -34,7 +35,7 @@ namespace Robust.Client.GameObjects.Components.UserInterface
 
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-        
+
         public override void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel,
             ICommonSession? session = null)
         {

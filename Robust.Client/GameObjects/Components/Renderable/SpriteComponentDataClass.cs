@@ -86,7 +86,7 @@ namespace Robust.Client.GameObjects.Components.Renderable
 
             layers = new List<SpriteComponent.Layer>();
 
-            var layerMap = new Dictionary<object, int>();
+            layermap = new Dictionary<object, int>();
 
             var layerData =
                 serializer.ReadDataField("layers", new List<SharedSpriteComponent.PrototypeLayerData>());
@@ -206,13 +206,13 @@ namespace Robust.Client.GameObjects.Components.Renderable
                             key = keyString;
                         }
 
-                        if (layerMap.ContainsKey(key))
+                        if (layermap.ContainsKey(key))
                         {
                             Logger.ErrorS(SpriteComponent.LogCategory, "Duplicate layer map key definition: {0}", key);
                             continue;
                         }
 
-                        layerMap.Add(key, index);
+                        layermap.Add(key, index);
                     }
                 }
             }

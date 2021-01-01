@@ -118,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
         /// </summary>
-        public Dictionary<string, Dictionary<string, object?>> Components { get; } = new();
+        public Dictionary<string, IComponentData> Components { get; } = new();
 
         /// <summary>
         /// The mapping node inside the <c>data</c> field of the prototype. Null if no data field exists.
@@ -365,7 +365,10 @@ namespace Robust.Shared.GameObjects
                         }
                     }
 
-                    target.Components[type] = component.ShallowClone(); //todo is this sufficient?
+                    var data = dataMgr.GetEmptyComponentData(type);
+                    dataMgr.PushInheritance(type, component, data);
+
+                    target.Components[type] = data;
                 }
 
                 next: ;
@@ -433,7 +436,7 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var (name, data) in prototype.Components)
                 {
-                    Dictionary<string, object?> fullData = data;
+                    var fullData = data;
                     if (context != null)
                     {
                         fullData = context.GetComponentData(name, data);
@@ -470,7 +473,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, Dictionary<string, object?> data)
+        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName, IComponentData data)
         {
             var compType = factory.GetRegistration(compName).Type;
 

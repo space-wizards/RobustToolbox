@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
@@ -12,7 +13,7 @@ namespace Robust.Shared.Interfaces.GameObjects
         /// <summary>
         ///     Gets the serializer used to ExposeData a specific component.
         /// </summary>
-        Dictionary<string, object?> GetComponentData(string componentName, Dictionary<string, object?>? protoData);
+        IComponentData GetComponentData(string componentName, IComponentData? protoData);
 
         /// <summary>
         ///     Gets extra component names that must also be instantiated on top of the ones defined in the prototype,

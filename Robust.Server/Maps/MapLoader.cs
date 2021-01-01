@@ -770,8 +770,8 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            Dictionary<string, object?> IEntityLoadContext.GetComponentData(string componentName,
-                Dictionary<string, object?>? protoData)
+            IComponentData IEntityLoadContext.GetComponentData(string componentName,
+                IComponentData? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
@@ -816,17 +816,14 @@ namespace Robust.Server.Maps
                     return false;
                 }
 
-                if (compData.TryGetValue(field, out var prototypeVal))
-                {
-                    if (value == null)
-                    {
-                        return prototypeVal == null;
-                    }
+                var prototypeVal = compData.GetValue(field);
 
-                    return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
+                if (value == null)
+                {
+                    return prototypeVal == null;
                 }
 
-                return false;
+                return YamlObjectSerializer.IsSerializedEqual(value, prototypeVal);
             }
 
             private bool IsMapSavable(IEntity entity)

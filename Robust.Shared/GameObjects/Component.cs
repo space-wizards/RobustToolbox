@@ -12,6 +12,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     [Reflect(false)]
+    [AutoDataClass]
     public abstract class Component : IComponent
     {
         /// <inheritdoc />

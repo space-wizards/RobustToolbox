@@ -12,6 +12,7 @@ namespace Robust.Shared.Prototypes
 
         public CustomDataClassAttribute(string className)
         {
+            throw new NotImplementedException();
             ClassName = className;
         }
     }

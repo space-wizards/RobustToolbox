@@ -1,0 +1,25 @@
+using System;
+
+namespace Robust.Shared.Prototypes
+{
+    public abstract class ComponentData
+    {
+        public virtual string[] Tags { get; } = Array.Empty<string>();
+
+        /// <summary>
+        /// gets the mapped value of the given key. null if not mapped. exception if not in datadefinition (no corresponding [YamlField])
+        /// </summary>
+        public virtual object? GetValue(string tag)
+        {
+            throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
+        }
+
+        /// <summary>
+        /// sets the mapped value of a given key. exception if not in datadefinition (no corresponsing [YamlField])
+        /// </summary>
+        public virtual void SetValue(string tag, object? value)
+        {
+            throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
+        }
+    }
+}

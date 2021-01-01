@@ -19,6 +19,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects.Components.Transform
 {
+    [AutoDataClass]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [YamlField("parent")]

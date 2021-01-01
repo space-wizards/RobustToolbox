@@ -10,17 +10,17 @@ namespace Robust.Shared.Prototypes
 {
     public interface IComponentDataManager
     {
-        IComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null);
+        ComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null);
 
         YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp);
 
         IYamlFieldDefinition[] GetComponentDataDefinition(string compName);
 
-        IComponentData GetEmptyComponentData(string compName);
+        ComponentData GetEmptyComponentData(string compName);
 
-        void PopulateComponent(IComponent comp, IComponentData values);
+        void PopulateComponent(IComponent comp, ComponentData values);
 
-        void PushInheritance(string compName, IComponentData source, IComponentData target);
+        void PushInheritance(string compName, ComponentData source, ComponentData target);
 
         void RegisterCustomDataClasses();
     }

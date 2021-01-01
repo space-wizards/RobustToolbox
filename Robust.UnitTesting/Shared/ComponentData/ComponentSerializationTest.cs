@@ -4,7 +4,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
-using Robust.UnitTesting.Server.Maps;
 
 namespace Robust.UnitTesting.Shared.ComponentData
 {
@@ -49,7 +48,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
             Assert.That(comp.Baz, Is.EqualTo("Testing"));
         }
 
-
+        [AutoDataClass]
         private class SerializationTestComponent : Component
         {
             public override string Name => "TestComp";

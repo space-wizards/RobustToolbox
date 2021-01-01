@@ -22,7 +22,7 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
-        private static IDirectionalTextureProvider TextureForConfig(IComponentData compData, IResourceCache resourceCache)
+        private static IDirectionalTextureProvider TextureForConfig(ComponentData compData, IResourceCache resourceCache)
         {
             /*IDirectionalTextureProvider dirTex;
 

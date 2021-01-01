@@ -26,10 +26,6 @@ namespace Robust.UnitTesting.Server.GameObjects
   components:
   - type: ThrowsInAdd
 - type: entity
-  id: throwInExposeData
-  components:
-  - type: ThrowsInExposeData
-- type: entity
   id: throwsInInitialize
   components:
   - type: ThrowsInInitialize
@@ -45,7 +41,6 @@ namespace Robust.UnitTesting.Server.GameObjects
             _componentFactory = IoCManager.Resolve<IComponentFactory>();
 
             _componentFactory.Register<ThrowsInAddComponent>();
-            _componentFactory.Register<ThrowsInExposeDataComponent>();
             _componentFactory.Register<ThrowsInInitializeComponent>();
             _componentFactory.Register<ThrowsInStartupComponent>();
 
@@ -67,7 +62,7 @@ namespace Robust.UnitTesting.Server.GameObjects
         }
 
         [Test]
-        public void Test([Values("throwInAdd", "throwInExposeData", "throwsInInitialize", "throwsInStartup")]
+        public void Test([Values("throwInAdd", "throwsInInitialize", "throwsInStartup")]
             string prototypeName)
         {
             Assert.That(() => EntityManager.SpawnEntity(prototypeName, MapCoordinates.Nullspace),
@@ -81,13 +76,6 @@ namespace Robust.UnitTesting.Server.GameObjects
             public override string Name => "ThrowsInAdd";
 
             public override void OnAdd() => throw new NotSupportedException();
-        }
-
-        private sealed class ThrowsInExposeDataComponent : Component
-        {
-            public override string Name => "ThrowsInExposeData";
-
-            public override void ExposeData(ObjectSerializer serializer) => throw new NotSupportedException();
         }
 
         private sealed class ThrowsInInitializeComponent : Component

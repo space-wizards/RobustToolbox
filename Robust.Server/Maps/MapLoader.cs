@@ -501,6 +501,7 @@ namespace Robust.Server.Maps
                     {
                         foreach (var compData in componentList)
                         {
+                            //TODO Paul: maybe replace mapping with dict
                             CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode)compData;
                         }
                     }
@@ -782,7 +783,7 @@ namespace Robust.Server.Maps
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
                     //TODO Paul: maybe replace mapping with dict
-                    var contextData = dataMgr.ParseComponentData(componentName, mapping);
+                    var contextData = dataMgr.ParseComponentData(componentName, mapping, this);
                     dataMgr.PushInheritance(componentName, contextData, data);
                 }
 

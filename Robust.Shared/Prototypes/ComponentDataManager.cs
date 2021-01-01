@@ -131,10 +131,10 @@ namespace Robust.Shared.Prototypes
             return res;
         }
 
-        public Dictionary<string, object?> ParseComponentData(string compName, YamlMappingNode mapping)
+        public Dictionary<string, object?> ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)
         {
             var dataDefinition = GetComponentDataDefinition(compName);
-            var ser = YamlObjectSerializer.NewReader(mapping);
+            var ser = YamlObjectSerializer.NewReader(mapping, context);
 
             var data = new Dictionary<string, object?>();
             foreach (var fieldDef in dataDefinition)

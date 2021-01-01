@@ -501,8 +501,10 @@ namespace Robust.Server.Maps
                     {
                         foreach (var compData in componentList)
                         {
+                            var copy = new YamlMappingNode(((YamlMappingNode)compData).AsEnumerable());
+                            copy.Children.Remove(new YamlScalarNode("type"));
                             //TODO Paul: maybe replace mapping with dict
-                            CurrentReadingEntityComponents[compData["type"].AsString()] = (YamlMappingNode)compData;
+                            CurrentReadingEntityComponents[compData["type"].AsString()] = copy;
                         }
                     }
 

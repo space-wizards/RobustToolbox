@@ -136,7 +136,7 @@ namespace Robust.Shared.Prototypes
             var dataDefinition = GetComponentDataDefinition(compName);
             var ser = YamlObjectSerializer.NewReader(mapping, context);
 
-            var data = new Dictionary<string, object?>();
+            var data = GetEmptyComponentData(compName);
             foreach (var fieldDef in dataDefinition)
             {
                 object? value = null;

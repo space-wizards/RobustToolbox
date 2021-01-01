@@ -8,7 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using YamlDotNet.RepresentationModel;
 
-namespace Robust.Client.GameObjects
+namespace Robust.Client.GameObjects.Components.Renderable
 {
     public class RSITypeSerializer : YamlObjectSerializer.TypeSerializer
     {

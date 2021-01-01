@@ -122,7 +122,6 @@ namespace Robust.Client
                 new VisualizerTypeSerializer());
             YamlObjectSerializer.RegisterTypeSerializer(typeof(RSI),
                 new RSITypeSerializer());
-            //IoCManager.Register<IXamlCompiler, XamlCompiler>();
         }
     }
 }

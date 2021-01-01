@@ -34,9 +34,9 @@ namespace Robust.UnitTesting.Shared.ComponentData
         public void ParsingTest()
         {
             var data = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>("TestEntity");
-            Assert.That(data.Components["TestComp"]["foo"], Is.EqualTo(1));
-            Assert.That(data.Components["TestComp"]["bar"], Is.Null);
-            Assert.That(data.Components["TestComp"]["baz"], Is.EqualTo("Testing"));
+            Assert.That(data.Components["TestComp"].GetValue("foo"), Is.EqualTo(1));
+            Assert.That(data.Components["TestComp"].GetValue("bar"), Is.Null);
+            Assert.That(data.Components["TestComp"].GetValue("baz"), Is.EqualTo("Testing"));
         }
 
         [Test]

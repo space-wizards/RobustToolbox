@@ -22,13 +22,9 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
-        private static IDirectionalTextureProvider TextureForConfig(Dictionary<string, object?> compData, IResourceCache resourceCache)
+        private static IDirectionalTextureProvider TextureForConfig(IComponentData compData, IResourceCache resourceCache)
         {
-            IDirectionalTextureProvider dirTex;
-            if (compData.TryGetValue(SerializationCache, out var cachedDirText))
-            {
-                return (IDirectionalTextureProvider)cachedDirText!;
-            }
+            /*IDirectionalTextureProvider dirTex;
 
             //var tex = compData.ReadDataField<string?>("texture", null);
             if (compData.TryGetValue("texture", out var texObj) && !string.IsNullOrWhiteSpace((string?)texObj))
@@ -77,7 +73,9 @@ namespace Robust.Client.GameObjects
             {
                 Logger.ErrorS(LogCategory, "State '{0}' does not exist on RSI.", (string)stateObj!);
                 return resourceCache.GetFallback<TextureResource>().Texture;
-            }
+            }*/
+            //TODO Paul: LATER
+            return resourceCache.GetFallback<TextureResource>().Texture;
         }
 
         public static IDirectionalTextureProvider? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)

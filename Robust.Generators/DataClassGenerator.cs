@@ -37,7 +37,7 @@ namespace Robust.Generators
 
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
-            var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, string>();
+            var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, ITypeSymbol>();
             foreach (var classDeclarationSyntax in receiver.CustomDataClassRegistrations)
             {
                 var symbol = comp.GetSemanticModel(classDeclarationSyntax.SyntaxTree)
@@ -53,7 +53,7 @@ namespace Robust.Generators
                         classDeclarationSyntax.GetLocation()));
                     return;
                 }
-                resolvedCustomDataClasses.Add(symbol, (string)arg.Value.Value); //todo this is inadequate
+                resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value); //todo this is inadequate
             }
 
 
@@ -98,7 +98,7 @@ namespace Robust.Generators
                 {
                     var baseType = symbol.BaseType;
                     if (resolvedCustomDataClasses.TryGetValue(baseType, out var customDataClass))
-                        inheriting = customDataClass; //todo aaaahhhhhh
+                        inheriting = $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
                     else
                         inheriting = $"{baseType.ContainingNamespace}.{baseType.Name}_AUTODATA";
                 }
@@ -112,6 +112,7 @@ namespace Robust.Generators
             var code = $@"#nullable enable
 using System;
 using System.Linq;
+using Robust.Shared.Serialization;
 namespace {@namespace} {{
     public class {name} : {inheriting} {{
 
@@ -135,6 +136,22 @@ namespace {@namespace} {{
                 code += $@"
         public global::{field.Type} {field.Name};";
             }
+
+            //generate exposedata
+            code += @"
+
+        /// <inheritdoc />
+        public override void ExposeData(ObjectSerializer serializer)
+        {
+            base.ExposeData(serializer);";
+
+            foreach (var field in fields)
+            {
+                code += $@"
+            serializer.DataField(ref {field.Name}, ""{field.Name}"", null);";
+            }
+            code += @"
+        }";
 
             //generate getvalue
             code += @"

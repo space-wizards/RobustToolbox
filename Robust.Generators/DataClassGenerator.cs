@@ -20,23 +20,10 @@ namespace Robust.Generators
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
-            var errors = receiver.Registrations.Where(r => receiver.CustomDataClassRegistrations.Contains(r)).ToArray();
-            if (errors.Length != 0)
-            {
-                foreach (var classDeclarationSyntax in errors)
-                {
-                    var msg = $"Class {classDeclarationSyntax.Identifier.Text} has both a CustomDataClass & AutoDataClass Attribute!";
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
-                        classDeclarationSyntax.GetLocation()));
-                }
-                return;
-            }
-
             var comp = (CSharpCompilation)context.Compilation;
-
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
+            //resolve all custom dataclasses
             var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, ITypeSymbol>();
             foreach (var classDeclarationSyntax in receiver.CustomDataClassRegistrations)
             {
@@ -53,15 +40,32 @@ namespace Robust.Generators
                         classDeclarationSyntax.GetLocation()));
                     return;
                 }
-                resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value); //todo this is inadequate
+                resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value);
             }
 
-
-            foreach (var classDeclarationSyntax in receiver.Registrations)
+            string ResolveParentDataClass(ITypeSymbol typeSymbol)
             {
-                var symbol = comp.GetSemanticModel(classDeclarationSyntax.SyntaxTree)
-                    .GetDeclaredSymbol(classDeclarationSyntax);
+                if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)))
+                    return "Robust.Shared.Prototypes.ComponentData";
 
+                var baseType = typeSymbol.BaseType;
+
+                if (resolvedCustomDataClasses.TryGetValue(baseType, out var customDataClass))
+                    return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
+
+                var metaName = GetDataClassName(baseType);
+                var dataClass = comp.GetTypeByMetadataName(metaName);
+                if (dataClass == null) return ResolveParentDataClass(baseType);
+                return metaName;
+            }
+
+            //resolve autodata registrations (we need the to validate the customdataclasses)
+            var resolvedAutoDataRegistrations =
+                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToArray();
+
+            //generate all autodata classes
+            foreach (var symbol in resolvedAutoDataRegistrations)
+            {
                 var fields = new List<FieldTemplate>();
                 foreach (var member in symbol.GetMembers())
                 {
@@ -73,17 +77,17 @@ namespace Robust.Generators
                     switch (member)
                     {
                         case IFieldSymbol fieldSymbol:
-                            type = $"{fieldSymbol.Type.ContainingNamespace}.{fieldSymbol.Type.Name}";
+                            type = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             break;
                         case IPropertySymbol propertySymbol:
-                            type = $"{propertySymbol.ContainingNamespace}.{propertySymbol.Type.MetadataName}";
+                            type = propertySymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
                             break;
                         default:
                             var msg =
                                 $"YamlFieldAttribute assigned for Member {member} of type {symbol} which is neither Field or Property! It will be ignored.";
                             context.ReportDiagnostic(Diagnostic.Create(
                                 new DiagnosticDescriptor("RADC0000", msg, msg, "Usage", DiagnosticSeverity.Warning, true),
-                                symbol.Locations.First()));
+                                member.Locations.First()));
                             continue;
                     }
                     fields.Add(new FieldTemplate(fieldName, type));
@@ -91,20 +95,44 @@ namespace Robust.Generators
 
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
-                string inheriting = null;
-                if(symbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)))
-                    inheriting = "Robust.Shared.Prototypes.ComponentData";
-                else
-                {
-                    var baseType = symbol.BaseType;
-                    if (resolvedCustomDataClasses.TryGetValue(baseType, out var customDataClass))
-                        inheriting = $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
-                    else
-                        inheriting = $"{baseType.ContainingNamespace}.{baseType.Name}_AUTODATA";
-                }
+
+                string inheriting = ResolveParentDataClass(symbol);
 
                 context.AddSource($"{name}.g.cs", SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
             }
+
+            //check if all custom dataclasses are inheriting the correct parent
+            foreach (var pair in resolvedCustomDataClasses)
+            {
+                var component = pair.Key;
+                var dataclass = pair.Value;
+
+                var shouldInherit = ResolveParentDataClass(component);
+                if (dataclass.BaseType?.ToDisplayString() == shouldInherit)
+                {
+                    continue;
+
+                }
+
+                if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(component, r)))
+                {
+                    shouldInherit = GetDataClassName(component);
+                    if (dataclass.BaseType?.ToDisplayString() == shouldInherit)
+                    {
+                        continue;
+                    }
+                }
+
+                var msg = $"Custom Dataclass is inheriting {dataclass.BaseType} when it should inherit {shouldInherit}";
+                context.ReportDiagnostic(Diagnostic.Create(
+                    new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                    dataclass.Locations.First()));
+            }
+        }
+
+        private string GetDataClassName(ITypeSymbol typeSymbol)
+        {
+            return $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
         }
 
         private string GenerateCode(string name, string @namespace, string inheriting, List<FieldTemplate> fields)
@@ -134,7 +162,7 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-        public global::{field.Type} {field.Name};";
+        public {field.Type} {field.Name};";
             }
 
             //generate exposedata
@@ -186,7 +214,7 @@ namespace {@namespace} {{
             {
                 code += $@"
                 case ""{field.Name}"":
-                    {field.Name} = (global::{field.Type})value;
+                    {field.Name} = ({field.Type})value;
                     break;";
             }
             code += @"

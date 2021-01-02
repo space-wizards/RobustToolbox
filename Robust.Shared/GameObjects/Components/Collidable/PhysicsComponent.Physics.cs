@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Interfaces.Physics;
@@ -40,8 +40,6 @@ namespace Robust.Shared.GameObjects.Components
         ///     Whether or not the entity is anchored in place.
         /// </summary>
         bool Anchored { get; set; }
-
-        event Action? AnchoredChanged;
 
         bool Predict { get; set; }
 
@@ -344,12 +342,10 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _anchored = value;
-                AnchoredChanged?.Invoke();
+                SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
             }
         }
-
-        public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict
@@ -516,6 +512,16 @@ namespace Robust.Shared.GameObjects.Components
         public bool CanMove()
         {
             return !Anchored && Mass > 0;
+        }
+    }
+
+    public class AnchoredChangedMessage : ComponentMessage
+    {
+        public readonly bool Anchored;
+
+        public AnchoredChangedMessage(bool anchored)
+        {
+            Anchored = anchored;
         }
     }
 }

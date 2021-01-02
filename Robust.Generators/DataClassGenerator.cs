@@ -21,10 +21,6 @@ namespace Robust.Generators
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
-            var amsg = $"found autoregistrations: {String.Join(",", receiver.Registrations.Select(r => r.Identifier.Text))}";
-            context.ReportDiagnostic(Diagnostic.Create(
-                new DiagnosticDescriptor("abc", amsg, amsg, "aa", DiagnosticSeverity.Warning, true), Location.None));
-
             var comp = (CSharpCompilation)context.Compilation;
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
@@ -48,12 +44,17 @@ namespace Robust.Generators
                 resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value);
             }
 
+            //resolve autodata registrations (we need the to validate the customdataclasses)
+            var resolvedAutoDataRegistrations =
+                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
+
+
             string ResolveParentDataClass(ITypeSymbol typeSymbol)
             {
                 var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
                 var dataClass = comp.GetTypeByMetadataName(metaName);
-                if (dataClass != null) return metaName;
-
+                if (dataClass != null || resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(r, typeSymbol))) return metaName;
+                
                 if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
                     return "Robust.Shared.Prototypes.ComponentData";
 
@@ -62,10 +63,6 @@ namespace Robust.Generators
 
                 return ResolveParentDataClass(typeSymbol.BaseType);
             }
-
-            //resolve autodata registrations (we need the to validate the customdataclasses)
-            var resolvedAutoDataRegistrations =
-                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
 
             //generate all autodata classes
             foreach (var symbol in resolvedAutoDataRegistrations)
@@ -100,12 +97,10 @@ namespace Robust.Generators
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                string inheriting = ResolveParentDataClass(symbol);
-
+                string inheriting = ResolveParentDataClass(symbol.BaseType);
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
-
             }
 
             //check if all custom dataclasses are inheriting the correct parent

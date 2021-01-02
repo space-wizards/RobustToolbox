@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             var entity = IoCManager.Resolve<IEntityManager>().CreateEntityUninitialized("CustomTestEntity");
             var comp = entity.GetComponent<TestCustomDataClassComponent>();
-            Assert.That(comp.Abc, Is.EqualTo("foobar"));
+            Assert.That(comp.Abc, Is.EqualTo("foo"));
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             var entity = IoCManager.Resolve<IEntityManager>().CreateEntityUninitialized("CustomInheritTestEntity");
             var comp = entity.GetComponent<TestCustomDataClassInheritorComponent>();
-            Assert.That(comp.Abc, Is.EqualTo("foobar"));
+            Assert.That(comp.Abc, Is.EqualTo("foo"));
         }
 
         private class SerializationTestComponent : Component
@@ -122,7 +122,6 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             base.ExposeData(serializer);
             serializer.DataField(ref Abc, "abc", null);
-            Abc += "bar";
         }
     }
 }

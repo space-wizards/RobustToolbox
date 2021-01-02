@@ -144,12 +144,12 @@ namespace Robust.Shared.Prototypes
             var dataDef = new List<IYamlFieldDefinition>();
             foreach (var fieldInfo in compType.GetAllFields())
             {
-                //todo Paul: Attribute.GetCustomAttribute()
-                var yamlFieldAttribute = (YamlFieldAttribute?)Attribute.GetCustomAttribute(fieldInfo, typeof(YamlFieldAttribute));
-                    //fieldInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(YamlFieldAttribute));
-                if (yamlFieldAttribute == null) continue;
+                var tag =
+                    ((YamlFieldAttribute?) Attribute.GetCustomAttribute(fieldInfo, typeof(YamlFieldAttribute)))?.Tag ??
+                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(fieldInfo,
+                        typeof(CustomYamlTargetAttribute)))?.Tag;
+                if (tag == null) continue;
 
-                var tag = yamlFieldAttribute.Tag;
                 dataDef.Add(new YamlFieldDefinition(tag, fieldInfo));
             }
 

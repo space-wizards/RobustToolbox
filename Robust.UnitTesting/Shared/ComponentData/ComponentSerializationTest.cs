@@ -53,7 +53,6 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             var data = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>("TestEntity");
 
-            Assert.That(data.Components["TestComp"] is SerializationTestComponent_AUTODATA);
             Assert.That(data.Components["TestComp"].GetValue("foo"), Is.EqualTo(1));
             Assert.That(data.Components["TestComp"].GetValue("bar"), Is.Null);
             Assert.That(data.Components["TestComp"].GetValue("baz"), Is.EqualTo("Testing"));

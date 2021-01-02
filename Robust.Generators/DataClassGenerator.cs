@@ -54,7 +54,7 @@ namespace Robust.Generators
                 var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
                 var dataClass = comp.GetTypeByMetadataName(metaName);
                 if (dataClass != null || resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(r, typeSymbol))) return metaName;
-                
+
                 if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
                     return "Robust.Shared.Prototypes.ComponentData";
 

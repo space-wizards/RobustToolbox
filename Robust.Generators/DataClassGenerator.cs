@@ -74,6 +74,15 @@ namespace Robust.Generators
                         .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
                     if(attribute == null) continue;
                     var fieldName = (string)attribute.ConstructorArguments[0].Value;
+                    if (fieldName == null || !SyntaxFacts.IsValidIdentifier(fieldName))
+                    {
+                        var msg =
+                            $"YamlFieldAttribute for Member {member} of type {symbol} has an invalid tag {fieldName}.";
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            new DiagnosticDescriptor("RADC0004", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            member.Locations.First()));
+                    }
+
                     string type;
                     switch (member)
                     {
@@ -129,7 +138,7 @@ namespace Robust.Generators
                     {
                         var msg = $"Custom Dataclass is inheriting {dataclass.BaseType?.ToDisplayString()} when it should inherit {shouldInherit}";
                         context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            new DiagnosticDescriptor("RADC0003", msg, msg, "Usage", DiagnosticSeverity.Error, true),
                             dataclass.Locations.First()));
                     }
                 }

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -17,6 +19,7 @@ namespace Robust.Shared.Prototypes
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
 
         private Dictionary<Type, Type> _customDataClasses = new ();
+        private Dictionary<Type, Dictionary<string, IYamlFieldDefinition>> _customYamlFields = new ();
 
         public void RegisterCustomDataClasses()
         {
@@ -38,12 +41,24 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var customDataClass = attribute.ClassName;
-                //var customDataClass = _reflectionManager.GetType(className);
-                /*if (customDataClass == null)
+
+                var fields = new Dictionary<string, IYamlFieldDefinition>();
+                foreach (var fieldInfo in customDataClass.GetFields())
                 {
-                    Logger.Error("CustomDataClass {0} could not be found for type {1}.",className, type);
-                    continue;
-                }*/
+                    var fieldDef = GetFieldDefinition(fieldInfo, true);
+                    if(fieldDef == null) continue;
+                    fields.Add(fieldDef.Tag, fieldDef);
+                }
+
+                foreach (var fieldInfo in customDataClass.GetProperties())
+                {
+                    var fieldDef = GetFieldDefinition(fieldInfo, true, true);
+                    if(fieldDef == null) continue;
+                    fields.Add(fieldDef.Tag, fieldDef);
+                }
+
+                if(fields.Count != 0)
+                    _customYamlFields.Add(type, fields);
 
                 _customDataClasses.Add(type, customDataClass);
             }
@@ -80,13 +95,30 @@ namespace Robust.Shared.Prototypes
 
         #region Populating
 
+        private IYamlFieldDefinition GetCustomField(Type type, string tag)
+        {
+            if (_customYamlFields.TryGetValue(type, out var fields) && fields.TryGetValue(tag, out var field))
+                return field;
+            if (type.BaseType == null) throw new Exception($"Custom Yamlfield {tag} not found");
+            return GetCustomField(type.BaseType, tag);
+        }
+
         public void PopulateComponent(IComponent comp, ComponentData values)
         {
             var def = GetComponentDataDefinition(comp.Name);
 
             foreach (var fieldDefinition in def)
             {
-                var value = values.GetValue(fieldDefinition.Tag);
+                object? value;
+                if (fieldDefinition.IsCustom)
+                {
+                    var sourceField = GetCustomField(comp.GetType(), fieldDefinition.Tag);
+                    value = sourceField.GetValue(values);
+                }
+                else
+                {
+                    value = values.GetValue(fieldDefinition.Tag);
+                }
                 if(value == null) continue;
                 fieldDefinition.SetValue(comp, value);
             }
@@ -146,22 +178,16 @@ namespace Robust.Shared.Prototypes
             var dataDef = new List<IYamlFieldDefinition>();
             foreach (var fieldInfo in compType.GetAllFields())
             {
-                var tag =
-                    ((YamlFieldAttribute?) Attribute.GetCustomAttribute(fieldInfo, typeof(YamlFieldAttribute)))?.Tag ??
-                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(fieldInfo, typeof(CustomYamlTargetAttribute)))?.Tag;
-                if (tag == null) continue;
-
-                dataDef.Add(new YamlFieldDefinition(tag, fieldInfo));
+                var fieldDef = GetFieldDefinition(fieldInfo);
+                if(fieldDef == null) continue;
+                dataDef.Add(fieldDef);
             }
 
             foreach (var propertyInfo in compType.GetAllProperties())
             {
-                var tag =
-                    ((YamlFieldAttribute?) Attribute.GetCustomAttribute(propertyInfo, typeof(YamlFieldAttribute)))?.Tag ??
-                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(propertyInfo, typeof(CustomYamlTargetAttribute)))?.Tag;
-                if (tag == null) continue;
-
-                dataDef.Add(new YamlPropertyDefinition(tag, propertyInfo));
+                var fieldDef = GetFieldDefinition(propertyInfo);
+                if(fieldDef == null) continue;
+                dataDef.Add(fieldDef);
             }
 
             var res = dataDef.ToArray();
@@ -169,6 +195,55 @@ namespace Robust.Shared.Prototypes
             _dataDefinitions.Add(compName, res);
 
             return res;
+        }
+
+        private IYamlFieldDefinition? GetFieldDefinition(PropertyInfo info, bool onlyCustom = false, bool needsGet = false)
+        {
+            var yamlFieldAttr =
+                (YamlFieldAttribute?) Attribute.GetCustomAttribute(info, typeof(YamlFieldAttribute));
+            var customYamlAttr =
+                (CustomYamlFieldAttribute?) Attribute.GetCustomAttribute(info,
+                    typeof(CustomYamlFieldAttribute));
+            if (yamlFieldAttr != null && customYamlAttr != null)
+            {
+                throw new Exception($"Property {info} is annotated with both YamlFieldAttribute and CustomYamlFieldAttribute");
+            }
+            var tag =
+                yamlFieldAttr?.Tag ??
+                customYamlAttr?.Tag;
+            if (tag == null) return null;
+
+            if (!info.CanWrite)
+            {
+                throw new Exception(
+                    $"Property {info} is annotated as a YamlField but does not have a setter");
+            }
+
+            if (!info.CanRead && needsGet)
+            {
+                throw new Exception($"Property {info} does not have a required getter.");
+            }
+
+            return onlyCustom && customYamlAttr == null ? null : new YamlPropertyDefinition(tag, info, customYamlAttr != null);
+        }
+
+        private IYamlFieldDefinition? GetFieldDefinition(FieldInfo info, bool onlyCustom = false)
+        {
+            var yamlFieldAttr =
+                (YamlFieldAttribute?) Attribute.GetCustomAttribute(info, typeof(YamlFieldAttribute));
+            var customYamlAttr =
+                (CustomYamlFieldAttribute?) Attribute.GetCustomAttribute(info,
+                    typeof(CustomYamlFieldAttribute));
+            if (yamlFieldAttr != null && customYamlAttr != null)
+            {
+                throw new Exception($"Property {info} is annotated with both YamlFieldAttribute and CustomYamlFieldAttribute");
+            }
+            var tag =
+                yamlFieldAttr?.Tag ??
+                customYamlAttr?.Tag;
+            if (tag == null) return null;
+
+            return onlyCustom && customYamlAttr == null ? null : new YamlFieldDefinition(tag, info, customYamlAttr != null);
         }
 
         public ComponentData ParseComponentData(string compName, YamlMappingNode mapping, YamlObjectSerializer.Context? context = null)

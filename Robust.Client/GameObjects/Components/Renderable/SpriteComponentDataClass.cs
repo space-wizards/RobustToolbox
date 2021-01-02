@@ -17,8 +17,11 @@ namespace Robust.Client.GameObjects.Components.Renderable
 {
     public class SpriteComponentDataClass : SpriteComponent_AUTODATA
     {
+        [CustomYamlField("layers")]
         private List<SpriteComponent.Layer>? layers;
+        [CustomYamlField("layermap")]
         private Dictionary<object, int>? layermap;
+        [CustomYamlField("rsi")]
         public RSI? rsi;
 
         public override void ExposeData(ObjectSerializer serializer)

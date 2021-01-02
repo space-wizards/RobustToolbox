@@ -103,7 +103,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             public override string Name => "CustomTestComp";
 
-            [CustomYamlTarget("abc")]
+            [CustomYamlField("abc")]
             public string Abc = "ERROR";
         }
 
@@ -115,6 +115,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
 
     public class ACustomDataClassWithARandomName : Component_AUTODATA
     {
+        [CustomYamlField("abc")]
         public string? Abc;
 
         public override void ExposeData(ObjectSerializer serializer)
@@ -122,20 +123,6 @@ namespace Robust.UnitTesting.Shared.ComponentData
             base.ExposeData(serializer);
             serializer.DataField(ref Abc, "abc", null);
             Abc += "bar";
-        }
-
-        public override object? GetValue(string tag)
-        {
-            return tag == "abc" ? Abc : base.GetValue(tag);
-        }
-
-        public override void SetValue(string tag, object? value)
-        {
-            if (tag == "abc")
-            {
-                Abc = (string?)value;
-            }
-            base.SetValue(tag, value);
         }
     }
 }

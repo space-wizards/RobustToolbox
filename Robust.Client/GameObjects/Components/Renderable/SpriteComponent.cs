@@ -131,7 +131,7 @@ namespace Robust.Client.GameObjects
         private RSI? _baseRsi;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [CustomYamlTarget("rsi")]
+        [CustomYamlField("rsi")]
         public RSI? BaseRSI
         {
             get => _baseRsi;
@@ -175,11 +175,11 @@ namespace Robust.Client.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public ShaderInstance? PostShader { get; set; }
 
-        [ViewVariables] [CustomYamlTarget("layermap")] private Dictionary<object, int> LayerMap = new();
+        [ViewVariables] [CustomYamlField("layermap")] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
         [ViewVariables] private List<Layer> Layers = default!;
 
-        [CustomYamlTarget("layers")]
+        [CustomYamlField("layers")]
         private List<Layer> LayersSetter
         {
             get => Layers;

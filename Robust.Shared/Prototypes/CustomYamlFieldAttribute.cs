@@ -3,11 +3,11 @@ using System;
 namespace Robust.Shared.Prototypes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class CustomYamlTargetAttribute : Attribute
+    public class CustomYamlFieldAttribute : Attribute
     {
         public string Tag;
 
-        public CustomYamlTargetAttribute(string tag)
+        public CustomYamlFieldAttribute(string tag)
         {
             Tag = tag;
         }

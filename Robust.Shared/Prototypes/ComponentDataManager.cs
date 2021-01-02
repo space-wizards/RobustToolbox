@@ -95,10 +95,12 @@ namespace Robust.Shared.Prototypes
 
         public void PushInheritance(string compName, ComponentData source, ComponentData target)
         {
-            foreach (var tag in source.Tags)
+            var def = GetComponentDataDefinition(compName);
+
+            foreach (var tag in def)
             {
-                if(target.GetValue(tag) == null)
-                    target.SetValue(tag, source.GetValue(tag));
+                if(target.GetValue(tag.Tag) == null)
+                    target.SetValue(tag.Tag, source.GetValue(tag.Tag));
             }
         }
 

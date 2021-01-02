@@ -6,8 +6,6 @@ namespace Robust.Shared.Prototypes
 {
     public abstract class ComponentData : IExposeData
     {
-        public virtual string[] Tags { get; } = Array.Empty<string>();
-
         /// <summary>
         /// gets the mapped value of the given key. null if not mapped. exception if not in datadefinition (no corresponding [YamlField])
         /// </summary>

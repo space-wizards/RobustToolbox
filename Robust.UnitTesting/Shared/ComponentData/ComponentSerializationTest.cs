@@ -115,8 +115,6 @@ namespace Robust.UnitTesting.Shared.ComponentData
 
     public class ACustomDataClassWithARandomName : Component_AUTODATA
     {
-        public override string[] Tags => new[] {"abc"};
-
         public string? Abc;
 
         public override void ExposeData(ObjectSerializer serializer)

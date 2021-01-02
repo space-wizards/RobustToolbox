@@ -147,18 +147,6 @@ using Robust.Shared.Serialization;
 namespace {@namespace} {{
     public class {name} : {inheriting} {{
 
-        /// <inheritdoc />
-        public override string[] Tags => base.Tags.Concat(new string[]
-        {{";
-
-            foreach (var field in fields)
-            {
-                code += $@"
-            ""{field.Name}"",";
-            }
-
-            code += @"
-        }).ToArray();
 ";
 
             //generate fields

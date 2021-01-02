@@ -17,13 +17,6 @@ namespace Robust.Client.GameObjects.Components.Renderable
 {
     public class SpriteComponentDataClass : SpriteComponent_AUTODATA
     {
-        public override string[] Tags => base.Tags.Concat(new[]
-        {
-            "rsi",
-            "layers",
-            "layermap"
-        }).ToArray();
-
         private List<SpriteComponent.Layer>? layers;
         private Dictionary<object, int>? layermap;
         public RSI? rsi;

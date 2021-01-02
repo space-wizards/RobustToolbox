@@ -148,8 +148,7 @@ namespace Robust.Shared.Prototypes
             {
                 var tag =
                     ((YamlFieldAttribute?) Attribute.GetCustomAttribute(fieldInfo, typeof(YamlFieldAttribute)))?.Tag ??
-                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(fieldInfo,
-                        typeof(CustomYamlTargetAttribute)))?.Tag;
+                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(fieldInfo, typeof(CustomYamlTargetAttribute)))?.Tag;
                 if (tag == null) continue;
 
                 dataDef.Add(new YamlFieldDefinition(tag, fieldInfo));
@@ -157,11 +156,11 @@ namespace Robust.Shared.Prototypes
 
             foreach (var propertyInfo in compType.GetAllProperties())
             {
-                var yamlFieldAttribute =
-                    propertyInfo.CustomAttributes.FirstOrDefault(a => a.AttributeType == typeof(YamlFieldAttribute));
-                if (yamlFieldAttribute == null) continue;
+                var tag =
+                    ((YamlFieldAttribute?) Attribute.GetCustomAttribute(propertyInfo, typeof(YamlFieldAttribute)))?.Tag ??
+                    ((CustomYamlTargetAttribute?) Attribute.GetCustomAttribute(propertyInfo, typeof(CustomYamlTargetAttribute)))?.Tag;
+                if (tag == null) continue;
 
-                var tag = (string)yamlFieldAttribute.ConstructorArguments[0].Value!;
                 dataDef.Add(new YamlPropertyDefinition(tag, propertyInfo));
             }
 

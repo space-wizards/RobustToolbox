@@ -642,7 +642,7 @@ namespace Robust.Server.Maps
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in entity.GetAllComponents())
                     {
-                        var compMapping = dataMgr.SerializeNonDefaultComponentData(component);
+                        var compMapping = dataMgr.SerializeNonDefaultComponentData(component, this);
 
                         // Don't need to write it if nothing was written!
                         if (compMapping != null)

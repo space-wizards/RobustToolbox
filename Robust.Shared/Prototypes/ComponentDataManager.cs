@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -142,15 +143,36 @@ namespace Robust.Shared.Prototypes
 
         private readonly Dictionary<string, IYamlFieldDefinition[]> _dataDefinitions = new();
 
-        public YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp)
+        public YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp, YamlObjectSerializer.Context? context = null)
         {
-            var mapping = new YamlMappingNode
+            var mapping = new YamlMappingNode();
+            var ser = YamlObjectSerializer.NewWriter(mapping, context);
+
+            ComponentData data = GetEmptyComponentData(comp.Name);
+            var def = GetComponentDataDefinition(comp.Name);
+            foreach (var fieldDefinition in def)
             {
-                {"type", comp.Name}
-            };
-            //todo Paul: serialize all non-default (default & prototype) values
-            //todo Paul: return null if no non-default values
-            throw new NotImplementedException();
+                var value = fieldDefinition.GetValue(comp);
+                if(Equals(value, fieldDefinition.DefaultValue)) continue;
+                if (fieldDefinition.IsCustom)
+                {
+                    var customField = GetCustomField(comp.GetType(), fieldDefinition.Tag);
+                    customField.SetValue(data, value);
+                }
+                else
+                {
+                    data.SetValue(fieldDefinition.Tag, value);
+                }
+            }
+            data.ExposeData(ser);
+
+            if (mapping.Children.Count != 0)
+            {
+                mapping.Add("type", comp.Name);
+                return mapping;
+            }
+
+            return null;
         }
 
         public IYamlFieldDefinition[] GetComponentDataDefinition(string compName)

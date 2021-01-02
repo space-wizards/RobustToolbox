@@ -387,21 +387,21 @@ namespace Robust.Shared.Physics.Chunks
         {
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
-            var onlyOnGrid = true;
+            var onlyOnGrid = false;
 
             foreach (var grid in MapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
             {
                 var indices = new List<Vector2i>();
 
-                foreach (var tile in grid.GetTilesIntersecting(entityBounds))
+                foreach (var tile in grid.GetTilesIntersecting(entityBounds, false))
                 {
                     indices.Add(tile.GridIndices);
                 }
 
                 results[grid.Index] = indices;
 
-                if (onlyOnGrid && !grid.WorldBounds.Encloses(entityBounds))
-                    onlyOnGrid = false;
+                if (!onlyOnGrid && grid.WorldBounds.Encloses(entityBounds))
+                    onlyOnGrid = true;
             }
 
             if (!onlyOnGrid)
@@ -472,6 +472,9 @@ namespace Robust.Shared.Physics.Chunks
 
         private void HandleParentChanged(EntParentChangedMessage message)
         {
+            if (!message.Entity.Initialized)
+                return;
+
             if (message.Entity.IsInContainer())
             {
                 HandleEntityRemove(message.Entity);
@@ -557,6 +560,7 @@ namespace Robust.Shared.Physics.Chunks
         private void HandleEntityAdd(IEntity entity)
         {
             if (entity.HasComponent<MapGridComponent>() ||
+                entity.Transform.Parent == null ||
                 entity.IsInContainer() ||
                 !entity.IsValid() ||
                 entity.Transform.MapID == MapId.Nullspace)

@@ -177,6 +177,14 @@ namespace Robust.Server.GameObjects
             return stateEntities.Count == 0 ? default : stateEntities;
         }
 
+        /// <summary>
+        ///     AKA PVS (potentially visible set). Get all relevant ComponentStates in range of us.
+        /// </summary>
+        /// <param name="fromTick"></param>
+        /// <param name="currentTick"></param>
+        /// <param name="player"></param>
+        /// <param name="range"></param>
+        /// <returns></returns>
         public List<EntityState>? GetEntityStates(GameTick fromTick, GameTick currentTick, IPlayerSession player, float range)
         {
             // Old PVS used to just get all for no session...
@@ -350,8 +358,9 @@ namespace Robust.Server.GameObjects
         /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
+        /// <param name="newEntity"></param>
         /// <returns>New entity State for the given entity.</returns>
-        public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity = false)
+        public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity=false)
         {
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
@@ -392,7 +401,8 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            // TODO: If above TODO done then force send metadata as we always need that
+            // TODO: Force send only metadata if it was created on tick 1? Should be a speedup and
+            // makes not sending every entity on connect more viable.
 
             return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
         }

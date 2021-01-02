@@ -39,6 +39,24 @@ namespace Robust.Server.GameObjects.EntitySystems
             UnsubscribeLocalEvent<DirtyEntityMessage>();
         }
 
+        protected override void HandleEntityDeleted(EntityDeletedMessage message)
+        {
+            base.HandleEntityDeleted(message);
+            foreach (var (_, data) in _lastSeen)
+            {
+                data.EntityLastSeen.Remove(message.Entity.Uid);
+            }
+        }
+
+        protected override void RemoveChunk(EntityLookupChunk chunk)
+        {
+            base.RemoveChunk(chunk);
+            foreach (var (_, data) in _lastSeen)
+            {
+                data.KnownChunks.Remove(chunk);
+            }
+        }
+
         private void HandleDirtyEntity(DirtyEntityMessage message)
         {
             // Removing from lookup should be handled elsewhere already.

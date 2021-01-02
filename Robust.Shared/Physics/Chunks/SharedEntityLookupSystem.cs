@@ -280,6 +280,11 @@ namespace Robust.Shared.Physics.Chunks
             return results;
         }
 
+        protected virtual void RemoveChunk(EntityLookupChunk chunk)
+        {
+            _graph[chunk.MapId][chunk.GridId].Remove(chunk.Origin);
+        }
+
         private EntityLookupChunk GetOrCreateChunk(MapId mapId, GridId gridId, Vector2i indices)
         {
             var chunkIndices = GetChunkIndices(indices);
@@ -382,7 +387,7 @@ namespace Robust.Shared.Physics.Chunks
         {
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
-            var onlyOnGrid = false;
+            var onlyOnGrid = true;
 
             foreach (var grid in MapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
             {
@@ -395,8 +400,8 @@ namespace Robust.Shared.Physics.Chunks
 
                 results[grid.Index] = indices;
 
-                if (grid.WorldBounds.Encloses(entityBounds))
-                    onlyOnGrid = true;
+                if (onlyOnGrid && !grid.WorldBounds.Encloses(entityBounds))
+                    onlyOnGrid = false;
             }
 
             if (!onlyOnGrid)
@@ -432,8 +437,9 @@ namespace Robust.Shared.Physics.Chunks
 
         public override void Initialize()
         {
-            SubscribeLocalEvent<MoveEvent>(HandleEntityMove);
+            SubscribeLocalEvent<MoveEvent>(ev => HandleEntityMove(ev.Sender));
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
+            SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
             MapManager.OnGridCreated += HandleGridCreated;
             MapManager.OnGridRemoved += HandleGridRemoval;
@@ -446,6 +452,7 @@ namespace Robust.Shared.Physics.Chunks
             base.Shutdown();
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<EntityInitializedMessage>();
+            UnsubscribeLocalEvent<EntityDeletedMessage>();
             UnsubscribeLocalEvent<EntParentChangedMessage>();
             MapManager.OnGridCreated -= HandleGridCreated;
             MapManager.OnGridRemoved -= HandleGridRemoval;
@@ -458,20 +465,22 @@ namespace Robust.Shared.Physics.Chunks
             HandleEntityAdd(message.Entity);
         }
 
+        protected virtual void HandleEntityDeleted(EntityDeletedMessage message)
+        {
+            HandleEntityRemove(message.Entity);
+        }
+
         private void HandleParentChanged(EntParentChangedMessage message)
         {
             if (message.Entity.IsInContainer())
             {
                 HandleEntityRemove(message.Entity);
             }
+            else
+            {
+                HandleEntityAdd(message.Entity);
+            }
         }
-
-        /*
-        private void HandleEntityDeleted(EntityDeletedMessage message)
-        {
-            HandleEntityRemove(message.Entity);
-        }
-        */
 
         private void HandleTileChanged(object? sender, TileChangedEventArgs eventArgs)
         {
@@ -529,7 +538,15 @@ namespace Robust.Shared.Physics.Chunks
             }
 
             if (mapId != null)
+            {
+                // Cleanup player data
+                foreach (var (_, chunk) in _graph[mapId.Value][gridId])
+                {
+                    RemoveChunk(chunk);
+                }
+
                 _graph[mapId.Value].Remove(gridId);
+            }
         }
 
         /// <summary>
@@ -547,7 +564,10 @@ namespace Robust.Shared.Physics.Chunks
                 return;
             }
 
-            // TODO: Update transform children with their own
+            foreach (var child in entity.Transform.Children)
+            {
+                HandleEntityAdd(child.Owner);
+            }
 
             var entityNodes = GetOrCreateNodes(entity);
             var newIndices = new Dictionary<GridId, List<Vector2i>>();
@@ -598,7 +618,7 @@ namespace Robust.Shared.Physics.Chunks
 
             foreach (var chunk in toDelete)
             {
-                _graph[chunk.MapId][chunk.GridId].Remove(chunk.Origin);
+                RemoveChunk(chunk);
             }
 
             //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(null));
@@ -608,40 +628,38 @@ namespace Robust.Shared.Physics.Chunks
         ///     When an entity moves around we'll remove it from its old node and add it to its new node (if applicable)
         /// </summary>
         /// <param name="moveEvent"></param>
-        private void HandleEntityMove(MoveEvent moveEvent)
+        private void HandleEntityMove(IEntity entity)
         {
-            if (moveEvent.Sender.Deleted ||
-                !moveEvent.NewPosition.IsValid(EntityManager) ||
-                moveEvent.Sender.IsInContainer() ||
-                moveEvent.Sender.HasComponent<MapGridComponent>())
+            if (entity.Deleted ||
+                !entity.Transform.Coordinates.IsValid(EntityManager) ||
+                entity.IsInContainer() ||
+                entity.HasComponent<MapGridComponent>())
             {
-                HandleEntityRemove(moveEvent.Sender);
+                HandleEntityRemove(entity);
                 return;
             }
 
             // This probably means it's a grid
-            if (!_lastKnownNodes.TryGetValue(moveEvent.Sender, out var oldNodes))
+            if (!_lastKnownNodes.TryGetValue(entity, out var oldNodes))
                 return;
 
-            var newNodes = GetNodes(moveEvent.Sender);
+            var newNodes = GetNodes(entity);
             if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))
                 return;
 
             var toRemove = oldNodes.Where(oldNode => !newNodes.Contains(oldNode));
             var toAdd = newNodes.Where(newNode => !oldNodes.Contains(newNode));
 
-            // TODO: Update transform children with their own
-
-            foreach (var child in moveEvent.Sender.Transform.Children)
+            foreach (var child in entity.Transform.Children)
             {
-                // TODO: Handle move
+                HandleEntityMove(child.Owner);
             }
 
             var canDelete = new HashSet<EntityLookupChunk>();
 
             foreach (var node in toRemove)
             {
-                node.RemoveEntity(moveEvent.Sender);
+                node.RemoveEntity(entity);
                 if (node.ParentChunk.CanDeleteChunk())
                 {
                     canDelete.Add(node.ParentChunk);
@@ -650,13 +668,13 @@ namespace Robust.Shared.Physics.Chunks
 
             foreach (var node in toAdd)
             {
-                node.AddEntity(moveEvent.Sender);
+                node.AddEntity(entity);
                 canDelete.Remove(node.ParentChunk);
             }
 
             foreach (var chunk in canDelete)
             {
-                _graph[chunk.MapId][chunk.GridId].Remove(chunk.Origin);
+                RemoveChunk(chunk);
             }
 
             var newIndices = new Dictionary<GridId, List<Vector2i>>();
@@ -671,7 +689,7 @@ namespace Robust.Shared.Physics.Chunks
                 existing.Add(node.Indices);
             }
 
-            _lastKnownNodes[moveEvent.Sender] = newNodes;
+            _lastKnownNodes[entity] = newNodes;
             //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(newIndices));
         }
     }

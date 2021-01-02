@@ -198,17 +198,21 @@ namespace Robust.Server.GameObjects
 
             var seenEntities = new HashSet<IEntity>();
 
-            // Send important entities (maps and grids)
-            var mapEntity = _mapManager.GetMapEntity(mapId);
-            seenEntities.Add(mapEntity);
-
-            AddEntityState(data, player, fromTick, mapEntity, entityStates);
-
-            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
+            // Send important entities (all maps and grids).
+            // Could potentially trim this down in future however atm it'll throw or lead to unexpected behavior.
+            foreach (var map in _mapManager.GetAllMapIds())
             {
-                var gridEntity = GetEntity(grid.GridEntityId);
-                seenEntities.Add(gridEntity);
-                AddEntityState(data, player, fromTick, gridEntity, entityStates);
+                if (map == MapId.Nullspace) continue;
+                var mapEntity = _mapManager.GetMapEntity(map);
+                seenEntities.Add(mapEntity);
+                AddEntityState(data, player, fromTick, mapEntity, entityStates);
+
+                foreach (var grid in _mapManager.GetAllMapGrids(map))
+                {
+                    var gridEntity = GetEntity(grid.GridEntityId);
+                    seenEntities.Add(gridEntity);
+                    AddEntityState(data, player, fromTick, gridEntity, entityStates);
+                }
             }
 
             // TODO: For stuff that needs a higher pvs range (e.g. lights) can either

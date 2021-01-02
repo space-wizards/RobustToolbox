@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Prometheus;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
+using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
@@ -210,6 +211,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(IEntity e)
         {
+            EventBus.QueueEvent(EventSource.Local, new EntityDeletedMessage(e));
             e.Shutdown();
         }
 

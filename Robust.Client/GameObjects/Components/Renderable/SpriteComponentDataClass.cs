@@ -5,7 +5,6 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -16,29 +15,14 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Client.GameObjects.Components.Renderable
 {
-    public class SpriteComponentDataClass : Component_AUTODATA
+    public class SpriteComponentDataClass : SpriteComponent_AUTODATA
     {
         public override string[] Tags => base.Tags.Concat(new[]
         {
-            "scale",
-            "rotation",
-            "offset",
-            "drawdepth",
-            "color",
-            "directional",
-            "visible",
             "rsi",
             "layers",
             "layermap"
         }).ToArray();
-
-        public Vector2? scale;
-        public Angle? rotation;
-        public Vector2? offset;
-        public int? drawDepth;
-        public Color? color;
-        public bool? directional;
-        public bool? visible;
 
         private List<SpriteComponent.Layer>? layers;
         private Dictionary<object, int>? layermap;
@@ -49,18 +33,6 @@ namespace Robust.Client.GameObjects.Components.Renderable
             base.ExposeData(serializer);
 
             var resourceCache = IoCManager.Resolve<IResourceCache>();
-
-            serializer.DataField(ref scale, "scale", null);
-            serializer.DataField(ref rotation, "rotation", null);
-            serializer.DataField(ref offset, "offset", null);
-
-            var tempField = -1;
-            serializer.DataField(ref tempField, "drawdepth", -1, WithFormat.Constants<DrawDepth>());
-            if (tempField != -1) drawDepth = tempField;
-
-            serializer.DataField(ref color, "color", null);
-            serializer.DataField(ref directional, "directional", null);
-            serializer.DataField(ref visible, "visible", null);
 
             // TODO: Writing?
             if (!serializer.Reading)

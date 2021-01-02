@@ -24,7 +24,6 @@ namespace Robust.Server.GameObjects.Components.UserInterface
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
-    [AutoDataClass]
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _interfaces =

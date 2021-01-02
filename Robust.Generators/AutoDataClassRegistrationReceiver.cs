@@ -14,10 +14,7 @@ namespace Robust.Generators
         {
             if (!(syntaxNode is ClassDeclarationSyntax classDeclarationSyntax)) return;
 
-            if(YamlFieldFinder.HasYamlField(classDeclarationSyntax))
-            {
-                Registrations.Add(classDeclarationSyntax);
-            }
+            Registrations.AddRange(YamlFieldFinder.GetAutoDataRegistrations(classDeclarationSyntax));
 
             if (classDeclarationSyntax.AttributeLists.Any(al =>
                 al.Attributes.Any(a => a.Name.ToString() == "CustomDataClass")))
@@ -26,24 +23,30 @@ namespace Robust.Generators
             }
         }
 
+        //todo find classes in classes
         public class YamlFieldFinder : CSharpSyntaxWalker
         {
             private YamlFieldFinder() {}
 
-            public static bool HasYamlField(ClassDeclarationSyntax classDeclarationSyntax)
+            public static ClassDeclarationSyntax[] GetAutoDataRegistrations(ClassDeclarationSyntax classDeclarationSyntax)
             {
                 var finder = new YamlFieldFinder();
                 finder.Visit(classDeclarationSyntax);
-                return finder._foundYamlField;
+                return finder.foundDataRegistrations.ToArray();
             }
 
-            private bool _foundYamlField;
+            private HashSet<ClassDeclarationSyntax> foundDataRegistrations = new HashSet<ClassDeclarationSyntax>();
+
+            public override void VisitClassDeclaration(ClassDeclarationSyntax node)
+            {
+                base.VisitClassDeclaration(node);
+            }
 
             public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
             {
                 if (node.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "YamlField")))
                 {
-                    _foundYamlField = true;
+                    foundDataRegistrations.Add((ClassDeclarationSyntax)node.Parent);
                 }
             }
 
@@ -51,7 +54,7 @@ namespace Robust.Generators
             {
                 if (node.AttributeLists.Any(al => al.Attributes.Any(a => a.Name.ToString() == "YamlField")))
                 {
-                    _foundYamlField = true;
+                    foundDataRegistrations.Add((ClassDeclarationSyntax)node.Parent);
                 }
             }
         }

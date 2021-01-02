@@ -12,7 +12,6 @@ using IComponent = Robust.Shared.Interfaces.GameObjects.IComponent;
 
 namespace Robust.Client.GameObjects.Components.UserInterface
 {
-    [AutoDataClass]
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent
     {
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =

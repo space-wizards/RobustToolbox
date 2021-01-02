@@ -12,7 +12,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects
 {
-    [AutoDataClass]
     public class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;

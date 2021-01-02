@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -19,6 +20,10 @@ namespace Robust.Generators
         public void Execute(GeneratorExecutionContext context)
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
+
+            var amsg = $"found autoregistrations: {String.Join(",", receiver.Registrations.Select(r => r.Identifier.Text))}";
+            context.ReportDiagnostic(Diagnostic.Create(
+                new DiagnosticDescriptor("abc", amsg, amsg, "aa", DiagnosticSeverity.Warning, true), Location.None));
 
             var comp = (CSharpCompilation)context.Compilation;
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
@@ -45,23 +50,22 @@ namespace Robust.Generators
 
             string ResolveParentDataClass(ITypeSymbol typeSymbol)
             {
-                if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)))
+                var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
+                var dataClass = comp.GetTypeByMetadataName(metaName);
+                if (dataClass != null) return metaName;
+
+                if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
                     return "Robust.Shared.Prototypes.ComponentData";
 
-                var baseType = typeSymbol.BaseType;
-
-                if (resolvedCustomDataClasses.TryGetValue(baseType, out var customDataClass))
+                if (resolvedCustomDataClasses.TryGetValue(typeSymbol.BaseType, out var customDataClass))
                     return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
 
-                var metaName = GetDataClassName(baseType);
-                var dataClass = comp.GetTypeByMetadataName(metaName);
-                if (dataClass == null) return ResolveParentDataClass(baseType);
-                return metaName;
+                return ResolveParentDataClass(typeSymbol.BaseType);
             }
 
             //resolve autodata registrations (we need the to validate the customdataclasses)
             var resolvedAutoDataRegistrations =
-                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToArray();
+                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
 
             //generate all autodata classes
             foreach (var symbol in resolvedAutoDataRegistrations)
@@ -98,7 +102,10 @@ namespace Robust.Generators
 
                 string inheriting = ResolveParentDataClass(symbol);
 
-                context.AddSource($"{name}.g.cs", SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
+
+                context.AddSource($"{name}.g.cs",
+                    SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
+
             }
 
             //check if all custom dataclasses are inheriting the correct parent
@@ -107,32 +114,33 @@ namespace Robust.Generators
                 var component = pair.Key;
                 var dataclass = pair.Value;
 
-                var shouldInherit = ResolveParentDataClass(component);
-                if (dataclass.BaseType?.ToDisplayString() == shouldInherit)
-                {
-                    continue;
-
-                }
-
                 if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(component, r)))
                 {
-                    shouldInherit = GetDataClassName(component);
-                    if (dataclass.BaseType?.ToDisplayString() == shouldInherit)
+                    var shouldInherit = $"{component.Name}_AUTODATA";
+                    //todo compare symbols here eventually
+                    if (dataclass.BaseType?.Name != shouldInherit) //can only compare names here since the type WILL be an errorsymbol (since its part of this compilation)
                     {
-                        continue;
+                        var msg = $"Custom Dataclass is inheriting {dataclass.BaseType?.ToDisplayString()} when it should inherit its own autodataclass: {shouldInherit}";
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            dataclass.Locations.First()));
+                    }
+                }
+                else
+                {
+                    var shouldInherit = ResolveParentDataClass(component);
+                    //todo compare symbols here eventually
+                    if (dataclass.BaseType?.ToDisplayString() != shouldInherit)
+                    {
+                        var msg = $"Custom Dataclass is inheriting {dataclass.BaseType?.ToDisplayString()} when it should inherit {shouldInherit}";
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            dataclass.Locations.First()));
                     }
                 }
 
-                var msg = $"Custom Dataclass is inheriting {dataclass.BaseType} when it should inherit {shouldInherit}";
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
-                    dataclass.Locations.First()));
-            }
-        }
 
-        private string GetDataClassName(ITypeSymbol typeSymbol)
-        {
-            return $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
+            }
         }
 
         private string GenerateCode(string name, string @namespace, string inheriting, List<FieldTemplate> fields)

@@ -15,7 +15,6 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.GameObjects
 {
-    [AutoDataClass]
     public class PointLightComponent : Component
     {
         public override string Name => "PointLight";

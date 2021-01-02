@@ -168,9 +168,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
 
         [YamlField("str")] public string Str = null!;
 
-        [YamlField("int")] public int? @int = null!;
+        [YamlField("@int")] public int? @int = null!;
 
-        [YamlField("float")] public float? @float = null!;
+        [YamlField("@float")] public float? @float = null!;
 
         [YamlField("float2")] public float? @float2 = null!;
 

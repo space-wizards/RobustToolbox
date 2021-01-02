@@ -52,6 +52,8 @@ namespace Robust.UnitTesting.Shared.ComponentData
         public void ParsingTest()
         {
             var data = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>("TestEntity");
+
+            Assert.That(data.Components["TestComp"] is SerializationTestComponent_AUTODATA);
             Assert.That(data.Components["TestComp"].GetValue("foo"), Is.EqualTo(1));
             Assert.That(data.Components["TestComp"].GetValue("bar"), Is.Null);
             Assert.That(data.Components["TestComp"].GetValue("baz"), Is.EqualTo("Testing"));
@@ -83,7 +85,6 @@ namespace Robust.UnitTesting.Shared.ComponentData
             Assert.That(comp.Abc, Is.EqualTo("foobar"));
         }
 
-        [AutoDataClass]
         private class SerializationTestComponent : Component
         {
             public override string Name => "TestComp";
@@ -103,11 +104,10 @@ namespace Robust.UnitTesting.Shared.ComponentData
         {
             public override string Name => "CustomTestComp";
 
-            [YamlField("abc")]
+            [CustomYamlTarget("abc")]
             public string Abc = "ERROR";
         }
 
-        [AutoDataClass]
         private class TestCustomDataClassInheritorComponent : TestCustomDataClassComponent
         {
             public override string Name => "CustomTestCompInheritor";

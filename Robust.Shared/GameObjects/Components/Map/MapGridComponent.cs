@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects.Components.Map
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
-    [AutoDataClass]
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;

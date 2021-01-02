@@ -6,7 +6,6 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects.Components
 {
     [RegisterComponent]
-    [AutoDataClass]
     public class VisibilityComponent : Component
     {
         [YamlField("layer")]

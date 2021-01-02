@@ -41,7 +41,6 @@ namespace Robust.Shared.GameObjects.Components
         void AddedToPhysicsTree(MapId mapId);
     }
 
-    [AutoDataClass]
     public partial class PhysicsComponent : Component, IPhysicsComponent
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;

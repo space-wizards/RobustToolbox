@@ -7,7 +7,6 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects.Components.Eye
 {
-    [AutoDataClass]
     public class EyeComponent : SharedEyeComponent
     {
         [YamlField("drawFov")]

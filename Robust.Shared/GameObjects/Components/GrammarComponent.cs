@@ -10,7 +10,6 @@ namespace Robust.Shared.GameObjects.Components
     /// Holds the necessary information to generate text related to the entity.
     /// </summary>
     [RegisterComponent]
-    [AutoDataClass]
     public class GrammarComponent: Component, IProperNamable
     {
         public sealed override string Name => "Grammar";

@@ -295,6 +295,11 @@ namespace Robust.Server.GameObjects.Components.Container
                 serializer.DataField(ref Entities, "entities", new List<EntityUid>());
                 serializer.DataField(ref Type, "type", null);
             }
+
+            public IDeepClone DeepClone()
+            {
+                return this;
+            }
         }
 
         public struct AllContainersEnumerable : IEnumerable<IContainer>

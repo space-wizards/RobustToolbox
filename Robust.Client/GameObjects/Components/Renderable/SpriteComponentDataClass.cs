@@ -16,7 +16,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Client.GameObjects.Components.Renderable
 {
-    public class SpriteComponentDataClass
+    public partial class SpriteComponentDataClass
     {
         [CustomYamlField("layers")]
         private List<SpriteComponent.Layer>? layers;

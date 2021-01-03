@@ -29,5 +29,10 @@ namespace Robust.Client.Interfaces.Input
             serializer.DataField(ref CanFocus, "canFocus", false);
             serializer.DataField(ref CanRepeat, "canRepeat", false);
         }
+
+        public IDeepClone DeepClone()
+        {
+            return this;
+        }
     }
 }

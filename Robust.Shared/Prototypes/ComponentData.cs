@@ -26,5 +26,10 @@ namespace Robust.Shared.Prototypes
         {
             //throw new NotImplementedException();
         }
+
+        public IDeepClone DeepClone()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

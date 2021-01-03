@@ -170,6 +170,11 @@ namespace Robust.Shared.Audio
             me.PlayOffsetSeconds = offset;
             return me;
         }
+
+        public IDeepClone DeepClone()
+        {
+            return this;
+        }
     }
 
     /// <summary>

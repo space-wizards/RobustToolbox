@@ -19,6 +19,11 @@ namespace Robust.Shared.GameObjects.Components.UserInterface
                 UiKey = serializer.ReadStringEnumKey("key");
                 ClientType = serializer.ReadDataField<string>("type");
             }
+
+            public IDeepClone DeepClone()
+            {
+                return new PrototypeData {UiKey = UiKey, ClientType = ClientType};
+            }
         }
 
         [NetSerializable, Serializable]

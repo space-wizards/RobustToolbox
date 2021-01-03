@@ -92,6 +92,11 @@ namespace Robust.Shared.GameObjects.Components.Renderable
                 serializer.DataField(ref Color, "color", Color.White);
                 serializer.DataField(ref MapKeys, "map", null);
             }
+
+            public IDeepClone DeepClone()
+            {
+                return this;
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Shared.Interfaces.Map;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -100,6 +101,11 @@ namespace Robust.Shared.Map
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return new Box2Rotated(_mapGrid.LocalBounds, rotation).CalcBoundingBox();
+        }
+
+        public IDeepClone DeepClone()
+        {
+            return new PhysShapeGrid(_mapGrid);
         }
     }
 }

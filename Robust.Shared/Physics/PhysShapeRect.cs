@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
@@ -77,6 +78,16 @@ namespace Robust.Shared.Physics
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             return new Box2Rotated(_rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox();
+        }
+
+        public IDeepClone DeepClone()
+        {
+            return new PhysShapeRect
+            {
+                _rectangle = _rectangle,
+                _collisionLayer = _collisionLayer,
+                _collisionMask = _collisionMask
+            };
         }
     }
 }

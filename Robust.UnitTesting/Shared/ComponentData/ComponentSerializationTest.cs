@@ -113,7 +113,7 @@ namespace Robust.UnitTesting.Shared.ComponentData
         }
     }
 
-    public class ACustomDataClassWithARandomName : Component_AUTODATA
+    public partial class ACustomDataClassWithARandomName : Component_AUTODATA
     {
         [CustomYamlField("abc")]
         public string? Abc;

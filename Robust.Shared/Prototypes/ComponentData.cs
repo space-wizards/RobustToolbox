@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Serialization;
 
@@ -12,6 +13,11 @@ namespace Robust.Shared.Prototypes
         public virtual object? GetValue(string tag)
         {
             throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
+        }
+
+        public object? CloneValue(string tag)
+        {
+            return IDeepClone.CloneValue(GetValue(tag));
         }
 
         /// <summary>

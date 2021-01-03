@@ -118,7 +118,7 @@ namespace Robust.Shared.Prototypes
                 }
                 else
                 {
-                    value = values.GetValue(fieldDefinition.Tag);
+                    value = values.CloneValue(fieldDefinition.Tag);
                 }
                 if(value == null) continue;
                 fieldDefinition.SetValue(comp, value);
@@ -133,7 +133,7 @@ namespace Robust.Shared.Prototypes
             foreach (var tag in def)
             {
                 if(target.GetValue(tag.Tag) == null)
-                    target.SetValue(tag.Tag, source.GetValue(tag.Tag));
+                    target.SetValue(tag.Tag, source.CloneValue(tag.Tag));
             }
         }
 

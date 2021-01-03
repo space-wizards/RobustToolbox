@@ -1,5 +1,5 @@
 using JetBrains.Annotations;
-using Robust.Shared.Physics.Chunks;
+using Robust.Shared.EntityLookup;
 
 namespace Robust.Client.GameObjects.EntitySystems
 {

@@ -22,7 +22,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 

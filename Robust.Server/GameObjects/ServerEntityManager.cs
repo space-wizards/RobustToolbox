@@ -204,7 +204,7 @@ namespace Robust.Server.GameObjects
             // TODO: This is based on the old method but ideally it iterates through all of their eyes enlarged
             var viewbox = new Box2(playerPos, playerPos).Enlarged(range);
 
-            var seenEntities = new HashSet<IEntity>();
+            var seenEntities = new HashSet<EntityUid>();
 
             // Send important entities (all maps and grids).
             // Could potentially trim this down in future however atm it'll throw or lead to unexpected behavior.
@@ -212,13 +212,13 @@ namespace Robust.Server.GameObjects
             {
                 if (map == MapId.Nullspace) continue;
                 var mapEntity = _mapManager.GetMapEntity(map);
-                seenEntities.Add(mapEntity);
+                seenEntities.Add(mapEntity.Uid);
                 AddEntityState(data, player, fromTick, mapEntity, entityStates);
 
                 foreach (var grid in _mapManager.GetAllMapGrids(map))
                 {
                     var gridEntity = GetEntity(grid.GridEntityId);
-                    seenEntities.Add(gridEntity);
+                    seenEntities.Add(gridEntity.Uid);
                     AddEntityState(data, player, fromTick, gridEntity, entityStates);
                 }
             }
@@ -235,10 +235,11 @@ namespace Robust.Server.GameObjects
 
                 data.UpdateChunk(currentTick, chunk);
 
-                foreach (var entity in chunk.GetEntities())
+                // We'll track unique on our own
+                foreach (var entity in chunk.GetEntities(fromTick, unique: false))
                 {
-                    if (entity.Deleted || seenEntities.Contains(entity)) continue;
-                    seenEntities.Add(entity);
+                    if (entity.Deleted || seenEntities.Contains(entity.Uid)) continue;
+                    seenEntities.Add(entity.Uid);
                     // TODO: Probably don't send container data to clients maybe?
                     // Though I guess sending contents is useful for prediction ahhhhhhhh
 

@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
-namespace Robust.Shared.Physics.Chunks
+namespace Robust.Shared.EntityLookup
 {
     public sealed class EntityLookupChunk
     {
@@ -61,42 +61,81 @@ namespace Robust.Shared.Physics.Chunks
         }
 
         /// <summary>
-        ///     Get all entities that intersect this chunk
+        ///     Get all entities that intersect this chunk. May return duplicates from nodes.
         /// </summary>
         /// <param name="includeContainers">Whether to include entities within our containermanager component</param>
+        /// <param name="unique">Don't return multiple entities due to node overlaps</param>
         /// <returns></returns>
-        public IReadOnlySet<IEntity> GetEntities(bool includeContainers=true)
+        public IReadOnlyCollection<IEntity> GetEntities(bool includeContainers=true, bool unique=true)
         {
-            var entities = new HashSet<IEntity>();
+            var entities = new List<IEntity>();
 
             for (var x = 0; x < ChunkSize; x++)
             {
                 for (var y = 0; y < ChunkSize; y++)
                 {
                     var node = _nodes[x, y];
-                    entities.UnionWith(node.Entities);
-                }
-            }
-
-            if (includeContainers)
-            {
-                var contained = new HashSet<IEntity>();
-
-                foreach (var entity in entities)
-                {
-                    foreach (var con in entity.GetContained())
+                    foreach (var entity in node.Entities)
                     {
-                        contained.Add(con);
+                        if (includeContainers)
+                        {
+                            foreach (var con in entity.GetContained())
+                            {
+                                entities.Add(con);
+                            }
+                        }
+
+                        entities.Add(entity);
                     }
                 }
-
-                entities.UnionWith(contained);
             }
+
+            if (unique)
+                return new HashSet<IEntity>(entities);
 
             return entities;
         }
 
-        public IReadOnlySet<IEntity> GetEntities(Vector2i index)
+        /// <summary>
+        ///     Get all entities that intersect this chunk. May return duplicates from nodes.
+        /// </summary>
+        /// <param name="fromTick">Only retrieve entities modified after this tick</param>
+        /// <param name="includeContainers">Whether to include entities within our containermanager component</param>
+        /// <param name="unique">Don't return multiple entities due to node overlaps</param>
+        /// <returns></returns>
+        public IReadOnlyCollection<IEntity> GetEntities(GameTick fromTick, bool includeContainers=true, bool unique=true)
+        {
+            var entities = new List<IEntity>();
+
+            for (var x = 0; x < ChunkSize; x++)
+            {
+                for (var y = 0; y < ChunkSize; y++)
+                {
+                    var node = _nodes[x, y];
+                    foreach (var entity in node.Entities)
+                    {
+                        if (includeContainers)
+                        {
+                            foreach (var con in entity.GetContained())
+                            {
+                                if (con.LastModifiedTick <= fromTick) continue;
+                                entities.Add(con);
+                            }
+                        }
+
+                        if (entity.LastModifiedTick <= fromTick) continue;
+                        entities.Add(entity);
+                    }
+                }
+            }
+
+            if (unique)
+                return new HashSet<IEntity>(entities);
+
+            return entities;
+        }
+
+        public IReadOnlyCollection<IEntity> GetEntities(Vector2i index)
         {
             var node = _nodes[index.X - Origin.X, index.Y - Origin.Y];
 

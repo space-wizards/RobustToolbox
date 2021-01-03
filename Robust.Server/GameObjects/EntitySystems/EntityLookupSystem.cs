@@ -3,13 +3,13 @@ using JetBrains.Annotations;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Player;
 using Robust.Shared.Containers;
+using Robust.Shared.EntityLookup;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
-using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameObjects.EntitySystems

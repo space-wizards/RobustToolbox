@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
 
-namespace Robust.Shared.Physics.Chunks
+namespace Robust.Shared.EntityLookup
 {
     public sealed class EntityLookupNode
     {

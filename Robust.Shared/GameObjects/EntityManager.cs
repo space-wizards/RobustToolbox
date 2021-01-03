@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Prometheus;
+using Robust.Shared.EntityLookup;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Transform;
 using Robust.Shared.GameObjects.EntitySystemMessages;
@@ -12,7 +13,6 @@ using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Chunks;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;

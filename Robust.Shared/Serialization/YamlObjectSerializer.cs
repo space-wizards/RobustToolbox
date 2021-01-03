@@ -675,7 +675,7 @@ namespace Robust.Shared.Serialization
             }
 
             // List<T>/IReadOnlyCollection<T>/IReadOnlyList<T>
-            if (TryGenericListType(type, out var listType) || TryGenericReadOnlyCollectionType(type, out listType))
+            if (TypeHelpers.TryGenericListType(type, out var listType) || TypeHelpers.TryGenericReadOnlyCollectionType(type, out listType))
             {
                 var node = new YamlSequenceNode();
                 node.Tag = TagSkipTag;
@@ -699,8 +699,8 @@ namespace Robust.Shared.Serialization
             }
 
             // Dictionary<K,V>
-            if (TryGenericDictType(type, out var keyType, out var valType)
-                || TryGenericReadOnlyDictType(type, out keyType, out valType))
+            if (TypeHelpers.TryGenericDictType(type, out var keyType, out var valType)
+                || TypeHelpers.TryGenericReadOnlyDictType(type, out keyType, out valType))
             {
                 var node = new YamlMappingNode();
                 node.Tag = TagSkipTag;
@@ -726,7 +726,7 @@ namespace Robust.Shared.Serialization
             }
 
             // HashSet<T>
-            if (TryGenericHashSetType(type, out var setType))
+            if (TypeHelpers.TryGenericHashSetType(type, out var setType))
             {
                 var node = new YamlSequenceNode();
                 node.Tag = TagSkipTag;

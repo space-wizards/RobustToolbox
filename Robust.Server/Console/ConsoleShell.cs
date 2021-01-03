@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Server.Console.Commands;
 using Robust.Server.Interfaces.Console;
 using Robust.Server.Interfaces.Player;
-using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.Interfaces.Reflection;

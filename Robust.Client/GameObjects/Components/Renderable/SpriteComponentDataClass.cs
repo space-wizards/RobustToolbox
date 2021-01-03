@@ -5,6 +5,7 @@ using Robust.Client.Graphics;
 using Robust.Client.Graphics.Shaders;
 using Robust.Client.Interfaces.ResourceManagement;
 using Robust.Client.ResourceManagement;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Interfaces.Reflection;
 using Robust.Shared.IoC;
@@ -15,7 +16,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Client.GameObjects.Components.Renderable
 {
-    public class SpriteComponentDataClass : SpriteComponent_AUTODATA
+    public class SpriteComponentDataClass
     {
         [CustomYamlField("layers")]
         private List<SpriteComponent.Layer>? layers;

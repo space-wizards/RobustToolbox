@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -24,6 +23,10 @@ namespace Robust.Generators
             var comp = (CSharpCompilation)context.Compilation;
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
 
+            //resolve autodata registrations (we need the to validate the customdataclasses)
+            var resolvedAutoDataRegistrations =
+                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
+
             //resolve all custom dataclasses
             var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, ITypeSymbol>();
             foreach (var classDeclarationSyntax in receiver.CustomDataClassRegistrations)
@@ -41,13 +44,31 @@ namespace Robust.Generators
                         classDeclarationSyntax.GetLocation()));
                     return;
                 }
+
+                var customDataClass = (ITypeSymbol) arg.Value.Value;
+                if (customDataClass == null)
+                {
+                    var msg = $"Could not resolve CustomDataClassAttribute for class {classDeclarationSyntax.Identifier.Text}";
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                        classDeclarationSyntax.GetLocation()));
+                    continue;
+                }
+
+                string shouldInherit;
+                if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(symbol, r)))
+                {
+                    shouldInherit = $"{symbol}_AUTODATA";
+                }
+                else
+                {
+                    shouldInherit = ResolveParentDataClass(symbol);
+                }
+                context.AddSource($"{customDataClass.Name}_INHERIT.g.cs", SourceText.From(GenerateCustomDataClassInheritanceCode(customDataClass.Name, customDataClass.ContainingNamespace.ToString(), shouldInherit), Encoding.UTF8));
+
+
                 resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value);
             }
-
-            //resolve autodata registrations (we need the to validate the customdataclasses)
-            var resolvedAutoDataRegistrations =
-                receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
-
 
             string ResolveParentDataClass(ITypeSymbol typeSymbol)
             {
@@ -79,7 +100,7 @@ namespace Robust.Generators
                         var msg =
                             $"YamlFieldAttribute for Member {member} of type {symbol} has an invalid tag {fieldName}.";
                         context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("RADC0004", msg, msg, "Usage", DiagnosticSeverity.Error, true),
+                            new DiagnosticDescriptor("RADC0003", msg, msg, "Usage", DiagnosticSeverity.Error, true),
                             member.Locations.First()));
                     }
 
@@ -106,45 +127,19 @@ namespace Robust.Generators
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                string inheriting = ResolveParentDataClass(symbol.BaseType);
+                var inheriting = ResolveParentDataClass(symbol.BaseType);
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
             }
+        }
 
-            //check if all custom dataclasses are inheriting the correct parent
-            foreach (var pair in resolvedCustomDataClasses)
-            {
-                var component = pair.Key;
-                var dataclass = pair.Value;
-
-                if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(component, r)))
-                {
-                    var shouldInherit = $"{component.Name}_AUTODATA";
-                    //todo compare symbols here eventually
-                    if (dataclass.BaseType?.Name != shouldInherit) //can only compare names here since the type WILL be an errorsymbol (since its part of this compilation)
-                    {
-                        var msg = $"Custom Dataclass is inheriting {dataclass.BaseType?.ToDisplayString()} when it should inherit its own autodataclass: {shouldInherit}";
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("RADC0001", msg, msg, "Usage", DiagnosticSeverity.Error, true),
-                            dataclass.Locations.First()));
-                    }
-                }
-                else
-                {
-                    var shouldInherit = ResolveParentDataClass(component);
-                    //todo compare symbols here eventually
-                    if (dataclass.BaseType?.ToDisplayString() != shouldInherit)
-                    {
-                        var msg = $"Custom Dataclass is inheriting {dataclass.BaseType?.ToDisplayString()} when it should inherit {shouldInherit}";
-                        context.ReportDiagnostic(Diagnostic.Create(
-                            new DiagnosticDescriptor("RADC0003", msg, msg, "Usage", DiagnosticSeverity.Error, true),
-                            dataclass.Locations.First()));
-                    }
-                }
-
-
-            }
+        private string GenerateCustomDataClassInheritanceCode(string name, string @namespace, string inheriting)
+        {
+            return $@"namespace {@namespace} {{
+    public partial class {name} : {inheriting} {{}}
+}}
+";
         }
 
         private string GenerateCode(string name, string @namespace, string inheriting, List<FieldTemplate> fields)

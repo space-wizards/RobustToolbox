@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
@@ -205,7 +206,14 @@ namespace Robust.Shared.Containers
             return userContainer == otherContainer;
         }
 
-        public static List<IEntity> GetContained(this IEntity entity, List<IEntity>? existing = null)
+        /// <summary>
+        ///     Recursively retrieve all entities we contain.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="existing"></param>
+        /// <param name="excluded"></param>
+        /// <returns></returns>
+        public static List<IEntity> GetContained(this IEntity entity, List<IEntity>? existing = null, HashSet<EntityUid>? excluded = null)
         {
             existing ??= new List<IEntity>();
 
@@ -218,7 +226,7 @@ namespace Robust.Shared.Containers
             {
                 foreach (var contained in container.ContainedEntities)
                 {
-                    if (contained == null)
+                    if (contained == null || excluded?.Contains(contained.Uid) == true)
                         continue;
 
                     existing.Add(contained);

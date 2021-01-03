@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -34,6 +35,14 @@ namespace Robust.Shared.EntityLookup
 
         public int EntityCount = 0;
 
+        public float Bottom => Origin.Y;
+
+        public float Left => Origin.X;
+
+        public float Top => Origin.Y + ChunkSize;
+
+        public float Right => Origin.X + ChunkSize;
+
         internal EntityLookupChunk(MapId mapId, GridId gridId, Vector2i origin)
         {
             MapId = mapId;
@@ -63,47 +72,12 @@ namespace Robust.Shared.EntityLookup
         /// <summary>
         ///     Get all entities that intersect this chunk. May return duplicates from nodes.
         /// </summary>
-        /// <param name="includeContainers">Whether to include entities within our containermanager component</param>
-        /// <param name="unique">Don't return multiple entities due to node overlaps</param>
-        /// <returns></returns>
-        public IReadOnlyCollection<IEntity> GetEntities(bool includeContainers=true, bool unique=true)
-        {
-            var entities = new List<IEntity>();
-
-            for (var x = 0; x < ChunkSize; x++)
-            {
-                for (var y = 0; y < ChunkSize; y++)
-                {
-                    var node = _nodes[x, y];
-                    foreach (var entity in node.Entities)
-                    {
-                        if (includeContainers)
-                        {
-                            foreach (var con in entity.GetContained())
-                            {
-                                entities.Add(con);
-                            }
-                        }
-
-                        entities.Add(entity);
-                    }
-                }
-            }
-
-            if (unique)
-                return new HashSet<IEntity>(entities);
-
-            return entities;
-        }
-
-        /// <summary>
-        ///     Get all entities that intersect this chunk. May return duplicates from nodes.
-        /// </summary>
         /// <param name="fromTick">Only retrieve entities modified after this tick</param>
         /// <param name="includeContainers">Whether to include entities within our containermanager component</param>
         /// <param name="unique">Don't return multiple entities due to node overlaps</param>
+        /// <param name="excluded">Entities we shouldn't return</param>
         /// <returns></returns>
-        public IReadOnlyCollection<IEntity> GetEntities(GameTick fromTick, bool includeContainers=true, bool unique=true)
+        public IReadOnlyCollection<IEntity> GetEntities(bool includeContainers=true, bool unique=true, HashSet<EntityUid>? excluded = null)
         {
             var entities = new List<IEntity>();
 
@@ -114,16 +88,18 @@ namespace Robust.Shared.EntityLookup
                     var node = _nodes[x, y];
                     foreach (var entity in node.Entities)
                     {
+                        if (entity.Deleted) continue;
+
                         if (includeContainers)
                         {
                             foreach (var con in entity.GetContained())
                             {
-                                if (con.LastModifiedTick <= fromTick) continue;
+                                if (con.Deleted || excluded?.Contains(con.Uid) == true) continue;
                                 entities.Add(con);
                             }
                         }
 
-                        if (entity.LastModifiedTick <= fromTick) continue;
+                        if (excluded?.Contains(entity.Uid) == true) continue;
                         entities.Add(entity);
                     }
                 }

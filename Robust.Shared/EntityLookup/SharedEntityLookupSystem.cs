@@ -46,7 +46,7 @@ namespace Robust.Shared.EntityLookup
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
-        private readonly Dictionary<IEntity, HashSet<EntityLookupNode>> _lastKnownNodes = new();
+        protected readonly Dictionary<IEntity, HashSet<EntityLookupNode>> LastKnownNodes = new();
 
         public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
         {
@@ -207,6 +207,7 @@ namespace Robust.Shared.EntityLookup
             foreach (var gid in gridIds)
             {
                 var localCenter = gid == GridId.Invalid ? worldBox.Center : MapManager.GetGrid(gid).WorldToLocal(worldBox.Center);
+                var localBounds = new Box2(localCenter - range, localCenter + range);
                 var centerTile = new Vector2i((int) Math.Floor(localCenter.X), (int) Math.Floor(localCenter.Y));
                 if (!_graph[mapId].TryGetValue(gid, out var chunks)) continue;
 
@@ -217,6 +218,11 @@ namespace Robust.Shared.EntityLookup
                         var chunkIndices = GetChunkIndices(new Vector2i(centerTile.X + x * EntityLookupChunk.ChunkSize, centerTile.Y + y * EntityLookupChunk.ChunkSize));
 
                         if (!chunks.TryGetValue(chunkIndices, out var chunk)) continue;
+
+                        if (chunk.Right < localBounds.Left ||
+                            chunk.Left > localBounds.Right ||
+                            chunk.Bottom > localBounds.Top ||
+                            chunk.Top < localBounds.Bottom) continue;
 
                         results.Add(chunk);
                     }
@@ -264,7 +270,7 @@ namespace Robust.Shared.EntityLookup
         {
             var results = new List<Vector2i>();
 
-            if (!_lastKnownNodes.TryGetValue(entity, out var nodes))
+            if (!LastKnownNodes.TryGetValue(entity, out var nodes))
             {
                 return results;
             }
@@ -323,7 +329,7 @@ namespace Robust.Shared.EntityLookup
 
         private HashSet<EntityLookupNode> GetOrCreateNodes(IEntity entity)
         {
-            if (_lastKnownNodes.TryGetValue(entity, out var nodes))
+            if (LastKnownNodes.TryGetValue(entity, out var nodes))
             {
                 return nodes;
             }
@@ -340,7 +346,7 @@ namespace Robust.Shared.EntityLookup
                 }
             }
 
-            _lastKnownNodes[entity] = results;
+            LastKnownNodes[entity] = results;
             return results;
         }
 
@@ -509,7 +515,7 @@ namespace Robust.Shared.EntityLookup
         {
             var toRemove = new List<IEntity>();
 
-            foreach (var (entity, _) in _lastKnownNodes)
+            foreach (var (entity, _) in LastKnownNodes)
             {
                 if (entity.Deleted || entity.Transform.GridID == gridId)
                     toRemove.Add(entity);
@@ -517,7 +523,7 @@ namespace Robust.Shared.EntityLookup
 
             foreach (var entity in toRemove)
             {
-                _lastKnownNodes.Remove(entity);
+                LastKnownNodes.Remove(entity);
             }
 
             MapId? mapId = null;
@@ -585,7 +591,7 @@ namespace Robust.Shared.EntityLookup
                 existing.Add(node.Indices);
             }
 
-            _lastKnownNodes[entity] = entityNodes;
+            LastKnownNodes[entity] = entityNodes;
             //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(newIndices));
         }
 
@@ -598,7 +604,7 @@ namespace Robust.Shared.EntityLookup
             var toDelete = new List<EntityLookupChunk>();
             var checkedChunks = new HashSet<EntityLookupChunk>();
 
-            if (_lastKnownNodes.TryGetValue(entity, out var nodes))
+            if (LastKnownNodes.TryGetValue(entity, out var nodes))
             {
                 foreach (var node in nodes)
                 {
@@ -615,7 +621,7 @@ namespace Robust.Shared.EntityLookup
                 }
             }
 
-            _lastKnownNodes.Remove(entity);
+            LastKnownNodes.Remove(entity);
 
             foreach (var chunk in toDelete)
             {
@@ -641,7 +647,7 @@ namespace Robust.Shared.EntityLookup
             }
 
             // This probably means it's a grid
-            if (!_lastKnownNodes.TryGetValue(entity, out var oldNodes))
+            if (!LastKnownNodes.TryGetValue(entity, out var oldNodes))
                 return;
 
             var newNodes = GetNodes(entity);
@@ -690,7 +696,7 @@ namespace Robust.Shared.EntityLookup
                 existing.Add(node.Indices);
             }
 
-            _lastKnownNodes[entity] = newNodes;
+            LastKnownNodes[entity] = newNodes;
             //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(newIndices));
         }
     }

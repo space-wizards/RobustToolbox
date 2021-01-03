@@ -235,14 +235,14 @@ namespace Robust.Server.GameObjects
 
                 data.UpdateChunk(currentTick, chunk);
 
-                // We'll track unique on our own
-                foreach (var entity in chunk.GetEntities(fromTick, unique: false))
+                // TODO: Debug highlight updated chunk
+
+                // TODO: Could maybe optimise this a bit more somehow
+                foreach (var entity in chunk.GetEntities(unique: false, excluded: seenEntities))
                 {
-                    if (entity.Deleted || seenEntities.Contains(entity.Uid)) continue;
                     seenEntities.Add(entity.Uid);
                     // TODO: Probably don't send container data to clients maybe?
                     // Though I guess sending contents is useful for prediction ahhhhhhhh
-
                     AddEntityState(data, player, fromTick, entity, entityStates);
                 }
             }
@@ -273,7 +273,7 @@ namespace Robust.Server.GameObjects
                     return;
                 }
 
-                state = GetEntityState(ComponentManager, entity.Uid, fromTick);
+                state = GetEntityState(ComponentManager, entity.Uid, lastSeen);
             }
             // Never before seen entity
             else

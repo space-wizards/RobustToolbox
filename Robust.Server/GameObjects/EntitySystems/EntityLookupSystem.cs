@@ -75,12 +75,14 @@ namespace Robust.Server.GameObjects.EntitySystems
                 break;
             }
 
-            var aabb = EntityManager.GetWorldAabbFromEntity(entity);
-            var mapId = entity.Transform.MapID;
+            if (!LastKnownNodes.TryGetValue(entity, out var nodes))
+                return;
 
-            foreach (var chunk in GetChunksInRange(mapId, aabb))
+            var currentTick = _gameTiming.CurTick;
+
+            foreach (var node in nodes)
             {
-                chunk.LastModifiedTick = _gameTiming.CurTick;
+                node.ParentChunk.LastModifiedTick = currentTick;
             }
         }
 

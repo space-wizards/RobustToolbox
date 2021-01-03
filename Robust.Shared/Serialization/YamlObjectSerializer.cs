@@ -482,7 +482,7 @@ namespace Robust.Shared.Serialization
                 return Enum.Parse(type, node.ToString());
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
-            if (TryGenericReadOnlyCollectionType(type, out var collectionType))
+            if (TypeHelpers.TryGenericReadOnlyCollectionType(type, out var collectionType))
             {
                 var listNode = (YamlSequenceNode)node;
                 var elems = listNode.Children;
@@ -498,7 +498,7 @@ namespace Robust.Shared.Serialization
             }
 
             // List<T>
-            if (TryGenericListType(type, out var listType))
+            if (TypeHelpers.TryGenericListType(type, out var listType))
             {
                 var listNode = (YamlSequenceNode)node;
                 var newList = (IList)Activator.CreateInstance(type, listNode.Children.Count)!;
@@ -513,7 +513,7 @@ namespace Robust.Shared.Serialization
             }
 
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
-            if (TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
+            if (TypeHelpers.TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
             {
                 var dictNode = (YamlMappingNode)node;
                 var newDict = (IDictionary)Activator.CreateInstance(dictType, dictNode.Children.Count)!;
@@ -530,7 +530,7 @@ namespace Robust.Shared.Serialization
             }
 
             // HashSet<T>
-            if (TryGenericHashSetType(type, out var setType))
+            if (TypeHelpers.TryGenericHashSetType(type, out var setType))
             {
                 var nodes = ((YamlSequenceNode) node).Children;
                 var valuesArray = Array.CreateInstance(setType, new[] {nodes.Count})!;
@@ -821,7 +821,7 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericListType(type!, out _))
+            if (TypeHelpers.TryGenericListType(type!, out _))
             {
                 var listA = (IList) a;
                 var listB = (IList) b!;
@@ -845,7 +845,7 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericDictType(type!, out _, out _))
+            if (TypeHelpers.TryGenericDictType(type!, out _, out _))
             {
                 var dictA = (IDictionary) a;
                 var dictB = (IDictionary) b!;
@@ -870,7 +870,7 @@ namespace Robust.Shared.Serialization
                 return true;
             }
 
-            if (TryGenericHashSetType(type!, out _))
+            if (TypeHelpers.TryGenericHashSetType(type!, out _))
             {
                 var setA = ((IEnumerable) a).GetEnumerator();
                 var setB = ((IEnumerable) b!).GetEnumerator();
@@ -928,111 +928,6 @@ namespace Robust.Shared.Serialization
         {
             if (!_typeSerializers.ContainsKey(type))
                 _typeSerializers.Add(type, serializer);
-        }
-
-        private static bool TryGenericReadOnlyCollectionType(Type type, [NotNullWhen(true)] out Type? listType)
-        {
-            if (!type.GetTypeInfo().IsGenericType)
-            {
-                listType = default;
-                return false;
-            }
-
-            var baseGeneric = type.GetGenericTypeDefinition();
-            var isList = baseGeneric == typeof(IReadOnlyCollection<>) || baseGeneric == typeof(IReadOnlyList<>);
-
-            if (isList)
-            {
-                listType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            listType = default;
-            return false;
-        }
-
-        private static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
-        {
-            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
-
-            if (isList)
-            {
-                listType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            listType = default;
-            return false;
-        }
-
-        private static bool TryGenericReadOnlyDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>);
-
-            if (isDict)
-            {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
-            }
-
-            keyType = default;
-            valType = default;
-            return false;
-        }
-
-        private static bool TryGenericReadDictType(Type type, [NotNullWhen(true)] out Type? keyType,
-            [NotNullWhen(true)] out Type? valType, [NotNullWhen(true)] out Type? dictType)
-        {
-            if (TryGenericDictType(type, out keyType, out valType))
-            {
-                // Pass through the type directly if it's Dictionary<K,V>.
-                // Since that's more efficient.
-                dictType = type;
-                return true;
-            }
-
-            if (TryGenericReadOnlyDictType(type, out keyType, out valType))
-            {
-                // If it's IReadOnlyDictionary<K,V> we need to make a Dictionary<K,V> type to use to deserialize.
-                dictType = typeof(Dictionary<,>).MakeGenericType(keyType, valType);
-                return true;
-            }
-
-            dictType = default;
-            return false;
-        }
-
-        private static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
-        {
-            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
-
-            if (isDict)
-            {
-                var genArgs = type.GetGenericArguments();
-                keyType = genArgs[0];
-                valType = genArgs[1];
-                return true;
-            }
-
-            keyType = default;
-            valType = default;
-            return false;
-        }
-
-        private static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
-        {
-            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
-
-            if (isSet)
-            {
-                setType = type.GetGenericArguments()[0];
-                return true;
-            }
-
-            setType = default;
-            return false;
         }
 
         public abstract class TypeSerializer

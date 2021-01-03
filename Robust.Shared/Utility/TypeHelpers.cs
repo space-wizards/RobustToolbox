@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 
@@ -85,7 +86,7 @@ namespace Robust.Shared.Utility
 
         internal static readonly IComparer<Type> TypeInheritanceComparer = new TypeInheritanceComparerImpl();
 
-        private sealed class TypeInheritanceComparerImpl : IComparer<Type>
+        public sealed class TypeInheritanceComparerImpl : IComparer<Type>
         {
             public int Compare(Type? x, Type? y)
             {
@@ -106,6 +107,111 @@ namespace Robust.Shared.Utility
 
                 return 0;
             }
+        }
+
+        public static bool TryGenericReadOnlyCollectionType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            if (!type.GetTypeInfo().IsGenericType)
+            {
+                listType = default;
+                return false;
+            }
+
+            var baseGeneric = type.GetGenericTypeDefinition();
+            var isList = baseGeneric == typeof(IReadOnlyCollection<>) || baseGeneric == typeof(IReadOnlyList<>);
+
+            if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        public static bool TryGenericListType(Type type, [NotNullWhen(true)] out Type? listType)
+        {
+            var isList = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>);
+
+            if (isList)
+            {
+                listType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            listType = default;
+            return false;
+        }
+
+        public static bool TryGenericReadOnlyDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
+            return false;
+        }
+
+        public static bool TryGenericReadDictType(Type type, [NotNullWhen(true)] out Type? keyType,
+            [NotNullWhen(true)] out Type? valType, [NotNullWhen(true)] out Type? dictType)
+        {
+            if (TryGenericDictType(type, out keyType, out valType))
+            {
+                // Pass through the type directly if it's Dictionary<K,V>.
+                // Since that's more efficient.
+                dictType = type;
+                return true;
+            }
+
+            if (TryGenericReadOnlyDictType(type, out keyType, out valType))
+            {
+                // If it's IReadOnlyDictionary<K,V> we need to make a Dictionary<K,V> type to use to deserialize.
+                dictType = typeof(Dictionary<,>).MakeGenericType(keyType, valType);
+                return true;
+            }
+
+            dictType = default;
+            return false;
+        }
+
+        public static bool TryGenericDictType(Type type, [NotNullWhen(true)] out Type? keyType, [NotNullWhen(true)] out Type? valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
+            return false;
+        }
+
+        public static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
+        {
+            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+            if (isSet)
+            {
+                setType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            setType = default;
+            return false;
         }
     }
 }

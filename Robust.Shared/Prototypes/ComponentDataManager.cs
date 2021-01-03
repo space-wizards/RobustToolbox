@@ -143,6 +143,25 @@ namespace Robust.Shared.Prototypes
 
         private readonly Dictionary<string, IYamlFieldDefinition[]> _dataDefinitions = new();
 
+        private readonly Dictionary<(Type, IYamlFieldDefinition), object?> _defaultValues = new();
+        private object? GetDefaultValue(Type type, IYamlFieldDefinition field)
+        {
+            var id = (type, field);
+            if (_defaultValues.TryGetValue(id, out var defaultVal))
+                return defaultVal;
+
+            var defaultObj = Activator.CreateInstance(type);
+            if (defaultObj == null)
+            {
+                throw new ArgumentException(
+                    $"Failed to create instance of type {type} to retrieve its default value of {field}");
+            }
+
+            defaultVal = field.GetValue(defaultObj);
+            _defaultValues.Add(id, defaultVal);
+            return defaultVal;
+        }
+
         public YamlMappingNode? SerializeNonDefaultComponentData(IComponent comp, YamlObjectSerializer.Context? context = null)
         {
             var mapping = new YamlMappingNode();
@@ -150,10 +169,11 @@ namespace Robust.Shared.Prototypes
 
             ComponentData data = GetEmptyComponentData(comp.Name);
             var def = GetComponentDataDefinition(comp.Name);
+            var compType = comp.GetType();
             foreach (var fieldDefinition in def)
             {
                 var value = fieldDefinition.GetValue(comp);
-                if(Equals(value, fieldDefinition.DefaultValue)) continue;
+                if(Equals(value, GetDefaultValue(compType, fieldDefinition))) continue;
                 if (fieldDefinition.IsCustom)
                 {
                     var customField = GetCustomField(comp.GetType(), fieldDefinition.Tag);

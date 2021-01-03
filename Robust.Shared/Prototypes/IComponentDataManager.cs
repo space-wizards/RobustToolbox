@@ -33,8 +33,6 @@ namespace Robust.Shared.Prototypes
 
         bool IsCustom { get; }
 
-        object? DefaultValue { get; }
-
         void SetValue(object obj, object? value);
 
         object? GetValue(object obj);
@@ -45,7 +43,6 @@ namespace Robust.Shared.Prototypes
         public string Tag { get; }
         public Type FieldType => _fieldInfo.FieldType;
         public bool IsCustom { get; }
-        public object? DefaultValue { get; }
         private FieldInfo _fieldInfo;
 
         public YamlFieldDefinition([NotNull] string tag, FieldInfo fieldInfo, bool isCustom)
@@ -53,7 +50,6 @@ namespace Robust.Shared.Prototypes
             Tag = tag;
             _fieldInfo = fieldInfo;
             IsCustom = isCustom;
-            DefaultValue = fieldInfo.GetValue(Activator.CreateInstance(fieldInfo.DeclaringType!)); //todo stinky, maybe set default value in the attribute?
         }
 
         public void SetValue(object obj, object? value)
@@ -72,14 +68,12 @@ namespace Robust.Shared.Prototypes
         public string Tag { get; }
         public Type FieldType => _propertyInfo.PropertyType;
         public bool IsCustom { get; }
-        public object? DefaultValue { get; }
         private PropertyInfo _propertyInfo;
         public YamlPropertyDefinition([NotNull] string tag, PropertyInfo propertyInfo, bool isCustom)
         {
             Tag = tag;
             _propertyInfo = propertyInfo;
             IsCustom = isCustom;
-            DefaultValue = propertyInfo.GetValue(Activator.CreateInstance(propertyInfo.DeclaringType!)); //todo stinky, maybe set default value in the attribute?
         }
 
         public void SetValue(object obj, object? value)

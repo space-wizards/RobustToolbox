@@ -608,6 +608,8 @@ namespace Robust.Shared.EntityLookup
             {
                 foreach (var node in nodes)
                 {
+                    node.RemoveEntity(entity);
+
                     if (!checkedChunks.Contains(node.ParentChunk))
                     {
                         checkedChunks.Add(node.ParentChunk);
@@ -616,8 +618,6 @@ namespace Robust.Shared.EntityLookup
                             toDelete.Add(node.ParentChunk);
                         }
                     }
-
-                    node.RemoveEntity(entity);
                 }
             }
 

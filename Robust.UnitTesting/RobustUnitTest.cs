@@ -52,15 +52,26 @@ namespace Robust.UnitTesting
             assemblies.Add(AppDomain.CurrentDomain.GetAssemblyByName("Robust.Shared"));
             assemblies.Add(Assembly.GetExecutingAssembly());
 
+            var configurationManager = IoCManager.Resolve<IConfigurationManagerInternal>();
+
+            configurationManager.Initialize(Project == UnitTestProject.Server);
+
             foreach (var assembly in assemblies)
             {
-                IoCManager.Resolve<IConfigurationManagerInternal>().LoadCVarsFromAssembly(assembly);
+                configurationManager.LoadCVarsFromAssembly(assembly);
+            }
+
+            var contentAssemblies = GetContentAssemblies();
+
+            foreach (var assembly in contentAssemblies)
+            {
+                configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
             var modLoader = IoCManager.Resolve<TestingModLoader>();
-            modLoader.Assemblies = GetContentAssemblies();
+            modLoader.Assemblies = contentAssemblies;
             modLoader.TryLoadModulesFrom(ResourcePath.Root, "");
 
             // Required components for the engine to work

@@ -41,6 +41,9 @@ namespace Robust.Shared.GameObjects.Components
         /// </summary>
         bool Anchored { get; set; }
 
+        [Obsolete("Use AnchoredChangedMessage instead")]
+        event Action? AnchoredChanged;
+
         bool Predict { get; set; }
 
         protected internal Dictionary<Type, VirtualController> Controllers { get; set; }
@@ -342,10 +345,16 @@ namespace Robust.Shared.GameObjects.Components
                     return;
 
                 _anchored = value;
+#pragma warning disable 618
+                AnchoredChanged?.Invoke();
+#pragma warning restore 618
                 SendMessage(new AnchoredChangedMessage(Anchored));
                 Dirty();
             }
         }
+
+        [Obsolete("Use AnchoredChangedMessage instead")]
+        public event Action? AnchoredChanged;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Predict

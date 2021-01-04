@@ -6,6 +6,7 @@ using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.UnitTesting.Shared.ComponentData
 {
@@ -66,6 +67,20 @@ namespace Robust.UnitTesting.Shared.ComponentData
             Assert.That(comp.Foo, Is.EqualTo(1));
             Assert.That(comp.Bar, Is.EqualTo(-1));
             Assert.That(comp.Baz, Is.EqualTo("Testing"));
+        }
+
+        [Test]
+        public void SerializationTest()
+        {
+            var entity = IoCManager.Resolve<IEntityManager>().CreateEntityUninitialized("TestEntity");
+            var comp = entity.GetComponent<SerializationTestComponent>();
+            var mapping = IoCManager.Resolve<IComponentDataManager>().SerializeNonDefaultComponentData(comp);
+            Assert.That(mapping, Is.Not.Null);
+            Assert.That(mapping!.Children.ContainsKey("foo"));
+            Assert.That(mapping.Children["foo"], Is.EqualTo(new YamlScalarNode("1")));
+            Assert.That(mapping!.Children.ContainsKey("baz"));
+            Assert.That(mapping.Children["baz"], Is.EqualTo(new YamlScalarNode("Testing")));
+            Assert.That(!mapping!.Children.ContainsKey("bar"));
         }
 
         [Test]

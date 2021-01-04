@@ -95,6 +95,7 @@ namespace Robust.Generators
                         .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
                     if(attribute == null) continue;
                     var fieldName = (string)attribute.ConstructorArguments.FirstOrDefault().Value;
+                    if (fieldName == "base") fieldName = "WORKAROUNDbase"; //TODO Paul: fix this in code
                     if (fieldName == null || !SyntaxFacts.IsValidIdentifier(fieldName))
                     {
                         var msg =
@@ -102,6 +103,7 @@ namespace Robust.Generators
                         context.ReportDiagnostic(Diagnostic.Create(
                             new DiagnosticDescriptor("RADC0003", msg, msg, "Usage", DiagnosticSeverity.Error, true),
                             member.Locations.First()));
+                        continue;
                     }
 
                     string type;

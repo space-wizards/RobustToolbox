@@ -7,7 +7,7 @@ namespace Robust.Shared.Prototypes
     {
         public readonly string Tag;
 
-        public YamlFieldAttribute([NotNull] string tag)
+        public YamlFieldAttribute([NotNull] string tag, bool readOnly = false) //todo Paul: readonly
         {
             Tag = tag;
         }

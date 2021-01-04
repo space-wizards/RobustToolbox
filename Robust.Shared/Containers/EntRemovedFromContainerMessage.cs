@@ -3,7 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 
-namespace Robust.Server.GameObjects.EntitySystemMessages
+namespace Robust.Shared.Containers
 {
     [PublicAPI]
     public abstract class ContainerModifiedMessage : EntitySystemMessage

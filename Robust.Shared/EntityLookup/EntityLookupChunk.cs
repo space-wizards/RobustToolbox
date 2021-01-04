@@ -88,8 +88,6 @@ namespace Robust.Shared.EntityLookup
                     var node = _nodes[x, y];
                     foreach (var entity in node.Entities)
                     {
-                        if (entity.Deleted) continue;
-
                         if (includeContainers)
                         {
                             foreach (var con in entity.GetContained())
@@ -99,7 +97,7 @@ namespace Robust.Shared.EntityLookup
                             }
                         }
 
-                        if (excluded?.Contains(entity.Uid) == true) continue;
+                        if (entity.Deleted || excluded?.Contains(entity.Uid) == true) continue;
                         entities.Add(entity);
                     }
                 }

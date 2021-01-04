@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using Robust.Shared.Containers;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.EntityLookup
 {
@@ -22,6 +24,8 @@ namespace Robust.Shared.EntityLookup
 
         internal void AddEntity(IEntity entity)
         {
+            DebugTools.Assert(!entity.IsInContainer());
+
             if (_entities.Add(entity))
                 ParentChunk.EntityCount += 1;
         }

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.Interfaces.Player;
@@ -9,7 +8,6 @@ using Robust.Shared.EntityLookup;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.EntitySystemMessages;
-using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Timing;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -188,12 +186,5 @@ internal sealed class PlayerLookupChunks
             return;
 
         KnownChunks[chunk] = currentTick;
-
-        return;
-    }
-
-    public void RemoveChunk(EntityLookupChunk chunk)
-    {
-        KnownChunks.Remove(chunk);
     }
 }

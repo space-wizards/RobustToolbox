@@ -170,13 +170,9 @@ namespace Robust.Server.GameObjects.Components.Container
         {
             DebugTools.Assert(!Deleted);
 
-            if (toremove == null)
-                return true;
-
             if (!CanRemove(toremove))
-            {
                 return false;
-            }
+
             InternalRemove(toremove);
 
             if (!toremove.IsValid())
@@ -205,7 +201,7 @@ namespace Robust.Server.GameObjects.Components.Container
             DebugTools.AssertNotNull(toremove);
             DebugTools.Assert(toremove.IsValid());
 
-            Owner?.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
+            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntRemovedFromContainerMessage(toremove, this));
 
             Manager.Owner.SendMessage(Manager, new ContainerContentsModifiedMessage(this, toremove, true));
             Manager.Dirty();

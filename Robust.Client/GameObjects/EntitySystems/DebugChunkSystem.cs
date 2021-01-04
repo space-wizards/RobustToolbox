@@ -32,7 +32,11 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             base.Initialize();
             SubscribeNetworkEvent<ChunkDirtyMessage>(HandleChunkDirty);
-            _overlay = new ChunkOverlay(IoCManager.Resolve<IMapManager>());
+            _overlay = new ChunkOverlay(
+                IoCManager.Resolve<IEyeManager>(),
+                IoCManager.Resolve<IGameTiming>(),
+                IoCManager.Resolve<IMapManager>(),
+                IoCManager.Resolve<IPlayerManager>());
             IoCManager.Resolve<IOverlayManager>().AddOverlay(_overlay);
         }
 
@@ -82,9 +86,9 @@ namespace Robust.Client.GameObjects.EntitySystems
             var toRemove = new List<Vector2i>();
             var currentTime = _gameTiming.CurTime;
 
-            foreach (var (mapId, grids) in _chunks)
+            foreach (var (_, grids) in _chunks)
             {
-                foreach (var (gridId, chunks) in grids)
+                foreach (var (_, chunks) in grids)
                 {
                     foreach (var (chunk, time) in chunks)
                     {
@@ -141,26 +145,33 @@ namespace Robust.Client.GameObjects.EntitySystems
 
     internal sealed class ChunkOverlay : Overlay
     {
+        private readonly IEyeManager _eyeManager;
+        private readonly IGameTiming _gameTiming;
         private readonly IMapManager _mapManager;
+        private readonly IPlayerManager _playerManager;
+
+        private DebugChunkSystem _debugChunks;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public ChunkOverlay(IMapManager mapManager) : base(nameof(ChunkOverlay))
+        public ChunkOverlay(IEyeManager eyeManager, IGameTiming gameTiming, IMapManager mapManager, IPlayerManager playerManager) : base(nameof(ChunkOverlay))
         {
+            _eyeManager = eyeManager;
+            _gameTiming = gameTiming;
             _mapManager = mapManager;
+            _playerManager = playerManager;
+            _debugChunks = EntitySystem.Get<DebugChunkSystem>();
         }
 
         protected override void Draw(DrawingHandleBase handle, OverlaySpace currentSpace)
         {
-            var debugChunks = EntitySystem.Get<DebugChunkSystem>();
-            var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.ControlledEntity;
-            var eyeManager = IoCManager.Resolve<IEyeManager>();
+            var player = _playerManager.LocalPlayer?.ControlledEntity;
 
-            if (debugChunks.Chunks.Count == 0 || player == null || !debugChunks.Chunks.TryGetValue(player.Transform.MapID, out var grids)) return;
+            if (_debugChunks.Chunks.Count == 0 || player == null || !_debugChunks.Chunks.TryGetValue(player.Transform.MapID, out var grids)) return;
 
             var worldHandle = (DrawingHandleWorld) handle;
-            var currentTime = IoCManager.Resolve<IGameTiming>().CurTime;
-            var viewPort = eyeManager.GetWorldViewport();
+            var currentTime = _gameTiming.CurTime;
+            var viewPort = _eyeManager.GetWorldViewport();
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(player.Transform.MapID, viewPort, true))
             {

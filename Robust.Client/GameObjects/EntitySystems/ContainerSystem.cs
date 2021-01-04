@@ -13,12 +13,20 @@ namespace Robust.Client.GameObjects.EntitySystems
         {
             base.Initialize();
 
-            SubscribeLocalEvent<UpdateContainerOcclusionMessage>(UpdateContainerOcclusion);
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(UpdateContainerOcclusion);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(UpdateContainerOcclusion);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
         }
 
-        private void UpdateContainerOcclusion(UpdateContainerOcclusionMessage ev)
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
+            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
+        }
+
+        private void UpdateContainerOcclusion(ContainerModifiedMessage ev)
         {
             _updateQueue.Add(ev.Entity);
         }
@@ -91,15 +99,5 @@ namespace Robust.Client.GameObjects.EntitySystems
                 }
             }
         }
-    }
-
-    internal readonly struct UpdateContainerOcclusionMessage
-    {
-        public UpdateContainerOcclusionMessage(IEntity entity)
-        {
-            Entity = entity;
-        }
-
-        public IEntity Entity { get; }
     }
 }

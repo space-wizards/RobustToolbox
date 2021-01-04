@@ -560,7 +560,6 @@ namespace Robust.Shared.GameObjects.Components.Transform
             var compMessage = new ParentChangedMessage(newParentEnt, oldParentOwner);
 
             _parent = newParentEnt.Uid;
-
             ChangeMapId(newConcrete.MapID);
 
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, entMessage);
@@ -578,6 +577,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
             MapID = newMapId;
             MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
+            TryUpdatePhysicsTree();
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)

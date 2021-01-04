@@ -2,19 +2,18 @@
 using System.Collections.Generic;
 using Prometheus;
 using Robust.Server.GameObjects.Components;
-using Robust.Server.GameObjects.Components.Container;
 using Robust.Server.GameObjects.EntitySystemMessages;
 using Robust.Server.GameObjects.EntitySystems;
 using Robust.Server.Interfaces.GameObjects;
 using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.Timing;
 using Robust.Shared;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
@@ -158,7 +157,7 @@ namespace Robust.Server.GameObjects
                 if (entity.LastModifiedTick <= fromTick)
                     continue;
 
-                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick));
+                stateEntities.Add(GetEntityState(ComponentManager, entity.Uid, fromTick, true));
             }
 
             if (session != null)
@@ -235,8 +234,6 @@ namespace Robust.Server.GameObjects
 
                 data.UpdateChunk(currentTick, chunk);
 
-                // TODO: Debug highlight updated chunk
-
                 // TODO: Could maybe optimise this a bit more somehow
                 foreach (var entity in chunk.GetEntities(unique: false, excluded: seenEntities))
                 {
@@ -244,6 +241,18 @@ namespace Robust.Server.GameObjects
                     // TODO: Probably don't send container data to clients maybe?
                     // Though I guess sending contents is useful for prediction ahhhhhhhh
                     AddEntityState(data, player, fromTick, entity, entityStates);
+                }
+            }
+
+            // TODO DEBUG ONLY PLZ REMOVE
+            foreach (var eState in entityStates)
+            {
+                var entity = GetEntity(eState.Uid);
+                var parent = entity.Transform.Parent?.Owner.Uid;
+                if (parent != null && !data.EntityLastSeen.ContainsKey(parent.Value))
+                {
+                    var ourNodes = _lookupSystem.GetNodes(entity);
+                    var parentNodes = _lookupSystem.GetNodes(GetEntity(parent.Value));
                 }
             }
 

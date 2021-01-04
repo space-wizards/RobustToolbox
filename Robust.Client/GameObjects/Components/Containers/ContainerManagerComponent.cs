@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.GameObjects.EntitySystems;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Containers;
 using Robust.Shared.Interfaces.GameObjects;
@@ -164,7 +165,7 @@ namespace Robust.Client.GameObjects.Components.Containers
                 foreach (var containerEntity in container.Entities)
                 {
                     Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                        new UpdateContainerOcclusionMessage(containerEntity));
+                        new EntRemovedFromContainerMessage(containerEntity, container));
                 }
             }
         }

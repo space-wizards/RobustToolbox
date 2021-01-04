@@ -231,7 +231,7 @@ namespace Robust.Shared.Containers
 
                     existing.Add(contained);
                     // Recursion time
-                    GetContained(contained, existing);
+                    GetContained(contained, existing, excluded);
                 }
             }
 

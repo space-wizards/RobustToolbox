@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -110,9 +111,7 @@ namespace Robust.Shared.EntityLookup
             bool includeMap = false,
             bool approximate = true)
         {
-            var entities = new List<IEntity>();
-
-            var checkedEntities = new HashSet<EntityUid>();
+            var entities = new HashSet<IEntity>();
 
             if (includeMap)
             {
@@ -123,20 +122,7 @@ namespace Robust.Shared.EntityLookup
             {
                 foreach (var grid in MapManager.FindGridsIntersecting(mapId, worldBox))
                 {
-                    if (checkedEntities.Contains(grid.GridEntityId))
-                        continue;
-
                     var gridEntity = EntityManager.GetEntity(grid.GridEntityId);
-
-                    foreach (var contained in gridEntity.GetContained())
-                    {
-                        if (checkedEntities.Contains(contained.Uid))
-                            continue;
-
-                        entities.Add(contained);
-                    }
-
-                    checkedEntities.Add(grid.GridEntityId);
                     entities.Add(gridEntity);
                 }
             }
@@ -147,27 +133,20 @@ namespace Robust.Shared.EntityLookup
                 {
                     if (!entity.Deleted && (approximate || worldBox.Intersects(EntityManager.GetWorldAabbFromEntity(entity))))
                     {
-                        if (checkedEntities.Contains(entity.Uid))
-                            continue;
-
                         if (includeContainers)
                         {
                             foreach (var contained in entity.GetContained())
                             {
-                                if (checkedEntities.Contains(contained.Uid))
-                                    continue;
-
                                 entities.Add(contained);
                             }
                         }
 
-                        checkedEntities.Add(entity.Uid);
                         entities.Add(entity);
                     }
                 }
             }
 
-            return entities;
+            return entities.ToList();
         }
 
         private IList<EntityLookupNode> GetNodesInRange(MapId mapId, Box2 worldBox)
@@ -350,7 +329,46 @@ namespace Robust.Shared.EntityLookup
             return results;
         }
 
-        private HashSet<EntityLookupNode> GetNodes(IEntity entity)
+        /// <summary>
+        ///     Gets the node for this worldposition.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="worldPos"></param>
+        /// <returns></returns>
+        public bool TryGetNode(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out EntityLookupNode? node)
+        {
+            node = null;
+
+            if (!_graph.TryGetValue(mapId, out var grids))
+                return false;
+
+            Vector2 gridPos;
+            Dictionary<Vector2i, EntityLookupChunk>? chunks;
+
+            if (MapManager.TryFindGridAt(mapId, worldPos, out var grid))
+            {
+                if (!grids.TryGetValue(grid.Index, out chunks))
+                    return false;
+
+                gridPos = grid.WorldToLocal(worldPos);
+            }
+            else
+            {
+                if (!grids.TryGetValue(GridId.Invalid, out chunks))
+                    return false;
+
+                gridPos = worldPos;
+            }
+
+            var chunkOrigin = GetChunkIndices(gridPos);
+            if (!chunks.TryGetValue(chunkOrigin, out var chunk))
+                return false;
+
+            node = chunk.GetNode(new Vector2i((int) MathF.Floor(gridPos.X), (int) MathF.Floor(gridPos.Y)));
+            return true;
+        }
+
+        public HashSet<EntityLookupNode> GetNodes(IEntity entity)
         {
             var grids = GetEntityIndices(entity);
             var results = new HashSet<EntityLookupNode>();
@@ -435,7 +453,7 @@ namespace Robust.Shared.EntityLookup
                 return new Box2(physics.WorldAABB.BottomLeft + 0.01f, physics.WorldAABB.TopRight - 0.01f);
 
             // Don't want to accidentally get neighboring tiles unless we're near an edge
-            return Box2.CenteredAround(entity.Transform.Coordinates.ToMapPos(EntityManager), Vector2.One / 2);
+            return Box2.CenteredAround(entity.Transform.WorldPosition, Vector2.One / 2);
         }
 
         public override void Initialize()
@@ -443,7 +461,8 @@ namespace Robust.Shared.EntityLookup
             SubscribeLocalEvent<MoveEvent>(ev => HandleEntityMove(ev.Sender));
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
             SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
-            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             MapManager.OnGridCreated += HandleGridCreated;
             MapManager.OnGridRemoved += HandleGridRemoval;
             MapManager.TileChanged += HandleTileChanged;
@@ -456,7 +475,8 @@ namespace Robust.Shared.EntityLookup
             UnsubscribeLocalEvent<MoveEvent>();
             UnsubscribeLocalEvent<EntityInitializedMessage>();
             UnsubscribeLocalEvent<EntityDeletedMessage>();
-            UnsubscribeLocalEvent<EntParentChangedMessage>();
+            UnsubscribeLocalEvent<EntInsertedIntoContainerMessage>();
+            UnsubscribeLocalEvent<EntRemovedFromContainerMessage>();
             MapManager.OnGridCreated -= HandleGridCreated;
             MapManager.OnGridRemoved -= HandleGridRemoval;
             MapManager.TileChanged -= HandleTileChanged;
@@ -473,19 +493,14 @@ namespace Robust.Shared.EntityLookup
             HandleEntityRemove(message.Entity);
         }
 
-        private void HandleParentChanged(EntParentChangedMessage message)
+        private void HandleContainerInsert(EntInsertedIntoContainerMessage message)
         {
-            if (!message.Entity.Initialized)
-                return;
+            HandleEntityRemove(message.Entity);
+        }
 
-            if (message.Entity.IsInContainer())
-            {
-                HandleEntityRemove(message.Entity);
-            }
-            else
-            {
-                HandleEntityAdd(message.Entity);
-            }
+        private void HandleContainerRemove(EntRemovedFromContainerMessage message)
+        {
+            HandleEntityAdd(message.Entity);
         }
 
         private void HandleTileChanged(object? sender, TileChangedEventArgs eventArgs)
@@ -566,10 +581,14 @@ namespace Robust.Shared.EntityLookup
                 entity.Transform.Parent == null ||
                 entity.IsInContainer() ||
                 !entity.IsValid() ||
-                entity.Transform.MapID == MapId.Nullspace)
+                entity.Transform.MapID == MapId.Nullspace ||
+                LastKnownNodes.ContainsKey(entity))
             {
                 return;
             }
+
+            // TODO: Something fucky is going on with containers as powercells are shown as not in container but
+            // are parented to a taser.
 
             foreach (var child in entity.Transform.Children)
             {
@@ -601,31 +620,25 @@ namespace Robust.Shared.EntityLookup
         /// <param name="entity"></param>
         private void HandleEntityRemove(IEntity entity)
         {
-            var toDelete = new List<EntityLookupChunk>();
+            if (!LastKnownNodes.TryGetValue(entity, out var nodes))
+                return;
+
             var checkedChunks = new HashSet<EntityLookupChunk>();
 
-            if (LastKnownNodes.TryGetValue(entity, out var nodes))
+            foreach (var node in nodes)
             {
-                foreach (var node in nodes)
-                {
-                    node.RemoveEntity(entity);
-
-                    if (!checkedChunks.Contains(node.ParentChunk))
-                    {
-                        checkedChunks.Add(node.ParentChunk);
-                        if (node.ParentChunk.CanDeleteChunk())
-                        {
-                            toDelete.Add(node.ParentChunk);
-                        }
-                    }
-                }
+                node.RemoveEntity(entity);
+                checkedChunks.Add(node.ParentChunk);
             }
 
             LastKnownNodes.Remove(entity);
 
-            foreach (var chunk in toDelete)
+            foreach (var chunk in checkedChunks)
             {
-                RemoveChunk(chunk);
+                if (chunk.CanDeleteChunk())
+                {
+                    RemoveChunk(chunk);
+                }
             }
 
             //EntityManager.EventBus.RaiseEvent(EventSource.Local, new TileLookupUpdateMessage(null));
@@ -634,10 +647,11 @@ namespace Robust.Shared.EntityLookup
         /// <summary>
         ///     When an entity moves around we'll remove it from its old node and add it to its new node (if applicable)
         /// </summary>
-        /// <param name="moveEvent"></param>
+        /// <param name="entity"></param>
         private void HandleEntityMove(IEntity entity)
         {
-            if (entity.Deleted ||
+            if (!LastKnownNodes.TryGetValue(entity, out var oldNodes) ||
+                entity.Deleted ||
                 !entity.Transform.Coordinates.IsValid(EntityManager) ||
                 entity.IsInContainer() ||
                 entity.HasComponent<MapGridComponent>())
@@ -645,10 +659,6 @@ namespace Robust.Shared.EntityLookup
                 HandleEntityRemove(entity);
                 return;
             }
-
-            // This probably means it's a grid
-            if (!LastKnownNodes.TryGetValue(entity, out var oldNodes))
-                return;
 
             var newNodes = GetNodes(entity);
             if (oldNodes.Count == newNodes.Count && oldNodes.SetEquals(newNodes))

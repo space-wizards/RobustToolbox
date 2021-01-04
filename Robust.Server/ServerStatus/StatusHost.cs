@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
@@ -234,12 +235,12 @@ namespace Robust.Server.ServerStatus
                 return serializer.Deserialize<T>(jsonReader);
             }
 
-            public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
+            public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
             {
                 Respond(text, (int) code, contentType);
             }
 
-            public void Respond(string text, int code = 200, string contentType = "text/plain")
+            public void Respond(string text, int code = 200, string contentType = MediaTypeNames.Text.Plain)
             {
                 _context.Response.StatusCode = code;
                 _context.Response.ContentType = contentType;
@@ -262,6 +263,8 @@ namespace Robust.Server.ServerStatus
             public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
                 using var streamWriter = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                _context.Response.ContentType = MediaTypeNames.Application.Json;
 
                 using var jsonWriter = new JsonTextWriter(streamWriter);
 

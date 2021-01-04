@@ -35,7 +35,7 @@ namespace Robust.Generators
                     .GetDeclaredSymbol(classDeclarationSyntax);
 
                 var arg = symbol?.GetAttributes()
-                    .FirstOrDefault(a => a.AttributeClass?.Name == "CustomDataClassAttribute")?.ConstructorArguments[0];
+                    .FirstOrDefault(a => a.AttributeClass?.Name == "CustomDataClassAttribute")?.ConstructorArguments.FirstOrDefault();
                 if (arg == null)
                 {
                     var msg = $"Could not resolve argument of CustomDataClassAttribute for class {classDeclarationSyntax.Identifier.Text}";
@@ -94,7 +94,7 @@ namespace Robust.Generators
                     var attribute = member.GetAttributes()
                         .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
                     if(attribute == null) continue;
-                    var fieldName = (string)attribute.ConstructorArguments[0].Value;
+                    var fieldName = (string)attribute.ConstructorArguments.FirstOrDefault().Value;
                     if (fieldName == null || !SyntaxFacts.IsValidIdentifier(fieldName))
                     {
                         var msg =

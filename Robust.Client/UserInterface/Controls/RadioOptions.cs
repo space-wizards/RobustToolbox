@@ -6,13 +6,14 @@ using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public class RadioOptionButton : HBoxContainer
+    public class RadioOptions : Control
     {
-        public const string StyleClassOptionButton = "optionButton";
-        public const string StyleClassOptionTriangle = "optionTriangle";
+        public enum RadioLayout { Horizontal, Vertical }
 
         private readonly List<ButtonData> _buttonDataList = new();
         private readonly Dictionary<int, int> _idMap = new();
+        private ButtonGroup _buttonGroup = new();
+        private Container _container;
 
         public string ButtonStyle = "";
         public string FirstButtonStyle = "";
@@ -22,11 +23,20 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
-        public string Prefix { get; set; }
-
-        public RadioOptionButton()
+        public RadioOptions(RadioLayout layout)
         {
-            Prefix = "";
+            switch (layout)
+            {
+                case RadioLayout.Vertical:
+                    _container = new VBoxContainer();
+                    break;
+                case RadioLayout.Horizontal:
+                default:
+                    _container = new HBoxContainer();
+                    break;
+            }
+
+            this.AddChild(_container);
         }
 
         public void AddItem(Texture icon, string label, int? id = null)
@@ -34,7 +44,7 @@ namespace Robust.Client.UserInterface.Controls
             AddItem(label, id);
         }
 
-        public void AddItem(string label, int? id = null)
+        public void AddItem(string label, int? id = null, Action<ItemSelectedEventArgs>? itemSelectedAction = null)
         {
             if (id == null)
             {
@@ -49,16 +59,21 @@ namespace Robust.Client.UserInterface.Controls
             var button = new Button
             {
                 Text = label,
-                ToggleMode = true
+                ToggleMode = true,
+                Group = _buttonGroup
             };
             button.OnPressed += ButtonOnPressed;
             var data = new ButtonData(label, button)
             {
                 Id = id.Value,
             };
+            if (itemSelectedAction != null)
+            {
+                data.OnItemSelected += itemSelectedAction;
+            }
             _idMap.Add(id.Value, _buttonDataList.Count);
             _buttonDataList.Add(data);
-            this.AddChild(button);
+            _container.AddChild(button);
             UpdateFirstAndLastButtonStyle();
             if (_buttonDataList.Count == 1)
             {
@@ -68,16 +83,17 @@ namespace Robust.Client.UserInterface.Controls
 
         private void ButtonOnPressed(ButtonEventArgs obj)
         {
-            obj.Button.Pressed = false;
             foreach (var buttonData in _buttonDataList)
             {
                 if (buttonData.Button == obj.Button)
                 {
-                    OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
+                    if (buttonData.HasOnItemSelectedEvent)
+                        buttonData.InvokeItemSelected(new ItemSelectedEventArgs(buttonData.Id, this));
+                    else
+                        OnItemSelected?.Invoke(new ItemSelectedEventArgs(buttonData.Id, this));
                     return;
                 }
             }
-
             // Not reachable.
             throw new InvalidOperationException();
         }
@@ -117,7 +133,7 @@ namespace Robust.Client.UserInterface.Controls
             var data = _buttonDataList[idx];
             data.Button.OnPressed -= ButtonOnPressed;
             _idMap.Remove(data.Id);
-            this.RemoveChild(data.Button);
+            _container.RemoveChild(data.Button);
             _buttonDataList.RemoveAt(idx);
             var newIdx = 0;
             foreach (var buttonData in _buttonDataList)
@@ -129,10 +145,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Select(int idx)
         {
-            if (_idMap.TryGetValue(SelectedId, out var prevIdx))
-            {
-                _buttonDataList[prevIdx].Button.Pressed = false;
-            }
             var data = _buttonDataList[idx];
             SelectedId = data.Id;
             data.Button.Pressed = true;
@@ -211,14 +223,14 @@ namespace Robust.Client.UserInterface.Controls
 
         public class ItemSelectedEventArgs : EventArgs
         {
-            public RadioOptionButton Button { get; }
+            public RadioOptions Button { get; }
 
             /// <summary>
             ///     The ID of the item that has been selected.
             /// </summary>
             public int Id { get; }
 
-            public ItemSelectedEventArgs(int id, RadioOptionButton button)
+            public ItemSelectedEventArgs(int id, RadioOptions button)
             {
                 Id = id;
                 Button = button;
@@ -237,6 +249,13 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Text = text;
                 Button = button;
+            }
+
+            public event Action<ItemSelectedEventArgs>? OnItemSelected;
+            public bool HasOnItemSelectedEvent => OnItemSelected != null;
+            public void InvokeItemSelected(ItemSelectedEventArgs args)
+            {
+                OnItemSelected?.Invoke(args);
             }
         }
     }

@@ -157,7 +157,7 @@ namespace Robust.Shared.Prototypes
                     $"Failed to create instance of type {type} to retrieve its default value of {field}");
             }
 
-            defaultVal = field.GetValue(defaultObj);
+            defaultVal = field.GetValue(defaultObj); //todo Paul: just get all fields
             _defaultValues.Add(id, defaultVal);
             return defaultVal;
         }

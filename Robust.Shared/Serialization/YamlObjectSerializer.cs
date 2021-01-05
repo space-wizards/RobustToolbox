@@ -599,7 +599,7 @@ namespace Robust.Shared.Serialization
             }
 
             // ISelfSerialize
-            if (typeof(ISelfSerialize).IsAssignableFrom(type))
+            if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
             {
                 var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
                 instance.Deserialize(node.ToString());

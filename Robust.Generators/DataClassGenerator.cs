@@ -95,8 +95,7 @@ namespace Robust.Generators
                         .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
                     if(attribute == null) continue;
                     var fieldName = (string)attribute.ConstructorArguments.FirstOrDefault().Value;
-                    if (fieldName == "base") fieldName = "WORKAROUNDbase"; //TODO Paul: fix this in code
-                    if (fieldName == null || !SyntaxFacts.IsValidIdentifier(fieldName))
+                    if (fieldName == null || !SyntaxFacts.IsValidIdentifier(GetFieldName(fieldName)))
                     {
                         var msg =
                             $"YamlFieldAttribute for Member {member} of type {symbol} has an invalid tag {fieldName}.";
@@ -144,6 +143,8 @@ namespace Robust.Generators
 ";
         }
 
+        private string GetFieldName(string fieldname) => $"{fieldname}_field";
+
         private string GenerateCode(string name, string @namespace, string inheriting, List<FieldTemplate> fields)
         {
             var code = $@"#nullable enable
@@ -159,7 +160,7 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-        public {field.Type} {field.Name};";
+        public {field.Type} {GetFieldName(field.Name)};";
             }
 
             //generate exposedata
@@ -173,7 +174,7 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-            serializer.DataField(ref {field.Name}, ""{field.Name}"", null);";
+            serializer.DataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null);";
             }
             code += @"
         }";
@@ -190,7 +191,7 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-                ""{field.Name}"" => {field.Name},";
+                ""{field.Name}"" => {GetFieldName(field.Name)},";
             }
 
             code += @"
@@ -211,7 +212,7 @@ namespace {@namespace} {{
             {
                 code += $@"
                 case ""{field.Name}"":
-                    {field.Name} = ({field.Type})value;
+                    {GetFieldName(field.Name)} = ({field.Type})value;
                     break;";
             }
             code += @"

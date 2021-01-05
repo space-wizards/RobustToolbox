@@ -182,11 +182,11 @@ namespace Robust.Shared.Reflection
 
             reference = reference.Substring(5);
 
+            if (_enumCache.TryGetValue(reference, out @enum))
+                return true;
+
             var dotIndex = reference.LastIndexOf('.');
             var typeName = reference.Substring(0, dotIndex);
-
-            if (_enumCache.TryGetValue(typeName, out @enum))
-                return true;
 
             var value = reference.Substring(dotIndex + 1);
 
@@ -200,7 +200,7 @@ namespace Robust.Shared.Reflection
                     }
 
                     @enum = (Enum) Enum.Parse(type, value);
-                    _enumCache[typeName] = @enum;
+                    _enumCache[reference] = @enum;
                     return true;
                 }
             }

@@ -452,25 +452,25 @@ namespace Robust.Shared.Serialization
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
             // special snowflake string
-            if (type == typeof(String))
+            if (underlyingType == typeof(String))
                 return node.ToString();
 
             // val primitives
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal))
             {
-                return StringToType(type, node.ToString());
+                return StringToType(underlyingType, node.ToString());
             }
 
             // array
-            if (type.IsArray)
+            if (underlyingType.IsArray)
             {
                 var listNode = (YamlSequenceNode)node;
-                var newArray = (Array)Activator.CreateInstance(type, listNode.Children.Count)!;
+                var newArray = (Array)Activator.CreateInstance(underlyingType, listNode.Children.Count)!;
 
                 var idx = 0;
                 foreach (var entryNode in listNode)
                 {
-                    var value = NodeToType(type.GetElementType()!, entryNode);
+                    var value = NodeToType(underlyingType.GetElementType()!, entryNode);
                     newArray.SetValue(value, idx++);
                 }
 
@@ -478,11 +478,11 @@ namespace Robust.Shared.Serialization
             }
 
             // val enum
-            if (type.IsEnum)
-                return Enum.Parse(type, node.ToString());
+            if (underlyingType.IsEnum)
+                return Enum.Parse(underlyingType, node.ToString());
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
-            if (TypeHelpers.TryGenericReadOnlyCollectionType(type, out var collectionType))
+            if (TypeHelpers.TryGenericReadOnlyCollectionType(underlyingType, out var collectionType))
             {
                 var listNode = (YamlSequenceNode)node;
                 var elems = listNode.Children;
@@ -498,10 +498,10 @@ namespace Robust.Shared.Serialization
             }
 
             // List<T>
-            if (TypeHelpers.TryGenericListType(type, out var listType))
+            if (TypeHelpers.TryGenericListType(underlyingType, out var listType))
             {
                 var listNode = (YamlSequenceNode)node;
-                var newList = (IList)Activator.CreateInstance(type, listNode.Children.Count)!;
+                var newList = (IList)Activator.CreateInstance(underlyingType, listNode.Children.Count)!;
 
                 foreach (var entryNode in listNode)
                 {
@@ -513,7 +513,7 @@ namespace Robust.Shared.Serialization
             }
 
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
-            if (TypeHelpers.TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
+            if (TypeHelpers.TryGenericReadDictType(underlyingType, out var keyType, out var valType, out var dictType))
             {
                 var dictNode = (YamlMappingNode)node;
                 var newDict = (IDictionary)Activator.CreateInstance(dictType, dictNode.Children.Count)!;
@@ -530,7 +530,7 @@ namespace Robust.Shared.Serialization
             }
 
             // HashSet<T>
-            if (TypeHelpers.TryGenericHashSetType(type, out var setType))
+            if (TypeHelpers.TryGenericHashSetType(underlyingType, out var setType))
             {
                 var nodes = ((YamlSequenceNode) node).Children;
                 var valuesArray = Array.CreateInstance(setType, new[] {nodes.Count})!;
@@ -541,39 +541,39 @@ namespace Robust.Shared.Serialization
                     valuesArray.SetValue(value, i);
                 }
 
-                var newSet = Activator.CreateInstance(type, valuesArray)!;
+                var newSet = Activator.CreateInstance(underlyingType, valuesArray)!;
 
                 return newSet;
             }
 
             // Hand it to the context.
-            if (_context != null && _context.TryNodeToType(node, type, out var contextObj))
+            if (_context != null && _context.TryNodeToType(node, underlyingType, out var contextObj))
             {
                 return contextObj;
             }
 
             // custom TypeSerializer
-            if (_typeSerializers.TryGetValue(type, out var serializer))
-                return serializer.NodeToType(type, node, this);
+            if (_typeSerializers.TryGetValue(underlyingType, out var serializer))
+                return serializer.NodeToType(underlyingType, node, this);
 
             // IExposeData.
-            if (typeof(IExposeData).IsAssignableFrom(type))
+            if (typeof(IExposeData).IsAssignableFrom(underlyingType))
             {
                 if (!(node is YamlMappingNode mapNode))
                 {
-                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{type}'");
+                    throw new InvalidOperationException($"Cannot read from IExposeData on non-mapping node. Type: '{underlyingType}'");
                 }
 
-                var concreteType = type;
-                if (type.IsAbstract || type.IsInterface)
+                var concreteType = underlyingType;
+                if (underlyingType.IsAbstract || underlyingType.IsInterface)
                 {
                     var tag = node.Tag;
                     if (string.IsNullOrWhiteSpace(tag))
-                        throw new YamlException($"Type '{type}' is abstract, but there is no yaml tag for the concrete type.");
+                        throw new YamlException($"Type '{underlyingType}' is abstract, but there is no yaml tag for the concrete type.");
 
                     if (tag.StartsWith("!type:"))
                     {
-                        concreteType = ResolveConcreteType(type, tag["!type:".Length..]);
+                        concreteType = ResolveConcreteType(underlyingType, tag["!type:".Length..]);
                     }
                     else
                     {
@@ -601,14 +601,14 @@ namespace Robust.Shared.Serialization
             // ISelfSerialize
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
             {
-                var instance = (ISelfSerialize)Activator.CreateInstance(type)!;
+                var instance = (ISelfSerialize)Activator.CreateInstance(underlyingType)!;
                 instance.Deserialize(node.ToString());
                 return instance;
             }
 
             // other val (struct)
-            if (type.IsValueType)
-                return _structSerializer.NodeToType(type, (YamlMappingNode)node, this);
+            if (underlyingType.IsValueType)
+                return _structSerializer.NodeToType(underlyingType, (YamlMappingNode)node, this);
 
             // ref type that isn't a custom TypeSerializer
             throw new ArgumentException($"Type {type.FullName} is not supported.", nameof(type));

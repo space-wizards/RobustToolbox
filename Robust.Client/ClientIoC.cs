@@ -117,9 +117,6 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
-
-            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer),
-                new VisualizerTypeSerializer());
         }
     }
 }

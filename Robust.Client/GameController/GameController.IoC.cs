@@ -73,6 +73,8 @@ namespace Robust.Client
             ClientIoC.RegisterIoC(mode);
             IoCManager.BuildGraph();
             RegisterReflection();
+            YamlObjectSerializer.RegisterTypeSerializer(typeof(AppearanceVisualizer),
+                new VisualizerTypeSerializer());
         }
 
 

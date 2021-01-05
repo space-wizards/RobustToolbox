@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Interfaces.Graphics.ClientEye;
 using Robust.Client.Interfaces.Input;
 using Robust.Client.Interfaces.UserInterface;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.Containers;
 using Robust.Shared.EntityLookup;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.IoC;
@@ -60,20 +62,25 @@ namespace Robust.Client.GameObjects.EntitySystems
                 return;
             }
 
-            var nodeEnts = node.Entities;
+            _nodeEntities.Clear();
+            _nodeEntities.UnionWith(node.Entities);
 
-            if (!_nodeEntities.SetEquals(nodeEnts))
+            foreach (var entity in _nodeEntities.ToArray())
             {
-                _control.DisposeAllChildren();
-                _nodeEntities = new HashSet<IEntity>(nodeEnts);
-
-                foreach (var entity in node.Entities)
+                foreach (var con in entity.GetContained())
                 {
-                    _control.AddChild(new Label
-                    {
-                        Text = $"uid: {entity.Uid}, name: {entity.Name}"
-                    });
+                    _nodeEntities.Add(con);
                 }
+            }
+
+            _control.DisposeAllChildren();
+
+            foreach (var entity in _nodeEntities)
+            {
+                _control.AddChild(new Label
+                {
+                    Text = $"uid: {entity.Uid}, name: {entity.Name}"
+                });
             }
 
             LayoutContainer.SetPosition(_control, mousePos + new Vector2(0, 20));

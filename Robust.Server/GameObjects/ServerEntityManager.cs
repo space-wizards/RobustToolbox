@@ -372,6 +372,13 @@ namespace Robust.Server.GameObjects
         /// <returns>New entity State for the given entity.</returns>
         public EntityState GetEntityState(IComponentManager compMan, EntityUid entityUid, GameTick fromTick, bool newEntity=false)
         {
+            // TODO: Being able to send a state to only one person
+            /*
+             * So how I was thinking of doing it is you need a bool flag on the component to indicate this.
+             * Then if the bool is set you need to
+             * a) Always call Dirty on PlayerAttached / PlayerDetached (best way to do this easily? NFI)
+             * b) Check for this flag below here (probably just need to pass in the player session to this method too)
+             */
             var compStates = new List<ComponentState>();
             var changed = new List<ComponentChanged>();
 

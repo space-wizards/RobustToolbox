@@ -212,15 +212,6 @@ namespace Robust.Client.UserInterface.Controls
             data.Button.Text = text;
         }
 
-        private void OnPressedInternal(ButtonEventArgs args)
-        {
-        }
-
-        protected override void ExitedTree()
-        {
-            base.ExitedTree();
-        }
-
         public class ItemSelectedEventArgs : EventArgs
         {
             public RadioOptions Button { get; }

@@ -15,9 +15,9 @@ namespace Robust.Client.UserInterface.Controls
         private ButtonGroup _buttonGroup = new();
         private Container _container;
 
-        public string ButtonStyle = "";
-        public string FirstButtonStyle = "";
-        public string LastButtonStyle = "";
+        public string ButtonStyle = string.Empty;
+        public string FirstButtonStyle = string.Empty;
+        public string LastButtonStyle = string.Empty;
 
         public int ItemCount => _buttonDataList.Count;
 

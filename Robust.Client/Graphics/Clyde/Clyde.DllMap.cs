@@ -11,6 +11,22 @@ namespace Robust.Client.Graphics.Clyde
     {
         static Clyde()
         {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) &&
+                RuntimeInformation.ProcessArchitecture == Architecture.X64)
+            {
+                try
+                {
+                    // We force load nvapi64.dll so nvidia gives us the dedicated GPU on optimus laptops.
+                    // This is 100x easier than nvidia's documented approach of NvOptimusEnablement,
+                    // and works while developing.
+                    NativeLibrary.Load("nvapi64.dll");
+                }
+                catch (Exception)
+                {
+                    // If this fails whatever.
+                }
+            }
+
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return;

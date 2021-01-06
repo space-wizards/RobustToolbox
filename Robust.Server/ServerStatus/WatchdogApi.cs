@@ -45,9 +45,9 @@ namespace Robust.Server.ServerStatus
             _statusHost.AddHandler(ShutdownHandler);
         }
 
-        private bool UpdateHandler(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        private bool UpdateHandler(IStatusHandlerContext context)
         {
-            if (method != HttpMethod.Post || request.Url!.AbsolutePath != "/update")
+            if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/update")
             {
                 return false;
             }
@@ -58,26 +58,26 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            var auth = request.Headers["WatchdogToken"];
+            var auth = context.RequestHeaders["WatchdogToken"];
 
             if (auth != _watchdogToken)
             {
                 // Holy shit nobody read these logs please.
                 _sawmill.Info(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
-                response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                context.RespondError(HttpStatusCode.Unauthorized);
                 return true;
             }
 
             _taskManager.RunOnMainThread(() => UpdateReceived?.Invoke());
 
-            response.StatusCode = (int) HttpStatusCode.OK;
+            context.Respond("Success", HttpStatusCode.OK);
 
             return true;
         }
 
-        private bool ShutdownHandler(HttpMethod method, HttpListenerRequest request, HttpListenerResponse response)
+        private bool ShutdownHandler(IStatusHandlerContext context)
         {
-            if (method != HttpMethod.Post || request.Url!.AbsolutePath != "/shutdown")
+            if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/shutdown")
             {
                 return false;
             }
@@ -88,22 +88,21 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            var auth = request.Headers["WatchdogToken"];
+            var auth = context.RequestHeaders["WatchdogToken"];
 
             if (auth != _watchdogToken)
             {
                 _sawmill.Warning(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
-                response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                context.RespondError(HttpStatusCode.Unauthorized);
                 return true;
             }
-
 
             ShutdownParameters? parameters = null;
             try
             {
-                parameters = request.GetFromJson<ShutdownParameters>();
+                parameters = context.RequestBodyJson<ShutdownParameters>();
             }
             catch (JsonSerializationException)
             {
@@ -112,14 +111,14 @@ namespace Robust.Server.ServerStatus
 
             if (parameters == null)
             {
-                response.StatusCode = (int) HttpStatusCode.BadRequest;
+                context.RespondError(HttpStatusCode.BadRequest);
 
                 return true;
             }
 
             _taskManager.RunOnMainThread(() => _baseServer.Shutdown(parameters.Reason));
 
-            response.StatusCode = (int) HttpStatusCode.OK;
+            context.Respond("Success", HttpStatusCode.OK);
 
             return true;
         }

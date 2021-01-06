@@ -77,7 +77,7 @@ namespace Robust.Shared.ContentPack
                 var fullPath = mountPath / filePath;
                 Logger.DebugS("res.mod", $"Found module '{fullPath}'");
 
-                var asmFile = _res.ContentFileRead(fullPath);
+                using var asmFile = _res.ContentFileRead(fullPath);
                 var (asmRefs, asmName) = GetAssemblyReferenceData(asmFile);
 
                 if (!files.TryAdd(asmName, (fullPath, asmRefs)))
@@ -118,8 +118,8 @@ namespace Robust.Shared.ContentPack
                     }
                     else
                     {
-                        var assemblyStream = _res.ContentFileRead(path);
-                        var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
+                        using var assemblyStream = _res.ContentFileRead(path);
+                        using var symbolsStream = _res.ContentFileReadOrNull(path.WithExtension("pdb"));
                         LoadGameAssembly(assemblyStream, symbolsStream, skipVerify: true);
                     }
                 }
@@ -241,16 +241,34 @@ namespace Robust.Shared.ContentPack
 
             if (_res.TryContentFileRead(dllPath, out var gameDll))
             {
-                Logger.DebugS("srv", $"Loading {assemblyName} DLL");
-
-                // see if debug info is present
-                if (_res.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"),
-                    out var gamePdb))
+                using (gameDll)
                 {
+                    Logger.DebugS("srv", $"Loading {assemblyName} DLL");
+
+                    // see if debug info is present
+                    if (_res.TryContentFileRead(new ResourcePath($@"/Assemblies/{assemblyName}.pdb"),
+                        out var gamePdb))
+                    {
+                        using (gamePdb)
+                        {
+                            try
+                            {
+                                // load the assembly into the process, and bootstrap the GameServer entry point.
+                                LoadGameAssembly(gameDll, gamePdb);
+                                return true;
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
+                                return false;
+                            }
+                        }
+                    }
+
                     try
                     {
                         // load the assembly into the process, and bootstrap the GameServer entry point.
-                        LoadGameAssembly(gameDll, gamePdb);
+                        LoadGameAssembly(gameDll);
                         return true;
                     }
                     catch (Exception e)
@@ -258,18 +276,6 @@ namespace Robust.Shared.ContentPack
                         Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
                         return false;
                     }
-                }
-
-                try
-                {
-                    // load the assembly into the process, and bootstrap the GameServer entry point.
-                    LoadGameAssembly(gameDll);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Logger.ErrorS("srv", $"Exception loading DLL {assemblyName}.dll: {e.ToStringBetter()}");
-                    return false;
                 }
             }
 

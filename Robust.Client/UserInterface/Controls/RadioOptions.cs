@@ -106,6 +106,7 @@ namespace Robust.Client.UserInterface.Controls
                 buttonDatum.Button.OnPressed -= ButtonOnPressed;
             }
             _buttonDataList.Clear();
+            _container.Children.Clear();
             SelectedId = 0;
         }
 

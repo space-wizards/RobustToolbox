@@ -44,14 +44,14 @@ namespace Robust.Shared.Prototypes
                 var customDataClass = attribute.ClassName;
 
                 var fields = new Dictionary<string, IYamlFieldDefinition>();
-                foreach (var fieldInfo in customDataClass.GetFields())
+                foreach (var fieldInfo in customDataClass.GetAllFields())
                 {
                     var fieldDef = GetFieldDefinition(fieldInfo, true);
                     if(fieldDef == null) continue;
                     fields.Add(fieldDef.Tag, fieldDef);
                 }
 
-                foreach (var fieldInfo in customDataClass.GetProperties())
+                foreach (var fieldInfo in customDataClass.GetAllProperties())
                 {
                     var fieldDef = GetFieldDefinition(fieldInfo, true, true);
                     if(fieldDef == null) continue;
@@ -107,33 +107,50 @@ namespace Robust.Shared.Prototypes
         public void PopulateComponent(IComponent comp, ComponentData values)
         {
             var def = GetComponentDataDefinition(comp.Name);
+            var compType = comp.GetType();
 
             foreach (var fieldDefinition in def)
             {
-                object? value;
-                if (fieldDefinition.IsCustom)
-                {
-                    var sourceField = GetCustomField(comp.GetType(), fieldDefinition.Tag);
-                    value = sourceField.GetValue(values);
-                }
-                else
-                {
-                    value = values.CloneValue(fieldDefinition.Tag);
-                }
+                var value = GetFieldValue(compType, fieldDefinition, values);
                 if(value == null) continue;
                 fieldDefinition.SetValue(comp, value);
             }
         }
 
-
         public void PushInheritance(string compName, ComponentData source, ComponentData target)
         {
             var def = GetComponentDataDefinition(compName);
+            var compType = _componentFactory.GetRegistration(compName).Type;
 
             foreach (var tag in def)
             {
-                if(target.GetValue(tag.Tag) == null)
-                    target.SetValue(tag.Tag, source.CloneValue(tag.Tag));
+                if(GetFieldValue(compType, tag, target) == null)
+                {
+                    var value = GetFieldValue(compType, tag, source);
+                    SetFieldValue(compType, tag, target, value);
+                }
+            }
+        }
+
+        private object? GetFieldValue(Type type, IYamlFieldDefinition field, ComponentData data)
+        {
+            if (field.IsCustom)
+            {
+                return GetCustomField(type, field.Tag).GetValue(data);
+            }
+
+            return data.GetValue(field.Tag);
+        }
+
+        private void SetFieldValue(Type type, IYamlFieldDefinition field, ComponentData data, object? value)
+        {
+            if (field.IsCustom)
+            {
+                GetCustomField(type, field.Tag).SetValue(data, value);
+            }
+            else
+            {
+                data.SetValue(field.Tag, value);
             }
         }
 
@@ -174,15 +191,7 @@ namespace Robust.Shared.Prototypes
             {
                 var value = fieldDefinition.GetValue(comp);
                 if(Equals(value, GetDefaultValue(compType, fieldDefinition))) continue;
-                if (fieldDefinition.IsCustom)
-                {
-                    var customField = GetCustomField(comp.GetType(), fieldDefinition.Tag);
-                    customField.SetValue(data, value);
-                }
-                else
-                {
-                    data.SetValue(fieldDefinition.Tag, value);
-                }
+                SetFieldValue(compType, fieldDefinition, data, value);
             }
             data.ExposeData(ser);
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -85,6 +86,19 @@ namespace Robust.Generators
                 return ResolveParentDataClass(typeSymbol.BaseType);
             }
 
+            T GetCtorArg<T>(ImmutableArray<TypedConstant> ctorArgs, int i)
+            {
+                try
+                {
+                    return (T) ctorArgs[i].Value;
+
+                }
+                catch
+                {
+                    return default;
+                }
+            }
+
             //generate all autodata classes
             foreach (var symbol in resolvedAutoDataRegistrations)
             {
@@ -94,7 +108,7 @@ namespace Robust.Generators
                     var attribute = member.GetAttributes()
                         .FirstOrDefault(a => a.AttributeClass?.Name == "YamlFieldAttribute");
                     if(attribute == null) continue;
-                    var fieldName = (string)attribute.ConstructorArguments.FirstOrDefault().Value;
+                    var fieldName = GetCtorArg<string>(attribute.ConstructorArguments, 0);
                     if (fieldName == null || !SyntaxFacts.IsValidIdentifier(GetFieldName(fieldName)))
                     {
                         var msg =
@@ -104,6 +118,9 @@ namespace Robust.Generators
                             member.Locations.First()));
                         continue;
                     }
+
+                    var @readonly = GetCtorArg<bool>(attribute.ConstructorArguments, 1);
+                    var flagType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 2);
 
                     string type;
                     switch (member)
@@ -122,7 +139,7 @@ namespace Robust.Generators
                                 member.Locations.First()));
                             continue;
                     }
-                    fields.Add(new FieldTemplate(fieldName, type));
+                    fields.Add(new FieldTemplate(fieldName, type, @readonly, flagType));
                 }
 
                 var name = $"{symbol.Name}_AUTODATA";
@@ -174,7 +191,7 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-            serializer.DataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null);";
+            {(field.ReadOnly ? "if(serializer.Reading) " : "")}serializer.NullableDataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null{(field.FlagType != default ? $", withFormat: WithFormat.Flags<{field.FlagType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()" : "")});";
             }
             code += @"
         }";
@@ -232,10 +249,14 @@ namespace {@namespace} {{
         {
             public readonly string Name;
             public readonly string Type;
+            public readonly bool ReadOnly;
+            public readonly ITypeSymbol FlagType;
 
-            public FieldTemplate(string name, string type)
+            public FieldTemplate(string name, string type, bool readOnly, ITypeSymbol flagType)
             {
                 Name = name;
+                ReadOnly = readOnly;
+                FlagType = flagType;
                 Type = type.EndsWith("?") ? type : $"{type}?";
             }
         }

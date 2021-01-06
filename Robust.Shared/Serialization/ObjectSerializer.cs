@@ -76,6 +76,103 @@ namespace Robust.Shared.Serialization
         /// <param name="value">The reference to the field that will be read/written into.</param>
         /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
         /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        //DO NOT, I REPEAT DO NOT CHANGE NULLABLE<T> TO T? IT WILL FUCK EVERYTHING UP CAUSE GENERICS AND NULLABILITY DONT MIX
+        public void NullableDataField<T>(ref Nullable<T> value, string name, Nullable<T> defaultValue) where T : unmanaged
+        {
+            NullableDataField(ref value, name, defaultValue, WithFormat<T>.NoFormat);
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        //DO NOT, I REPEAT DO NOT CHANGE NULLABLE<T> TO T? IT WILL FUCK EVERYTHING UP CAUSE GENERICS AND NULLABILITY DONT MIX
+        public void NullableDataField<T>(ref Nullable<T> value, string name, Nullable<T> defaultValue, WithFormat<T> withFormat)
+            where T : unmanaged
+        {
+            if (Reading)
+            {
+                var tempValue = default(T);
+                if (!TryReadDataField<T>(name, withFormat, out tempValue))
+                {
+                    value = null;
+                }
+                else
+                {
+                    value = tempValue;
+                }
+            }
+            else
+            {
+                if(EqualityComparer<T?>.Default.Equals(value, defaultValue)) return;
+
+                if (value == null)
+                {
+                    DataField(ref value, name, defaultValue);
+                }
+                else
+                {
+                    var tempValue = (T) value;
+                    DataField(ref tempValue, name, (T)defaultValue!, withFormat);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        public void NullableDataField<T>(ref T? value, string name, T? defaultValue)
+        {
+            NullableDataField(ref value, name, defaultValue, WithFormat<T>.NoFormat);
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
+        /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
+        /// <typeparam name="T">The type of the field that will be read/written.</typeparam>
+        public void NullableDataField<T>(ref T? value, string name, T? defaultValue, WithFormat<T> withFormat)
+        {
+            if (Reading)
+            {
+                if (!TryReadDataField(name, withFormat, out value))
+                {
+                    value = default;
+                }
+            }
+            else
+            {
+                if(EqualityComparer<T?>.Default.Equals(value, defaultValue)) return;
+
+                if (value == null)
+                {
+                    DataField(ref value, name, defaultValue);
+                }
+                else
+                {
+                    DataField<T>(ref value, name, (T)defaultValue, withFormat);
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Writes or reads a simple field by reference.
+        /// </summary>
+        /// <param name="value">The reference to the field that will be read/written into.</param>
+        /// <param name="name">The name of the field in the serialization medium. Most likely the name in YAML.</param>
+        /// <param name="defaultValue">A default value. Used if the field does not exist while reading or to know if writing would be redundant.</param>
         /// <param name="withFormat">The formatter to use for representing this particular value in the medium.</param>
         /// <param name="alwaysWrite">If true, always write this field to map saving, even if it matches the default.</param>
         /// <typeparam name="T">The type of the field that will be read/written.</typeparam>

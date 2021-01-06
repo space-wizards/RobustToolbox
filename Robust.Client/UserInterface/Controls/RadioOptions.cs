@@ -1,7 +1,6 @@
+using Robust.Client.Graphics;
 using System;
 using System.Collections.Generic;
-using Robust.Client.Graphics;
-using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BaseButton;
 
 namespace Robust.Client.UserInterface.Controls

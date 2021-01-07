@@ -185,23 +185,35 @@ namespace Robust.Shared.Physics.Broadphase
                 return;
             }
 
-            var oldMap = Get<SharedPhysicsSystem>().Maps[message.OldMapId];
-            oldMap.Remove(physicsComponent);
-
-            var newMap = Get<SharedPhysicsSystem>().Maps[message.Entity.Transform.MapID];
-            newMap.Add(physicsComponent);
-
-            foreach (var broadPhase in _lastBroadPhases[physicsComponent])
+            if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.OldMapId, out var oldMap))
             {
-                var proxies = physicsComponent.GetProxies(GetGridId(broadPhase));
-
-                foreach (var proxy in proxies)
-                {
-                    broadPhase.RemoveProxy(proxy.ProxyId);
-                }
+                oldMap.Remove(physicsComponent);
             }
 
-            _lastBroadPhases[physicsComponent].Clear();
+            if (Get<SharedPhysicsSystem>().Maps.TryGetValue(message.Entity.Transform.MapID, out var newMap))
+            {
+                newMap.Add(physicsComponent);
+            }
+
+            if (_lastBroadPhases.TryGetValue(physicsComponent, out var broadPhases))
+            {
+                foreach (var broadPhase in broadPhases)
+                {
+                    var proxies = physicsComponent.GetProxies(GetGridId(broadPhase));
+
+                    foreach (var proxy in proxies)
+                    {
+                        broadPhase.RemoveProxy(proxy.ProxyId);
+                    }
+                }
+
+                _lastBroadPhases[physicsComponent].Clear();
+            }
+            else
+            {
+                _lastBroadPhases.Add(physicsComponent, new List<IBroadPhase>());
+            }
+
             foreach (var fixture in physicsComponent.FixtureList)
             {
                 fixture.DestroyProxies();

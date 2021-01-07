@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Robust.Shared.Interfaces.GameObjects.Components;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -77,7 +78,10 @@ namespace Robust.Shared.Physics.Shapes
                     if (_vertices.Count <= 3)
                         _vertices.ForceCounterClockWise();
                     else
+                    {
                         _vertices = GiftWrap.GetConvexHull(_vertices);
+                        DebugTools.Assert(_vertices.Count == value.Count);
+                    }
                 }
 
                 _normals = new Vertices(_vertices.Count);
@@ -92,6 +96,11 @@ namespace Robust.Shared.Physics.Shapes
                     //FPE optimization: Normals.Add(MathUtils.Cross(edge, 1.0f));
                     Vector2 temp = new Vector2(edge.Y, -edge.X).Normalized;
                     _normals.Add(temp);
+                }
+
+                if (_vertices.Count < 3)
+                {
+
                 }
 
                 // Compute the polygon mass data
@@ -111,8 +120,7 @@ namespace Robust.Shared.Physics.Shapes
             // For consistency sake I started BL
             // If it's < 3 vertices it'll throw
             serializer.DataField(this, x => x.Vertices, "vertices", new Vertices());
-
-            ComputeProperties();
+            // Setting vertices should already ComputeProperties
         }
 
         protected override void ComputeProperties()

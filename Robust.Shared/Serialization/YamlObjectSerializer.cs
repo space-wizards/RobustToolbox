@@ -1343,8 +1343,9 @@ namespace Robust.Shared.Serialization
             public override object NodeToType(Type type, YamlNode node, YamlObjectSerializer serializer)
             {
                 var verts = new List<Vector2>();
+                var sequence = (YamlSequenceNode) node;
 
-                foreach (var sub in node.AllNodes)
+                foreach (var sub in sequence)
                 {
                     verts.Add(sub.AsVector2());
                 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -20,6 +21,8 @@ namespace Robust.Generators
         public void Execute(GeneratorExecutionContext context)
         {
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
+
+            Debugger.Launch();
 
             var comp = (CSharpCompilation)context.Compilation;
             var iCompType = comp.GetTypeByMetadataName("Robust.Shared.Interfaces.GameObjects.IComponent");
@@ -71,8 +74,19 @@ namespace Robust.Generators
                 resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value);
             }
 
-            string ResolveParentDataClass(ITypeSymbol typeSymbol)
+            string ResolveParentDataClass(ITypeSymbol typeS, bool print = false)
             {
+                var typeSymbol = typeS;
+                if (typeSymbol is INamedTypeSymbol tSym)
+                {
+                    if(print) context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("AAA", $"{tSym.ConstructedFrom},{tSym.IsGenericType}", $"{tSym.ConstructedFrom},{tSym.IsGenericType}", "usage", DiagnosticSeverity.Warning, true),Location.None));
+                    typeSymbol = tSym.ConstructedFrom;
+                }
+
+
+                if (resolvedCustomDataClasses.TryGetValue(typeSymbol, out var customDataClass))
+                    return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
+
                 var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
                 var dataClass = comp.GetTypeByMetadataName(metaName);
                 if (dataClass != null || resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(r, typeSymbol))) return metaName;
@@ -80,10 +94,7 @@ namespace Robust.Generators
                 if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
                     return "Robust.Shared.Prototypes.ComponentData";
 
-                if (resolvedCustomDataClasses.TryGetValue(typeSymbol.BaseType, out var customDataClass))
-                    return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
-
-                return ResolveParentDataClass(typeSymbol.BaseType);
+                return ResolveParentDataClass(typeSymbol.BaseType, print);
             }
 
             T GetCtorArg<T>(ImmutableArray<TypedConstant> ctorArgs, int i)
@@ -145,7 +156,8 @@ namespace Robust.Generators
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                var inheriting = ResolveParentDataClass(symbol.BaseType);
+                bool b = name == "PowerSupplierComponent_AUTODATA";
+                var inheriting = ResolveParentDataClass(symbol.BaseType, b);
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));

@@ -25,9 +25,15 @@ namespace Robust.Shared.GameObjects.Systems
         private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderRemoveQueue =
             new List<(OccluderComponent Occluder, EntityCoordinates Coordinates)>();
 
-        internal DynamicTree<OccluderComponent> GetOccluderTreeForGrid(MapId mapId, GridId gridId)
+        internal DynamicTree<OccluderComponent>? GetOccluderTreeForGrid(MapId mapId, GridId gridId)
         {
-            return _gridTrees[mapId][gridId];
+            if (!_gridTrees.TryGetValue(mapId, out var grids))
+                return null;
+
+            if (!grids.TryGetValue(gridId, out var occluderTree))
+                return null;
+
+            return occluderTree;
         }
 
         public override void Initialize()

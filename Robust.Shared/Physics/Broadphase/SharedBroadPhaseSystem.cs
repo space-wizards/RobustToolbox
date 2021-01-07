@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Components.Map;
@@ -9,8 +10,10 @@ using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Map;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Broadphase
 {
@@ -61,14 +64,14 @@ namespace Robust.Shared.Physics.Broadphase
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private readonly Dictionary<MapId, Dictionary<GridId, IBroadPhase>> _graph =
-                     new Dictionary<MapId, Dictionary<GridId, IBroadPhase>>();
+        private readonly Dictionary<MapId, Dictionary<GridId, IBroadPhase>> _graph = new();
 
-        private Dictionary<PhysicsComponent, List<IBroadPhase>> _lastBroadPhases =
-            new Dictionary<PhysicsComponent, List<IBroadPhase>>(1);
+        private Dictionary<PhysicsComponent, List<IBroadPhase>> _lastBroadPhases = new(1);
 
         // Raycasts
         private RayCastReportFixtureDelegate? _rayCastDelegateTmp;
+
+        private Queue<EntMapIdChangedMessage> _queuedMapChanges = new Queue<EntMapIdChangedMessage>();
 
         private IEnumerable<IBroadPhase> BroadPhases()
         {
@@ -81,21 +84,23 @@ namespace Robust.Shared.Physics.Broadphase
             }
         }
 
-        public IBroadPhase GetBroadPhase(GridId gridId)
+        public IBroadPhase? GetBroadPhase(MapId mapId, GridId gridId)
         {
-            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+            if (mapId == MapId.Nullspace)
+                return null;
+
             return _graph[mapId][gridId];
         }
 
         // Look for now I've hardcoded grids
-        public IEnumerable<(IBroadPhase Broadphase, IMapGrid Grid)> GetBroadphases(PhysicsComponent body)
+        public IEnumerable<(IBroadPhase Broadphase, GridId GridId)> GetBroadphases(PhysicsComponent body)
         {
             // TODO: Snowflake grids here
             var grids = _graph[body.Owner.Transform.MapID];
 
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(body.Owner.Transform.MapID, body.WorldAABB, true))
             {
-                yield return (grids[gridId], _mapManager.GetGrid(gridId));
+                yield return (grids[gridId], gridId);
             }
         }
 
@@ -151,11 +156,37 @@ namespace Robust.Shared.Physics.Broadphase
 
         public override void Initialize()
         {
+            base.Initialize();
             SubscribeLocalEvent<MoveEvent>(HandlePhysicsMove);
-            SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
+            SubscribeLocalEvent<EntMapIdChangedMessage>(QueueMapChange);
             _mapManager.OnGridCreated += HandleGridCreated;
             _mapManager.OnGridRemoved += HandleGridRemoval;
             _mapManager.MapCreated += HandleMapCreated;
+            UpdatesBefore.Add(typeof(SharedPhysicsSystem));
+        }
+
+        public override void Update(float frameTime)
+        {
+            base.Update(frameTime);
+
+            var handling = false;
+
+            if (_queuedMapChanges.Count > 0)
+            {
+                Logger.Debug($"Handling MapId changes for {_queuedMapChanges.Count} entities");
+                handling = true;
+            }
+
+            while (_queuedMapChanges.Count > 0)
+            {
+                HandleMapChange(_queuedMapChanges.Dequeue());
+                Logger.Debug($"{_queuedMapChanges.Count} remaining");
+            }
+
+            if (handling)
+            {
+                Logger.Debug("Handled MapId changes");
+            }
         }
 
         public override void Shutdown()
@@ -174,13 +205,20 @@ namespace Robust.Shared.Physics.Broadphase
             physicsComponent.SynchronizeFixtures();
         }
 
+        private void QueueMapChange(EntMapIdChangedMessage message)
+        {
+            _queuedMapChanges.Enqueue(message);
+        }
+
         /// <summary>
         ///     Handles map changes for bodies completely
         /// </summary>
         /// <param name="message"></param>
         private void HandleMapChange(EntMapIdChangedMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (message.Entity.Deleted ||
+                !message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent) ||
+                !_lastBroadPhases.TryGetValue(physicsComponent, out var broadPhases))
             {
                 return;
             }
@@ -195,9 +233,13 @@ namespace Robust.Shared.Physics.Broadphase
                 newMap.Add(physicsComponent);
             }
 
-            if (_lastBroadPhases.TryGetValue(physicsComponent, out var broadPhases))
+            var newBroadPhases = GetBroadphases(physicsComponent).ToList();
+            var oldBroadPhases = broadPhases.Where(o => !newBroadPhases.Select(b => b.Broadphase).Contains(o));
+
+            /* TODO: Seems to dupe DestroyProxies ya dumbass
+            if (message.OldMapId != MapId.Nullspace)
             {
-                foreach (var broadPhase in broadPhases)
+                foreach (var broadPhase in oldBroadPhases)
                 {
                     var proxies = physicsComponent.GetProxies(GetGridId(broadPhase));
 
@@ -206,36 +248,36 @@ namespace Robust.Shared.Physics.Broadphase
                         broadPhase.RemoveProxy(proxy.ProxyId);
                     }
                 }
-
-                _lastBroadPhases[physicsComponent].Clear();
             }
-            else
-            {
-                _lastBroadPhases.Add(physicsComponent, new List<IBroadPhase>());
-            }
-
+            */
             foreach (var fixture in physicsComponent.FixtureList)
             {
                 fixture.DestroyProxies();
             }
 
-            foreach (var (broadPhase, grid) in GetBroadphases(physicsComponent))
+            _lastBroadPhases[physicsComponent].Clear();
+            _lastBroadPhases[physicsComponent] = new List<IBroadPhase>();
+
+            if (physicsComponent.Owner.Transform.MapID != MapId.Nullspace)
             {
-                var transform = physicsComponent.GetTransform();
-
-                _lastBroadPhases[physicsComponent].Add(broadPhase);
-                foreach (var fixture in physicsComponent.FixtureList)
+                foreach (var (broadPhase, gridId) in newBroadPhases)
                 {
-                    fixture.CreateProxies(grid.Index, transform);
-                }
+                    var transform = physicsComponent.GetTransform();
 
-                var proxies = physicsComponent.GetProxies(grid.Index);
+                    _lastBroadPhases[physicsComponent].Add(broadPhase);
+                    foreach (var fixture in physicsComponent.FixtureList)
+                    {
+                        fixture.CreateProxies(gridId, transform);
+                    }
 
-                for (var i = 0; i < proxies.Count; i++)
-                {
-                    // TODO: mutating this struct disgusts me
-                    var proxy = proxies[i];
-                    proxy.ProxyId = broadPhase.AddProxy(proxy);
+                    var proxies = physicsComponent.GetProxies(gridId);
+
+                    for (var i = 0; i < proxies.Length; i++)
+                    {
+                        ref var proxy = ref proxies[i];
+                        proxy.ProxyId = broadPhase.AddProxy(proxy);
+                        DebugTools.Assert(proxy.ProxyId != DynamicTree.Proxy.Free);
+                    }
                 }
             }
         }
@@ -255,7 +297,14 @@ namespace Robust.Shared.Physics.Broadphase
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
-            _graph[eventArgs.Map] = new Dictionary<GridId, IBroadPhase>();
+            _graph[eventArgs.Map] = new Dictionary<GridId, IBroadPhase>()
+            {
+                {
+                    GridId.Invalid,
+                    new DynamicTreeBroadPhase(eventArgs.Map, GridId.Invalid)
+                }
+            };
+
         }
 
         private void HandleGridRemoval(GridId gridId)
@@ -267,6 +316,13 @@ namespace Robust.Shared.Physics.Broadphase
         public void AddBody(PhysicsComponent component)
         {
             var mapId = component.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace)
+            {
+                _lastBroadPhases[component] = new List<IBroadPhase>();
+                return;
+            }
+
             var grids = _graph[mapId];
             var fixtures = component.FixtureList;
             var transform = component.GetTransform();
@@ -279,14 +335,13 @@ namespace Robust.Shared.Physics.Broadphase
 
                 foreach (var fixture in fixtures)
                 {
-                    fixture.CreateProxies(gridId, transform);
-                }
-
-                var proxies = component.GetProxies(gridId);
-
-                foreach (var proxy in proxies)
-                {
-                    broadPhase.AddProxy(proxy);
+                    var proxies = fixture.CreateProxies(gridId, transform);
+                    for (var i = 0; i < fixture.ProxyCount; i++)
+                    {
+                        ref var proxy = ref proxies[i];
+                        proxy.ProxyId = broadPhase.AddProxy(proxy);
+                        DebugTools.Assert(proxy.ProxyId != DynamicTree.Proxy.Free);
+                    }
                 }
 
                 _lastBroadPhases[component].Add(broadPhase);
@@ -295,7 +350,13 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void RemoveBody(PhysicsComponent component)
         {
-            foreach (var broadPhase in _lastBroadPhases[component])
+            if (!_lastBroadPhases.TryGetValue(component, out var broadPhases))
+            {
+                // TODO: Log warning
+                return;
+            }
+
+            foreach (var broadPhase in broadPhases)
             {
                 foreach (var fixture in component.FixtureList)
                 {
@@ -312,7 +373,17 @@ namespace Robust.Shared.Physics.Broadphase
         public void SynchronizeFixtures(PhysicsComponent component, PhysicsTransform xf1, PhysicsTransform xf2)
         {
             var mapId = component.Owner.Transform.MapID;
-            var oldGridIds = _lastBroadPhases[component].Select(o => GetGridId(o)).ToList();
+
+            if (mapId == MapId.Nullspace)
+                return;
+
+            if (!_lastBroadPhases.TryGetValue(component, out var broadPhases))
+            {
+                broadPhases = new List<IBroadPhase>();
+                _lastBroadPhases[component] = broadPhases;
+            }
+
+            var oldGridIds = broadPhases.Select(o => GetGridId(o)).ToList();
             var newGridIds = new List<GridId>();
             foreach (var gridId in _mapManager.FindGridIdsIntersecting(mapId,
                 component.WorldAABB, true))
@@ -323,7 +394,8 @@ namespace Robust.Shared.Physics.Broadphase
             // Remove old broadPhases
             foreach (var gridId in oldGridIds.Where(o => !newGridIds.Contains(o)))
             {
-                var broadPhase = GetBroadPhase(gridId);
+                var broadPhase = GetBroadPhase(mapId, gridId);
+                Debug.Assert(broadPhase != null);
 
                 foreach (var fixture in component.FixtureList)
                 {
@@ -339,13 +411,14 @@ namespace Robust.Shared.Physics.Broadphase
             // Move on existing ones
             foreach (var gridId in newGridIds.Where(o => oldGridIds.Contains(o)))
             {
-                var broadPhase = GetBroadPhase(gridId);
+                var broadPhase = GetBroadPhase(mapId, gridId);
+                Debug.Assert(broadPhase != null);
 
                 foreach (var fixture in component.FixtureList)
                 {
                     for (var i = 0; i < fixture.ProxyCount; i++)
                     {
-                        var proxy = fixture.Proxies[gridId][i];
+                        ref var proxy = ref fixture.Proxies[gridId][i];
                         proxy.AABB = SynchronizeAABB(proxy, xf1, xf2);
                         var displacement = xf2.Position - xf1.Position;
                         broadPhase.MoveProxy(proxy.ProxyId, ref proxy.AABB, displacement);
@@ -356,13 +429,24 @@ namespace Robust.Shared.Physics.Broadphase
             // Add to new ones
             foreach (var gridId in newGridIds.Where(o => !oldGridIds.Contains(o)))
             {
-                var broadPhase = GetBroadPhase(gridId);
+                var broadPhase = GetBroadPhase(mapId, gridId);
+                Debug.Assert(broadPhase != null);
+                var transform = component.GetTransform();
+
+                if (gridId != GridId.Invalid)
+                {
+                    transform.Position -= _mapManager.GetGrid(gridId).WorldPosition;
+                }
 
                 foreach (var fixture in component.FixtureList)
                 {
-                    foreach (var proxy in fixture.Proxies[gridId])
+                    var proxies = fixture.CreateProxies(gridId, transform);
+
+                    for (var i = 0; i < fixture.ProxyCount; i++)
                     {
-                        broadPhase.AddProxy(proxy);
+                        ref var proxy = ref proxies[i];
+                        proxy.ProxyId = broadPhase.AddProxy(proxy);
+                        DebugTools.Assert(proxy.ProxyId != DynamicTree.Proxy.Free);
                     }
                 }
 
@@ -378,9 +462,12 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void DestroyProxies(Fixture fixture)
         {
+            var mapid = fixture.Body.Owner.Transform.MapID;
+
             foreach (var (gridId, proxies) in fixture.Proxies)
             {
-                var broadPhase = GetBroadPhase(gridId);
+                var broadPhase = GetBroadPhase(mapid, gridId);
+                Debug.Assert(broadPhase != null);
 
                 foreach (var proxy in proxies)
                 {
@@ -423,9 +510,10 @@ namespace Robust.Shared.Physics.Broadphase
 
                 var proxies = fixture.CreateProxies(gridId, fixture.Body.GetTransform(), _mapManager);
 
-                foreach (var proxy in proxies)
+                for (var i = 0; i < fixture.ProxyCount; i++)
                 {
-                    broadPhase.AddProxy(proxy);
+                    ref var proxy = ref proxies[i];
+                    proxy.ProxyId = broadPhase.AddProxy(proxy);
                 }
             }
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Map;
@@ -358,7 +359,16 @@ namespace Robust.Shared.Physics
                 {
                     foreach (var (gridId, proxies) in fixture.Proxies)
                     {
-                        var offset = mapManager.GetGrid(gridId).WorldPosition;
+                        Vector2 offset;
+
+                        if (gridId == GridId.Invalid)
+                        {
+                            offset = Vector2.Zero;
+                        }
+                        else
+                        {
+                            offset = -mapManager.GetGrid(gridId).WorldPosition;
+                        }
 
                         foreach (var proxy in proxies)
                         {
@@ -481,7 +491,18 @@ namespace Robust.Shared.Physics
             serializer.DataField(this, x => x._bodyType, "bodyType", BodyType.Dynamic);
             serializer.DataField(this, x => x.SleepingAllowed, "sleepingAllowed", true);
             serializer.DataField(this, x => x.Awake, "awake", true);
-            serializer.DataReadWriteFunction("fixtures", new List<Fixture>(), value => FixtureList = value, () => FixtureList);
+            serializer.DataReadWriteFunction("fixtures",
+                new List<Fixture>(),
+                value =>
+                {
+                    foreach (var fixture in value)
+                    {
+                        fixture.Body = this;
+                    }
+
+                    FixtureList = value;
+                },
+                () => FixtureList);
             serializer.DataField(this, x => x.Enabled, "enabled", true);
         }
 
@@ -829,7 +850,7 @@ namespace Robust.Shared.Physics
         }
         #endregion
 
-        public List<FixtureProxy> GetProxies(GridId gridId)
+        public FixtureProxy[] GetProxies(GridId gridId)
         {
             var proxies = new List<FixtureProxy>();
             foreach (var fixture in FixtureList)
@@ -840,7 +861,8 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            return proxies;
+            // TODO: Disgusting
+            return proxies.ToArray();
         }
 
         /// <summary>

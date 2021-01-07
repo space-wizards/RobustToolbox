@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Robust.Shared.GameObjects.Components;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.Map;
@@ -233,6 +234,7 @@ namespace Robust.Shared.Physics
             }
 
             ProxyCount = Shape.ChildCount;
+            DebugTools.Assert(ProxyCount > 0);
 
             Proxies[gridId] = new FixtureProxy[ProxyCount];
 
@@ -243,7 +245,8 @@ namespace Robust.Shared.Physics
                     Fixture = this,
                     ChildIndex = i,
                     AABB = Shape.ComputeAABB(gridTransform, i),
-                    ProxyId = new DynamicTree.Proxy(i),
+                    // Use temporary ProxyId and will change after
+                    ProxyId = DynamicTree.Proxy.Free,
                 };
 
                 Proxies[gridId][i] = proxy;
@@ -256,11 +259,16 @@ namespace Robust.Shared.Physics
         {
             foreach (var (gridId, proxies) in Proxies)
             {
-                var broadPhase = EntitySystem.Get<SharedBroadPhaseSystem>().GetBroadPhase(gridId);
+                var broadPhase = EntitySystem.Get<SharedBroadPhaseSystem>().GetBroadPhase(Body.Owner.Transform.MapID, gridId);
+                Debug.Assert(broadPhase != null);
                 for (var i = 0; i < ProxyCount; i++)
-                    broadPhase.RemoveProxy(proxies[i].ProxyId);
+                {
+                    var proxyId = proxies[i].ProxyId;
+                    broadPhase.RemoveProxy(proxyId);
+                }
             }
 
+            Proxies.Clear();
             ProxyCount = 0;
         }
 

@@ -15,11 +15,6 @@ namespace Robust.Shared.Prototypes
             throw new ArgumentException($"Tag {tag} not defined.", nameof(tag));
         }
 
-        public object? CloneValue(string tag)
-        {
-            return IDeepClone.CloneValue(GetValue(tag));
-        }
-
         /// <summary>
         /// sets the mapped value of a given key. exception if not in datadefinition (no corresponsing [YamlField])
         /// </summary>

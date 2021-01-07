@@ -10,12 +10,16 @@ namespace Robust.Shared.Prototypes
         public readonly string Tag;
         public readonly bool ReadOnly;
         public readonly Type? FlagType;
+        public readonly Type? ConstantType;
 
-        public YamlFieldAttribute([NotNull] string tag, bool readOnly = false, Type? flagType = null)
+        public YamlFieldAttribute([NotNull] string tag, bool readOnly = false, Type? flagType = null, Type? constType = null)
         {
             Tag = tag;
             ReadOnly = readOnly;
             FlagType = flagType;
+            ConstantType = constType;
+            if (FlagType != null && constType != null)
+                throw new ArgumentException("Cannot have both a flagType and a constType specified");
         }
     }
 }

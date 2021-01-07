@@ -31,26 +31,27 @@ namespace Robust.Generators
             var resolvedAutoDataRegistrations =
                 receiver.Registrations.Select(cl => comp.GetSemanticModel(cl.SyntaxTree).GetDeclaredSymbol(cl)).ToImmutableHashSet();
 
-            //resolve all custom dataclasses
             var resolvedCustomDataClasses = new Dictionary<ITypeSymbol, ITypeSymbol>();
+
+            bool TryResolveCustomDataClass(ITypeSymbol typeSymbol, out ITypeSymbol customDataClass)
+            {
+                if (resolvedCustomDataClasses.TryGetValue(typeSymbol, out customDataClass))
+                    return true;
+
+                var arg = typeSymbol?.GetAttributes()
+                    .FirstOrDefault(a => a.AttributeClass?.Name == "CustomDataClassAttribute")?.ConstructorArguments.FirstOrDefault();
+                if (arg == null) return false;
+                customDataClass = arg.Value.Value as ITypeSymbol;
+                return customDataClass != null;
+            }
+
+            //resolve all custom dataclasses
             foreach (var classDeclarationSyntax in receiver.CustomDataClassRegistrations)
             {
                 var symbol = comp.GetSemanticModel(classDeclarationSyntax.SyntaxTree)
                     .GetDeclaredSymbol(classDeclarationSyntax);
 
-                var arg = symbol?.GetAttributes()
-                    .FirstOrDefault(a => a.AttributeClass?.Name == "CustomDataClassAttribute")?.ConstructorArguments.FirstOrDefault();
-                if (arg == null)
-                {
-                    var msg = $"Could not resolve argument of CustomDataClassAttribute for class {classDeclarationSyntax.Identifier.Text}";
-                    context.ReportDiagnostic(Diagnostic.Create(
-                        new DiagnosticDescriptor("RADC0002", msg, msg, "Usage", DiagnosticSeverity.Error, true),
-                        classDeclarationSyntax.GetLocation()));
-                    return;
-                }
-
-                var customDataClass = (ITypeSymbol) arg.Value.Value;
-                if (customDataClass == null)
+                if (!TryResolveCustomDataClass(symbol, out var customDataClass))
                 {
                     var msg = $"Could not resolve CustomDataClassAttribute for class {classDeclarationSyntax.Identifier.Text}";
                     context.ReportDiagnostic(Diagnostic.Create(
@@ -59,6 +60,11 @@ namespace Robust.Generators
                     continue;
                 }
 
+                context.ReportDiagnostic(Diagnostic.Create(
+                    new DiagnosticDescriptor("AAA", "",
+                        $"{symbol} | {customDataClass}", "usage", DiagnosticSeverity.Warning,
+                        true), Location.None));
+
                 string shouldInherit;
                 if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(symbol, r)))
                 {
@@ -66,25 +72,22 @@ namespace Robust.Generators
                 }
                 else
                 {
-                    shouldInherit = ResolveParentDataClass(symbol);
+                    shouldInherit = ResolveParentDataClass(symbol, true);
                 }
                 context.AddSource($"{customDataClass.Name}_INHERIT.g.cs", SourceText.From(GenerateCustomDataClassInheritanceCode(customDataClass.Name, customDataClass.ContainingNamespace.ToString(), shouldInherit), Encoding.UTF8));
 
-
-                resolvedCustomDataClasses.Add(symbol, (ITypeSymbol)arg.Value.Value);
+                resolvedCustomDataClasses.Add(symbol, customDataClass);
             }
 
-            string ResolveParentDataClass(ITypeSymbol typeS, bool print = false)
+            string ResolveParentDataClass(ITypeSymbol typeS, bool forCustom = false)
             {
                 var typeSymbol = typeS;
                 if (typeSymbol is INamedTypeSymbol tSym)
                 {
-                    if(print) context.ReportDiagnostic(Diagnostic.Create(new DiagnosticDescriptor("AAA", $"{tSym.ConstructedFrom},{tSym.IsGenericType}", $"{tSym.ConstructedFrom},{tSym.IsGenericType}", "usage", DiagnosticSeverity.Warning, true),Location.None));
-                    typeSymbol = tSym.ConstructedFrom;
+                    typeSymbol = tSym.ConstructedFrom; //todo Paul: properly do generics
                 }
 
-
-                if (resolvedCustomDataClasses.TryGetValue(typeSymbol, out var customDataClass))
+                if (!forCustom && TryResolveCustomDataClass(typeSymbol, out var customDataClass))
                     return $"{customDataClass.ContainingNamespace}.{customDataClass.Name}";
 
                 var metaName = $"{typeSymbol.ContainingNamespace}.{typeSymbol.Name}_AUTODATA";
@@ -94,7 +97,7 @@ namespace Robust.Generators
                 if(typeSymbol.Interfaces.Any(i => SymbolEqualityComparer.Default.Equals(i, iCompType)) || typeSymbol.BaseType == null)
                     return "Robust.Shared.Prototypes.ComponentData";
 
-                return ResolveParentDataClass(typeSymbol.BaseType, print);
+                return ResolveParentDataClass(typeSymbol.BaseType);
             }
 
             T GetCtorArg<T>(ImmutableArray<TypedConstant> ctorArgs, int i)
@@ -132,6 +135,7 @@ namespace Robust.Generators
 
                     var @readonly = GetCtorArg<bool>(attribute.ConstructorArguments, 1);
                     var flagType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 2);
+                    var constType = GetCtorArg<ITypeSymbol>(attribute.ConstructorArguments, 3);
 
                     string type;
                     switch (member)
@@ -150,14 +154,13 @@ namespace Robust.Generators
                                 member.Locations.First()));
                             continue;
                     }
-                    fields.Add(new FieldTemplate(fieldName, type, @readonly, flagType));
+                    fields.Add(new FieldTemplate(fieldName, type, @readonly, flagType, constType));
                 }
 
                 var name = $"{symbol.Name}_AUTODATA";
                 var @namespace = symbol.ContainingNamespace.ToString();
 
-                bool b = name == "PowerSupplierComponent_AUTODATA";
-                var inheriting = ResolveParentDataClass(symbol.BaseType, b);
+                var inheriting = ResolveParentDataClass(symbol.BaseType);
 
                 context.AddSource($"{name}.g.cs",
                     SourceText.From(GenerateCode(name, @namespace, inheriting, fields), Encoding.UTF8));
@@ -203,7 +206,17 @@ namespace {@namespace} {{
             foreach (var field in fields)
             {
                 code += $@"
-            {(field.ReadOnly ? "if(serializer.Reading) " : "")}serializer.NullableDataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null{(field.FlagType != default ? $", withFormat: WithFormat.Flags<{field.FlagType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()" : "")});";
+            {(field.ReadOnly ? "if(serializer.Reading) " : "")}serializer.NullableDataField(ref {GetFieldName(field.Name)}, ""{field.Name}"", null";
+                if (field.FlagType != default)
+                {
+                    code +=
+                        $", withFormat: WithFormat.Flags<{field.FlagType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()";
+                }else if (field.ConstantsType != default)
+                {
+                    code +=
+                        $", withFormat: WithFormat.Constants<{field.ConstantsType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>()";
+                }
+                code += ");";
             }
             code += @"
         }";
@@ -263,12 +276,14 @@ namespace {@namespace} {{
             public readonly string Type;
             public readonly bool ReadOnly;
             public readonly ITypeSymbol FlagType;
+            public readonly ITypeSymbol ConstantsType;
 
-            public FieldTemplate(string name, string type, bool readOnly, ITypeSymbol flagType)
+            public FieldTemplate(string name, string type, bool readOnly, ITypeSymbol flagType, ITypeSymbol constantsType)
             {
                 Name = name;
                 ReadOnly = readOnly;
                 FlagType = flagType;
+                ConstantsType = constantsType;
                 Type = type.EndsWith("?") ? type : $"{type}?";
             }
         }

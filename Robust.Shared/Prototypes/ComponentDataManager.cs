@@ -7,6 +7,7 @@ using System.Reflection.Metadata;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.Reflection;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
@@ -148,7 +149,6 @@ namespace Robust.Shared.Prototypes
         {
             if (field.IsCustom)
             {
-                if (field.Tag == "voltage") Debugger.Launch();
                 return GetCustomField(type, field.Tag).GetValue(data);
             }
 
@@ -157,13 +157,14 @@ namespace Robust.Shared.Prototypes
 
         private void SetFieldValue(Type type, IYamlFieldDefinition field, ComponentData data, object? value)
         {
+            var clone = IDeepClone.CloneValue(value);
             if (field.IsCustom)
             {
-                GetCustomField(type, field.Tag).SetValue(data, value);
+                GetCustomField(type, field.Tag).SetValue(data, clone);
             }
             else
             {
-                data.SetValue(field.Tag, value);
+                data.SetValue(field.Tag, clone);
             }
         }
 

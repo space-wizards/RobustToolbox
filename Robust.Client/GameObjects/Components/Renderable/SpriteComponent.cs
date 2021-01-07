@@ -48,8 +48,7 @@ namespace Robust.Client.GameObjects
             set => _visible = value;
         }
 
-        [YamlField("drawdepth")]
-        //todo WithFormat.Constants<DrawDepthTag>()
+        [YamlField("drawdepth", constType: typeof(DrawDepthTag))]
         private int drawDepth = DrawDepthTag.Default;
 
         /// <summary>
@@ -177,7 +176,7 @@ namespace Robust.Client.GameObjects
 
         [ViewVariables] [CustomYamlField("layermap")] private Dictionary<object, int> LayerMap = new();
         [ViewVariables] private bool _layerMapShared;
-        [ViewVariables] private List<Layer> Layers = default!;
+        [ViewVariables] private List<Layer> Layers = new();
 
         [CustomYamlField("layers")]
         private List<Layer> LayersSetter
@@ -1083,7 +1082,6 @@ namespace Robust.Client.GameObjects
         //TODO PAUL: AAAAA D
         /*public override void ExposeData(ObjectSerializer serializer)
         {
-//todo Paul: ur not done!
 
             List<Layer> CloneLayers(List<Layer> source)
             {

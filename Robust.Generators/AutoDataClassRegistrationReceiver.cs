@@ -23,7 +23,6 @@ namespace Robust.Generators
             }
         }
 
-        //todo find classes in classes
         public class YamlFieldFinder : CSharpSyntaxWalker
         {
             private YamlFieldFinder() {}

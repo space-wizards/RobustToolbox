@@ -32,7 +32,7 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public void SetupNetworking()
         {
-            if(_netManager.IsServer)
+            if(_isServer)
             {
                 _netManager.Connected += PeerConnected;
                 _netManager.Disconnect += PeerDisconnected;

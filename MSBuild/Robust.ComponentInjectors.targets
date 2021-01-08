@@ -27,7 +27,7 @@
       AssemblyFile="@(IntermediateAssembly)"
       IntermediatePath="$(IntermediateOutputPath)"
       AssemblyReferencesPath="$(DirtyCallInjectorReferencesTemporaryFilepath)"
-      UpdateBuildIndicator="$(IntermediateOutputPath)XAML/doot"/>
+      UpdateBuildIndicator="$(IntermediateOutputPath)Injections/doot"/>
 
     <PropertyGroup>
       <DOTNET_HOST_PATH Condition="'$(DOTNET_HOST_PATH)' == ''">dotnet</DOTNET_HOST_PATH>

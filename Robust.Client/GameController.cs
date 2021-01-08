@@ -32,6 +32,7 @@ using Robust.Shared.Interfaces.Timers;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -65,6 +66,7 @@ namespace Robust.Client
         [Dependency] private readonly IScriptClient _scriptClient = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
 
         private CommandLineArgs? _commandLineArgs;
         private bool _disableAssemblyLoadContext;
@@ -125,6 +127,7 @@ namespace Robust.Client
             ProgramShared.DoMounts(_resourceCache, _commandLineArgs?.MountOptions, "Content.Client", _loaderArgs != null);
             if (_loaderArgs != null)
             {
+                _stringSerializer.EnableCaching = false;
                 _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
             }

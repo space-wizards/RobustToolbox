@@ -1,20 +1,28 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Robust.Server.Interfaces.Player;
 using Robust.Server.Interfaces.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Log;
 using Robust.Shared.Interfaces.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Utility;
+using HttpListener = ManagedHttpListener.HttpListener;
+using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -28,6 +36,7 @@ namespace Robust.Server.ServerStatus
 
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandler> _handlers = new();
@@ -35,19 +44,20 @@ namespace Robust.Server.ServerStatus
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
 
+        private string? _serverNameCache;
+
         public Task ProcessRequestAsync(HttpListenerContext context)
         {
-            var response = context.Response;
-            var request = context.Request;
-            var method = new HttpMethod(request.HttpMethod);
+            var apiContext = (IStatusHandlerContext) new ContextImpl(context);
 
-            _httpSawmill.Info($"{method} {context.Request.Url?.PathAndQuery} from {request.RemoteEndPoint}");
+            _httpSawmill.Info(
+                $"{apiContext.RequestMethod} {apiContext.Url.PathAndQuery} from {apiContext.RemoteEndPoint}");
 
             try
             {
                 foreach (var handler in _handlers)
                 {
-                    if (handler(method, request, response))
+                    if (handler(apiContext))
                     {
                         return Task.CompletedTask;
                     }
@@ -55,11 +65,11 @@ namespace Robust.Server.ServerStatus
 
                 // No handler returned true, assume no handlers care about this.
                 // 404.
-                response.Respond(method, "Not Found", HttpStatusCode.NotFound);
+                apiContext.Respond("Not Found", HttpStatusCode.NotFound);
             }
             catch (Exception e)
             {
-                response.Respond(method, "Internal Server Error", HttpStatusCode.InternalServerError);
+                apiContext.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
                 _httpSawmill.Error($"Exception in StatusHost: {e}");
             }
 
@@ -84,6 +94,10 @@ namespace Robust.Server.ServerStatus
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
             RegisterCVars();
+
+            // Cache this in a field to avoid thread safety shenanigans.
+            // Writes/reads of references are atomic in C# so no further synchronization necessary.
+            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n);
 
             if (!_configurationManager.GetCVar(CVars.StatusEnabled))
             {
@@ -141,24 +155,27 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            BuildInfo? info = null;
             try
             {
                 var buildInfo = File.ReadAllText(PathHelpers.ExecutableRelativeFile("build.json"));
-                info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+
+                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
             }
             catch (FileNotFoundException)
             {
             }
 
-            _configurationManager.SetCVar(CVars.BuildForkId, info?.ForkId ?? "");
-            _configurationManager.SetCVar(CVars.BuildVersion, info?.Version ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlWindows, info?.Downloads.Windows ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlMacOS, info?.Downloads.MacOS ?? "");
-            _configurationManager.SetCVar(CVars.BuildDownloadUrlLinux, info?.Downloads.Linux ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashWindows, info?.Hashes.Windows ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashMacOS, info?.Hashes.MacOS ?? "");
-            _configurationManager.SetCVar(CVars.BuildHashLinux, info?.Hashes.Linux ?? "");
+            void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
+            {
+                if (_configurationManager.GetCVar(cvar) == "")
+                    _configurationManager.SetCVar(cvar, val);
+            }
         }
 
         public void Dispose()
@@ -175,18 +192,86 @@ namespace Robust.Server.ServerStatus
         [JsonObject(ItemRequired = Required.DisallowNull)]
         private sealed class BuildInfo
         {
-            [JsonProperty("hashes")] public PlatformData Hashes { get; set; } = default!;
-            [JsonProperty("downloads")] public PlatformData Downloads { get; set; } = default!;
-            [JsonProperty("fork_id")] public string ForkId { get; set; } = default!;
-            [JsonProperty("version")] public string Version { get; set; } = default!;
+            [JsonProperty("engine_version")] public string EngineVersion = default!;
+            [JsonProperty("hash")] public string? Hash;
+            [JsonProperty("download")] public string? Download;
+            [JsonProperty("fork_id")] public string ForkId = default!;
+            [JsonProperty("version")] public string Version = default!;
         }
 
-        [JsonObject(ItemRequired = Required.DisallowNull)]
-        private sealed class PlatformData
+        private sealed class ContextImpl : IStatusHandlerContext
         {
-            [JsonProperty("windows")] public string Windows { get; set; } = default!;
-            [JsonProperty("linux")] public string Linux { get; set; } = default!;
-            [JsonProperty("macos")] public string MacOS { get; set; } = default!;
+            private readonly HttpListenerContext _context;
+            public HttpMethod RequestMethod { get; }
+            public IPEndPoint RemoteEndPoint => _context.Request.RemoteEndPoint!;
+            public Uri Url => _context.Request.Url!;
+            public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
+            public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+            public ContextImpl(HttpListenerContext context)
+            {
+                _context = context;
+                RequestMethod = new HttpMethod(context.Request.HttpMethod!);
+
+                var headers = new Dictionary<string, StringValues>();
+                foreach (string? key in context.Request.Headers.Keys)
+                {
+                    if (key == null)
+                        continue;
+
+                    headers.Add(key, context.Request.Headers.GetValues(key));
+                }
+
+                RequestHeaders = headers;
+            }
+
+            [return: MaybeNull]
+            public T RequestBodyJson<T>()
+            {
+                using var streamReader = new StreamReader(_context.Request.InputStream, EncodingHelpers.UTF8);
+                using var jsonReader = new JsonTextReader(streamReader);
+
+                var serializer = new JsonSerializer();
+                return serializer.Deserialize<T>(jsonReader);
+            }
+
+            public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
+            {
+                Respond(text, (int) code, contentType);
+            }
+
+            public void Respond(string text, int code = 200, string contentType = MediaTypeNames.Text.Plain)
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+
+                if (RequestMethod == HttpMethod.Head)
+                {
+                    return;
+                }
+
+                using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                writer.Write(text);
+            }
+
+            public void RespondError(HttpStatusCode code)
+            {
+                Respond(code.ToString(), code);
+            }
+
+            public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
+            {
+                using var streamWriter = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                _context.Response.ContentType = MediaTypeNames.Application.Json;
+
+                using var jsonWriter = new JsonTextWriter(streamWriter);
+
+                JsonSerializer.Serialize(jsonWriter, jsonData);
+
+                jsonWriter.Flush();
+            }
         }
     }
 }

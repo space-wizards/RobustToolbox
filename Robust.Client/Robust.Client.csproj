@@ -46,4 +46,10 @@
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.ComponentInjectors.targets" />
+  <Import Project="..\MSBuild\Robust.Engine.targets" />
+  <PropertyGroup>
+    <RobustToolsPath>../Tools</RobustToolsPath>
+  </PropertyGroup>
+  <Target Name="RobustAfterBuild" AfterTargets="Build" />
+  <Import Project="..\MSBuild\XamlIL.targets" />
 </Project>

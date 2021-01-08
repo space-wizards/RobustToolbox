@@ -31,6 +31,11 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             base.FrameUpdate(args);
 
+            if (!VisibleInTree)
+            {
+                return;
+            }
+
             _label.Text = string.Join("\n", _inputManager.DownKeyFunctions);
         }
     }

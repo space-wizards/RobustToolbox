@@ -5,6 +5,7 @@ using Robust.Shared.Animations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects.Components.Map;
 using Robust.Shared.GameObjects.EntitySystemMessages;
+using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.Map;
@@ -722,8 +723,9 @@ namespace Robust.Shared.GameObjects.Components.Transform
                     var oldPos = Coordinates;
                     SetPosition(newState.LocalPosition);
 
-                    Owner.EntityManager.EventBus.RaiseEvent(
-                        EventSource.Local, new MoveEvent(Owner, oldPos, Coordinates));
+                    var ev = new MoveEvent(Owner, oldPos, Coordinates);
+                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ev);
+
                     rebuildMatrices = true;
                 }
 
@@ -873,6 +875,7 @@ namespace Robust.Shared.GameObjects.Components.Transform
         public IEntity Sender { get; }
         public EntityCoordinates OldPosition { get; }
         public EntityCoordinates NewPosition { get; }
+        public bool Handled { get; set; }
     }
 
     public class RotateEvent : EntitySystemMessage

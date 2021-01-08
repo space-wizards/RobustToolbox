@@ -30,5 +30,4 @@
     </Content>
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
-  <Import Project="..\MSBuild\Robust.ComponentInjectors.targets" />
 </Project>

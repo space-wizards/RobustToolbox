@@ -17,6 +17,7 @@ namespace Robust.Build.Injections
 
         [Required]
         public string AssemblyReferencesPath { get; set; }
+        public string UpdateBuildIndicator { get; set; }
 
         public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
@@ -168,6 +169,18 @@ namespace Robust.Build.Injections
 
             resolver.Dispose();
             asdef.Dispose();
+
+            if (!string.IsNullOrEmpty(UpdateBuildIndicator))
+            {
+                if (!File.Exists(UpdateBuildIndicator))
+                {
+                    File.Create(UpdateBuildIndicator).Dispose();
+                }
+                else
+                {
+                    File.SetLastWriteTime(UpdateBuildIndicator, DateTime.Now);
+                }
+            }
             return true;
         }
     }

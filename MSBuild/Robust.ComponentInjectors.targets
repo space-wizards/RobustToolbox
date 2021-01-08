@@ -1,13 +1,40 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <ItemGroup>
-    <ProjectReference Include="../Robust.Build.Injections/Robust.Build.Injections.csproj" ReferenceOutputAssembly="false"/>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)/../Robust.Build.Injections/Robust.Build.Injections.csproj" ReferenceOutputAssembly="false"/>
   </ItemGroup>
-  <UsingTask TaskName="DirtyCallInjectionTask" AssemblyFile="..\Robust.Build.Injections\bin\$(Configuration)\net5.0\Robust.Build.Injections.dll" />
-  <Target Name="DirtyCallInjection" AfterTargets="AfterCompile">
+  <UsingTask
+    Condition="'$(_RobustUseExternalMSBuild)' != 'true' And $(DesignTimeBuild) != true"
+    TaskName="DirtyCallInjectionTask"
+    AssemblyFile="$(MSBuildThisFileDirectory)\..\Robust.Build.Injections\bin\$(Configuration)\net5.0\Robust.Build.Injections.dll" />
+  <Target
+    Name="DirtyCallInjection"
+    Condition="Exists('@(IntermediateAssembly)')"
+    AfterTargets="AfterCompile"
+    Inputs="@(IntermediateAssembly);@(ReferencePathWithRefAssemblies)"
+    Outputs="$(IntermediateOutputPath)Injections/doot">
     <PropertyGroup>
-      <DirtyCallInjectorReferencesTemporaryFilepath Condition="'$(DirtyCallInjectorReferencesTemporaryFilepath)' == ''">$(IntermediateOutputPath)references</DirtyCallInjectorReferencesTemporaryFilepath>
+      <DirtyCallInjectorReferencesTemporaryFilepath Condition="'$(DirtyCallInjectorReferencesTemporaryFilepath)' == ''">$(IntermediateOutputPath)Injections/references</DirtyCallInjectorReferencesTemporaryFilepath>
     </PropertyGroup>
-    <WriteLinesToFile File="$(DirtyCallInjectorReferencesTemporaryFilepath)" Lines="@(ReferencePathWithRefAssemblies)" Overwrite="true" />
-    <DirtyCallInjectionTask AssemblyFile="@(IntermediateAssembly)" IntermediatePath="$(IntermediateOutputPath)" AssemblyReferencesPath="$(DirtyCallInjectorReferencesTemporaryFilepath)" />
+    <WriteLinesToFile
+      Condition="'$(_RobustForceInternalMSBuild)' != 'true'"
+      File="$(DirtyCallInjectorReferencesTemporaryFilepath)"
+      Lines="@(ReferencePathWithRefAssemblies)"
+      Overwrite="true" />
+
+
+    <DirtyCallInjectionTask
+      Condition="'$(_RobustUseExternalMSBuild)' != 'true'"
+      AssemblyFile="@(IntermediateAssembly)"
+      IntermediatePath="$(IntermediateOutputPath)"
+      AssemblyReferencesPath="$(DirtyCallInjectorReferencesTemporaryFilepath)"
+      UpdateBuildIndicator="$(IntermediateOutputPath)XAML/doot"/>
+
+    <PropertyGroup>
+      <DOTNET_HOST_PATH Condition="'$(DOTNET_HOST_PATH)' == ''">dotnet</DOTNET_HOST_PATH>
+    </PropertyGroup>
+    <Exec
+      Condition="'$(_RobustUseExternalMSBuild)' == 'true'"
+      Command="&quot;$(DOTNET_HOST_PATH)&quot; msbuild /nodereuse:false $(MSBuildProjectFile) /t:DirtyCallInjection /p:_RobustForceInternalMSBuild=true /p:Configuration=$(Configuration) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:TargetFramework=$(TargetFramework) /p:BuildProjectReferences=false"/>
+
   </Target>
 </Project>

@@ -6,26 +6,37 @@ using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.GameObjects.Components.Renderable;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [CustomDataClass(typeof(SpriteComponentData))]
     public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent
     {
         const string LayerSerializationCache = "spritelayersrv";
         [ViewVariables]
+        [CustomYamlField("layers")]
         private List<PrototypeLayerData> Layers = new();
 
-        private bool _visible;
+        [YamlField("visible")]
+        private bool _visible = true;
+        [YamlField("drawdepth", constType:typeof(DrawDepthTag))]
         private int _drawDepth = DrawDepthTag.Default;
-        private Vector2 _scale;
-        private Vector2 _offset;
-        private Color _color;
-        private bool _directional;
+        [YamlField("scale")]
+        private Vector2 _scale = Vector2.One;
+        [YamlField("offset")]
+        private Vector2 _offset = Vector2.Zero;
+        [YamlField("color")]
+        private Color _color = Color.White;
+        [YamlField("directional")]
+        private bool _directional = true;
+        [YamlField("sprite")]
         private string? _baseRSIPath;
-        private Angle _rotation;
+        [YamlField("rotation")]
+        private Angle _rotation = Angle.Zero;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public int DrawDepth
@@ -273,7 +284,7 @@ namespace Robust.Server.GameObjects
         {
             if (Layers.Count <= layer)
             {
-                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set set! Trace:\n{1}",
+                Logger.ErrorS("go.comp.sprite", "Layer with index '{0}' does not exist, cannot set state! Trace:\n{1}",
                     layer, Environment.StackTrace);
                 return;
             }
@@ -389,60 +400,6 @@ namespace Robust.Server.GameObjects
             Layers[layer] = thelayer;
             Dirty();
         }
-
-        //TODO Paul: fix dis
-        /*public override void ExposeData(ObjectSerializer serializer)
-        {
-            base.ExposeData(serializer);
-
-            serializer.DataFieldCached(ref _visible, "visible", true);
-            serializer.DataFieldCached(ref _drawDepth, "drawdepth", DrawDepthTag.Default, WithFormat.Constants<DrawDepthTag>());
-            serializer.DataFieldCached(ref _offset, "offset", Vector2.Zero);
-            serializer.DataFieldCached(ref _scale, "scale", Vector2.One);
-            serializer.DataFieldCached(ref _color, "color", Color.White);
-            serializer.DataFieldCached(ref _directional, "directional", true);
-            serializer.DataFieldCached(ref _baseRSIPath, "sprite", null);
-            serializer.DataFieldCached(ref _rotation, "rotation", Angle.Zero);
-
-            // TODO: Writing?
-            if (!serializer.Reading)
-            {
-                return;
-            }
-
-            if (serializer.TryGetCacheData<List<PrototypeLayerData>>(LayerSerializationCache, out var layers))
-            {
-                Layers = layers.ShallowClone();
-                return;
-            }
-
-            var layerData =
-                serializer.ReadDataField<List<PrototypeLayerData>>("layers", new List<PrototypeLayerData>());
-
-            if(layerData.Count == 0){
-                var baseState = serializer.ReadDataField<string?>("state", null);
-                var texturePath = serializer.ReadDataField<string?>("texture", null);
-
-                if (baseState != null || texturePath != null)
-                {
-                    var layerZeroData = PrototypeLayerData.New();
-                    if (!string.IsNullOrWhiteSpace(baseState))
-                    {
-                        layerZeroData.State = baseState;
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(texturePath))
-                    {
-                        layerZeroData.TexturePath = texturePath;
-                    }
-
-                    layerData.Insert(0, layerZeroData);
-                }
-            }
-
-            serializer.SetCacheData(LayerSerializationCache, layerData.ShallowClone());
-            Layers = layerData;
-        }*/
 
         public override ComponentState GetComponentState()
         {

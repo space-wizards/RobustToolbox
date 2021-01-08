@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Reflection;
+using Robust.Shared.Configuration;
 
 namespace Robust.Shared.Interfaces.Configuration
 {

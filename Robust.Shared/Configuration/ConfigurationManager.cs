@@ -1,4 +1,4 @@
-﻿using Nett;
+using Nett;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Log;
 using System;
@@ -13,10 +13,10 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
-    internal sealed class ConfigurationManager : IConfigurationManagerInternal
+    internal class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
-        private readonly Dictionary<string, ConfigVar> _configVars = new();
+        protected readonly Dictionary<string, ConfigVar> _configVars = new();
         private string? _configFile;
         private bool _isServer;
 
@@ -131,6 +131,8 @@ namespace Robust.Shared.Configuration
                         continue;
                     }
 
+                    // Don't write if Archive flag is not set.
+                    // Don't write if the cVar is the default value.
                     if (!cVar.ConfigModified &&
                         (cVar.Flags & CVar.ARCHIVE) == 0 || value.Equals(cVar.DefaultValue))
                     {
@@ -305,7 +307,7 @@ namespace Robust.Shared.Configuration
         }
 
         /// <inheritdoc />
-        public void SetCVar(string name, object value)
+        public virtual void SetCVar(string name, object value)
         {
             //TODO: Make flags work, required non-derpy net system.
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered && (cVar.Flags & CVar.SECURE) == 0)
@@ -383,7 +385,7 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        private object ParseOverrideValue(string value, Type? type)
+        private static object ParseOverrideValue(string value, Type? type)
         {
             if (type == typeof(int))
             {
@@ -434,7 +436,7 @@ namespace Robust.Shared.Configuration
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
-        private class ConfigVar
+        protected class ConfigVar
         {
             /// <summary>
             ///     Constructs a CVar.

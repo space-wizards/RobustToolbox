@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using Robust.Client.Interfaces;
 using Robust.Client.Interfaces.Debugging;
@@ -7,6 +7,7 @@ using Robust.Client.Interfaces.GameStates;
 using Robust.Client.Interfaces.Utility;
 using Robust.Client.Player;
 using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.Interfaces.Configuration;
 using Robust.Shared.Interfaces.Map;
@@ -25,7 +26,7 @@ namespace Robust.Client
     {
         [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IPlayerManager _playMan = default!;
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
+        [Dependency] private readonly INetConfigurationManager _configManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
@@ -101,6 +102,8 @@ namespace Robust.Client
             // request base info about the server
             var msgInfo = _net.CreateNetMessage<MsgServerInfoReq>();
             _net.ClientSendMessage(msgInfo);
+
+            _configManager.SyncWithServer();
         }
 
         /// <summary>

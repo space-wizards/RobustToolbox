@@ -1,5 +1,6 @@
 ﻿using System;
 using Robust.Client.Utility;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
@@ -16,7 +17,7 @@ namespace Robust.Client.Graphics
         ///     RSIs are folded into a single set of animation timings when loaded.
         ///     This is to simplify animation playback code in-engine.
         /// </remarks>
-        public sealed class State : IDirectionalTextureProvider
+        public sealed class State : IDirectionalTextureProvider, IDeepClone
         {
             // List of delays for the frame to reach the next frame.
             private readonly float[] Delays;
@@ -155,6 +156,16 @@ namespace Robust.Client.Graphics
                 SouthWest = 5,
                 NorthEast = 6,
                 NorthWest = 7,
+            }
+
+            public IDeepClone DeepClone()
+            {
+                return new State(
+                    IDeepClone.CloneValue(Size),
+                    IDeepClone.CloneValue(StateId),
+                    IDeepClone.CloneValue(Directions),
+                    IDeepClone.CloneValue(Delays)!,
+                    IDeepClone.CloneValue(Icons)!);
             }
         }
     }

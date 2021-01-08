@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -13,7 +14,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Type to handle Robust Station Image (RSI) files.
     /// </summary>
-    public sealed partial class RSI : IEnumerable<RSI.State>
+    public sealed partial class RSI : IEnumerable<RSI.State>, IDeepClone
     {
         /// <summary>
         ///     The size of this RSI, width x height.
@@ -66,7 +67,7 @@ namespace Robust.Client.Graphics
         ///     Represents an ID used to reference states in an RSI.
         ///     Kept around as a simple wrapper around the state Name, to avoid breaking existing code.
         /// </summary>
-        public struct StateId : IEquatable<StateId>
+        public struct StateId : IEquatable<StateId>, IDeepClone
         {
             public readonly string? Name;
 
@@ -115,6 +116,16 @@ namespace Robust.Client.Graphics
             {
                 return Name?.GetHashCode() ?? 0;
             }
+
+            public IDeepClone DeepClone()
+            {
+                return new StateId(Name);
+            }
+        }
+
+        public IDeepClone DeepClone()
+        {
+            return new RSI(Size, Path);
         }
     }
 }

@@ -185,6 +185,9 @@ namespace Robust.Client.GameObjects.Components.Renderable
                     }
                 }
             }
+
+            if (layers.Count == 0) layers = null;
+            if (layermap.Count == 0) layermap = null;
         }
     }
 }

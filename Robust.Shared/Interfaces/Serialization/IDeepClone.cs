@@ -110,8 +110,10 @@ namespace Robust.Shared.Interfaces.Serialization
             }
 
             //class fallback
+            Exception? e = null;
             try
             {
+                Logger.Warning($"Using Fallback-Deepclone for Type {type}!");
                 var fields = underlyingType.GetAllFields().ToArray();
                 if (fields.Length != 0)
                 {
@@ -122,16 +124,17 @@ namespace Robust.Shared.Interfaces.Serialization
                         fieldInfo.SetValue(newInstance, CloneValue(tempVal));
                     }
 
-                    Logger.Error($"Using Fallback-Deepclone for Type {type}!");
                     return newInstance is T ? (T) newInstance : default;
                 }
             }
-            catch (Exception)
+            catch (Exception err)
             {
                 // ignored
+                e = err;
             }
 
-            throw new ArgumentException($"Failed to clone value with type {type}", nameof(value));
+            Logger.Error($"Failed to clone value with type {type}{(e != null ? $" with error {e}" : "")}", nameof(value));
+            return value;
         }
 
     }

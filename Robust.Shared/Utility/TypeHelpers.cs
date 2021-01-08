@@ -200,9 +200,41 @@ namespace Robust.Shared.Utility
             return false;
         }
 
+        public static bool TryGenericSortedDictType(Type type, [NotNullWhen(true)] out Type? keyType,
+            [NotNullWhen(true)] out Type? valType)
+        {
+            var isDict = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedDictionary<,>);
+
+            if (isDict)
+            {
+                var genArgs = type.GetGenericArguments();
+                keyType = genArgs[0];
+                valType = genArgs[1];
+                return true;
+            }
+
+            keyType = default;
+            valType = default;
+            return false;
+        }
+
         public static bool TryGenericHashSetType(Type type, [NotNullWhen(true)] out Type? setType)
         {
             var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(HashSet<>);
+
+            if (isSet)
+            {
+                setType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            setType = default;
+            return false;
+        }
+
+        public static bool TryGenericSortedSetType(Type type, [NotNullWhen(true)] out Type? setType)
+        {
+            var isSet = type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(SortedSet<>);
 
             if (isSet)
             {

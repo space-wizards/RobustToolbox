@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
 namespace Robust.Generators
@@ -18,8 +19,59 @@ namespace Robust.Generators
             context.RegisterForSyntaxNotifications(() => new AutoDataClassRegistrationReceiver());
         }
 
+        private void AnalyzeDeepCloneCandidates(GeneratorExecutionContext context, List<ClassDeclarationSyntax> candidates)
+        {
+            var compilation = context.Compilation;
+            var deepCloneSymbol =
+                compilation.GetTypeByMetadataName("Robust.Shared.Interfaces.Serialization.IDeepClone");
+
+            bool IsDeepClone(ITypeSymbol typeSymbol)
+            {
+                if (typeSymbol == null) return false;
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol, deepCloneSymbol)) return true;
+                return IsDeepClone(typeSymbol.BaseType);
+            }
+
+            bool IsValid(ITypeSymbol typeSymbol)
+            {
+                if (typeSymbol.IsAbstract) return true; //does not need implementation
+                foreach (var member in typeSymbol.GetMembers())
+                {
+                    if (member is IMethodSymbol methodSymbol && methodSymbol.Name == "DeepClone")return true;
+                }
+
+                return false;
+            }
+
+            foreach (var syntax in candidates)
+            {
+                var symbol = compilation.GetSemanticModel(syntax.SyntaxTree).GetDeclaredSymbol(syntax);
+                if(!IsDeepClone(symbol)) continue;
+
+                if (!IsValid(symbol))
+                {
+                    foreach (var loc in symbol.Locations)
+                    {
+                        context.ReportDiagnostic(Diagnostic.Create(
+                            new DiagnosticDescriptor(
+                                "RADC0004",
+                                "",
+                                $"{symbol} should implement IDeepClone.DeepClone",
+                                "Usage",
+                                DiagnosticSeverity.Error,
+                                true),
+                            loc));
+                    }
+                }
+            }
+        }
+
         public void Execute(GeneratorExecutionContext context)
         {
+            if (context.SyntaxReceiver is DeepCloneCandidates deepCloneCandidates)
+            {
+                AnalyzeDeepCloneCandidates(context, deepCloneCandidates.Candidates);
+            }
             if(!(context.SyntaxReceiver is AutoDataClassRegistrationReceiver receiver)) return;
 
             Debugger.Launch();
@@ -59,11 +111,6 @@ namespace Robust.Generators
                         classDeclarationSyntax.GetLocation()));
                     continue;
                 }
-
-                context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("AAA", "",
-                        $"{symbol} | {customDataClass}", "usage", DiagnosticSeverity.Warning,
-                        true), Location.None));
 
                 string shouldInherit;
                 if (resolvedAutoDataRegistrations.Any(r => SymbolEqualityComparer.Default.Equals(symbol, r)))

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Interfaces.GameObjects.Components;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Animations
@@ -15,7 +16,7 @@ namespace Robust.Client.Animations
         /// <summary>
         ///     A list of key frames for when to fire flicks.
         /// </summary>
-        public readonly List<KeyFrame> KeyFrames = new();
+        public List<KeyFrame> KeyFrames { get; private set; } = new();
 
         // TODO: Should this layer key be per keyframe maybe?
         /// <summary>
@@ -67,6 +68,15 @@ namespace Robust.Client.Animations
             }
 
             return (keyFrameIndex, playingTime);
+        }
+
+        public override IDeepClone DeepClone()
+        {
+            return new AnimationTrackSpriteFlick
+            {
+                KeyFrames = IDeepClone.CloneValue(KeyFrames)!,
+                LayerKey = IDeepClone.CloneValue(LayerKey)
+            };
         }
 
         public struct KeyFrame

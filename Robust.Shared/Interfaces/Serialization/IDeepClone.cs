@@ -1,7 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using NFluidsynth;
+using Robust.Shared.Interfaces.GameObjects;
 using Robust.Shared.Utility;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.Interfaces.Serialization
 {
@@ -18,12 +22,12 @@ namespace Robust.Shared.Interfaces.Serialization
             if (underlyingType.IsPrimitive || underlyingType == typeof(decimal) || underlyingType == typeof(String) || type.IsEnum)
                 return value;
 
-            if (typeof(IDeepClone).IsAssignableFrom(type))
+            if (typeof(IDeepClone).IsAssignableFrom(underlyingType))
                 return (T)((IDeepClone) value).DeepClone();
 
-            if (type.IsArray && value is Array arraySource)
+            if (underlyingType.IsArray && value is Array arraySource)
             {
-                var newArray = (Array)Activator.CreateInstance(type, arraySource.Length)!;
+                var newArray = (Array)Activator.CreateInstance(underlyingType, arraySource.Length)!;
 
                 var idx = 0;
                 foreach (var entry in arraySource)
@@ -35,7 +39,7 @@ namespace Robust.Shared.Interfaces.Serialization
             }
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
-            if (TypeHelpers.TryGenericReadOnlyCollectionType(type, out var collectionType))
+            if (TypeHelpers.TryGenericReadOnlyCollectionType(underlyingType, out var collectionType))
             {
                 var source = (IList)value;
                 var newList = (IList)Array.CreateInstance(collectionType, source.Count);
@@ -49,10 +53,10 @@ namespace Robust.Shared.Interfaces.Serialization
             }
 
             // List<T>
-            if (TypeHelpers.TryGenericListType(type, out var listType))
+            if (TypeHelpers.TryGenericListType(underlyingType, out var listType))
             {
                 var source = (IList)value;
-                var newList = (IList)Activator.CreateInstance(type, source.Count)!;
+                var newList = (IList)Activator.CreateInstance(underlyingType, source.Count)!;
 
                 foreach (var entry in source)
                 {
@@ -63,7 +67,7 @@ namespace Robust.Shared.Interfaces.Serialization
             }
 
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
-            if (TypeHelpers.TryGenericReadDictType(type, out var keyType, out var valType, out var dictType))
+            if (TypeHelpers.TryGenericReadDictType(underlyingType, out var keyType, out var valType, out var dictType))
             {
                 var sourceDict = (IDictionary)value;
                 var newDict = (IDictionary)Activator.CreateInstance(dictType, sourceDict.Count)!;
@@ -78,19 +82,53 @@ namespace Robust.Shared.Interfaces.Serialization
                 return (T)newDict;
             }
 
-            // HashSet<T>
-            if (TypeHelpers.TryGenericHashSetType(type, out var setType) && value is Array setSource)
+            if (TypeHelpers.TryGenericSortedDictType(underlyingType, out var sortedKeyType, out var sortedValType))
             {
-                var valuesArray = Array.CreateInstance(setType, new[] {setSource.Length})!;
-
-                for (var i = 0; i < setSource.Length; i++)
+                var sourceDict = (IDictionary) value;
+                //var valueDict = (IDictionary) Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(sortedKeyType, sortedValType))!;
+                var newDict = (IDictionary)Activator.CreateInstance(underlyingType)!;
+                foreach (DictionaryEntry entry in sourceDict)
                 {
-                    valuesArray.SetValue(CloneValue(setSource.GetValue(i)), i);
+                    newDict.Add(CloneValue(entry.Key)!, CloneValue(entry.Value));
                 }
 
-                var newSet = Activator.CreateInstance(type, valuesArray)!;
+                return (T)newDict;
+            }
+
+            // HashSet<T>
+            if ((TypeHelpers.TryGenericHashSetType(underlyingType, out var setType) || TypeHelpers.TryGenericSortedSetType(underlyingType, out setType)) && value is IEnumerable rawSetSource)
+            {
+                List<object?> values = new();
+                foreach (var val in rawSetSource)
+                {
+                    values.Add(CloneValue(val));
+                }
+
+                var newSet = Activator.CreateInstance(underlyingType, values.ToArray())!;
 
                 return (T)newSet;
+            }
+
+            //class fallback
+            try
+            {
+                var fields = underlyingType.GetAllFields().ToArray();
+                if (fields.Length != 0)
+                {
+                    var newInstance = Activator.CreateInstance(underlyingType);
+                    foreach (var fieldInfo in fields)
+                    {
+                        var tempVal = fieldInfo.GetValue(value);
+                        fieldInfo.SetValue(newInstance, CloneValue(tempVal));
+                    }
+
+                    Logger.Error($"Using Fallback-Deepclone for Type {type}!");
+                    return newInstance is T ? (T) newInstance : default;
+                }
+            }
+            catch (Exception)
+            {
+                // ignored
             }
 
             throw new ArgumentException($"Failed to clone value with type {type}", nameof(value));

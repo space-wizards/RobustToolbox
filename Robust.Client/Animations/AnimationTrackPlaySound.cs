@@ -4,6 +4,7 @@ using Robust.Client.GameObjects.EntitySystems;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects.Systems;
 using Robust.Shared.Interfaces.GameObjects;
+using Robust.Shared.Interfaces.Serialization;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -17,7 +18,7 @@ namespace Robust.Client.Animations
         /// <summary>
         ///     A list of key frames for when to fire flicks.
         /// </summary>
-        public readonly List<KeyFrame> KeyFrames = new();
+        public List<KeyFrame> KeyFrames { get; private set; } = new();
 
         public override (int KeyFrameIndex, float FramePlayingTime) InitPlayback()
         {
@@ -44,6 +45,14 @@ namespace Robust.Client.Animations
             }
 
             return (keyFrameIndex, playingTime);
+        }
+
+        public override IDeepClone DeepClone()
+        {
+            return new AnimationTrackPlaySound
+            {
+                KeyFrames = IDeepClone.CloneValue(KeyFrames)!
+            };
         }
 
         public struct KeyFrame

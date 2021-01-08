@@ -9,9 +9,9 @@ namespace Robust.Shared.Interfaces.Serialization
     {
         IDeepClone DeepClone();
 
-        public static object? CloneValue(object? value)
+        public static T? CloneValue<T>(T? value)
         {
-            if (value == null) return null;
+            if (value == null) return default;
             var type = value.GetType();
             var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
@@ -19,20 +19,19 @@ namespace Robust.Shared.Interfaces.Serialization
                 return value;
 
             if (typeof(IDeepClone).IsAssignableFrom(type))
-                return ((IDeepClone) value).DeepClone();
+                return (T)((IDeepClone) value).DeepClone();
 
-            if (type.IsArray)
+            if (type.IsArray && value is Array arraySource)
             {
-                var source = (Array)value;
-                var newArray = (Array)Activator.CreateInstance(type, source.Length)!;
+                var newArray = (Array)Activator.CreateInstance(type, arraySource.Length)!;
 
                 var idx = 0;
-                foreach (var entry in source)
+                foreach (var entry in arraySource)
                 {
                     newArray.SetValue(CloneValue(entry), idx++);
                 }
 
-                return newArray;
+                return newArray is T array ? array : default;
             }
 
             // IReadOnlyList<T>/IReadOnlyCollection<T>
@@ -46,7 +45,7 @@ namespace Robust.Shared.Interfaces.Serialization
                     newList[i] = CloneValue(source[i]);
                 }
 
-                return newList;
+                return (T)newList;
             }
 
             // List<T>
@@ -60,7 +59,7 @@ namespace Robust.Shared.Interfaces.Serialization
                     newList.Add(CloneValue(entry));
                 }
 
-                return newList;
+                return (T)newList;
             }
 
             // Dictionary<K,V>/IReadOnlyDictionary<K,V>
@@ -76,23 +75,22 @@ namespace Robust.Shared.Interfaces.Serialization
                     newDict.Add(CloneValue(entry.Key)!, CloneValue(entry.Value));
                 }
 
-                return newDict;
+                return (T)newDict;
             }
 
             // HashSet<T>
-            if (TypeHelpers.TryGenericHashSetType(type, out var setType))
+            if (TypeHelpers.TryGenericHashSetType(type, out var setType) && value is Array setSource)
             {
-                var source = (Array) value;
-                var valuesArray = Array.CreateInstance(setType, new[] {source.Length})!;
+                var valuesArray = Array.CreateInstance(setType, new[] {setSource.Length})!;
 
-                for (var i = 0; i < source.Length; i++)
+                for (var i = 0; i < setSource.Length; i++)
                 {
-                    valuesArray.SetValue(CloneValue(source.GetValue(i)), i);
+                    valuesArray.SetValue(CloneValue(setSource.GetValue(i)), i);
                 }
 
                 var newSet = Activator.CreateInstance(type, valuesArray)!;
 
-                return newSet;
+                return (T)newSet;
             }
 
             throw new ArgumentException($"Failed to clone value with type {type}", nameof(value));

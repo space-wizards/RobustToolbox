@@ -58,6 +58,6 @@
     </PropertyGroup>
     <Exec
       Condition="'$(_RobustUseExternalMSBuild)' == 'true'"
-      Command="$(DOTNET_HOST_PATH) msbuild /nodereuse:false $(MSBuildProjectFile) /t:CompileRobustXaml /p:_RobustForceInternalMSBuild=true /p:Configuration=$(Configuration) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:TargetFramework=$(TargetFramework) /p:BuildProjectReferences=false"/>
+      Command="&quot;$(DOTNET_HOST_PATH)&quot; msbuild /nodereuse:false $(MSBuildProjectFile) /t:CompileRobustXaml /p:_RobustForceInternalMSBuild=true /p:Configuration=$(Configuration) /p:RuntimeIdentifier=$(RuntimeIdentifier) /p:TargetFramework=$(TargetFramework) /p:BuildProjectReferences=false"/>
   </Target>
 </Project>
